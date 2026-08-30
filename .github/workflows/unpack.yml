@@ -1,7 +1,9 @@
-name: Unpack ZIP Project
+name: Auto Unpack ZIP
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "*.zip"
 
@@ -13,33 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Find ZIP file
-        id: zip
-        run: |
-          ZIP=$(ls *.zip | head -n 1)
-          echo "zip=$ZIP" >> $GITHUB_OUTPUT
+      - name: Install unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
 
       - name: Extract ZIP
         run: |
-          mkdir -p extracted
-          unzip -o "${{ steps.zip.outputs.zip }}" -d extracted
+          mkdir unzip_temp
+          unzip -o *.zip -d unzip_temp
+          cp -r unzip_temp/* .
+          rm -rf unzip_temp
+          rm -f *.zip
 
-      - name: Move files to root
+      - name: Commit changes
         run: |
-          cp -r extracted/* .
-          rm -rf extracted
-          rm -f "${{ steps.zip.outputs.zip }}"
-
-      - name: Commit unpacked files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
+          git config user.name "github-actions"
+          git config user.email "41898282+github-actions@users.noreply.github.com"
           git add .
-          git commit -m "Auto unpack ZIP project" || echo "No changes"
+          git commit -m "Auto extract project files" || exit 0
           git push
