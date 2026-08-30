@@ -1,28 +1,20 @@
-إصلاح الأونلاين — تحدي العباقرة ONLINE PRO
+بوسراج للألعاب 2.0 — طريقة النشر
 
-سبب رسالة Load failed غالبًا:
-- فتح online.html مباشرة من ملف/ZIP؛ أو
-- رفع مجلد public فقط كملفات ثابتة؛ أو
-- عدم نشر Worker + Durable Object.
+1) فك الملف ZIP.
+2) افتح Terminal داخل المجلد الذي يحتوي package.json وwrangler.jsonc.
+3) نفذ: npm install
+4) نفذ: npx wrangler login
+5) نفذ: npm run verify
+6) إذا انتهى التحقق بدون أخطاء نفذ: npm run deploy
 
-الأونلاين يحتاج نشر المشروع كاملًا من جذر الحزمة.
+بعد النشر افتح رابط Worker ثم /api/health.
+المفترض يظهر JSON فيه ok:true و online:true.
 
-الطريقة الصحيحة:
-1) فك ZIP.
-2) افتح Terminal داخل مجلد المشروع الذي يحتوي package.json وwrangler.jsonc.
-3) npm install
-4) npx wrangler login
-5) npx wrangler deploy
+مهم جدًا:
+- لا ترفع public وحده؛ الأونلاين يحتاج Worker + Durable Object.
+- الصفحة الرئيسية الآن هي مركز الألعاب.
+- الألعاب الجديدة (جاكارو، الزهرة، السلم والثعبان، النرد) محلية على نفس الجهاز في هذا الإصدار.
+- تحدي العباقرة يحتفظ بالوضع المحلي والأونلاين.
 
-بعد النشر اختبر هذا المسار في المتصفح:
-https://wild-scene-db78.bogasy52.workers.dev/api/health
-
-المفترض ترى JSON شبيهًا بـ:
-{"ok":true,"online":true,"service":"tahadi-alabaqera-online"}
-
-إذا ظهر HTML أو 404 بدل JSON، فهذا يعني أن الواجهة منشورة لكن Worker API ليس منشورًا.
-
-مهم:
-- لا ترفع public وحده إذا تريد الغرف.
-- النشر الكامل يرفع Worker والـStatic Assets كوحدة واحدة.
-- نسخة Android المصححة توجه API تلقائيًا إلى Cloudflare بدل appassets.androidplatform.net.
+رابط فحص النسخة الحالية:
+https://tahdia-online.bogasy52.workers.dev/api/health

@@ -1,12 +1,14 @@
 {
-  "name": "tahadi-alabaqera-online",
-  "version": "1.0.0",
+  "name": "busraj-games",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "wrangler deploy --dry-run"
+    "check": "wrangler deploy --dry-run",
+    "test": "node --test test/*.test.js",
+    "verify": "npm test && node scripts/verify-static.mjs && npm run check"
   },
   "devDependencies": {
     "wrangler": "4.127.1"
