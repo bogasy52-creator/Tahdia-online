@@ -1,5 +1,4 @@
-name: Install Busraj Games Update
-
+name: Busraj_Games_2.1_FIXED_ROOT_UPLOAD.zip
 on:
   push:
     paths:
