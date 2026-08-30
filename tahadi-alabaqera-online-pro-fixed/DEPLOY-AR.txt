@@ -5,16 +5,23 @@
 3) نفذ: npm install
 4) نفذ: npx wrangler login
 5) نفذ: npm run verify
-6) إذا انتهى التحقق بدون أخطاء نفذ: npm run deploy
+6) نفذ: npm run verify:full  (يتطلب تثبيت Wrangler عبر npm install)
+7) إذا انتهى التحقق الكامل بدون أخطاء نفذ: npm run deploy
 
 بعد النشر افتح رابط Worker ثم /api/health.
 المفترض يظهر JSON فيه ok:true و online:true.
 
 مهم جدًا:
-- لا ترفع public وحده؛ الأونلاين يحتاج Worker + Durable Object.
-- الصفحة الرئيسية الآن هي مركز الألعاب.
-- الألعاب الجديدة (جاكارو، الزهرة، السلم والثعبان، النرد) محلية على نفس الجهاز في هذا الإصدار.
-- تحدي العباقرة يحتفظ بالوضع المحلي والأونلاين.
+- لا ترفع public وحده؛ الأونلاين يحتاج Worker + Durable Objects.
+- Worker يبقى بنفس الاسم: tahdia-online.
+- Durable Objects الحالية:
+  ROOMS / GameRoom لتحدي العباقرة.
+  BOARD_ROOMS / BoardGameRoom للسلم والثعبان وجاكارو.
+- migration v2 تضيف BoardGameRoom، لذلك يجب نشر المشروع كاملًا عبر Wrangler.
+- السلم والثعبان: محلي + أونلاين لـ2–4 لاعبين.
+- جاكارو: محلي + أونلاين لـ4 لاعبين 2v2 مع إخفاء يد الخصوم على مستوى السيرفر.
+- الزهرة وتحدي النرد يظلان محليين.
+- الصفحة الرئيسية هي مركز الألعاب.
 
 رابط فحص النسخة الحالية:
 https://tahdia-online.bogasy52.workers.dev/api/health

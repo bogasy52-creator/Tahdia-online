@@ -1,25 +1,31 @@
-بوسراج للألعاب 2.0 — تقرير الفحص النهائي (إعادة تحقق)
+بوسراج للألعاب 2.0 — تقرير الفحص النهائي للنسخة Premium Board Games
 التاريخ: 2026-08-30
 
-النتائج:
-- 21/21 اختبار Node ناجح (0 فشل).
-- فحص المراجع المحلية: 53 مرجعاً، ولا توجد ملفات مفقودة.
-- جميع ملفات JavaScript وMJS اجتازت node --check.
-- manifest.webmanifest صالح ويمكن تحليله JSON.
+النتائج المثبتة في بيئة التنفيذ الحالية:
+- 34/34 اختبار Node ناجح (0 فشل).
+- فحص المراجع المحلية: 64 مرجعًا، ولا توجد ملفات مفقودة.
+- جميع ملفات JavaScript الجديدة والحالية اجتازت node --check.
 - الملفات الأساسية للنشر موجودة: package.json, wrangler.jsonc, src/index.js, src/questions.js, public/*.
-- إعداد Cloudflare مضبوط على Worker: tahdia-online.
-- Durable Object binding: ROOMS / GameRoom موجود.
+- إعداد Cloudflare ما زال على Worker: tahdia-online.
+- Durable Object القديم محفوظ: ROOMS / GameRoom.
+- Durable Object الجديد موجود: BOARD_ROOMS / BoardGameRoom مع migration v2.
 - ASSETS binding موجود ومجلد الواجهة هو ./public.
-- بنك الأسئلة: 23 فئة / 207 أسئلة.
-- src/questions.js مطابق بايت-ببايت للنسخة الأصلية المرفوعة (SHA-256 مطابق).
-- 15 ملف صوت أصلي تم مقارنتها بايت-ببايت وهي مطابقة للأصل.
-- لا توجد ملفات صفرية الحجم.
-- لا توجد ملفات .env أو ملفات credentials/secrets ضمن الحزمة.
+- اختبارات الغرف تغطي: السعة، البدء، منع الدور الخاطئ، نرد السيرفر، خصوصية يد جاكارو، وإعادة المباراة.
+- اختبارات الواجهة الثابتة تغطي ملفات Premium والـonline modules وService Worker الجديد.
+- src/questions.js وبنك الأسئلة لم يتم تعديلهما ضمن تطوير ألعاب الطاولة.
+- لا توجد ملفات .env أو credentials/secrets مطلوبة ضمن الحزمة.
+
+فحص بصري عبر Chromium:
+- بيئة التنفيذ الحالية تمنع التنقل إلى localhost وكذلك file:// برسالة ERR_BLOCKED_BY_ADMINISTRATOR.
+- لذلك لم يتم الادعاء بإتمام فحص بصري تفاعلي داخل Chromium من هذه البيئة.
+- الفحوص البرمجية والثابتة المذكورة أعلاه تمت بنجاح، ويُنصح بعد النشر بفتح snakes.html وjackaroo.html على الجوال والديسكتوب كفحص بصري نهائي.
 
 ملاحظة Wrangler:
-- تمت محاولة npm install مرة أخرى، لكنها انتهت بمهلة شبكة في بيئة التنفيذ الحالية.
-- تمت محاولة npx wrangler@4.127.1 deploy --dry-run كذلك وتعذر إكمال التنزيل بسبب مهلة/اتصال البيئة.
-- لذلك لم يتم إثبات dry-run عبر Wrangler من هذه البيئة، ولا توجد دلالة على أن السبب من المشروع نفسه.
-- package.json يثبت Wrangler على الإصدار 4.127.1، ويمكن إجراء التحقق النهائي على جهاز متصل بالإنترنت عبر: npm install ثم npm run verify.
+- تم فصل التحقق المحلي عن Wrangler حتى لا يفشل الإصدار بسبب غياب node_modules.
+- npm run verify ينفذ الاختبارات + فحص الأصول + فحص إعداد Worker وDurable Objects بدون تنزيل حزم.
+- npm run verify:full يضيف wrangler deploy --dry-run، ويتطلب npm install واتصالًا بالإنترنت.
+- package.json يثبت Wrangler على الإصدار 4.127.1 قبل أي نشر فعلي.
 
-الحزمة النهائية تم إنشاؤها بعد هذه الفحوص، ثم فحصها بـ unzip -t وبمطابقة SHA256SUMS بعد فكها.
+التغليف:
+- يتم تحديث SHA256SUMS.txt بعد جميع التعديلات.
+- يتم اختبار ملف ZIP النهائي بـ unzip -t ومقارنة SHA256SUMS بعد فك نسخة اختبارية منه.

@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "wrangler deploy --dry-run",
+    "check": "node scripts/verify-worker-config.mjs",
     "test": "node --test test/*.test.js",
-    "verify": "npm test && node scripts/verify-static.mjs && npm run check"
+    "verify": "npm test && node scripts/verify-static.mjs && npm run check",
+    "check:cloudflare": "wrangler deploy --dry-run",
+    "verify:full": "npm run verify && npm run check:cloudflare"
   },
   "devDependencies": {
     "wrangler": "4.127.1"

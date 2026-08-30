@@ -6,7 +6,6 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "html_handling": "drop-trailing-slash",
     "run_worker_first": [
       "/api/*"
     ]
@@ -16,6 +15,10 @@
       {
         "name": "ROOMS",
         "class_name": "GameRoom"
+      },
+      {
+        "name": "BOARD_ROOMS",
+        "class_name": "BoardGameRoom"
       }
     ]
   },
@@ -24,6 +27,12 @@
       "tag": "v1",
       "new_sqlite_classes": [
         "GameRoom"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "BoardGameRoom"
       ]
     }
   ],

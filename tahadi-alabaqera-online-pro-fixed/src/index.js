@@ -1,6 +1,7 @@
 
 import { DurableObject } from "cloudflare:workers";
 import { CATEGORIES } from "./questions.js";
+import { BoardGameRoom as BoardGameRoomBase } from "./rooms/board-game-room.js";
 
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -156,6 +157,51 @@ export default {
       }
     }
 
+    if (request.method === "POST" && url.pathname === "/api/games/rooms") {
+      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الطاولة غير مفعّل على السيرفر" }, 503);
+      try {
+        let body = {};
+        try { body = await request.json(); } catch {}
+        const gameType = body.gameType === "jackaroo" ? "jackaroo" : body.gameType === "snakes" ? "snakes" : "";
+        if (!gameType) return json({ ok: false, error: "نوع اللعبة غير صالح" }, 400);
+        const name = cleanName(body.name);
+        for (let attempt = 0; attempt < 10; attempt++) {
+          const code = roomCode();
+          const id = env.BOARD_ROOMS.idFromName(code);
+          const stub = env.BOARD_ROOMS.get(id);
+          const hostKey = token();
+          const hostToken = token();
+          const hostPlayerId = crypto.randomUUID();
+          const res = await stub.fetch("https://board-room.internal/init", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ code, gameType, hostKey, hostToken, hostPlayerId, name }),
+          });
+          if (res.status === 201) return json({ ok: true, code, gameType, token: hostToken, hostKey, playerId: hostPlayerId });
+        }
+        return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
+      } catch (err) {
+        console.error("create board room failed", err);
+        return json({ ok: false, error: "تعذر تشغيل محرك ألعاب الطاولة" }, 503);
+      }
+    }
+
+    const boardMatch = url.pathname.match(/^\/api\/games\/rooms\/(\d{6})(\/ws|\/status)?$/);
+    if (boardMatch) {
+      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الطاولة غير مفعّل على السيرفر" }, 503);
+      try {
+        const code = boardMatch[1];
+        const suffix = boardMatch[2] || "/status";
+        const id = env.BOARD_ROOMS.idFromName(code);
+        const stub = env.BOARD_ROOMS.get(id);
+        if (suffix === "/ws") return stub.fetch(request);
+        return stub.fetch("https://board-room.internal/status");
+      } catch (err) {
+        console.error("board room route failed", err);
+        return json({ ok: false, error: "تعذر الوصول لغرفة اللعبة" }, 503);
+      }
+    }
+
     if (url.pathname === "/api/catalog") {
       return json({
         categories: CATEGORIES.map((c) => ({ id: c.id, name: c.name, icon: c.icon, desc: c.desc })),
@@ -165,6 +211,8 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+export class BoardGameRoom extends BoardGameRoomBase {}
 
 export class GameRoom extends DurableObject {
   constructor(ctx, env) {

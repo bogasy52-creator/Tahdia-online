@@ -7,6 +7,6 @@
   function syncMute(){const muted=window.BS_AUDIO?.getSettings?.().muted;document.querySelectorAll('[data-audio-toggle]').forEach(b=>{b.textContent=muted?'🔇':'🔊';b.setAttribute('aria-label',muted?'تشغيل الصوت':'كتم الصوت')})}
   document.addEventListener('click',e=>{const installBtn=e.target.closest('[data-install]');if(installBtn)install();const audio=e.target.closest('[data-audio-toggle]');if(audio){window.BS_AUDIO?.toggleMuted();syncMute()}const settings=e.target.closest('[data-settings-open]');if(settings){buildSettings();document.querySelector('#bsSettings').classList.add('open')}});
   window.addEventListener('bs-audio-change',syncMute);syncMute();
-  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js').catch(()=>{}));
+  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
   window.BS_PLATFORM={toast,install,openSettings:()=>{buildSettings();document.querySelector('#bsSettings').classList.add('open')}};
 })();

@@ -1,26 +1,81 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#070812"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="assets/css/platform.css"><link rel="stylesheet" href="assets/css/game-kit.css"><title>جاكارو — بوسراج</title><style>
-.jack-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px;margin-top:10px}.jack-main,.jack-side{padding:14px}.jack-board{position:relative;width:min(100%,760px);aspect-ratio:1;margin:auto;border-radius:50%;background:radial-gradient(circle,#161a31 0 25%,#0d1120 25% 54%,#12172b 54% 100%);border:1px solid #414968;box-shadow:inset 0 0 80px rgba(124,58,237,.08),var(--bs-shadow)}.track-hole,.safe-hole{position:absolute;width:clamp(18px,3.3vw,34px);height:clamp(18px,3.3vw,34px);border-radius:50%;transform:translate(-50%,-50%);background:#242a40;border:1px solid #505978;display:flex;align-items:center;justify-content:center}.track-hole.start{border:3px solid var(--c);background:color-mix(in srgb,var(--c) 22%,#172037)}.safe-hole{background:color-mix(in srgb,var(--c) 24%,#172037);border-color:color-mix(in srgb,var(--c) 58%,#41506d)}.jack-piece{width:78%;height:78%;border-radius:50%;background:var(--c);border:2px solid rgba(255,255,255,.78);box-shadow:0 4px 8px rgba(0,0,0,.42);display:grid;place-items:center;color:#fff;font-size:8px;font-weight:1000}.jack-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:31%;aspect-ratio:1;border-radius:28%;display:grid;place-items:center;text-align:center;background:linear-gradient(145deg,#1b1f39,#0d1120);border:1px solid #4a5478;box-shadow:0 20px 45px rgba(0,0,0,.3)}.jack-center b{font-size:clamp(18px,3vw,30px)}.jack-center span{display:block;color:var(--bs-muted);font-size:10px;margin-top:4px}.team-rail{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}.team-card{padding:10px;border:1px solid var(--bs-line);border-radius:15px;background:#0b0f1e}.team-card b{display:block}.team-card span{color:var(--bs-muted);font-size:11px}.player-jack{padding:10px;border:1px solid var(--bs-line);border-radius:14px;background:#0b0f1e;display:grid;grid-template-columns:11px 1fr auto;gap:8px;align-items:center}.player-jack.turn{border-color:#7563b6;background:rgba(124,58,237,.1)}.home-marbles{display:flex;gap:2px;margin-top:4px}.home-marbles i{width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:var(--c)}.hand-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 7px}.hand{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}.playing-card{position:relative;flex:0 0 74px;height:104px;border-radius:13px;border:2px solid #e6e2ef;background:linear-gradient(145deg,#fff,#d9dbe4);color:#181828;padding:7px;cursor:pointer;box-shadow:0 9px 18px rgba(0,0,0,.2);text-align:right}.playing-card.red{color:#c42643}.playing-card.selected{transform:translateY(-6px);box-shadow:0 0 0 3px rgba(240,185,74,.35),0 12px 22px rgba(0,0,0,.3)}.playing-card .rank{font-size:22px;font-weight:1000}.playing-card .suit{font-size:26px;position:absolute;left:8px;bottom:6px}.action-list{display:grid;gap:6px;max-height:230px;overflow:auto;padding-left:2px}.action-btn{border:1px solid #3a4467;border-radius:13px;background:#10162a;color:#fff;padding:10px;text-align:right;font-weight:800;cursor:pointer}.action-btn:hover{border-color:#7161ae}.privacy{position:fixed;inset:0;z-index:75;background:radial-gradient(circle at 50% 25%,#28194b,#080a14 60%);display:none;place-items:center;padding:20px;text-align:center}.privacy.show{display:grid}.privacy-card{width:min(480px,100%);padding:28px}.privacy-icon{font-size:58px}.privacy h2{font-size:31px;margin:6px 0}.privacy p{color:var(--bs-muted);line-height:1.7}.rules-note{font-size:10px;color:var(--bs-muted);line-height:1.6;margin-top:8px}@media(max-width:980px){.jack-layout{grid-template-columns:1fr}.jack-side{order:-1}.jack-side .player-list{grid-template-columns:repeat(2,1fr)}}@media(max-width:570px){.jack-main,.jack-side{padding:10px}.track-hole,.safe-hole{width:19px;height:19px}.jack-piece{font-size:6px}.playing-card{flex-basis:66px;height:94px}.jack-side .player-list{grid-template-columns:1fr 1fr}.player-jack{padding:8px}.jack-center{border-radius:22%}}
-</style></head><body class="bs-page"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>جاكارو</b><span>2 ضد 2</span></span></a><div class="bs-actions"><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header>
-<section id="setup" class="bs-panel setup-wrap"><h1 class="bs-title" style="font-size:34px">جاكارو 🃏</h1><p class="bs-subtitle">أربعة لاعبين في فريقين. اللاعبان المتقابلان فريق واحد: الأول مع الثالث، والثاني مع الرابع.</p><div class="setup-grid" style="margin-top:14px"><label class="bs-field"><span>اللاعب 1 — بنفسجي</span><input id="n0" value="اللاعب الأول"></label><label class="bs-field"><span>اللاعب 2 — سماوي</span><input id="n1" value="اللاعب الثاني"></label><label class="bs-field"><span>اللاعب 3 — ذهبي</span><input id="n2" value="اللاعب الثالث"></label><label class="bs-field"><span>اللاعب 4 — أخضر</span><input id="n3" value="اللاعب الرابع"></label></div><div class="mode-note" style="margin-top:12px">نسخة بوسراج تستخدم 52 ورقة بدون جوكر، وتوزيع 4 ثم 4 ثم 5 أوراق. A للخروج أو 1/11، 4 للخلف، 5 لأي حجر صالح، 7 قابلة للتقسيم، J للتبديل، Q = 12، وK للخروج أو 13.</div><div class="setup-actions"><button id="startBtn" class="bs-btn gold">ابدأ جاكارو</button></div></section>
-<section id="game" class="hidden"><div class="game-toolbar"><div class="toolbar-title"><h1>جاكارو</h1><p>مرّر الجهاز بين اللاعبين — الأوراق تُخفى تلقائيًا بين الأدوار</p></div><button id="restart" class="bs-btn">إعادة</button></div><div class="jack-layout"><section class="bs-panel jack-main"><div id="board" class="jack-board"><div class="jack-center"><div><b>JACKAROO</b><span id="deckCount"></span><span id="dealText"></span></div></div></div></section><aside class="bs-panel jack-side"><div class="team-rail"><div id="team0" class="team-card"></div><div id="team1" class="team-card"></div></div><div id="players" class="player-list"></div><div id="status" class="game-status"></div><div class="hand-title"><b>أوراقك</b><span id="handHint" class="mini-note">اختر ورقة</span></div><div id="hand" class="hand"></div><div id="actions" class="action-list"></div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد المستخدمة</summary><ul><li>A: خروج حجر أو 1/11 خطوة.</li><li>K: خروج حجر أو 13 خطوة.</li><li>4: أربع خطوات للخلف.</li><li>5: تحريك أي حجر صالح خمس خطوات.</li><li>7: تقسيم سبع خطوات على حجرين.</li><li>J: تبديل حجرك بحجر آخر صالح.</li><li>Q: 12 خطوة، وبقية الأرقام بقيمتها.</li><li>الحجر على خانة بدايته محمي.</li><li>الفريق الذي يدخل أحجاره الثمانية إلى الأمان يفوز.</li></ul></details><div class="rules-note">توجد اختلافات منزلية متعددة في قواعد جاكارو؛ هذه النسخة تعتمد مجموعة قواعد رقمية ثابتة حتى تكون كل مباراة متسقة.</div></aside></div></section></main>
-<div id="privacy" class="privacy"><div class="bs-panel privacy-card"><div class="privacy-icon">🂠</div><h2 id="privacyName"></h2><p>مرّر الجهاز للاعب صاحب الدور. اضغط الزر عندما تصبح الشاشة عنده حتى لا تنكشف أوراقه.</p><button id="revealHand" class="bs-btn gold primary-action">عرض أوراقي</button></div></div><div id="winnerOverlay" class="winner-overlay"><div class="bs-panel winner-card"><div class="winner-icon">🏆🃏</div><h2 id="winnerName"></h2><p>الفريق أدخل أحجاره الثمانية إلى منطقة الأمان.</p><button id="again" class="bs-btn gold">مباراة جديدة</button></div></div><div class="bs-toast"></div><script src="assets/js/audio-manager.js"></script><script src="assets/js/platform.js"></script><script type="module">
-import {createJackarooGame,getJackarooActions,playJackarooAction,globalJackarooPosition,cardRank} from './assets/js/engines/jackaroo-engine.js';
-const $=s=>document.querySelector(s),colors=['#8b5cf6','#22d3ee','#f0b94a','#22c55e'];let state=null,selectedCard=null;const suits={S:'♠',H:'♥',D:'♦',C:'♣'};
-function getNames(){return [0,1,2,3].map(i=>$('#n'+i).value.trim()||`لاعب ${i+1}`)}
-function posPct(global,radius=44){const angle=(-90+global*360/52)*Math.PI/180;return{x:50+radius*Math.cos(angle),y:50+radius*Math.sin(angle)}}
-function buildBoard(){const b=$('#board');b.querySelectorAll('.track-hole,.safe-hole').forEach(x=>x.remove());for(let i=0;i<52;i++){const p=posPct(i),h=document.createElement('div');h.className='track-hole '+([0,13,26,39].includes(i)?'start':'');h.dataset.track=i;h.style.left=p.x+'%';h.style.top=p.y+'%';const owner=[0,13,26,39].indexOf(i);if(owner>=0)h.style.setProperty('--c',colors[owner]);b.appendChild(h)}for(let pi=0;pi<4;pi++){for(let j=0;j<4;j++){const angle=(-90+pi*90)*Math.PI/180,r=31-j*6;const h=document.createElement('div');h.className='safe-hole';h.dataset.safe=`${pi}:${j}`;h.style.left=(50+r*Math.cos(angle))+'%';h.style.top=(50+r*Math.sin(angle))+'%';h.style.setProperty('--c',colors[pi]);b.appendChild(h)}}}
-function piece(pi,mi){const p=document.createElement('span');p.className='jack-piece';p.style.setProperty('--c',colors[pi]);p.textContent=mi+1;return p}
-function renderPieces(){document.querySelectorAll('.track-hole,.safe-hole').forEach(h=>h.innerHTML='');state.players.forEach((p,pi)=>p.marbles.forEach((m,mi)=>{if(m>=0&&m<=51){const g=globalJackarooPosition(pi,m);document.querySelector(`.track-hole[data-track="${g}"]`)?.appendChild(piece(pi,mi))}else if(m>=52&&m<=55)document.querySelector(`.safe-hole[data-safe="${pi}:${m-52}"]`)?.appendChild(piece(pi,mi))}))}
-function renderTeams(){const teams=[[0,2],[1,3]];teams.forEach((members,t)=>{const done=members.flatMap(i=>state.players[i].marbles).filter(x=>x===56).length;$('#team'+t).innerHTML=`<b>الفريق ${t+1}</b><span>${state.players[members[0]].name} + ${state.players[members[1]].name}</span><span>${done}/8 في الأمان</span>`})}
-function renderPlayers(){const box=$('#players');box.innerHTML='';state.players.forEach((p,i)=>{const home=p.marbles.filter(x=>x===-1).length,done=p.marbles.filter(x=>x===56).length,row=document.createElement('div');row.className='player-jack '+(state.turn===i&&state.winnerTeam===null?'turn':'');row.innerHTML=`<i class="player-dot" style="background:${colors[i]}"></i><div><b>${p.name}</b><div class="home-marbles" style="--c:${colors[i]}">${Array.from({length:home},()=>'<i></i>').join('')}</div><div class="mini-note">${done}/4 أمان</div></div><b>${p.marbles.filter(x=>x>=0&&x<56).length}</b>`;box.appendChild(row)})}
-function cardFace(card,index){const rank=cardRank(card),s=String(card).slice(-1),red=s==='H'||s==='D',b=document.createElement('button');b.className='playing-card '+(red?'red ':'')+(selectedCard===index?'selected':'');b.innerHTML=`<span class="rank">${rank}</span><span class="suit">${suits[s]||'◆'}</span>`;b.onclick=()=>selectCard(index);return b}
-function actionLabel(a){const owner=a.owner??state.turn,name=state.players[owner]?.name||'';if(a.type==='enter')return `⬆ إخراج حجر ${a.marble+1}${owner!==state.turn?' — '+name:''}`;if(a.type==='move')return `${a.backward?'↶':'→'} ${name} • حجر ${a.marble+1} ${a.backward?'−':'+'}${a.steps}`;if(a.type==='moveAny5')return `5️⃣ ${name} • حجر ${a.marble+1} +5`;if(a.type==='swap')return `⇄ حجر ${a.marble+1} مع ${state.players[a.otherOwner].name} • حجر ${a.otherMarble+1}`;if(a.type==='split7')return `7️⃣ ${name}: حجر ${a.first.marble+1} +${a.first.steps}، حجر ${a.second.marble+1} +${a.second.steps}`;return '🔥 حرق الورقة — لا توجد حركة'}
-function selectCard(index){selectedCard=index;BS_AUDIO.play('card');renderHand();renderActions()}
-function renderHand(){const box=$('#hand');box.innerHTML='';state.hands[state.turn].forEach((c,i)=>box.appendChild(cardFace(c,i)));$('#handHint').textContent=`${state.hands[state.turn].length} ورقة`}
-function renderActions(){const box=$('#actions');box.innerHTML='';if(selectedCard===null){box.innerHTML='<div class="mini-note">اختر ورقة لعرض الحركات القانونية.</div>';return}const acts=getJackarooActions(state,selectedCard);acts.forEach(a=>{const b=document.createElement('button');b.className='action-btn';b.textContent=actionLabel(a);b.onclick=()=>play(a);box.appendChild(b)})}
-function render(){renderPieces();renderTeams();renderPlayers();$('#deckCount').textContent=`المتبقي في الرزمة: ${state.deck.length}`;$('#dealText').textContent=`التوزيع: ${['4','4','5'][state.dealIndex]} التالي`;if(state.winnerTeam!==null){const members=state.winnerTeam===0?[0,2]:[1,3];$('#winnerName').textContent=`${state.players[members[0]].name} + ${state.players[members[1]].name}`;$('#winnerOverlay').classList.add('show');BS_AUDIO.play('win');return}$('#status').textContent=`الدور: ${state.players[state.turn].name} — اختر ورقة ثم حركة`;renderHand();renderActions()}
-function showPrivacy(){if(state.winnerTeam!==null)return;selectedCard=null;$('#privacyName').textContent=`دور ${state.players[state.turn].name}`;$('#privacy').classList.add('show')}
-function play(a){const card=state.hands[state.turn][selectedCard];const actor=state.turn;try{state=playJackarooAction(state,selectedCard,a,actor)}catch(e){BS_AUDIO.play('error');return BS_PLATFORM.toast('هذه الحركة لم تعد صالحة')}BS_AUDIO.play(a.type==='discard'?'wrong':a.type==='swap'?'duel':'move');BS_AUDIO.vibrate(a.type==='swap'?[45,30,45]:25);selectedCard=null;render();if(state.winnerTeam===null)setTimeout(showPrivacy,180)}
-function start(){state=createJackarooGame(getNames());selectedCard=null;buildBoard();$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#winnerOverlay').classList.remove('show');render();BS_AUDIO.play('launch');showPrivacy()}
-$('#revealHand').onclick=()=>{$('#privacy').classList.remove('show');BS_AUDIO.play('card');render()};$('#startBtn').onclick=start;$('#restart').onclick=start;$('#again').onclick=start;
-</script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070812">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="assets/css/platform.css">
+  <link rel="stylesheet" href="assets/css/game-kit.css">
+  <link rel="stylesheet" href="assets/css/board-premium.css">
+  <link rel="stylesheet" href="assets/css/jackaroo-premium.css">
+  <title>جاكارو — بوسراج</title>
+</head>
+<body class="bs-page">
+<main class="bs-shell">
+  <header class="bs-topbar">
+    <a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>جاكارو</b><span>Premium Edition · 2 ضد 2</span></span></a>
+    <div class="bs-actions"><button class="bs-icon-btn" data-audio-toggle aria-label="الصوت">🔊</button><button class="bs-icon-btn" data-settings-open aria-label="الإعدادات">⚙️</button><a class="bs-icon-btn" href="./" aria-label="الرئيسية" style="text-decoration:none">⌂</a></div>
+  </header>
+
+  <section id="homeScreen" class="board-landing">
+    <div class="bs-panel board-hero">
+      <div class="board-hero-copy">
+        <h1>جاكارو</h1>
+        <p>أربعة لاعبين، فريقان، لوحة خشبية محفورة وقطع رخامية. اختر الورقة ثم اضغط الحجر والخانة القانونية مباشرة على اللوحة.</p>
+        <div class="board-menu"><button id="localModeBtn" class="bs-btn gold">لعب محلي</button><button id="onlineModeBtn" class="bs-btn primary">لعب أونلاين</button><button id="rulesBtn" class="bs-btn wide">طريقة اللعب</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="localSetup" class="bs-panel board-setup hidden">
+    <div class="board-setup-head"><div><h2>جاكارو محلي</h2><p>اللاعب 1 مع 3، واللاعب 2 مع 4. تمرير الجهاز يخفي الأوراق بين الأدوار.</p></div><button class="bs-btn" data-back-menu>رجوع</button></div>
+    <div class="setup-grid">
+      <label class="bs-field"><span>اللاعب 1</span><input id="n0" value="اللاعب الأول" maxlength="20"></label>
+      <label class="bs-field"><span>اللاعب 2</span><input id="n1" value="اللاعب الثاني" maxlength="20"></label>
+      <label class="bs-field"><span>اللاعب 3</span><input id="n2" value="اللاعب الثالث" maxlength="20"></label>
+      <label class="bs-field"><span>اللاعب 4</span><input id="n3" value="اللاعب الرابع" maxlength="20"></label>
+    </div>
+    <div class="setup-actions"><button id="startLocalBtn" class="bs-btn gold">ابدأ جاكارو</button></div>
+  </section>
+
+  <section id="onlineSetup" class="bs-panel board-setup hidden">
+    <div class="board-setup-head"><div><h2>غرفة جاكارو</h2><p>أربعة لاعبين بالضبط. كل لاعب يستلم أوراقه من السيرفر ولا تُرسل له أوراق الآخرين.</p></div><button class="bs-btn" data-back-menu>رجوع</button></div>
+    <div id="onlineEntry">
+      <div class="room-entry"><label class="bs-field"><span>اسمك</span><input id="onlineName" maxlength="20" value="لاعب"></label><label class="bs-field"><span>كود الغرفة</span><input id="roomCode" inputmode="numeric" maxlength="6" placeholder="000000"></label></div>
+      <div class="room-actions"><button id="createRoomBtn" class="bs-btn gold">إنشاء غرفة</button><button id="joinRoomBtn" class="bs-btn primary">دخول الغرفة</button></div>
+    </div>
+    <div id="onlineLobby" class="room-lobby hidden">
+      <div class="room-code-wrap"><div><small>كود الغرفة</small><div id="roomCodeDisplay" class="room-code">------</div></div><button id="copyRoomBtn" class="bs-btn">نسخ</button></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px"><span id="connectionStatus" class="connection-pill">غير متصل</span><span class="mini-note">4 لاعبين</span></div>
+      <div id="lobbyPlayers" class="lobby-player-list"></div>
+      <div class="room-actions"><button id="readyBtn" class="bs-btn">أنا جاهز</button><button id="startOnlineBtn" class="bs-btn gold hidden">ابدأ المباراة</button></div>
+    </div>
+  </section>
+
+  <section id="game" class="board-game-shell hidden">
+    <div class="game-toolbar"><div class="toolbar-title"><h1>جاكارو</h1><p id="gameSubtitle">اختر ورقة ثم الحجر والخانة على اللوحة</p></div><div class="toolbar-actions"><span id="modeLabel" class="mode-label">محلي</span><button id="restartLocal" class="bs-btn">إعادة</button><button id="leaveGame" class="bs-btn">القائمة</button></div></div>
+    <div class="board-game-grid">
+      <section class="bs-panel board-stage-panel">
+        <div id="boardWrap" class="board-frame jack-board-frame"><div id="jackBoard" class="jack-board"><div class="jack-center"><div><b>BUSRAJ<br>JACKAROO</b><span id="deckCount"></span><span id="dealText"></span></div></div></div><div id="motionLayer" class="board-motion-layer"></div></div>
+      </section>
+      <aside class="bs-panel board-control-panel">
+        <div class="jack-team-rail"><div id="team0" class="jack-team-card"></div><div id="team1" class="jack-team-card"></div></div>
+        <div id="players" class="board-player-list"></div>
+        <div id="status" class="board-status"></div>
+        <div class="jack-hand-wrap"><div class="jack-hand-head"><b>أوراقك</b><span id="handHint" class="mini-note"></span></div><div id="hand" class="jack-hand"></div><div id="moveHint" class="move-hint">اختر ورقة لعرض الأحجار القانونية على اللوحة.</div><button id="discardBtn" class="bs-btn discard-action hidden">حرق الورقة — لا توجد حركة قانونية</button></div>
+        <button id="rematchBtn" class="bs-btn gold primary-action hidden" style="margin-top:10px">إعادة المباراة</button>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<div id="privacy" class="privacy"><div class="bs-panel privacy-card"><div class="privacy-symbol">🂠</div><h2 id="privacyName"></h2><p>مرّر الجهاز للاعب صاحب الدور. اضغط عرض الأوراق فقط عندما تصبح الشاشة عنده.</p><button id="revealHand" class="bs-btn gold primary-action">عرض أوراقي</button></div></div>
+<div id="rulesModal" class="bs-modal"><div class="bs-panel bs-settings"><h2>قواعد جاكارو</h2><ul class="board-rules-copy"><li>A: إخراج حجر أو التحرك 1 أو 11.</li><li>K: إخراج حجر أو 13 خطوة.</li><li>4: أربع خطوات للخلف.</li><li>5: تحريك أي حجر صالح خمس خطوات.</li><li>7: تقسيم سبع خطوات على حجرين.</li><li>J: تبديل حجرين صالحين.</li><li>Q: 12 خطوة، وبقية الأرقام بقيمتها.</li><li>الفريق الفائز هو أول فريق يُكمل أحجاره الثمانية.</li></ul><div class="setup-actions"><button id="closeRulesBtn" class="bs-btn gold">تم</button></div></div></div>
+<div id="winnerOverlay" class="winner-overlay"><div class="bs-panel winner-card"><div class="winner-icon">🏆</div><h2 id="winnerName"></h2><p>الفريق أكمل أحجاره الثمانية.</p><div class="winner-actions"><button id="winnerAgainBtn" class="bs-btn gold">مباراة جديدة</button><button id="winnerMenuBtn" class="bs-btn">القائمة</button></div></div></div>
+<div class="bs-toast"></div>
+<script src="assets/js/audio-manager.js"></script>
+<script src="assets/js/platform.js"></script>
+<script type="module" src="assets/js/games/jackaroo-ui.js"></script>
+</body>
+</html>

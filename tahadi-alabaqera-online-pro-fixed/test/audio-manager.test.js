@@ -55,3 +55,12 @@ test('regular effects stay disabled when effects setting is off', async () => {
   api.play('move');
   assert.equal(started.length, 0);
 });
+
+test('premium board-game sound names synthesize effects without extra asset files', async () => {
+  const { api, started } = await loadAudio({ muted: false, effects: true, timer: true, volume: 1 });
+  for (const name of ['ui-click','room-join','room-ready','turn','dice-pickup','dice-roll','dice-land','piece-step','ladder-up','snake-hiss','snake-slide','card-shuffle','card-deal','card-select','card-play','marble-move','capture','swap','safe-home','victory','error']) {
+    const before = started.length;
+    api.play(name);
+    assert.ok(started.length > before, `${name} should produce an effect`);
+  }
+});
