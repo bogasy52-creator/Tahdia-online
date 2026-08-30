@@ -1,0 +1,28 @@
+إصلاح الأونلاين — تحدي العباقرة ONLINE PRO
+
+سبب رسالة Load failed غالبًا:
+- فتح online.html مباشرة من ملف/ZIP؛ أو
+- رفع مجلد public فقط كملفات ثابتة؛ أو
+- عدم نشر Worker + Durable Object.
+
+الأونلاين يحتاج نشر المشروع كاملًا من جذر الحزمة.
+
+الطريقة الصحيحة:
+1) فك ZIP.
+2) افتح Terminal داخل مجلد المشروع الذي يحتوي package.json وwrangler.jsonc.
+3) npm install
+4) npx wrangler login
+5) npx wrangler deploy
+
+بعد النشر اختبر هذا المسار في المتصفح:
+https://wild-scene-db78.bogasy52.workers.dev/api/health
+
+المفترض ترى JSON شبيهًا بـ:
+{"ok":true,"online":true,"service":"tahadi-alabaqera-online"}
+
+إذا ظهر HTML أو 404 بدل JSON، فهذا يعني أن الواجهة منشورة لكن Worker API ليس منشورًا.
+
+مهم:
+- لا ترفع public وحده إذا تريد الغرف.
+- النشر الكامل يرفع Worker والـStatic Assets كوحدة واحدة.
+- نسخة Android المصححة توجه API تلقائيًا إلى Cloudflare بدل appassets.androidplatform.net.
