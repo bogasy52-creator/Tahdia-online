@@ -96,6 +96,25 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (request.method === "GET") {
+      const pageMap = new Map([
+        ["/", "/index.html"],
+        ["/index.html", "/index.html"],
+        ["/local", "/local.html"],
+        ["/local/", "/local.html"],
+        ["/local.html", "/local.html"],
+        ["/online", "/online.html"],
+        ["/online/", "/online.html"],
+        ["/online.html", "/online.html"],
+      ]);
+      const assetPath = pageMap.get(url.pathname);
+      if (assetPath) {
+        const assetUrl = new URL(request.url);
+        assetUrl.pathname = assetPath;
+        return env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+      }
+    }
+
     if (request.method === "GET" && url.pathname === "/api/health") {
       if (!env.ROOMS) {
         return json({ ok: false, online: false, error: "ROOMS binding missing", version: "1.1.0" }, 503);

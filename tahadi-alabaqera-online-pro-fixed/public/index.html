@@ -27,8 +27,8 @@
 <div class="copy"><span class="tag">اختار طريقة اللعب</span><h2>محلي أو<br><span>تحدي أونلاين</span></h2><p>نفس هوية بوسراج، لكن كل وضع مصمم بطريقة مختلفة تناسب أسلوب اللعب.</p></div>
 </div>
 <div class="modes">
-<section class="mode"><div class="ico">🎮</div><h3>لعب محلي</h3><p>فريقان على جهاز واحد، 6 فئات ولوحة نقاط ومساعدات وتشكيل عشوائي.</p><div class="features"><span class="pill">23 فئة</span><span class="pill">207 سؤال</span><span class="pill">أصوات + زوم</span></div><button class="go" onclick="location.href='/local.html'">ابدأ اللعب المحلي</button></section>
-<section class="mode online"><div class="ico">⚔️</div><h3>تحدي أونلاين</h3><p>1 ضد 1 من جوالين مختلفين: غرفة برقم، بازر، إجابات سرية، سرقة ومزامنة لحظية.</p><div class="features"><span class="pill">كود غرفة</span><span class="pill">WebSocket</span><span class="pill">السيرفر هو الحكم</span></div><button class="go" onclick="location.href='/online.html'">ادخل الأونلاين</button></section>
+<section class="mode"><div class="ico">🎮</div><h3>لعب محلي</h3><p>فريقان على جهاز واحد، 6 فئات ولوحة نقاط ومساعدات وتشكيل عشوائي.</p><div class="features"><span class="pill">23 فئة</span><span class="pill">207 سؤال</span><span class="pill">أصوات + زوم</span></div><button class="go" onclick="location.href='/local'">ابدأ اللعب المحلي</button></section>
+<section class="mode online"><div class="ico">⚔️</div><h3>تحدي أونلاين</h3><p>1 ضد 1 من جوالين مختلفين: غرفة برقم، بازر، إجابات سرية، سرقة ومزامنة لحظية.</p><div class="features"><span class="pill">كود غرفة</span><span class="pill">WebSocket</span><span class="pill">السيرفر هو الحكم</span></div><button class="go" onclick="location.href='/online'">ادخل الأونلاين</button></section>
 </div>
 <div class="footer">© 2026 بوسراج — جميع حقوق تصميم اللعبة والمحتوى محفوظة.</div>
 </div>
@@ -36,6 +36,6 @@
 let deferred=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e});
 document.getElementById('install').onclick=async()=>{if(deferred){deferred.prompt();try{await deferred.userChoice}catch{}deferred=null}else{const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);alert(ios?'في Safari: مشاركة ← إضافة إلى الشاشة الرئيسية':'من قائمة المتصفح اختر تثبيت التطبيق أو إضافة إلى الشاشة الرئيسية')}};
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js?v=4').catch(()=>{}));
 </script>
 </body></html>
