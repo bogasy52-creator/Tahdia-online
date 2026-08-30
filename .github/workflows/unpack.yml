@@ -1,7 +1,9 @@
 name: Install Busraj Games Update
 
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/unpack.yml"
 
 permissions:
   contents: write
@@ -11,18 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find and extract update
+      - name: Extract update
         run: |
           ZIP=$(find . -name "Busraj_Games_2.0_READY_TO_UPLOAD.zip" -print -quit)
+          test -n "$ZIP"
           DIR=$(dirname "$ZIP")
-          echo "Update found in: $DIR"
           unzip -o "$ZIP" -d "$DIR"
           rm "$ZIP"
 
-      - name: Save updated game
+      - name: Save update
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
