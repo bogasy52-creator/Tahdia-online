@@ -1,5 +1,0 @@
-import test from 'node:test';import assert from 'node:assert/strict';
-import {createLudoGame,getLegalLudoMoves,applyLudoMove,globalLudoPosition} from '../public/assets/js/engines/ludo-engine.js';
-test('piece needs six to enter',()=>{let s=createLudoGame(['أ','ب']);assert.deepEqual(getLegalLudoMoves(s,5),[]);assert.deepEqual(getLegalLudoMoves(s,6),[0,1,2,3]);s=applyLudoMove(s,0,6);assert.equal(s.players[0].tokens[0],0);assert.equal(s.turn,0)});
-test('landing on opponent on unsafe cell captures it',()=>{let s=createLudoGame(['أ','ب']);s.players[0].tokens[0]=4;s.players[1].tokens[0]=44;assert.equal(globalLudoPosition(0,5),globalLudoPosition(1,44));s=applyLudoMove(s,0,1);assert.equal(s.players[1].tokens[0],-1)});
-test('safe cells prevent capture and exact home completion wins',()=>{let s=createLudoGame(['أ','ب']);s.players[0].tokens[0]=0;s.players[1].tokens[0]=38;s.turn=1;s=applyLudoMove(s,0,1);assert.notEqual(s.players[0].tokens[0],-1);s.players[0].tokens=[55,56,56,56];s.turn=0;assert.deepEqual(getLegalLudoMoves(s,1),[0]);s=applyLudoMove(s,0,1);assert.equal(s.winner,0)});

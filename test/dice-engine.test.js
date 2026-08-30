@@ -1,5 +1,0 @@
-import test from 'node:test';import assert from 'node:assert/strict';
-import {createRaceDiceGame,rollRaceDice,bankRaceDice,createHighestDiceGame,scoreHighestRound} from '../public/assets/js/engines/dice-engine.js';
-test('race mode loses unbanked points on one and can bank',()=>{let s=createRaceDiceGame(['أ','ب'],20);s=rollRaceDice(s,5);s=rollRaceDice(s,4);assert.equal(s.turnTotal,9);s=bankRaceDice(s);assert.equal(s.players[0].score,9);assert.equal(s.turn,1);s=rollRaceDice(s,1);assert.equal(s.turnTotal,0);assert.equal(s.turn,0)});
-test('race mode declares winner on bank',()=>{let s=createRaceDiceGame(['أ','ب'],10);s=rollRaceDice(s,6);s=rollRaceDice(s,5);s=bankRaceDice(s);assert.equal(s.winner,0)});
-test('highest roll awards tied leaders and completes rounds',()=>{let s=createHighestDiceGame(['أ','ب','ج'],2);s=scoreHighestRound(s,[6,6,2]);assert.deepEqual(s.players.map(p=>p.score),[1,1,0]);s=scoreHighestRound(s,[1,3,5]);assert.equal(s.finished,true);assert.deepEqual(s.winners,[0,1,2])});

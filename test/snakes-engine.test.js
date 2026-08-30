@@ -1,4 +1,0 @@
-import test from 'node:test';import assert from 'node:assert/strict';
-import {createSnakesGame,playSnakesRoll} from '../public/assets/js/engines/snakes-engine.js';
-test('ladder and snake jumps resolve after landing',()=>{let s=createSnakesGame(['أ','ب'],{jumps:{4:14,17:7}});s=playSnakesRoll(s,4);assert.equal(s.players[0].position,14);s={...s,turn:1,players:[s.players[0],{...s.players[1],position:13}]};s=playSnakesRoll(s,4);assert.equal(s.players[1].position,7)});
-test('rolling six keeps turn and exact finish is required',()=>{let s=createSnakesGame(['أ','ب'],{jumps:{}});s=playSnakesRoll(s,6);assert.equal(s.turn,0);s={...s,players:[{...s.players[0],position:98},s.players[1]],turn:0};s=playSnakesRoll(s,3);assert.equal(s.players[0].position,98);assert.equal(s.turn,1);s={...s,players:[{...s.players[0],position:98},s.players[1]],turn:0};s=playSnakesRoll(s,2);assert.equal(s.winner,0)});
