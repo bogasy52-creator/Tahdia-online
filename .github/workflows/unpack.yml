@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download files
+      - name: Checkout files
         uses: actions/checkout@v4
 
       - name: Unzip game update
         run: |
           GAME="tahadi-alabaqera-online-pro-fixed"
 
-          ZIP=$(find . -name "*.zip" | head -1)
+          ZIP=$(find . -maxdepth 1 -name "*.zip" | head -1)
 
           if [ -z "$ZIP" ]; then
             echo "No ZIP file found"
@@ -35,19 +35,7 @@ jobs:
 
           rm -f "$ZIP"
 
-      - name: Save update
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add .
-
-          git commit -m "Auto update game" || echo "No changes"
-
-          git push
-          rm -f "$ZIP"
-
-          echo "Game updated successfully"
+          echo "Game extracted successfully"
 
       - name: Commit and push changes
         run: |
@@ -58,4 +46,4 @@ jobs:
 
           git commit -m "Auto update game files" || echo "No changes"
 
-          git push
+          git push origin main
