@@ -1,4 +1,4 @@
-name: Auto Unpack ZIP
+name: Auto Update Game From ZIP
 
 on:
   push:
@@ -11,60 +11,41 @@ permissions:
   contents: write
 
 jobs:
-  unpack:
+  update-game:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract ZIP
+      - name: Extract ZIP to game folder
         run: |
-          PROJECT="tahadi-alabaqera-online-pro-fixed"
+          GAME_FOLDER="tahadi-alabaqera-online-pro-fixed"
+
           ZIP=$(find . -maxdepth 1 -name "*.zip" | head -1)
 
           if [ -z "$ZIP" ]; then
-            echo "No ZIP found"
+            echo "No ZIP file found"
             exit 1
           fi
 
-          mkdir -p "$PROJECT"
+          echo "Updating game from $ZIP"
 
-          unzip -o "$ZIP" -d "$PROJECT"
+          mkdir -p "$GAME_FOLDER"
+
+          unzip -o "$ZIP" -d "$GAME_FOLDER"
 
           rm -f "$ZIP"
 
-      - name: Commit changes
+          echo "Game updated successfully"
+
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add .
 
-          git commit -m "Auto extract ZIP" || echo "No changes to commit"
+          git commit -m "Auto update game files" || echo "No changes"
 
-          git push          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add .
-          git commit -m "Update project files" || exit 0
-          git push          unzip -o "$ZIP" -d "$PROJECT_DIR"
-
-          rm -f "$ZIP"
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add .
-
-          git commit -m "Auto update project files" || echo "No changes"
-
-          git push        run: |
-          git config user.name "github-actions"
-          git config user.email "41898282+github-actions@users.noreply.github.com"
-
-          git add .
-          git commit -m "Auto extract ZIP" || exit 0
           git push
