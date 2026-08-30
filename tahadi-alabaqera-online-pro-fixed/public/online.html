@@ -97,7 +97,7 @@ install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>'
 let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false;
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
-const DEFAULT_CLOUD_API='https://wild-scene-db78.bogasy52.workers.dev';
+const DEFAULT_CLOUD_API='https://tahdia-online.bogasy52.workers.dev';
 let activeApiOrigin='';
 let backendProbe=null;
 
@@ -154,13 +154,13 @@ async function createRoom(){
   if(!ct.includes('application/json'))throw new Error('السيرفر الحالي لا يحتوي محرك الغرف. انشر المشروع كاملًا كـ Worker وليس ملفات الواجهة فقط.');
   const d=await r.json();if(!r.ok)throw new Error(d.error||('تعذر إنشاء الغرفة — HTTP '+r.status));
   store('online_name',name);store('hostKey:'+d.code,d.hostKey);
-  const next=new URL('online.html',location.href);next.searchParams.set('room',d.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)next.searchParams.set('api',activeApiOrigin);location.href=next.href;
+  const next=new URL('/online',location.origin);next.searchParams.set('room',d.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)next.searchParams.set('api',activeApiOrigin);location.href=next.href;
  }catch(e){setNet('bad','فشل إنشاء الغرفة');toast(e?.message||'تعذر الوصول لسيرفر الأونلاين')}finally{$('#createBtn').disabled=false}
 }
 function joinRoom(){
  const code=$('#joinCode').value.replace(/\D/g,'').slice(0,6),name=$('#joinName').value.trim();
  if(code.length!==6)return toast('رقم الغرفة 6 أرقام');if(!name)return toast('اكتب اسمك');
- store('online_name',name);const next=new URL('online.html',location.href);next.searchParams.set('room',code);const api=qs.get('api')||activeApiOrigin;if(api&&api!==location.origin)next.searchParams.set('api',api);location.href=next.href;
+ store('online_name',name);const next=new URL('/online',location.origin);next.searchParams.set('room',code);const api=qs.get('api')||activeApiOrigin;if(api&&api!==location.origin)next.searchParams.set('api',api);location.href=next.href;
 }
 $('#createBtn').onclick=createRoom;$('#joinBtn').onclick=joinRoom;
 $('#joinCode').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));

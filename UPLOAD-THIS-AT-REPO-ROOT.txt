@@ -1,0 +1,3 @@
+Busraj Games 2.1 fixed package.
+Project folder included as: tahadi-alabaqera-online-pro-fixed/
+Fixes: canonical Cloudflare routes, online worker URL, PWA cache refresh, explicit html_handling.

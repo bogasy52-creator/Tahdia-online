@@ -37,7 +37,10 @@ async function requireTarget(target, source, raw) {
   if (checked.has(key)) return;
   checked.add(key);
   try { await access(target); }
-  catch { missing.push(`${relative(root, source)} -> ${raw}`); }
+  catch {
+    try { await access(`${target}.html`); }
+    catch { missing.push(`${relative(root, source)} -> ${raw}`); }
+  }
 }
 
 const files = await walk(publicDir);

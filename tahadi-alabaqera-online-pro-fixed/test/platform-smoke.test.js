@@ -22,7 +22,7 @@ test('expanded platform assets exist', async () => {
 
 test('home links every game and both quiz modes', async () => {
   const html = await readFile(join(publicDir, 'index.html'), 'utf8');
-  for (const href of ['local.html', 'online.html', 'snakes.html', 'dice.html', 'zahra.html', 'jackaroo.html']) {
+  for (const href of ['/local', '/online', '/snakes', '/dice', '/zahra', '/jackaroo']) {
     assert.match(html, new RegExp(`href=["']${href.replace('.', '\\.')}`));
   }
 });
@@ -37,11 +37,11 @@ test('quiz pages load shared audio manager', async () => {
 test('service worker pre-caches the complete game hub shell', async () => {
   const sw = await readFile(join(publicDir, 'service-worker.js'), 'utf8');
   for (const asset of [
-    './snakes.html', './dice.html', './zahra.html', './jackaroo.html',
-    './assets/css/platform.css', './assets/css/game-kit.css',
-    './assets/js/audio-manager.js', './assets/js/platform.js',
-    './assets/js/engines/snakes-engine.js', './assets/js/engines/dice-engine.js',
-    './assets/js/engines/ludo-engine.js', './assets/js/engines/jackaroo-engine.js',
+    '/snakes', '/dice', '/zahra', '/jackaroo',
+    '/assets/css/platform.css', '/assets/css/game-kit.css',
+    '/assets/js/audio-manager.js', '/assets/js/platform.js',
+    '/assets/js/engines/snakes-engine.js', '/assets/js/engines/dice-engine.js',
+    '/assets/js/engines/ludo-engine.js', '/assets/js/engines/jackaroo-engine.js',
   ]) {
     assert.ok(sw.includes(asset), `service worker must cache ${asset}`);
   }
