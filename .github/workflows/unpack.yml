@@ -17,8 +17,7 @@ jobs:
 
       - name: Extract update
         run: |
-          ZIP=$(find . -name "Busraj_Games_2.0_READY_TO_UPLOAD.zip" -print -quit)
-          test -n "$ZIP"
+          ZIP=$(find . -name "Busraj_Games_2.1_FIXED_ROOT_UPLOAD.zip" -print -quit)
           DIR=$(dirname "$ZIP")
           unzip -o "$ZIP" -d "$DIR"
           rm "$ZIP"
