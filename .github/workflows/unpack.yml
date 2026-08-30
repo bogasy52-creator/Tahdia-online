@@ -1,31 +1,45 @@
-name: Busraj_Games_2.1_FIXED_ROOT_UPLOAD.zip
+name: Unpack ZIP Project
+
 on:
   push:
     paths:
-      - ".github/workflows/unpack.yml"
+      - "*.zip"
 
 permissions:
   contents: write
 
 jobs:
-  update:
+  unpack:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Extract update
+      - name: Find ZIP file
+        id: zip
         run: |
-          ZIP=$(find . -name "Busraj_Games_2.1_FIXED_ROOT_UPLOAD.zip" -print -quit)
-          DIR=$(dirname "$ZIP")
-          unzip -o "$ZIP" -d "$DIR"
-          rm "$ZIP"
+          ZIP=$(ls *.zip | head -n 1)
+          echo "zip=$ZIP" >> $GITHUB_OUTPUT
 
-      - name: Save update
+      - name: Extract ZIP
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "Deploy Busraj Games 2.0"
+          mkdir -p extracted
+          unzip -o "${{ steps.zip.outputs.zip }}" -d extracted
+
+      - name: Move files to root
+        run: |
+          cp -r extracted/* .
+          rm -rf extracted
+          rm -f "${{ steps.zip.outputs.zip }}"
+
+      - name: Commit unpacked files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "Auto unpack ZIP project" || echo "No changes"
           git push
