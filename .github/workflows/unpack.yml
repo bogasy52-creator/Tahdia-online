@@ -1,40 +1,50 @@
-name: Auto Update Game From ZIP
+name: Auto Update Game
 
 on:
   push:
     branches:
       - main
     paths:
-      - "*.zip"
+      - "**.zip"
 
 permissions:
   contents: write
 
 jobs:
-  update-game:
+  update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Download files
         uses: actions/checkout@v4
 
-      - name: Extract ZIP to game folder
+      - name: Unzip game update
         run: |
-          GAME_FOLDER="tahadi-alabaqera-online-pro-fixed"
+          GAME="tahadi-alabaqera-online-pro-fixed"
 
-          ZIP=$(find . -maxdepth 1 -name "*.zip" | head -1)
+          ZIP=$(find . -name "*.zip" | head -1)
 
           if [ -z "$ZIP" ]; then
             echo "No ZIP file found"
             exit 1
           fi
 
-          echo "Updating game from $ZIP"
+          echo "Updating game..."
 
-          mkdir -p "$GAME_FOLDER"
+          unzip -o "$ZIP" -d "$GAME"
 
-          unzip -o "$ZIP" -d "$GAME_FOLDER"
+          rm -f "$ZIP"
 
+      - name: Save update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          git commit -m "Auto update game" || echo "No changes"
+
+          git push
           rm -f "$ZIP"
 
           echo "Game updated successfully"
