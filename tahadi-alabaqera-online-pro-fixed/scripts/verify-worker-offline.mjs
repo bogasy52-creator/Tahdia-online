@@ -43,13 +43,14 @@ try {
   let body = await response.json();
   assert.equal(body.ok, true);
   assert.equal(body.online, true);
-  assert.equal(body.version, '3.0.1');
+  assert.equal(body.version, '3.1.0');
   assert.equal(body.socialOnline, true);
 
   response = await mod.default.fetch(new Request('https://game.test/api/catalog'), env);
   assert.equal(response.status, 200);
   body = await response.json();
-  assert.equal(body.categories.length, 23);
+  assert.equal(body.categories.length, 24);
+  assert.ok(body.categories.some((category) => category.id === 'memory' && category.name.includes('الذاكرة')));
 
   response = await mod.default.fetch(new Request('https://game.test/index.html'), env);
   assert.equal(await response.text(), 'asset:/index.html');

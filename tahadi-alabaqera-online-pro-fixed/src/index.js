@@ -234,9 +234,9 @@ export default {
       const boardOnline = Boolean(env.BOARD_ROOMS);
       const socialOnline = Boolean(env.SOCIAL_USERS || env.BOARD_ROOMS);
       if (!quizOnline || !boardOnline) {
-        return json({ ok: false, online: false, quizOnline, boardOnline, socialOnline, error: "Durable Object binding missing", version: "3.0.1" }, 503);
+        return json({ ok: false, online: false, quizOnline, boardOnline, socialOnline, error: "Durable Object binding missing", version: "3.1.0" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, socialOnline, service: "tahadi-alabaqera-online", version: "3.0.1" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, socialOnline, service: "tahadi-alabaqera-online", version: "3.1.0" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
@@ -727,6 +727,7 @@ export class GameRoom extends DurableObject {
         media: c.media || null,
         deadline: c.deadline,
         startedAt: c.startedAt,
+        answerOpensAt: c.answerOpensAt || c.startedAt,
         buzzWinner: c.buzzWinner,
         stealPlayer: c.stealPlayer,
         answeredPlayers: Object.keys(c.answers || {}),
@@ -779,6 +780,9 @@ export class GameRoom extends DurableObject {
     const { options, correctIndex } = buildChoices(cat, q);
     const now = Date.now();
     const isSecret = plan.mode === "secret";
+    const previewMs = q.media === "memory" ? Math.min(8000, Math.max(2500, Number(q.memory?.previewMs) || 4500)) : 0;
+    const answerOpensAt = now + previewMs;
+    const responseMs = isSecret ? 30000 : 15000;
     this.room.current = {
       mode: plan.mode,
       phase: isSecret ? "secret" : "buzzer",
@@ -791,12 +795,14 @@ export class GameRoom extends DurableObject {
         focusY: Number.isFinite(q.focusY) ? q.focusY : 50,
         replays: Number.isInteger(q.replays) ? q.replays : (q.media === "sound" ? 2 : null),
         credit: q.credit || "",
+        memory: q.media === "memory" ? (q.memory || null) : null,
       } : null,
       options,
       correctIndex,
       correctAnswer: q.a,
-      deadline: now + (isSecret ? 30000 : 15000),
+      deadline: answerOpensAt + responseMs,
       startedAt: now,
+      answerOpensAt,
       answers: {},
       buzzWinner: null,
       stealPlayer: null,
@@ -821,6 +827,7 @@ export class GameRoom extends DurableObject {
     if (this.room.status !== "playing" || !c || !this.allowedToAnswer(player.id)) return;
     if (!Number.isInteger(choice) || choice < 0 || choice >= c.options.length) return;
     const now = Date.now();
+    if (now < (c.answerOpensAt || c.startedAt || 0)) return;
     if (now > c.deadline + 1200) return;
 
     c.answers[player.id] = { choice, at: now, bonus: speedBonus(c.deadline, now) };
@@ -857,6 +864,7 @@ export class GameRoom extends DurableObject {
   async handleBuzz(player) {
     const c = this.room.current;
     if (this.room.status !== "playing" || !c || c.mode !== "buzzer" || c.phase !== "buzzer") return;
+    if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
     if (Date.now() > c.deadline) return;
     c.buzzWinner = player.id;
     c.phase = "buzzer_answer";
@@ -868,6 +876,7 @@ export class GameRoom extends DurableObject {
   async usePower(player, power) {
     const c = this.room.current;
     if (this.room.status !== "playing" || !c) return;
+    if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
     if (!["double", "time", "block"].includes(power)) return;
     if (!player.powers[power]) return;
     if (c.blocked?.[player.id]) return;

@@ -7,6 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="assets/css/platform.css">
+<link rel="stylesheet" href="assets/css/quiz-luxury.css">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="تحدي العباقرة">
 <title>تحدي العباقرة — لعب محلي</title>
@@ -25,59 +26,12 @@
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>تحدي العباقرة</h1><div class="muted">إصدار بوسراج • لعبة فئات وأسئلة</div></div></div><div class="topActions"><button class="ibtn" onclick="location.href=\'./\'" aria-label="العودة">⌂</button><button id="installTop" class="ibtn installBtnTop" type="button"><span>⬇</span><span class="installText">تثبيت</span></button><button class="ibtn" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button id="sound" class="ibtn" data-audio-toggle aria-label="كتم الصوت">🔊</button></div></div>
 
 <section id="home">
-<div class="hero">
-  <svg viewBox="0 0 1200 420" role="img" aria-label="رسمة كرتونية خاصة بلعبة تحدي العباقرة">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#261746"/><stop offset="1" stop-color="#0d1930"/></linearGradient>
-      <linearGradient id="brain" x1="0" x2="1"><stop stop-color="#b78cff"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
-      <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#ffe394"/><stop offset="1" stop-color="#e4a932"/></linearGradient>
-      <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity=".35"/></filter>
-    </defs>
-    <rect width="1200" height="420" fill="url(#bg)"/>
-    <circle cx="1020" cy="65" r="120" fill="#6d28d9" opacity=".16"/>
-    <circle cx="780" cy="375" r="160" fill="#0891b2" opacity=".10"/>
-    <g opacity=".25" stroke="#ffffff">
-      <path d="M690 55h150M735 25v80"/><circle cx="930" cy="160" r="18"/><path d="M900 160h60M930 130v60"/>
-    </g>
-    <!-- Game board -->
-    <g transform="translate(610 120)" filter="url(#shadow)">
-      <rect x="0" y="0" width="430" height="230" rx="26" fill="#11172d" stroke="#7357c7" stroke-width="4"/>
-      <g fill="#201d42" stroke="#4d4386" stroke-width="2">
-        <rect x="22" y="25" width="115" height="42" rx="12"/><rect x="157" y="25" width="115" height="42" rx="12"/><rect x="292" y="25" width="115" height="42" rx="12"/>
-        <rect x="22" y="83" width="115" height="50" rx="13"/><rect x="157" y="83" width="115" height="50" rx="13"/><rect x="292" y="83" width="115" height="50" rx="13"/>
-        <rect x="22" y="150" width="115" height="50" rx="13"/><rect x="157" y="150" width="115" height="50" rx="13"/><rect x="292" y="150" width="115" height="50" rx="13"/>
-      </g>
-      <g font-family="Arial" font-weight="bold" text-anchor="middle" fill="#f5c663">
-        <text x="79" y="116" font-size="25">100</text><text x="214" y="116" font-size="25">200</text><text x="349" y="116" font-size="25">300</text>
-        <text x="79" y="184" font-size="25">100</text><text x="214" y="184" font-size="25">200</text><text x="349" y="184" font-size="25">300</text>
-      </g>
-    </g>
-    <!-- Brain mascot -->
-    <g transform="translate(245 95)" filter="url(#shadow)">
-      <path d="M85 95c-36-7-53-48-29-76 17-20 43-20 60-8 19-27 60-23 75 5 27-14 61 6 61 38 26 8 38 39 22 62 17 26 0 62-32 66-8 32-48 45-73 24-24 24-67 11-73-23-31 0-51-31-37-58-15-12-13-36 5-48 9 11 12 13 21 18z" fill="url(#brain)" stroke="#e3d7ff" stroke-width="4"/>
-      <g fill="none" stroke="#5a33ac" stroke-width="6" stroke-linecap="round">
-        <path d="M112 24v155M157 18v165M91 65h42M137 103h44M93 142h38M151 65h47M153 144h45"/>
-      </g>
-      <!-- eyes -->
-      <ellipse cx="119" cy="110" rx="12" ry="15" fill="#fff"/><ellipse cx="181" cy="110" rx="12" ry="15" fill="#fff"/>
-      <circle cx="122" cy="113" r="6" fill="#17132a"/><circle cx="178" cy="113" r="6" fill="#17132a"/>
-      <path d="M124 146q27 23 54 0" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-      <!-- crown -->
-      <path d="M95 -1l25 20 28-30 28 30 28-20-8 42H103z" fill="url(#gold)" stroke="#fff0be" stroke-width="3"/>
-      <!-- arms -->
-      <path d="M53 126q-42 4-60 34" fill="none" stroke="#b78cff" stroke-width="18" stroke-linecap="round"/>
-      <path d="M247 126q45 5 63 36" fill="none" stroke="#8c5cff" stroke-width="18" stroke-linecap="round"/>
-      <circle cx="-12" cy="166" r="17" fill="#f0b94a"/><circle cx="316" cy="168" r="17" fill="#f0b94a"/>
-    </g>
-    <!-- lightning / question marks -->
-    <path d="M520 80l35-42-5 35h27l-42 49 9-42z" fill="#f0b94a"/>
-    <text x="1080" y="305" fill="#d8c5ff" font-size="80" font-family="Arial" font-weight="bold">؟</text>
-    <text x="540" y="330" fill="#63def0" font-size="56" font-family="Arial" font-weight="bold">؟</text>
-  </svg>
-  <div class="heroCopy"><span class="eyebrow">6 فئات • تشكيلة متجددة</span><h2>اختاروا الفئات<br><span>وابدأوا التحدي</span></h2><p>لوحة أسئلة مباشرة، بدون اختيارات مربكة. اكشفوا الإجابة ثم أعطوا النقاط للفريق الصحيح.</p></div>
+<div class="quizHero">
+  <div class="quizHeroCopy"><span class="eyebrow">🧠 تحدي العباقرة • بوسراج</span><h2>اختاروا فئاتكم<span>والتحدي علينا.</span></h2><p>واجهة أوضح، فئات حيوية، تحديات صوت وصورة، وباقة ذاكرة جديدة تختبر التركيز قبل أن تختفي المعلومة.</p><div class="quizHeroStats"><span>🎯 6 فئات في المباراة</span><span>🎲 اختيار عشوائي</span><span>🧠 ذاكرة جديدة</span><span>🔊 صوت وصورة</span></div></div>
+  <div class="quizHeroVisual" aria-hidden="true"><div class="quizConsole"><div class="quizConsoleScreen"><div class="quizConsoleHead"><span>BUSRAJ QUIZ</span><span>● LIVE</span></div><div class="quizBrain">🧠</div><div class="quizMiniGrid"><i>100</i><i>200</i><i>300</i><i>🎧</i><i>👁</i><i>🧩</i></div></div></div><div class="quizMemoryBadge">NEW • باقة الذاكرة</div></div>
 </div>
 
-<div class="setup">
+<div class="setup quizSetup">
   <div class="card">
     <div class="titleRow"><div><b>إعداد المباراة</b><div class="muted">فريقان + مدة السؤال.</div></div></div>
     <div class="teamSetup">
@@ -88,8 +42,8 @@
     <button id="start" class="btn gold" style="width:100%;margin-top:10px">ابدأ المباراة</button>
   </div>
   <div class="card">
-    <div class="titleRow"><div><b>اختر 6 فئات</b><div class="muted">كل فئة = بنك 9 أسئلة، ويُختار 6 عشوائيًا.</div></div><b id="selectedCount" style="color:#f0c36c">0 / 6</b></div>
-    <div id="cats" class="catGrid"></div><div class="shapeBox"><div><b>تشكيل الأسئلة العشوائي</b><div class="muted">كل فئة لديها 9 أسئلة؛ المباراة تسحب عشوائيًا 6 منها: سؤالان 100، سؤالان 200، سؤالان 300.</div><div class="installHint">التشكيلة تتغير تلقائيًا عند فتح اللعبة.</div></div><button id="shapeBtn" class="btn sec">⤨ تشكيل جديد</button><span id="shapeId" class="shapeId"></span></div>
+    <div class="category-toolbar"><div><b>اختر 6 فئات</b><div class="muted">اختر يدويًا أو خل بوسراج يكوّن لك تشكيلة متنوعة.</div></div><div class="category-toolbar-actions"><button id="randomCatsLocal" class="btn sec random-cat-btn">🎲 اختر لي 6 فئات</button><b id="selectedCount" style="color:#f0c36c;align-self:center">0 / 6</b></div></div>
+    <div id="cats" class="catGrid"></div><div class="shapeBox"><div><b>تشكيل الأسئلة</b><div class="muted">لكل فئة بنك تحديات متوازن؛ المباراة تسحب سؤالين من كل مستوى 100 / 200 / 300.</div><div class="installHint">يمكنك إنشاء تشكيلة جديدة قبل البداية.</div></div><button id="shapeBtn" class="btn sec">⤨ تشكيل جديد</button><span id="shapeId" class="shapeId"></span></div>
   </div>
 </div>
 </section>
@@ -171,10 +125,11 @@ double:'<path d="M5 7h7v7H5zM12 10h7v7h-7z"/>',
 extra:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>',
 pass:'<path d="M4 8h12M13 5l3 3-3 3M20 16H8M11 13l-3 3 3 3"/>',
 shuffle:'<path d="M4 7h3c5 0 5 10 10 10h3M17 14l3 3-3 3M4 17h3c2 0 3-2 4-4M14 7c1 0 2 0 3 0h3M17 4l3 3-3 3"/>',
-install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>'
+install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>',
+memory:'<path d="M9 4a3 3 0 0 0-5 2 3 3 0 0 0 1 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V6a3 3 0 0 0-3-2zM15 4a3 3 0 0 1 5 2 3 3 0 0 1-1 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V6a3 3 0 0 1 3-2zM9 8h3M12 12H8M12 15h3"/>'
 };return '<span class="catIcon"><svg viewBox="0 0 24 24">'+p[k]+'</svg></span>'}
-function renderCats(){const box=$('#cats');box.innerHTML='';DATA.forEach(c=>{const b=document.createElement('button');b.className='catCard '+(selected.includes(c.id)?'active':'');b.innerHTML='<div class="catArt">'+icon(c.icon)+'</div><div class="catText"><b>'+c.name+'</b><span>'+c.desc+'</span></div>';b.onclick=()=>{const i=selected.indexOf(c.id);if(i>=0)selected.splice(i,1);else{if(selected.length>=6)return toast('اختر 6 فئات فقط');selected.push(c.id)}$('#selectedCount').textContent=selected.length+' / 6';renderCats()};box.appendChild(b)})}
-renderCats();formQuestions(false);$('#shapeBtn').onclick=()=>formQuestions(true);
+const CAT_COLORS=['#f4c76d','#a78bfa','#22d3ee','#34d399','#fb7185','#60a5fa'];function renderCats(){const box=$('#cats');box.innerHTML='';DATA.forEach((c,idx)=>{const b=document.createElement('button');b.className='catCard '+(selected.includes(c.id)?'active':'');b.dataset.cat=c.id;b.style.setProperty('--cat-accent',c.id==='memory'?'#22d3ee':CAT_COLORS[idx%CAT_COLORS.length]);b.innerHTML='<div class="catArt">'+icon(c.icon)+'</div><div class="catText"><b>'+c.name+'</b><span>'+c.desc+'</span></div>';b.onclick=()=>{const i=selected.indexOf(c.id);if(i>=0)selected.splice(i,1);else{if(selected.length>=6)return toast('اختر 6 فئات فقط');selected.push(c.id)}$('#selectedCount').textContent=selected.length+' / 6';renderCats()};box.appendChild(b)})}
+renderCats();formQuestions(false);$('#shapeBtn').onclick=()=>formQuestions(true);$('#randomCatsLocal').onclick=()=>{selected=shuffled(DATA.map(c=>c.id)).slice(0,6);$('#selectedCount').textContent='6 / 6';renderCats();formQuestions(false);toast('🎲 تم اختيار 6 فئات عشوائيًا')};
 function renderScores(){$('#nameA').textContent=teams[0].name;$('#nameB').textContent=teams[1].name;$('#scoreA').textContent=teams[0].score;$('#scoreB').textContent=teams[1].score;$('#boxA').classList.toggle('turn',turn===0);$('#boxB').classList.toggle('turn',turn===1);renderAssists()}
 function renderAssists(){[0,1].forEach(i=>{const box=$('#assist'+(i?'B':'A'));box.innerHTML='';[['double','دبل','double'],['extra','+15 ثانية','extra'],['pass','تمرير','pass']].forEach(([key,label,ico])=>{const b=document.createElement('button');b.className='assist '+(!teams[i][key]?'used':'');b.innerHTML=icon(ico)+'<span>'+label+'</span>';b.disabled=!teams[i][key];b.onclick=()=>useAssist(i,key);box.appendChild(b)})})}
 function useAssist(i,key){if(i!==turn)return toast('المساعدة للفريق صاحب الدور فقط');if(!current)return toast('اختر سؤالًا أولًا');if(!teams[i][key])return;if(key==='double'){doubleArmed=true;teams[i].double=false;toast('دبل النقاط مفعّل لهذا السؤال')}else if(key==='extra'){left+=15;total+=15;teams[i].extra=false;$('#timer').textContent=left;toast('+15 ثانية')}else if(key==='pass'){teams[i].pass=false;turn=1-turn;$('#qTurn').textContent='السؤال انتقل إلى '+teams[turn].name;renderScores();toast('تم تمرير السؤال')}renderAssists()}
@@ -185,6 +140,25 @@ async function drawWaveform(src,canvas){
   const paint=(bars)=>{ctx.clearRect(0,0,W,H);ctx.fillStyle='#070a13';ctx.fillRect(0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,'#22d3ee');grad.addColorStop(.5,'#9b7cff');grad.addColorStop(1,'#d946ef');ctx.fillStyle=grad;const bw=W/bars.length;bars.forEach((v,i)=>{const h=Math.max(3,v*(H*.78));ctx.globalAlpha=.45+.55*v;ctx.fillRect(i*bw+(bw*.19),(H-h)/2,Math.max(1,bw*.62),h)});ctx.globalAlpha=1};
   try{const res=await fetch(src);const buf=await res.arrayBuffer();const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw 0;const ac=new AC();const dec=await ac.decodeAudioData(buf.slice(0));const ch=dec.getChannelData(0),N=76,step=Math.max(1,Math.floor(ch.length/N)),bars=[];for(let i=0;i<N;i++){let peak=0;const a=i*step,b=Math.min(ch.length,a+step);for(let j=a;j<b;j+=Math.max(1,Math.floor(step/80)))peak=Math.max(peak,Math.abs(ch[j]));bars.push(Math.min(1,peak*1.7))}paint(bars);ac.close?.()}catch{paint(Array.from({length:76},(_,i)=>.18+.18*Math.sin(i*.7)**2))}
 }
+
+function memoryPreviewMs(memory){return Math.min(8000,Math.max(2500,Number(memory?.previewMs)||4500))}
+function mountMemoryChallenge(memory,area,opts={}){
+  const mem=memory||{},preview=memoryPreviewMs(mem),panel=document.createElement('div');panel.className='memoryPanel';
+  const head=document.createElement('div');head.className='memoryHeader';const title=document.createElement('b');title.textContent='🧠 '+(mem.caption||'احفظ ما يظهر');const count=document.createElement('span');count.className='memoryCountdown';head.append(title,count);
+  const stage=document.createElement('div');stage.className='memoryStage';
+  const seq=(items,extra='')=>{const d=document.createElement('div');d.className='memorySequence '+extra;(items||[]).forEach(x=>{const s=document.createElement('span');s.textContent=typeof x==='string'?x:(x?.label||'');d.appendChild(s)});stage.appendChild(d)};
+  if(mem.kind==='digits'){const d=document.createElement('div');d.className='memoryDigits';d.textContent=mem.value||'';stage.appendChild(d)}
+  else if(mem.kind==='words')seq(mem.items,'memoryWords');
+  else if(mem.kind==='colors'){const d=document.createElement('div');d.className='memorySequence memoryColors';(mem.items||[]).forEach(x=>{const s=document.createElement('span');s.style.background=x.color||'#777';s.title=x.label||'';d.appendChild(s)});stage.appendChild(d)}
+  else if(mem.kind==='grid'){const d=document.createElement('div');d.className='memoryGrid';d.style.gridTemplateColumns='repeat('+Math.max(2,Math.min(4,Number(mem.cols)||3))+',1fr)';(mem.items||[]).forEach(x=>{const s=document.createElement('span');s.textContent=x;d.appendChild(s)});stage.appendChild(d)}
+  else if(mem.kind==='photo'){const im=document.createElement('img');im.className='memoryPhoto';im.src=mem.src||'';im.alt='صورة تحدي الذاكرة';stage.appendChild(im)}
+  else seq(mem.items,'');
+  const note=document.createElement('div');note.className='memoryReadyNote';note.textContent='بعد اختفاء المحتوى يبدأ وقت الإجابة';panel.append(head,stage,note);area.appendChild(panel);
+  if(opts.revealed){panel.classList.add('revealed');count.remove();note.textContent='المحتوى الذي ظهر في تحدي الذاكرة';return 0}
+  const started=Date.now(),end=opts.endAt||started+preview;
+  const tick=()=>{const ms=Math.max(0,end-Date.now());count.textContent='احفظ • '+Math.ceil(ms/1000)+'ث';if(ms<=0){stage.classList.add('memoryHidden');const after=document.createElement('div');after.className='memoryAfter';after.innerHTML='<div><strong>اختفى المحتوى 👀</strong><span>جاوب الآن من ذاكرتك</span></div>';stage.replaceWith(after);count.textContent='وقت الإجابة';note.textContent='لا يمكن إعادة عرض التحدي';opts.onEnd?.();return}requestAnimationFrame(tick)};tick();return Math.max(0,end-Date.now())
+}
+
 function renderQuestionMedia(q){
   stopQuestionAudio();const area=$('#mediaArea');area.innerHTML='';area._zoomImg=null;
   if(q.media==='sound'){
@@ -203,10 +177,13 @@ function renderQuestionMedia(q){
     let hinted=false,z=Number(q.zoom)||5;img.style.transform='scale('+z+')';frame.append(img,stage);
     const tools=document.createElement('div');tools.className='zoomTools';const less=document.createElement('button');less.className='assist';less.innerHTML=icon('zoom')+' تلميح بصري واحد';less.onclick=()=>{if(hinted)return;hinted=true;z=Math.max(1,Number(q.hintZoom)||Math.max(1,z*.62));img.style.transform='scale('+z+')';less.disabled=true;less.classList.add('used');stage.textContent='تلميح بصري • صورة حقيقية'};tools.appendChild(less);
     const cr=document.createElement('div');cr.className='zoomCredit';cr.textContent=q.credit||'صورة فوتوغرافية حقيقية محفوظة محليًا داخل اللعبة';panel.append(frame,tools,cr);area.appendChild(panel);area._zoomImg=img;
+  }else if(q.media==='memory'){
+    return mountMemoryChallenge(q.memory,area);
   }
+  return 0;
 }
 
-function openQuestion(cat,q,tile){current={cat,q,tile};doubleArmed=false;renderQuestionMedia(q);$('#qCat').textContent=cat.name;$('#qPoints').textContent=q.v+' نقطة';$('#qTurn').textContent='الدور: '+teams[turn].name;$('#question').textContent=q.q;$('#answer').textContent=q.a;$('#answerBox').classList.add('hidden');$('#awardArea').classList.add('hidden');$('#questionTools').classList.remove('hidden');$('#modal').classList.remove('hidden');$('#awardA').textContent='النقاط لـ '+teams[0].name;$('#awardB').textContent='النقاط لـ '+teams[1].name;sfx('round');startTimer()}
+function openQuestion(cat,q,tile){current={cat,q,tile};doubleArmed=false;const previewMs=renderQuestionMedia(q)||0;$('#qCat').textContent=cat.name;$('#qPoints').textContent=q.v+' نقطة';$('#qTurn').textContent='الدور: '+teams[turn].name;$('#question').textContent=previewMs?'👀 احفظ ما يظهر أمامك…':q.q;$('#answer').textContent=q.a;$('#answerBox').classList.add('hidden');$('#awardArea').classList.add('hidden');$('#questionTools').classList.remove('hidden');$('#modal').classList.remove('hidden');$('#awardA').textContent='النقاط لـ '+teams[0].name;$('#awardB').textContent='النقاط لـ '+teams[1].name;sfx('round');if(previewMs){stopTimer();$('#timer').textContent='احفظ';$('#bar').style.width='100%';$('#pauseBtn').disabled=true;$('#revealBtn').disabled=true;setTimeout(()=>{if(current?.q!==q)return;$('#question').textContent=q.q;$('#pauseBtn').disabled=false;$('#revealBtn').disabled=false;startTimer();sfx('round')},previewMs+80)}else startTimer()}
 function startTimer(){stopTimer();total=left=Number($('#time').value)||45;paused=false;$('#timer').textContent=left;$('#bar').style.width='100%';$('#pauseBtn').textContent='إيقاف الوقت';BS_AUDIO?.timerTick?.(left);timerId=setInterval(tick,1000)}
 function tick(){left--;$('#timer').textContent=Math.max(0,left);$('#bar').style.width=(Math.max(0,left)/total*100)+'%';if(left>0)BS_AUDIO?.timerTick?.(left);if(left<=0){stopTimer();$('#pauseBtn').textContent='انتهى الوقت';BS_AUDIO?.timerEnd?.();sfx('wrong')}}
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}

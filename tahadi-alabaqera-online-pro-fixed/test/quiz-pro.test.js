@@ -9,12 +9,12 @@ const pub = join(root,'public');
 const byId = id => CATEGORIES.find(c=>c.id===id);
 
 test('quiz bank is expanded, balanced, and uniquely identified', () => {
-  assert.equal(CATEGORIES.length,23);
+  assert.equal(CATEGORIES.length,24);
   const total=CATEGORIES.reduce((n,c)=>n+c.questions.length,0);
   assert.ok(total>=680,`expected >=680 challenges, got ${total}`);
   const ids=new Set();
   for(const c of CATEGORIES){
-    if(!['sounds','zoom'].includes(c.id)) assert.ok(c.questions.length>=27,`${c.id} too small`);
+    if(!['sounds','zoom','memory'].includes(c.id)) assert.ok(c.questions.length>=27,`${c.id} too small`);
     for(const q of c.questions){
       assert.ok(q.id,`${c.id} missing question id`);
       assert.ok(!ids.has(q.id),`duplicate id ${q.id}`);ids.add(q.id);
@@ -69,7 +69,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v16/);assert.match(sw,/busraj-quiz-media-v3/);
+  assert.match(sw,/busraj-games-v18/);assert.match(sw,/busraj-quiz-media-v3/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });
