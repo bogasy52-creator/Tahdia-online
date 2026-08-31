@@ -1,14 +1,19 @@
 {
   "name": "busraj-games",
-  "version": "2.2.0",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "wrangler deploy --dry-run",
+    "check": "npm run check:cloudflare",
     "test": "node --test test/*.test.js",
-    "verify": "npm test && node scripts/verify-static.mjs && npm run check"
+    "verify": "npm run sync:quiz && npm test && npm run verify:static && npm run verify:worker",
+    "sync:quiz": "node scripts/sync-quiz-data.mjs",
+    "verify:static": "node scripts/verify-static.mjs",
+    "verify:worker": "node scripts/verify-worker-offline.mjs",
+    "check:cloudflare": "wrangler deploy --dry-run",
+    "verify:cloudflare": "npm run verify && npm run check:cloudflare"
   },
   "devDependencies": {
     "wrangler": "4.127.1"

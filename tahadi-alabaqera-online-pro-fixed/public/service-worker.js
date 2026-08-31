@@ -1,4 +1,5 @@
-const CACHE_NAME = 'busraj-games-v10';
+const CACHE_NAME = 'busraj-games-v13';
+const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -16,7 +17,9 @@ const APP_SHELL = [
   '/assets/css/game-kit.css',
   '/assets/css/board-premium.css',
   '/assets/css/luxury-game-ui.css',
+  '/assets/css/mobile-game.css',
   '/assets/js/audio-manager.js',
+  '/assets/js/questions-data.js',
   '/assets/js/luxury-game-ui.js',
   '/assets/js/platform.js',
   '/assets/js/board-online.js',
@@ -30,37 +33,17 @@ const APP_SHELL = [
   '/assets/sounds/correct.wav',
   '/assets/sounds/wrong.wav',
   '/assets/sounds/duel.wav',
-  '/assets/sounds_guess/knock.wav',
-  '/assets/sounds_guess/camera.wav',
-  '/assets/sounds_guess/applause.wav',
-  '/assets/sounds_guess/engine.wav',
-  '/assets/sounds_guess/keyboard.wav',
-  '/assets/sounds_guess/water.wav',
-  '/assets/sounds_guess/heartbeat.wav',
-  '/assets/sounds_guess/clock.wav',
-  '/assets/sounds_guess/rain.wav',
 ];
 
-const EXTERNAL_MEDIA = [
-  'https://upload.wikimedia.org/wikipedia/commons/0/0a/Banana_pic.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/1/1a/Cut_watermelon.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/3/30/Photography_Camera.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/4/4c/African_lions.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/6/69/Wristwatch.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/a/a1/Pineapple.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/d/d7/Cup_Coffee.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/e/e1/Strawberries.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/f/f2/Cat_image.jpg',
-];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then(async (cache) => { await cache.addAll(APP_SHELL); await Promise.allSettled(EXTERNAL_MEDIA.map(async (url) => { const response = await fetch(url, { mode: 'no-cors' }); await cache.put(url, response); })); }));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => ![CACHE_NAME,MEDIA_CACHE].includes(key)).map((key) => caches.delete(key))))
   );
   self.clients.claim();
 });
@@ -68,12 +51,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
-  if (url.hostname === 'upload.wikimedia.org') {
-    event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request, { mode: 'no-cors' }).then((response) => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
-      return response;
-    })));
+  if (url.origin === self.location.origin && (url.pathname.startsWith('/assets/quiz_photos/') || url.pathname.startsWith('/assets/sounds_pro/'))) {
+    event.respondWith(caches.open(MEDIA_CACHE).then(async (cache) => { const cached=await cache.match(event.request); if(cached)return cached; const response=await fetch(event.request); if(response?.ok)cache.put(event.request,response.clone()).catch(()=>{}); return response; }));
     return;
   }
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;

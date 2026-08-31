@@ -34,15 +34,17 @@ test('service worker caches luxury presentation assets', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
   assert.ok(sw.includes('/assets/css/luxury-game-ui.css'));
   assert.ok(sw.includes('/assets/js/luxury-game-ui.js'));
-  assert.match(sw,/busraj-games-v10/);
+  assert.match(sw,/busraj-games-v13/);
 });
 
 
-test('dice is ivory white with recessed black pips and board pieces are sculpted pawns', async()=>{
+test('dice is porcelain white with large recessed black pips and board pieces are sculpted pawns', async()=>{
   const css=await readFile(join(pub,'assets/css/luxury-game-ui.css'),'utf8');
-  assert.match(css,/Realistic ivory 3D dice/);
-  assert.match(css,/linear-gradient\(145deg,#ffffff 0%,#fbfaf6/);
-  assert.match(css,/background:radial-gradient\(circle at 38% 34%,#373737/);
+  assert.match(css,/Porcelain Pro Dice/);
+  assert.match(css,/linear-gradient\(145deg,#ffffff 0%,#fdfdfd/);
+  assert.match(css,/width:clamp\(12px,28%,25px\)/);
+  assert.match(css,/luxuryDiceBody/);
+  assert.match(css,/luxuryDiceShadow/);
   assert.match(css,/Sculpted playing pawns/);
   assert.match(css,/clip-path:polygon\(36% 0,64% 0/);
   for(const file of ['snakes.html','zahra.html','jackaroo.html']){

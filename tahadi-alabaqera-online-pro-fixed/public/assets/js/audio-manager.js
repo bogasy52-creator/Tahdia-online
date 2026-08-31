@@ -18,7 +18,7 @@
     const t=c.currentTime+delay,src=c.createBufferSource(),g=c.createGain();src.buffer=noiseCache;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
     if(c.createBiquadFilter){const f=c.createBiquadFilter();f.type='highpass';f.frequency.setValueAtTime(highpass,t);src.connect(f).connect(g).connect(c.destination)}else src.connect(g).connect(c.destination);src.start(t);src.stop(t+duration+.02)
   }
-  function luxuryDice(){noise(.11,.045,0,900);tone(118,.12,.065,'triangle',0,74);tone(280,.035,.025,'sine',.055,190);noise(.05,.026,.105,1300);tone(92,.10,.07,'sine',.12,64);tone(760,.055,.018,'sine',.17,520)}
+  function luxuryDice(){/* porcelain roll: small tumbles, weighty landing, tiny final bounce */noise(.055,.024,0,1700);tone(410,.028,.018,'triangle',0,285);noise(.04,.020,.16,1900);tone(350,.026,.016,'triangle',.16,245);noise(.04,.018,.32,1800);tone(305,.025,.015,'triangle',.32,220);noise(.065,.046,.56,850);tone(168,.085,.064,'triangle',.56,96);tone(510,.038,.025,'sine',.565,340);noise(.035,.022,.72,1250);tone(235,.052,.032,'triangle',.72,150)}
   function luxuryMove(){tone(360,.055,.022,'sine',0,520);noise(.035,.014,.018,1400);tone(650,.07,.02,'sine',.045,780)}
   function luxuryCapture(){noise(.12,.055,0,500);tone(210,.10,.06,'triangle',0,95);tone(92,.17,.075,'sine',.055,54);tone(840,.055,.025,'sine',.16,620)}
   function luxurySnake(){noise(.30,.035,0,1000);tone(310,.28,.045,'sawtooth',0,105);tone(245,.25,.028,'triangle',.08,82);noise(.10,.028,.24,450)}

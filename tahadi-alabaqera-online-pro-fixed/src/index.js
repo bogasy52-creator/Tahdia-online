@@ -136,10 +136,19 @@ function roomCode() {
 }
 
 function buildChoices(cat, q) {
-  const wrong = shuffle(
-    [...new Set(cat.questions.filter((x) => x.a !== q.a).map((x) => x.a))]
-  ).slice(0, 3);
-  const options = shuffle([q.a, ...wrong]);
+  const preferred = [...new Set((Array.isArray(q.distractors) ? q.distractors : [])
+    .map((x) => String(x || "").trim()).filter((x) => x && x !== q.a))];
+  const fallback = shuffle([...new Set(cat.questions.filter((x) => x.a !== q.a).map((x) => x.a))]);
+  const wrong = [];
+  for (const item of shuffle(preferred)) {
+    if (!wrong.includes(item)) wrong.push(item);
+    if (wrong.length === 3) break;
+  }
+  for (const item of fallback) {
+    if (!wrong.includes(item)) wrong.push(item);
+    if (wrong.length === 3) break;
+  }
+  const options = shuffle([q.a, ...wrong.slice(0, 3)]);
   return { options, correctIndex: options.indexOf(q.a) };
 }
 
@@ -147,26 +156,49 @@ function questionRef(cat, q) {
   return `${cat.id}:${cat.questions.indexOf(q)}`;
 }
 
-function makePlan(categoryIds, rounds = 12) {
-  const chosen = categoryIds.map((id) => CATEGORY_MAP.get(id)).filter(Boolean);
-  const plan = [];
-  const perCategory = Math.max(1, Math.floor(rounds / chosen.length));
-  for (const cat of chosen) {
-    const values = shuffle([100, 200, 300]);
-    for (let i = 0; i < perCategory; i++) {
-      const v = values[i % values.length];
-      const pool = cat.questions.filter((q) => q.v === v);
-      const q = pick(pool);
-      plan.push({ catId: cat.id, qid: questionRef(cat, q) });
+function balancedModes(rounds) {
+  const modes = Array.from({ length: rounds }, (_, i) => i < Math.ceil(rounds / 2) ? "secret" : "buzzer");
+  for (let tries = 0; tries < 24; tries++) {
+    const candidate = shuffle(modes);
+    let streak = 1, ok = true;
+    for (let i = 1; i < candidate.length; i++) {
+      streak = candidate[i] === candidate[i - 1] ? streak + 1 : 1;
+      if (streak > 2) { ok = false; break; }
     }
+    if (ok) return candidate;
   }
-  while (plan.length < rounds) {
-    const cat = pick(chosen);
-    const unused = cat.questions.filter((q) => !plan.some((p) => p.qid === questionRef(cat, q)));
-    const q = pick(unused.length ? unused : cat.questions);
+  return modes.map((_, i) => i % 2 === 0 ? "secret" : "buzzer");
+}
+
+function makePlan(categoryIds, rounds = 12, recentQids = []) {
+  const chosen = categoryIds.map((id) => CATEGORY_MAP.get(id)).filter(Boolean);
+  if (!chosen.length) return [];
+  const recent = new Set(Array.isArray(recentQids) ? recentQids : []);
+  const plan = [];
+  const addQuestion = (cat, value) => {
+    const all = cat.questions.filter((q) => !value || q.v === value);
+    const unused = all.filter((q) => !plan.some((p) => p.qid === questionRef(cat, q)));
+    const fresh = unused.filter((q) => !recent.has(questionRef(cat, q)));
+    const pool = fresh.length ? fresh : (unused.length ? unused : all);
+    if (!pool.length) return false;
+    const q = pick(pool);
     plan.push({ catId: cat.id, qid: questionRef(cat, q) });
+    return true;
+  };
+
+  // Give every selected category a balanced spread of difficulties before filling extras.
+  let cursor = 0;
+  while (plan.length < rounds && cursor < rounds * 4) {
+    const cat = chosen[cursor % chosen.length];
+    const values = [100, 200, 300];
+    addQuestion(cat, values[Math.floor(cursor / chosen.length) % values.length]);
+    cursor += 1;
   }
-  return shuffle(plan.slice(0, rounds)).map((x, i) => ({ ...x, mode: i % 2 === 0 ? "secret" : "buzzer" }));
+  while (plan.length < rounds) addQuestion(pick(chosen), null);
+
+  const order = shuffle(plan.slice(0, rounds));
+  const modes = balancedModes(order.length);
+  return order.map((x, i) => ({ ...x, mode: modes[i] }));
 }
 
 function qFromRef(catId, qid) {
@@ -194,9 +226,9 @@ export default {
       const quizOnline = Boolean(env.ROOMS);
       const boardOnline = Boolean(env.BOARD_ROOMS);
       if (!quizOnline || !boardOnline) {
-        return json({ ok: false, online: false, quizOnline, boardOnline, error: "Durable Object binding missing", version: "2.2.0" }, 503);
+        return json({ ok: false, online: false, quizOnline, boardOnline, error: "Durable Object binding missing", version: "2.5.0" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, service: "tahadi-alabaqera-online", version: "2.2.0" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, service: "tahadi-alabaqera-online", version: "2.5.0" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
@@ -378,6 +410,7 @@ export class GameRoom extends DurableObject {
         roundIndex: -1,
         current: null,
         lastReveal: null,
+        recentQids: [],
         winnerId: null,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
@@ -505,6 +538,17 @@ export class GameRoom extends DurableObject {
               .slice(0, 6);
             if (ids.length !== 6) return this.sendError(ws, "اختر 6 فئات");
             this.room.selectedCategories = ids;
+            await this.persistAndBroadcast();
+          }
+          break;
+
+        case "set_round_count":
+          if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
+          {
+            const requested = Number(msg.roundCount);
+            if (![12, 18, 24].includes(requested)) return this.sendError(ws, "عدد الجولات غير مدعوم");
+            this.room.roundCount = requested;
+            for (const id of this.room.order) this.room.players[id].ready = false;
             await this.persistAndBroadcast();
           }
           break;
@@ -671,6 +715,7 @@ export class GameRoom extends DurableObject {
         question: c.question,
         media: c.media || null,
         deadline: c.deadline,
+        startedAt: c.startedAt,
         buzzWinner: c.buzzWinner,
         stealPlayer: c.stealPlayer,
         answeredPlayers: Object.keys(c.answers || {}),
@@ -690,7 +735,11 @@ export class GameRoom extends DurableObject {
     this.room.winnerId = null;
     this.room.lastReveal = null;
     this.room.roundIndex = -1;
-    this.room.roundPlan = makePlan(this.room.selectedCategories, this.room.roundCount);
+    this.room.roundPlan = makePlan(this.room.selectedCategories, this.room.roundCount, this.room.recentQids || []);
+    this.room.recentQids = [...new Set([
+      ...this.room.roundPlan.map((x) => x.qid),
+      ...(this.room.recentQids || []),
+    ])].slice(0, 96);
     for (const id of this.room.order) {
       const p = this.room.players[id];
       p.score = 0;
@@ -725,7 +774,13 @@ export class GameRoom extends DurableObject {
       category: { id: cat.id, name: cat.name, icon: cat.icon },
       value: q.v,
       question: q.q,
-      media: q.media ? { type: q.media, src: q.src, zoom: q.zoom || null, credit: q.credit || "" } : null,
+      media: q.media ? {
+        type: q.media, src: q.src, zoom: q.zoom || null, hintZoom: q.hintZoom || null,
+        focusX: Number.isFinite(q.focusX) ? q.focusX : 50,
+        focusY: Number.isFinite(q.focusY) ? q.focusY : 50,
+        replays: Number.isInteger(q.replays) ? q.replays : (q.media === "sound" ? 2 : null),
+        credit: q.credit || "",
+      } : null,
       options,
       correctIndex,
       correctAnswer: q.a,

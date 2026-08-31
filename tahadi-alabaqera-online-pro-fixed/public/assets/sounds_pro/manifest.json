@@ -1,0 +1,485 @@
+{
+  "targetActiveRmsDb": -16.5,
+  "clips": [
+    {
+      "file": "airplane.wav",
+      "sampleRate": 44100,
+      "durationMs": 3500,
+      "activeRmsDb": -16.5,
+      "peakDb": -1.98,
+      "sha256": "40b8987c1699eda85ba10bf2e96e620b06a4cf5e221ea80c942c5e3564dfed09"
+    },
+    {
+      "file": "alarm.wav",
+      "sampleRate": 44100,
+      "durationMs": 2700,
+      "activeRmsDb": -16.5,
+      "peakDb": -13.72,
+      "sha256": "4d6b432b176f3d298466b4ede0a5027f052951a486e587181eb77167261d0481"
+    },
+    {
+      "file": "applause.wav",
+      "sampleRate": 44100,
+      "durationMs": 2600,
+      "activeRmsDb": -16.32,
+      "peakDb": -3.27,
+      "sha256": "3cf53fa4ce6779ea9a34f9ec48ec9ca8ed34e8e163b3ee2bbf50569c96efa000"
+    },
+    {
+      "file": "basketball.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.5,
+      "peakDb": -1.8,
+      "sha256": "8cee7c6149f4bdb081b34d4779abee08e9018075a661731a87c2f342dc09e7a9"
+    },
+    {
+      "file": "bell.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.47,
+      "peakDb": -3.01,
+      "sha256": "6a9bfc04f0acd21b1e91648c23a07e54a3a2fe0a35dcfcfcd9c2c5be9b064b12"
+    },
+    {
+      "file": "bikebell.wav",
+      "sampleRate": 44100,
+      "durationMs": 2100,
+      "activeRmsDb": -16.56,
+      "peakDb": -2.64,
+      "sha256": "ce0edefda0c64ebb5e7f8c3c8c3cbaacc9cbee0714192b3e5ff40e84e940a880"
+    },
+    {
+      "file": "blender.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -4.69,
+      "sha256": "f38201812688bdd9ed408e77e58c4344090d3e10363ba2fe195cf16ee2752c7a"
+    },
+    {
+      "file": "boiling.wav",
+      "sampleRate": 44100,
+      "durationMs": 3200,
+      "activeRmsDb": -16.5,
+      "peakDb": -2.25,
+      "sha256": "3b94c0ffffa3527df087e29c697efa23d90802f8aeef35a0c523df0b3dab2aba"
+    },
+    {
+      "file": "bottle_pop.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.38,
+      "peakDb": -4.81,
+      "sha256": "6b75e0d4bc137faae494a7bd5518ff92d4234530c59f9c56f4853ae21688388f"
+    },
+    {
+      "file": "bowling.wav",
+      "sampleRate": 44100,
+      "durationMs": 3400,
+      "activeRmsDb": -16.5,
+      "peakDb": -0.35,
+      "sha256": "1def1cdf387b6cfb4b485f4602ca187f8361815bc5c3b7f7f5c60b542c5eac89"
+    },
+    {
+      "file": "brakes.wav",
+      "sampleRate": 44100,
+      "durationMs": 2500,
+      "activeRmsDb": -16.5,
+      "peakDb": -10.32,
+      "sha256": "8cdadd16fd6acb3ff4acaded8d99b0eac91cd4bcc93c72a79fd9f61adac14da9"
+    },
+    {
+      "file": "camera.wav",
+      "sampleRate": 44100,
+      "durationMs": 1400,
+      "activeRmsDb": -16.36,
+      "peakDb": -2.82,
+      "sha256": "1e191fff2afc0daa4eea27c41ee3146d59a69fc68a4c7c4f7d624da3a405e178"
+    },
+    {
+      "file": "clock.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.5,
+      "peakDb": -7.84,
+      "sha256": "a1300e19b28b4805963c0d19f8ab0646fb8e3a34770161612d8ebbf9f9936c07"
+    },
+    {
+      "file": "coin.wav",
+      "sampleRate": 44100,
+      "durationMs": 1800,
+      "activeRmsDb": -16.53,
+      "peakDb": -2.75,
+      "sha256": "daeef32491fbc1dc1eb17d52d12ffc34809e4c1f816ad65fdd29084965276fe0"
+    },
+    {
+      "file": "copier.wav",
+      "sampleRate": 44100,
+      "durationMs": 3200,
+      "activeRmsDb": -16.5,
+      "peakDb": -5.95,
+      "sha256": "d1bb91c781f0b0dbeb4a8767107ac97c8c0e753c78b6ec121d6b82d21138470f"
+    },
+    {
+      "file": "doorbell.wav",
+      "sampleRate": 44100,
+      "durationMs": 2200,
+      "activeRmsDb": -16.51,
+      "peakDb": -2.29,
+      "sha256": "54ff3c4c8fbcdc796c81460606147976ff9929d682aa0f044e24615eed663836"
+    },
+    {
+      "file": "drill.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.5,
+      "peakDb": -5.89,
+      "sha256": "09f88a1c774bccf7125f156edb2d74e3f46dde7fdf55473e1223d8cbb413453d"
+    },
+    {
+      "file": "drops.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -4.77,
+      "sha256": "cca53954e3f8886b6d16aa494b26967bf2638572be36bf6e5392528d22bfcf90"
+    },
+    {
+      "file": "electric_hum.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -12.73,
+      "sha256": "99dc64eea56ffc6203b477ec699028e5eaefbf0278724b3093f2b3cb6c2e0394"
+    },
+    {
+      "file": "elevator.wav",
+      "sampleRate": 44100,
+      "durationMs": 1800,
+      "activeRmsDb": -16.54,
+      "peakDb": -1.71,
+      "sha256": "4a6cd5cb788f3fb5420be066f846e4077e68b83d7c490b27b4bc74c7ff06c89c"
+    },
+    {
+      "file": "engine.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -10.07,
+      "sha256": "6e6e0870943418bd20dfc6884961b9c64b72014eca670aafa7b21f9eab7e2f78"
+    },
+    {
+      "file": "fire.wav",
+      "sampleRate": 44100,
+      "durationMs": 3200,
+      "activeRmsDb": -16.42,
+      "peakDb": -3.46,
+      "sha256": "af37bfd02cce35031d619673f716f1df56a66822ccefedd3f3ce4032a8b14e26"
+    },
+    {
+      "file": "footsteps.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.49,
+      "peakDb": -5.04,
+      "sha256": "ac1e2d540971b216da537b6960aa964310470725b5cdf6863438f059bf919f21"
+    },
+    {
+      "file": "gate.wav",
+      "sampleRate": 44100,
+      "durationMs": 2200,
+      "activeRmsDb": -16.27,
+      "peakDb": -2.24,
+      "sha256": "ef983e2380c35bbf81fe00f6f3b417299bb77390548486830f48ad0ac42c3105"
+    },
+    {
+      "file": "glass.wav",
+      "sampleRate": 44100,
+      "durationMs": 2200,
+      "activeRmsDb": -16.57,
+      "peakDb": -2.15,
+      "sha256": "42938a090a05be1f5f357a5cad9539490067b9f95f9365c14fa0aae0840ee875"
+    },
+    {
+      "file": "hairdryer.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.43,
+      "sha256": "2a4852badb5eb0d17a392ace009aa548a2f7c66beaddeeae3af698239da6058e"
+    },
+    {
+      "file": "heartbeat.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.97,
+      "peakDb": -0.72,
+      "sha256": "f6e39a9cf6f7d66a402caf2a2b859e23471014a64eed161feb2d25f7d988db0d"
+    },
+    {
+      "file": "helicopter.wav",
+      "sampleRate": 44100,
+      "durationMs": 3200,
+      "activeRmsDb": -16.5,
+      "peakDb": -2.09,
+      "sha256": "e2713e044a7b2661a400849fe598291b679f9d20a791f2085f47469abecf27e5"
+    },
+    {
+      "file": "keyboard.wav",
+      "sampleRate": 44100,
+      "durationMs": 2100,
+      "activeRmsDb": -16.25,
+      "peakDb": -2.21,
+      "sha256": "51c16360240f437ef07baba263ef964234ae68a1a1ad11c07d623aba70ea0884"
+    },
+    {
+      "file": "keys.wav",
+      "sampleRate": 44100,
+      "durationMs": 2500,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.73,
+      "sha256": "d7e12ec7001c5ea3359769c52d2008640ae112b0fb51bdb746f2eb937a402581"
+    },
+    {
+      "file": "kitchen_timer.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -11.65,
+      "sha256": "6b6e88e80215ca152d49e21265afad6d1f3aeda0baa02daaf6547ba5504b9d17"
+    },
+    {
+      "file": "knock.wav",
+      "sampleRate": 44100,
+      "durationMs": 1700,
+      "activeRmsDb": -16.49,
+      "peakDb": -2.8,
+      "sha256": "a194bef1ac5ba6628787955a939611a9e0f74ac576c28165ff6647169b39c4b8"
+    },
+    {
+      "file": "microwave.wav",
+      "sampleRate": 44100,
+      "durationMs": 2200,
+      "activeRmsDb": -16.5,
+      "peakDb": -11.92,
+      "sha256": "d222341fbe8e6e7e96b2e9959a2315426ac1be6c0772166af0cbe180c5b18209"
+    },
+    {
+      "file": "motorcycle.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -8.69,
+      "sha256": "c0d6923ed3ebb7d165a047832d5ee0415c0a6447ca6cbbdbd911a5c926d6938f"
+    },
+    {
+      "file": "mouse.wav",
+      "sampleRate": 44100,
+      "durationMs": 1500,
+      "activeRmsDb": -16.5,
+      "peakDb": -1.36,
+      "sha256": "b8625f750c7baacd78d2c05b2bf27937f1b643d4c6eee5c11b6f94ebadd59168"
+    },
+    {
+      "file": "notification.wav",
+      "sampleRate": 44100,
+      "durationMs": 1800,
+      "activeRmsDb": -16.51,
+      "peakDb": -2.12,
+      "sha256": "d63f62d0fdc99911d9f2417e3708aad4406b4156f5b21c82d64616cd4f727553"
+    },
+    {
+      "file": "pages.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.5,
+      "peakDb": -2.76,
+      "sha256": "37557ced1ec5d70ad04f9940adcf7f138c08a402f8f34ce558f46649374be66f"
+    },
+    {
+      "file": "paper_tear.wav",
+      "sampleRate": 44100,
+      "durationMs": 2600,
+      "activeRmsDb": -16.51,
+      "peakDb": -1.38,
+      "sha256": "d4668474350c5331ab0a09d1a91d7ce939e31713a5ee09f39ee6c884dbdbc8e9"
+    },
+    {
+      "file": "pen_click.wav",
+      "sampleRate": 44100,
+      "durationMs": 1900,
+      "activeRmsDb": -16.33,
+      "peakDb": -2.36,
+      "sha256": "645be1152b4b4757c9a22a582a6e0e238d574055bbed1c3ed03cc3119bbaf35f"
+    },
+    {
+      "file": "phone.wav",
+      "sampleRate": 44100,
+      "durationMs": 3200,
+      "activeRmsDb": -16.5,
+      "peakDb": -10.92,
+      "sha256": "764325a890b0396b44ef6ca76acb838cd5a7c65b56000767237a6c5cc8f832a1"
+    },
+    {
+      "file": "printer.wav",
+      "sampleRate": 44100,
+      "durationMs": 3100,
+      "activeRmsDb": -16.41,
+      "peakDb": -3.27,
+      "sha256": "14c0bdcc94e779b29a0dfad2c00af884d19d03f463b526375114bad8dda1f45b"
+    },
+    {
+      "file": "radio.wav",
+      "sampleRate": 44100,
+      "durationMs": 3100,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.22,
+      "sha256": "824470c4dd5d0169696cc587339489869dd61cef8bb1a08a0587f62803ddfb9a"
+    },
+    {
+      "file": "rain.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.47,
+      "sha256": "8d5d7ac59046fa5bcf113c1ac9b918939037a565ebc22fbd9ab93cefac0ca51a"
+    },
+    {
+      "file": "revving.wav",
+      "sampleRate": 44100,
+      "durationMs": 3300,
+      "activeRmsDb": -16.5,
+      "peakDb": -9.69,
+      "sha256": "ecec8b65d400c669e062e130c635c39dfb1edfb0be25de029964fa78b2d63de0"
+    },
+    {
+      "file": "robotvac.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.4,
+      "sha256": "500e60dea00e10e3376879a764ed6ec5c447021bf9e92b65d2bf508e1fbf7243"
+    },
+    {
+      "file": "saw.wav",
+      "sampleRate": 44100,
+      "durationMs": 2900,
+      "activeRmsDb": -16.5,
+      "peakDb": -6.45,
+      "sha256": "34efecc825be49de6fde2db9c1f09ebd05df00a6e8ba4f4cea67fc3b9d2be79e"
+    },
+    {
+      "file": "scanner.wav",
+      "sampleRate": 44100,
+      "durationMs": 2700,
+      "activeRmsDb": -16.5,
+      "peakDb": -10.15,
+      "sha256": "d388daf65b38966f1b7ffdce86229a7b9b35a498ed64ec1e3fedc8c110a9d335"
+    },
+    {
+      "file": "siren.wav",
+      "sampleRate": 44100,
+      "durationMs": 3200,
+      "activeRmsDb": -16.5,
+      "peakDb": -12.97,
+      "sha256": "83b8f3b1fb67b943ed053815a7a2dbcff91b607ac45434f95324b2000634617d"
+    },
+    {
+      "file": "snap.wav",
+      "sampleRate": 44100,
+      "durationMs": 1300,
+      "activeRmsDb": -16.51,
+      "peakDb": -0.88,
+      "sha256": "1dbd3a4b9a67c2b22394402d5f3c236d1a5f10c91484fe8d77e336cd61dca99b"
+    },
+    {
+      "file": "spray.wav",
+      "sampleRate": 44100,
+      "durationMs": 2700,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.33,
+      "sha256": "56b1831fca517ab69982d46a4b254732a203ee7fee7a1454ae322b566a8e57b9"
+    },
+    {
+      "file": "stapler.wav",
+      "sampleRate": 44100,
+      "durationMs": 1600,
+      "activeRmsDb": -16.34,
+      "peakDb": -2.69,
+      "sha256": "358c38e9251a93b63fc522dc9b12043890c702523c624358a066288f76aacdf7"
+    },
+    {
+      "file": "tennis.wav",
+      "sampleRate": 44100,
+      "durationMs": 1800,
+      "activeRmsDb": -16.49,
+      "peakDb": -2.05,
+      "sha256": "4e6f96920d772622d040d3cf863bc7d12835e910b4b453b9c1a439ed08319865"
+    },
+    {
+      "file": "thunder.wav",
+      "sampleRate": 44100,
+      "durationMs": 3300,
+      "activeRmsDb": -16.46,
+      "peakDb": -2.95,
+      "sha256": "1d15344d64bb6b9ca69f44c17a4ab719e97ee430e2731c1f860b7d26ca187bfe"
+    },
+    {
+      "file": "train.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -8.97,
+      "sha256": "d56cbb255f7cf0f4434336a21f8f5a1e07a183faa46cca92a0c57fedf3356f26"
+    },
+    {
+      "file": "vacuum.wav",
+      "sampleRate": 44100,
+      "durationMs": 3000,
+      "activeRmsDb": -16.5,
+      "peakDb": -3.8,
+      "sha256": "4be08356610b957599178d22957f11c514233ebf4b9494f43c412c58987778db"
+    },
+    {
+      "file": "water.wav",
+      "sampleRate": 44100,
+      "durationMs": 2800,
+      "activeRmsDb": -16.5,
+      "peakDb": -2.68,
+      "sha256": "d4015447f9c678a26c5fed4c1f74aeed9409be699ef795d18cac261a18a3a8c1"
+    },
+    {
+      "file": "waves.wav",
+      "sampleRate": 44100,
+      "durationMs": 4000,
+      "activeRmsDb": -16.51,
+      "peakDb": -1.37,
+      "sha256": "4ccb709f7cc3cbef3ce405768fdc05ef0fe11963f2bd76e5e0827cd93b452a6d"
+    },
+    {
+      "file": "whistle.wav",
+      "sampleRate": 44100,
+      "durationMs": 2100,
+      "activeRmsDb": -16.5,
+      "peakDb": -12.13,
+      "sha256": "3012d8c45439617b643637b89469d07905bd968d2075bb08df1e3453141d9f7b"
+    },
+    {
+      "file": "wind.wav",
+      "sampleRate": 44100,
+      "durationMs": 3400,
+      "activeRmsDb": -16.5,
+      "peakDb": -1.75,
+      "sha256": "22bbafa9ab58298c2e9c014096647f8d70e19c98d8bedcdf3f17209f969d24fb"
+    },
+    {
+      "file": "zipper.wav",
+      "sampleRate": 44100,
+      "durationMs": 2200,
+      "activeRmsDb": -16.51,
+      "peakDb": -2.05,
+      "sha256": "d9e56e3606670198d686a5abb636738b3273c85bc5a52b9341b832fbfa8a0b24"
+    }
+  ]
+}

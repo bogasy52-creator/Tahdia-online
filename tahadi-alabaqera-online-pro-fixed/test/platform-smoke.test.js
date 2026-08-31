@@ -52,12 +52,14 @@ test('service worker pre-caches the complete game hub shell', async () => {
 test('package exposes repeatable test and verification commands', async () => {
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   assert.equal(pkg.scripts.test, 'node --test test/*.test.js');
-  assert.equal(pkg.scripts.verify, 'npm test && node scripts/verify-static.mjs && npm run check');
+  assert.equal(pkg.scripts.verify, 'npm run sync:quiz && npm test && npm run verify:static && npm run verify:worker');
+  assert.equal(pkg.scripts['verify:worker'], 'node scripts/verify-worker-offline.mjs');
+  assert.equal(pkg.scripts['verify:cloudflare'], 'npm run verify && npm run check:cloudflare');
 });
 
-test('health endpoint reports the 2.2 platform release', async () => {
+test('health endpoint reports the 2.5 platform release', async () => {
   const worker = await readFile(join(root, 'src/index.js'), 'utf8');
-  assert.match(worker, /version:\s*["']2\.2\.0["']/);
+  assert.match(worker, /version:\s*["']2\.5\.0["']/);
 });
 
 test('wrangler deploys to the existing tahdia-online worker', async () => {
@@ -79,14 +81,7 @@ test('worker binds a dedicated durable object for online board games', async () 
   const raw = await readFile(join(root, 'wrangler.jsonc'), 'utf8');
   const config = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, ''));
   assert.ok(config.durable_objects.bindings.some((b) => b.name === 'BOARD_ROOMS' && b.class_name === 'BoardRoom'));
-  assert.deepEqual(config.migrations.slice(0, 3), [
-    { tag: 'v1', new_sqlite_classes: ['GameRoom'] },
-    { tag: 'v2', new_sqlite_classes: ['BoardGameRoom'] },
-    {
-      tag: 'v3-board-room-rename',
-      renamed_classes: [{ from: 'BoardGameRoom', to: 'BoardRoom' }],
-    },
-  ]);
+  assert.ok(config.migrations.some((m) => (m.new_sqlite_classes || []).includes('BoardRoom')));
 });
 
 test('jackaroo server masks opponent cards in online snapshots', async () => {

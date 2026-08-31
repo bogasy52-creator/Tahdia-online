@@ -1,30 +1,27 @@
-/* Busraj 2.3.1 — Ivory Dice + Sculpted Pawns */
+/* Busraj 2.4 — Porcelain Pro Dice + Sculpted Pawns */
 :root{--lux-gold:#f4c76d;--lux-cyan:#53e6ff;--lux-ink:#050711;--lux-edge:rgba(255,255,255,.24)}
 
 /* ===== Realistic ivory 3D dice ===== */
 .dice-stage{perspective:1050px;isolation:isolate}
-.die{--die-rx:0deg;--die-ry:0deg;position:relative!important;display:block!important;padding:0!important;background:transparent!important;border-radius:24px!important;box-shadow:none!important;transform:none!important;perspective:980px;overflow:visible!important;isolation:isolate;filter:drop-shadow(0 14px 12px rgba(0,0,0,.32))}
+.die{--die-rx:0deg;--die-ry:0deg;position:relative!important;display:block!important;padding:0!important;background:transparent!important;border-radius:24px!important;box-shadow:none!important;transform:none!important;perspective:1100px;overflow:visible!important;isolation:isolate;filter:drop-shadow(0 13px 12px rgba(0,0,0,.34));transform-origin:50% 75%}
 .die:before{content:"";position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.12),rgba(244,199,109,.035) 42%,transparent 68%);filter:blur(15px);opacity:.75;pointer-events:none;transform:translateZ(-1px)}
 .die:after{content:"";position:absolute;left:5%;right:5%;height:25%;bottom:-31%;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.58),rgba(0,0,0,.18) 58%,transparent 76%);filter:blur(5px);pointer-events:none;z-index:-2}
 .die[data-value="1"]{--die-rx:0deg;--die-ry:0deg}.die[data-value="2"]{--die-rx:0deg;--die-ry:-90deg}.die[data-value="3"]{--die-rx:90deg;--die-ry:0deg}.die[data-value="4"]{--die-rx:-90deg;--die-ry:0deg}.die[data-value="5"]{--die-rx:0deg;--die-ry:90deg}.die[data-value="6"]{--die-rx:0deg;--die-ry:180deg}
 .luxury-die-cube{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(var(--die-rx)) rotateY(var(--die-ry));transition:transform .62s cubic-bezier(.16,.84,.28,1.08);will-change:transform}
-.die.rolling{animation:none!important}.die.rolling .luxury-die-cube{animation:luxuryDiceRoll .86s cubic-bezier(.18,.72,.2,1)}
-@keyframes luxuryDiceRoll{0%{transform:rotateX(var(--die-rx)) rotateY(var(--die-ry)) translateY(0) scale(1)}16%{transform:rotateX(145deg) rotateY(-110deg) rotateZ(21deg) translateY(-15px) scale(.94)}41%{transform:rotateX(395deg) rotateY(240deg) rotateZ(-17deg) translateY(-34px) scale(1.055)}70%{transform:rotateX(618deg) rotateY(520deg) rotateZ(9deg) translateY(-9px) scale(.985)}88%{transform:rotateX(690deg) rotateY(585deg) rotateZ(-3deg) translateY(-3px) scale(1.015)}100%{transform:rotateX(var(--die-rx)) rotateY(var(--die-ry)) rotateZ(0) translateY(0) scale(1)}}
-.lux-die-face{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:15%;border-radius:20%;backface-visibility:hidden;background:
-  radial-gradient(circle at 24% 18%,rgba(255,255,255,.98),rgba(255,255,255,.26) 22%,transparent 43%),
-  radial-gradient(circle at 78% 82%,rgba(208,204,194,.25),transparent 47%),
-  linear-gradient(145deg,#ffffff 0%,#fbfaf6 34%,#efede5 72%,#d8d5cb 100%);
- border:1px solid rgba(91,88,79,.23);box-shadow:
-  inset 0 0 0 1px rgba(255,255,255,.86),
-  inset -9px -11px 16px rgba(82,78,67,.13),
-  inset 7px 7px 12px rgba(255,255,255,.74),
-  0 0 4px rgba(255,255,255,.24)}
+.die.rolling{animation:luxuryDiceBody .92s cubic-bezier(.2,.78,.22,1)!important}.die.rolling:after{animation:luxuryDiceShadow .92s ease-out!important}.die.rolling .luxury-die-cube{animation:luxuryDiceRoll .92s cubic-bezier(.18,.72,.18,1)!important}
+@keyframes luxuryDiceBody{0%{transform:translateY(0) scale(1)}28%{transform:translateY(-34px) scale(1.015)}57%{transform:translateY(0) scale(.985)}72%{transform:translateY(-8px) scale(1.006)}86%{transform:translateY(0) scale(.997)}100%{transform:translateY(0) scale(1)}}
+@keyframes luxuryDiceShadow{0%,100%{transform:scale(1);opacity:.9}28%{transform:scale(.62);opacity:.38}57%{transform:scale(1.08);opacity:1}72%{transform:scale(.84);opacity:.62}}
+@keyframes luxuryDiceRoll{0%{transform:rotateX(var(--die-rx)) rotateY(var(--die-ry)) rotateZ(0)}26%{transform:rotateX(calc(var(--die-rx) + 90deg)) rotateY(var(--die-ry)) rotateZ(-1.2deg)}52%{transform:rotateX(calc(var(--die-rx) + 180deg)) rotateY(var(--die-ry)) rotateZ(.9deg)}70%{transform:rotateX(calc(var(--die-rx) + 270deg)) rotateY(var(--die-ry)) rotateZ(-.6deg)}86%{transform:rotateX(calc(var(--die-rx) + 360deg)) rotateY(var(--die-ry)) rotateZ(.25deg)}100%{transform:rotateX(var(--die-rx)) rotateY(var(--die-ry)) rotateZ(0)}}
+.lux-die-face{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:13%;border-radius:23%;backface-visibility:hidden;background:
+  radial-gradient(circle at 27% 18%,rgba(255,255,255,1),rgba(255,255,255,.32) 23%,transparent 45%),
+  linear-gradient(145deg,#ffffff 0%,#fdfdfd 38%,#f2f3f5 72%,#d9dde2 100%);
+ border:1px solid rgba(67,73,83,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.95),inset -10px -12px 18px rgba(60,68,78,.12),inset 8px 8px 14px rgba(255,255,255,.84),0 0 5px rgba(255,255,255,.28)}
 .lux-die-face:before{content:"";position:absolute;inset:2.5%;border-radius:18%;background:linear-gradient(115deg,rgba(255,255,255,.28),transparent 28% 75%,rgba(103,99,88,.055));mix-blend-mode:soft-light;pointer-events:none}
 .lux-die-face:after{content:"";position:absolute;inset:6%;border-radius:17%;border:1px solid rgba(92,88,78,.055);box-shadow:inset 0 0 6px rgba(80,75,62,.035);pointer-events:none}
 .lux-die-face.f1{transform:translateZ(var(--die-half,46px))}.lux-die-face.f2{transform:rotateY(90deg) translateZ(var(--die-half,46px))}.lux-die-face.f3{transform:rotateX(-90deg) translateZ(var(--die-half,46px))}.lux-die-face.f4{transform:rotateX(90deg) translateZ(var(--die-half,46px))}.lux-die-face.f5{transform:rotateY(-90deg) translateZ(var(--die-half,46px))}.lux-die-face.f6{transform:rotateY(180deg) translateZ(var(--die-half,46px))}
-.lux-pip{width:clamp(8px,18%,17px);aspect-ratio:1;border-radius:50%;place-self:center;background:radial-gradient(circle at 38% 34%,#373737 0 9%,#181818 24%,#050505 66%,#000 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,.12),inset -2px -2px 3px rgba(0,0,0,.8),0 1px 1px rgba(255,255,255,.45);transform:translateZ(.8px)}
+.lux-pip{width:clamp(12px,28%,25px);aspect-ratio:1;border-radius:50%;place-self:center;background:radial-gradient(circle at 37% 33%,#303030 0 8%,#111 22%,#030303 68%,#000 100%);box-shadow:inset 2px 2px 3px rgba(255,255,255,.08),inset -3px -3px 4px rgba(0,0,0,.9),0 1px 1px rgba(255,255,255,.28);transform:translateZ(.9px)}
 .lux-pip.c1{grid-area:1/1}.lux-pip.c2{grid-area:1/2}.lux-pip.c3{grid-area:1/3}.lux-pip.c4{grid-area:2/1}.lux-pip.c5{grid-area:2/2}.lux-pip.c6{grid-area:2/3}.lux-pip.c7{grid-area:3/1}.lux-pip.c8{grid-area:3/2}.lux-pip.c9{grid-area:3/3}
-.dice-hero .die{padding:0!important}.dice-hero .lux-die-face{border-width:1px}.dice-hero:after{content:"IVORY DICE";position:absolute;bottom:18px;font-size:9px;letter-spacing:.28em;color:rgba(255,255,255,.46);font-weight:900}
+.dice-hero .die{padding:0!important}.dice-hero .lux-die-face{border-width:1px}.dice-hero:after{content:"BUSRAJ PORCELAIN";position:absolute;bottom:18px;font-size:9px;letter-spacing:.28em;color:rgba(255,255,255,.46);font-weight:900}
 
 /* ===== Sculpted playing pawns — visibly different from circles ===== */
 .snake-token,.start-token,.ludo-piece,.jack-piece{position:relative!important;isolation:isolate;overflow:visible!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;color:#fff!important;display:grid!important;place-items:center!important;transform-style:preserve-3d;filter:drop-shadow(0 5px 3px rgba(0,0,0,.38))}
@@ -63,5 +60,5 @@
 .snake-tongue{fill:none;stroke:#ff6b83;stroke-width:3;stroke-linecap:round;animation:tongueFlick 1.8s ease-in-out infinite}
 @keyframes tongueFlick{0%,72%,100%{opacity:.12;stroke-width:2}78%,90%{opacity:1;stroke-width:3.4}}
 
-@media(max-width:560px){.lux-die-face{padding:14%}.lux-pip{width:clamp(7px,17%,13px)}.snake-token .pawn-label,.start-token .pawn-label,.ludo-piece .pawn-label,.jack-piece .pawn-label{font-size:5px;margin-bottom:8%}}
-@media(prefers-reduced-motion:reduce){.die.rolling .luxury-die-cube,.snake-tongue,.ludo-piece.legal{animation:none!important}.luxury-die-cube{transition:none!important}}
+@media(max-width:560px){.lux-die-face{padding:13%}.lux-pip{width:clamp(10px,27%,19px)}.snake-token .pawn-label,.start-token .pawn-label,.ludo-piece .pawn-label,.jack-piece .pawn-label{font-size:5px;margin-bottom:8%}}
+@media(prefers-reduced-motion:reduce){.die.rolling,.die.rolling:after,.die.rolling .luxury-die-cube,.snake-tongue,.ludo-piece.legal{animation:none!important}.luxury-die-cube{transition:none!important}}
