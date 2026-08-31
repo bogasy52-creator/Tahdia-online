@@ -4,6 +4,13 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesGame, playSnakesRoll } from "../public/assets/js/engines/snakes-engine.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
+import { handleSocialRequest } from "./social/social-api.js";
+import { createSocialUserClass } from "./social/social-user.js";
+
+class SocialDelegateBase {
+  constructor(ctx, env) { this.ctx = ctx; this.env = env; }
+}
+const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -225,23 +232,27 @@ export default {
     if (request.method === "GET" && url.pathname === "/api/health") {
       const quizOnline = Boolean(env.ROOMS);
       const boardOnline = Boolean(env.BOARD_ROOMS);
+      const socialOnline = Boolean(env.SOCIAL_USERS || env.BOARD_ROOMS);
       if (!quizOnline || !boardOnline) {
-        return json({ ok: false, online: false, quizOnline, boardOnline, error: "Durable Object binding missing", version: "2.5.0" }, 503);
+        return json({ ok: false, online: false, quizOnline, boardOnline, socialOnline, error: "Durable Object binding missing", version: "3.0.1" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, service: "tahadi-alabaqera-online", version: "2.5.0" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, socialOnline, service: "tahadi-alabaqera-online", version: "3.0.1" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
       const origin = request.headers.get("Origin");
       const headers = {
-        "access-control-allow-headers": "content-type",
-        "access-control-allow-methods": "GET,POST,OPTIONS",
+        "access-control-allow-headers": "content-type,authorization",
+        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
         "access-control-max-age": "86400",
         "vary": "Origin",
       };
       if (origin) headers["access-control-allow-origin"] = origin;
       return new Response(null, { status: 204, headers });
     }
+
+    const socialResponse = await handleSocialRequest(request, env, { rateLimit });
+    if (socialResponse) return socialResponse;
 
     if (request.method === "POST" && url.pathname === "/api/rooms") {
       const limited = await rateLimit(request, env, "quiz-create", 12, 60_000);
@@ -1047,6 +1058,7 @@ export class BoardRoom extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.room = null;
+    this.social = new BoardSocialUser(ctx, env);
     this.ctx.blockConcurrencyWhile(async () => {
       this.room = (await this.ctx.storage.get("room")) || null;
       this.syncConnected();
@@ -1212,6 +1224,7 @@ export class BoardRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.hostname === "social.internal") return this.social.fetch(request);
     if (url.pathname === "/init" && request.method === "POST") {
       if (this.room) return json({ ok: false, error: "room_exists" }, 409);
       const body = await request.json();
@@ -1275,6 +1288,9 @@ export class BoardRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    try {
+      if (ws.deserializeAttachment()?.username) return this.social.webSocketMessage(ws, raw);
+    } catch {}
     if (!this.room) return;
     const player = this.playerForSocket(ws);
     if (!player) return;
@@ -1436,7 +1452,10 @@ export class BoardRoom extends DurableObject {
     this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
   }
 
-  async webSocketClose(ws) {
+  async webSocketClose(ws, code = 1000, reason = "closed") {
+    try {
+      if (ws.deserializeAttachment()?.username) return this.social.webSocketClose(ws, code, reason);
+    } catch {}
     const p = this.playerForSocket(ws);
     if (!p || !this.room) return;
     p.connected = false;
@@ -1445,7 +1464,12 @@ export class BoardRoom extends DurableObject {
     this.broadcast();
     await this.scheduleNextAlarm();
   }
-  async webSocketError(ws) { await this.webSocketClose(ws); }
+  async webSocketError(ws) {
+    try {
+      if (ws.deserializeAttachment()?.username) return this.social.webSocketError(ws);
+    } catch {}
+    await this.webSocketClose(ws);
+  }
 
   async alarm() {
     if (!this.room) return;

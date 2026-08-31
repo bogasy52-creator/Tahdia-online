@@ -27,7 +27,7 @@
 
 <section id="room" class="hidden">
 <div id="roomHeader" class="card">
-<div class="roomHead"><div><div class="mut">رقم الغرفة</div><div id="roomCode" class="roomCode">------</div></div><div><button id="shareBtn" class="btn sec">↗ مشاركة الدعوة</button></div></div>
+<div class="roomHead"><div><div class="mut">رقم الغرفة</div><div id="roomCode" class="roomCode">------</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button id="inviteFriendBtn" class="btn sec">👥 دعوة صديق</button><button id="shareBtn" class="btn sec">↗ مشاركة الدعوة</button></div></div>
 <div id="players" class="players"></div>
 </div>
 
@@ -61,6 +61,7 @@
 </div>
 <script src="assets/js/audio-manager.js"></script>
 <script src="assets/js/platform.js"></script>
+<script src="assets/js/social-client.js"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -98,6 +99,8 @@ let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDela
 const soundPlayCounts=new Map(),waveCache=new Map(),zoomLevels=new Map();
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
+const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName){$('#createName').value=socialProfile.displayName;$('#joinName').value=socialProfile.displayName}
+
 const DEFAULT_CLOUD_API='https://tahdia-online.bogasy52.workers.dev';
 let activeApiOrigin='';
 let backendProbe=null;
@@ -295,6 +298,7 @@ function renderFinished(){
 }
 
 $('#shareBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
+$('#inviteFriendBtn').onclick=()=>{if(!state?.code)return toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'quiz',roomCode:state.code})};
 
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else{$('#entry').classList.remove('hidden');probeBackend().catch(e=>toast(e.message))}
 })();

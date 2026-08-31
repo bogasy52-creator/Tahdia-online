@@ -7,7 +7,7 @@ const root=process.cwd(),pub=join(root,'public');
 test('mobile board stylesheet is shipped and cached', async()=>{
   await access(join(pub,'assets/css/mobile-game.css'));
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v13/);
+  assert.match(sw,/busraj-games-v16/);
   assert.ok(sw.includes('/assets/css/mobile-game.css'));
 });
 
@@ -49,3 +49,39 @@ test('jackaroo pieces animate above the board for move, swap and split seven', a
   assert.ok(html.includes("type==='split7'"));
   assert.match(css,/game-jackaroo\.game-running \.jack-piece\.moving-piece/);
 });
+
+test('snakes and zahra use the dedicated viewport-filling stage with measured board fitting', async()=>{
+  const fullscreenCss=await readFile(join(pub,'assets/css/fullscreen-board.css'),'utf8');
+  const fullscreenJs=await readFile(join(pub,'assets/js/fullscreen-game.js'),'utf8');
+  const snakes=await readFile(join(pub,'snakes.html'),'utf8');
+  const zahra=await readFile(join(pub,'zahra.html'),'utf8');
+  assert.match(fullscreenCss,/body\.game-snakes\.game-running[\s\S]*--game-vh:\s*100dvh/);
+  assert.match(fullscreenCss,/body\.game-zahra\.game-running[\s\S]*height:\s*var\(--game-vh\)/);
+  assert.match(fullscreenCss,/grid-template-columns:\s*minmax\(0,1fr\)\s+var\(--game-dock-width\)/);
+  assert.match(fullscreenCss,/width:\s*var\(--game-board-size\)\s*!important/);
+  assert.match(fullscreenCss,/@media \(max-height: 560px\) and \(orientation: landscape\)/);
+  assert.match(fullscreenJs,/requestFullscreen|webkitRequestFullscreen/);
+  assert.match(fullscreenJs,/visualViewport/);
+  assert.match(fullscreenJs,/ResizeObserver/);
+  assert.match(fullscreenJs,/MutationObserver/);
+  assert.match(fullscreenJs,/busraj:game-layout/);
+  assert.match(fullscreenJs,/Math\.min\(rect\.width, rect\.height\)/);
+  for(const html of [snakes,zahra]){
+    assert.match(html,/assets\/css\/fullscreen-board\.css/);
+    assert.match(html,/assets\/js\/fullscreen-game\.js/);
+    assert.match(html,/data-game-fullscreen/);
+    assert.match(html,/BS_GAME_FULLSCREEN\?\.fit/);
+  }
+});
+
+test('snakes fullscreen keeps unstarted pieces visible without covering the board', async()=>{
+  const fullscreenCss=await readFile(join(pub,'assets/css/fullscreen-board.css'),'utf8');
+  const snakes=await readFile(join(pub,'snakes.html'),'utf8');
+  const boardEnd=snakes.indexOf('</div><div class=\"snake-legend\">');
+  const tray=snakes.indexOf('id=\"mobileStartLane\"');
+  assert.ok(boardEnd>0 && tray>boardEnd,'start tray is outside the square board');
+  assert.match(fullscreenCss,/game-snakes\.game-running \.mobile-start-lane\s*\{[\s\S]*display:\s*flex\s*!important/);
+  assert.match(fullscreenCss,/game-snakes\.game-running \.snake-legend \+ div[\s\S]*display:\s*none\s*!important/);
+  assert.match(snakes,/busraj:game-layout/);
+});
+

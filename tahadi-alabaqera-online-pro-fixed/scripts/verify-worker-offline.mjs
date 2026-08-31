@@ -27,6 +27,8 @@ const source = await readFile(srcPath, 'utf8');
 assert.match(source, /export default\s*\{/);
 assert.match(source, /export class GameRoom extends DurableObject/);
 assert.match(source, /export class BoardRoom extends DurableObject/);
+assert.match(source, /const BoardSocialUser = createSocialUserClass\(SocialDelegateBase\)/);
+assert.match(source, /url\.hostname === \"social\.internal\"/);
 await writeFile(stubPath, 'export class DurableObject { constructor(ctx, env) { this.ctx = ctx; this.env = env; } }\n');
 await writeFile(tmpPath, source.replace('from "cloudflare:workers"', 'from "../scripts/.verify-cloudflare-stub.mjs"'));
 
@@ -41,7 +43,8 @@ try {
   let body = await response.json();
   assert.equal(body.ok, true);
   assert.equal(body.online, true);
-  assert.equal(body.version, '2.5.0');
+  assert.equal(body.version, '3.0.1');
+  assert.equal(body.socialOnline, true);
 
   response = await mod.default.fetch(new Request('https://game.test/api/catalog'), env);
   assert.equal(response.status, 200);

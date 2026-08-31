@@ -1,12 +1,13 @@
-بوسراج للألعاب — PRO ULTIMATE 2.4
+بوسراج للألعاب — SOCIAL PLATFORM 3.0
 طريقة النشر
 
 1) فك ملف ZIP.
 2) افتح Terminal داخل المجلد الذي يحتوي package.json وwrangler.jsonc.
-3) نفذ: npm install
+3) نفذ: npm install --include=dev
 4) نفذ: npx wrangler login
 5) نفذ: npm run verify
-6) إذا انتهى التحقق بدون أخطاء نفذ: npm run deploy
+6) نفذ: npm run check:cloudflare
+7) إذا انتهى التحقق بدون أخطاء نفذ: npm run deploy
 
 بعد النشر افتح:
 /api/health
@@ -16,21 +17,28 @@ ok:true
 online:true
 quizOnline:true
 boardOnline:true
-version:"2.4.0"
+socialOnline:true
+version:"3.0.1"
+
+Cloudflare:
+- ROOMS -> GameRoom
+- BOARD_ROOMS -> BoardRoom
+- SOCIAL_USERS -> SocialUser
+- حافظ على migrations v1/v2/v3 وأضف v4-social-users فقط بعد v3.
 
 فحوص موصى بها بعد النشر:
-- تحدي العباقرة: جرّب 12/18/24 جولة، سؤال صوتي وتشغيلين فقط، وسؤال Zoom.
-- اختبر المحلي والأونلاين وتأكد أن بنك الأسئلة يعمل في الاثنين.
-- افتح من جهاز/متصفح آخر واختبر reconnect ونقل الاستضافة.
-- اختبر السلم والثعبان والزهرة وجاكارو، خصوصًا انقطاع صاحب الدور.
+- حسابان: تسجيل -> طلب صداقة -> قبول -> Presence.
+- دعوة جاكارو/سباق الـ100/الزهرة/تحدي العباقرة من صديق لصديق.
+- رفض دعوة تحمل كود غرفة لعبة مختلفة أو غرفة بدأت بالفعل.
+- حظر/إلغاء حظر وخصوصية الدعوات.
+- اختبر reconnect ونقل الاستضافة للألعاب الحالية.
 - في جاكارو استخدم 4 جلسات للتأكد أن كل لاعب يرى أوراقه فقط.
-- اختبر النرد الجديد على iPhone/Android وكمبيوتر للتأكد من سلاسة الانقلاب والـSnap.
 
 PWA:
-App shell cache = busraj-games-v12
+App shell cache = busraj-games-v14
 Quiz media cache = busraj-quiz-media-v3
 
 مهم:
 - انشر المشروع كاملًا وليس public فقط.
 - لا تحذف migrations الموجودة في wrangler.jsonc.
-- نفذ npm run verify على جهاز متصل قبل النشر الفعلي.
+- في مسار ZIP، merge-worker-config.mjs يسمح فقط بإضافة Durable Object migrations آمنة Append-only.

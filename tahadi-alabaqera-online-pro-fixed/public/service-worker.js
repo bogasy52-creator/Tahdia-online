@@ -1,10 +1,11 @@
-const CACHE_NAME = 'busraj-games-v13';
+const CACHE_NAME = 'busraj-games-v16';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/local',
   '/online',
+  '/social',
   '/snakes',
   '/dice',
   '/zahra',
@@ -14,14 +15,18 @@ const APP_SHELL = [
   '/icon-512.png',
   '/apple-touch-icon.png',
   '/assets/css/platform.css',
+  '/assets/css/social.css',
   '/assets/css/game-kit.css',
   '/assets/css/board-premium.css',
   '/assets/css/luxury-game-ui.css',
   '/assets/css/mobile-game.css',
+  '/assets/css/fullscreen-board.css',
   '/assets/js/audio-manager.js',
   '/assets/js/questions-data.js',
   '/assets/js/luxury-game-ui.js',
   '/assets/js/platform.js',
+  '/assets/js/social-client.js',
+  '/assets/js/fullscreen-game.js',
   '/assets/js/board-online.js',
   '/assets/js/engines/snakes-engine.js',
   '/assets/js/engines/dice-engine.js',
