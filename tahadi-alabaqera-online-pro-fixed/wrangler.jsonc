@@ -49,25 +49,4 @@
   "observability": {
     "enabled": true
   }
-}      ]
-    },
-    {
-      "tag": "v3-board-room-rename",
-      "renamed_classes": [
-        {
-          "from": "BoardGameRoom",
-          "to": "BoardRoom"
-        }
-      ]
-    },
-    {
-      "tag": "v4-board-room-fix",
-      "new_sqlite_classes": [
-        "BoardRoom"
-      ]
-    }
-  ],
-  "observability": {
-    "enabled": true
-  }
 }
