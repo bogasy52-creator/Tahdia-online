@@ -44,6 +44,12 @@
           "to": "BoardRoom"
         }
       ]
+    },
+    {
+      "tag": "v4-board-room-fix",
+      "new_sqlite_classes": [
+        "BoardRoom"
+      ]
     }
   ],
   "observability": {
