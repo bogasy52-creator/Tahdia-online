@@ -24,7 +24,15 @@ done < <(unzip -Z1 "$ZIP_FILE")
 
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
-unzip -q -o "$ZIP_FILE" -d "$TEMP_DIR"
+ARCHIVE_DIR="$TEMP_DIR/archive"
+WORKER_CONFIG_BACKUP="$TEMP_DIR/wrangler.jsonc"
+mkdir -p "$ARCHIVE_DIR"
+
+if [ -f "$GAME_DIR/wrangler.jsonc" ]; then
+  cp "$GAME_DIR/wrangler.jsonc" "$WORKER_CONFIG_BACKUP"
+fi
+
+unzip -q -o "$ZIP_FILE" -d "$ARCHIVE_DIR"
 
 VALID_PROJECTS=()
 while IFS= read -r -d '' package_file; do
@@ -34,7 +42,7 @@ while IFS= read -r -d '' package_file; do
     && [ -f "$candidate/src/index.js" ]; then
     VALID_PROJECTS+=("$candidate")
   fi
-done < <(find "$TEMP_DIR" -type f -name package.json -print0)
+done < <(find "$ARCHIVE_DIR" -type f -name package.json -print0)
 
 if [ "${#VALID_PROJECTS[@]}" -ne 1 ]; then
   echo "ZIP must contain exactly one valid project (package.json, wrangler.jsonc, public/index.html, and src/index.js)." >&2
@@ -49,6 +57,9 @@ fi
 
 mkdir -p "$GAME_DIR"
 cp -a "$PROJECT_ROOT"/. "$GAME_DIR"/
+if [ -f "$WORKER_CONFIG_BACKUP" ]; then
+  cp "$WORKER_CONFIG_BACKUP" "$GAME_DIR/wrangler.jsonc"
+fi
 rm -f -- "$ZIP_FILE"
 
 echo "ZIP update applied from: $PROJECT_ROOT"

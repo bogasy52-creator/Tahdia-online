@@ -57,7 +57,7 @@ d6f7c6f41ec0134b64f9aada5da8eb9a774055763cbeae206ee758f993202bc7  ./test/jackaro
 ebb46a9114b3d08746f946a73bd9c0123d18718014741abed666d879aeb0fd43  ./test/ludo-engine.test.js
 a8da12477d340ec7a6ad41348b70231115b714051d6ec40d9436c000242ca96f  ./test/luxury-game-ui.test.js
 667e0509db06a536bda2c77aa3239e96bdc82ee7a13ab8e7eaa0d165ada45b80  ./test/online-hardening.test.js
-89e4fbb0d4f5f9211c366c841281f38aa7f5e508eade5b700d527b8b2dad15f5  ./test/platform-smoke.test.js
+03dd183e3e27c16aa0ef017c3da5cfccade9077fd0cd6129b272ae684da16a18  ./test/platform-smoke.test.js
 867a28af341fdd9e668d5e6f52af0d4ca6402750403de7c70a4510038b25e739  ./test/snakes-engine.test.js
 44d6570cbef8532e9562de8e38ee782f2df8cb69c4919e4fe61657438eb7f61a  ./test/snakes-premium-ui.test.js
-92e891443a9c380454ec8730666680c549c56b52911b5320c8a6d0e331d38c7c  ./wrangler.jsonc
+43385610b3f0fdb0fde49a9ae523480dd3b6e50055b0a60d01fbe6a0dfe7cbea  ./wrangler.jsonc

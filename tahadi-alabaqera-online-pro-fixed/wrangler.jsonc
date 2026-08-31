@@ -31,9 +31,18 @@
       ]
     },
     {
-      "tag": "v2-board-games",
+      "tag": "v2",
       "new_sqlite_classes": [
-        "BoardRoom"
+        "BoardGameRoom"
+      ]
+    },
+    {
+      "tag": "v3-board-room-rename",
+      "renamed_classes": [
+        {
+          "from": "BoardGameRoom",
+          "to": "BoardRoom"
+        }
       ]
     }
   ],

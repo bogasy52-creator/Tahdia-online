@@ -71,6 +71,23 @@ test('finds the project inside wrapper folders before applying it', async (t) =>
   await assert.rejects(readFile(zip));
 });
 
+test('preserves the deployed Worker configuration while applying a ZIP', async (t) => {
+  const { root, repo, game } = await fixture(t);
+  const payload = join(root, 'payload');
+  const zip = join(repo, 'update.zip');
+  const deployedConfig = '{"name":"deployed-worker","migrations":[{"tag":"v1"}]}\n';
+  await writeFile(join(game, 'wrangler.jsonc'), deployedConfig);
+  await writeProject(payload, 'updated game');
+  await writeFile(join(payload, 'wrangler.jsonc'), '{"name":"replacement-worker"}\n');
+  createZip(payload, zip);
+
+  const result = applyZip(repo, zip, game);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(await readFile(join(game, 'wrangler.jsonc'), 'utf8'), deployedConfig);
+  assert.equal(await readFile(join(game, 'public', 'index.html'), 'utf8'), 'updated game\n');
+});
+
 test('rejects an invalid ZIP without touching the current project', async (t) => {
   const { root, repo, game } = await fixture(t);
   const payload = join(root, 'payload');

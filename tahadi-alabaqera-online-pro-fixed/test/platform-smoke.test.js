@@ -79,7 +79,14 @@ test('worker binds a dedicated durable object for online board games', async () 
   const raw = await readFile(join(root, 'wrangler.jsonc'), 'utf8');
   const config = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, ''));
   assert.ok(config.durable_objects.bindings.some((b) => b.name === 'BOARD_ROOMS' && b.class_name === 'BoardRoom'));
-  assert.ok(config.migrations.some((m) => (m.new_sqlite_classes || []).includes('BoardRoom')));
+  assert.deepEqual(config.migrations.slice(0, 3), [
+    { tag: 'v1', new_sqlite_classes: ['GameRoom'] },
+    { tag: 'v2', new_sqlite_classes: ['BoardGameRoom'] },
+    {
+      tag: 'v3-board-room-rename',
+      renamed_classes: [{ from: 'BoardGameRoom', to: 'BoardRoom' }],
+    },
+  ]);
 });
 
 test('jackaroo server masks opponent cards in online snapshots', async () => {
