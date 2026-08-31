@@ -12,7 +12,13 @@ assert.equal(config.assets?.binding, 'ASSETS');
 assert.ok(config.durable_objects?.bindings?.some((b) => b.name === 'ROOMS' && b.class_name === 'GameRoom'));
 assert.ok(config.durable_objects?.bindings?.some((b) => b.name === 'BOARD_ROOMS' && b.class_name === 'BoardRoom'));
 assert.ok(config.migrations?.some((m) => (m.new_sqlite_classes || []).includes('GameRoom')));
-assert.ok(config.migrations?.some((m) => (m.new_sqlite_classes || []).includes('BoardRoom')));
+assert.ok(config.migrations?.some(
+  (migration) =>
+    (migration.new_sqlite_classes || []).includes('BoardRoom') ||
+    (migration.renamed_classes || []).some(
+      (rename) => rename.from === 'BoardGameRoom' && rename.to === 'BoardRoom'
+    )
+));
 
 const srcPath = join(root, 'src/index.js');
 const tmpPath = join(root, 'src/.verify-index.mjs');

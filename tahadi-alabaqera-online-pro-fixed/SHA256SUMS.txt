@@ -177,7 +177,7 @@ e9d079ccea46b07697b134537cdeac29cba860ca5f4b5ae65c85df75aac01e30  ./public/servi
 ce04a57b53e0a959290c41ddd73e76d3d67ed2560f2ffe7c9a0cc2ef4654b5a3  ./public/zahra.html
 1b5caea75bf31ffae69a4e500fd7c57a68f01ca2c075ebbf15598dd38ebc39f8  ./scripts/sync-quiz-data.mjs
 82f1bc7408369ca2ad26d7af8a497207ad9da9459936b9b7772e744df64adff3  ./scripts/verify-static.mjs
-5b81156207eaa414c66ef5ec5367f337c787b51e909c99d50e344a2b49238ac1  ./scripts/verify-worker-offline.mjs
+e04e53fe57c3e512aaa58f0f78bcac7e9945aa55712361db9a8a6caabd4eecf0  ./scripts/verify-worker-offline.mjs
 4375346638e24e0af6e762f8936cb9bf3256bde5f274eb4067d908dfc43c6596  ./src/index.js
 66132e233713465816d934b4e9e70892d6978def935c2ccc12806bf55a20f6ef  ./src/questions.js
 1b347e37548514a7190aa1f6c1c7c2a999248f58aa05dc96ae4e6f4ea6119081  ./test/audio-manager.test.js
@@ -187,8 +187,8 @@ ebb46a9114b3d08746f946a73bd9c0123d18718014741abed666d879aeb0fd43  ./test/ludo-en
 847be96ab0f4b3c046eaac066b22062763a7ef8af7710387d1c6a8015a871e9d  ./test/luxury-game-ui.test.js
 c4d2015ce8c1fe53b868693fd2af294960068378d27aaf7829261779150cd03c  ./test/mobile-board-ui.test.js
 667e0509db06a536bda2c77aa3239e96bdc82ee7a13ab8e7eaa0d165ada45b80  ./test/online-hardening.test.js
-3b2d791380598596ddc0d89f5854de194e0a78ce7b03596acfaf73854df47dd9  ./test/platform-smoke.test.js
+848e9b93d7abdb2d72031cfa5181b324f0095584139ef5e7901950b54d8c3901  ./test/platform-smoke.test.js
 227ed80440a7f3c6fa02e44c950d2de0a8ffa7631c754a5b8be7348e38c2c5cb  ./test/quiz-pro.test.js
 867a28af341fdd9e668d5e6f52af0d4ca6402750403de7c70a4510038b25e739  ./test/snakes-engine.test.js
 7bac90984bb3fe343c4f9473d5415bb9fd35951446f954f37bd679da646908f3  ./test/snakes-premium-ui.test.js
-7d377e8bd0f8d0dd4b58199e8f921897ccaa103a3b7d74a96f947dfe23c7f2f9  ./wrangler.jsonc
+43385610b3f0fdb0fde49a9ae523480dd3b6e50055b0a60d01fbe6a0dfe7cbea  ./wrangler.jsonc

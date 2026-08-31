@@ -1,23 +1,40 @@
-test('worker binds a dedicated durable object for online board games', async () => {
-  const raw = await readFile(join(root, 'wrangler.jsonc'), 'utf8');
-  const config = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, ''));
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile, access } from 'node:fs/promises';
+import { join } from 'node:path';
 
-  assert.ok(
-    config.durable_objects.bindings.some(
-      (b) => b.name === 'BOARD_ROOMS' && b.class_name === 'BoardRoom'
-    )
-  );
+const root = new URL('../', import.meta.url).pathname;
+const publicDir = join(root, 'public');
 
-  assert.ok(
-    config.migrations.some(
-      (m) =>
-        (m.new_sqlite_classes || []).includes('BoardRoom') ||
-        (m.renamed_classes || []).some(
-          (r) => r.to === 'BoardRoom'
-        )
-    )
-  );
-});});
+const requiredAssets = [
+  'assets/css/platform.css',
+  'assets/js/audio-manager.js',
+  'assets/js/platform.js',
+  'assets/js/board-online.js',
+  'assets/css/board-premium.css',
+  'snakes.html',
+  'dice.html',
+  'zahra.html',
+  'jackaroo.html',
+];
+
+test('expanded platform assets exist', async () => {
+  for (const rel of requiredAssets) await access(join(publicDir, rel));
+});
+
+test('home links every game and both quiz modes', async () => {
+  const html = await readFile(join(publicDir, 'index.html'), 'utf8');
+  for (const href of ['/local', '/online', '/snakes', '/dice', '/zahra', '/jackaroo']) {
+    assert.match(html, new RegExp(`href=["']${href.replace('.', '\\.')}`));
+  }
+});
+
+test('quiz pages load shared audio manager', async () => {
+  for (const file of ['local.html', 'online.html']) {
+    const html = await readFile(join(publicDir, file), 'utf8');
+    assert.match(html, /assets\/js\/audio-manager\.js/);
+  }
+});
 
 test('service worker pre-caches the complete game hub shell', async () => {
   const sw = await readFile(join(publicDir, 'service-worker.js'), 'utf8');
@@ -64,7 +81,15 @@ test('worker binds a dedicated durable object for online board games', async () 
   const raw = await readFile(join(root, 'wrangler.jsonc'), 'utf8');
   const config = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, ''));
   assert.ok(config.durable_objects.bindings.some((b) => b.name === 'BOARD_ROOMS' && b.class_name === 'BoardRoom'));
-  assert.ok(config.migrations.some((m) => (m.new_sqlite_classes || []).includes('BoardRoom')));
+  const createsBoardRoom = config.migrations.some(
+    (migration) => (migration.new_sqlite_classes || []).includes('BoardRoom')
+  );
+  const renamesToBoardRoom = config.migrations.some(
+    (migration) => (migration.renamed_classes || []).some(
+      (rename) => rename.from === 'BoardGameRoom' && rename.to === 'BoardRoom'
+    )
+  );
+  assert.ok(createsBoardRoom || renamesToBoardRoom);
 });
 
 test('jackaroo server masks opponent cards in online snapshots', async () => {
