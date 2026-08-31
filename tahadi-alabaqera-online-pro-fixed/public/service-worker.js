@@ -1,4 +1,4 @@
-const CACHE_NAME = 'busraj-games-v18';
+const CACHE_NAME = 'busraj-games-v20';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -22,7 +22,10 @@ const APP_SHELL = [
   '/assets/css/mobile-game.css',
   '/assets/css/fullscreen-board.css',
   '/assets/css/snakes-premium.css',
+  '/assets/css/zahra-premium.css',
+  '/assets/css/jackaroo-next.css',
   '/assets/css/quiz-luxury.css',
+  '/assets/css/quiz-board-v2.css',
   '/assets/js/audio-manager.js',
   '/assets/js/questions-data.js',
   '/assets/js/luxury-game-ui.js',

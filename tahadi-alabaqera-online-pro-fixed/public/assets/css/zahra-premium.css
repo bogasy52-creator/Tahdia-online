@@ -1,0 +1,66 @@
+/* Busraj 3.2 — Zahra: clean jewel-board redesign. */
+body.game-zahra{--z-ink:#f6f8ff;--z-frame:#0b1020}
+body.game-zahra.game-running{background:radial-gradient(circle at 18% 8%,rgba(139,92,246,.15),transparent 28%),radial-gradient(circle at 84% 90%,rgba(34,211,238,.11),transparent 28%),#050812!important}
+body.game-zahra.game-running .ludo-frame{background:linear-gradient(145deg,#222d46,#0c1324 22%,#060a13)!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:0 26px 64px rgba(0,0,0,.56),0 0 0 5px rgba(3,6,12,.72) inset,0 0 36px rgba(139,92,246,.08)!important}
+body.game-zahra.game-running .ludo-board{gap:1px!important;background:#0a1020!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:inset 0 0 28px rgba(0,0,0,.34)!important}
+body.game-zahra.game-running .ludo-cell{border:1px solid rgba(17,24,39,.18)!important;border-radius:3px!important;background:linear-gradient(145deg,#f8f8f4,#e6e9ec)!important;box-shadow:inset 0 1px rgba(255,255,255,.8),inset 0 -1px rgba(0,0,0,.04)!important}
+body.game-zahra.game-running .ludo-cell.safe{background:linear-gradient(145deg,#fff8d8,#efe0a2)!important}
+body.game-zahra.game-running .ludo-cell.safe:after{content:'✦'!important;color:#8b6f20!important;font-size:clamp(5px,.9vw,10px)!important;text-shadow:none!important}
+body.game-zahra.game-running .ludo-cell.start{box-shadow:inset 0 0 0 2px var(--c),inset 0 0 18px color-mix(in srgb,var(--c) 18%,transparent)!important;background:color-mix(in srgb,var(--c) 16%,#fff)!important}
+body.game-zahra.game-running .home-lane{background:color-mix(in srgb,var(--c) 32%,#fff)!important;border-color:color-mix(in srgb,var(--c) 48%,#d8dde6)!important}
+body.game-zahra.game-running .ludo-yard{margin:2px!important;border-radius:23px!important;border:1px solid color-mix(in srgb,var(--c) 52%,rgba(255,255,255,.3))!important;background:radial-gradient(circle at 38% 25%,color-mix(in srgb,var(--c) 34%,#fff),transparent 38%),linear-gradient(145deg,color-mix(in srgb,var(--c) 28%,#111827),color-mix(in srgb,var(--c) 8%,#070b14))!important;box-shadow:inset 0 0 34px rgba(0,0,0,.18),0 0 16px color-mix(in srgb,var(--c) 10%,transparent)}
+body.game-zahra.game-running .yard-inner{width:76%!important;height:76%!important;border-radius:28%!important;background:rgba(5,8,16,.34)!important;border:1px solid rgba(255,255,255,.16)!important;gap:8%!important;padding:10%!important;box-shadow:inset 0 0 20px rgba(0,0,0,.2)!important}
+body.game-zahra.game-running .finish-center{border-radius:24%!important;background:conic-gradient(from 45deg,#8b5cf6 0 25%,#22d3ee 0 50%,#f0b94a 0 75%,#22c55e 0)!important;border:2px solid rgba(255,255,255,.78)!important;box-shadow:0 8px 24px rgba(0,0,0,.32),0 0 0 3px rgba(255,255,255,.08)!important}
+/* Zahra pieces are glass pawns, not flat dots. */
+body.game-zahra.game-running .ludo-piece{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:transparent!important;overflow:visible!important}
+body.game-zahra.game-running .ludo-piece:before{content:"";position:absolute;left:50%;bottom:0;width:68%;height:62%;transform:translateX(-50%);clip-path:polygon(34% 0,66% 0,72% 34%,92% 100%,8% 100%,28% 34%);border-radius:40%;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 64%,#050812),var(--c) 42%,color-mix(in srgb,var(--c) 72%,#fff));box-shadow:0 5px 5px rgba(0,0,0,.4),inset 2px 0 3px rgba(255,255,255,.18)}
+body.game-zahra.game-running .ludo-piece:after{content:"";position:absolute;left:50%;top:1%;width:43%;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 32% 27%,rgba(255,255,255,.85),var(--c) 42%,color-mix(in srgb,var(--c) 55%,#050812));border:1px solid rgba(255,255,255,.6);box-shadow:0 3px 5px rgba(0,0,0,.34)}
+body.game-zahra.game-running .ludo-piece.legal{animation:zahraPawnPulse .7s ease-in-out infinite alternate!important;filter:drop-shadow(0 0 10px var(--c))!important}
+@keyframes zahraPawnPulse{to{transform:translateY(-3px) scale(1.08)}}
+body.game-zahra.game-running .game-side{background:linear-gradient(160deg,rgba(13,18,32,.96),rgba(5,8,16,.98))!important;border-color:rgba(255,255,255,.08)!important}
+body.game-zahra.game-running .game-status{background:linear-gradient(145deg,rgba(139,92,246,.08),rgba(34,211,238,.035))!important;border-color:rgba(139,92,246,.15)!important}
+@media(max-width:650px){body.game-zahra.game-running .ludo-frame{padding:2px!important;border-radius:13px!important}body.game-zahra.game-running .ludo-board{padding:1px!important;border-radius:10px!important}.ludo-yard{border-radius:13px!important}.yard-inner{border-radius:22%!important}}
+
+/* Busraj 3.2 final — Obsidian Jewel board. No sterile white track. */
+body.game-zahra.game-running .ludo-frame{
+  background:linear-gradient(145deg,#252a35 0,#090c13 22%,#030509 100%)!important;
+  border:1px solid rgba(219,229,255,.18)!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.62),inset 0 0 0 3px rgba(255,255,255,.025),0 0 34px rgba(34,211,238,.06)!important;
+}
+body.game-zahra.game-running .ludo-board{
+  background:radial-gradient(circle at 50% 50%,rgba(151,128,255,.10),transparent 24%),linear-gradient(145deg,#0b1019,#05070c)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  box-shadow:inset 0 0 50px rgba(0,0,0,.44)!important;
+}
+body.game-zahra.game-running .ludo-cell{
+  background:linear-gradient(145deg,#202733,#111720)!important;
+  border:1px solid rgba(207,220,245,.18)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.06),inset 0 -6px 12px rgba(0,0,0,.17)!important;
+}
+body.game-zahra.game-running .ludo-cell.path-color{
+  background:radial-gradient(circle at 36% 24%,rgba(255,255,255,.18),transparent 34%),linear-gradient(145deg,color-mix(in srgb,var(--c) 40%,#101722),color-mix(in srgb,var(--c) 18%,#071019))!important;
+  border-color:color-mix(in srgb,var(--c) 55%,rgba(255,255,255,.22))!important;
+  box-shadow:inset 0 0 16px color-mix(in srgb,var(--c) 14%,transparent),0 0 8px color-mix(in srgb,var(--c) 8%,transparent)!important;
+}
+body.game-zahra.game-running .ludo-cell.star{
+  background:radial-gradient(circle at 50% 45%,rgba(255,221,125,.25),transparent 42%),linear-gradient(145deg,#4a3a1b,#171309)!important;
+  border-color:rgba(255,213,112,.66)!important;
+  color:#ffe39a!important;
+}
+body.game-zahra.game-running .ludo-cell.star:after{color:#ffdb79!important;filter:drop-shadow(0 0 6px rgba(255,208,84,.45))}
+body.game-zahra.game-running .ludo-yard{
+  border:1px solid color-mix(in srgb,var(--c) 64%,rgba(255,255,255,.18))!important;
+  background:radial-gradient(circle at 48% 40%,color-mix(in srgb,var(--c) 34%,#fff),transparent 34%),linear-gradient(145deg,color-mix(in srgb,var(--c) 24%,#101722),#080c14 70%)!important;
+  box-shadow:inset 0 0 36px rgba(0,0,0,.30),0 0 18px color-mix(in srgb,var(--c) 13%,transparent)!important;
+}
+body.game-zahra.game-running .yard-inner{
+  background:linear-gradient(145deg,rgba(4,7,13,.72),rgba(14,20,31,.78))!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+  box-shadow:inset 0 12px 30px rgba(0,0,0,.34),0 1px rgba(255,255,255,.05)!important;
+}
+body.game-zahra.game-running .finish-center{
+  background:conic-gradient(from 45deg,#6f46d8 0 25%,#0ea8c5 0 50%,#d49d2d 0 75%,#159a56 0)!important;
+  border:1px solid rgba(255,244,214,.78)!important;
+  box-shadow:0 9px 28px rgba(0,0,0,.42),inset 0 0 22px rgba(255,255,255,.12),0 0 18px rgba(244,199,109,.10)!important;
+}
+body.game-zahra.game-running .ludo-piece{filter:drop-shadow(0 5px 4px rgba(0,0,0,.42))}

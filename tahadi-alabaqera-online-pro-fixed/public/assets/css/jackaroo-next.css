@@ -1,0 +1,89 @@
+/* Busraj 3.2 — Jackaroo Black Table. Modern, high-contrast and mobile board-first. */
+body.game-jackaroo.game-running{background:radial-gradient(circle at 15% 8%,rgba(240,185,74,.10),transparent 28%),radial-gradient(circle at 85% 88%,rgba(34,211,238,.07),transparent 28%),#05070c!important}
+body.game-jackaroo.game-running .jack-layout{grid-template-columns:minmax(0,1fr) clamp(300px,27vw,370px)!important;gap:8px!important;margin-top:6px!important;align-items:start}
+body.game-jackaroo.game-running .jack-main{padding:8px!important;background:linear-gradient(155deg,rgba(15,18,27,.98),rgba(7,9,14,.98))!important;border-color:rgba(240,185,74,.14)!important}
+body.game-jackaroo.game-running .jack-board-wrap{width:min(100%,860px)!important;padding:8px!important;border-radius:34px!important;background:linear-gradient(145deg,#2d3037,#101217 17%,#050607 100%)!important;border:1px solid rgba(240,213,154,.32)!important;box-shadow:0 30px 74px rgba(0,0,0,.62),0 0 0 5px rgba(0,0,0,.55) inset,0 0 35px rgba(240,185,74,.06)!important}
+body.game-jackaroo.game-running .jack-board{border-radius:28px!important;background:radial-gradient(circle at 50% 50%,rgba(240,185,74,.055) 0 15%,transparent 15.4%),radial-gradient(circle at 50% 50%,transparent 0 49%,rgba(240,185,74,.07) 49.3% 50%,transparent 50.4%),linear-gradient(145deg,#151920,#080a0d 64%,#11151b)!important;border:1px solid rgba(240,213,154,.20)!important;box-shadow:inset 0 0 74px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.025)!important}
+body.game-jackaroo.game-running .jack-board:before{inset:8%!important;border:1px solid rgba(240,213,154,.08)!important;box-shadow:inset 0 0 50px rgba(0,0,0,.22)!important}
+body.game-jackaroo.game-running .track-hole,body.game-jackaroo.game-running .safe-hole,body.game-jackaroo.game-running .home-hole{background:radial-gradient(circle at 40% 34%,#f5efe3,#bdb39e 27%,#554b3c 31%,#111318 65%)!important;border:1px solid rgba(240,213,154,.54)!important;box-shadow:inset 0 4px 7px rgba(0,0,0,.68),0 1px 0 rgba(255,255,255,.14),0 0 0 1px rgba(0,0,0,.38)!important}
+body.game-jackaroo.game-running .track-hole.start{border:2px solid color-mix(in srgb,var(--seat,var(--c)) 76%,#fff)!important;box-shadow:inset 0 4px 7px rgba(0,0,0,.62),0 0 0 3px color-mix(in srgb,var(--seat,var(--c)) 17%,transparent),0 0 16px color-mix(in srgb,var(--seat,var(--c)) 23%,transparent)!important}
+body.game-jackaroo.game-running .safe-hole{background:radial-gradient(circle at 40% 34%,color-mix(in srgb,var(--seat) 50%,#fff),color-mix(in srgb,var(--seat) 22%,#252832) 38%,#101217 72%)!important}
+body.game-jackaroo.game-running .home-zone{border-radius:26px!important;border:1px solid color-mix(in srgb,var(--seat) 38%,rgba(255,255,255,.14))!important;background:radial-gradient(circle at 45% 42%,color-mix(in srgb,var(--seat) 18%,transparent),rgba(7,9,14,.72) 68%)!important;box-shadow:inset 0 0 34px rgba(0,0,0,.28),0 0 22px color-mix(in srgb,var(--seat) 8%,transparent)!important}
+body.game-jackaroo.game-running .home-zone .home-label{color:color-mix(in srgb,var(--seat) 72%,#fff)!important;letter-spacing:.06em}
+body.game-jackaroo.game-running .jack-center{border-radius:24px!important;background:radial-gradient(circle at 50% 18%,rgba(240,185,74,.10),transparent 36%),linear-gradient(145deg,#161920,#07080b)!important;border:1px solid rgba(240,185,74,.38)!important;box-shadow:0 16px 38px rgba(0,0,0,.48),inset 0 0 24px rgba(240,185,74,.05)!important}
+body.game-jackaroo.game-running .jack-center b{color:#f4d797!important;letter-spacing:.12em!important;font-size:clamp(14px,2.6vw,28px)!important}
+body.game-jackaroo.game-running .jack-center span{color:#918777!important}
+body.game-jackaroo.game-running .jack-marble{background:radial-gradient(circle at 29% 22%,rgba(255,255,255,.96) 0 7%,rgba(255,255,255,.42) 8% 17%,var(--seat) 40%,color-mix(in srgb,var(--seat) 50%,#07080b) 100%)!important;border:1px solid rgba(255,255,255,.74)!important;box-shadow:inset -5px -6px 8px rgba(0,0,0,.30),0 6px 10px rgba(0,0,0,.46),0 0 8px color-mix(in srgb,var(--seat) 18%,transparent)!important}
+body.game-jackaroo.game-running .jack-side{background:linear-gradient(160deg,rgba(16,19,28,.98),rgba(6,8,13,.98))!important;border-color:rgba(240,185,74,.12)!important;padding:10px!important}
+body.game-jackaroo.game-running .jack-team-card,body.game-jackaroo.game-running .team-card,body.game-jackaroo.game-running .player-jack{background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012))!important;border-color:rgba(255,255,255,.065)!important}
+body.game-jackaroo.game-running .playing-card{background:linear-gradient(145deg,#fffef9,#e8e4dc)!important;border-color:#fff9ed!important;box-shadow:0 12px 24px rgba(0,0,0,.34)!important}
+body.game-jackaroo.game-running .playing-card.selected{box-shadow:0 0 0 3px rgba(240,185,74,.35),0 18px 32px rgba(0,0,0,.42)!important}
+body.game-jackaroo.game-running .move-hint,body.game-jackaroo.game-running .action-btn{background:#080b11!important;border-color:rgba(255,255,255,.08)!important}
+body.game-jackaroo.game-running .action-btn:hover{border-color:rgba(240,185,74,.48)!important;background:#10131b!important}
+@media(max-width:980px){
+ body.game-jackaroo.game-running .jack-layout{grid-template-columns:1fr!important;gap:5px!important}
+ body.game-jackaroo.game-running .jack-main{order:0!important;padding:3px!important;border-radius:15px!important}
+ body.game-jackaroo.game-running .jack-side{order:1!important;padding:7px!important;border-radius:15px!important}
+ body.game-jackaroo.game-running .jack-board-wrap{width:min(100vw - 8px,720px)!important;padding:3px!important;border-radius:18px!important}
+ body.game-jackaroo.game-running .jack-board{border-radius:15px!important}
+ body.game-jackaroo.game-running .jack-side .player-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.game-jackaroo.game-running .jack-hand{min-height:98px!important;margin-top:2px!important}
+ body.game-jackaroo.game-running .playing-card{flex-basis:62px!important;height:92px!important;margin-inline:-7px!important}
+ body.game-jackaroo.game-running .action-list{max-height:180px!important}
+}
+@media(max-width:600px){
+ body.game-jackaroo.game-running .bs-shell{padding-inline:2px!important}
+ body.game-jackaroo.game-running .game-toolbar{margin-bottom:3px!important}
+ body.game-jackaroo.game-running .game-toolbar .toolbar-title p{display:none}
+ body.game-jackaroo.game-running .jack-board-wrap{width:calc(100vw - 4px)!important}
+ body.game-jackaroo.game-running .track-hole,body.game-jackaroo.game-running .safe-hole{width:18px!important;height:18px!important}
+ body.game-jackaroo.game-running .home-zone{border-radius:14px!important}
+ body.game-jackaroo.game-running .jack-center{border-radius:14px!important}
+ body.game-jackaroo.game-running .jack-side .player-list{grid-template-columns:1fr 1fr!important;gap:4px!important}
+ body.game-jackaroo.game-running .player-jack{padding:6px!important;font-size:9px!important}
+ body.game-jackaroo.game-running .jack-team-rail,body.game-jackaroo.game-running .team-rail{gap:4px!important;margin-bottom:5px!important}
+ body.game-jackaroo.game-running .jack-team-card,body.game-jackaroo.game-running .team-card{padding:6px!important}
+}
+
+/* Busraj 3.2 final — Walnut + midnight felt Jackaroo table. */
+body.game-jackaroo.game-running{
+  background:radial-gradient(circle at 50% -8%,rgba(202,151,76,.11),transparent 33%),radial-gradient(circle at 92% 80%,rgba(19,146,114,.08),transparent 28%),#050806!important;
+}
+body.game-jackaroo.game-running .jack-board-wrap{
+  background:linear-gradient(145deg,#8a5b30 0,#4a2c16 8%,#20130c 16%,#080b09 22%,#030504 100%)!important;
+  border:1px solid rgba(255,214,151,.46)!important;
+  box-shadow:0 30px 78px rgba(0,0,0,.66),inset 0 0 0 4px rgba(53,28,12,.78),inset 0 0 0 7px rgba(255,219,165,.055),0 0 34px rgba(205,145,72,.08)!important;
+}
+body.game-jackaroo.game-running .jack-board{
+  background:radial-gradient(circle at 50% 50%,rgba(240,185,74,.055) 0 14%,transparent 14.6%),radial-gradient(circle at 50% 50%,transparent 0 49%,rgba(240,200,129,.12) 49.2% 50%,transparent 50.4%),radial-gradient(circle at 32% 25%,rgba(46,151,119,.10),transparent 36%),linear-gradient(145deg,#123126,#071611 58%,#0a1f18)!important;
+  border:1px solid rgba(244,208,148,.24)!important;
+  box-shadow:inset 0 0 90px rgba(0,0,0,.52),inset 0 0 0 1px rgba(255,255,255,.035)!important;
+}
+body.game-jackaroo.game-running .jack-board:after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.13;
+  background-image:repeating-linear-gradient(18deg,rgba(255,255,255,.035) 0 1px,transparent 1px 5px);
+  mix-blend-mode:soft-light;
+}
+body.game-jackaroo.game-running .track-hole,
+body.game-jackaroo.game-running .safe-hole,
+body.game-jackaroo.game-running .home-hole{
+  background:radial-gradient(circle at 42% 34%,#f2ddba 0 10%,#8b7658 11% 21%,#2f271e 26%,#090c0b 67%)!important;
+  border-color:rgba(239,198,135,.62)!important;
+  box-shadow:inset 0 4px 8px rgba(0,0,0,.76),0 1px rgba(255,255,255,.18),0 0 0 1px rgba(27,15,7,.64)!important;
+}
+body.game-jackaroo.game-running .safe-hole{
+  background:radial-gradient(circle at 40% 34%,color-mix(in srgb,var(--seat) 55%,#fff),color-mix(in srgb,var(--seat) 24%,#173027) 34%,#08120e 72%)!important;
+}
+body.game-jackaroo.game-running .home-zone{
+  background:radial-gradient(circle at 46% 40%,color-mix(in srgb,var(--seat) 22%,transparent),rgba(5,14,11,.82) 70%)!important;
+  border-color:color-mix(in srgb,var(--seat) 46%,rgba(244,208,148,.18))!important;
+}
+body.game-jackaroo.game-running .jack-center{
+  background:radial-gradient(circle at 50% 20%,rgba(240,185,74,.12),transparent 34%),linear-gradient(145deg,#17231d,#07100c)!important;
+  border-color:rgba(239,196,127,.52)!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.52),inset 0 0 26px rgba(240,185,74,.065)!important;
+}
+body.game-jackaroo.game-running .jack-center b{color:#f4d38f!important;text-shadow:0 2px 12px rgba(240,185,74,.10)}
+body.game-jackaroo.game-running .jack-main,
+body.game-jackaroo.game-running .jack-side{border-color:rgba(238,199,139,.10)!important}
+body.game-jackaroo.game-running .jack-marble{filter:drop-shadow(0 6px 5px rgba(0,0,0,.44))}

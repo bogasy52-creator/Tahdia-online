@@ -93,7 +93,7 @@
     const title = document.createElement('b');
     title.textContent = `🎮 دعوة من ${notification.from?.displayName || notification.from?.username || 'صديق'}`;
     const sub = document.createElement('span');
-    const labels = { quiz: 'تحدي العباقرة', jackaroo: 'جاكارو', snakes: 'السلم والثعبان', zahra: 'الزهرة' };
+    const labels = { quiz: 'تحدي العباقرة', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة' };
     sub.textContent = `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}`;
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';

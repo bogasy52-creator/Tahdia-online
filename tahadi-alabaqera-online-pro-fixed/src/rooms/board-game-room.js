@@ -277,7 +277,7 @@ export class BoardGameRoom extends DurableObject {
       const messages = {
         wrong_turn: 'ليس دورك الآن',
         players_not_ready: 'كل اللاعبين يجب أن يكونوا جاهزين',
-        snakes_requires_2_to_4_players: 'السلم والثعبان يحتاج من لاعبين إلى أربعة',
+        snakes_requires_2_to_4_players: 'الثعبان يحتاج من لاعبين إلى أربعة',
         jackaroo_requires_4_players: 'جاكارو يحتاج أربعة لاعبين بالضبط',
         illegal_jackaroo_action: 'الحركة غير قانونية',
         invalid_card: 'الورقة غير صالحة',

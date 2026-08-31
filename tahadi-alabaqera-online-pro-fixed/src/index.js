@@ -234,9 +234,9 @@ export default {
       const boardOnline = Boolean(env.BOARD_ROOMS);
       const socialOnline = Boolean(env.SOCIAL_USERS || env.BOARD_ROOMS);
       if (!quizOnline || !boardOnline) {
-        return json({ ok: false, online: false, quizOnline, boardOnline, socialOnline, error: "Durable Object binding missing", version: "3.1.0" }, 503);
+        return json({ ok: false, online: false, quizOnline, boardOnline, socialOnline, error: "Durable Object binding missing", version: "3.2.0" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, socialOnline, service: "tahadi-alabaqera-online", version: "3.1.0" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, socialOnline, service: "tahadi-alabaqera-online", version: "3.2.0" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {

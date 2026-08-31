@@ -7,7 +7,7 @@ const root=process.cwd(),pub=join(root,'public');
 test('mobile board stylesheet is shipped and cached', async()=>{
   await access(join(pub,'assets/css/mobile-game.css'));
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v18/);
+  assert.match(sw,/busraj-games-v20/);
   assert.ok(sw.includes('/assets/css/mobile-game.css'));
 });
 
@@ -24,8 +24,9 @@ test('snakes pieces cannot be clipped during movement', async()=>{
   const html=await readFile(join(pub,'snakes.html'),'utf8');
   const css=await readFile(join(pub,'assets/css/mobile-game.css'),'utf8');
   assert.ok(html.includes("classList.add('occupied-cell')"));
-  assert.ok(html.includes('async function glideToken('));
-  assert.ok(html.includes("classList.add('moving-token')"));
+  assert.ok(html.includes('async function animatePawnPath('));
+  assert.ok(html.includes('async function animateSnakeEat('));
+  assert.ok(html.includes("classList.add('motion-hidden')"));
   assert.match(css,/\.snake-cell\.occupied-cell\s*\{[^}]*overflow:\s*visible\s*!important/s);
   assert.match(css,/\.token-stack\s*\{[^}]*z-index:\s*40\s*!important/s);
 });
