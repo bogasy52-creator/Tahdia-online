@@ -5,45 +5,55 @@ on:
     branches:
       - main
     paths:
-      - "**.zip"
+      - "*.zip"
 
 permissions:
   contents: write
 
+concurrency:
+  group: automatic-zip-update
+  cancel-in-progress: false
+
 jobs:
   update:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout files
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Unzip game update
+      - name: Find uploaded ZIP
+        id: upload
+        shell: bash
         run: |
-          GAME="tahadi-alabaqera-online-pro-fixed"
-
-          ZIP=$(find . -maxdepth 1 -name "*.zip" | head -1)
-
-          if [ -z "$ZIP" ]; then
-            echo "No ZIP file found"
+          mapfile -t ZIPS < <(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" -- '*.zip' | awk 'index($0, "/") == 0' | sort -u)
+          if [ "${#ZIPS[@]}" -ne 1 ] || [ ! -f "${ZIPS[0]}" ]; then
+            echo "Upload exactly one ZIP file to the repository root." >&2
             exit 1
           fi
+          echo "zip=${ZIPS[0]}" >> "$GITHUB_OUTPUT"
 
-          echo "Updating game..."
+      - name: Apply ZIP update
+        shell: bash
+        run: bash .github/scripts/apply-zip-update.sh "${{ steps.upload.outputs.zip }}" tahadi-alabaqera-online-pro-fixed
 
-          unzip -o "$ZIP" -d "$GAME"
+      - name: Refresh checksums and verify project
+        working-directory: tahadi-alabaqera-online-pro-fixed
+        shell: bash
+        run: |
+          node -e 'const fs=require("fs"),crypto=require("crypto"),file="SHA256SUMS.txt";const lines=fs.readFileSync(file,"utf8").trimEnd().split("\n");const next=lines.map(line=>{const name=line.slice(66);const hash=crypto.createHash("sha256").update(fs.readFileSync(name)).digest("hex");return hash+"  "+name});fs.writeFileSync(file,next.join("\n")+"\n")'
+          npm run verify
+          sha256sum -c SHA256SUMS.txt
 
-          rm -f "$ZIP"
-
-          echo "Game extracted successfully"
-
-      - name: Commit and push changes
+      - name: Publish verified update
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add .
-
-          git commit -m "Auto update game files" || echo "No changes"
-
+          git add -A -- tahadi-alabaqera-online-pro-fixed "${{ steps.upload.outputs.zip }}"
+          git commit -m "Auto update game files"
+          git pull --rebase origin main
           git push origin main
