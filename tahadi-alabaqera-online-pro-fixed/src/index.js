@@ -1,10 +1,100 @@
 
 import { DurableObject } from "cloudflare:workers";
 import { CATEGORIES } from "./questions.js";
-import { BoardGameRoom as BoardGameRoomBase } from "./rooms/board-game-room.js";
+import { createSnakesGame, playSnakesRoll } from "../public/assets/js/engines/snakes-engine.js";
+import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
+import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
 
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
+const DISCONNECT_GRACE_MS = 45_000;
+const TURN_TIMEOUT_MS = 60_000;
+const MOVE_TIMEOUT_MS = 25_000;
+const RATE_BUCKETS = new Map();
+
+function memoryRateLimit(request, bucket, limit, windowMs) {
+  const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() || "local";
+  const key = `${bucket}:${ip}`;
+  const now = Date.now();
+  const current = RATE_BUCKETS.get(key);
+  if (!current || now >= current.resetAt) {
+    RATE_BUCKETS.set(key, { count: 1, resetAt: now + windowMs });
+    return null;
+  }
+  current.count += 1;
+  if (current.count > limit) {
+    const retryAfter = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+    return new Response(JSON.stringify({ ok: false, error: "طلبات كثيرة جدًا، حاول بعد قليل" }), {
+      status: 429,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "retry-after": String(retryAfter),
+        "x-content-type-options": "nosniff",
+      },
+    });
+  }
+  if (RATE_BUCKETS.size > 5000) {
+    for (const [k, v] of RATE_BUCKETS) if (now >= v.resetAt) RATE_BUCKETS.delete(k);
+  }
+  return null;
+}
+
+async function rateLimit(request, env, bucket, limit, windowMs) {
+  if (!env?.ROOMS) return memoryRateLimit(request, bucket, limit, windowMs);
+  const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() || "local";
+  try {
+    const id = env.ROOMS.idFromName(`__rate__:${ip}`);
+    const stub = env.ROOMS.get(id);
+    const res = await stub.fetch("https://room.internal/rate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ bucket, limit, windowMs }),
+    });
+    if (res.status !== 429) return null;
+    const data = await res.json().catch(() => ({}));
+    const retryAfter = Math.max(1, Number(data.retryAfter) || 1);
+    return new Response(JSON.stringify({ ok: false, error: "طلبات كثيرة جدًا، حاول بعد قليل" }), {
+      status: 429,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "retry-after": String(retryAfter),
+        "x-content-type-options": "nosniff",
+      },
+    });
+  } catch {
+    return memoryRateLimit(request, bucket, limit, windowMs);
+  }
+}
+
+function webSocketAuth(request) {
+  const protocols = String(request.headers.get("Sec-WebSocket-Protocol") || "")
+    .split(",").map((x) => x.trim()).filter(Boolean);
+  const read = (prefix) => protocols.find((x) => x.startsWith(prefix))?.slice(prefix.length) || "";
+  return {
+    reconnectToken: read("rt."),
+    hostKey: read("hk."),
+    protocol: protocols.includes("busraj-v1") ? "busraj-v1" : "",
+  };
+}
+
+function webSocketResponse(client, protocol) {
+  const headers = protocol ? { "Sec-WebSocket-Protocol": protocol } : undefined;
+  return new Response(null, { status: 101, webSocket: client, headers });
+}
+
+function sameOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return true;
+  try {
+    const requestUrl = new URL(request.url);
+    const originUrl = new URL(origin);
+    return originUrl.protocol === requestUrl.protocol && originUrl.host === requestUrl.host;
+  } catch {
+    return false;
+  }
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -12,15 +102,14 @@ function json(data, status = 200) {
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
-      "access-control-allow-origin": "*",
-      "access-control-allow-headers": "content-type",
-      "access-control-allow-methods": "GET,POST,OPTIONS",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "same-origin",
     },
   });
 }
 
 function cleanName(value) {
-  return String(value || "").trim().replace(/[<>]/g, "").slice(0, 20) || "لاعب";
+  return String(value || "").normalize("NFKC").trim().replace(/[\u0000-\u001F\u007F<>]/g, "").slice(0, 20) || "لاعب";
 }
 
 function shuffle(items) {
@@ -97,26 +186,34 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (url.pathname.startsWith("/api/") && !sameOrigin(request)) {
+      return json({ ok: false, error: "cross_origin_forbidden" }, 403);
+    }
+
     if (request.method === "GET" && url.pathname === "/api/health") {
-      if (!env.ROOMS) {
-        return json({ ok: false, online: false, error: "ROOMS binding missing", version: "2.0.0" }, 503);
+      const quizOnline = Boolean(env.ROOMS);
+      const boardOnline = Boolean(env.BOARD_ROOMS);
+      if (!quizOnline || !boardOnline) {
+        return json({ ok: false, online: false, quizOnline, boardOnline, error: "Durable Object binding missing", version: "2.2.0" }, 503);
       }
-      return json({ ok: true, online: true, service: "tahadi-alabaqera-online", version: "2.0.0" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, service: "tahadi-alabaqera-online", version: "2.2.0" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "access-control-allow-origin": "*",
-          "access-control-allow-headers": "content-type",
-          "access-control-allow-methods": "GET,POST,OPTIONS",
-          "access-control-max-age": "86400",
-        },
-      });
+      const origin = request.headers.get("Origin");
+      const headers = {
+        "access-control-allow-headers": "content-type",
+        "access-control-allow-methods": "GET,POST,OPTIONS",
+        "access-control-max-age": "86400",
+        "vary": "Origin",
+      };
+      if (origin) headers["access-control-allow-origin"] = origin;
+      return new Response(null, { status: 204, headers });
     }
 
     if (request.method === "POST" && url.pathname === "/api/rooms") {
+      const limited = await rateLimit(request, env, "quiz-create", 12, 60_000);
+      if (limited) return limited;
       if (!env.ROOMS) return json({ ok: false, error: "محرك الغرف غير مفعّل على السيرفر" }, 503);
       try {
         let body = {};
@@ -143,6 +240,8 @@ export default {
 
     const match = url.pathname.match(/^\/api\/rooms\/(\d{6})(\/ws|\/status)?$/);
     if (match) {
+      const limited = await rateLimit(request, env, match[2] === "/ws" ? "quiz-ws" : "quiz-status", match[2] === "/ws" ? 80 : 180, 60_000);
+      if (limited) return limited;
       if (!env.ROOMS) return json({ ok: false, error: "محرك الغرف غير مفعّل على السيرفر" }, 503);
       try {
         const code = match[1];
@@ -157,45 +256,47 @@ export default {
       }
     }
 
-    if (request.method === "POST" && url.pathname === "/api/games/rooms") {
-      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الطاولة غير مفعّل على السيرفر" }, 503);
+    if (request.method === "POST" && url.pathname === "/api/board/rooms") {
+      const limited = await rateLimit(request, env, "board-create", 12, 60_000);
+      if (limited) return limited;
+      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الجلسات غير مفعّل" }, 503);
       try {
         let body = {};
         try { body = await request.json(); } catch {}
-        const gameType = body.gameType === "jackaroo" ? "jackaroo" : body.gameType === "snakes" ? "snakes" : "";
-        if (!gameType) return json({ ok: false, error: "نوع اللعبة غير صالح" }, 400);
+        const game = String(body.game || "");
+        if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        const playerLimit = game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
-        for (let attempt = 0; attempt < 10; attempt++) {
+        for (let attempt = 0; attempt < 12; attempt++) {
           const code = roomCode();
           const id = env.BOARD_ROOMS.idFromName(code);
           const stub = env.BOARD_ROOMS.get(id);
           const hostKey = token();
-          const hostToken = token();
-          const hostPlayerId = crypto.randomUUID();
-          const res = await stub.fetch("https://board-room.internal/init", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, gameType, hostKey, hostToken, hostPlayerId, name }),
+          const res = await stub.fetch("https://board.internal/init", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ code, hostKey, game, playerLimit, name }),
           });
-          if (res.status === 201) return json({ ok: true, code, gameType, token: hostToken, hostKey, playerId: hostPlayerId });
+          if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit });
         }
         return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
       } catch (err) {
         console.error("create board room failed", err);
-        return json({ ok: false, error: "تعذر تشغيل محرك ألعاب الطاولة" }, 503);
+        return json({ ok: false, error: "تعذر تشغيل غرفة اللعبة" }, 503);
       }
     }
 
-    const boardMatch = url.pathname.match(/^\/api\/games\/rooms\/(\d{6})(\/ws|\/status)?$/);
+    const boardMatch = url.pathname.match(/^\/api\/board\/rooms\/(\d{6})(\/ws|\/status)?$/);
     if (boardMatch) {
-      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الطاولة غير مفعّل على السيرفر" }, 503);
+      const limited = await rateLimit(request, env, boardMatch[2] === "/ws" ? "board-ws" : "board-status", boardMatch[2] === "/ws" ? 100 : 220, 60_000);
+      if (limited) return limited;
+      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الجلسات غير مفعّل" }, 503);
       try {
         const code = boardMatch[1];
         const suffix = boardMatch[2] || "/status";
         const id = env.BOARD_ROOMS.idFromName(code);
         const stub = env.BOARD_ROOMS.get(id);
         if (suffix === "/ws") return stub.fetch(request);
-        return stub.fetch("https://board-room.internal/status");
+        return stub.fetch("https://board.internal/status");
       } catch (err) {
         console.error("board room route failed", err);
         return json({ ok: false, error: "تعذر الوصول لغرفة اللعبة" }, 503);
@@ -211,8 +312,6 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
-
-export class BoardGameRoom extends BoardGameRoomBase {}
 
 export class GameRoom extends DurableObject {
   constructor(ctx, env) {
@@ -244,6 +343,22 @@ export class GameRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/rate" && request.method === "POST") {
+      const body = await request.json().catch(() => ({}));
+      const bucket = String(body.bucket || "default").slice(0, 48);
+      const limit = Math.min(1000, Math.max(1, Number(body.limit) || 60));
+      const windowMs = Math.min(3_600_000, Math.max(1000, Number(body.windowMs) || 60_000));
+      const key = `rate:${bucket}`;
+      const now = Date.now();
+      let rec = await this.ctx.storage.get(key);
+      if (!rec || now >= rec.resetAt) rec = { count: 0, resetAt: now + windowMs };
+      rec.count += 1;
+      await this.ctx.storage.put(key, rec);
+      await this.ctx.storage.setAlarm(rec.resetAt + 5_000);
+      if (rec.count > limit) return json({ ok: false, retryAfter: Math.max(1, Math.ceil((rec.resetAt - now) / 1000)) }, 429);
+      return json({ ok: true });
+    }
 
     if (url.pathname === "/init" && request.method === "POST") {
       if (this.room) return json({ ok: false, error: "room_exists" }, 409);
@@ -280,9 +395,11 @@ export class GameRoom extends DurableObject {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
       if (request.headers.get("Upgrade") !== "websocket") return json({ ok: false, error: "WebSocket required" }, 426);
 
+      if (this.room.status === "lobby" && this.cleanupLobbySeats()) await this.persist();
+
       const name = cleanName(url.searchParams.get("name"));
-      const reconnectToken = url.searchParams.get("token") || "";
-      const hostKey = url.searchParams.get("hostKey") || "";
+      const { reconnectToken, hostKey, protocol } = webSocketAuth(request);
+      if (!protocol) return json({ ok: false, error: "WebSocket protocol required" }, 426);
       let player = null;
 
       if (reconnectToken) {
@@ -295,8 +412,11 @@ export class GameRoom extends DurableObject {
       }
 
       if (!player) {
-        if (this.room.order.length >= 2) return json({ ok: false, error: "الغرفة ممتلئة" }, 409);
-        player = this.addPlayer(name, this.room.order.length === 0 ? "host" : "guest");
+        if (this.room.order.length === 0) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
+        if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
+        this.cleanupLobbySeats();
+        if (this.room.order.length >= 2) return json({ ok: false, error: "الغرفة ممتلئة — اللاعب المنقطع لديه مهلة للعودة" }, 409);
+        player = this.addPlayer(name, "guest");
       } else if (name) {
         player.name = name;
       }
@@ -313,6 +433,7 @@ export class GameRoom extends DurableObject {
       this.ctx.acceptWebSocket(server);
       server.serializeAttachment({ playerId: player.id });
       player.connected = true;
+      player.disconnectedAt = null;
       this.room.updatedAt = Date.now();
       await this.persist();
 
@@ -324,7 +445,7 @@ export class GameRoom extends DurableObject {
       }));
       this.broadcastState();
 
-      return new Response(null, { status: 101, webSocket: client });
+      return webSocketResponse(client, protocol);
     }
 
     return json({ ok: false, error: "not_found" }, 404);
@@ -340,6 +461,7 @@ export class GameRoom extends DurableObject {
       score: 0,
       ready: false,
       connected: true,
+      disconnectedAt: null,
       powers: { double: true, time: true, block: true },
     };
     this.room.players[id] = p;
@@ -397,6 +519,7 @@ export class GameRoom extends DurableObject {
           if (player.role !== "host") return this.sendError(ws, "للمضيف فقط");
           if (this.room.status !== "lobby") return;
           if (this.room.order.length !== 2) return this.sendError(ws, "يلزم لاعبان");
+          if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال اللاعبين");
           if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "اللاعبان لازم يكونان جاهزين");
           if (this.room.selectedCategories.length !== 6) return this.sendError(ws, "اختر 6 فئات");
           await this.startMatch();
@@ -432,9 +555,13 @@ export class GameRoom extends DurableObject {
     const p = this.playerForSocket(ws);
     if (p) {
       p.connected = false;
+      p.disconnectedAt = Date.now();
       this.room.updatedAt = Date.now();
       await this.persist();
       this.broadcastState();
+      if (["lobby", "finished"].includes(this.room.status)) {
+        await this.ctx.storage.setAlarm(Math.min(this.room.expiresAt, p.disconnectedAt + DISCONNECT_GRACE_MS));
+      }
     }
   }
 
@@ -444,6 +571,51 @@ export class GameRoom extends DurableObject {
 
   sendError(ws, message) {
     try { ws.send(JSON.stringify({ type: "error", message })); } catch {}
+  }
+
+  cleanupLobbySeats() {
+    if (!this.room || !["lobby", "finished"].includes(this.room.status)) return false;
+    this.syncConnectedFlags();
+    const now = Date.now();
+    let changed = false;
+
+    for (const id of [...this.room.order]) {
+      const p = this.room.players[id];
+      if (p?.role === "guest" && !p.connected && p.disconnectedAt && now - p.disconnectedAt >= DISCONNECT_GRACE_MS) {
+        delete this.room.players[id];
+        this.room.order = this.room.order.filter((x) => x !== id);
+        changed = true;
+      }
+    }
+
+    const hostId = this.room.order.find((id) => this.room.players[id]?.role === "host");
+    const host = hostId ? this.room.players[hostId] : null;
+    if (host && !host.connected && host.disconnectedAt && now - host.disconnectedAt >= DISCONNECT_GRACE_MS) {
+      const successorId = this.room.order.find((id) => id !== hostId && this.room.players[id]?.connected);
+      if (successorId) {
+        delete this.room.players[hostId];
+        this.room.order = this.room.order.filter((id) => id !== hostId);
+        const successor = this.room.players[successorId];
+        successor.role = "host";
+        successor.ready = false;
+        this.room.hostKey = token();
+        changed = true;
+      }
+    }
+
+    return changed;
+  }
+
+  async scheduleLobbyAlarm() {
+    if (!this.room || !["lobby", "finished"].includes(this.room.status)) return;
+    const now = Date.now();
+    const candidates = [this.room.expiresAt];
+    for (const id of this.room.order) {
+      const p = this.room.players[id];
+      if (!p?.connected && p?.disconnectedAt) candidates.push(p.disconnectedAt + DISCONNECT_GRACE_MS);
+    }
+    const next = Math.min(...candidates.filter((ts) => Number.isFinite(ts) && ts > now));
+    if (Number.isFinite(next)) await this.ctx.storage.setAlarm(next);
   }
 
   async persistAndBroadcast() {
@@ -723,7 +895,7 @@ export class GameRoom extends DurableObject {
     }
     this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
     await this.persistAndBroadcast();
-    await this.ctx.storage.setAlarm(this.room.expiresAt);
+    await this.scheduleLobbyAlarm();
   }
 
   async resetForRematch() {
@@ -740,15 +912,34 @@ export class GameRoom extends DurableObject {
       p.powers = { double: true, time: true, block: true };
     }
     await this.persistAndBroadcast();
+    await this.scheduleLobbyAlarm();
   }
 
   async alarm() {
-    if (!this.room) return;
+    if (!this.room) {
+      const now = Date.now();
+      const rateEntries = await this.ctx.storage.list({ prefix: "rate:" });
+      const expired = [];
+      let nextReset = Infinity;
+      for (const [key, rec] of rateEntries) {
+        if (!rec?.resetAt || now >= rec.resetAt) expired.push(key);
+        else nextReset = Math.min(nextReset, rec.resetAt);
+      }
+      if (expired.length) await this.ctx.storage.delete(expired);
+      if (Number.isFinite(nextReset)) await this.ctx.storage.setAlarm(nextReset + 5_000);
+      return;
+    }
     const now = Date.now();
 
-    if (this.room.status === "finished" && now >= this.room.expiresAt) {
+    if (now >= this.room.expiresAt) {
       await this.ctx.storage.deleteAll();
       this.room = null;
+      return;
+    }
+
+    if (["lobby", "finished"].includes(this.room.status)) {
+      if (this.cleanupLobbySeats()) await this.persistAndBroadcast();
+      await this.scheduleLobbyAlarm();
       return;
     }
 
@@ -791,5 +982,432 @@ export class GameRoom extends DurableObject {
     if (c.mode === "buzzer" && c.phase === "steal") {
       await this.finalizeBuzzer(c.stealPlayer, false, true);
     }
+  }
+}
+
+
+export class BoardRoom extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.ctx = ctx;
+    this.env = env;
+    this.room = null;
+    this.ctx.blockConcurrencyWhile(async () => {
+      this.room = (await this.ctx.storage.get("room")) || null;
+      this.syncConnected();
+    });
+  }
+
+  syncConnected() {
+    if (!this.room?.players) return;
+    const ids = new Set();
+    for (const ws of this.ctx.getWebSockets()) {
+      try { const a = ws.deserializeAttachment(); if (a?.playerId) ids.add(a.playerId); } catch {}
+    }
+    for (const p of Object.values(this.room.players)) p.connected = ids.has(p.id);
+  }
+
+  async persist() {
+    if (!this.room) return;
+    this.room.updatedAt = Date.now();
+    await this.ctx.storage.put("room", this.room);
+  }
+
+  addPlayer(name, role) {
+    const id = crypto.randomUUID();
+    const p = { id, token: token(), name: cleanName(name), role, ready: false, connected: true, disconnectedAt: null };
+    this.room.players[id] = p;
+    this.room.order.push(id);
+    return p;
+  }
+
+  playerForSocket(ws) {
+    try {
+      const a = ws.deserializeAttachment();
+      return a?.playerId ? this.room?.players?.[a.playerId] : null;
+    } catch { return null; }
+  }
+
+  playerIndex(playerId) { return this.room?.order?.indexOf(playerId) ?? -1; }
+
+  async leaveLobby(player, ws) {
+    if (!this.room || this.room.status !== "lobby" || !player) return false;
+    const wasHost = player.role === "host";
+    delete this.room.players[player.id];
+    this.room.order = this.room.order.filter((id) => id !== player.id);
+    if (wasHost && this.room.order.length) {
+      const successorId = this.room.order.find((id) => this.room.players[id]?.connected) || this.room.order[0];
+      this.room.players[successorId].role = "host";
+      this.room.players[successorId].ready = false;
+      this.room.hostKey = token();
+    }
+    if (!this.room.order.length) {
+      await this.ctx.storage.deleteAll();
+      this.room = null;
+      try { ws.close(1000, "left"); } catch {}
+      return true;
+    }
+    await this.saveAndBroadcast();
+    try { ws.close(1000, "left"); } catch {}
+    return true;
+  }
+
+  randomDie() {
+    return (crypto.getRandomValues(new Uint32Array(1))[0] % 6) + 1;
+  }
+
+  publicGameState(playerId) {
+    if (!this.room?.state) return null;
+    const state = structuredClone(this.room.state);
+    if (this.room.game === "jackaroo") {
+      const me = this.playerIndex(playerId);
+      state.deck = Array(state.deck?.length || 0).fill("?");
+      state.discard = Array(state.discard?.length || 0).fill("?");
+      state.hands = (state.hands || []).map((hand, i) => i === me ? hand : Array(hand.length).fill("?"));
+    }
+    return state;
+  }
+
+  publicState(playerId) {
+    if (!this.room) return null;
+    const me = this.room.players[playerId];
+    return {
+      code: this.room.code,
+      game: this.room.game,
+      serverNow: Date.now(),
+      playerLimit: this.room.playerLimit,
+      status: this.room.status,
+      version: this.room.version || 0,
+      players: this.room.order.map((id, index) => {
+        const p = this.room.players[id];
+        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected) };
+      }),
+      me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
+      pendingRoll: this.room.pendingRoll,
+      turnDeadline: this.room.turnDeadline || null,
+      state: this.publicGameState(playerId),
+    };
+  }
+
+  sendError(ws, message) { try { ws.send(JSON.stringify({ type: "error", message })); } catch {} }
+
+  broadcast() {
+    if (!this.room) return;
+    this.syncConnected();
+    for (const ws of this.ctx.getWebSockets()) {
+      const p = this.playerForSocket(ws);
+      if (!p) continue;
+      try { ws.send(JSON.stringify({ type: "state", state: this.publicState(p.id) })); } catch {}
+    }
+  }
+
+  setTurnDeadline(ms = TURN_TIMEOUT_MS) {
+    this.room.turnDeadline = Date.now() + ms;
+  }
+
+  cleanupStaleLobbyGuests() {
+    if (!this.room || !["lobby", "finished"].includes(this.room.status)) return false;
+    const now = Date.now();
+    let changed = false;
+    const staleGuests = this.room.order.filter((id) => {
+      const p = this.room.players[id];
+      return p?.role === "guest" && !p.connected && p.disconnectedAt && now - p.disconnectedAt >= DISCONNECT_GRACE_MS;
+    });
+    for (const id of staleGuests) delete this.room.players[id];
+    if (staleGuests.length) {
+      this.room.order = this.room.order.filter((id) => !staleGuests.includes(id));
+      changed = true;
+    }
+    const hostId = this.room.order.find((id) => this.room.players[id]?.role === "host");
+    const host = hostId ? this.room.players[hostId] : null;
+    if (host && !host.connected && host.disconnectedAt && now - host.disconnectedAt >= DISCONNECT_GRACE_MS) {
+      const successorId = this.room.order.find((id) => id !== hostId && this.room.players[id]?.connected);
+      if (successorId) {
+        delete this.room.players[hostId];
+        this.room.order = this.room.order.filter((id) => id !== hostId);
+        this.room.players[successorId].role = "host";
+        this.room.players[successorId].ready = false;
+        this.room.hostKey = token();
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  async scheduleNextAlarm() {
+    if (!this.room) return;
+    const now = Date.now();
+    const candidates = [this.room.expiresAt];
+    if (this.room.status === "playing" && this.room.turnDeadline) candidates.push(this.room.turnDeadline);
+    if (["lobby", "finished"].includes(this.room.status)) {
+      for (const id of this.room.order) {
+        const p = this.room.players[id];
+        if (!p?.connected && p?.disconnectedAt) candidates.push(p.disconnectedAt + DISCONNECT_GRACE_MS);
+      }
+    }
+    const next = Math.min(...candidates.filter((x) => Number.isFinite(x)));
+    if (Number.isFinite(next)) await this.ctx.storage.setAlarm(Math.max(now + 50, next));
+  }
+
+  async saveAndBroadcast() {
+    await this.persist();
+    this.broadcast();
+    await this.scheduleNextAlarm();
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === "/init" && request.method === "POST") {
+      if (this.room) return json({ ok: false, error: "room_exists" }, 409);
+      const body = await request.json();
+      const game = String(body.game || "");
+      if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
+      const now = Date.now();
+      this.room = {
+        code: body.code, hostKey: body.hostKey, game,
+        playerLimit: game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2)),
+        createdAt: now, updatedAt: now, expiresAt: now + 24 * 60 * 60 * 1000,
+        status: "lobby", players: {}, order: [], state: null, pendingRoll: null, turnDeadline: null, version: 0,
+      };
+      await this.persist();
+      await this.scheduleNextAlarm();
+      return json({ ok: true }, 201);
+    }
+
+    if (url.pathname === "/status") {
+      if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
+      return json({ ok: true, game: this.room.game, status: this.room.status, players: this.room.order.length, playerLimit: this.room.playerLimit });
+    }
+
+    if (url.pathname.endsWith("/ws")) {
+      if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
+      if (request.headers.get("Upgrade") !== "websocket") return json({ ok: false, error: "WebSocket required" }, 426);
+      const expectedGame = url.searchParams.get("game") || "";
+      if (expectedGame && expectedGame !== this.room.game) return json({ ok: false, error: "رمز الغرفة يخص لعبة أخرى" }, 409);
+      if (this.room.status === "lobby" && this.cleanupStaleLobbyGuests()) await this.persist();
+      const name = cleanName(url.searchParams.get("name"));
+      const { reconnectToken, hostKey, protocol } = webSocketAuth(request);
+      if (!protocol) return json({ ok: false, error: "WebSocket protocol required" }, 426);
+      let player = null;
+      if (reconnectToken) player = Object.values(this.room.players).find((p) => p.token === reconnectToken) || null;
+      if (!player && hostKey && hostKey === this.room.hostKey) {
+        player = Object.values(this.room.players).find((p) => p.role === "host") || null;
+        if (!player) player = this.addPlayer(name, "host");
+      }
+      if (!player) {
+        if (this.room.order.length === 0) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
+        if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
+        this.syncConnected();
+        this.cleanupStaleLobbyGuests();
+        if (this.room.order.length >= this.room.playerLimit) return json({ ok: false, error: "الغرفة ممتلئة — اللاعب المنقطع لديه مهلة للعودة" }, 409);
+        player = this.addPlayer(name, "guest");
+      } else if (name) player.name = name;
+
+      for (const old of this.ctx.getWebSockets()) {
+        try { if (old.deserializeAttachment()?.playerId === player.id) old.close(4001, "reconnected"); } catch {}
+      }
+      const pair = new WebSocketPair(), client = pair[0], server = pair[1];
+      this.ctx.acceptWebSocket(server);
+      server.serializeAttachment({ playerId: player.id });
+      player.connected = true;
+      player.disconnectedAt = null;
+      await this.persist();
+      server.send(JSON.stringify({ type: "welcome", playerId: player.id, token: player.token, state: this.publicState(player.id) }));
+      this.broadcast();
+      return webSocketResponse(client, protocol);
+    }
+    return json({ ok: false, error: "not_found" }, 404);
+  }
+
+  async webSocketMessage(ws, raw) {
+    if (!this.room) return;
+    const player = this.playerForSocket(ws);
+    if (!player) return;
+    const text = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
+    if (text.length > 8192) return this.sendError(ws, "الرسالة أكبر من المسموح");
+    let msg; try { msg = JSON.parse(text); } catch { return this.sendError(ws, "رسالة غير صالحة"); }
+    try {
+      if (msg.type === "leave") {
+        if (this.room.status === "lobby") return await this.leaveLobby(player, ws);
+        return;
+      }
+      if (msg.type === "ready") {
+        if (this.room.status !== "lobby") return;
+        player.ready = Boolean(msg.ready);
+        return await this.saveAndBroadcast();
+      }
+      if (msg.type === "start") {
+        if (player.role !== "host") return this.sendError(ws, "بدء المباراة للمضيف فقط");
+        if (this.room.status !== "lobby") return;
+        if (this.room.order.length !== this.room.playerLimit) return this.sendError(ws, `يلزم ${this.room.playerLimit} لاعبين`);
+        if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال جميع اللاعبين");
+        if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "كل اللاعبين لازم يضغطون جاهز");
+        return await this.startGame();
+      }
+      if (msg.type === "rematch") {
+        if (player.role !== "host") return this.sendError(ws, "الإعادة للمضيف فقط");
+        if (this.room.status !== "finished") return;
+        return await this.resetForRematch();
+      }
+      if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
+      const actor = this.playerIndex(player.id);
+      if (actor !== this.room.state.turn && this.room.game !== "jackaroo") return this.sendError(ws, "مو دورك الآن");
+      if (this.room.game === "snakes" && msg.type === "roll") {
+        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
+        const roll = this.randomDie();
+        this.room.state = playSnakesRoll(this.room.state, roll);
+        this.room.version++;
+        if (this.room.state.winner !== null) this.finishGame();
+        else this.setTurnDeadline();
+        return await this.saveAndBroadcast();
+      }
+      if (this.room.game === "zahra") {
+        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
+        if (msg.type === "roll") {
+          if (this.room.pendingRoll !== null) return this.sendError(ws, "اختر الحجر أولًا");
+          const roll = this.randomDie();
+          const legal = getLegalLudoMoves(this.room.state, roll);
+          if (!legal.length) {
+            this.room.state = passLudoTurn(this.room.state, roll);
+            this.room.pendingRoll = null;
+          } else this.room.pendingRoll = roll;
+          this.room.version++;
+          this.setTurnDeadline(this.room.pendingRoll !== null ? MOVE_TIMEOUT_MS : TURN_TIMEOUT_MS);
+          return await this.saveAndBroadcast();
+        }
+        if (msg.type === "ludo_move") {
+          if (this.room.pendingRoll === null) return this.sendError(ws, "ارمِ الزهرة أولًا");
+          this.room.state = applyLudoMove(this.room.state, Number(msg.token), this.room.pendingRoll);
+          this.room.pendingRoll = null;
+          this.room.version++;
+          if (this.room.state.winner !== null) this.finishGame();
+          else this.setTurnDeadline();
+          return await this.saveAndBroadcast();
+        }
+      }
+      if (this.room.game === "jackaroo" && msg.type === "jackaroo_play") {
+        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
+        const cardIndex = Number(msg.cardIndex);
+        const action = msg.action;
+        const legal = getJackarooActions(this.room.state, cardIndex, actor);
+        const sig = JSON.stringify(action);
+        if (!legal.some((a) => JSON.stringify(a) === sig)) return this.sendError(ws, "الحركة غير صالحة");
+        this.room.state = playJackarooAction(this.room.state, cardIndex, action, actor);
+        this.room.version++;
+        if (this.room.state.winnerTeam !== null) this.finishGame();
+        else this.setTurnDeadline();
+        return await this.saveAndBroadcast();
+      }
+      this.sendError(ws, "أمر غير معروف");
+    } catch (err) {
+      console.error("board room message error", err);
+      this.sendError(ws, "تعذر تنفيذ الحركة");
+    }
+  }
+
+  async startGame() {
+    const names = this.room.order.map((id) => this.room.players[id].name);
+    if (this.room.game === "snakes") this.room.state = createSnakesGame(names);
+    else if (this.room.game === "zahra") this.room.state = createLudoGame(names);
+    else this.room.state = createJackarooGame(names);
+    this.room.status = "playing";
+    this.room.pendingRoll = null;
+    this.room.version++;
+    this.setTurnDeadline();
+    for (const id of this.room.order) this.room.players[id].ready = true;
+    await this.saveAndBroadcast();
+  }
+
+  async resetForRematch() {
+    this.room.status = "lobby";
+    this.room.state = null;
+    this.room.pendingRoll = null;
+    this.room.turnDeadline = null;
+    this.room.version++;
+    for (const id of this.room.order) this.room.players[id].ready = false;
+    await this.saveAndBroadcast();
+  }
+
+  async handleTurnTimeout() {
+    if (!this.room || this.room.status !== "playing" || !this.room.state) return;
+    const actor = this.room.state.turn;
+    if (this.room.game === "snakes") {
+      this.room.state = playSnakesRoll(this.room.state, this.randomDie());
+      this.room.version++;
+      if (this.room.state.winner !== null) this.finishGame();
+      else this.setTurnDeadline();
+      return await this.saveAndBroadcast();
+    }
+    if (this.room.game === "zahra") {
+      let roll = this.room.pendingRoll;
+      if (roll === null) roll = this.randomDie();
+      const legal = getLegalLudoMoves(this.room.state, roll);
+      if (legal.length) {
+        const choice = pick(legal);
+        this.room.state = applyLudoMove(this.room.state, choice, roll);
+      } else {
+        this.room.state = passLudoTurn(this.room.state, roll);
+      }
+      this.room.pendingRoll = null;
+      this.room.version++;
+      if (this.room.state.winner !== null) this.finishGame();
+      else this.setTurnDeadline();
+      return await this.saveAndBroadcast();
+    }
+    if (this.room.game === "jackaroo") {
+      const candidates = [];
+      const hand = this.room.state.hands?.[actor] || [];
+      for (let cardIndex = 0; cardIndex < hand.length; cardIndex++) {
+        for (const action of getJackarooActions(this.room.state, cardIndex, actor)) candidates.push({ cardIndex, action });
+      }
+      if (candidates.length) {
+        const preferred = candidates.filter((x) => x.action.type !== "discard");
+        const chosen = pick(preferred.length ? preferred : candidates);
+        this.room.state = playJackarooAction(this.room.state, chosen.cardIndex, chosen.action, actor);
+        this.room.version++;
+        if (this.room.state.winnerTeam !== null) this.finishGame();
+        else this.setTurnDeadline();
+      } else {
+        this.setTurnDeadline();
+      }
+      return await this.saveAndBroadcast();
+    }
+  }
+
+  finishGame() {
+    this.room.status = "finished";
+    this.room.pendingRoll = null;
+    this.room.turnDeadline = null;
+    this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+  }
+
+  async webSocketClose(ws) {
+    const p = this.playerForSocket(ws);
+    if (!p || !this.room) return;
+    p.connected = false;
+    p.disconnectedAt = Date.now();
+    await this.persist();
+    this.broadcast();
+    await this.scheduleNextAlarm();
+  }
+  async webSocketError(ws) { await this.webSocketClose(ws); }
+
+  async alarm() {
+    if (!this.room) return;
+    const now = Date.now();
+    if (now >= this.room.expiresAt) {
+      await this.ctx.storage.deleteAll();
+      this.room = null;
+      return;
+    }
+    if (this.room.status === "playing" && this.room.turnDeadline && now >= this.room.turnDeadline) {
+      await this.handleTurnTimeout();
+      return;
+    }
+    if (["lobby", "finished"].includes(this.room.status) && this.cleanupStaleLobbyGuests()) {
+      await this.persist();
+      this.broadcast();
+    }
+    await this.scheduleNextAlarm();
   }
 }

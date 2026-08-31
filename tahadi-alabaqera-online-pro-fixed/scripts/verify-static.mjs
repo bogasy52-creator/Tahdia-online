@@ -36,14 +36,11 @@ async function requireTarget(target, source, raw) {
   const key = `${source}|${target}`;
   if (checked.has(key)) return;
   checked.add(key);
-  const candidates = extname(target) ? [target] : [target, `${target}.html`];
-  for (const candidate of candidates) {
-    try {
-      await access(candidate);
-      return;
-    } catch {}
+  try { await access(target); }
+  catch {
+    try { await access(`${target}.html`); }
+    catch { missing.push(`${relative(root, source)} -> ${raw}`); }
   }
-  missing.push(`${relative(root, source)} -> ${raw}`);
 }
 
 const files = await walk(publicDir);

@@ -1,0 +1,14 @@
+Busraj Games 2.2 PRO — Luxury Dice & Pieces
+============================================
+
+نتائج التحقق المحلي:
+- اختبارات Node: 38/38 ناجحة.
+- فحص المراجع الثابتة: 67 مرجعًا محليًا ناجحًا.
+- JavaScript syntax: audio-manager.js / luxury-game-ui.js / src/index.js ناجح.
+- محركات الألعاب الأربعة لم تتغير مقارنة بإصدار Arcade Premium.
+- منطق السيرفر src/index.js لم يتغير مقارنة بإصدار Arcade Premium.
+- PWA cache: busraj-games-v9 ويشمل ملفات Luxury UI الجديدة.
+
+ملاحظة النشر:
+- npm run check يعتمد على wrangler.
+- في بيئة الفحص الحالية wrangler غير مثبت، لذلك يجب تشغيل npm install ثم npm run verify في بيئة النشر قبل Cloudflare deploy.

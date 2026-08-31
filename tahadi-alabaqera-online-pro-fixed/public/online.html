@@ -61,7 +61,6 @@
 </div>
 <script src="assets/js/audio-manager.js"></script>
 <script src="assets/js/platform.js"></script>
-<script src="assets/js/online/room-client.js"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -98,7 +97,7 @@ install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>'
 let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false;
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
-const DEFAULT_CLOUD_API='https://wild-scene-db78.bogasy52.workers.dev';
+const DEFAULT_CLOUD_API='https://tahdia-online.bogasy52.workers.dev';
 let activeApiOrigin='';
 let backendProbe=null;
 
@@ -175,11 +174,12 @@ async function connect(){
  const hostKey=read('hostKey:'+roomCode);
  if(!activeApiOrigin){try{await probeBackend()}catch(e){setNet('bad','محرك الغرف غير متاح');toast(e.message);scheduleReconnect();return}}
  const url=websocketUrl('/api/rooms/'+roomCode+'/ws');
- url.searchParams.set('name',name);if(token)url.searchParams.set('token',token);if(hostKey)url.searchParams.set('hostKey',hostKey);
+ url.searchParams.set('name',name);
+ const protocols=['busraj-v1'];if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
  setNet('','جار الاتصال');
- try{ws=new WebSocket(url)}catch{scheduleReconnect();return}
+ try{ws=new WebSocket(url,protocols)}catch{scheduleReconnect();return}
  ws.onopen=()=>{setNet('ok','متصل');reconnectDelay=800};
- ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error')toast(m.message||'خطأ')};
+ ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);try{localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error')toast(m.message||'خطأ')};
  ws.onclose=()=>{setNet('bad','انقطع الاتصال');if(!manualClose)scheduleReconnect()};
  ws.onerror=()=>setNet('bad','مشكلة اتصال');
 }
@@ -286,7 +286,7 @@ function renderFinished(){
  const me=myPlayer();$('#rematch').classList.toggle('hidden',me?.role!=='host');$('#rematch').onclick=()=>send('rematch');
 }
 
-$('#shareBtn').onclick=async()=>{const invite=new URL('/online',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
+$('#shareBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
 
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else{$('#entry').classList.remove('hidden');probeBackend().catch(e=>toast(e.message))}
 })();
