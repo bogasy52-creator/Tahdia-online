@@ -1,13 +1,12 @@
-const CACHE_NAME = 'busraj-games-v5';
+const CACHE_NAME = 'busraj-games-v6';
 const APP_SHELL = [
   './',
-  './index.html',
-  './local.html',
-  './online.html',
-  './snakes.html',
-  './dice.html',
-  './zahra.html',
-  './jackaroo.html',
+  './local',
+  './online',
+  './snakes',
+  './dice',
+  './zahra',
+  './jackaroo',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -68,7 +67,7 @@ self.addEventListener('fetch', (event) => {
       caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
       return response;
     }).catch(() => {
-      if (event.request.mode === 'navigate') return caches.match('./index.html');
+      if (event.request.mode === 'navigate') return caches.match('./');
       return Response.error();
     }))
   );

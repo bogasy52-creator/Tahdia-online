@@ -155,13 +155,13 @@ async function createRoom(){
   if(!ct.includes('application/json'))throw new Error('السيرفر الحالي لا يحتوي محرك الغرف. انشر المشروع كاملًا كـ Worker وليس ملفات الواجهة فقط.');
   const d=await r.json();if(!r.ok)throw new Error(d.error||('تعذر إنشاء الغرفة — HTTP '+r.status));
   store('online_name',name);store('hostKey:'+d.code,d.hostKey);
-  const next=new URL('online.html',location.href);next.searchParams.set('room',d.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)next.searchParams.set('api',activeApiOrigin);location.href=next.href;
+  const next=new URL('/online',location.origin);next.searchParams.set('room',d.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)next.searchParams.set('api',activeApiOrigin);location.href=next.href;
  }catch(e){setNet('bad','فشل إنشاء الغرفة');toast(e?.message||'تعذر الوصول لسيرفر الأونلاين')}finally{$('#createBtn').disabled=false}
 }
 function joinRoom(){
  const code=$('#joinCode').value.replace(/\D/g,'').slice(0,6),name=$('#joinName').value.trim();
  if(code.length!==6)return toast('رقم الغرفة 6 أرقام');if(!name)return toast('اكتب اسمك');
- store('online_name',name);const next=new URL('online.html',location.href);next.searchParams.set('room',code);const api=qs.get('api')||activeApiOrigin;if(api&&api!==location.origin)next.searchParams.set('api',api);location.href=next.href;
+ store('online_name',name);const next=new URL('/online',location.origin);next.searchParams.set('room',code);const api=qs.get('api')||activeApiOrigin;if(api&&api!==location.origin)next.searchParams.set('api',api);location.href=next.href;
 }
 $('#createBtn').onclick=createRoom;$('#joinBtn').onclick=joinRoom;
 $('#joinCode').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));
@@ -286,7 +286,7 @@ function renderFinished(){
  const me=myPlayer();$('#rematch').classList.toggle('hidden',me?.role!=='host');$('#rematch').onclick=()=>send('rematch');
 }
 
-$('#shareBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
+$('#shareBtn').onclick=async()=>{const invite=new URL('/online',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
 
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else{$('#entry').classList.remove('hidden');probeBackend().catch(e=>toast(e.message))}
 })();

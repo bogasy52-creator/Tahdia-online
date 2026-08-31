@@ -22,10 +22,11 @@ test('expanded platform assets exist', async () => {
   for (const rel of requiredAssets) await access(join(publicDir, rel));
 });
 
-test('home links every game and both quiz modes', async () => {
+test('home links every game through Cloudflare canonical routes', async () => {
   const html = await readFile(join(publicDir, 'index.html'), 'utf8');
-  for (const href of ['local.html', 'online.html', 'snakes.html', 'dice.html', 'zahra.html', 'jackaroo.html']) {
-    assert.match(html, new RegExp(`href=["']${href.replace('.', '\\.')}`));
+  for (const route of ['local', 'online', 'snakes', 'dice', 'zahra', 'jackaroo']) {
+    assert.match(html, new RegExp(`href=["']/${route}["']`));
+    assert.doesNotMatch(html, new RegExp(`href=["'][^"']*${route}\\.html["']`));
   }
 });
 
@@ -36,10 +37,21 @@ test('quiz pages load shared audio manager', async () => {
   }
 });
 
+test('online room navigation and invitations keep the canonical route', async () => {
+  const html = await readFile(join(publicDir, 'online.html'), 'utf8');
+  assert.doesNotMatch(html, /online\.html/);
+  assert.match(html, /new URL\('\/online',location\.origin\)/);
+});
+
 test('service worker pre-caches the complete game hub shell', async () => {
   const sw = await readFile(join(publicDir, 'service-worker.js'), 'utf8');
+  assert.doesNotMatch(sw, /\.\/index\.html/);
+  assert.match(sw, /caches\.match\('\.\/'\)/);
+  for (const route of ['local', 'online', 'snakes', 'dice', 'zahra', 'jackaroo']) {
+    assert.match(sw, new RegExp(`["']\\./${route}["']`));
+    assert.doesNotMatch(sw, new RegExp(`["']\\./${route}\\.html["']`));
+  }
   for (const asset of [
-    './snakes.html', './dice.html', './zahra.html', './jackaroo.html',
     './assets/css/platform.css', './assets/css/game-kit.css',
     './assets/js/audio-manager.js', './assets/js/platform.js',
     './assets/js/engines/snakes-engine.js', './assets/js/engines/dice-engine.js',
@@ -117,7 +129,7 @@ test('premium jackaroo page uses board interaction instead of long action list',
 
 test('service worker version includes all premium board-game assets', async () => {
   const sw = await readFile(join(publicDir, 'service-worker.js'), 'utf8');
-  assert.match(sw, /busraj-games-v5/);
+  assert.match(sw, /busraj-games-v6/);
   for (const asset of [
     './assets/css/board-premium.css',
     './assets/css/snakes-premium.css',
