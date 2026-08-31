@@ -7,6 +7,7 @@
   const dedicatedStage = () => body.classList.contains('game-running') && (body.classList.contains('game-snakes') || body.classList.contains('game-zahra'));
   let frame = 0;
   let lastBoardSize = 0;
+  let lastLayoutMode = '';
 
   function viewport() {
     const vv = window.visualViewport;
@@ -36,6 +37,24 @@
     updateButton();
     if (!dedicatedStage()) return;
 
+    const computeLayout = window.BS_ADAPTIVE_BOARD_LAYOUT?.computeAdaptiveBoardLayout;
+    const layout = computeLayout
+      ? computeLayout({width, height})
+      : {
+          mode: height >= width ? 'portrait' : 'landscape',
+          boardSize: Math.min(width, height),
+          topStrip: height >= width ? 36 : 0,
+          gap: height >= width ? 2 : 4,
+          dockWidth: Math.min(300, Math.max(168, Math.round(width * .24))),
+          dockHeight: Math.min(230, Math.max(180, height - Math.min(width, height) - 38)),
+        };
+    body.dataset.gameLayoutMode = layout.mode;
+    body.style.setProperty('--game-top-strip', `${layout.topStrip}px`);
+    body.style.setProperty('--game-gap', `${layout.gap}px`);
+    body.style.setProperty('--game-dock-width', `${layout.dockWidth}px`);
+    body.style.setProperty('--game-dock-height', `${layout.dockHeight}px`);
+    body.style.setProperty('--game-board-size', `${layout.boardSize}px`);
+
     const main = document.querySelector('#game .game-main');
     const board = document.querySelector('#game .snake-board-wrap, #game .ludo-frame');
     if (!main || !board) return;
@@ -43,11 +62,13 @@
     // The layout CSS determines how much room the board column/row receives.
     // Measure that final box, then make the board the largest square that can fit.
     const rect = main.getBoundingClientRect();
-    const size = Math.max(1, Math.floor(Math.min(rect.width, rect.height)));
-    if (Math.abs(size - lastBoardSize) > 1) {
+    const measuredSize = Math.max(1, Math.floor(Math.min(rect.width, rect.height)));
+    const size = Math.max(1, Math.min(layout.boardSize, measuredSize));
+    if (Math.abs(size - lastBoardSize) > 1 || layout.mode !== lastLayoutMode) {
       lastBoardSize = size;
+      lastLayoutMode = layout.mode;
       body.style.setProperty('--game-board-size', `${size}px`);
-      window.dispatchEvent(new CustomEvent('busraj:game-layout', {detail: {width, height, boardSize: size}}));
+      window.dispatchEvent(new CustomEvent('busraj:game-layout', {detail: {width, height, boardSize: size, mode: layout.mode}}));
     }
   }
 
