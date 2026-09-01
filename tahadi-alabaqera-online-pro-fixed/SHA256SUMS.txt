@@ -197,7 +197,7 @@ a0fb62ab5efff8d423a9d6785fa1b73046a662d2b1a486e0eb59c42936805cfe  ./public/jacka
 2c85788e8f9ee512e526bc154e3fd3c06d6b1a4eb34c17cfe7b2dac10559e9ee  ./public/manifest.webmanifest
 ba8da39520d20218d48bf54200c43e9694467692088985121c8fb4aba5710d85  ./public/online.html
 d9764417c51247daf5a445788a7be70d7628c600e86071d5a11df62a0c1101d3  ./public/service-worker.js
-e16daf2ef65c3454534e01a4d5cac3b3f1618117acc79cd11fe9dfc1d36cfe40  ./public/snakes.html
+46d33558338ff8b29ccbdd673cd71deb7edccf46afc0b34283d0fc8253b27708  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
 feea9e90199cc383b82c6f5f870b15bbb0676b163f9d7ee5e6484175d48eb657  ./public/zahra.html
 59262505be2db55661552f930585baa6c5f8fb3c57d86bbc3ec38da13bd9e18d  ./README-AR.md
@@ -212,7 +212,7 @@ cf1550abe165c1692e31d66e1302e11914daa86709c0ffb546eb111bc710a0f1  ./RELEASE-CHEC
 62d39861da2e7ab377873414054837a652a13af078f767edf66a7f30b48de892  ./scripts/verify-worker-offline.mjs
 09d0c36594f63674629c7a67258739cc5e2bb3a6cf0d8517ad306f4350c51b9c  ./src/games/jackaroo-server.js
 fb9e94a1fc9d3c53224db40e1afba2f3e491e5f0b981250dd4c83b17da662698  ./src/games/snakes-server.js
-5e5d299479009005a143656f4e6fb4fe4c54958bb59ff735f49d108c5ffdf763  ./src/index.js
+82cea8d9ff42014490dc4f69fa3a3c4148696a626de69defd097c7331b933d8e  ./src/index.js
 e797f331a5fd0e7dc332e280878caad1a0ba2081695e87ff4014146bb0e1a4cb  ./src/questions.js
 ba0d572d0829b8839880bda7499132f7710a7a4ac9e1214533ee2e4d14da030c  ./src/rooms/board-game-core.js
 3d7796d6c9873093fddea9ab5471b6cd3effbfcd0570934fccc791c441c8270a  ./src/rooms/board-game-room.js

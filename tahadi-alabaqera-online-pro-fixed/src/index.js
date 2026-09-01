@@ -6,6 +6,7 @@ import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
 import { handleSocialRequest } from "./social/social-api.js";
 import { createSocialUserClass } from "./social/social-user.js";
+import { generateSafeQuestions } from "./ai-questions.js";
 
 class SocialDelegateBase {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; }
@@ -253,6 +254,19 @@ export default {
 
     const socialResponse = await handleSocialRequest(request, env, { rateLimit });
     if (socialResponse) return socialResponse;
+
+    if (request.method === "POST" && url.pathname === "/api/ai/questions") {
+      const limited = await rateLimit(request, env, "ai-questions", 6, 60_000);
+      if (limited) return limited;
+      try {
+        const body = await request.json().catch(() => ({}));
+        const questions = await generateSafeQuestions(env, body);
+        return json({ ok:true, questions });
+      } catch (error) {
+        const code = error?.message || "ai_error";
+        return json({ ok:false, error: code === 'ai_not_configured' ? 'مولد الأسئلة غير مفعّل على السيرفر' : 'تعذر توليد أسئلة موثوقة حاليًا' }, code === 'ai_not_configured' ? 503 : 502);
+      }
+    }
 
     if (request.method === "POST" && url.pathname === "/api/rooms") {
       const limited = await rateLimit(request, env, "quiz-create", 12, 60_000);

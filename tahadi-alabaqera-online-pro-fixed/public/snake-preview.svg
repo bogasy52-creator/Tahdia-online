@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="1100" viewBox="0 0 700 1100">
+<defs>
+ <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#141a29"/><stop offset="1" stop-color="#050811"/></linearGradient>
+ <linearGradient id="cyan"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#1766cf"/></linearGradient>
+ <linearGradient id="pink"><stop stop-color="#f044cf"/><stop offset="1" stop-color="#7522b8"/></linearGradient>
+ <linearGradient id="green"><stop stop-color="#a5ef35"/><stop offset="1" stop-color="#087c58"/></linearGradient>
+ <linearGradient id="gold"><stop stop-color="#ffd36a"/><stop offset="1" stop-color="#8a4e17"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="14"/></filter>
+</defs>
+<rect width="700" height="1100" fill="url(#bg)"/>
+<circle cx="75" cy="160" r="150" fill="#22d3ee" opacity=".12" filter="url(#soft)"/><circle cx="640" cy="640" r="170" fill="#8b5cf6" opacity=".14" filter="url(#soft)"/>
+<path d="M25 25H675V85H25z" rx="18" fill="#0c1220" stroke="#22d3ee" stroke-width="2"/><text x="350" y="63" fill="#f4c76d" font-size="28" text-anchor="middle" font-family="Arial" font-weight="bold">🐍 NEON SNAKE ARENA</text>
+<rect x="25" y="105" width="650" height="650" rx="20" fill="#080d18" stroke="#f4c76d" stroke-opacity=".45" stroke-width="3"/>
+<g stroke="#64748b" stroke-opacity=".28" fill="#111a2a" font-family="Arial" font-size="13" fill-opacity="1">
+<script type="application/ecmascript"><![CDATA[]]></script>
+<!-- grid -->
+<path d="M25 170H675M25 235H675M25 300H675M25 365H675M25 430H675M25 495H675M25 560H675M25 625H675M25 690H675M90 105V755M155 105V755M220 105V755M285 105V755M350 105V755M415 105V755M480 105V755M545 105V755M610 105V755"/>
+</g>
+<g fill="#aab7cc" font-family="Arial" font-size="14" font-weight="bold">
+<text x="36" y="128">100</text><text x="101" y="128">99</text><text x="166" y="128">98</text><text x="231" y="128">97</text><text x="296" y="128">96</text><text x="361" y="128">95</text><text x="426" y="128">94</text><text x="491" y="128">93</text><text x="556" y="128">92</text><text x="621" y="128">91</text>
+<text x="36" y="193">81</text><text x="101" y="193">82</text><text x="166" y="193">83</text><text x="231" y="193">84</text><text x="296" y="193">85</text><text x="361" y="193">86</text><text x="426" y="193">87</text><text x="491" y="193">88</text><text x="556" y="193">89</text><text x="621" y="193">90</text>
+<text x="36" y="258">80</text><text x="101" y="258">79</text><text x="166" y="258">78</text><text x="231" y="258">77</text><text x="296" y="258">76</text><text x="361" y="258">75</text><text x="426" y="258">74</text><text x="491" y="258">73</text><text x="556" y="258">72</text><text x="621" y="258">71</text>
+<text x="36" y="323">61</text><text x="101" y="323">62</text><text x="166" y="323">63</text><text x="231" y="323">64</text><text x="296" y="323">65</text><text x="361" y="323">66</text><text x="426" y="323">67</text><text x="491" y="323">68</text><text x="556" y="323">69</text><text x="621" y="323">70</text>
+<text x="36" y="388">60</text><text x="101" y="388">59</text><text x="166" y="388">58</text><text x="231" y="388">57</text><text x="296" y="388">56</text><text x="361" y="388">55</text><text x="426" y="388">54</text><text x="491" y="388">53</text><text x="556" y="388">52</text><text x="621" y="388">51</text>
+<text x="36" y="453">41</text><text x="101" y="453">42</text><text x="166" y="453">43</text><text x="231" y="453">44</text><text x="296" y="453">45</text><text x="361" y="453">46</text><text x="426" y="453">47</text><text x="491" y="453">48</text><text x="556" y="453">49</text><text x="621" y="453">50</text>
+<text x="36" y="518">40</text><text x="101" y="518">39</text><text x="166" y="518">38</text><text x="231" y="518">37</text><text x="296" y="518">36</text><text x="361" y="518">35</text><text x="426" y="518">34</text><text x="491" y="518">33</text><text x="556" y="518">32</text><text x="621" y="518">31</text>
+<text x="36" y="583">21</text><text x="101" y="583">22</text><text x="166" y="583">23</text><text x="231" y="583">24</text><text x="296" y="583">25</text><text x="361" y="583">26</text><text x="426" y="583">27</text><text x="491" y="583">28</text><text x="556" y="583">29</text><text x="621" y="583">30</text>
+<text x="36" y="648">20</text><text x="101" y="648">19</text><text x="166" y="648">18</text><text x="231" y="648">17</text><text x="296" y="648">16</text><text x="361" y="648">15</text><text x="426" y="648">14</text><text x="491" y="648">13</text><text x="556" y="648">12</text><text x="621" y="648">11</text>
+<text x="36" y="713">1</text><text x="101" y="713">2</text><text x="166" y="713">3</text><text x="231" y="713">4</text><text x="296" y="713">5</text><text x="361" y="713">6</text><text x="426" y="713">7</text><text x="491" y="713">8</text><text x="556" y="713">9</text><text x="621" y="713">10</text>
+</g>
+<!-- ladders --> <g stroke="#f4c76d" stroke-width="7" stroke-linecap="round" filter="url(#glow)" opacity=".9"><path d="M80 680L205 505M130 680L255 505M95 650L145 685M120 610L170 645M145 570L195 605M170 530L220 565"/><path d="M380 600L300 350M425 600L345 350M365 555L415 570M350 500L400 515M335 445L385 460M320 390L370 405"/><path d="M600 700L625 520M640 700L665 520M603 660L645 665M610 610L652 615M617 560L659 565"/></g>
+<!-- snakes --> <g fill="none" stroke-linecap="round" filter="url(#glow)"><path d="M115 650 Q150 580 150 500 T180 360 Q200 285 175 180" stroke="url(#cyan)" stroke-width="24"/><path d="M250 630 Q300 550 330 470 T410 330 Q450 250 420 160" stroke="url(#pink)" stroke-width="25"/><path d="M525 650 Q480 575 500 510 T570 380 Q610 300 580 185" stroke="url(#green)" stroke-width="24"/><path d="M70 440 Q170 420 220 375 T300 300" stroke="url(#gold)" stroke-width="22"/></g>
+<g font-family="Arial" font-size="36"><text x="160" y="170">🐍</text><text x="410" y="150">🐍</text><text x="570" y="178">🐍</text><text x="275" y="305">🐍</text></g>
+<g><circle cx="58" cy="705" r="22" fill="#22d3ee" stroke="#fff" stroke-width="3" filter="url(#glow)"/><circle cx="125" cy="705" r="22" fill="#f044cf" stroke="#fff" stroke-width="3" filter="url(#glow)"/></g>
+<rect x="25" y="785" width="650" height="85" rx="18" fill="#0b1220" stroke="#22d3ee" stroke-opacity=".6"/><text x="350" y="820" text-anchor="middle" font-family="Arial" font-size="18" fill="#c9d5e9">دور اللاعب الأول • الخانة 33</text><text x="350" y="850" text-anchor="middle" font-family="Arial" font-size="14" fill="#f4c76d">اصعد بالسلالم وابتعد عن الثعابين</text>
+<g><rect x="25" y="895" width="200" height="120" rx="18" fill="#081a2b" stroke="#22d3ee" stroke-width="2"/><text x="125" y="930" text-anchor="middle" font-family="Arial" font-size="17" fill="#8eefff">اللاعب الأول</text><text x="125" y="975" text-anchor="middle" font-family="Arial" font-size="38" font-weight="bold" fill="#22d3ee">33</text><rect x="250" y="895" width="200" height="120" rx="18" fill="#1b0d2d" stroke="#d946ef" stroke-width="2"/><text x="350" y="930" text-anchor="middle" font-family="Arial" font-size="17" fill="#f5a7ff">اللاعب الثاني</text><text x="350" y="975" text-anchor="middle" font-family="Arial" font-size="38" font-weight="bold" fill="#d946ef">7</text><rect x="475" y="895" width="200" height="120" rx="18" fill="#161b14" stroke="#a5ef35" stroke-width="2"/><text x="575" y="930" text-anchor="middle" font-family="Arial" font-size="17" fill="#c9fa77">اللاعب الثالث</text><text x="575" y="975" text-anchor="middle" font-family="Arial" font-size="38" font-weight="bold" fill="#a5ef35">19</text></g>
+<rect x="205" y="1035" width="290" height="52" rx="20" fill="url(#pink)" stroke="#fff" stroke-opacity=".4"/><text x="350" y="1070" text-anchor="middle" font-family="Arial" font-size="23" font-weight="bold" fill="#fff">🎲 ارْمِ النرد</text>
+</svg>
