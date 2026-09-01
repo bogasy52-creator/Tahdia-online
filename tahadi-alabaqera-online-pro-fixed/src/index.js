@@ -270,7 +270,7 @@ export default {
           const res = await stub.fetch("https://room.internal/init", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, hostKey, name }),
+          body: JSON.stringify({ code, hostKey, name, playerLimit: body.playerLimit }),
           });
           if (res.status === 201) return json({ ok: true, code, hostKey });
         }
@@ -423,6 +423,8 @@ export class GameRoom extends DurableObject {
         lastReveal: null,
         recentQids: [],
         winnerId: null,
+        mode: [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
+        playerLimit: [4,6].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
       await this.persist();
@@ -459,7 +461,7 @@ export class GameRoom extends DurableObject {
         if (this.room.order.length === 0) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
         this.cleanupLobbySeats();
-        if (this.room.order.length >= 2) return json({ ok: false, error: "الغرفة ممتلئة — اللاعب المنقطع لديه مهلة للعودة" }, 409);
+        if (this.room.order.length >= (this.room.playerLimit || 8)) return json({ ok: false, error: `الغرفة ممتلئة (الحد الأقصى ${this.room.playerLimit || 8} لاعبين)` }, 409);
         player = this.addPlayer(name, "guest");
       } else if (name) {
         player.name = name;
@@ -502,6 +504,7 @@ export class GameRoom extends DurableObject {
       token: token(),
       name: cleanName(name),
       role,
+      team: this.room.mode === 'teams-4' ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : this.room.mode === 'teams-6' ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : null,
       score: 0,
       ready: false,
       connected: true,
@@ -573,9 +576,9 @@ export class GameRoom extends DurableObject {
         case "start":
           if (player.role !== "host") return this.sendError(ws, "للمضيف فقط");
           if (this.room.status !== "lobby") return;
-          if (this.room.order.length !== 2) return this.sendError(ws, "يلزم لاعبان");
+          if (this.room.order.length < 2) return this.sendError(ws, "يلزم لاعبان على الأقل");
           if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال اللاعبين");
-          if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "اللاعبان لازم يكونان جاهزين");
+          if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "يجب أن يكون جميع اللاعبين جاهزين");
           if (this.room.selectedCategories.length !== 6) return this.sendError(ws, "اختر 6 فئات");
           await this.startMatch();
           break;
@@ -962,12 +965,15 @@ export class GameRoom extends DurableObject {
     this.room.status = "finished";
     this.room.current = null;
     this.room.lastReveal = null;
-    const [a, b] = this.room.order;
-    if (a && b) {
-      const sa = this.room.players[a].score;
-      const sb = this.room.players[b].score;
-      this.room.winnerId = sa === sb ? null : (sa > sb ? a : b);
+    if (this.room.mode === 'teams-4' || this.room.mode === 'teams-6') {
+      const totals = ['A','B'].map(team => ({team, score:this.room.order.reduce((s,id)=>s+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})).sort((a,b)=>b.score-a.score);
+      this.room.winnerId = totals[0].score === totals[1].score ? null : `team:${totals[0].team}`;
+      this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      await this.persistAndBroadcast(); await this.scheduleLobbyAlarm(); return;
     }
+    const ranked = this.room.order.map((id) => this.room.players[id]).filter(Boolean).sort((x,y)=>(y.score||0)-(x.score||0));
+    const top = ranked[0], tied = ranked.filter(p => (p.score||0) === (top?.score||0));
+    this.room.winnerId = tied.length === 1 ? top.id : null;
     this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
     await this.persistAndBroadcast();
     await this.scheduleLobbyAlarm();
