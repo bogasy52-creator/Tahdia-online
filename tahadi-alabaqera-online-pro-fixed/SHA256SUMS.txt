@@ -196,7 +196,7 @@ a0fb62ab5efff8d423a9d6785fa1b73046a662d2b1a486e0eb59c42936805cfe  ./public/jacka
 87ce5c8a7956b00599d6b31d6486d3af794e4ee674634aa61d1ad3a02c8cb1a0  ./public/local.html
 2c85788e8f9ee512e526bc154e3fd3c06d6b1a4eb34c17cfe7b2dac10559e9ee  ./public/manifest.webmanifest
 ba8da39520d20218d48bf54200c43e9694467692088985121c8fb4aba5710d85  ./public/online.html
-d9764417c51247daf5a445788a7be70d7628c600e86071d5a11df62a0c1101d3  ./public/service-worker.js
+e1f21dd9e84cfd24634a012d6cb0e80efbaf2c467e21e46aacf68289e1b8e5f0  ./public/service-worker.js
 46d33558338ff8b29ccbdd673cd71deb7edccf46afc0b34283d0fc8253b27708  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
 feea9e90199cc383b82c6f5f870b15bbb0676b163f9d7ee5e6484175d48eb657  ./public/zahra.html
@@ -227,7 +227,7 @@ bf7f45a14ee3ef2b3f64b2c21c1f370ca26686d8fe748d67f8542cfb3c90b802  ./src/social/s
 d6f7c6f41ec0134b64f9aada5da8eb9a774055763cbeae206ee758f993202bc7  ./test/jackaroo-engine.test.js
 ebb46a9114b3d08746f946a73bd9c0123d18718014741abed666d879aeb0fd43  ./test/ludo-engine.test.js
 3549eb4d5b4bd7f4a5431b63830d03094cf1bb3e17cd74c3439b0b731ca8a75c  ./test/luxury-game-ui.test.js
-4fe057e01b1ba067a32819d2e2dff4279d49d7df731cc1ab065fc3eedd4f7c37  ./test/mobile-board-ui.test.js
+6c9e7cbaf7f07e3d79c139ea08bd15c2bf893920bbe5a5a60f53ca358f726c4d  ./test/mobile-board-ui.test.js
 667e0509db06a536bda2c77aa3239e96bdc82ee7a13ab8e7eaa0d165ada45b80  ./test/online-hardening.test.js
 748ef076e9a6aab116795ad8dcf193456d352278a8a3eab83ab2fdab37806200  ./test/platform-smoke.test.js
 d0363547fbca0e8e626b7ae50c240eee733d13b4acc39f124f09c6e1fc4a5aba  ./test/quiz-memory-premium.test.js
