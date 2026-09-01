@@ -25,6 +25,7 @@ const APP_SHELL = [
   '/assets/css/snakes-premium.css',
   '/assets/css/snakes-v4-board.css',
   '/assets/css/snakes-v4-interactions.css',
+  '/assets/css/snake-reference-skin.css',
   '/assets/css/zahra-premium.css',
   '/assets/css/jackaroo-next.css',
   '/assets/css/quiz-luxury.css',

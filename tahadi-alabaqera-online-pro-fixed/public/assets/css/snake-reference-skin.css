@@ -1,0 +1,407 @@
+/*
+ * Neon Creature Arena reference skin.
+ *
+ * The supplied 709 × 1536 artwork is the visual frame.  The rules below are
+ * intentionally loaded last and use an ID + !important so the older generic
+ * board styles cannot paint a second board over the artwork.  Game state is
+ * still live: pawns, scores, status, dice and the hit effects are positioned
+ * as transparent overlays on top of the frame.
+ */
+
+body.game-snakes.game-running {
+  background: #050811 !important;
+}
+
+body.game-snakes.game-running .bs-shell {
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 !important;
+}
+
+#game.reference-skin {
+  position: relative !important;
+  flex: 0 0 auto !important;
+  /* 100vh fallback keeps the frame usable in older mobile WebViews. */
+  width: min(709px, 100vw, calc(100vh / 2.167842)) !important;
+  width: min(709px, 100vw, calc(100dvh / 2.167842)) !important;
+  height: min(1536px, calc(100vw * 2.167842), 100vh) !important;
+  height: min(1536px, calc(100vw * 2.167842), 100dvh) !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  background-color: #050811 !important;
+  background-image: url('../snake-reference-skin.png') !important;
+  background-position: 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#game.reference-skin .stage-orb,
+#game.reference-skin .game-toolbar,
+#game.reference-skin #livebar,
+#game.reference-skin .snake-legend,
+#game.reference-skin #startLane,
+#game.reference-skin .rules {
+  display: none !important;
+}
+
+#game.reference-skin .game-layout {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+#game.reference-skin .game-main,
+#game.reference-skin .game-side {
+  display: contents !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* The art's board runs from roughly y=75 to y=979 (903 px at source size). */
+#game.reference-skin .snake-board-wrap {
+  position: absolute !important;
+  inset: auto !important;
+  left: 1.20% !important;
+  top: 4.88% !important;
+  width: 97.60% !important;
+  height: 58.80% !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  isolation: isolate !important;
+}
+
+#game.reference-skin .snake-board-wrap::before,
+#game.reference-skin .snake-board-wrap::after,
+#game.reference-skin .snake-board::before,
+#game.reference-skin .snake-board::after {
+  display: none !important;
+}
+
+#game.reference-skin .snake-board {
+  display: grid !important;
+  grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+  /* Slight perspective in the source artwork; this keeps tokens centred. */
+  grid-template-rows: 8.98% 9.31% 10.20% 9.87% 9.98% 9.87% 10.75% 10.09% 10.64% 10.31% !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#game.reference-skin .snake-cell {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#game.reference-skin .snake-cell b,
+#game.reference-skin .snake-cell .jump-mark {
+  visibility: hidden !important;
+}
+
+/* The ladders and snakes are already part of the supplied frame.  Keep the
+   procedural layer dormant for pixel fidelity, then reveal it briefly during
+   a live reaction so the move still feels physical. */
+#game.reference-skin .board-paths {
+  display: block !important;
+  opacity: 0 !important;
+  transition: opacity .18s ease !important;
+  pointer-events: none !important;
+}
+
+#game.reference-skin .snake-board-wrap.board-moving .board-paths,
+#game.reference-skin .snake-board-wrap.ladder-active .board-paths,
+#game.reference-skin .snake-board-wrap.snake-active .board-paths {
+  opacity: .34 !important;
+}
+
+#game.reference-skin .snake-cell.trail-lit {
+  background: radial-gradient(circle, rgba(93, 241, 226, .46), transparent 68%) !important;
+  box-shadow: inset 0 0 0 2px rgba(143, 255, 244, .72), 0 0 18px rgba(69, 232, 220, .34) !important;
+}
+
+#game.reference-skin .snake-cell.landing-hit {
+  animation: referenceLanding .72s ease both !important;
+}
+
+@keyframes referenceLanding {
+  0% { box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0); }
+  42% { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .82), 0 0 26px rgba(83, 234, 222, .62); }
+  100% { box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+#game.reference-skin .token-stack {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 30 !important;
+  display: block !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+#game.reference-skin .snake-cell.occupied-cell {
+  z-index: 35 !important;
+  overflow: visible !important;
+}
+
+#game.reference-skin .token-stack .snake-token {
+  position: absolute !important;
+  left: 22% !important;
+  top: 8% !important;
+  width: clamp(22px, 3.8vw, 34px) !important;
+  height: clamp(22px, 3.8vw, 34px) !important;
+  z-index: 40 !important;
+  transform: scale(.90) !important;
+}
+
+#game.reference-skin .token-stack .snake-token:nth-child(2) {
+  left: 51% !important;
+  top: 8% !important;
+}
+
+#game.reference-skin .token-stack .snake-token:nth-child(3) {
+  left: 22% !important;
+  top: 48% !important;
+}
+
+#game.reference-skin .token-stack .snake-token:nth-child(4) {
+  left: 51% !important;
+  top: 48% !important;
+}
+
+/* Keep a zero-opacity origin for smooth moves that start before cell 1. */
+#game.reference-skin .mobile-start-lane {
+  display: flex !important;
+  position: absolute !important;
+  left: 3% !important;
+  right: 3% !important;
+  top: 58.8% !important;
+  height: 4.2% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+#game.reference-skin .player-list {
+  position: absolute !important;
+  left: 2.4% !important;
+  right: 2.4% !important;
+  top: 70.7% !important;
+  height: 11.0% !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 2.2% !important;
+  direction: ltr !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+#game.reference-skin .player-row {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: center !important;
+  justify-items: center !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  direction: rtl !important;
+  text-align: center !important;
+  color: #fff !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#game.reference-skin .player-row::after,
+#game.reference-skin .player-row .player-dot,
+#game.reference-skin .player-row .mini-note,
+#game.reference-skin .player-row .player-progress {
+  display: none !important;
+}
+
+#game.reference-skin .player-row > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+#game.reference-skin .player-row > div > b {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  color: rgba(236, 250, 255, .94) !important;
+  font-size: clamp(12px, 2.5vw, 20px) !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  text-shadow: 0 2px 7px rgba(0, 0, 0, .75) !important;
+}
+
+#game.reference-skin .player-row .score {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 0 !important;
+  translate: -50% 0 !important;
+  color: #fff !important;
+  font-size: clamp(30px, 6.2vw, 46px) !important;
+  line-height: .95 !important;
+  font-variant-numeric: tabular-nums !important;
+  text-shadow: 0 0 13px currentColor, 0 3px 9px rgba(0, 0, 0, .72) !important;
+}
+
+#game.reference-skin .game-status {
+  position: absolute !important;
+  left: 4% !important;
+  right: 4% !important;
+  top: 64.0% !important;
+  height: 5.3% !important;
+  min-height: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: #e8f7ff !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: clamp(14px, 3vw, 24px) !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .8) !important;
+}
+
+#game.reference-skin .dice-stage {
+  position: absolute !important;
+  left: 24% !important;
+  top: 75.1% !important;
+  width: 52% !important;
+  height: 16.0% !important;
+  min-height: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+}
+
+#game.reference-skin .dice-stage::before,
+#game.reference-skin .dice-stage::after {
+  display: none !important;
+}
+
+#game.reference-skin .die {
+  width: clamp(72px, 28vw, 198px) !important;
+  height: clamp(72px, 28vw, 198px) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+#game.reference-skin.has-rolled .die {
+  opacity: .98 !important;
+}
+
+/* The printed button remains visible; this is an accessible hit target. */
+#game.reference-skin #roll {
+  position: absolute !important;
+  left: 13% !important;
+  bottom: 1.1% !important;
+  width: 74% !important;
+  height: 8.6% !important;
+  min-height: 0 !important;
+  z-index: 60 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 24px !important;
+  color: transparent !important;
+  text-shadow: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+#game.reference-skin #roll::before,
+#game.reference-skin #roll::after {
+  display: none !important;
+}
+
+#game.reference-skin #roll:focus-visible {
+  outline: 3px solid rgba(112, 245, 255, .92) !important;
+  outline-offset: -4px !important;
+  background: rgba(66, 225, 255, .08) !important;
+}
+
+#game.reference-skin #roll:disabled {
+  cursor: wait !important;
+  opacity: 1 !important;
+}
+
+#game.reference-skin .board-hud {
+  z-index: 70 !important;
+  pointer-events: none !important;
+}
+
+#game.reference-skin .action-banner {
+  max-width: 82% !important;
+  font-size: clamp(17px, 4vw, 30px) !important;
+}
+
+#snakeProBadge {
+  display: none !important;
+}
+
+@media (max-width: 520px) {
+  #game.reference-skin .player-list { top: 70.9% !important; height: 10.8% !important; }
+  #game.reference-skin .game-status { top: 64.2% !important; }
+  #game.reference-skin .dice-stage { top: 75.5% !important; height: 15.6% !important; }
+  #game.reference-skin #roll { left: 11% !important; width: 78% !important; height: 8.8% !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #game.reference-skin .snake-token,
+  #game.reference-skin .action-banner { transition: none !important; }
+}
