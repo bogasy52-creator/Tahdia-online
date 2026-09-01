@@ -6,7 +6,8 @@
   const active = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
   const dedicatedStage = () => body.classList.contains('game-running') && (body.classList.contains('game-snakes') || body.classList.contains('game-zahra'));
   let frame = 0;
-  let lastBoardSize = 0;
+  let lastBoardWidth = 0;
+  let lastBoardHeight = 0;
   let lastLayoutMode = '';
 
   function viewport() {
@@ -43,6 +44,8 @@
       : {
           mode: height >= width ? 'portrait' : 'landscape',
           boardSize: Math.min(width, height),
+          boardWidth: Math.min(width, height),
+          boardHeight: Math.min(width, height),
           topStrip: height >= width ? 36 : 0,
           gap: height >= width ? 2 : 4,
           dockWidth: Math.min(300, Math.max(168, Math.round(width * .24))),
@@ -54,21 +57,30 @@
     body.style.setProperty('--game-dock-width', `${layout.dockWidth}px`);
     body.style.setProperty('--game-dock-height', `${layout.dockHeight}px`);
     body.style.setProperty('--game-board-size', `${layout.boardSize}px`);
+    body.style.setProperty('--game-board-width', `${layout.boardWidth??layout.boardSize}px`);
+    body.style.setProperty('--game-board-height', `${layout.boardHeight??layout.boardSize}px`);
 
     const main = document.querySelector('#game .game-main');
     const board = document.querySelector('#game .snake-board-wrap, #game .ludo-frame');
     if (!main || !board) return;
 
     // The layout CSS determines how much room the board column/row receives.
-    // Measure that final box, then make the board the largest square that can fit.
+    // Scale the planned board without destroying its portrait aspect ratio.
     const rect = main.getBoundingClientRect();
-    const measuredSize = Math.max(1, Math.floor(Math.min(rect.width, rect.height)));
-    const size = Math.max(1, Math.min(layout.boardSize, measuredSize));
-    if (Math.abs(size - lastBoardSize) > 1 || layout.mode !== lastLayoutMode) {
-      lastBoardSize = size;
+    const plannedWidth=Math.max(1,layout.boardWidth??layout.boardSize);
+    const plannedHeight=Math.max(1,layout.boardHeight??layout.boardSize);
+    const scale=Math.min(1,rect.width/plannedWidth,rect.height/plannedHeight);
+    const boardWidth=Math.max(1,Math.floor(plannedWidth*scale));
+    const boardHeight=Math.max(1,Math.floor(plannedHeight*scale));
+    const size=Math.min(boardWidth,boardHeight);
+    if (Math.abs(boardWidth-lastBoardWidth)>1 || Math.abs(boardHeight-lastBoardHeight)>1 || layout.mode !== lastLayoutMode) {
+      lastBoardWidth = boardWidth;
+      lastBoardHeight = boardHeight;
       lastLayoutMode = layout.mode;
       body.style.setProperty('--game-board-size', `${size}px`);
-      window.dispatchEvent(new CustomEvent('busraj:game-layout', {detail: {width, height, boardSize: size, mode: layout.mode}}));
+      body.style.setProperty('--game-board-width', `${boardWidth}px`);
+      body.style.setProperty('--game-board-height', `${boardHeight}px`);
+      window.dispatchEvent(new CustomEvent('busraj:game-layout', {detail: {width, height, boardSize: size, boardWidth, boardHeight, mode: layout.mode}}));
     }
   }
 

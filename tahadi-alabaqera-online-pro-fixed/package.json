@@ -1,10 +1,10 @@
 {
   "name": "busraj-games",
-  "version": "3.2.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "node scripts/dev-preview.mjs",
     "deploy": "wrangler deploy",
     "check": "npm run check:cloudflare",
     "test": "node --test test/*.test.js",

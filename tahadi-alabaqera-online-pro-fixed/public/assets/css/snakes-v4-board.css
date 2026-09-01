@@ -23,8 +23,8 @@ body.game-snakes.game-running .game-main,
 body.game-snakes.game-running .snake-side{direction:rtl}
 
 body.game-snakes.game-running .snake-board-wrap{
-  width:var(--game-board-size)!important;
-  height:var(--game-board-size)!important;
+  width:var(--game-board-width,var(--game-board-size))!important;
+  height:var(--game-board-height,var(--game-board-size))!important;
   max-width:none!important;
   max-height:none!important;
   padding:clamp(3px,.55vmin,6px)!important;
@@ -176,14 +176,14 @@ body.game-snakes.game-running[data-game-layout-mode="portrait"] #game{
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .game-layout{
   grid-template-columns:minmax(0,1fr)!important;
-  grid-template-rows:var(--game-board-size) var(--game-dock-height)!important;
+  grid-template-rows:var(--game-board-height) var(--game-dock-height)!important;
   align-content:start!important;
   gap:var(--game-gap)!important;
   overflow:visible!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .game-main{
   width:100%!important;
-  height:var(--game-board-size)!important;
+  height:var(--game-board-height)!important;
   min-height:0!important;
   place-items:start center!important;
 }
@@ -198,7 +198,7 @@ body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) 84px minmax(108px,.76fr)!important;
   grid-template-areas:"players players players" "status status status" "start dice roll"!important;
-  grid-template-rows:minmax(44px,1fr) 31px minmax(78px,92px)!important;
+  grid-template-rows:minmax(42px,max-content) minmax(34px,44px) minmax(96px,1fr)!important;
   gap:4px!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .player-list{
@@ -207,9 +207,10 @@ body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .pla
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
   gap:4px!important;
   min-height:0;
+  align-content:start!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .player-row{
-  min-height:0!important;
+  min-height:38px!important;
   padding:4px 6px!important;
   grid-template-columns:8px minmax(0,1fr) auto!important;
   gap:5px!important;
@@ -242,8 +243,8 @@ body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .dic
   min-height:0!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .die{
-  width:min(68px,17vw)!important;
-  height:min(68px,17vw)!important;
+  width:min(104px,22vw)!important;
+  height:min(104px,22vw)!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #roll{
   grid-area:roll!important;
@@ -253,6 +254,11 @@ body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #rol
   padding:0 8px!important;
   border-radius:15px!important;
   font-size:clamp(12px,3.6vw,16px)!important;
+}
+
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .dice-stage{
+  display:grid!important;
+  place-items:center!important;
 }
 
 body.game-snakes.game-running[data-game-layout-mode="landscape"] .bs-shell{

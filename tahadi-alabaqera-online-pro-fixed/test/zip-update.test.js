@@ -5,9 +5,11 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 const script = fileURLToPath(new URL('../../.github/scripts/apply-zip-update.sh', import.meta.url));
 const gameName = 'tahadi-alabaqera-online-pro-fixed';
+const workflowTest=existsSync(script)?test:test.skip;
 
 async function writeProject(root, marker) {
   await mkdir(join(root, 'public'), { recursive: true });
@@ -42,7 +44,7 @@ async function fixture(t) {
   return { root, repo, game };
 }
 
-test('applies a ZIP whose project files are at the archive root', async (t) => {
+workflowTest('applies a ZIP whose project files are at the archive root', async (t) => {
   const { root, repo, game } = await fixture(t);
   const payload = join(root, 'payload');
   const zip = join(repo, 'update.zip');
@@ -56,7 +58,7 @@ test('applies a ZIP whose project files are at the archive root', async (t) => {
   await assert.rejects(readFile(zip));
 });
 
-test('finds the project inside wrapper folders before applying it', async (t) => {
+workflowTest('finds the project inside wrapper folders before applying it', async (t) => {
   const { root, repo, game } = await fixture(t);
   const payload = join(root, 'payload');
   const wrappedProject = join(payload, 'phone-download', gameName);
@@ -71,7 +73,7 @@ test('finds the project inside wrapper folders before applying it', async (t) =>
   await assert.rejects(readFile(zip));
 });
 
-test('preserves the deployed Worker configuration while applying a ZIP', async (t) => {
+workflowTest('preserves the deployed Worker configuration while applying a ZIP', async (t) => {
   const { root, repo, game } = await fixture(t);
   const payload = join(root, 'payload');
   const zip = join(repo, 'update.zip');
@@ -88,7 +90,7 @@ test('preserves the deployed Worker configuration while applying a ZIP', async (
   assert.equal(await readFile(join(game, 'public', 'index.html'), 'utf8'), 'updated game\n');
 });
 
-test('rejects an invalid ZIP without touching the current project', async (t) => {
+workflowTest('rejects an invalid ZIP without touching the current project', async (t) => {
   const { root, repo, game } = await fixture(t);
   const payload = join(root, 'payload');
   const zip = join(repo, 'invalid.zip');

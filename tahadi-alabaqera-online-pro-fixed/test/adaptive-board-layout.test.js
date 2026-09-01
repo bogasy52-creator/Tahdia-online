@@ -64,9 +64,12 @@ test('portrait phones use the full screen width for the board',async()=>{
 
   assert.equal(layout.mode,'portrait');
   assert.equal(layout.boardSize,390);
+  assert.equal(layout.boardWidth,390);
+  assert.equal(layout.boardHeight,476);
   assert.equal(layout.topStrip,36);
   assert.equal(layout.gap,2);
-  assert.equal(layout.dockHeight,230);
+  assert.equal(layout.dockHeight,330);
+  assert.equal(layout.topStrip+layout.boardHeight+layout.gap+layout.dockHeight,844);
 });
 
 test('short portrait screens preserve a usable control dock',async()=>{
@@ -75,8 +78,20 @@ test('short portrait screens preserve a usable control dock',async()=>{
 
   assert.equal(layout.mode,'portrait');
   assert.equal(layout.boardSize,342);
+  assert.equal(layout.boardWidth,342);
+  assert.equal(layout.boardHeight,342);
   assert.equal(layout.dockHeight,180);
-  assert.equal(layout.boardSize+layout.topStrip+layout.gap+layout.dockHeight,560);
+  assert.equal(layout.boardHeight+layout.topStrip+layout.gap+layout.dockHeight,560);
+});
+
+test('tall portrait phones never leave an unused strip below the cockpit',async()=>{
+  const compute=await loadLayoutEngine();
+  const layout=compute({width:787,height:1295});
+
+  assert.equal(layout.boardWidth,787);
+  assert.equal(layout.boardHeight,947);
+  assert.equal(layout.dockHeight,310);
+  assert.equal(layout.topStrip+layout.boardHeight+layout.gap+layout.dockHeight,1295);
 });
 
 test('landscape phones give the board the full viewport height',async()=>{
@@ -85,6 +100,8 @@ test('landscape phones give the board the full viewport height',async()=>{
 
   assert.equal(layout.mode,'landscape');
   assert.equal(layout.boardSize,390);
+  assert.equal(layout.boardWidth,390);
+  assert.equal(layout.boardHeight,390);
   assert.equal(layout.topStrip,0);
   assert.equal(layout.gap,4);
   assert.equal(layout.dockWidth,203);
@@ -97,6 +114,8 @@ test('layout values are sanitized for an invalid viewport',async()=>{
   assert.equal(layout.width,1);
   assert.equal(layout.height,1);
   assert.ok(layout.boardSize>=1);
+  assert.ok(layout.boardWidth>=1);
+  assert.ok(layout.boardHeight>=1);
 });
 
 test('fullscreen controller applies adaptive landscape metrics to the live stage',async()=>{
@@ -104,6 +123,8 @@ test('fullscreen controller applies adaptive landscape metrics to the live stage
 
   assert.equal(result.body.dataset.gameLayoutMode,'landscape');
   assert.equal(result.properties.get('--game-board-size'),'390px');
+  assert.equal(result.properties.get('--game-board-width'),'390px');
+  assert.equal(result.properties.get('--game-board-height'),'390px');
   assert.equal(result.properties.get('--game-top-strip'),'0px');
   assert.equal(result.properties.get('--game-dock-width'),'203px');
   assert.equal(result.layoutEvent?.type,'busraj:game-layout');
@@ -116,7 +137,9 @@ test('snake page loads the V4 cascade and adaptive controller in dependency orde
   const v4=html.indexOf('assets/css/snakes-v4-board.css');
   const layout=html.indexOf('assets/js/adaptive-board-layout.js');
   const fullscreen=html.indexOf('assets/js/fullscreen-game.js');
+  const interactions=html.indexOf("./assets/js/snakes-v4-fx.js");
 
   assert.ok(premium>=0&&v4>premium,'V4 board styling must win the CSS cascade');
   assert.ok(layout>=0&&fullscreen>layout,'layout engine must load before the fullscreen controller');
+  assert.ok(interactions>fullscreen,'the live V4 interaction engine must load in the game module');
 });

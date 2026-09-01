@@ -10,18 +10,24 @@
     if(portrait){
       const topStrip=36;
       const gap=2;
-      const minimumDock=180;
-      const boardSize=Math.max(1,Math.floor(Math.min(width,height-topStrip-gap-minimumDock)));
-      const remaining=height-topStrip-gap-boardSize;
+      const preferredDock=clamp(Math.round(height*.27),180,310);
+      const availableBoardHeight=Math.max(1,height-topStrip-gap-preferredDock);
+      const boardWidth=Math.max(1,Math.floor(Math.min(width,availableBoardHeight)));
+      const boardHeight=availableBoardHeight<width
+        ?boardWidth
+        :Math.max(boardWidth,Math.round(Math.min(availableBoardHeight,width*1.22)));
+      const remaining=Math.max(1,height-topStrip-gap-boardHeight);
       return Object.freeze({
         mode:'portrait',
         width,
         height,
-        boardSize,
+        boardSize:boardWidth,
+        boardWidth,
+        boardHeight,
         topStrip,
         gap,
         dockWidth:width,
-        dockHeight:clamp(remaining,minimumDock,230),
+        dockHeight:remaining,
       });
     }
 
@@ -34,6 +40,8 @@
       width,
       height,
       boardSize,
+      boardWidth:boardSize,
+      boardHeight:boardSize,
       topStrip,
       gap,
       dockWidth,

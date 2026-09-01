@@ -1,0 +1,213 @@
+/* Busraj V4.0 — live board, creature, ladder, pawn and dice reactions. */
+
+body.game-snakes.game-running .board-paths,
+body.game-snakes.game-running .snake-head-layer,
+body.game-snakes.game-running .snake-head-creature,
+body.game-snakes.game-running .snake-head-group{overflow:visible!important}
+body.game-snakes.game-running .snake-head-layer{pointer-events:none;isolation:isolate}
+
+/* Full-height portrait stage: no capped cockpit and no unused strip below it. */
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .game-layout{
+  width:100%!important;
+  height:calc(var(--game-board-height) + var(--game-dock-height) + var(--game-gap))!important;
+  min-height:0!important;
+}
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-board-wrap,
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-board{aspect-ratio:auto!important}
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side{
+  align-self:stretch!important;
+  background:
+    radial-gradient(circle at 50% 100%,rgba(68,225,211,.11),transparent 45%),
+    linear-gradient(155deg,rgba(13,37,42,.985),rgba(3,11,14,.995))!important;
+}
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .mobile-start-lane,
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .dice-stage,
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #roll{min-height:92px!important}
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #roll{
+  font-size:clamp(15px,4.6vw,22px)!important;
+  letter-spacing:.01em;
+}
+body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .mobile-start-lane{
+  align-content:center!important;
+  justify-content:center!important;
+}
+
+/* The entire field responds to real movement. */
+body.game-snakes.game-running .snake-board-wrap.board-moving{
+  box-shadow:0 30px 74px rgba(0,0,0,.62),0 0 0 2px rgba(2,7,9,.88) inset,0 0 0 4px rgba(255,255,255,.025) inset,0 0 58px rgba(79,239,226,.26)!important;
+}
+body.game-snakes.game-running .board-moving .snake-board:after{animation:v4BoardSweep .72s linear infinite!important}
+body.game-snakes.game-running .snake-cell.trail-lit{
+  z-index:26!important;
+  color:#fff!important;
+  background:radial-gradient(circle at 50% 58%,rgba(113,255,239,.45),rgba(30,157,159,.20) 42%,rgba(0,0,0,.08) 74%)!important;
+  box-shadow:inset 0 0 0 2px rgba(143,255,244,.76),inset 0 0 24px rgba(69,232,220,.40),0 0 18px rgba(69,232,220,.34)!important;
+  animation:v4TrailCell .68s cubic-bezier(.2,.8,.24,1) both!important;
+}
+body.game-snakes.game-running .snake-cell.step-hit:before{animation:v4CellRipple .62s ease-out!important}
+body.game-snakes.game-running .snake-cell.landing-hit{
+  z-index:31!important;
+  animation:v4LandingCell .78s cubic-bezier(.16,.8,.2,1)!important;
+}
+@keyframes v4BoardSweep{from{transform:translate3d(-20%,0,0);opacity:.25}50%{opacity:.85}to{transform:translate3d(20%,0,0);opacity:.25}}
+@keyframes v4TrailCell{0%{transform:scale(.92)}42%{transform:scale(1.10)}100%{transform:scale(1)}}
+@keyframes v4CellRipple{0%{opacity:.9;transform:scale(.28);border-radius:50%}100%{opacity:0;transform:scale(1.55);border-radius:18%}}
+@keyframes v4LandingCell{0%{transform:scale(.92)}38%{transform:scale(1.13);box-shadow:inset 0 0 0 3px #fff,0 0 30px rgba(83,234,222,.58)}100%{transform:scale(1)}}
+
+/* Layered living snakes. Heads are rendered last so no crossing can cover them. */
+body.game-snakes.game-running .snake-creature{--grown-width:var(--snake-growth,25px)}
+body.game-snakes.game-running .snake-creature .snake-path{
+  stroke-width:var(--grown-width)!important;
+  animation:v4SnakeBreathe 2.8s ease-in-out infinite alternate!important;
+  transition:stroke-width .42s ease,filter .3s ease;
+}
+body.game-snakes.game-running .snake-spine-line{
+  fill:none;
+  stroke:hsl(var(--snake-hue) 92% 72% / .30);
+  stroke-width:5;
+  stroke-linecap:round;
+  stroke-dasharray:2 16;
+  filter:drop-shadow(0 0 4px hsl(var(--snake-hue) 90% 60% / .34));
+  animation:v4ScaleFlow 2.6s linear infinite;
+}
+body.game-snakes.game-running .snake-scale-line{animation:v4ScaleFlow 2.2s linear infinite}
+body.game-snakes.game-running .snake-tail-fin{filter:drop-shadow(0 3px 2px rgba(0,0,0,.5));transform-box:fill-box;transform-origin:center;animation:v4TailPulse 2.2s ease-in-out infinite alternate}
+body.game-snakes.game-running .snake-head-halo{fill:hsl(var(--snake-hue) 92% 58% / .12);filter:blur(8px);opacity:.65}
+body.game-snakes.game-running .snake-neck{stroke:rgba(255,255,255,.23);stroke-width:1.6;filter:drop-shadow(0 4px 3px rgba(0,0,0,.5))}
+body.game-snakes.game-running .snake-head-shell{
+  stroke:rgba(255,255,255,.68)!important;
+  stroke-width:2.5!important;
+  filter:drop-shadow(0 6px 4px rgba(0,0,0,.64)) drop-shadow(0 0 6px hsl(var(--snake-hue) 90% 58% / .28))!important;
+  transform-box:fill-box;
+  transform-origin:center;
+  scale:var(--snake-head-scale,1);
+}
+body.game-snakes.game-running .snake-eye-socket{fill:rgba(3,7,9,.88);stroke:rgba(255,255,255,.28);stroke-width:1}
+body.game-snakes.game-running .snake-eye-glow{fill:#fff6a2!important;filter:drop-shadow(0 0 5px #ffd34e)}
+body.game-snakes.game-running .snake-eye-core{fill:#090b0f!important;transform-box:fill-box;transform-origin:center;animation:v4SnakeBlink 3.4s ease-in-out infinite}
+body.game-snakes.game-running .snake-brow{fill:none;stroke:rgba(8,10,12,.62);stroke-width:3.2;stroke-linecap:round}
+body.game-snakes.game-running .snake-mouth-cavity{fill:#270810;stroke:rgba(255,118,138,.40);stroke-width:1.2;opacity:.46;transform-box:fill-box;transform-origin:right center}
+body.game-snakes.game-running .snake-lower-jaw{stroke:rgba(255,255,255,.28);stroke-width:1.4;transform-box:fill-box;transform-origin:right top}
+body.game-snakes.game-running .snake-fang{fill:none;stroke:#fff6d8;stroke-width:4.2;stroke-linecap:round;opacity:.2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+body.game-snakes.game-running .snake-mouth{stroke-width:2.6!important}
+body.game-snakes.game-running .snake-tongue{filter:drop-shadow(0 0 3px #ff5078);animation:v4TongueFlick 1.55s ease-in-out infinite!important}
+
+body.game-snakes.game-running .snake-head-creature.tracking .snake-head-halo{animation:v4HeadAlert .18s ease-out both}
+body.game-snakes.game-running .snake-head-creature.tracking .snake-eye-core{translate:-3px 0;animation:none}
+body.game-snakes.game-running .snake-head-creature.tracking .snake-tongue{animation:v4HissTongue .18s linear infinite!important}
+body.game-snakes.game-running .snake-head-creature.attacking{filter:drop-shadow(0 0 18px rgba(255,73,103,.52))}
+body.game-snakes.game-running .snake-head-creature.attacking .snake-head-shell,
+body.game-snakes.game-running .snake-head-creature.attacking .snake-neck{animation:v4HeadStrike .31s cubic-bezier(.12,.82,.22,1) both!important}
+body.game-snakes.game-running .snake-head-creature.attacking .snake-lower-jaw{animation:v4JawBite .31s ease both}
+body.game-snakes.game-running .snake-head-creature.attacking .snake-mouth-cavity{animation:v4MouthOpen .31s ease both}
+body.game-snakes.game-running .snake-head-creature.attacking .snake-fang{animation:v4Fangs .31s ease both}
+body.game-snakes.game-running .snake-head-creature.attacking .snake-tongue{opacity:0!important}
+body.game-snakes.game-running .snake-creature.swallowing .snake-path-outline{stroke:rgba(255,255,255,.48);animation:v4SwallowBody .38s ease-in-out infinite alternate}
+body.game-snakes.game-running .snake-creature.digesting .snake-path,
+body.game-snakes.game-running .snake-creature.digesting .snake-path-outline{animation:v4DigestGrow .48s ease-in-out!important}
+body.game-snakes.game-running .snake-head-creature.digesting .snake-head-shell{animation:v4HeadDigest .48s ease-in-out!important}
+body.game-snakes.game-running .snake-head-creature.releasing .snake-eye-core{animation:v4SatisfiedBlink .36s ease both}
+body.game-snakes.game-running .snake-food-bulge{
+  fill:url(#snakeFood);
+  stroke:#fff4c5;
+  stroke-width:3;
+  filter:drop-shadow(0 0 11px var(--food-color,#ffbd62)) drop-shadow(0 4px 3px rgba(0,0,0,.55));
+  transform-box:view-box;
+  transform-origin:0 0;
+  will-change:transform,opacity;
+}
+body.game-snakes.game-running .snake-board-wrap.snake-active{box-shadow:0 30px 74px rgba(0,0,0,.62),0 0 0 2px rgba(2,7,9,.88) inset,0 0 56px rgba(255,70,104,.25)!important}
+@keyframes v4SnakeBreathe{to{stroke-width:calc(var(--grown-width) + 2px)}}
+@keyframes v4ScaleFlow{to{stroke-dashoffset:-34}}
+@keyframes v4TailPulse{to{scale:1.18;rotate:5deg}}
+@keyframes v4SnakeBlink{0%,88%,100%{scale:1 1}92%,95%{scale:1 .08}}
+@keyframes v4TongueFlick{0%,60%,100%{opacity:.08;stroke-dashoffset:22}68%,86%{opacity:1;stroke-dashoffset:0}}
+@keyframes v4HissTongue{50%{opacity:1;stroke-width:4.3;stroke-dashoffset:9}}
+@keyframes v4HeadAlert{from{opacity:.15;scale:.7}to{opacity:1;scale:1.24}}
+@keyframes v4HeadStrike{0%{scale:1}48%{scale:1.30 1.16}100%{scale:1.05}}
+@keyframes v4JawBite{0%{rotate:0deg;translate:0 0}48%{rotate:-24deg;translate:-2px 9px}100%{rotate:0deg;translate:0 0}}
+@keyframes v4MouthOpen{0%{scale:1 .3;opacity:.35}48%{scale:1 2.3;opacity:1}100%{scale:1 .4;opacity:.4}}
+@keyframes v4Fangs{20%,72%{opacity:1;stroke-width:5.2}100%{opacity:.24}}
+@keyframes v4SwallowBody{to{stroke-width:34;filter:drop-shadow(0 0 12px rgba(255,232,166,.58))}}
+@keyframes v4DigestGrow{50%{stroke-width:calc(var(--grown-width) + 9px);filter:drop-shadow(0 0 20px hsl(var(--snake-hue) 90% 62% / .72))}}
+@keyframes v4HeadDigest{50%{scale:1.18 1.12;filter:brightness(1.24)}}
+@keyframes v4SatisfiedBlink{30%,65%{scale:1 .08}}
+
+/* Ladders wake, light rung-by-rung, carry the pawn and land with weight. */
+body.game-snakes.game-running .ladder-aura{stroke:#75fff1;stroke-width:34;stroke-linecap:round;opacity:0;filter:blur(7px)}
+body.game-snakes.game-running .ladder-cap{fill:#5f3a1d;stroke:#f7d982;stroke-width:3;filter:drop-shadow(0 3px 2px rgba(0,0,0,.55))}
+body.game-snakes.game-running .ladder-cap.top{fill:#c18a3d}
+body.game-snakes.game-running .ladder-creature.activating .ladder-aura{animation:v4LadderWake .16s ease-out both}
+body.game-snakes.game-running .ladder-creature.climbing{filter:drop-shadow(0 0 12px rgba(117,255,241,.56))}
+body.game-snakes.game-running .ladder-creature.climbing .ladder-rail-hi{animation:v4RailCharge .72s linear infinite}
+body.game-snakes.game-running .ladder-rung.is-lit,
+body.game-snakes.game-running .ladder-creature.climbing .ladder-rung-hi{stroke:#fff4b0!important;filter:drop-shadow(0 0 8px #6affef)!important}
+body.game-snakes.game-running .ladder-creature.climbing .ladder-rung-hi{animation:v4RungLight .42s ease-in-out both;animation-delay:calc(var(--rung-index) * 82ms)}
+body.game-snakes.game-running .ladder-creature.landing .ladder-cap.top{animation:v4LadderLand .22s ease-out}
+body.game-snakes.game-running .snake-board-wrap.ladder-active{box-shadow:0 30px 74px rgba(0,0,0,.62),0 0 0 2px rgba(2,7,9,.88) inset,0 0 62px rgba(72,255,215,.30)!important}
+@keyframes v4LadderWake{from{opacity:0;stroke-width:12}55%{opacity:.8}to{opacity:.16;stroke-width:48}}
+@keyframes v4RailCharge{50%{stroke:#fff0a8;filter:drop-shadow(0 0 8px #5affdf)}}
+@keyframes v4RungLight{0%{opacity:.48}50%{opacity:1;stroke-width:5;filter:drop-shadow(0 0 10px #69ffe8)}100%{opacity:.7}}
+@keyframes v4LadderLand{45%{scale:1.8;filter:drop-shadow(0 0 15px #fff0a2)}}
+
+/* Distinct premium stones: geometry remains readable for color-blind players. */
+body.game-snakes.game-running .pawn-energy-ring{
+  position:absolute;
+  z-index:1;
+  left:8%;right:8%;bottom:-2%;height:20%;
+  border:1px solid color-mix(in srgb,var(--pc) 72%,#fff);
+  border-radius:50%;
+  background:color-mix(in srgb,var(--pc) 20%,transparent);
+  box-shadow:0 0 7px var(--pc),inset 0 0 4px var(--pc);
+  opacity:.7;
+}
+body.game-snakes.game-running .pawn-emblem{
+  position:absolute;
+  z-index:8;
+  left:50%;top:11%;
+  translate:-50% 0;
+  display:grid;
+  place-items:center;
+  width:33%;aspect-ratio:1;
+  color:#fffde8;
+  font:900 clamp(5px,1.25vmin,9px)/1 system-ui,sans-serif;
+  text-shadow:0 1px 2px #000,0 0 4px var(--pc);
+  pointer-events:none;
+}
+body.game-snakes.game-running [data-material="amethyst"] .pawn-emblem{rotate:45deg}
+body.game-snakes.game-running [data-material="topaz"] .pawn-emblem{font-size:clamp(4px,1.05vmin,8px)}
+body.game-snakes.game-running .snake-token.active .pawn-energy-ring{animation:v4PawnRing .9s ease-out infinite}
+body.game-snakes.game-running .snake-travel-pawn .pawn-emblem{top:8%;font-size:8px}
+body.game-snakes.game-running .snake-travel-pawn .pawn-energy-ring{bottom:-5%}
+@keyframes v4PawnRing{to{scale:1.45;opacity:0}}
+
+/* Physical 3D dice impact and result lock. */
+body.game-snakes.game-running .die.rolling{animation:v4DiceBody .98s cubic-bezier(.18,.76,.2,1)!important}
+body.game-snakes.game-running .die.rolling .luxury-die-cube{animation:v4DiceTumble .98s cubic-bezier(.15,.72,.2,1)!important}
+body.game-snakes.game-running .die.die-airborne{filter:drop-shadow(0 24px 15px rgba(0,0,0,.28)) drop-shadow(0 0 15px rgba(83,232,223,.20))}
+body.game-snakes.game-running .die.impact{filter:drop-shadow(0 8px 6px rgba(0,0,0,.62)) drop-shadow(0 0 24px rgba(255,221,132,.58))}
+body.game-snakes.game-running .die.impact:before{animation:v4DiceImpactRing .15s ease-out both!important}
+body.game-snakes.game-running .die.settling .luxury-die-cube{transition:transform .17s cubic-bezier(.2,1.3,.3,1)!important}
+body.game-snakes.game-running .die.result-impact .luxury-die-cube{animation:v4ResultLock .18s cubic-bezier(.2,.9,.25,1)!important}
+@keyframes v4DiceBody{0%{translate:0 0;scale:1}24%{translate:0 -42px;scale:1.04}58%{translate:0 -11px;scale:.96 1.05}68%{translate:0 0;scale:1.10 .88}82%{translate:0 -8px;scale:.99 1.03}100%{translate:0 0;scale:1}}
+@keyframes v4DiceTumble{0%{transform:rotateX(var(--die-rx)) rotateY(var(--die-ry)) rotateZ(0)}26%{transform:rotateX(calc(var(--die-rx) + 160deg)) rotateY(calc(var(--die-ry) + 110deg)) rotateZ(32deg)}56%{transform:rotateX(calc(var(--die-rx) + 390deg)) rotateY(calc(var(--die-ry) + 280deg)) rotateZ(-25deg)}76%{transform:rotateX(calc(var(--die-rx) + 540deg)) rotateY(calc(var(--die-ry) + 360deg)) rotateZ(7deg)}100%{transform:rotateX(var(--die-rx)) rotateY(var(--die-ry)) rotateZ(0)}}
+@keyframes v4DiceImpactRing{from{opacity:1;scale:.45;background:radial-gradient(circle,rgba(255,234,166,.58),transparent 62%)}to{opacity:0;scale:1.7}}
+@keyframes v4ResultLock{0%{scale:.92;filter:brightness(1.35)}65%{scale:1.06}100%{scale:1}}
+
+@media(max-width:430px) and (orientation:portrait){
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side{padding:5px!important;gap:4px!important;grid-template-columns:minmax(0,1fr) 78px minmax(104px,.84fr)!important}
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .player-row{min-height:34px!important;padding:3px 5px!important}
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .mobile-start-lane,
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .dice-stage,
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #roll{min-height:80px!important}
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .die{width:min(82px,21vw)!important;height:min(82px,21vw)!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.game-snakes.game-running .snake-spine-line,
+  body.game-snakes.game-running .snake-scale-line,
+  body.game-snakes.game-running .snake-tail-fin,
+  body.game-snakes.game-running .snake-eye-core,
+  body.game-snakes.game-running .snake-tongue,
+  body.game-snakes.game-running .snake-creature .snake-path{animation:none!important}
+}

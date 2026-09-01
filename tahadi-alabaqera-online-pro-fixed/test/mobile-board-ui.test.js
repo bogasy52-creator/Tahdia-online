@@ -66,7 +66,8 @@ test('snakes and zahra use the dedicated viewport-filling stage with measured bo
   assert.match(fullscreenJs,/ResizeObserver/);
   assert.match(fullscreenJs,/MutationObserver/);
   assert.match(fullscreenJs,/busraj:game-layout/);
-  assert.match(fullscreenJs,/Math\.min\(rect\.width, rect\.height\)/);
+  assert.match(fullscreenJs,/rect\.width\/plannedWidth/);
+  assert.match(fullscreenJs,/rect\.height\/plannedHeight/);
   for(const html of [snakes,zahra]){
     assert.match(html,/assets\/css\/fullscreen-board\.css/);
     assert.match(html,/assets\/js\/fullscreen-game\.js/);
@@ -85,4 +86,3 @@ test('snakes fullscreen keeps unstarted pieces visible without covering the boar
   assert.match(fullscreenCss,/game-snakes\.game-running \.snake-legend \+ div[\s\S]*display:\s*none\s*!important/);
   assert.match(snakes,/busraj:game-layout/);
 });
-

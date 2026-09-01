@@ -43,7 +43,7 @@ try {
   let body = await response.json();
   assert.equal(body.ok, true);
   assert.equal(body.online, true);
-  assert.equal(body.version, '3.2.0');
+  assert.equal(body.version, '4.0.0');
   assert.equal(body.socialOnline, true);
 
   response = await mod.default.fetch(new Request('https://game.test/api/catalog'), env);

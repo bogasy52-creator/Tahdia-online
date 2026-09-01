@@ -24,7 +24,19 @@
   function luxurySnake(){noise(.30,.035,0,1000);tone(310,.28,.045,'sawtooth',0,105);tone(245,.25,.028,'triangle',.08,82);noise(.10,.028,.24,450)}
   function luxuryLadder(){noise(.20,.022,0,1500);sequence([[380,.06,.022,'sine',0,520],[520,.06,.026,'sine',.055,710],[700,.07,.03,'sine',.11,940],[930,.11,.034,'sine',.18,1240]])}
   function luxuryWin(){noise(.20,.02,0,1800);sequence([[523,.10,.035,'sine',0,659],[659,.11,.045,'sine',.08,784],[784,.14,.05,'sine',.18,1046],[1046,.24,.055,'sine',.31,1318],[1568,.30,.03,'sine',.43,1760]])}
+  function boardStep(){tone(510,.032,.016,'triangle',0,690);noise(.025,.008,.006,1850)}
+  function boardLand(){noise(.07,.034,0,720);tone(190,.09,.046,'triangle',0,92);tone(720,.045,.016,'sine',.07,540)}
+  function diceImpact(){noise(.095,.06,0,520);tone(145,.12,.07,'triangle',0,68);tone(440,.05,.025,'sine',.018,270)}
+  function ladderIgnite(){sequence([[330,.06,.018,'triangle',0,510],[520,.08,.025,'sine',.045,780]]);noise(.08,.014,0,1600)}
+  function ladderStep(){tone(620,.045,.022,'triangle',0,810);tone(980,.035,.012,'sine',.026,1180)}
+  function ladderLand(){noise(.07,.035,0,820);sequence([[470,.06,.028,'triangle',0,640],[760,.09,.032,'sine',.045,960]])}
+  function snakeHiss(){noise(.30,.04,0,2400);tone(270,.28,.025,'sawtooth',0,86)}
+  function snakeBite(){noise(.105,.062,0,650);tone(180,.095,.072,'square',0,62);tone(95,.14,.05,'triangle',.035,48)}
+  function snakeSwallow(){sequence([[240,.11,.032,'sine',0,165],[185,.13,.038,'triangle',.11,118],[130,.16,.044,'sine',.24,76]]);noise(.24,.022,.02,380)}
+  function snakeGrow(){sequence([[92,.22,.045,'sine',0,68],[118,.25,.04,'triangle',.12,82],[158,.22,.027,'sine',.26,112]])}
+  function snakeRelease(){noise(.08,.025,0,900);sequence([[210,.07,.025,'triangle',0,360],[420,.10,.026,'sine',.06,640]])}
   function play(name,opts={}){if(settings.muted||!settings.effects)return;unlock();const a=audio[name];if(a){try{a.pause();a.currentTime=0;a.volume=Math.min(1,(opts.volume??.9)*settings.volume);a.play().catch(()=>{})}catch{};return}
+    const v4={boardStep,boardLand,diceImpact,ladderIgnite,ladderStep,ladderLand,snakeHiss,snakeBite,snakeSwallow,snakeGrow,snakeRelease};if(v4[name])return v4[name]();
     if(name==='dice')return luxuryDice();if(name==='move'||name==='step')return luxuryMove();if(name==='capture')return luxuryCapture();if(name==='snake'||name==='snakeSlide')return luxurySnake();if(name==='ladder'||name==='ladderClimb')return luxuryLadder();if(name==='win')return luxuryWin();
     const map={click:[560,.04,.02,'sine'],card:[430,.065,.028,'triangle'],select:[820,.055,.025,'sine'],buzzer:[170,.18,.06,'sawtooth'],error:[145,.16,.045,'triangle'],pop:[1040,.055,.022,'sine']};
     if(name==='turn')return sequence([[470,.045,.02,'sine',0,560],[690,.08,.027,'sine',.055,780]]);

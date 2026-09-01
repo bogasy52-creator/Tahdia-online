@@ -55,3 +55,12 @@ test('regular effects stay disabled when effects setting is off', async () => {
   api.play('move');
   assert.equal(started.length, 0);
 });
+
+test('V4 board reactions each have a synthesized audio cue', async () => {
+  const names=['boardStep','boardLand','diceImpact','ladderIgnite','ladderStep','ladderLand','snakeHiss','snakeBite','snakeSwallow','snakeGrow','snakeRelease'];
+  for(const name of names){
+    const {api,started}=await loadAudio({muted:false,effects:true,timer:true,volume:1});
+    api.play(name);
+    assert.ok(started.length>0,`${name} should create an audible cue`);
+  }
+});
