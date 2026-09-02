@@ -1,9 +1,11 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
-const CACHE_NAME = 'busraj-games-v21-reference-skin';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
+const CACHE_NAME = 'busraj-games-v22-v5-hub';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
+  '/v5',
   '/local',
   '/online',
   '/social',
@@ -11,6 +13,11 @@ const APP_SHELL = [
   '/dice',
   '/zahra',
   '/jackaroo',
+  '/memory',
+  '/reaction',
+  '/logic',
+  '/puzzle',
+  '/accuracy',
   '/manifest.webmanifest',
   '/icon-192.png',
   '/icon-512.png',
@@ -43,6 +50,7 @@ const APP_SHELL = [
   '/assets/js/engines/dice-engine.js',
   '/assets/js/engines/ludo-engine.js',
   '/assets/js/engines/jackaroo-engine.js',
+  '/assets/js/snake-pro-upgrade.js',
   '/assets/snake-reference-skin.png',
   '/assets/sounds/round.wav',
   '/assets/sounds/reveal.wav',

@@ -75,6 +75,20 @@ for (const file of files) {
   }
 }
 
+// The service worker install is all-or-nothing: one stale APP_SHELL path
+// causes cache.addAll() to reject and leaves the PWA without an offline shell.
+// Validate every literal shell entry just like HTML href/src references.
+const serviceWorker = join(publicDir, 'service-worker.js');
+try {
+  const swText = await readFile(serviceWorker, 'utf8');
+  const shell = swText.match(/const\s+APP_SHELL\s*=\s*\[(.*?)\];/s)?.[1] || '';
+  for (const match of shell.matchAll(/['"]([^'"]+)['"]/g)) {
+    await requireTarget(localTarget(match[1], serviceWorker), serviceWorker, match[1]);
+  }
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error;
+}
+
 if (missing.length) {
   console.error('Static asset verification failed:');
   for (const item of missing) console.error(` - ${item}`);
