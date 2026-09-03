@@ -14,7 +14,19 @@ window.TahdiaMatchmaking={
   box.querySelector('#cancelMatch').onclick=()=>{this.queue=false;if(this.watch)clearInterval(this.watch);box.remove();};
   const start=async()=>{
    if(!window.TahdiaOnline){
-    t.textContent='جاري تجهيز الاتصال...'; return;
+    t.textContent='جاري تجهيز الاتصال...';
+    let tries=0;
+    const wait=setInterval(()=>{
+      tries++;
+      if(window.TahdiaOnline){
+        clearInterval(wait);
+        start();
+      }else if(tries>20){
+        clearInterval(wait);
+        t.textContent='تعذر الاتصال بـ Firebase';
+      }
+    },500);
+    return;
    }
    t.textContent='تم تسجيلك في قائمة الانتظار...';
    const api=window.TahdiaOnline;
