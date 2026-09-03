@@ -19,7 +19,7 @@ eb58f1a691a748ae45ecb958cc557beaae073daf3569b1d64d779925596efa21  ./docs/superpo
 58686b67d380e16a04ef8cce5e4fd559eaa2c1ca53b3ab76c0ae0c564225cd7d  ./docs/superpowers/specs/2026-08-31-busraj-social-board-games-pro-design.md
 2cdd69bf8039b7958ede5cb0bf1c3b6460821f28f812b4d16998d5ba84944f01  ./package-lock.json
 3c28dd58ce2dbf14be179d6eae1ed815b4ee220ee7ce4450cf36813e45f3bdf8  ./package.json
-d3c56c0828d9fec3be6682569483440bdf4d8936867f2b060960030551659223  ./public/accuracy.html
+0403bcd78283998dc71caeef2cd7c9fc3525be480f020df7426cc0a8feb46017  ./public/accuracy.html
 3c71fb17908278161e69f7903a11431d8f150b59e60d4528cccf6dc54c2e415e  ./public/apple-touch-icon.png
 9068cd42ec0eb00df1f34aae3a011365a0682f13005c7d4ebbfe08aa3d49f52b  ./public/assets/css/board-premium.css
 3806f80d8deb9d3774f6e69f48f02b0139ba393cf0bb40d2a8fc818098534595  ./public/assets/css/fullscreen-board.css
@@ -209,7 +209,7 @@ a9102e0daed918cc1283879dae926e86a0d12667de81ebb0df72342b2834fe29  ./public/logic
 2c85788e8f9ee512e526bc154e3fd3c06d6b1a4eb34c17cfe7b2dac10559e9ee  ./public/manifest.webmanifest
 9cad805dd00c4db4070cb37b47a4c3bf59dbf34595a9d398e9a918af923e2384  ./public/memory.html
 b1bb700f63d340bbfd2ef55094a4a832b1c10e7b4db1c3fb1fbc1cf16b052b42  ./public/online.html
-a03044a1141e17095a71397c1155b1a2d08f25409e9cb0a396b781ac2ba91d6a  ./public/puzzle.html
+77256a6b242c81e4d67d369a55f2fdca39735285ac472c66476e24674fad0be6  ./public/puzzle.html
 674dbb0d93bc471eda4148f9b691f5012922e85b60e447a61c0eb67dc928e209  ./public/reaction.html
 ee8266ebf36a35f2049087c22851226ef0d87b258be68b9a288de8e8c44b57d7  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
