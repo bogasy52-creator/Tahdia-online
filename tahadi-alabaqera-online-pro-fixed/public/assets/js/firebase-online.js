@@ -7,8 +7,11 @@ if(cfg){
  const app=initializeApp(cfg);
  const auth=getAuth(app);
  const db=getFirestore(app);
- signInAnonymously(auth).then(async()=>{
-   window.TahdiaOnline={db,addDoc,collection,serverTimestamp,getDocs};
-   window.TahdiaMatchmaking.firebaseReady=true;
- }).catch(()=>{});
+ // Make Firestore available even if anonymous auth is not enabled yet
+ window.TahdiaOnline={db,addDoc,collection,serverTimestamp,getDocs};
+ signInAnonymously(auth)
+  .then(()=>{ window.TahdiaOnline.authReady=true; window.TahdiaOnlineError=null; })
+  .catch((e)=>{ window.TahdiaOnlineError=e.message; });
+}else{
+ window.TahdiaOnlineError='Firebase config missing';
 }
