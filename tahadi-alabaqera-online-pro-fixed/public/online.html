@@ -12,6 +12,27 @@
 :root{--bg:#080914;--panel:#111526;--panel2:#0b0f1d;--line:#313858;--txt:#fbfbff;--mut:#aab2c8;--vio:#7c3aed;--pink:#d946ef;--gold:#f0b94a;--cyan:#22d3ee;--green:#22c55e;--red:#ef4444}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#241440,#0c0e1a 45%,#070812 86%);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}button,input{font:inherit}.app{width:min(1040px,100%);margin:auto;padding:11px}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.brand{display:flex;align-items:center;gap:9px}.logo{width:47px;height:47px;border-radius:15px;background:linear-gradient(135deg,var(--vio),var(--pink));display:grid;place-items:center;font-weight:1000}.brand h1{margin:0;font-size:clamp(21px,5vw,30px)}.mut{color:var(--mut);font-size:13px;line-height:1.65}.topBtns{display:flex;gap:6px}.ib{min-width:45px;min-height:45px;border:1px solid var(--line);border-radius:13px;background:#090d19;color:#fff;font-weight:900}.card{background:linear-gradient(180deg,#15192c,#0e1220);border:1px solid var(--line);border-radius:22px;padding:15px}.hidden{display:none!important}.net{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 8px}.dot{width:8px;height:8px;border-radius:50%;background:#64748b}.net.ok .dot{background:var(--green)}.net.bad .dot{background:var(--red)}.hero{padding:22px;min-height:185px;background:radial-gradient(circle at 15% 0,rgba(34,211,238,.10),transparent 35%),radial-gradient(circle at 85% 0,rgba(124,58,237,.18),transparent 42%),linear-gradient(180deg,#15192d,#101421)}.hero h2{font-size:clamp(32px,7vw,50px);margin:7px 0}.hero h2 span{color:var(--gold)}.entry{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}.form{display:grid;gap:8px}input{width:100%;min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:11px;font-size:16px}.btn{min-height:49px;border:0;border-radius:14px;padding:10px 13px;background:linear-gradient(135deg,var(--vio),var(--pink));color:#fff;font-weight:1000}.btn.sec{background:#090d18;border:1px solid var(--line);color:#fff}.btn.cyan{background:linear-gradient(135deg,#087ea4,#6d28d9)}.btn.gold{background:linear-gradient(135deg,#d49a31,#f2c25a);color:#211607}.roomHead{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.roomCode{font-size:30px;font-weight:1000;letter-spacing:5px;color:#f2c66f}.players{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.player{border:1px solid var(--line);border-radius:18px;padding:12px;background:#0b0f1c}.player.me{border-color:#8061da}.player .name{font-weight:1000}.presence{font-size:11px;color:var(--mut);margin-top:3px}.presence.on{color:#86efac}.score{font-size:31px;font-weight:1000;color:#f0bd59;margin-top:4px}.lobbyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px}.cat{min-height:98px;border:1px solid var(--line);border-radius:15px;background:#0a0e1a;color:#fff;text-align:right;padding:10px}.cat.sel{border-color:#8262e0;background:rgba(124,58,237,.13)}.catIcon{width:29px;height:29px;color:#e8c872;display:inline-grid}.catIcon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.cat b{display:block;margin-top:5px;font-size:13px}.cat span{display:block;color:var(--mut);font-size:10px;margin-top:2px;line-height:1.35}.lobbyActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.lobbyActions .btn{flex:1 1 135px}.roundPicker{flex:1 0 100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:15px;background:#090d18;padding:8px 10px}.roundPicker>b{font-size:12px;color:#dfe4ef}.roundPicker>div{display:flex;gap:5px}.roundOpt{min-width:52px;min-height:37px;border:1px solid var(--line);border-radius:11px;background:#0e1322;color:#fff;font-weight:1000}.roundOpt.active{border-color:#f0b94a;background:rgba(240,185,74,.14);color:#ffd884}.ready{border:1px solid #3f4a64;border-radius:16px;padding:10px;background:#0a0e1a;margin-top:10px;text-align:center}.ready strong{display:block;font-size:18px}.matchTop{display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center;margin-bottom:9px}.scoreCard{border:1px solid var(--line);border-radius:17px;padding:9px;background:#0c101d;min-width:0}.scoreCard:last-child{text-align:left}.roundBadge{border:1px solid var(--line);border-radius:999px;padding:7px 9px;color:#d8dceb;font-size:11px;white-space:nowrap}.questionCard{text-align:center;min-height:520px;display:flex;flex-direction:column;justify-content:center}.qmeta{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 8px;color:#c8cee0;font-size:11px}.pill.gold{color:#f2c76f}.question{font-size:clamp(25px,6vw,40px);font-weight:1000;line-height:1.55;margin:18px auto 12px;max-width:780px;min-height:104px;display:flex;align-items:center;justify-content:center}.timer{font-size:52px;font-weight:1000;font-variant-numeric:tabular-nums}.track{height:8px;max-width:450px;margin:5px auto 12px;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#070a12}.bar{height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),var(--vio),var(--pink))}.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:760px;margin:11px auto;width:100%}.choice{min-height:60px;border:1px solid var(--line);border-radius:15px;background:#090d18;color:#fff;padding:9px;font-weight:850}.choice:disabled{opacity:.48}.choice.correct{border-color:var(--green);background:rgba(34,197,94,.14)}.choice.wrong{border-color:var(--red);background:rgba(239,68,68,.12)}.buzzer{width:min(430px,100%);min-height:116px;border:1px solid #9a743a;border-radius:24px;background:radial-gradient(circle at 50% 20%,rgba(240,185,74,.18),transparent 42%),linear-gradient(145deg,#1a1725,#0c101c);color:#f3cc79;font-size:28px;font-weight:1000;margin:12px auto}.buzzer:active{transform:scale(.985)}.statusText{color:#d7dbea;font-weight:900;margin:10px auto}.powers{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:680px;margin:12px auto 0}.power{min-height:66px;border:1px solid var(--line);border-radius:15px;background:#0a0e1a;color:#fff;padding:7px;font-weight:850}.power b{display:block}.power small{color:var(--mut)}.power.used{opacity:.35}.power.blocked{opacity:.28;filter:grayscale(1)}.reveal{max-width:720px;margin:8px auto}.answer{font-size:clamp(22px,5vw,33px);font-weight:1000;color:#93f0b2;margin:8px auto}.resultRows{display:grid;gap:7px;margin-top:11px}.result{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:14px;padding:9px;background:#090d18}.gain{color:#f0c16a;font-weight:1000}.winner{font-size:clamp(30px,7vw,52px);font-weight:1000;margin:14px auto;color:#f0c46b}.media{max-width:680px;margin:4px auto 9px}.soundStudio{border:1px solid #514a74;border-radius:20px;padding:14px;background:radial-gradient(circle at 50% 0,rgba(124,58,237,.16),transparent 48%),linear-gradient(145deg,#14182c,#0b0e19);box-shadow:0 15px 42px rgba(0,0,0,.25)}.soundBtn{min-height:64px;width:100%;border:1px solid #8b6ce3;border-radius:16px;background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(34,211,238,.07));color:#fff;font-weight:1000}.soundBtn:disabled{opacity:.48}.soundCanvas{display:block;width:100%;height:68px;margin-top:9px;border-radius:11px;background:#070a13;border:1px solid #303653}.soundInfo{display:flex;justify-content:space-between;gap:8px;color:#aeb6ca;font-size:10px;margin-top:7px}.soundProgress{height:5px;border-radius:999px;background:#070912;overflow:hidden;margin-top:6px}.soundProgress>i{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--cyan),var(--vio),var(--pink))}.zoomFrame{aspect-ratio:16/10;overflow:hidden;border:1px solid #4c5370;border-radius:17px;background:#06080e;position:relative}.zoomFrame img{width:100%;height:100%;object-fit:cover;transition:transform .65s cubic-bezier(.2,.8,.2,1)}.zoomStage{position:absolute;top:8px;right:8px;border:1px solid #ffffff25;border-radius:999px;background:#070912c9;color:#fff;padding:5px 8px;font-size:9px;font-weight:900;backdrop-filter:blur(8px)}.credit{font-size:9px;color:#6e778a;margin-top:3px}.countdownNote{color:var(--mut);font-size:12px}.toast{position:fixed;bottom:9px;left:50%;transform:translateX(-50%);max-width:min(520px,92vw);background:#090d18;border:1px solid var(--line);border-radius:14px;padding:10px 13px;z-index:50;color:#e1e5f1}.footer{text-align:center;color:#747d91;font-size:11px;margin:12px 0 2px}
 @media(min-width:760px){.entry{grid-template-columns:1fr 1fr}.lobbyGrid{grid-template-columns:repeat(3,1fr)}}@media(min-width:1000px){.lobbyGrid{grid-template-columns:repeat(4,1fr)}}@media(max-width:520px){.app{padding:8px}.players{grid-template-columns:1fr}.questionCard{min-height:500px;padding:12px}.choices{grid-template-columns:1fr}.question{font-size:25px;min-height:120px}.powers{grid-template-columns:1fr 1fr 1fr}.power{font-size:12px;padding:5px}.matchTop{grid-template-columns:1fr 42px 1fr}.score{font-size:25px}.roomCode{font-size:26px}}
+
+/* V5.0 — Online UX refresh */
+.entry{align-items:stretch}
+.online-fast-card{grid-column:1/-1;position:relative;overflow:hidden;padding:22px;background:radial-gradient(circle at 8% 0,rgba(34,211,238,.14),transparent 36%),radial-gradient(circle at 92% 0,rgba(124,58,237,.24),transparent 42%),linear-gradient(180deg,#171a31,#101421);border-color:#6454a3}
+.online-fast-card:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.035),transparent 55%)}
+.quick-main{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;position:relative;z-index:1}
+.quick-icon{width:70px;height:70px;border-radius:22px;display:grid;place-items:center;font-size:31px;background:linear-gradient(145deg,#7c3aed,#33205f);border:1px solid #a88cf0}
+.quick-copy b{display:block;font-size:clamp(22px,5vw,30px);margin-bottom:3px}.quick-copy .mut{max-width:560px}
+.quick-id{display:inline-flex;align-items:center;gap:6px;margin-top:7px;padding:5px 9px;border:1px solid #ffffff1c;border-radius:999px;color:#d9ddef;font-size:11px;background:#080b1580}
+.quick-main .btn{min-width:190px;min-height:58px;font-size:16px}
+.private-title{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:4px;color:#dfe4f3;font-weight:1000}.private-title:after{content:"";height:1px;flex:1;background:var(--line)}
+.entry .card:not(.online-fast-card){padding:18px}
+.form-note{font-size:11px;color:#7f8aa4;margin-top:6px}
+.qm-shell{display:grid;gap:10px;margin-top:10px}.qm-head{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.qm-head-copy b{font-size:20px}.qm-live{display:inline-flex;align-items:center;gap:6px;border:1px solid #295d4a;border-radius:999px;padding:6px 9px;color:#8df0b5;background:#0b261c80;font-size:11px;font-weight:900}.qm-live i{width:7px;height:7px;border-radius:50%;background:#22c55e}
+.qm-players{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qm-player{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:17px;background:#0b0f1c;padding:10px}.qm-player.me{border-color:#7c62d7;background:#16122b}.qm-player>div{display:flex;align-items:center;gap:8px;min-width:0}.qm-player b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qm-player strong{font-size:27px;color:#f0c16a}.qm-avatar{width:36px;height:36px;flex:none;border-radius:12px;display:grid;place-items:center;background:#252a43;color:#fff;font-weight:1000}
+.qm-game{padding:clamp(14px,3vw,24px);text-align:center}.qm-topline{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.qm-status{color:#c9d0e2;font-size:12px}.qm-question{font-size:clamp(24px,6vw,38px);font-weight:1000;line-height:1.6;min-height:110px;display:grid;place-items:center;margin:12px auto;max-width:780px}.qm-timer-row{display:flex;align-items:center;justify-content:center;gap:12px}.qm-timer{font-size:42px;font-weight:1000;min-width:56px;font-variant-numeric:tabular-nums}.qm-track{height:8px;flex:1;max-width:420px;border-radius:999px;background:#070a12;overflow:hidden;border:1px solid var(--line)}.qm-bar{height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),var(--vio),var(--pink));transition:width .15s linear}.qm-reveal{margin-top:12px;padding:12px;border:1px solid #2f6b48;border-radius:16px;background:#0c211780}.qm-result-note{font-weight:900;color:#e7ebf5}
+.qm-finished{padding:24px;text-align:center}.qm-final-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.qm-rank-list{display:grid;gap:8px;margin-top:14px}.qm-rank-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:16px;padding:12px;background:#090d18;text-align:right}.qm-rank-row.me{border-color:#7c62d7}.qm-rank-row span{display:grid;gap:3px}.qm-rank-row small{color:var(--mut)}.qm-rank-row strong{font-size:28px;color:#f0c16a}
+.choice.selected{border-color:#8b6ce3;background:rgba(124,58,237,.17)}
+@media(min-width:760px){.entry .card:not(.online-fast-card){min-height:240px}}
+@media(max-width:640px){.quick-main{grid-template-columns:auto 1fr}.quick-main .btn{grid-column:1/-1;width:100%;min-width:0}.quick-icon{width:58px;height:58px;border-radius:18px}.qm-players{grid-template-columns:1fr}.qm-final-actions{grid-template-columns:1fr}.qm-head{grid-template-columns:1fr}.online-fast-card{padding:16px}}
+
 </style>
 <link rel="stylesheet" href="assets/css/quiz-board-v2.css">
 </head>
@@ -20,12 +41,41 @@
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">1 ضد 1 • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
 
 <section id="entry">
-<div class="card quizOnlineHero"><div><div class="mut">BUSRAJ • ONLINE DUEL</div><h2>غرفة واحدة.<br><span>وتحدي أذكى.</span></h2><p class="mut">فئات حيوية، اختيار عشوائي، بازر وإجابات سرية، ومعها باقة الذاكرة الجديدة التي تعرض المحتوى ثم تخفيه قبل الإجابة.</p></div><div class="onlineHeroOrb" aria-hidden="true">🧠</div></div>
+<div class="card quizOnlineHero"><div><div class="mut">V5.0 • ONLINE DUEL</div><h2>ادخل مباشرة.<br><span>والتحدي يبدأ.</span></h2><p class="mut">اللعب السريع يطابقك مع منافس تلقائيًا، يختار أسئلة عشوائية، ويبدأ المواجهة بدون غرفة أو كتابة اسم.</p></div><div class="onlineHeroOrb" aria-hidden="true">🧠</div></div>
 <div class="entry">
-<div class="card online-fast-card"><b>⚡ العب الآن</b><div class="mut">يدخلك في قائمة انتظار اللعب المباشر بدون إنشاء غرفة.</div><div class="form" style="margin-top:9px"><input id="quickName" maxlength="20" placeholder="اسمك"><button id="quickPlayBtn" class="btn gold">⚡ ابدأ اللعب الآن</button></div></div>
-<div class="card"><b>➕ إنشاء غرفة</b><div class="mut">اختر نظام المنافسة وعدد اللاعبين.</div><div class="form" style="margin-top:9px"><input id="createName" maxlength="20" placeholder="اسمك"><select id="playerLimit" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="2">مواجهة فردية (2)</option><option value="4" selected>فريقان: ٢ ضد ٢</option><option value="6">فريقان: ٣ ضد ٣</option><option value="5">منافسة فردية (5)</option><option value="7">منافسة فردية (7)</option><option value="8">منافسة فردية (8)</option></select><button id="createBtn" class="btn cyan">إنشاء غرفة جديدة</button></div></div>
-<div class="card"><b>🔑 دخول غرفة</b><div class="mut">اكتب كود الـ 6 أرقام واسمك.</div><div class="form" style="margin-top:9px"><input id="joinCode" inputmode="numeric" maxlength="6" placeholder="مثال: 482731"><input id="joinName" maxlength="20" placeholder="اسمك"><button id="joinBtn" class="btn">دخول التحدي</button></div></div>
+<div class="card online-fast-card">
+  <div class="quick-main">
+    <div class="quick-icon" aria-hidden="true">⚡</div>
+    <div class="quick-copy"><b>العب الآن</b><div class="mut">دخول فوري لمواجهة 1 ضد 1. إذا لم يكن لديك اسم، نضع لك اسمًا افتراضيًا تلقائيًا.</div><div id="quickIdentity" class="quick-id">● تجهيز هويتك تلقائيًا</div></div>
+    <button id="quickPlayBtn" class="btn gold">⚡ ابحث عن منافس</button>
+  </div>
 </div>
+<div class="private-title">لعب خاص مع الأصدقاء</div>
+<div class="card"><b>➕ إنشاء غرفة</b><div class="mut">اختر عدد اللاعبين، والاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="createName" maxlength="20" placeholder="اسم اختياري"><select id="playerLimit" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="2">مواجهة فردية (2)</option><option value="4" selected>فريقان: ٢ ضد ٢</option><option value="6">فريقان: ٣ ضد ٣</option><option value="5">منافسة فردية (5)</option><option value="7">منافسة فردية (7)</option><option value="8">منافسة فردية (8)</option></select><button id="createBtn" class="btn cyan">إنشاء غرفة جديدة</button><div class="form-note">إذا تركت الاسم فارغًا سنستخدم اسم حسابك أو اسمًا افتراضيًا.</div></div></div>
+<div class="card"><b>🔑 دخول غرفة</b><div class="mut">اكتب كود الـ 6 أرقام فقط؛ الاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="joinCode" inputmode="numeric" maxlength="6" placeholder="مثال: 482731"><input id="joinName" maxlength="20" placeholder="اسم اختياري"><button id="joinBtn" class="btn">دخول التحدي</button><div class="form-note">بدون اسم؟ ندخلك باسم تلقائي.</div></div></div>
+</div>
+</section>
+
+<section id="quickArena" class="hidden qm-shell" aria-live="polite">
+  <div class="card qm-head">
+    <div class="qm-head-copy"><div class="mut">مواجهة سريعة • أسئلة عشوائية</div><b>تحدي العباقرة 1 ضد 1</b></div>
+    <span class="qm-live"><i></i> مباشر</span>
+  </div>
+  <div id="qmPlayers" class="qm-players"></div>
+  <div id="qmGameCard" class="card qm-game">
+    <div class="qm-topline"><div id="qmMeta" class="qmeta"></div><span id="qmRound" class="roundBadge">1 / 10</span></div>
+    <div id="qmQuestion" class="qm-question">تجهيز المواجهة…</div>
+    <div class="qm-timer-row"><div id="qmTimer" class="qm-timer">--</div><div class="qm-track"><div id="qmBar" class="qm-bar"></div></div></div>
+    <div id="qmChoices" class="choices"></div>
+    <div id="qmReveal" class="qm-reveal hidden"></div>
+    <div id="qmStatus" class="qm-status">جاري مزامنة اللاعبين…</div>
+  </div>
+  <div id="qmFinished" class="card qm-finished hidden">
+    <div class="mut">انتهت المواجهة</div>
+    <div id="qmWinner" class="winner"></div>
+    <div id="qmFinalScores" class="qm-rank-list"></div>
+    <div class="qm-final-actions"><button id="qmPlayAgain" class="btn gold">⚡ العب مرة ثانية</button><button id="qmHome" class="btn sec">⌂ الرئيسية</button></div>
+  </div>
 </section>
 
 <section id="room" class="hidden">
@@ -59,11 +109,14 @@
 </div>
 </section>
 
-<div class="footer">© 2026 بوسراج — تحدي العباقرة Online. حالة المباراة والنقاط تُدار من السيرفر.</div>
+<div class="footer">© 2026 بوسراج — تحدي العباقرة Online. اللعب السريع متزامن مباشرة، والغرف الخاصة تعمل بمحرك السيرفر.</div>
 <div id="toast" class="toast hidden"></div>
 </div>
 <script src="assets/js/audio-manager.js"></script>
 <script src="assets/js/platform.js"></script>
+<script src="firebase-config.js"></script>
+<script type="module" src="assets/js/firebase-online.js"></script>
+<script src="assets/js/matchmaking.js"></script>
 <script src="assets/js/social-client.js"></script>
 <script>
 (() => {
@@ -104,6 +157,11 @@ const soundPlayCounts=new Map(),waveCache=new Map(),zoomLevels=new Map();
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
 const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName){$('#createName').value=socialProfile.displayName;$('#joinName').value=socialProfile.displayName}
+function autoPlayerName(inputValue=''){
+ const typed=cleanName(inputValue);if(typed)return typed;
+ try{const p=JSON.parse(localStorage.getItem('tahadi-player')||'null');const saved=cleanName(p?.name||read('online_name')||read('tahdia_guest_name'));if(saved&&saved!=='لاعب'&&saved!=='لاعب العباقرة')return saved}catch{}
+ const id=read('tahdia_guest_id')||Math.random().toString(36).slice(-4).toUpperCase();const name='عبقري '+String(id).replace(/[^a-zA-Z0-9]/g,'').slice(-4).toUpperCase();store('online_name',name);return name;
+}
 
 const DEFAULT_CLOUD_API='https://tahdia-online.bogasy52.workers.dev';
 let activeApiOrigin='';
@@ -153,20 +211,12 @@ async function apiFetch(path,opts={}){const origin=activeApiOrigin||await probeB
 function websocketUrl(path){const u=new URL(path,activeApiOrigin||DEFAULT_CLOUD_API);u.protocol=u.protocol==='https:'?'wss:':'ws:';return u}
 
 async function quickPlay(){
- const name=cleanName($('#quickName').value);
- if(!name)return toast('اكتب اسمك أولًا');
- store('online_name',name);
- toast('جار البحث عن لاعب متاح...');
- try{
-  const r=await apiFetch('/api/matchmaking',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name})});
-  const d=await r.json().catch(()=>({}));
-  if(r.ok&&d.code){const next=new URL('/online',location.origin);next.searchParams.set('room',d.code);location.href=next.href;return;}
-  toast(d.error||'الخدمة غير مفعلة على السيرفر الحالي');
- }catch(e){toast('تعذر الاتصال بالسيرفر');}
+ try{if(!window.TahdiaMatchmaking?.join)throw new Error('نظام المطابقة لم يجهز بعد');window.TahdiaMatchmaking.join()}
+ catch(e){toast(e?.message||'تعذر بدء البحث')}
 }
 
 async function createRoom(){
- const name=$('#createName').value.trim();if(!name)return toast('اكتب اسمك');
+ const name=autoPlayerName($('#createName').value);$('#createName').value=name;
  $('#createBtn').disabled=true;setNet('','جار تجهيز الغرفة');
  try{
   await probeBackend(true);
@@ -179,8 +229,8 @@ async function createRoom(){
  }catch(e){setNet('bad','فشل إنشاء الغرفة');toast(e?.message||'تعذر الوصول لسيرفر الأونلاين')}finally{$('#createBtn').disabled=false}
 }
 function joinRoom(){
- const code=$('#joinCode').value.replace(/\D/g,'').slice(0,6),name=$('#joinName').value.trim();
- if(code.length!==6)return toast('رقم الغرفة 6 أرقام');if(!name)return toast('اكتب اسمك');
+ const code=$('#joinCode').value.replace(/\D/g,'').slice(0,6),name=autoPlayerName($('#joinName').value);$('#joinName').value=name;
+ if(code.length!==6)return toast('رقم الغرفة 6 أرقام');
  store('online_name',name);const next=new URL('/online',location.origin);next.searchParams.set('room',code);const api=qs.get('api')||activeApiOrigin;if(api&&api!==location.origin)next.searchParams.set('api',api);location.href=next.href;
 }
 $('#createBtn').onclick=createRoom;$('#quickPlayBtn').onclick=quickPlay;$('#joinBtn').onclick=joinRoom;
@@ -190,7 +240,7 @@ async function connect(){
  if(!roomCode)return;
  if(!state){try{await probeBackend();const sr=await apiFetch('/api/rooms/'+roomCode+'/status',{cache:'no-store'});if(!sr.ok){const d=await sr.json().catch(()=>({}));$('#room').classList.add('hidden');$('#entry').classList.remove('hidden');return toast(d.error||'الغرفة غير موجودة')}}catch{setNet('bad','تعذر الوصول للسيرفر');scheduleReconnect();return}}
  clearTimeout(reconnectTimer);manualClose=false;
- const name=read('online_name')||'لاعب';
+ const name=autoPlayerName(read('online_name'));
  const token=read('roomToken:'+roomCode);
  const hostKey=read('hostKey:'+roomCode);
  if(!activeApiOrigin){try{await probeBackend()}catch(e){setNet('bad','محرك الغرف غير متاح');toast(e.message);scheduleReconnect();return}}
@@ -336,7 +386,9 @@ function renderFinished(){
 $('#shareBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
 $('#inviteFriendBtn').onclick=()=>{if(!state?.code)return toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'quiz',roomCode:state.code})};
 
-if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else{$('#entry').classList.remove('hidden');probeBackend().catch(e=>toast(e.message))}
+const quickMatchParam=qs.get('quickMatch')||qs.get('match');
+if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
+<script type="module" src="assets/js/quick-match-game.js"></script>
 </body></html>
