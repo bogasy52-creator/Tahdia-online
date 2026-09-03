@@ -91,7 +91,32 @@ body.bs-page:after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 #game.reference-skin .game-side .die{width:clamp(62px,16vw,118px);height:clamp(62px,16vw,118px);opacity:.96}
 #game.reference-skin .game-side #roll{position:absolute;left:13%;width:74%;bottom:1.1%;height:8.6%;min-height:0;border-radius:18px;font-size:clamp(18px,4vw,32px);z-index:30}
 @media(max-width:520px){#game.reference-skin{height:calc(100vw * 2.1678)}#game.reference-skin .game-side .player-list{top:72.8%;height:8.4%}#game.reference-skin .game-side .game-status{top:64.8%}#game.reference-skin .game-side .dice-stage{top:81.5%;height:11%}}
-</style><link rel="stylesheet" href="assets/css/luxury-game-ui.css"><link rel="stylesheet" href="assets/css/mobile-game.css"><link rel="stylesheet" href="assets/css/fullscreen-board.css"><link rel="stylesheet" href="assets/css/snakes-premium.css"><link rel="stylesheet" href="assets/css/snakes-v4-board.css"><link rel="stylesheet" href="assets/css/snakes-v4-interactions.css"><link rel="stylesheet" href="assets/css/snake-reference-skin.css"></head><body class="bs-page board-game game-snakes"><main class="bs-shell">
+</style><link rel="stylesheet" href="assets/css/luxury-game-ui.css"><link rel="stylesheet" href="assets/css/mobile-game.css"><link rel="stylesheet" href="assets/css/fullscreen-board.css"><link rel="stylesheet" href="assets/css/snakes-premium.css"><link rel="stylesheet" href="assets/css/snakes-v4-board.css"><link rel="stylesheet" href="assets/css/snakes-v4-interactions.css"><link rel="stylesheet" href="assets/css/snake-reference-skin.css">
+<style id="snake-pro-phase1">
+/* Snake PRO phase 1: independent game effects */
+#die.rolling{
+  animation: snakeDiceFast .48s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes snakeDiceFast{
+  0%{transform:rotate(0) scale(1)}
+  35%{transform:rotate(220deg) scale(1.12)}
+  70%{transform:rotate(420deg) scale(.96)}
+  100%{transform:rotate(540deg) scale(1)}
+}
+.snake-hit,.ladder-hit{
+  animation: snakeBoardPulse .45s ease;
+}
+@keyframes snakeBoardPulse{
+  0%{filter:brightness(1)}
+  50%{filter:brightness(1.35)}
+  100%{filter:brightness(1)}
+}
+.snake-pro-no-copy{
+  user-select:none;
+  -webkit-user-select:none;
+}
+</style>
+</head><body class="bs-page board-game game-snakes"><main class="bs-shell">
 <header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الثعبان</b><span>BUSRAJ TABLETOP</span></span></a><div class="bs-actions"><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" aria-label="الرئيسية" style="text-decoration:none">⌂</a></div></header>
 <section id="setup" class="bs-panel setup-wrap" style="max-width:820px"><div class="premium-hero"><div class="premium-kicker">BUSRAJ ARCADE</div><h1>🐍 الثعبان</h1><p>لوحة حية وسريعة: تحرّك بسلاسة، اصعد بالسلالم، وإذا وصلت لرأس الثعبان شاهد هجومه قبل أن ينزلك إلى الذيل.</p><div class="feature-row"><span class="feature-pill">🪜 سلالم مجسمة</span><span class="feature-pill">🐍 ثعابين مرسومة</span><span class="feature-pill">🌐 غرف أونلاين</span><span class="feature-pill">📱 ملء الشاشة</span></div></div>
 <div class="play-mode"><button id="modeLocal" class="active">👥 نفس الجهاز</button><button id="modeOnline">🌐 أونلاين</button></div>
@@ -306,4 +331,18 @@ const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.
 
 $('#startBtn').onclick=startLocal;$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
 $('#playerCount').onchange=()=>{const c=Number($('#playerCount').value);for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',i>=c)};$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});window.addEventListener('resize',()=>state&&drawPaths());window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(drawPaths));
-</script></body></html>
+</script>
+<script>
+/* Snake PRO creature layer prototype */
+(function(){
+  const state={t:0};
+  function pulse(){
+    state.t+=0.06;
+    document.documentElement.style.setProperty('--snake-creature-wobble', (Math.sin(state.t)*0.8).toFixed(2)+'px');
+    requestAnimationFrame(pulse);
+  }
+  requestAnimationFrame(pulse);
+  window.SNAKE_CREATURE_V5={enabled:true,version:"Creature Prototype"};
+})();
+</script>
+</body></html>

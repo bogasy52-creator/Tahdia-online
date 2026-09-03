@@ -57,7 +57,7 @@ b25efbc1c6edc35367b4c731de5068a64cb7515d2656558e631587b56ddea446  ./public/asset
 84152216719392a734390341ef0362de6864edc13bc902c4b7cbf287e5da7666  ./public/assets/js/questions-data.js
 c3255e5daf15c905ee522c65c4b231f531b6fefd39f2256cd2d805c46ded7c4a  ./public/assets/js/quick-match-game.js
 690b8a4d0e0a07dfcdd100e6bc2849bee33facaff23d6b5d0a8a41bcd4f9dc11  ./public/assets/js/quiz-media.js
-6b7addee269decbb192ea1e78a9ef528e205383d6b84d28bbd178537f2b4039c  ./public/assets/js/snake-pro-upgrade.js
+3b94ddcf565135daae7c7d3402f40b6ed0c1780bff88609c6cf6d4049d3bac93  ./public/assets/js/snake-pro-upgrade.js
 0f7bd76c52bef077472a1cc510176843ea40cd7b74ba4c3dfb128167d97b14db  ./public/assets/js/snakes-v4-fx.js
 a93ba42a444e9f29635d940f5eb413ed7065ec1cbdc99d4559341608d098c564  ./public/assets/js/social-client.js
 572efbd98b1c2029082f05fad5987870442bfb4b19c4c7e3cb9ae74b1e0a2f1f  ./public/assets/quiz_photos/astronaut_glove.webp
@@ -213,7 +213,7 @@ b1bb700f63d340bbfd2ef55094a4a832b1c10e7b4db1c3fb1fbc1cf16b052b42  ./public/onlin
 674dbb0d93bc471eda4148f9b691f5012922e85b60e447a61c0eb67dc928e209  ./public/reaction.html
 ee8266ebf36a35f2049087c22851226ef0d87b258be68b9a288de8e8c44b57d7  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
-b36601b82e1460086b7f9103b944c4ebc345200694282292346a3345e7db1ecd  ./public/snakes.html
+a4a98bc654adca6d9985dcf342a6369fc0aa9d0146b6939cbc6ed78836a79cfe  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
 791c98f26d15ed6ce5cc4b732e5eb710ad44166c044c353c4f47380aea2cd224  ./public/v5.html
 feea9e90199cc383b82c6f5f870b15bbb0676b163f9d7ee5e6484175d48eb657  ./public/zahra.html
