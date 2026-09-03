@@ -19,6 +19,12 @@
 
 .topActions{display:flex;gap:7px}.installBtnTop{display:flex;align-items:center;gap:6px;width:auto;padding:0 11px}.shapeBox{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:11px 12px;border:1px solid #454064;border-radius:16px;background:rgba(124,58,237,.08)}.shapeId{font-weight:1000;color:#f0c36c}.mediaArea{min-height:0}.soundPanel{max-width:600px;margin:0 auto 10px;border:1px solid #514a74;border-radius:20px;padding:16px;background:radial-gradient(circle at 50% 0,rgba(124,58,237,.18),transparent 48%),linear-gradient(145deg,#14182c,#0b0e19);box-shadow:0 16px 45px rgba(0,0,0,.25)}.playSound{min-height:70px;width:100%;border:1px solid #9574ec;border-radius:17px;background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(34,211,238,.08));color:#fff;font-weight:1000;font-size:17px;transition:.2s}.playSound:disabled{opacity:.48}.playSound:active:not(:disabled){transform:scale(.988)}.soundWaveCanvas{display:block;width:100%;height:74px;margin-top:10px;border-radius:12px;background:#070a13;border:1px solid #303653}.soundMeta{display:flex;justify-content:space-between;gap:10px;color:#aeb6ca;font-size:11px;margin-top:8px}.soundProgress{height:5px;border-radius:999px;background:#070912;overflow:hidden;margin-top:7px}.soundProgress>i{display:block;width:0;height:100%;background:linear-gradient(90deg,#22d3ee,#8b5cf6,#d946ef)}.zoomPanel{max-width:650px;margin:0 auto 10px}.zoomFrame{aspect-ratio:16/10;overflow:hidden;border:1px solid #514a74;border-radius:18px;background:#06080e;position:relative}.zoomFrame img{width:100%;height:100%;object-fit:cover;transition:transform .62s cubic-bezier(.2,.8,.2,1);transform-origin:center}.zoomStage{position:absolute;top:9px;right:9px;z-index:2;border:1px solid #ffffff28;border-radius:999px;background:#070912c9;color:#fff;padding:5px 9px;font-size:10px;font-weight:900;backdrop-filter:blur(8px)}.zoomTools{display:flex;justify-content:center;gap:7px;margin-top:8px}.zoomCredit{font-size:9px;color:#70798e;margin-top:5px}.assist{display:inline-flex;align-items:center;gap:5px}.assist .catIcon{width:17px;height:17px;color:#e5c672}.installHint{font-size:11px;color:#aeb4cc;margin-top:5px}
 @media(max-width:560px){.topActions{gap:5px}.installBtnTop{padding:0 8px}.installBtnTop .installText{display:none}.shapeBox{align-items:flex-start;flex-direction:column}.shapeBox .btn{width:100%}.mediaArea{margin-top:-2px}.soundPanel{padding:12px}.playSound{min-height:64px}.zoomFrame{aspect-ratio:4/3}}
+
+.resultBox{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:18px}
+.resultCard{width:min(460px,100%);background:#12172a;border:1px solid #313654;border-radius:24px;padding:24px;text-align:center;box-shadow:0 20px 60px #000}
+.resultCard h2{margin:0 0 18px;color:#f0b94a}
+.resultRow{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:14px;background:#0b1020;margin:8px 0;font-weight:900}
+.resultRow.first{border:1px solid #f0b94a}
 </style>
 <link rel="stylesheet" href="assets/css/quiz-board-v2.css">
 </head>
@@ -61,6 +67,16 @@
 <div class="boardWrap"><div id="board" class="board"></div></div>
 </section>
 
+
+<div id="resultOverlay" class="resultBox hidden">
+  <div class="resultCard">
+    <h2>🏆 ترتيب المباراة</h2>
+    <div id="resultWinner" style="font-size:22px;font-weight:1000;margin-bottom:12px"></div>
+    <div id="resultList"></div>
+    <div id="resultStats" class="muted" style="margin:14px 0"></div>
+    <button id="resultClose" class="btn">موافق</button>
+  </div>
+</div>
 <div id="modal" class="modal hidden">
   <div class="qcard">
     <div class="qmeta"><span id="qCat" class="pill"></span><span id="qPoints" class="pill points"></span><span id="qTurn" class="pill"></span></div>
@@ -193,9 +209,12 @@ $('#revealBtn').onclick=()=>{stopTimer();stopQuestionAudio();if($('#mediaArea').
 function awardTo(i){if(!current)return;let pts=current.q.v;if(doubleArmed&&i===turn)pts*=2;teams[i].score+=pts;sfx('correct');finishQuestion(i===turn?1-turn:turn)}
 function finishQuestion(nextTurn){stopQuestionAudio();rememberQuestion(current?.q);$('#mediaArea').innerHTML='';$('#mediaArea')._zoomImg=null;current.tile.dataset.used='1';current.tile.classList.add('used');current.tile.disabled=true;turn=nextTurn;$('#modal').classList.add('hidden');current=null;doubleArmed=false;renderScores();checkFinish()}
 $('#awardA').onclick=()=>awardTo(0);$('#awardB').onclick=()=>awardTo(1);$('#none').onclick=()=>{sfx('wrong');finishQuestion(1-turn)};
-function checkFinish(){const all=[...document.querySelectorAll('.tile')];if(all.length&&all.every(t=>t.dataset.used==='1')){const w=teams[0].score===teams[1].score?'تعادل!':(teams[0].score>teams[1].score?teams[0].name:teams[1].name);BS_AUDIO?.play?.('win');BS_AUDIO?.vibrate?.([80,50,150]);setTimeout(()=>toast('انتهت المباراة — '+w),200)}}
+function showResults(){const list=$('#resultList'),winner=$('#resultWinner'),stats=$('#resultStats');const order=[...teams].sort((a,b)=>b.score-a.score);const draw=order[0].score===order[1].score;if(draw){winner.textContent='🤝 انتهت المباراة بتعادل الفريقين';winner.style.color='#f0b94a'}else{winner.textContent='🏆 الفائز: '+order[0].name;winner.style.color='#22c55e'}list.innerHTML=order.map((t,i)=>`<div class="resultRow ${i===0&&!draw?'first':''}"><span>${draw?'🤝':'#'+(i+1)+' 🏆'} ${t.name}</span><b>${t.score} نقطة</b></div>`).join('');stats.innerHTML='📊 أعلى نتيجة: '+Math.max(...order.map(t=>t.score))+' نقطة<br>⭐ مجموع النقاط: '+order.reduce((a,t)=>a+t.score,0);$('#resultOverlay').classList.remove('hidden');if(!draw){confettiBurst()}}
+function confettiBurst(){for(let i=0;i<30;i++){const e=document.createElement('i');e.textContent='🎉';e.style.position='fixed';e.style.left=Math.random()*100+'%';e.style.top='-20px';e.style.zIndex='999';e.style.fontSize=(16+Math.random()*18)+'px';e.style.transition='transform 1.8s ease,opacity 1.8s';document.body.appendChild(e);requestAnimationFrame(()=>{e.style.transform='translateY(100vh) rotate(720deg)';e.style.opacity='0'});setTimeout(()=>e.remove(),2000)}}
+function checkFinish(){const all=[...document.querySelectorAll('.tile')];if(all.length&&all.every(t=>t.dataset.used==='1')){BS_AUDIO?.play?.('win');BS_AUDIO?.vibrate?.([80,50,150]);setTimeout(showResults,250)}}
 $('#start').onclick=()=>{if(selected.length!==6)return toast('لازم تختار 6 فئات');formQuestions(false);teams=[{name:$('#teamA').value.trim()||'الفريق الأول',score:0,double:true,extra:true,pass:true},{name:$('#teamB').value.trim()||'الفريق الثاني',score:0,double:true,extra:true,pass:true}];turn=0;$('#home').classList.add('hidden');$('#game').classList.remove('hidden');buildBoard();renderScores();sfx('round')};
 function goHome(){stopQuestionAudio();$('#mediaArea').innerHTML='';$('#mediaArea')._zoomImg=null;$('#game').classList.add('hidden');$('#home').classList.remove('hidden');$('#modal').classList.add('hidden');stopTimer();current=null}
+$('#resultClose').onclick=()=>$('#resultOverlay').classList.add('hidden');
 $('#homeBtn').onclick=goHome;$('#resetBtn').onclick=()=>{teams.forEach(t=>{t.score=0;t.double=t.extra=t.pass=true});turn=0;buildBoard();renderScores();toast('تمت إعادة المباراة')};
 let deferredInstall=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});

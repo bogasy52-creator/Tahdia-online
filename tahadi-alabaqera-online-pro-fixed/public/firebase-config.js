@@ -1,0 +1,9 @@
+window.TAHDIA_FIREBASE_CONFIG={
+ apiKey:"AIzaSyBYOWtCGwFA5pVMdWkcjp5eb_JIidRObWQ",
+ authDomain:"tahdyat-online.firebaseapp.com",
+ projectId:"tahdyat-online",
+ storageBucket:"tahdyat-online.firebasestorage.app",
+ messagingSenderId:"62440506360",
+ appId:"1:62440506360:web:b76c767e5bae7d96720c0d",
+ measurementId:"G-9Z296V7SBW"
+};
