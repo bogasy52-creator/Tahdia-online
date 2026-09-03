@@ -9,8 +9,9 @@ if(cfg){
  const db=getFirestore(app);
  // Make Firestore available even if anonymous auth is not enabled yet
  window.TahdiaOnline={db,addDoc,collection,serverTimestamp,getDocs};
+ window.dispatchEvent(new Event('tahdia-firebase-ready'));
  signInAnonymously(auth)
-  .then(()=>{ window.TahdiaOnline.authReady=true; window.TahdiaOnlineError=null; })
+  .then(()=>{ window.TahdiaOnline.authReady=true; window.TahdiaOnlineError=null; window.dispatchEvent(new Event('tahdia-auth-ready')); })
   .catch((e)=>{ window.TahdiaOnlineError=e.message; });
 }else{
  window.TahdiaOnlineError='Firebase config missing';
