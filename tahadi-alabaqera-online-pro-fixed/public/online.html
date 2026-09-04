@@ -391,4 +391,32 @@ if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hi
 })();
 </script>
 <script type="module" src="assets/js/quick-match-game.js"></script>
+
+<script>
+/* Fallback fix: ensure room entry button works even if lobby scripts fail */
+(function(){
+  function fixJoinButton(){
+    const btn=document.getElementById('joinBtn');
+    const input=document.getElementById('joinCode');
+    const name=document.getElementById('joinName');
+    if(!btn || btn.dataset.fallbackReady) return;
+    btn.dataset.fallbackReady='1';
+    btn.addEventListener('click', function(){
+      const code=(input?.value||'').replace(/\D/g,'').slice(0,6);
+      if(code.length!==6){
+        alert('اكتب كود الغرفة المكون من 6 أرقام');
+        input?.focus();
+        return;
+      }
+      const next=new URL('/online',location.origin);
+      next.searchParams.set('room',code);
+      if(name?.value) localStorage.setItem('online_name',name.value.trim());
+      location.href=next.toString();
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fixJoinButton);
+  else fixJoinButton();
+})();
+</script>
+
 </body></html>
