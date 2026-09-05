@@ -157,6 +157,7 @@ const soundPlayCounts=new Map(),waveCache=new Map(),zoomLevels=new Map();
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
 const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName){$('#createName').value=socialProfile.displayName;$('#joinName').value=socialProfile.displayName}
+function cleanName(value){return String(value||'').normalize('NFKC').trim().replace(/[\u0000-\u001F\u007F<>]/g,'').slice(0,20)||''}
 function autoPlayerName(inputValue=''){
  const typed=cleanName(inputValue);if(typed)return typed;
  try{const p=JSON.parse(localStorage.getItem('tahadi-player')||'null');const saved=cleanName(p?.name||read('online_name')||read('tahdia_guest_name'));if(saved&&saved!=='لاعب'&&saved!=='لاعب العباقرة')return saved}catch{}
@@ -249,10 +250,19 @@ async function connect(){
  const protocols=['busraj-v1'];if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
  setNet('','جار الاتصال');
  try{ws=new WebSocket(url,protocols)}catch{scheduleReconnect();return}
- ws.onopen=()=>{setNet('ok','متصل');reconnectDelay=800};
- ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);try{localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error')toast(m.message||'خطأ')};
- ws.onclose=()=>{setNet('bad','انقطع الاتصال');if(!manualClose)scheduleReconnect()};
- ws.onerror=()=>setNet('bad','مشكلة اتصال');
+ const thisWs=ws;
+ let openTimedOut=false;
+ const openTimer=setTimeout(()=>{
+   if(ws!==thisWs)return;
+   openTimedOut=true;
+   setNet('bad','تعذر الاتصال بالغرفة');
+   toast('انتهت مهلة الاتصال — جاري إعادة المحاولة');
+   try{thisWs.close()}catch{}
+ },9000);
+ ws.onopen=()=>{if(ws!==thisWs)return;clearTimeout(openTimer);setNet('ok','متصل');reconnectDelay=800};
+ ws.onmessage=e=>{if(ws!==thisWs)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);try{localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error')toast(m.message||'خطأ')};
+ ws.onclose=()=>{if(ws!==thisWs)return;clearTimeout(openTimer);if(!openTimedOut)setNet('bad','انقطع الاتصال');if(!manualClose)scheduleReconnect()};
+ ws.onerror=()=>{if(ws!==thisWs)return;setNet('bad','مشكلة اتصال')};
 }
 function scheduleReconnect(){clearTimeout(reconnectTimer);reconnectTimer=setTimeout(connect,reconnectDelay);reconnectDelay=Math.min(6000,reconnectDelay*1.6)}
 window.addEventListener('online',connect);window.addEventListener('offline',()=>setNet('bad','بدون إنترنت'));
