@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="assets/css/platform.css">
+<link rel="stylesheet" href="assets/css/pro-theme-v6.css">
+<link rel="stylesheet" href="assets/css/game-kit.css">
+<title>فرق تعرف — تحدي العباقرة</title>
+<style>
+.sd-shell{max-width:860px;margin:auto}
+.sd-modes{display:flex;gap:8px;margin:14px 0}
+.sd-modes button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--st-line);background:var(--st-navy);color:var(--st-ink);font-family:var(--st-font-display);font-weight:800;cursor:pointer}
+.sd-modes button.active{background:linear-gradient(180deg,var(--st-gold-2),var(--st-gold));color:#241705;border-color:transparent}
+.sd-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:10px 0}
+.sd-score{text-align:center;font-family:var(--st-font-display);font-weight:900}
+.sd-score b{display:block;font-size:24px;color:var(--st-gold)}
+.sd-timer{text-align:center;font-family:var(--st-font-display);font-weight:900;font-size:22px;color:var(--st-gold-2)}
+.sd-opp{text-align:center;opacity:.85}
+.sd-boards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.sd-boards{grid-template-columns:1fr}}
+.sd-board{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--st-line);background:#0a0e1a;aspect-ratio:1/1;cursor:crosshair;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.sd-board canvas{width:100%;height:100%;display:block;pointer-events:none}
+.sd-board.loading::after{content:"جارِ التحميل…";position:absolute;inset:0;display:grid;place-items:center;color:var(--st-ink-dim);font-family:var(--st-font-display);font-weight:800;background:#0a0e1a}
+.sd-board .sd-label{position:absolute;top:8px;right:10px;font-size:11px;font-weight:900;font-family:var(--st-font-display);color:var(--st-gold-2);background:rgba(10,14,26,.7);padding:3px 9px;border-radius:6px}
+.sd-mark{position:absolute;border-radius:50%;border:3px solid var(--st-emerald);box-shadow:0 0 0 3px rgba(39,157,118,.25);transform:translate(-50%,-50%) scale(0);transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.sd-mark.show{transform:translate(-50%,-50%) scale(1)}
+.sd-mark.mine{border-color:var(--st-emerald)}
+.sd-mark.theirs{border-color:var(--st-burgundy-2)}
+.sd-miss{position:absolute;width:26px;height:26px;border-radius:50%;background:rgba(201,72,72,.35);transform:translate(-50%,-50%) scale(0);transition:transform .25s ease, opacity .5s ease .1s;pointer-events:none;opacity:1}
+.sd-actions{display:flex;justify-content:center;gap:10px;margin-top:16px}
+.sd-over{position:fixed;inset:0;z-index:90;display:none;place-items:center;padding:16px;background:rgba(3,2,8,.8)}
+.sd-over.show{display:grid}
+.sd-over-card{width:min(420px,100%);padding:28px;text-align:center}
+.sd-over-card .ico{font-size:56px}
+.sd-over-actions{display:flex;gap:10px;margin-top:16px}
+.sd-over-actions a,.sd-over-actions button{flex:1}
+#sdOnlineSetup .setup-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+</style>
+</head>
+<body class="bs-page">
+<main class="bs-shell sd-shell">
+  <header class="bs-topbar">
+    <a class="bs-brand" href="/"><span class="bs-mark">🔍</span><span class="bs-brand-copy"><b>فرق تعرف</b><span>ارصد الفروقات قبل خصمك</span></span></a>
+    <div class="bs-actions">
+      <button class="bs-icon-btn" data-audio-toggle aria-label="كتم الصوت">🔊</button>
+      <a class="bs-btn" href="/">🏠</a>
+    </div>
+  </header>
+
+  <div class="sd-modes">
+    <button id="sdModeLocal" class="active">🎯 فردي بعداد</button>
+    <button id="sdModeOnline">⚔️ أونلاين 1×1</button>
+  </div>
+
+  <!-- ONLINE SETUP -->
+  <section id="sdOnlineSetup" class="bs-panel" style="padding:18px">
+    <label class="bs-field"><span>اسمك</span><input id="sdName" value="لاعب" maxlength="20"></label>
+    <div class="setup-actions">
+      <button id="sdCreate" class="bs-btn gold">➕ إنشاء غرفة</button>
+      <div style="display:flex;gap:8px">
+        <input id="sdJoinCode" placeholder="رمز الغرفة" maxlength="6" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--st-line);background:var(--st-navy);color:var(--st-ink);text-align:center;font-family:var(--st-font-display);font-weight:800">
+        <button id="sdJoin" class="bs-btn">دخول</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="sdLobby" class="bs-panel room-lobby hidden" style="padding:18px">
+    <div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="sdCopyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="sdNetBadge" class="net-badge"><i></i><span>اتصال…</span></span></div>
+    <div id="sdRoomPlayers" class="room-players"></div>
+    <div class="lobby-controls">
+      <button id="sdReadyBtn" class="bs-btn primary">✓ أنا جاهز</button>
+      <button id="sdInvite" class="bs-btn cyan">👥 دعوة صديق</button>
+      <button id="sdHostStart" class="bs-btn gold" disabled>ابدأ المباراة</button>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="sdGame" class="hidden">
+    <div class="sd-hud">
+      <div class="sd-score"><b id="sdMyScore">0</b><small>نقاطي</small></div>
+      <div class="sd-timer" id="sdTimer">01:15</div>
+      <div class="sd-score sd-opp" id="sdOppWrap"><b id="sdOppScore">0</b><small id="sdOppLabel">—</small></div>
+    </div>
+    <div class="sd-boards">
+      <div class="sd-board" id="sdBoardLeft"><span class="sd-label">الأصلية</span><canvas id="sdCanvasLeft"></canvas></div>
+      <div class="sd-board" id="sdBoardRight"><span class="sd-label">ابحث هنا 🔍</span><canvas id="sdCanvasRight"></canvas></div>
+    </div>
+    <div class="sd-actions">
+      <button class="bs-btn" id="sdNewLocal">🔄 صورة جديدة</button>
+    </div>
+  </section>
+
+  <details class="rules bs-panel" style="padding:14px;margin-top:18px">
+    <summary>كيف ألعب؟</summary>
+    <ul>
+      <li>صورتان متشابهتان بينهما 5 فروقات — اضغط على الفرق بأي من الصورتين.</li>
+      <li>بالوضع الفردي: اعثر على أكبر عدد فروقات قبل نفاد الوقت.</li>
+      <li>بالوضع الأونلاين: كل نقرة صحيحة تُرى فورًا لخصمك — أول من يجمع الفروقات الخمس يفوز!</li>
+    </ul>
+  </details>
+
+  <div class="sd-over" id="sdOver">
+    <div class="bs-panel winner-card sd-over-card">
+      <div class="ico" id="sdOverIcon">🏆</div>
+      <h2 id="sdOverTitle">انتهت الجولة!</h2>
+      <p class="bs-subtitle" id="sdOverSub"></p>
+      <div class="sd-over-actions">
+        <a class="bs-btn" href="/">الرئيسية</a>
+        <button class="bs-btn primary" id="sdRetry">جولة جديدة</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/js/audio-manager.js"></script>
+<script src="assets/js/platform.js"></script>
+<script type="module">
+import { PHOTO_BANK, generateDiffPoints } from './assets/js/engines/spotdiff-scenes.js';
+import { BoardOnlineClient, renderRoomPlayers, bindRoomCountdown } from './assets/js/board-online.js';
+
+const $ = (s) => document.querySelector(s);
+const play = (n) => { try { window.BS_AUDIO?.play(n); } catch {} };
+const CANVAS_SIZE = 480;
+const TINTS = ['#e8a83c','#9c3349','#279d76','#c24a5f','#2c8a92'].map(hexToRgb);
+
+function hexToRgb(hex){
+  const n = parseInt(hex.slice(1),16);
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
+
+function drawCover(ctx, img, size){
+  ctx.clearRect(0,0,size,size);
+  const scale = Math.max(size/img.naturalWidth, size/img.naturalHeight);
+  const sw = size/scale, sh = size/scale;
+  const sx = (img.naturalWidth-sw)/2, sy = (img.naturalHeight-sh)/2;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
+}
+
+function applyDiffMarks(ctx, size, diffs){
+  diffs.forEach((p, i)=>{
+    const cx=(p.x/100)*size, cy=(p.y/100)*size, rad=(p.r/100)*size;
+    const [tr,tg,tb] = TINTS[i % TINTS.length];
+    const x0=Math.max(0,Math.floor(cx-rad)), y0=Math.max(0,Math.floor(cy-rad));
+    const x1=Math.min(size,Math.ceil(cx+rad)), y1=Math.min(size,Math.ceil(cy+rad));
+    const w=x1-x0, h=y1-y0;
+    if(w<=0||h<=0) return;
+    const imgData = ctx.getImageData(x0,y0,w,h);
+    const d = imgData.data;
+    for(let yy=0; yy<h; yy++){
+      for(let xx=0; xx<w; xx++){
+        const px=x0+xx, py=y0+yy;
+        const dist = Math.hypot(px-cx, py-cy);
+        if(dist>rad) continue;
+        const falloff = 1 - Math.pow(dist/rad, 2);
+        const amt = 0.55*falloff;
+        const idx = (yy*w+xx)*4;
+        d[idx]   = d[idx]  *(1-amt) + tr*amt;
+        d[idx+1] = d[idx+1]*(1-amt) + tg*amt;
+        d[idx+2] = d[idx+2]*(1-amt) + tb*amt;
+      }
+    }
+    ctx.putImageData(imgData, x0, y0);
+  });
+}
+
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+const leftCanvas = $('#sdCanvasLeft'), rightCanvas = $('#sdCanvasRight');
+[leftCanvas, rightCanvas].forEach(c=>{ c.width = CANVAS_SIZE; c.height = CANVAS_SIZE; });
+const leftCtx = leftCanvas.getContext('2d'), rightCtx = rightCanvas.getContext('2d');
+
+let mode = 'local';
+let currentImg = null, currentDiffs = [];
+let foundLocal = new Set();
+let localScore = 0, localTimer = null, localEndsAt = 0;
+let client = null, room = null, stopCountdown = null;
+
+async function renderPhoto(photoSrc, diffs, foundMap){
+  $('#sdBoardLeft').classList.add('loading');
+  $('#sdBoardRight').classList.add('loading');
+  const img = await loadImage(photoSrc);
+  currentImg = img; currentDiffs = diffs;
+  drawCover(leftCtx, img, CANVAS_SIZE);
+  drawCover(rightCtx, img, CANVAS_SIZE);
+  const toMark = diffs.filter(d=>{
+    const f = foundMap?.get ? foundMap.get(d.id) : foundMap?.[d.id];
+    return !f; // unresolved diffs still get the real visual difference baked in
+  });
+  applyDiffMarks(rightCtx, CANVAS_SIZE, toMark);
+  // already-found diffs get a permanent highlighted ring instead of the raw tint
+  diffs.forEach(d=>{
+    const f = foundMap?.get ? foundMap.get(d.id) : foundMap?.[d.id];
+    if(f) drawFoundRing(d, f);
+  });
+  $('#sdBoardLeft').classList.remove('loading');
+  $('#sdBoardRight').classList.remove('loading');
+}
+
+function drawFoundRing(diff, who){
+  [leftCtx, rightCtx].forEach(ctx=>{
+    const cx=(diff.x/100)*CANVAS_SIZE, cy=(diff.y/100)*CANVAS_SIZE, rad=(diff.r/100)*CANVAS_SIZE;
+    ctx.save();
+    ctx.strokeStyle = who==='mine' ? '#279d76' : '#c24a5f';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx,cy,rad,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function missFlash(board, xPct, yPct){
+  const m = document.createElement('div');
+  m.className='sd-miss';
+  m.style.left = xPct+'%'; m.style.top = yPct+'%';
+  board.appendChild(m);
+  requestAnimationFrame(()=>{ m.style.transform='translate(-50%,-50%) scale(1)'; m.style.opacity='0'; });
+  setTimeout(()=> m.remove(), 650);
+}
+
+function clickToPct(e, board){
+  const rect = board.getBoundingClientRect();
+  const px = ((e.clientX - rect.left) / rect.width) * 100;
+  const py = ((e.clientY - rect.top) / rect.height) * 100;
+  return { x: px, y: py };
+}
+
+/* ---------------- LOCAL MODE ---------------- */
+async function startLocal(){
+  foundLocal = new Set();
+  localScore = 0;
+  $('#sdMyScore').textContent = '0';
+  $('#sdOppWrap').classList.add('hidden');
+  $('#sdOver').classList.remove('show');
+  const photo = PHOTO_BANK[Math.floor(Math.random()*PHOTO_BANK.length)];
+  const diffs = generateDiffPoints(5);
+  await renderPhoto(photo, diffs, new Map());
+  localEndsAt = Date.now() + 75_000;
+  clearInterval(localTimer);
+  localTimer = setInterval(tickLocal, 200);
+  tickLocal();
+  play('turn');
+}
+function fmtTime(ms){
+  const s = Math.max(0, Math.ceil(ms/1000));
+  return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+function tickLocal(){
+  const left = localEndsAt - Date.now();
+  $('#sdTimer').textContent = fmtTime(left);
+  if(left<=0){ clearInterval(localTimer); return endLocal(); }
+}
+function handleLocalClick(e, board){
+  if(mode!=='local' || !currentDiffs.length) return;
+  const {x,y} = clickToPct(e, board);
+  const hit = currentDiffs.find(d=> !foundLocal.has(d.id) && Math.hypot(d.x-x, d.y-y) <= d.r);
+  if(hit){
+    foundLocal.add(hit.id);
+    localScore++;
+    $('#sdMyScore').textContent = localScore;
+    drawFoundRing(hit, 'mine');
+    play('correct');
+    if(foundLocal.size >= currentDiffs.length){ clearInterval(localTimer); return endLocal(); }
+  } else {
+    missFlash(board, x, y);
+    play('wrong');
+  }
+}
+function endLocal(){
+  const win = foundLocal.size >= currentDiffs.length;
+  $('#sdOverIcon').textContent = win ? '🏆' : '⏱';
+  $('#sdOverTitle').textContent = win ? 'أحسنت! لقطتها كاملة' : 'انتهى الوقت';
+  $('#sdOverSub').textContent = `وجدت ${foundLocal.size} من ${currentDiffs.length} فروقات`;
+  $('#sdOver').classList.add('show');
+  play(win ? 'finish' : 'buzzer');
+}
+
+/* ---------------- ONLINE MODE ---------------- */
+function net(status){
+  const b = $('#sdNetBadge');
+  if(!b) return;
+  b.classList.toggle('online', !!status.online);
+  b.querySelector('span').textContent = status.text || '';
+}
+function setupClient(){
+  client?.close();
+  client = new BoardOnlineClient('spotdiff', {
+    onStatus: net,
+    onError: (m)=>{ play('error'); window.BS_PLATFORM?.toast(m); },
+    onState: onRoomState,
+  });
+}
+async function onRoomState(next){
+  room = next;
+  if(next.status === 'lobby'){ renderLobby(); return; }
+  $('#sdOnlineSetup').classList.add('hidden');
+  $('#sdLobby').classList.add('hidden');
+  $('#sdGame').classList.remove('hidden');
+  $('#sdOppWrap').classList.remove('hidden');
+  const st = next.state;
+  if(!st) return;
+  const meIdx = next.me?.index ?? 0;
+  const oppIdx = meIdx === 0 ? 1 : 0;
+  const oppPlayer = next.players[oppIdx];
+  $('#sdOppLabel').textContent = oppPlayer ? oppPlayer.name : 'الخصم';
+  $('#sdMyScore').textContent = st.scores?.[meIdx] ?? 0;
+  $('#sdOppScore').textContent = st.scores?.[oppIdx] ?? 0;
+  const map = new Map();
+  st.diffs.forEach(d=>{ if(d.foundBy !== null) map.set(d.id, d.foundBy === meIdx ? 'mine':'theirs'); });
+  await renderPhoto(st.photo, st.diffs, map);
+  stopCountdown?.();
+  stopCountdown = bindRoomCountdown($('#sdTimer'), ()=> room);
+  if(next.status === 'finished' && st.winner !== undefined && st.winner !== null){
+    const iWon = st.winner === meIdx;
+    const draw = st.winner === -1;
+    $('#sdOverIcon').textContent = draw ? '🤝' : (iWon ? '🏆' : '💥');
+    $('#sdOverTitle').textContent = draw ? 'تعادل!' : (iWon ? 'فزت! 🎉' : 'خسرت الجولة');
+    $('#sdOverSub').textContent = `${st.scores[meIdx]} مقابل ${st.scores[oppIdx]}`;
+    $('#sdOver').classList.add('show');
+    play(iWon ? 'finish' : 'buzzer');
+  } else {
+    $('#sdOver').classList.remove('show');
+  }
+}
+function renderLobby(){
+  if(!room) return;
+  $('#sdOnlineSetup').classList.add('hidden');
+  $('#sdGame').classList.add('hidden');
+  $('#sdLobby').classList.remove('hidden');
+  $('#sdCopyCode').textContent = room.code;
+  renderRoomPlayers($('#sdRoomPlayers'), room, ['#e8a83c','#9c3349']);
+  const me = room.players.find(p=>p.id===room.me?.id);
+  $('#sdReadyBtn').textContent = me?.ready ? '✓ جاهز — إلغاء' : '✓ أنا جاهز';
+  const all = room.players.length === room.playerLimit && room.players.every(p=>p.ready && p.connected);
+  $('#sdHostStart').classList.toggle('hidden', room.me?.role !== 'host');
+  $('#sdHostStart').disabled = !all;
+}
+async function createRoom(){
+  setupClient();
+  try{ await client.create($('#sdName').value, 2); play('join'); }
+  catch(e){ window.BS_PLATFORM?.toast(e.message); play('error'); }
+}
+async function joinRoom(){
+  setupClient();
+  try{ await client.join($('#sdJoinCode').value, $('#sdName').value); play('join'); }
+  catch(e){ window.BS_PLATFORM?.toast(e.message); play('error'); }
+}
+function handleOnlineClick(e, board){
+  if(mode!=='online' || !client || room?.status!=='playing') return;
+  const {x,y} = clickToPct(e, board);
+  const sent = client.send('spotdiff_click', {x,y});
+  if(sent) missFlash(board, x, y); // optimistic tap feedback; real mark comes from state
+}
+
+/* ---------------- WIRING ---------------- */
+$('#sdBoardLeft').addEventListener('click', (e)=> mode==='local' ? handleLocalClick(e, $('#sdBoardLeft')) : handleOnlineClick(e, $('#sdBoardLeft')));
+$('#sdBoardRight').addEventListener('click', (e)=> mode==='local' ? handleLocalClick(e, $('#sdBoardRight')) : handleOnlineClick(e, $('#sdBoardRight')));
+$('#sdNewLocal').addEventListener('click', startLocal);
+$('#sdRetry').addEventListener('click', ()=>{
+  $('#sdOver').classList.remove('show');
+  if(mode==='local') startLocal();
+  else if(room?.me?.role==='host') client?.send('rematch');
+  else window.BS_PLATFORM?.toast('الإعادة بيد المضيف');
+});
+$('#sdCreate').addEventListener('click', createRoom);
+$('#sdJoin').addEventListener('click', joinRoom);
+$('#sdReadyBtn').addEventListener('click', ()=>{
+  const me = room?.players.find(p=>p.id===room.me?.id);
+  client?.send('ready', { ready: !me?.ready });
+});
+$('#sdHostStart').addEventListener('click', ()=> client?.send('start'));
+$('#sdCopyCode').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(room.code); window.BS_PLATFORM?.toast('تم نسخ رمز الغرفة'); }
+  catch{ window.BS_PLATFORM?.toast(room.code); }
+});
+$('#sdInvite').addEventListener('click', ()=>{
+  if(!room?.code) return window.BS_PLATFORM?.toast('أنشئ الغرفة أولًا');
+  window.BS_SOCIAL?.openInvitePicker({ game:'spotdiff', roomCode: room.code });
+});
+
+function setMode(next){
+  mode = next;
+  $('#sdModeLocal').classList.toggle('active', next==='local');
+  $('#sdModeOnline').classList.toggle('active', next==='online');
+  clearInterval(localTimer);
+  stopCountdown?.();
+  if(next==='local'){
+    client?.close(); client=null; room=null;
+    $('#sdOnlineSetup').classList.add('hidden');
+    $('#sdLobby').classList.add('hidden');
+    $('#sdGame').classList.remove('hidden');
+    $('#sdOppWrap').classList.add('hidden');
+    startLocal();
+  } else {
+    $('#sdGame').classList.add('hidden');
+    $('#sdOnlineSetup').classList.remove('hidden');
+    $('#sdOver').classList.remove('show');
+  }
+}
+$('#sdModeLocal').addEventListener('click', ()=> setMode('local'));
+$('#sdModeOnline').addEventListener('click', ()=> setMode('online'));
+
+setMode('local');
+</script>
+</body>
+</html>

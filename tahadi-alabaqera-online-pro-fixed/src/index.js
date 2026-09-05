@@ -4,6 +4,7 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesGame, playSnakesRoll } from "../public/assets/js/engines/snakes-engine.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
+import { pickPhoto, generateDiffPoints } from "../public/assets/js/engines/spotdiff-scenes.js";
 import { handleSocialRequest } from "./social/social-api.js";
 import { createSocialUserClass } from "./social/social-user.js";
 import { generateSafeQuestions } from "./ai-questions.js";
@@ -321,8 +322,8 @@ export default {
         let body = {};
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
-        if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
-        const playerLimit = game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2));
+        if (!["snakes", "zahra", "jackaroo", "spotdiff"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        const playerLimit = game === "jackaroo" ? 4 : game === "spotdiff" ? 2 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
           const code = roomCode();
@@ -1258,11 +1259,11 @@ export class BoardRoom extends DurableObject {
       if (this.room) return json({ ok: false, error: "room_exists" }, 409);
       const body = await request.json();
       const game = String(body.game || "");
-      if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
+      if (!["snakes", "zahra", "jackaroo", "spotdiff"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
       const now = Date.now();
       this.room = {
         code: body.code, hostKey: body.hostKey, game,
-        playerLimit: game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2)),
+        playerLimit: game === "jackaroo" ? 4 : game === "spotdiff" ? 2 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2)),
         createdAt: now, updatedAt: now, expiresAt: now + 24 * 60 * 60 * 1000,
         status: "lobby", players: {}, order: [], state: null, pendingRoll: null, turnDeadline: null, version: 0,
       };
@@ -1351,7 +1352,25 @@ export class BoardRoom extends DurableObject {
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
       const actor = this.playerIndex(player.id);
-      if (actor !== this.room.state.turn && this.room.game !== "jackaroo") return this.sendError(ws, "مو دورك الآن");
+      if (actor !== this.room.state.turn && !["jackaroo", "spotdiff"].includes(this.room.game)) return this.sendError(ws, "مو دورك الآن");
+      if (this.room.game === "spotdiff" && msg.type === "spotdiff_click") {
+        const st = this.room.state;
+        if (st.winner !== null || Date.now() >= st.endsAt) return;
+        const x = Number(msg.x), y = Number(msg.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return this.sendError(ws, "إحداثيات غير صالحة");
+        let hit = null;
+        for (const d of st.diffs) {
+          if (d.foundBy !== null) continue;
+          const dx = d.x - x, dy = d.y - y;
+          if (Math.sqrt(dx * dx + dy * dy) <= d.r) { hit = d; break; }
+        }
+        if (!hit) return await this.saveAndBroadcast();
+        hit.foundBy = actor;
+        st.scores[actor]++;
+        this.room.version++;
+        if (st.scores[actor] >= st.diffs.length) this.finishSpotdiff();
+        return await this.saveAndBroadcast();
+      }
       if (this.room.game === "snakes" && msg.type === "roll") {
         if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
         const roll = this.randomDie();
@@ -1409,13 +1428,36 @@ export class BoardRoom extends DurableObject {
     const names = this.room.order.map((id) => this.room.players[id].name);
     if (this.room.game === "snakes") this.room.state = createSnakesGame(names);
     else if (this.room.game === "zahra") this.room.state = createLudoGame(names);
+    else if (this.room.game === "spotdiff") this.room.state = this.createSpotdiffGame(names);
     else this.room.state = createJackarooGame(names);
     this.room.status = "playing";
     this.room.pendingRoll = null;
     this.room.version++;
-    this.setTurnDeadline();
+    if (this.room.game === "spotdiff") this.room.turnDeadline = this.room.state.endsAt;
+    else this.setTurnDeadline();
     for (const id of this.room.order) this.room.players[id].ready = true;
     await this.saveAndBroadcast();
+  }
+
+  createSpotdiffGame(names) {
+    const duration = 75_000;
+    return {
+      turn: null,
+      photo: pickPhoto(),
+      diffs: generateDiffPoints(5).map((d) => ({ ...d, foundBy: null })),
+      scores: names.map(() => 0),
+      startedAt: Date.now(),
+      endsAt: Date.now() + duration,
+      winner: null,
+    };
+  }
+
+  finishSpotdiff() {
+    const st = this.room.state;
+    if (!st || st.winner !== null) return;
+    const [a, b] = st.scores;
+    st.winner = a === b ? -1 : a > b ? 0 : 1; // -1 = draw
+    this.finishGame();
   }
 
   async resetForRematch() {
@@ -1430,6 +1472,7 @@ export class BoardRoom extends DurableObject {
 
   async handleTurnTimeout() {
     if (!this.room || this.room.status !== "playing" || !this.room.state) return;
+    if (this.room.game === "spotdiff") { this.finishSpotdiff(); return await this.saveAndBroadcast(); }
     const actor = this.room.state.turn;
     if (this.room.game === "snakes") {
       this.room.state = playSnakesRoll(this.room.state, this.randomDie());
