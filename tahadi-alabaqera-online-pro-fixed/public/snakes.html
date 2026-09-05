@@ -104,7 +104,7 @@ import {createSnakesGame,playSnakesRoll,DEFAULT_SNAKES_JUMPS} from './assets/js/
 import {BoardOnlineClient,renderRoomPlayers,bindRoomCountdown} from './assets/js/board-online.js';
 import {createBoardMovePlan,createReactionPlan,createSmoothMotionFrames,createSnakeBodyProgress,getPieceProfile} from './assets/js/snakes-v4-fx.js';
 function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const colors=['#12bff5','#a855f7','#f0b94a','#22c55e'],$=s=>document.querySelector(s),wait=ms=>new Promise(r=>setTimeout(r,ms)),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;let state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),confettiShown=false;
+const colors=['#12bff5','#a855f7','#f0b94a','#22c55e'],$=s=>document.querySelector(s),wait=ms=>new Promise(r=>setTimeout(r,ms)),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;let state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),confettiShown=false,pendingRedraw=false;
 $('#roll')?.setAttribute('aria-label','ارمِ النرد');
 if($('#playerCount')&&!$('#playerCount option[data-solo]')){const o=document.createElement('option');o.value='1';o.dataset.solo='true';o.textContent='تدريب فردي ضد الذكاء الاصطناعي';$('#playerCount').prepend(o)}
 bindRoomCountdown($('#turnTimer'),()=>room);
@@ -133,6 +133,8 @@ function drawPaths(){
   svg.insertAdjacentHTML('beforeend',`<g class="snake-head-layer">${snakeHeads.join('')}</g>`);
 }
 function snakeVisualParts(from){return [...document.querySelectorAll(`.snake-creature[data-from="${from}"],.snake-head-creature[data-from="${from}"]`)]}
+function safeDrawPaths(){if(busy){pendingRedraw=true;return}drawPaths()}
+function flushPendingRedraw(){if(pendingRedraw){pendingRedraw=false;drawPaths()}}
 function renderPlayers(){const p=$('#players');p.innerHTML='';state.players.forEach((x,i)=>{const row=document.createElement('div');row.className='player-row '+(state.turn===i&&state.winner===null?'turn turn-glow':'');row.style.setProperty('--pc',colors[i]);row.style.setProperty('--progress',`${x.position}%`);row.innerHTML=`<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(x.name)}</b><div class="mini-note">${x.position?`الخانة ${x.position} — ${x.position}%`:'عند البداية'}</div><div class="player-progress"><i style="--pc:${colors[i]};width:${x.position}%"></i></div></div><span class="score">${x.position}</span>`;p.appendChild(row)})}
 function launchConfetti(){
   if(confettiShown)return;
@@ -242,7 +244,7 @@ async function runSoloAi(){
       await wait(420);
     }while(state.lastRoll===6);
   }catch(error){console.error('Solo AI turn failed',error);window.BS_PLATFORM?.toast?.('تعذر إكمال دور الخصم — حاول الرمية التالية')}
-  finally{busy=false;render()}
+  finally{busy=false;render();flushPendingRedraw()}
 }
 async function rollTurn(){
   if(busy||!state||state.winner!==null||!canAct())return;
@@ -251,7 +253,7 @@ async function rollTurn(){
     if(mode==='online'){
       await spinDie();
       waitingForRemote=Boolean(client?.send('roll'));
-      if(!waitingForRemote){busy=false;render()}
+      if(!waitingForRemote){busy=false;render();flushPendingRedraw()}
       return;
     }
     const roll=Math.floor(Math.random()*6)+1;
@@ -260,12 +262,12 @@ async function rollTurn(){
     await animateEvent(prev,next);
     state=next;render();
     if(state.winner!==null){BS_AUDIO.play('win');BS_AUDIO.vibrate([100,60,160])}
-    if(Number($('#playerCount').value)===1&&state.turn===1&&state.winner===null)runSoloAi();
+    if(Number($('#playerCount').value)===1&&state.turn===1&&state.winner===null)await runSoloAi();
   }catch(error){
     console.error('Snake turn failed',error);
     window.BS_PLATFORM?.toast?.('حدث خطأ بسيط — أعد الرمية');
   }finally{
-    if(!waitingForRemote){busy=false;render()}
+    if(!waitingForRemote){busy=false;render();flushPendingRedraw()}
   }
 }
 $('#roll').onclick=rollTurn;
@@ -303,5 +305,5 @@ const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)
 const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;setTimeout(()=>joinRoom(),80)}
 
 $('#startBtn').onclick=startLocal;$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
-$('#playerCount').onchange=()=>{const c=Number($('#playerCount').value);for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',i>=c)};$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});window.addEventListener('resize',()=>state&&drawPaths());window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(drawPaths));
+$('#playerCount').onchange=()=>{const c=Number($('#playerCount').value);for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',i>=c)};$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});window.addEventListener('resize',()=>state&&safeDrawPaths());window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(safeDrawPaths));
 </script></body></html>
