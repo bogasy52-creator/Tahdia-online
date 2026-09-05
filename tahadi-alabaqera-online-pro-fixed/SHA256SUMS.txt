@@ -212,7 +212,7 @@ a9102e0daed918cc1283879dae926e86a0d12667de81ebb0df72342b2834fe29  ./public/logic
 b8ef7006f4e9c9db834545b888201c6e36e819cf5d3eaca4e2ecb04ebc510876  ./public/online.html
 77256a6b242c81e4d67d369a55f2fdca39735285ac472c66476e24674fad0be6  ./public/puzzle.html
 674dbb0d93bc471eda4148f9b691f5012922e85b60e447a61c0eb67dc928e209  ./public/reaction.html
-ee8266ebf36a35f2049087c22851226ef0d87b258be68b9a288de8e8c44b57d7  ./public/service-worker.js
+b150c87bcf46016a4d45cb71c353ef43ec601b94a7cda71421f0df7ef07175c1  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
 d96c756c855060cf679e25fcdc60870bc530bd9f18ea3cc7d420b7d0507a93f8  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html

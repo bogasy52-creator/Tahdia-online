@@ -1,6 +1,7 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
-const CACHE_NAME = 'busraj-games-v23-v5-online-fix';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
+const CACHE_NAME = 'busraj-games-v24-snake-pro-fix';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -32,7 +33,6 @@ const APP_SHELL = [
   '/assets/css/snakes-premium.css',
   '/assets/css/snakes-v4-board.css',
   '/assets/css/snakes-v4-interactions.css',
-  '/assets/css/snake-reference-skin.css',
   '/assets/css/zahra-premium.css',
   '/assets/css/jackaroo-next.css',
   '/assets/css/quiz-luxury.css',
