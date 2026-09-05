@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05040c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="assets/css/platform.css">
+<link rel="stylesheet" href="assets/css/pro-theme-v6.css">
+<link rel="stylesheet" href="assets/css/game-kit.css">
+<title>حروف وصور — تحدي العباقرة</title>
+<style>
+.lg-shell{max-width:760px;margin:auto}
+.lg-hud{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:14px 0}
+.lg-hearts{display:flex;gap:5px;font-size:20px}
+.lg-hearts .lost{opacity:.25;filter:grayscale(1)}
+.lg-score{text-align:center}
+.lg-score b{display:block;font-size:26px;color:var(--pro-gold);font-weight:900}
+.lg-score small{color:var(--bs-muted);font-size:11px}
+.lg-streak{justify-self:end;font-weight:900;color:var(--pro-cyan);font-size:13px;min-height:18px}
+.lg-timerbar{height:10px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;margin:8px 0 18px;border:1px solid var(--pro-line)}
+.lg-timerbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--pro-cyan),var(--pro-violet),var(--pro-magenta));transition:width .2s linear,background .3s}
+.lg-stage{position:relative;border-radius:28px;overflow:hidden;aspect-ratio:16/10;background:#0a0818;border:1px solid var(--pro-line);box-shadow:var(--pro-shadow-lg)}
+.lg-stage img{width:100%;height:100%;object-fit:cover;display:block;filter:blur(20px) saturate(1.1);transform:scale(1.08);transition:filter 1.1s ease}
+.lg-stage.revealed img{filter:blur(0) saturate(1.1)}
+.lg-stage .lg-veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(5,4,12,.75));pointer-events:none}
+.lg-stage .lg-badge{position:absolute;top:12px;right:12px;font-size:11px;font-weight:900;padding:6px 12px;border-radius:999px;background:rgba(5,4,12,.6);border:1px solid var(--pro-line);backdrop-filter:blur(8px)}
+.lg-blanks{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:20px 0 6px}
+.lg-blank{width:42px;height:50px;border-radius:12px;border:2px solid var(--pro-line);background:rgba(255,255,255,.04);display:grid;place-items:center;font-size:22px;font-weight:900;transition:.15s}
+.lg-blank.gap{border:none;background:none;width:16px}
+.lg-blank.filled{border-color:rgba(139,61,255,.6);background:linear-gradient(160deg,rgba(139,61,255,.22),rgba(255,63,164,.1));box-shadow:0 8px 20px rgba(139,61,255,.25)}
+.lg-blank.shake{animation:lgShake .4s ease}
+@keyframes lgShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.lg-blank.win{border-color:rgba(61,220,132,.7);background:linear-gradient(160deg,rgba(61,220,132,.3),rgba(32,227,210,.12));animation:lgWinPop .5s ease}
+@keyframes lgWinPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.lg-tiles{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:22px 0 8px}
+.lg-tile{width:48px;height:54px;border-radius:14px;border:1px solid var(--pro-line);background:linear-gradient(160deg,rgba(26,22,46,.9),rgba(10,9,20,.95));color:#fff;font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 10px 24px rgba(0,0,0,.35);transition:.16s;font-family:inherit}
+.lg-tile:hover{transform:translateY(-3px)}
+.lg-tile:active{transform:scale(.92)}
+.lg-tile.used{opacity:0;pointer-events:none;transform:scale(.5)}
+.lg-actions{display:flex;justify-content:center;gap:10px;margin-top:16px}
+.lg-combo{position:fixed;top:22%;left:50%;transform:translateX(-50%) scale(.6);z-index:60;font-size:32px;font-weight:900;color:var(--pro-gold);opacity:0;pointer-events:none;text-shadow:0 6px 20px rgba(0,0,0,.5);transition:.35s}
+.lg-combo.show{opacity:1;transform:translateX(-50%) scale(1)}
+.lg-over{position:fixed;inset:0;z-index:90;display:none;place-items:center;padding:16px;background:rgba(3,2,8,.8);backdrop-filter:blur(14px)}
+.lg-over.show{display:grid}
+.lg-over-card{width:min(420px,100%);padding:28px;text-align:center}
+.lg-over-card .ico{font-size:60px}
+.lg-over-card h2{font-size:30px;margin:6px 0}
+.lg-over-card .final{font-size:40px;font-weight:900;color:var(--pro-gold);margin:6px 0}
+.lg-over-actions{display:flex;gap:10px;margin-top:16px}
+.lg-over-actions a,.lg-over-actions button{flex:1}
+@media(max-width:480px){.lg-blank{width:34px;height:42px;font-size:18px}.lg-tile{width:40px;height:46px;font-size:18px}}
+</style>
+</head>
+<body class="bs-page">
+<main class="bs-shell lg-shell">
+  <header class="bs-topbar">
+    <a class="bs-brand" href="/"><span class="bs-mark">🔤</span><span class="bs-brand-copy"><b>حروف وصور</b><span>خمّن. رتّب. اربح.</span></span></a>
+    <div class="bs-actions">
+      <button class="bs-icon-btn" data-audio-toggle aria-label="كتم الصوت">🔊</button>
+      <a class="bs-btn" href="/">🏠</a>
+    </div>
+  </header>
+
+  <div class="lg-hud">
+    <div class="lg-hearts" id="lgHearts">❤️❤️❤️</div>
+    <div class="lg-score"><b id="lgScore">0</b><small>النقاط</small></div>
+    <div class="lg-streak" id="lgStreak"></div>
+  </div>
+
+  <div class="lg-timerbar"><i id="lgTimerBar"></i></div>
+
+  <div class="lg-stage" id="lgStage">
+    <img id="lgImg" src="" alt="خمّن الصورة">
+    <div class="lg-veil"></div>
+    <span class="lg-badge" id="lgLevelBadge">جولة 1</span>
+  </div>
+
+  <div class="lg-blanks" id="lgBlanks"></div>
+  <div class="lg-tiles" id="lgTiles"></div>
+
+  <div class="lg-actions">
+    <button class="bs-btn" id="lgUndo">⌫ مسح آخر حرف</button>
+    <button class="bs-btn cyan" id="lgHint">💡 تلميح (-30 نقطة)</button>
+  </div>
+
+  <details class="rules bs-panel" style="padding:14px;margin-top:18px">
+    <summary>كيف ألعب؟</summary>
+    <ul>
+      <li>انظر إلى الصورة وخمّن الكلمة قبل أن تتضح تمامًا.</li>
+      <li>اضغط الحروف بالترتيب الصحيح لملء الفراغات.</li>
+      <li>كل إجابة صحيحة سريعة تزيد نقاطك وتفتح سلسلة حماسية 🔥</li>
+      <li>لديك 3 قلوب — تخسر قلبًا إذا انتهى الوقت.</li>
+    </ul>
+  </details>
+
+  <div class="lg-combo" id="lgCombo"></div>
+
+  <div class="lg-over" id="lgOver">
+    <div class="bs-panel winner-card lg-over-card">
+      <div class="ico" id="lgOverIcon">🏆</div>
+      <h2 id="lgOverTitle">انتهت الجولات!</h2>
+      <div class="final"><span id="lgFinalScore">0</span> نقطة</div>
+      <p class="bs-subtitle" id="lgOverSub"></p>
+      <div class="lg-over-actions">
+        <a class="bs-btn" href="/">الرئيسية</a>
+        <button class="bs-btn primary" id="lgRetry">العب مجددًا</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/js/audio-manager.js"></script>
+<script src="assets/js/platform.js"></script>
+<script>
+(() => {
+  const BANK = [
+    {w:"قط", img:"assets/quiz_photos/cat.webp"},
+    {w:"أسد", img:"assets/quiz_photos/lion.webp"},
+    {w:"فهد", img:"assets/quiz_photos/cheetah.webp"},
+    {w:"زهرة", img:"assets/quiz_photos/flower.webp"},
+    {w:"ساعة", img:"assets/quiz_photos/clock.webp"},
+    {w:"كاميرا", img:"assets/quiz_photos/camera.webp"},
+    {w:"صاروخ", img:"assets/quiz_photos/rocket.webp"},
+    {w:"قمر", img:"assets/quiz_photos/moon.webp"},
+    {w:"عملات", img:"assets/quiz_photos/coins.webp"},
+    {w:"قهوة", img:"assets/quiz_photos/coffee.webp"},
+    {w:"عشب", img:"assets/quiz_photos/grass.webp"},
+    {w:"حصى", img:"assets/quiz_photos/gravel.webp"},
+    {w:"طوب", img:"assets/quiz_photos/brick.webp"},
+    {w:"برج إيفل", img:"assets/quiz_photos/eiffel.webp"},
+    {w:"رائد فضاء", img:"assets/quiz_photos/astronaut.webp"},
+    {w:"دراجة نارية", img:"assets/quiz_photos/motorcycle.webp"},
+    {w:"لبدة أسد", img:"assets/quiz_photos/lion_mane.webp"},
+    {w:"خوذة", img:"assets/quiz_photos/astronaut_helmet.webp"},
+    {w:"شبكية", img:"assets/quiz_photos/retina.webp"},
+    {w:"خلية", img:"assets/quiz_photos/cell.webp"},
+  ];
+  const DECOYS = "ابتثجحخدذرزسشصضطظعغفقكلمنهوي".split("");
+  const ROUND_SECONDS = 22;
+
+  let deck = [], deckIdx = 0, current = null;
+  let score = 0, streak = 0, lives = 3, round = 1;
+  let filled = [], tiles = [], timer = null, timeLeft = ROUND_SECONDS, revealTimer = null;
+  let locked = false;
+
+  const els = {
+    hearts: document.getElementById('lgHearts'),
+    score: document.getElementById('lgScore'),
+    streak: document.getElementById('lgStreak'),
+    bar: document.getElementById('lgTimerBar'),
+    stage: document.getElementById('lgStage'),
+    img: document.getElementById('lgImg'),
+    badge: document.getElementById('lgLevelBadge'),
+    blanks: document.getElementById('lgBlanks'),
+    tiles: document.getElementById('lgTiles'),
+    combo: document.getElementById('lgCombo'),
+    over: document.getElementById('lgOver'),
+    overTitle: document.getElementById('lgOverTitle'),
+    overSub: document.getElementById('lgOverSub'),
+    overIcon: document.getElementById('lgOverIcon'),
+    finalScore: document.getElementById('lgFinalScore'),
+  };
+
+  function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a; }
+
+  function newDeck(){ deck = shuffle(BANK); deckIdx = 0; }
+
+  function play(name){ try{ window.BS_AUDIO?.play(name); }catch{} }
+
+  function updateHearts(){
+    els.hearts.innerHTML = Array.from({length:3},(_,i)=>`<span class="${i<lives?'':'lost'}">❤️</span>`).join('');
+  }
+  function updateScore(){ els.score.textContent = score; }
+  function updateStreak(){
+    els.streak.textContent = streak>=2 ? `🔥 سلسلة ×${streak}` : '';
+  }
+
+  function buildBlanksAndTiles(word){
+    els.blanks.innerHTML = '';
+    filled = [];
+    const chars = word.split('');
+    chars.forEach((ch,i)=>{
+      const el = document.createElement('div');
+      if(ch===' '){ el.className='lg-blank gap'; }
+      else { el.className='lg-blank'; el.dataset.idx = i; }
+      els.blanks.appendChild(el);
+    });
+    const letters = chars.filter(c=>c!==' ');
+    const decoyCount = Math.min(4, Math.max(2, 6 - letters.length));
+    const decoys = shuffle(DECOYS.filter(d=>!letters.includes(d))).slice(0,decoyCount);
+    tiles = shuffle([...letters, ...decoys]);
+    els.tiles.innerHTML = '';
+    tiles.forEach((ch,ti)=>{
+      const b = document.createElement('button');
+      b.className = 'lg-tile';
+      b.textContent = ch;
+      b.dataset.ti = ti;
+      b.addEventListener('click', ()=> onTileTap(ti));
+      els.tiles.appendChild(b);
+    });
+  }
+
+  function nextEmptyBlankIndex(){
+    const blanks = [...els.blanks.querySelectorAll('.lg-blank:not(.gap)')];
+    for(const b of blanks){ if(!b.classList.contains('filled')) return b; }
+    return null;
+  }
+
+  function onTileTap(ti){
+    if(locked) return;
+    const btn = els.tiles.querySelector(`[data-ti="${ti}"]`);
+    if(!btn || btn.classList.contains('used')) return;
+    const blank = nextEmptyBlankIndex();
+    if(!blank) return;
+    blank.textContent = tiles[ti];
+    blank.classList.add('filled');
+    blank.dataset.tileIdx = ti;
+    btn.classList.add('used');
+    play('select');
+    if(!nextEmptyBlankIndex()) checkAnswer();
+  }
+
+  function undoLast(){
+    if(locked) return;
+    const filledBlanks = [...els.blanks.querySelectorAll('.lg-blank.filled')];
+    const last = filledBlanks[filledBlanks.length-1];
+    if(!last) return;
+    const ti = last.dataset.tileIdx;
+    els.tiles.querySelector(`[data-ti="${ti}"]`)?.classList.remove('used');
+    last.classList.remove('filled');
+    last.textContent = '';
+    delete last.dataset.tileIdx;
+  }
+
+  function checkAnswer(){
+    const blanks = [...els.blanks.querySelectorAll('.lg-blank:not(.gap)')];
+    const guess = blanks.map(b=>b.textContent).join('');
+    const answer = current.w.replace(/ /g,'');
+    if(guess === answer){
+      onCorrect();
+    } else {
+      blanks.forEach(b=>b.classList.add('shake'));
+      play('wrong');
+      setTimeout(()=>{
+        blanks.forEach(b=>{ b.classList.remove('shake','filled'); b.textContent=''; });
+        tiles.forEach((_,ti)=>els.tiles.querySelector(`[data-ti="${ti}"]`)?.classList.remove('used'));
+      }, 420);
+    }
+  }
+
+  function showCombo(text){
+    els.combo.textContent = text;
+    els.combo.classList.add('show');
+    setTimeout(()=>els.combo.classList.remove('show'), 900);
+  }
+
+  function onCorrect(){
+    locked = true;
+    clearInterval(timer);
+    const blanks = [...els.blanks.querySelectorAll('.lg-blank:not(.gap)')];
+    blanks.forEach(b=>b.classList.add('win'));
+    streak++;
+    const timeBonus = Math.max(0, Math.round(timeLeft * 8));
+    const gained = 100 + timeBonus + (streak>=2 ? streak*20 : 0);
+    score += gained;
+    updateScore(); updateStreak();
+    play('correct');
+    if(streak>=2) showCombo(`🔥 سلسلة ×${streak}!`);
+    setTimeout(()=> nextRound(), 900);
+  }
+
+  function onTimeout(){
+    locked = true;
+    clearInterval(timer);
+    lives--; streak = 0;
+    updateHearts(); updateStreak();
+    play('buzzer');
+    const blanks = [...els.blanks.querySelectorAll('.lg-blank:not(.gap)')];
+    blanks.forEach(b=>{ b.classList.add('shake'); });
+    setTimeout(()=>{
+      if(lives<=0) return gameOver();
+      nextRound();
+    }, 700);
+  }
+
+  function useHint(){
+    if(locked) return;
+    score = Math.max(0, score - 30);
+    updateScore();
+    const blank = nextEmptyBlankIndex();
+    if(!blank) return;
+    const idx = Number(blank.dataset.idx);
+    const correctChar = current.w[idx];
+    const ti = tiles.findIndex((ch,i)=> ch===correctChar && !els.tiles.querySelector(`[data-ti="${i}"]`).classList.contains('used'));
+    if(ti>=0) onTileTap(ti);
+  }
+
+  function startTimerBar(){
+    timeLeft = ROUND_SECONDS;
+    els.bar.style.width = '100%';
+    els.bar.style.background = '';
+    timer = setInterval(()=>{
+      timeLeft -= 0.1;
+      const pct = Math.max(0, (timeLeft/ROUND_SECONDS)*100);
+      els.bar.style.width = pct + '%';
+      if(timeLeft<=6) els.bar.style.background = 'linear-gradient(90deg,#ff4d5e,#ffc857)';
+      if(Math.abs(timeLeft - Math.round(timeLeft))<0.05 && timeLeft<=5 && timeLeft>0) window.BS_AUDIO?.timerTick(timeLeft);
+      if(timeLeft<=0){ clearInterval(timer); onTimeout(); }
+    }, 100);
+  }
+
+  function nextRound(){
+    locked = false;
+    if(deckIdx >= deck.length) newDeck();
+    current = deck[deckIdx++];
+    round++;
+    els.badge.textContent = `جولة ${round-1}`;
+    els.img.src = current.img;
+    els.stage.classList.remove('revealed');
+    clearTimeout(revealTimer);
+    revealTimer = setTimeout(()=> els.stage.classList.add('revealed'), 250);
+    buildBlanksAndTiles(current.w);
+    play('turn');
+    startTimerBar();
+  }
+
+  function gameOver(){
+    const best = Number(localStorage.getItem('tahadi-letters-best')||0);
+    const isBest = score > best;
+    if(isBest) localStorage.setItem('tahadi-letters-best', String(score));
+    els.finalScore.textContent = score;
+    els.overTitle.textContent = isBest ? 'رقم قياسي جديد! 🎉' : 'انتهت المحاولات';
+    els.overSub.textContent = isBest ? 'تفوقت على أفضل نتيجة سابقة!' : `أفضل نتيجة سابقة: ${best}`;
+    els.overIcon.textContent = isBest ? '🏆' : '💥';
+    els.over.classList.add('show');
+    play('finish');
+  }
+
+  function resetGame(){
+    score = 0; streak = 0; lives = 3; round = 1;
+    updateScore(); updateStreak(); updateHearts();
+    els.over.classList.remove('show');
+    newDeck();
+    nextRound();
+  }
+
+  document.getElementById('lgUndo').addEventListener('click', undoLast);
+  document.getElementById('lgHint').addEventListener('click', useHint);
+  document.getElementById('lgRetry').addEventListener('click', resetGame);
+
+  resetGame();
+})();
+</script>
+</body>
+</html>
