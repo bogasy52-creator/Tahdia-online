@@ -323,26 +323,12 @@ function onRoomState(next){
   }).catch(error=>{busy=false;console.error('Online state update failed',error);render()});
 }
 function renderLobby(){if(!room)return;$('#roomLobby').classList.remove('hidden');$('#copyCode').textContent=room.code;renderRoomPlayers($('#roomPlayers'),room,colors);const me=room.players.find(p=>p.id===room.me?.id);$('#readyBtn').textContent=me?.ready?'✓ جاهز — إلغاء':'✓ أنا جاهز';const all=room.players.length===room.playerLimit&&room.players.every(p=>p.ready&&p.connected);$('#hostStart').classList.toggle('hidden',room.me?.role!=='host');$('#hostStart').disabled=!all}
-async function createRoom(){setupClient();try{await client.create($('#onlineName').value,Number($('#onlineCount').value));BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}}
-async function joinRoom(){setupClient();try{await client.join($('#joinCode').value,$('#onlineName').value);BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}}
+async function createRoom(){if($('#createRoom').disabled)return;$('#createRoom').disabled=true;$('#joinRoom').disabled=true;setupClient();try{await client.create($('#onlineName').value,Number($('#onlineCount').value));BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}finally{$('#createRoom').disabled=false;$('#joinRoom').disabled=false}}
+async function joinRoom(){if($('#joinRoom').disabled)return;$('#createRoom').disabled=true;$('#joinRoom').disabled=true;setupClient();try{await client.join($('#joinCode').value,$('#onlineName').value);BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}finally{$('#createRoom').disabled=false;$('#joinRoom').disabled=false}}
 $('#modeLocal').onclick=()=>setMode('local');$('#modeOnline').onclick=()=>setMode('online');$('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;$('#readyBtn').onclick=()=>{const me=room?.players.find(p=>p.id===room.me?.id);client?.send('ready',{ready:!me?.ready})};$('#hostStart').onclick=()=>client?.send('start');$('#copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);BS_PLATFORM.toast('تم نسخ رمز الغرفة')}catch{BS_PLATFORM.toast(room.code)}};$('#inviteFriends').onclick=()=>{if(!room?.code)return BS_PLATFORM.toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'snakes',roomCode:room.code})};
 const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)$('#onlineName').value=socialProfile.displayName;
 const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;setTimeout(()=>joinRoom(),80)}
 
 $('#startBtn').onclick=startLocal;$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
 $('#playerCount').onchange=()=>{const c=Number($('#playerCount').value);for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',i>=c)};$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});window.addEventListener('resize',()=>state&&drawPaths());window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(drawPaths));
-</script>
-<script>
-/* Snake PRO creature layer prototype */
-(function(){
-  const state={t:0};
-  function pulse(){
-    state.t+=0.06;
-    document.documentElement.style.setProperty('--snake-creature-wobble', (Math.sin(state.t)*0.8).toFixed(2)+'px');
-    requestAnimationFrame(pulse);
-  }
-  requestAnimationFrame(pulse);
-  window.SNAKE_CREATURE_V5={enabled:true,version:"Creature Prototype"};
-})();
-</script>
-</body></html>
+</script></body></html>
