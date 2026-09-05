@@ -200,7 +200,7 @@ body.game-snakes.game-running .die.result-impact .luxury-die-cube{animation:v4Re
   body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .mobile-start-lane,
   body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .dice-stage,
   body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #roll{min-height:80px!important}
-  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .die{width:min(82px,21vw)!important;height:min(82px,21vw)!important}
+  body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .die{width:min(66px,17vw)!important;height:min(66px,17vw)!important}
 }
 
 @media(prefers-reduced-motion:reduce){

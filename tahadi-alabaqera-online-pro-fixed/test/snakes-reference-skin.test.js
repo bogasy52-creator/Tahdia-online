@@ -5,21 +5,11 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 
-test('reference arena keeps the supplied frame as the final visual layer', async () => {
+test('snake board no longer overlays the mismatched static reference frame', async () => {
   const html = await readFile(join(root, 'public', 'snakes.html'), 'utf8');
-  const css = await readFile(join(root, 'public', 'assets', 'css', 'snake-reference-skin.css'), 'utf8');
-  const image = await readFile(join(root, 'public', 'assets', 'snake-reference-skin.png'));
-
-  assert.match(html, /assets\/css\/snake-reference-skin\.css/);
-  assert.match(css, /#game\.reference-skin[\s\S]*background-image:\s*url\('\.\.\/snake-reference-skin\.png'\)/);
-  assert.match(css, /\.snake-board-wrap[\s\S]*height:\s*58\.80%/);
-  assert.match(css, /#game\.reference-skin #roll[\s\S]*color:\s*transparent/);
+  assert.doesNotMatch(html, /reference-skin/);
+  assert.doesNotMatch(html, /snake-reference-skin\.css/);
   assert.match(html, /function launchConfetti\(\)/);
-
-  // PNG signature + IHDR dimensions (the uploaded frame is 709 × 1536).
-  assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  assert.equal(image.readUInt32BE(16), 709);
-  assert.equal(image.readUInt32BE(20), 1536);
 });
 
 test('snakes page exposes resilient interaction handlers', async () => {

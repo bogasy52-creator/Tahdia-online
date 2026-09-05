@@ -19,6 +19,7 @@ eb58f1a691a748ae45ecb958cc557beaae073daf3569b1d64d779925596efa21  ./docs/superpo
 58686b67d380e16a04ef8cce5e4fd559eaa2c1ca53b3ab76c0ae0c564225cd7d  ./docs/superpowers/specs/2026-08-31-busraj-social-board-games-pro-design.md
 2cdd69bf8039b7958ede5cb0bf1c3b6460821f28f812b4d16998d5ba84944f01  ./package-lock.json
 3c28dd58ce2dbf14be179d6eae1ed815b4ee220ee7ce4450cf36813e45f3bdf8  ./package.json
+ca1ca347e95e68aeb94c0cde9f2e024a6dce58e30208c7f2d46112e82c53e680  ./PART2-NOTES-AR.md
 0403bcd78283998dc71caeef2cd7c9fc3525be480f020df7426cc0a8feb46017  ./public/accuracy.html
 3c71fb17908278161e69f7903a11431d8f150b59e60d4528cccf6dc54c2e415e  ./public/apple-touch-icon.png
 9068cd42ec0eb00df1f34aae3a011365a0682f13005c7d4ebbfe08aa3d49f52b  ./public/assets/css/board-premium.css
@@ -34,8 +35,8 @@ f5cff9ccfa763062bd72f6db60275ea2d4b81ec42966077b840011ee4c365698  ./public/asset
 219346e5a021d2e9b095cdcf6a29808ba85e03a0953e1f59c4c863423124acda  ./public/assets/css/quiz-pro.css
 9bd9ac3db31506406afa88c40e3ddbb19e196848cd4cdbb3393d96b76f8bc4bc  ./public/assets/css/snake-reference-skin.css
 99d3c321a65b722d7f23bed071fe131253d0525480b51b3c4fdc375689310d14  ./public/assets/css/snakes-premium.css
-b8502759d2f74a606c4f9d73ca14a13b876cceeb49273da52adb2766158a15c9  ./public/assets/css/snakes-v4-board.css
-3ef75c688cbf26854a2f20d510bf4eff74aa34b40e571800ac66fcc1d3b9471e  ./public/assets/css/snakes-v4-interactions.css
+f8ec1d29ed599cdca8ae00e3b07e8cf9659ce26b9244d682f1bed5b3ea68dc8f  ./public/assets/css/snakes-v4-board.css
+679a9ddc775b5b3fc87f6498567c961a1dea40de4896164f216d262b07052752  ./public/assets/css/snakes-v4-interactions.css
 678c977c37b0de22a9feb5b2d97fbb108aafb3252b73791f29789d53316081c2  ./public/assets/css/social.css
 2c93d9cbd9b7759aecda35c16108e084f1ca303ada3c6b7107454b9dcc1c8dde  ./public/assets/css/zahra-premium.css
 569c1ff1d590290658da0eea35b8735c66506d423a7df00a41ff994238e3f631  ./public/assets/js/adaptive-board-layout.js
@@ -213,7 +214,7 @@ b8ef7006f4e9c9db834545b888201c6e36e819cf5d3eaca4e2ecb04ebc510876  ./public/onlin
 674dbb0d93bc471eda4148f9b691f5012922e85b60e447a61c0eb67dc928e209  ./public/reaction.html
 ee8266ebf36a35f2049087c22851226ef0d87b258be68b9a288de8e8c44b57d7  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
-e0ceb74bc938d23bbaf2b7195343cd460aaf58e1505c2ddc9bc2e50e90f8f84c  ./public/snakes.html
+1502a12b0c97ed56ee600f3c0f25be445879db21c19913712d0174b9c49d2618  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
 791c98f26d15ed6ce5cc4b732e5eb710ad44166c044c353c4f47380aea2cd224  ./public/v5.html
 09309d2f1b2cb173c4640b9d673ff0b76d91e08f58db6fabf9a70f2977c16eba  ./public/zahra.html
@@ -255,11 +256,11 @@ d0363547fbca0e8e626b7ae50c240eee733d13b4acc39f124f09c6e1fc4a5aba  ./test/quiz-me
 1a013f59fdfe79e767c2c41f8b41e72cc17f731e42592596fefaf028d82ebc81  ./test/release-3.2-redesign.test.js
 b13f51fd32be982e3db3f35c9c9c7accad30c467cb2cd68d371477a90b5dc956  ./test/room-lobby.test.js
 33d96fad07605a10724ccbf67c35af79d5cddca750de013b9015605b1a83ab73  ./test/runtime-cleanup.test.js
-65a039672633f7e182d09b4f82a2aec389455b7a624811e1123af085a36988db  ./test/snake-reference-skin.test.js
+33042ad1869214d5794d3a647b95ba4373c4758d427d89bcfbb820b70ea6ce55  ./test/snake-reference-skin.test.js
 867a28af341fdd9e668d5e6f52af0d4ca6402750403de7c70a4510038b25e739  ./test/snakes-engine.test.js
 c3251cc6b252fd38b8e5e7d535847a8c96492e844c1ef262a9eb755aa1f33526  ./test/snakes-premium-ui.test.js
-3669d402d5eea801dec64b432bd852e4fcead5d8f886e92eacb87bc3286c6843  ./test/snakes-reference-skin.test.js
-99cd0b012fe7aaa0124d7246196fd5e6d4c6d345f997ea68a4df5ea309285941  ./test/snakes-solo-reference.test.js
+d9ef02e11c804faf199831d5707b43a09ec08e991d824565e3f1465672b2ed9f  ./test/snakes-reference-skin.test.js
+85622f9daf6c764adfb597dc8ec7446fe426cc4bb45a85b865025de41d42fde0  ./test/snakes-solo-reference.test.js
 da77dc212b8f10439f75ea9928365d3553f27385a80a0d2ad0e9addf5baa099e  ./test/snakes-v4-fx.test.js
 8b7860843dbdbde12138a52ec35c0bc2cae838ada65ed9b9af5f40a70c183f49  ./test/social-core.test.js
 c0fd78cead419305a6e4abf1c30396569351132a1a5c55978701c812483e3cae  ./test/social-integration.test.js

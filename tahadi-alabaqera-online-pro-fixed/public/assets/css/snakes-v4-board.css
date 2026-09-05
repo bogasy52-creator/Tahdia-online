@@ -243,8 +243,8 @@ body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .dic
   min-height:0!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .die{
-  width:min(104px,22vw)!important;
-  height:min(104px,22vw)!important;
+  width:min(74px,17vw)!important;
+  height:min(74px,17vw)!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side #roll{
   grid-area:roll!important;
@@ -351,8 +351,8 @@ body.game-snakes.game-running[data-game-layout-mode="landscape"] .snake-side .di
   height:100%!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="landscape"] .snake-side .die{
-  width:min(66px,16vh)!important;
-  height:min(66px,16vh)!important;
+  width:min(58px,13vh)!important;
+  height:min(58px,13vh)!important;
 }
 body.game-snakes.game-running[data-game-layout-mode="landscape"] .snake-side #roll{
   grid-area:roll!important;
@@ -368,8 +368,8 @@ body.game-snakes.game-running[data-game-layout-mode="landscape"] .snake-side #ro
     grid-template-columns:minmax(0,1fr) 72px 100px!important;
   }
   body.game-snakes.game-running[data-game-layout-mode="portrait"] .snake-side .die{
-    width:60px!important;
-    height:60px!important;
+    width:52px!important;
+    height:52px!important;
   }
 }
 
