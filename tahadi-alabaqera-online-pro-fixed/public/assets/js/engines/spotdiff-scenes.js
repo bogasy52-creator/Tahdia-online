@@ -69,21 +69,29 @@ export function pickPhoto() {
   return PHOTO_BANK[Math.floor(Math.random() * PHOTO_BANK.length)];
 }
 
-// Pure math — no image needed. Returns N non-overlapping points in percentage
-// space (0-100), each with a radius also in percentage of the canvas's
-// shorter side. Safe to call on the server (validates clicks) and the
-// client (renders the marks) — identical inputs always produce a fair game
-// because the server is the one generating these when a round starts.
-export function generateDiffPoints(count = 5, margin = 16, minR = 9, maxR = 13) {
-  const pts = [];
-  let guard = 0;
-  while (pts.length < count && guard < 800) {
-    guard++;
-    const x = margin + Math.random() * (100 - margin * 2);
-    const y = margin + Math.random() * (100 - margin * 2);
-    const r = minR + Math.random() * (maxR - minR);
-    const ok = pts.every((p) => Math.hypot(p.x - x, p.y - y) > p.r + r + 6);
-    if (ok) pts.push({ id: `d${pts.length}`, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, r: Math.round(r * 10) / 10 });
+// Deterministic sector placement — always returns exactly `count` points
+// with guaranteed minimum separation (no rejection sampling, so it can
+// never fall short or leave two points overlapping, unlike naive random
+// placement + retry). Percentage space (0-100); r is also in percentage
+// of the canvas's shorter side.
+export function generateDiffPoints(count = 5, margin = 14) {
+  const cols = Math.ceil(Math.sqrt(count * 1.3));
+  const rows = Math.ceil(count / cols);
+  const cellW = (100 - margin * 2) / cols;
+  const cellH = (100 - margin * 2) / rows;
+  const r = Math.max(7, Math.min(13, Math.min(cellW, cellH) * 0.28));
+  const pad = r + 2;
+  const cells = [];
+  for (let ry = 0; ry < rows; ry++) for (let cx = 0; cx < cols; cx++) cells.push([cx, ry]);
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
   }
-  return pts;
+  return cells.slice(0, count).map(([cx, cy], i) => {
+    const baseX = margin + cx * cellW, baseY = margin + cy * cellH;
+    const jitterW = Math.max(0, cellW - pad * 2), jitterH = Math.max(0, cellH - pad * 2);
+    const x = baseX + pad + Math.random() * jitterW;
+    const y = baseY + pad + Math.random() * jitterH;
+    return { id: `d${i}`, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, r: Math.round(r * 10) / 10 };
+  });
 }

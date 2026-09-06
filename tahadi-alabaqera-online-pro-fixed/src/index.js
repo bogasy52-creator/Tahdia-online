@@ -1364,7 +1364,7 @@ export class BoardRoom extends DurableObject {
           const dx = d.x - x, dy = d.y - y;
           if (Math.sqrt(dx * dx + dy * dy) <= d.r) { hit = d; break; }
         }
-        if (!hit) return await this.saveAndBroadcast();
+        if (!hit) return; // miss — nothing changed, don't spam a broadcast
         hit.foundBy = actor;
         st.scores[actor]++;
         this.room.version++;
