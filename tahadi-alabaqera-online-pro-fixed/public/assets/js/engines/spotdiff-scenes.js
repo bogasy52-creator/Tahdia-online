@@ -65,8 +65,10 @@ export const PHOTO_BANK = [
   "assets/quiz_photos/rocket_launchpad.webp",
 ];
 
-export function pickPhoto() {
-  return PHOTO_BANK[Math.floor(Math.random() * PHOTO_BANK.length)];
+export function pickPhoto(exclude = []) {
+  const pool = PHOTO_BANK.filter((p) => !exclude.includes(p));
+  const list = pool.length ? pool : PHOTO_BANK;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 // Deterministic sector placement — always returns exactly `count` points

@@ -1441,9 +1441,13 @@ export class BoardRoom extends DurableObject {
 
   createSpotdiffGame(names) {
     const duration = 75_000;
+    this.room.usedPhotos = this.room.usedPhotos || [];
+    const photo = pickPhoto(this.room.usedPhotos);
+    this.room.usedPhotos.push(photo);
+    if (this.room.usedPhotos.length > 20) this.room.usedPhotos.shift();
     return {
       turn: null,
-      photo: pickPhoto(),
+      photo,
       diffs: generateDiffPoints(5).map((d) => ({ ...d, foundBy: null })),
       scores: names.map(() => 0),
       startedAt: Date.now(),
