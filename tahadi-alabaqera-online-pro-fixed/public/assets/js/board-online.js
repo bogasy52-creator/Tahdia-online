@@ -1,14 +1,3 @@
-async function fetchWithTimeout(url,opts={},ms=8000){
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),ms);
-  try{
-    return await fetch(url,{...opts,signal:ctrl.signal});
-  }catch(e){
-    if(e?.name==='AbortError')throw new Error('انتهت مهلة الاتصال بالسيرفر — تأكد من اتصال الإنترنت وحاول مجددًا');
-    throw new Error('تعذر الوصول للسيرفر — تأكد من اتصال الإنترنت وحاول مجددًا');
-  }finally{clearTimeout(timer)}
-}
-
 export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
@@ -16,18 +5,21 @@ export class BoardOnlineClient {
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
   async create(name,playerLimit){
-    const res=await fetchWithTimeout('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit})},8000);
+    const res=await fetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit})});
     const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'تعذر إنشاء الغرفة');
     this.hostKey=data.hostKey;return this.connect(data.code,name);
   }
   async join(code,name){
     code=String(code||'').replace(/\D/g,'').slice(0,6);if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    const res=await fetchWithTimeout(`/api/board/rooms/${code}/status`,{},8000);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
+    const res=await fetch(`/api/board/rooms/${code}/status`);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
     return this.connect(code,name)
   }
   async connect(code,name){
     if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    this.closedByUser=false;this.code=code;this.name=String(name||'لاعب').trim().slice(0,20)||'لاعب';
+    let remembered='';try{remembered=localStorage.getItem('online_name')||''}catch{}
+    const requested=String(name||'').trim();
+    this.closedByUser=false;this.code=code;this.name=String((requested&&requested!=='لاعب')?requested:(remembered||requested||'لاعب')).trim().slice(0,20)||'لاعب';
+    try{const matchedHost=new URLSearchParams(location.search).get('matchHost');if(matchedHost)this.hostKey=matchedHost.slice(0,160)}catch{}
     try{this.token=localStorage.getItem(this.tokenKey(code))||''}catch{}
     await this.openSocket();return code;
   }

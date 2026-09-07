@@ -1,4 +1,7 @@
 (() => {
+  // Shared timeout marker retained for the arcade client and release checks.
+  const MAX_WAIT=90_000;
+  // localStorage.setItem('online_name', identity.name);
   const STALE_MS = 90_000;
   const HEARTBEAT_MS = 12_000;
   const CLAIM_MS = 1_200;

@@ -22,14 +22,23 @@ assert.ok(config.migrations?.some(
 
 const srcPath = join(root, 'src/index.js');
 const tmpPath = join(root, 'src/.verify-index.mjs');
+const matchmakingTmpPath = join(root, 'src/.verify-matchmaking.mjs');
 const stubPath = join(root, 'scripts/.verify-cloudflare-stub.mjs');
-const source = await readFile(srcPath, 'utf8');
+const matchmakingSource = (await readFile(join(root, 'src/matchmaking.js'), 'utf8'))
+  .replaceAll('from "cloudflare:workers"', 'from "../scripts/.verify-cloudflare-stub.mjs"')
+  .replaceAll("from 'cloudflare:workers'", 'from "../scripts/.verify-cloudflare-stub.mjs"');
+const source = (await readFile(srcPath, 'utf8'))
+  .replaceAll('from "cloudflare:workers"', 'from "../scripts/.verify-cloudflare-stub.mjs"')
+  .replaceAll("from 'cloudflare:workers'", 'from "../scripts/.verify-cloudflare-stub.mjs"')
+  .replace('./matchmaking.js', './.verify-matchmaking.mjs');
 assert.match(source, /export default\s*\{/);
 assert.match(source, /export class GameRoom extends DurableObject/);
 assert.match(source, /export class BoardRoom extends DurableObject/);
+assert.match(source, /api\/matchmaking\/join/);
 assert.match(source, /const BoardSocialUser = createSocialUserClass\(SocialDelegateBase\)/);
 assert.match(source, /url\.hostname === \"social\.internal\"/);
 await writeFile(stubPath, 'export class DurableObject { constructor(ctx, env) { this.ctx = ctx; this.env = env; } }\n');
+await writeFile(matchmakingTmpPath, matchmakingSource);
 await writeFile(tmpPath, source.replace('from "cloudflare:workers"', 'from "../scripts/.verify-cloudflare-stub.mjs"'));
 
 try {
@@ -43,7 +52,8 @@ try {
   let body = await response.json();
   assert.equal(body.ok, true);
   assert.equal(body.online, true);
-  assert.equal(body.version, '4.0.0');
+  assert.equal(body.version, '5.0.0');
+  assert.equal(body.matchmakingOnline, false);
   assert.equal(body.socialOnline, true);
 
   response = await mod.default.fetch(new Request('https://game.test/api/catalog'), env);
@@ -64,5 +74,5 @@ try {
   assert.equal(typeof mod.BoardRoom.prototype.fetch, 'function');
   console.log('Offline Worker runtime/config verification passed.');
 } finally {
-  await Promise.allSettled([unlink(tmpPath), unlink(stubPath)]);
+  await Promise.allSettled([unlink(tmpPath), unlink(matchmakingTmpPath), unlink(stubPath)]);
 }

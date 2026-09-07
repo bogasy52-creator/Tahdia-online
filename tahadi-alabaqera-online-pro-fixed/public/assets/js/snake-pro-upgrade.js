@@ -13,6 +13,13 @@
       profile.xp+=Math.max(10,Math.floor(score/10));
       if(score>profile.best) profile.best=score;
       save();
+      try{
+        if(window.TAHADI_PROGRESS?.award) window.TAHADI_PROGRESS.award({game:'snakes',score:Number(score)||0,win:Number(score)>=100});
+        else {
+          const k='tahadi-progress-v1',p=JSON.parse(localStorage.getItem(k)||'null')||{name:'لاعب العباقرة',level:1,xp:0,coins:0,wins:0,games:0,bestScore:0,titles:['بداية العباقرة']};
+          p.games++;p.xp+=Math.max(10,Math.floor((Number(score)||0)*.35));p.coins+=Math.max(3,Math.floor((Number(score)||0)/90));p.bestScore=Math.max(p.bestScore,Number(score)||0);p.level=Math.max(1,Math.floor(Math.sqrt(p.xp/80))+1);localStorage.setItem(k,JSON.stringify(p));
+        }
+      }catch{}
       return profile;
     },
     profile(){return profile;}

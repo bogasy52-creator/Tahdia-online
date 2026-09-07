@@ -1,7 +1,7 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
-const CACHE_NAME = 'busraj-games-v24-snake-pro-fix';
+const CACHE_NAME = 'busraj-games-v25-selected-games';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -9,6 +9,7 @@ const APP_SHELL = [
   '/v5',
   '/local',
   '/online',
+  '/matchmaking',
   '/social',
   '/snakes',
   '/dice',
@@ -19,11 +20,18 @@ const APP_SHELL = [
   '/logic',
   '/puzzle',
   '/accuracy',
+  '/draw',
+  '/secret',
+  '/order',
+  '/auction',
+  '/cipher',
   '/manifest.webmanifest',
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',
   '/assets/css/platform.css',
+  '/assets/css/arcade.css',
+  '/assets/css/new-games.css',
   '/assets/css/social.css',
   '/assets/css/game-kit.css',
   '/assets/css/board-premium.css',
@@ -45,6 +53,9 @@ const APP_SHELL = [
   '/assets/js/questions-data.js',
   '/assets/js/luxury-game-ui.js',
   '/assets/js/platform.js',
+  '/assets/js/progression.js',
+  '/assets/js/arcade-games.js',
+  '/assets/js/new-games.js',
   '/assets/js/social-client.js',
   '/assets/js/adaptive-board-layout.js',
   '/assets/js/snakes-v4-fx.js',
