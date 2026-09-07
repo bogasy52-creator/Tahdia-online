@@ -4,7 +4,7 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesGame, playSnakesRoll } from "../public/assets/js/engines/snakes-engine.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
-import { pickPhoto, generateDiffPoints } from "../public/assets/js/engines/spotdiff-scenes.js";
+import { pickPhoto, diffPointsForDifficulty } from "../public/assets/js/engines/spotdiff-scenes.js";
 import { handleSocialRequest } from "./social/social-api.js";
 import { createSocialUserClass } from "./social/social-user.js";
 import { generateSafeQuestions } from "./ai-questions.js";
@@ -1343,7 +1343,7 @@ export class BoardRoom extends DurableObject {
         if (this.room.order.length !== this.room.playerLimit) return this.sendError(ws, `يلزم ${this.room.playerLimit} لاعبين`);
         if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال جميع اللاعبين");
         if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "كل اللاعبين لازم يضغطون جاهز");
-        return await this.startGame();
+        return await this.startGame(msg.difficulty);
       }
       if (msg.type === "rematch") {
         if (player.role !== "host") return this.sendError(ws, "الإعادة للمضيف فقط");
@@ -1424,11 +1424,11 @@ export class BoardRoom extends DurableObject {
     }
   }
 
-  async startGame() {
+  async startGame(difficulty) {
     const names = this.room.order.map((id) => this.room.players[id].name);
     if (this.room.game === "snakes") this.room.state = createSnakesGame(names);
     else if (this.room.game === "zahra") this.room.state = createLudoGame(names);
-    else if (this.room.game === "spotdiff") this.room.state = this.createSpotdiffGame(names);
+    else if (this.room.game === "spotdiff") this.room.state = this.createSpotdiffGame(names, difficulty);
     else this.room.state = createJackarooGame(names);
     this.room.status = "playing";
     this.room.pendingRoll = null;
@@ -1439,16 +1439,17 @@ export class BoardRoom extends DurableObject {
     await this.saveAndBroadcast();
   }
 
-  createSpotdiffGame(names) {
-    const duration = 75_000;
+  createSpotdiffGame(names, difficulty) {
     this.room.usedPhotos = this.room.usedPhotos || [];
     const photo = pickPhoto(this.room.usedPhotos);
     this.room.usedPhotos.push(photo);
     if (this.room.usedPhotos.length > 20) this.room.usedPhotos.shift();
+    const { points, duration, key } = diffPointsForDifficulty(difficulty);
     return {
       turn: null,
       photo,
-      diffs: generateDiffPoints(5).map((d) => ({ ...d, foundBy: null })),
+      difficulty: key,
+      diffs: points.map((d) => ({ ...d, foundBy: null })),
       scores: names.map(() => 0),
       startedAt: Date.now(),
       endsAt: Date.now() + duration,

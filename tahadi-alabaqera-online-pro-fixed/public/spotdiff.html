@@ -14,6 +14,10 @@
 .sd-modes{display:flex;gap:8px;margin:14px 0}
 .sd-modes button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--st-line);background:var(--st-navy);color:var(--st-ink);font-family:var(--st-font-display);font-weight:800;cursor:pointer}
 .sd-modes button.active{background:linear-gradient(180deg,var(--st-gold-2),var(--st-gold));color:#241705;border-color:transparent}
+.sd-diff{display:flex;gap:8px;margin:12px 0}
+.sd-diff button{flex:1;padding:9px 6px;border-radius:10px;border:1px solid var(--st-line);background:var(--st-navy);color:var(--st-ink-dim);font-family:var(--st-font-display);font-weight:800;cursor:pointer;font-size:13px;transition:.15s}
+.sd-diff button.active{border-color:var(--st-gold-dim);color:var(--st-gold-2);background:linear-gradient(180deg,#1b2242,#141a33)}
+.sd-diff-label{text-align:center;font-size:11px;color:var(--st-ink-dim);margin-top:-6px;margin-bottom:10px;font-family:var(--st-font-display)}
 .sd-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:10px 0}
 .sd-score{text-align:center;font-family:var(--st-font-display);font-weight:900}
 .sd-score b{display:block;font-size:24px;color:var(--st-gold)}
@@ -55,6 +59,12 @@
     <button id="sdModeOnline">⚔️ أونلاين 1×1</button>
   </div>
 
+  <div class="sd-diff" id="sdDiffLocal">
+    <button data-diff="easy">🙂 سهل</button>
+    <button data-diff="medium" class="active">😐 متوسط</button>
+    <button data-diff="hard">🔥 صعب</button>
+  </div>
+
   <!-- ONLINE SETUP -->
   <section id="sdOnlineSetup" class="bs-panel" style="padding:18px">
     <label class="bs-field"><span>اسمك</span><input id="sdName" value="لاعب" maxlength="20"></label>
@@ -70,6 +80,11 @@
   <section id="sdLobby" class="bs-panel room-lobby hidden" style="padding:18px">
     <div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="sdCopyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="sdNetBadge" class="net-badge"><i></i><span>اتصال…</span></span></div>
     <div id="sdRoomPlayers" class="room-players"></div>
+    <div class="sd-diff" id="sdDiffLobby">
+      <button data-diff="easy">🙂 سهل</button>
+      <button data-diff="medium" class="active">😐 متوسط</button>
+      <button data-diff="hard">🔥 صعب</button>
+    </div>
     <div class="lobby-controls">
       <button id="sdReadyBtn" class="bs-btn primary">✓ أنا جاهز</button>
       <button id="sdInvite" class="bs-btn cyan">👥 دعوة صديق</button>
@@ -81,7 +96,7 @@
   <section id="sdGame" class="hidden">
     <div class="sd-hud">
       <div class="sd-score"><b id="sdMyScore">0</b><small>نقاطي</small></div>
-      <div class="sd-timer" id="sdTimer">01:15</div>
+      <div><div class="sd-timer" id="sdTimer">01:15</div><div class="sd-diff-label" id="sdDiffLive" style="margin:2px 0 0"></div></div>
       <div class="sd-score sd-opp" id="sdOppWrap"><b id="sdOppScore">0</b><small id="sdOppLabel">—</small></div>
     </div>
     <div class="sd-boards">
@@ -118,11 +133,12 @@
 <script src="assets/js/audio-manager.js"></script>
 <script src="assets/js/platform.js"></script>
 <script type="module">
-import { pickPhoto, generateDiffPoints } from './assets/js/engines/spotdiff-scenes.js';
+import { pickPhoto, DIFFICULTIES, diffPointsForDifficulty } from './assets/js/engines/spotdiff-scenes.js';
 import { BoardOnlineClient, renderRoomPlayers, bindRoomCountdown } from './assets/js/board-online.js';
 
 const $ = (s) => document.querySelector(s);
 const play = (n) => { try { window.BS_AUDIO?.play(n); } catch {} };
+const CANVAS_SIZE = 480;
 // A small set of plausible "photo edit" looks — desaturation, a brightness/
 // contrast push, a subtle hue shift — cycled across the 5 spots so each
 // difference reads as a deliberate edit instead of an odd colored smudge.
@@ -200,6 +216,7 @@ let currentImg = null, currentDiffs = [];
 let foundLocal = new Set();
 let localScore = 0, localTimer = null, localEndsAt = 0;
 let recentPhotos = [];
+let localDifficulty = 'medium', hostDifficulty = 'medium';
 let client = null, room = null, stopCountdown = null;
 
 async function renderPhoto(photoSrc, diffs, foundMap){
@@ -262,9 +279,11 @@ async function startLocal(){
   const photo = pickPhoto(recentPhotos);
   recentPhotos.push(photo);
   if (recentPhotos.length > 20) recentPhotos.shift();
-  const diffs = generateDiffPoints(5);
-  await renderPhoto(photo, diffs, new Map());
-  localEndsAt = Date.now() + 75_000;
+  const { points, duration } = diffPointsForDifficulty(localDifficulty);
+  await renderPhoto(photo, points, new Map());
+  const d = DIFFICULTIES[localDifficulty];
+  $('#sdDiffLive').textContent = `${d.icon} ${d.label}`;
+  localEndsAt = Date.now() + duration;
   clearInterval(localTimer);
   localTimer = setInterval(tickLocal, 200);
   tickLocal();
@@ -332,6 +351,8 @@ async function onRoomState(next){
   const oppIdx = meIdx === 0 ? 1 : 0;
   const oppPlayer = next.players[oppIdx];
   $('#sdOppLabel').textContent = oppPlayer ? oppPlayer.name : 'الخصم';
+  const dInfo = DIFFICULTIES[st.difficulty] || DIFFICULTIES.medium;
+  $('#sdDiffLive').textContent = `${dInfo.icon} ${dInfo.label}`;
   $('#sdMyScore').textContent = st.scores?.[meIdx] ?? 0;
   $('#sdOppScore').textContent = st.scores?.[oppIdx] ?? 0;
   const map = new Map();
@@ -363,6 +384,7 @@ function renderLobby(){
   const all = room.players.length === room.playerLimit && room.players.every(p=>p.ready && p.connected);
   $('#sdHostStart').classList.toggle('hidden', room.me?.role !== 'host');
   $('#sdHostStart').disabled = !all;
+  $('#sdDiffLobby').classList.toggle('hidden', room.me?.role !== 'host');
 }
 async function createRoom(){
   setupClient();
@@ -397,7 +419,23 @@ $('#sdReadyBtn').addEventListener('click', ()=>{
   const me = room?.players.find(p=>p.id===room.me?.id);
   client?.send('ready', { ready: !me?.ready });
 });
-$('#sdHostStart').addEventListener('click', ()=> client?.send('start'));
+$('#sdHostStart').addEventListener('click', ()=> client?.send('start', { difficulty: hostDifficulty }));
+document.querySelectorAll('#sdDiffLocal button[data-diff]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.classList.contains('active')) return;
+    document.querySelectorAll('#sdDiffLocal button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    localDifficulty = btn.dataset.diff;
+    if(mode==='local') startLocal();
+  });
+});
+document.querySelectorAll('#sdDiffLobby button[data-diff]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#sdDiffLobby button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    hostDifficulty = btn.dataset.diff;
+  });
+});
 $('#sdCopyCode').addEventListener('click', async ()=>{
   try{ await navigator.clipboard.writeText(room.code); window.BS_PLATFORM?.toast('تم نسخ رمز الغرفة'); }
   catch{ window.BS_PLATFORM?.toast(room.code); }
@@ -415,12 +453,14 @@ function setMode(next){
   stopCountdown?.();
   if(next==='local'){
     client?.close(); client=null; room=null;
+    $('#sdDiffLocal').classList.remove('hidden');
     $('#sdOnlineSetup').classList.add('hidden');
     $('#sdLobby').classList.add('hidden');
     $('#sdGame').classList.remove('hidden');
     $('#sdOppWrap').classList.add('hidden');
     startLocal();
   } else {
+    $('#sdDiffLocal').classList.add('hidden');
     $('#sdGame').classList.add('hidden');
     $('#sdOnlineSetup').classList.remove('hidden');
     $('#sdOver').classList.remove('show');
