@@ -25,6 +25,12 @@
   --st-line-soft: rgba(244,239,226,.09);
   --st-font-display: 'Tajawal', system-ui, sans-serif;
   --st-font-body: 'Cairo', system-ui, sans-serif;
+  /* Remap the base platform's purple/pink tokens to the stage palette so
+     every element still using var(--bs-purple)/var(--bs-pink) directly
+     (toggle switches, focus rings, sliders, older per-game stylesheets)
+     picks up the new identity too, without hunting down every usage. */
+  --bs-purple: var(--st-burgundy);
+  --bs-pink: var(--st-burgundy-2);
 }
 
 body.bs-page{
@@ -208,6 +214,29 @@ h1,h2,h3,.bs-brand-copy b,.toolbar-title h1{ font-family: var(--st-font-display)
 ::-webkit-scrollbar{ width: 9px; height: 9px; }
 ::-webkit-scrollbar-thumb{ background: var(--st-gold-dim); border-radius: 6px; }
 ::-webkit-scrollbar-track{ background: transparent; }
+
+/* ---------- Gameplay chrome — these were still using the raw platform
+   defaults (a plain white die, a flat status box) even after the stage
+   identity landed everywhere else. Bringing them in line. ---------- */
+.die{
+  background: linear-gradient(155deg, #fdf6e3, #e8d9b0) !important;
+  box-shadow:
+    inset -8px -8px 16px rgba(122,91,35,.22),
+    inset 4px 4px 10px rgba(255,255,255,.55),
+    0 18px 34px rgba(0,0,0,.4),
+    0 0 0 1px var(--st-gold-dim) !important;
+  border-radius: 18px !important;
+}
+.pip{ background: var(--st-burgundy) !important; }
+.game-status{
+  background: linear-gradient(175deg, var(--st-navy) 0%, #0d1226 100%) !important;
+  border: 1px solid var(--st-line-soft) !important;
+  border-right: 3px solid var(--st-gold-dim) !important;
+  color: var(--st-ink) !important;
+  border-radius: 12px !important;
+}
+.player-dot{ box-shadow: 0 0 0 3px rgba(232,168,60,.15) !important; }
+.turn-banner{ color: var(--st-gold-2) !important; }
 
 @media (max-width: 600px){
   .hero{ clip-path: polygon(0 0, 100% 0, 100% 98%, 0% 100%); }
