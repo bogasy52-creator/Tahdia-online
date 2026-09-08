@@ -65,10 +65,13 @@ export class MatchmakingRoom extends DurableObject {
       const body = await request.json().catch(() => ({}));
       const game = String(body.game || 'quiz').toLowerCase();
       if (!GAMES.has(game)) return json({ ok: false, error: 'اللعبة غير مدعومة' }, 400);
+      // المستوى/الخبرة قد تصل من عميل قديم، لكنها ليست معيارًا للمطابقة.
+      // في بداية الإطلاق نريد إدخال اللاعب مع أول منافس متاح في نفس اللعبة
+      // بدل إبقائه عالقًا بانتظار لاعب قريب منه بالنقاط أو الخبرة.
       const level = Math.max(1, Math.min(100, Number(body.level) || 1));
       const current = { id: crypto.randomUUID(), name: name(body.name), level, game, createdAt: now, status: 'waiting', result: null };
       const candidate = Object.values(this.tickets)
-        .filter((x) => x?.status === 'waiting' && x.game === game && Math.abs(Number(x.level) - level) <= 4)
+        .filter((x) => x?.status === 'waiting' && x.game === game)
         .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))[0];
       if (!candidate) {
         this.tickets[current.id] = current;

@@ -141,22 +141,6 @@ import { BoardOnlineClient, renderRoomPlayers, bindRoomCountdown } from './asset
 const $ = (s) => document.querySelector(s);
 const play = (n) => { try { window.BS_AUDIO?.play(n); } catch {} };
 const CANVAS_SIZE = 480;
-// Instead of guessing a filter and hoping it's visible, shift the actual
-// pixels by a fixed, calibrated amount — this guarantees a consistent,
-// medium-strength difference regardless of whether that spot of the photo
-// is bright, dark, or saturated. Direction (lighter/darker) is chosen from
-// the region's own measured brightness so it never washes out into white
-// or crushes into black. A different colour bias per spot keeps the 5
-// edits from all looking like the same brightness nudge.
-const HUE_BIAS = [
-  [0.90, 0.85, 0.50],
-  [0.60, 0.65, 0.95],
-  [1.00, 1.00, 1.00],
-  [0.55, 0.95, 0.70],
-  [0.95, 0.55, 0.65],
-];
-const TARGET_DELTA = 78; // A clear, calibrated change that stays inside the selected object area.
-
 function drawCover(ctx, img, size){
   ctx.clearRect(0,0,size,size);
   const scale = Math.max(size/img.naturalWidth, size/img.naturalHeight);
@@ -165,59 +149,45 @@ function drawCover(ctx, img, size){
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
 }
 
-function applyDiffMarks(ctx, size, diffs, allDiffs){
+function coverMetrics(img, size){
+  const scale = Math.max(size/img.naturalWidth, size/img.naturalHeight);
+  return { scale, sx:(img.naturalWidth-size/scale)/2, sy:(img.naturalHeight-size/scale)/2 };
+}
+
+function organicClip(ctx, cx, cy, rad, seed){
+  const points = 11;
+  ctx.beginPath();
+  for(let i=0;i<points;i++){
+    const angle = (Math.PI*2*i)/points;
+    const wobble = .78 + .14*Math.sin(seed*1.7+i*2.35) + .05*Math.cos(seed+i);
+    const x = cx + Math.cos(angle)*rad*wobble;
+    const y = cy + Math.sin(angle)*rad*wobble;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.clip();
+}
+
+function applyDiffMarks(ctx, size, diffs, allDiffs, img){
+  const {scale,sx,sy} = coverMetrics(img,size);
+  const shifts = [[8,-4],[-7,6],[6,7],[-8,-5],[5,8]];
   diffs.forEach((p)=>{
     const idx = allDiffs.indexOf(p);
     const cx=(p.x/100)*size, cy=(p.y/100)*size, rad=(p.r/100)*size;
-    const x0=Math.max(0,Math.floor(cx-rad)), y0=Math.max(0,Math.floor(cy-rad));
-    const x1=Math.min(size,Math.ceil(cx+rad)), y1=Math.min(size,Math.ceil(cy+rad));
+    const x0=Math.max(0,Math.floor(cx-rad*1.15)), y0=Math.max(0,Math.floor(cy-rad*1.15));
+    const x1=Math.min(size,Math.ceil(cx+rad*1.15)), y1=Math.min(size,Math.ceil(cy+rad*1.15));
     const w=x1-x0, h=y1-y0;
     if(w<=0||h<=0) return;
-    const imgData = ctx.getImageData(x0,y0,w,h);
-    const d = imgData.data;
-
-    // measure the real average brightness in this circle first
-    let sum=0, n=0;
-    for(let yy=0; yy<h; yy++) for(let xx=0; xx<w; xx++){
-      const px=x0+xx, py=y0+yy;
-      if(Math.hypot(px-cx,py-cy) > rad) continue;
-      const i=(yy*w+xx)*4;
-      sum += 0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; n++;
-    }
-    if(!n) return;
-    const avgLum = sum/n;
-    const sign = avgLum > 140 ? -1 : 1; // bright region -> darken, else brighten
-    const bias = HUE_BIAS[idx % HUE_BIAS.length];
-    const mag = Math.hypot(bias[0], bias[1], bias[2]);
-    const shift = bias.map(b => sign * TARGET_DELTA * (b/mag));
-
-    for(let yy=0; yy<h; yy++){
-      for(let xx=0; xx<w; xx++){
-        const px=x0+xx, py=y0+yy;
-        const dist = Math.hypot(px-cx,py-cy);
-        if(dist>rad) continue;
-        const t = 1 - dist/rad;
-        const falloff = t*t*(3-2*t); // smoothstep — soft, seamless edge
-        const i=(yy*w+xx)*4;
-        d[i]   = Math.max(0,Math.min(255, d[i]   + shift[0]*falloff));
-        d[i+1] = Math.max(0,Math.min(255, d[i+1] + shift[1]*falloff));
-        d[i+2] = Math.max(0,Math.min(255, d[i+2] + shift[2]*falloff));
-      }
-    }
-    ctx.putImageData(imgData, x0, y0);
-    // Add one small object-level change in the centre of the edited region.
-    // This makes the difference genuinely visible on a phone instead of
-    // relying on a near-imperceptible colour filter.
+    const [dx,dy] = shifts[idx % shifts.length];
+    // Move a small, irregular piece of the real photograph. This creates a
+    // believable object/detail change instead of a coloured circle or answer
+    // marker painted over the image.
     ctx.save();
-    ctx.globalAlpha = .82;
-    ctx.fillStyle = avgLum > 140 ? '#14203a' : '#ffd166';
-    ctx.shadowColor = avgLum > 140 ? '#06101f' : '#ffb347';
-    ctx.shadowBlur = Math.max(3, rad * .16);
-    ctx.beginPath();
-    if(idx % 2 === 0) ctx.arc(cx, cy, Math.max(4, rad * .18), 0, Math.PI * 2);
-    else if (typeof ctx.roundRect === 'function') ctx.roundRect(cx-rad*.28, cy-rad*.09, rad*.56, rad*.18, rad*.08);
-    else ctx.rect(cx-rad*.28, cy-rad*.09, rad*.56, rad*.18);
-    ctx.fill();
+    organicClip(ctx,cx,cy,rad,idx+1);
+    ctx.globalAlpha = .98;
+    ctx.drawImage(img,
+      sx+(x0+dx)/scale, sy+(y0+dy)/scale, w/scale, h/scale,
+      x0, y0, w, h);
     ctx.restore();
   });
 }
@@ -255,7 +225,7 @@ async function renderPhoto(photoSrc, diffs, foundMap){
     const f = foundMap?.get ? foundMap.get(d.id) : foundMap?.[d.id];
     return !f; // unresolved diffs still get the real visual difference baked in
   });
-  applyDiffMarks(rightCtx, CANVAS_SIZE, toMark, diffs);
+  applyDiffMarks(rightCtx, CANVAS_SIZE, toMark, diffs, img);
   // already-found diffs get a permanent highlighted ring instead of the raw tint
   diffs.forEach(d=>{
     const f = foundMap?.get ? foundMap.get(d.id) : foundMap?.[d.id];

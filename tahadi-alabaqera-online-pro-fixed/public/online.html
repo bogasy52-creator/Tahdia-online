@@ -33,13 +33,17 @@
 @media(min-width:760px){.entry .card:not(.online-fast-card){min-height:240px}}
 @media(max-width:640px){.quick-main{grid-template-columns:auto 1fr}.quick-main .btn{grid-column:1/-1;width:100%;min-width:0}.quick-icon{width:58px;height:58px;border-radius:18px}.qm-players{grid-template-columns:1fr}.qm-final-actions{grid-template-columns:1fr}.qm-head{grid-template-columns:1fr}.online-fast-card{padding:16px}}
 
+/* Team rooms: make 2×2 and 3×3 visible as real teams, not a flat player list. */
+.team-badge{display:inline-flex;align-items:center;gap:5px;margin-inline-start:6px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-weight:1000}.team-badge.a{color:#f4c76d;background:#f4c76d12}.team-badge.b{color:#a78bfa;background:#a78bfa14}.team-score-card{position:relative;overflow:hidden}.team-score-card.a{border-color:#f4c76d66;background:linear-gradient(145deg,#322713,#0c101d)}.team-score-card.b{border-color:#a78bfa66;background:linear-gradient(145deg,#251947,#0c101d)}.team-members{margin-top:4px;color:var(--mut);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.teamHub{display:grid;gap:8px;margin:10px 0;padding:11px;border:1px solid #5a4b91;border-radius:18px;background:linear-gradient(135deg,#17162e,#0b1020)}.teamHubTop{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.teamIdentity{font-weight:1000;color:#f4c76d}.teamIdentity.b{color:#b9a4ff}.teamModeNote{color:#c2c8da;font-size:11px}.teamTools{display:flex;gap:6px;flex-wrap:wrap}.teamTool{min-height:38px;border:1px solid var(--line);border-radius:11px;background:#090d18;color:#fff;padding:6px 9px;font-size:11px;font-weight:900}.teamTool:disabled{opacity:.35}.teamVoteNote{color:#91e8bd;font-size:11px;margin-top:4px}.teamVoice{display:flex;gap:6px;align-items:center}.teamVoice button{min-height:38px}.teamReactions{display:flex;gap:5px;flex-wrap:wrap}.reactionBtn{min-width:39px;min-height:35px;border:1px solid var(--line);border-radius:10px;background:#0b1020;color:#fff}.teamProgress{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--mut)}.teamProgress b{color:#f4c76d}.choice.team-voted{border-color:#22d3ee;background:#22d3ee16}.choice.team-ping{box-shadow:0 0 0 2px #f4c76d inset}.choice.team-hinted{opacity:.28;filter:grayscale(1)}.relayNotice{padding:9px;border:1px solid #5a4b91;border-radius:13px;background:#7c3aed18;color:#e8ddff;font-weight:900;font-size:12px}.voice-status{font-size:10px;color:var(--mut)}.reaction-float{position:fixed;left:50%;top:19%;transform:translateX(-50%);z-index:80;padding:11px 15px;border:1px solid #8b6ce3;border-radius:999px;background:#0a0d19e8;color:#fff;box-shadow:0 16px 40px #0008;font-weight:1000;animation:reaction-pop 1.8s ease forwards}@keyframes reaction-pop{0%{opacity:0;transform:translate(-50%,18px) scale(.85)}18%,72%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-24px) scale(1.05)}}
 </style>
 <link rel="stylesheet" href="assets/css/quiz-board-v2.css">
 <link rel="stylesheet" href="assets/css/quiz-polish.css">
+<link rel="stylesheet" href="assets/css/quiz-pro-overrides.css">
 </head>
 <body class="bs-page">
 <div class="app" id="app">
-<div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">1 ضد 1 • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
+<div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">مواجهات فردية وفرق • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
 
 <section id="entry">
 <div class="card quizOnlineHero"><div><div class="mut">V5.0 • ONLINE DUEL</div><h2>ادخل مباشرة.<br><span>والتحدي يبدأ.</span></h2><p class="mut">اللعب السريع يطابقك مع منافس تلقائيًا، يختار أسئلة عشوائية، ويبدأ المواجهة بدون غرفة أو كتابة اسم.</p></div><div class="onlineHeroOrb" aria-hidden="true">🧠</div></div>
@@ -52,7 +56,7 @@
   </div>
 </div>
 <div class="private-title">لعب خاص مع الأصدقاء</div>
-<div class="card"><b>➕ إنشاء غرفة</b><div class="mut">اختر عدد اللاعبين، والاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="createName" maxlength="20" placeholder="اسم اختياري"><select id="playerLimit" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="2">مواجهة فردية (2)</option><option value="4" selected>فريقان: ٢ ضد ٢</option><option value="6">فريقان: ٣ ضد ٣</option><option value="5">منافسة فردية (5)</option><option value="7">منافسة فردية (7)</option><option value="8">منافسة فردية (8)</option></select><button id="createBtn" class="btn cyan">إنشاء غرفة جديدة</button><div class="form-note">إذا تركت الاسم فارغًا سنستخدم اسم حسابك أو اسمًا افتراضيًا.</div></div></div>
+<div class="card"><b>➕ إنشاء غرفة</b><div class="mut">اختر عدد اللاعبين ونمط الفريق، والاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="createName" maxlength="20" placeholder="اسم اختياري"><select id="playerLimit" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="2">مواجهة فردية (2)</option><option value="4" selected>فريقان: ٢ ضد ٢</option><option value="6">فريقان: ٣ ضد ٣</option><option value="8">فريقان: ٤ ضد ٤</option><option value="5">منافسة فردية (5)</option><option value="7">منافسة فردية (7)</option></select><select id="teamMode" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="classic">⚔️ مواجهة جماعية</option><option value="escape">🚪 غرفة الهروب — أرواح مشتركة</option><option value="relay">🏃 سباق التتابع — دور متناوب</option><option value="captain">🧭 القائد والخبراء — نقاط مضاعفة للتخصص</option></select><input id="teamNameA" class="team-only" maxlength="28" placeholder="اسم الفريق الذهبي (اختياري)"><input id="teamNameB" class="team-only" maxlength="28" placeholder="اسم الفريق البنفسجي (اختياري)"><button id="createBtn" class="btn cyan">إنشاء غرفة جديدة</button><div class="form-note">نمط الفريق يظهر تلقائيًا عند اختيار ٢ ضد ٢ أو ٣ ضد ٣ أو ٤ ضد ٤.</div></div></div>
 <div class="card"><b>🔑 دخول غرفة</b><div class="mut">اكتب كود الـ 6 أرقام فقط؛ الاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="joinCode" inputmode="numeric" maxlength="6" placeholder="مثال: 482731"><input id="joinName" maxlength="20" placeholder="اسم اختياري"><button id="joinBtn" class="btn">دخول التحدي</button><div class="form-note">بدون اسم؟ ندخلك باسم تلقائي.</div></div></div>
 </div>
 </section>
@@ -81,7 +85,7 @@
 
 <section id="room" class="hidden">
 <div id="roomHeader" class="card">
-<div class="roomHead"><div><div class="mut">رقم الغرفة</div><div id="roomCode" class="roomCode">------</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button id="inviteFriendBtn" class="btn sec">👥 دعوة صديق</button><button id="shareBtn" class="btn sec">↗ مشاركة الدعوة</button></div></div>
+<div class="roomHead"><div><div class="mut">رقم الغرفة</div><div id="roomCode" class="roomCode">------</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button id="inviteFriendBtn" class="btn sec">👥 دعوة صديق</button><button id="spectateBtn" class="btn sec">👁 رابط مشاهدة</button><button id="shareBtn" class="btn sec">↗ مشاركة الدعوة</button></div></div>
 <div id="players" class="players"></div>
 </div>
 
@@ -98,6 +102,8 @@
 <div class="card questionCard">
 <div id="qmeta" class="qmeta"></div>
 <div id="media" class="media"></div>
+<!-- الفريق الذهبي والفريق البنفسجي يظهران تلقائيًا في غرف الفرق -->
+<div id="teamHub" class="teamHub hidden"></div>
 <div id="question" class="question"></div>
 <div id="timerWrap"><div id="timer" class="timer">--</div><div class="track"><div id="bar" class="bar"></div></div></div>
 <div id="action"></div>
@@ -106,7 +112,7 @@
 </div>
 
 <div id="finished" class="card hidden" style="margin-top:10px;text-align:center">
-<div class="mut">انتهت المواجهة</div><div id="winner" class="winner"></div><div id="finalScores"></div><button id="rematch" class="btn gold hidden" style="width:100%;margin-top:12px">إعادة مباراة</button>
+<div class="mut">انتهت المواجهة</div><div id="winner" class="winner"></div><div id="finalScores"></div><button id="rematch" class="btn gold hidden" style="width:100%;margin-top:12px">إعادة مباراة</button><a class="btn sec" href="/league.html" style="display:block;width:100%;margin-top:8px">🏆 دوري الفرق الأسبوعي</a>
 </div>
 </section>
 
@@ -153,10 +159,11 @@ shuffle:'<path d="M4 7h3c5 0 5 10 10 10h3M17 14l3 3-3 3M4 17h3c2 0 3-2 4-4M14 7c
 install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>',
 memory:'<path d="M9 4a3 3 0 0 0-5 2 3 3 0 0 0 1 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V6a3 3 0 0 0-3-2zM15 4a3 3 0 0 1 5 2 3 3 0 0 1-1 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V6a3 3 0 0 1 3-2zM9 8h3M12 12H8M12 15h3"/>'
 };return '<span class="catIcon"><svg viewBox="0 0 24 24">'+p[k]+'</svg></span>'}
-let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false,questionAudio=null,questionAudioRAF=0,activeZoomImg=null;
+let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false,questionAudio=null,questionAudioRAF=0,activeZoomImg=null,voiceStream=null,voicePeers=new Map(),voiceEnabled=false;
 const soundPlayCounts=new Map(),waveCache=new Map(),zoomLevels=new Map();
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
+const spectatorMode=qs.get('spectate')==='1';
 const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName){$('#createName').value=socialProfile.displayName;$('#joinName').value=socialProfile.displayName}
 function cleanName(value){return String(value||'').normalize('NFKC').trim().replace(/[\u0000-\u001F\u007F<>]/g,'').slice(0,20)||''}
 function autoPlayerName(inputValue=''){
@@ -175,6 +182,10 @@ function store(k,v){try{localStorage.setItem(k,v)}catch{}}
 function read(k){try{return localStorage.getItem(k)||''}catch{return''}}
 function send(type,data={}){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type,...data}));else toast('الاتصال غير جاهز')}
 function myPlayer(){return state?.players?.find(p=>p.id===myId)||null}
+function isTeamRoom(){return state?.mode==='teams-4'||state?.mode==='teams-6'||state?.mode==='teams-8'}
+function teamName(team){return state?.teamNames?.[team]||(team==='A'?'الذهبي':'البنفسجي')}
+function specialtyName(id){return ({science:'العلوم',history:'التاريخ',language:'الكلمات',sports:'الرياضة'})[id]||''}
+function showReaction(text){const el=document.createElement('div');el.className='reaction-float';el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),1900)}
 function opponent(){return state?.players?.find(p=>p.id!==myId)||null}
 function safeName(n){return String(n||'لاعب').replace(/[<>&]/g,'')}
 function originCandidateList(){
@@ -222,7 +233,10 @@ async function createRoom(){
  $('#createBtn').disabled=true;setNet('','جار تجهيز الغرفة');
  try{
   await probeBackend(true);
-  const r=await apiFetch('/api/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,playerLimit:Number($('#playerLimit').value||4)})});
+  const playerLimit=Number($('#playerLimit').value||4);
+  const teamMode=[4,6,8].includes(playerLimit)?String($('#teamMode').value||'classic'):'classic';
+  const teamA=cleanName($('#teamNameA').value)||'العباقرة الذهبي',teamB=cleanName($('#teamNameB').value)||'العباقرة البنفسجي';
+  const r=await apiFetch('/api/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,playerLimit,teamMode,teamA,teamB})});
   const ct=r.headers.get('content-type')||'';
   if(!ct.includes('application/json'))throw new Error('السيرفر الحالي لا يحتوي محرك الغرف. انشر المشروع كاملًا كـ Worker وليس ملفات الواجهة فقط.');
   const d=await r.json();if(!r.ok)throw new Error(d.error||('تعذر إنشاء الغرفة — HTTP '+r.status));
@@ -237,6 +251,8 @@ function joinRoom(){
 }
 $('#createBtn').onclick=createRoom;$('#quickPlayBtn').onclick=quickPlay;$('#joinBtn').onclick=joinRoom;
 $('#joinCode').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));
+$('#playerLimit').addEventListener('change',()=>{const team=[4,6,8].includes(Number($('#playerLimit').value));$('#teamMode').disabled=!team;$('#teamMode').style.opacity=team?'1':'.5';document.querySelectorAll('.team-only').forEach(el=>{el.disabled=!team;el.style.display=team?'block':'none'})});
+$('#playerLimit').dispatchEvent(new Event('change'));
 
 async function connect(){
  if(!roomCode)return;
@@ -248,6 +264,7 @@ async function connect(){
  if(!activeApiOrigin){try{await probeBackend()}catch(e){setNet('bad','محرك الغرف غير متاح');toast(e.message);scheduleReconnect();return}}
  const url=websocketUrl('/api/rooms/'+roomCode+'/ws');
  url.searchParams.set('name',name);
+ if(spectatorMode)url.searchParams.set('spectate','1');
  const protocols=['busraj-v1'];if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
  setNet('','جار الاتصال');
  try{ws=new WebSocket(url,protocols)}catch{scheduleReconnect();return}
@@ -261,7 +278,7 @@ async function connect(){
    try{thisWs.close()}catch{}
  },9000);
  ws.onopen=()=>{if(ws!==thisWs)return;clearTimeout(openTimer);setNet('ok','متصل');reconnectDelay=800};
- ws.onmessage=e=>{if(ws!==thisWs)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);try{localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error')toast(m.message||'خطأ')};
+ ws.onmessage=e=>{if(ws!==thisWs)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId||null;if(m.token)store('roomToken:'+roomCode,m.token);try{if(m.token===null)localStorage.removeItem('roomToken:'+roomCode);if(!spectatorMode)localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render();syncVoicePeers()}else if(m.type==='voice_signal'){handleVoiceSignal(m.fromId,m.signal)}else if(m.type==='team_reaction'){const labels={highfive:'🙌 هاي فايف من ',energy:'🥤 مشروب طاقة من ',fire:'🔥 حماس من ',clap:'👏 تشجيع من ',brain:'🧠 عبقرية من '};showReaction((labels[m.reaction]||'✨ من ')+safeName(m.fromName))}else if(m.type==='team_ping'){showReaction('📌 زميلك يقترح الخيار '+(Number(m.choice)+1))}else if(m.type==='error')toast(m.message||'خطأ')};
  ws.onclose=()=>{if(ws!==thisWs)return;clearTimeout(openTimer);if(!openTimedOut)setNet('bad','انقطع الاتصال');if(!manualClose)scheduleReconnect()};
  ws.onerror=()=>{if(ws!==thisWs)return;setNet('bad','مشكلة اتصال')};
 }
@@ -279,7 +296,8 @@ function render(){
 
 function renderPlayers(){
  const box=$('#players');box.innerHTML='';
- state.players.forEach(p=>{const d=document.createElement('div');d.className='player '+(p.id===myId?'me':'');d.innerHTML='<div class="name">'+safeName(p.name)+(p.id===myId?' • أنت':'')+'</div><div class="presence '+(p.connected?'on':'')+'">'+(p.connected?'● متصل':'○ غير متصل')+' • '+(p.role==='host'?'المضيف':'الخصم')+'</div><div class="score">'+p.score+'</div>';box.appendChild(d)})
+ const teamMode=isTeamRoom();
+ state.players.forEach(p=>{const d=document.createElement('div');d.className='player '+(p.id===myId?'me':'');const badge=teamMode&&p.team?'<span class="team-badge '+p.team.toLowerCase()+'">الفريق '+teamName(p.team)+'</span>':'';const role=teamMode&&p.teamRole==='captain'?'قائد الفريق':teamMode&&p.specialty?'متخصص '+specialtyName(p.specialty):'لاعب';d.innerHTML='<div class="name">'+safeName(p.name)+(p.id===myId?' • أنت':'')+badge+'</div><div class="presence '+(p.connected?'on':'')+'">'+(p.connected?'● متصل':'○ غير متصل')+' • '+(p.role==='host'?'المضيف':'لاعب')+' • '+role+'</div><div class="score">'+p.score+'</div>';box.appendChild(d)})
 }
 
 function renderLobby(){
@@ -288,7 +306,8 @@ function renderLobby(){
  if(!hostSel.size)hostSel=new Set(state.selectedCategories);
  const host=me.role==='host';
  $('#hostActions').classList.toggle('hidden',!host);$('#startWrap').classList.toggle('hidden',!host);
- $('#lobbyHelp').textContent=host?'اختر 6 فئات ثم اعتمدها.':'المضيف يختار الفئات — تقدر تجهز نفسك الآن.';
+ const teamMode=isTeamRoom();
+ $('#lobbyHelp').textContent=teamMode?(host?'نمط '+(state.teamModeLabel||'مواجهة جماعية')+' • اختر 6 فئات ثم اعتمدها.':'أنت ضمن الفريق '+teamName(me.team)+' • نمط '+(state.teamModeLabel||'مواجهة جماعية')+' — جهّز نفسك.'):(host?'اختر 6 فئات ثم اعتمدها.':'المضيف يختار الفئات — تقدر تجهز نفسك الآن.');
  $('#catCount').textContent=(host?hostSel.size:state.selectedCategories.length)+' / 6';
  const box=$('#cats');box.innerHTML='';
  state.categories.forEach((c,idx)=>{const b=document.createElement('button');const sel=host?hostSel.has(c.id):state.selectedCategories.includes(c.id);b.className='cat '+(sel?'sel':'');b.dataset.cat=c.id;b.style.setProperty('--cat-accent',c.id==='memory'?'#22d3ee':['#f4c76d','#a78bfa','#22d3ee','#34d399','#fb7185','#60a5fa'][idx%6]);b.disabled=!host;b.innerHTML=icon(c.icon)+'<b>'+c.name+'</b><span>'+c.desc+'</span>';b.onclick=()=>{if(!host)return;if(hostSel.has(c.id))hostSel.delete(c.id);else{if(hostSel.size>=6)return toast('اختر 6 فئات فقط');hostSel.add(c.id)}renderLobby()};box.appendChild(b)});
@@ -302,19 +321,67 @@ function renderLobby(){
 }
 
 function renderScores(){
- const cards=state.players.map(p=>'<div class="scoreCard '+(p.id===myId?'me':'')+'"><b>'+safeName(p.name)+'</b><div class="score">'+p.score+'</div></div>').join('');
+ const teamMode=isTeamRoom();
+ const cards=teamMode?['A','B'].map(team=>{const members=state.players.filter(p=>p.team===team).map(p=>safeName(p.name)).join(' • ');const mine=state.me?.team===team?' me':'';return '<div class="scoreCard team-score-card '+team.toLowerCase()+mine+'"><b>الفريق '+teamName(team)+'</b><div class="score">'+Number(state.teamScores?.[team]||0)+'</div><div class="team-members">'+members+'</div></div>'}).join(''):state.players.map(p=>'<div class="scoreCard '+(p.id===myId?'me':'')+'"><b>'+safeName(p.name)+'</b><div class="score">'+p.score+'</div></div>').join('');
  const top=document.querySelector('.matchTop'); top.innerHTML=cards+'<div id="roundBadge" class="roundBadge">'+Math.min(state.roundIndex+1,state.roundCount)+' / '+state.roundCount+'</div>';
  $('#roundBadge').textContent=Math.min(state.roundIndex+1,state.roundCount)+' / '+state.roundCount;
 }
 
+function renderTeamHub(){
+ const box=$('#teamHub');
+ if(!isTeamRoom()||!state.me){box.classList.add('hidden');box.innerHTML='';return}
+ box.classList.remove('hidden');
+ const me=state.me, team=me.team, c=state.current, pool=state.teamPowers?.[team]||{}, progress=state.teamProgress?.[team]||0, lives=state.teamLives?.[team]??3;
+ const members=state.players.filter(p=>p.team===team).map(p=>safeName(p.name)).join(' • ');
+ const role=me.teamRole==='captain'?'قائد الفريق':me.specialty?'متخصص '+specialtyName(me.specialty):'عضو الفريق';
+ const vote=c?.teamVote, counts=vote?.counts||{};
+ const countText=Object.keys(counts).length?Object.entries(counts).map(([choice,count])=>'الخيار '+(Number(choice)+1)+': '+count).join(' • '):'لم يصوّت أحد بعد';
+ const relay=c?.relayPlayerId?state.players.find(p=>p.id===c.relayPlayerId):null;
+ box.innerHTML='<div class="teamHubTop"><div><div class="teamIdentity '+(team==='B'?'b':'')+'">'+(teamName(team))+' • '+role+'</div><div class="teamModeNote">'+safeName(state.teamModeLabel||'مواجهة جماعية')+' • '+members+'</div></div><div class="teamVoice"><button id="voiceBtn" class="teamTool">'+(voiceEnabled?'🎙️ إيقاف الصوت':'🎙️ صوت الفريق')+'</button><span class="voice-status">'+(voiceEnabled?'القناة مفتوحة':'صوت اختياري')+'</span></div></div><div class="teamProgress"><span>🏁 التقدم <b>'+progress+'/10</b></span><span>❤️ الأرواح <b>'+lives+'</b></span><span>⚡ التتابع <b>'+(state.relayStreak?.[team]||0)+'</b></span></div>'+(relay?'<div class="relayNotice">🏃 الدور الآن: '+safeName(relay.name)+(relay.id===myId?' — أنت':'')+'</div>':'')+(c?.mode==='secret'?'<div class="teamVoteNote">🗳️ '+countText+(vote?.submitted?' • تم تسجيل صوتك':'')+'</div>':'')+'<div class="teamTools"><button class="teamTool" data-team-power="hint" '+(pool.hint?'':'disabled')+'>💡 تلميح ('+(pool.hint||0)+')</button><button class="teamTool" data-team-power="combo" '+(pool.combo?'':'disabled')+'>⚡ هجوم جماعي ('+(pool.combo||0)+')</button><button class="teamTool" data-team-power="revive" '+(pool.revive?'':'disabled')+'>🛟 إنعاش ('+(pool.revive||0)+')</button></div><div class="teamReactions"><button class="reactionBtn" data-reaction="highfive">🙌</button><button class="reactionBtn" data-reaction="energy">🥤</button><button class="reactionBtn" data-reaction="fire">🔥</button><button class="reactionBtn" data-reaction="clap">👏</button><button class="reactionBtn" data-reaction="brain">🧠</button></div>';
+ $('#voiceBtn').onclick=toggleVoice;
+ box.querySelectorAll('[data-team-power]').forEach(button=>button.onclick=()=>send('team_power',{power:button.dataset.teamPower}));
+ box.querySelectorAll('[data-reaction]').forEach(button=>button.onclick=()=>send('team_reaction',{reaction:button.dataset.reaction}));
+ if(voiceEnabled) syncVoicePeers();
+}
+
+async function toggleVoice(){
+ if(voiceEnabled){voiceEnabled=false;voiceStream?.getTracks?.().forEach(track=>track.stop());voiceStream=null;for(const pc of voicePeers.values())pc.close();voicePeers.clear();renderTeamHub();return}
+ if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection)return toast('المتصفح لا يدعم الصوت المباشر');
+ try{voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});voiceEnabled=true;renderTeamHub();syncVoicePeers()}catch{toast('اسمح للعبة باستخدام الميكروفون لتفعيل صوت الفريق')}
+}
+
+function voicePeer(remoteId,initiator=false){
+ if(voicePeers.has(remoteId))return voicePeers.get(remoteId);
+ const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.cloudflare.com:3478'},{urls:'stun:stun.l.google.com:19302'}]});
+ voicePeers.set(remoteId,pc);voiceStream?.getTracks?.().forEach(track=>pc.addTrack(track,voiceStream));
+ pc.onicecandidate=e=>{if(e.candidate)send('voice_signal',{targetId:remoteId,signal:{candidate:e.candidate}})};
+ pc.ontrack=e=>{let audio=document.getElementById('voice-'+remoteId);if(!audio){audio=document.createElement('audio');audio.id='voice-'+remoteId;audio.autoplay=true;audio.playsInline=true;audio.hidden=true;document.body.appendChild(audio)}audio.srcObject=e.streams[0]};
+ pc.onconnectionstatechange=()=>{if(['failed','closed','disconnected'].includes(pc.connectionState)){pc.close();voicePeers.delete(remoteId)}};
+ if(initiator)pc.createOffer().then(offer=>pc.setLocalDescription(offer).then(()=>send('voice_signal',{targetId:remoteId,signal:{description:pc.localDescription}}))).catch(()=>{});
+ return pc;
+}
+
+function syncVoicePeers(){
+ if(!voiceEnabled||!isTeamRoom())return;
+ const teammates=state.players.filter(p=>p.team===state.me?.team&&p.id!==myId&&p.connected);
+ for(const p of teammates)voicePeer(p.id,myId<p.id);
+ for(const [id,pc] of voicePeers){if(!teammates.some(p=>p.id===id)){pc.close();voicePeers.delete(id);document.getElementById('voice-'+id)?.remove()}}
+}
+
+async function handleVoiceSignal(fromId,signal){
+ if(!voiceEnabled||!signal)return;
+ const pc=voicePeer(fromId,false);
+ try{if(signal.description){await pc.setRemoteDescription(signal.description);if(signal.description.type==='offer'){const answer=await pc.createAnswer();await pc.setLocalDescription(answer);send('voice_signal',{targetId:fromId,signal:{description:pc.localDescription}})}}if(signal.candidate)await pc.addIceCandidate(signal.candidate)}catch{}
+}
+
 function renderMatch(){
- $('#lobby').classList.add('hidden');$('#match').classList.remove('hidden');$('#finished').classList.add('hidden');renderScores();
+ $('#lobby').classList.add('hidden');$('#match').classList.remove('hidden');$('#finished').classList.add('hidden');renderScores();renderTeamHub();
  clearInterval(tickId);
  if(state.lastReveal){stopQuestionAudio();renderReveal(state.lastReveal);tickId=setInterval(updateRevealCountdown,250);updateRevealCountdown();return}
  const c=state.current;if(!c){stopQuestionAudio();$('#question').textContent='تجهيز الجولة التالية…';$('#action').innerHTML='';$('#powers').innerHTML='';$('#media').innerHTML='';return}
  const audioPhase=state.roundIndex+':'+c.phase;if(audioPhase!==lastAudioPhase){lastAudioPhase=audioPhase;lastAudioSecond=null;BS_AUDIO?.play?.(c.mode==='buzzer'?'duel':'round')}
  $('#qmeta').innerHTML='<span class="pill">'+c.category.name+'</span><span class="pill gold">'+c.value+' نقطة</span><span class="pill">'+(c.mode==='secret'?'إجابة سرية':'مواجهة بازر')+'</span>';
- const memorizing=Boolean(c.answerOpensAt&&Date.now()<c.answerOpensAt);$('#question').textContent=memorizing?'👀 احفظ ما يظهر أمامك…':c.question;renderMedia(c.media,false);renderCurrentAction(c);renderPowers(c);if(memorizing){const wait=Math.max(20,c.answerOpensAt-Date.now()+35);setTimeout(()=>{if(state?.current&&state.roundIndex>=0&&Date.now()>=state.current.answerOpensAt)renderMatch()},wait)}tickId=setInterval(updateTimer,120);updateTimer();
+ const memorizing=Boolean(c.answerOpensAt&&Date.now()<c.answerOpensAt);$('#question').textContent=memorizing?'👀 احفظ ما يظهر أمامك…':c.question;renderMedia(c.media,false);renderCurrentAction(c);renderPowers(c);if(spectatorMode)$('#action').innerHTML='<div class="statusText">👁 مشاهدة مباشرة — الخيارات مخفية عن الجمهور</div>';if(memorizing){const wait=Math.max(20,c.answerOpensAt-Date.now()+35);setTimeout(()=>{if(state?.current&&state.roundIndex>=0&&Date.now()>=state.current.answerOpensAt)renderMatch()},wait)}tickId=setInterval(updateTimer,120);updateTimer();
 }
 function updateTimer(){
  const c=state?.current;if(!c)return;const now=Date.now(),memorizing=Boolean(c.answerOpensAt&&now<c.answerOpensAt),ms=memorizing?Math.max(0,c.answerOpensAt-now):Math.max(0,c.deadline-now),sec=(ms/1000).toFixed(ms<10000?1:0),whole=Math.ceil(ms/1000);$('#timer').textContent=memorizing?('👀 '+sec):sec;const span=memorizing?Math.max(1,(c.answerOpensAt-(c.startedAt||now))):(c.mode==='secret'?30000:(c.phase==='buzzer'?15000:c.phase==='buzzer_answer'?10000:8000));$('#bar').style.width=Math.min(100,Math.max(0,ms/span*100))+'%';if(c.media?.type==='zoom'&&activeZoomImg&&!state.lastReveal){const key=state.roundIndex;if(!zoomLevels.has(key))zoomLevels.set(key,Number(c.media.zoom)||5);if(ms<span*.58&&zoomLevels.get(key)!==Number(c.media.hintZoom)){const z=Math.max(1,Number(c.media.hintZoom)||3);zoomLevels.set(key,z);activeZoomImg.style.transform='scale('+z+')'}}if(whole!==lastAudioSecond){lastAudioSecond=whole;if(whole>0)BS_AUDIO?.timerTick?.(whole);else BS_AUDIO?.timerEnd?.()}
@@ -356,7 +423,7 @@ function renderCurrentAction(c){
  const box=$('#action');box.innerHTML='';const me=myPlayer();if(!me)return;if(c.answerOpensAt&&Date.now()<c.answerOpensAt){box.innerHTML='<div class="statusText">🧠 مرحلة الحفظ — الإجابة تفتح بعد اختفاء المحتوى</div>';return;}
  if(c.blocked){const s=document.createElement('div');s.className='statusText';s.textContent='🔒 الخصم عطّل مساعداتك لهذه الجولة';box.appendChild(s)}
  if(c.mode==='secret'&&c.phase==='secret'){
-  const submitted=c.answeredPlayers.includes(myId);if(submitted){box.innerHTML='<div class="statusText">تم إرسال إجابتك 🔐 — بانتظار الخصم</div>';return}
+  const submitted=isTeamRoom()?Boolean(c.teamVote?.submitted):c.answeredPlayers.includes(myId);if(submitted){box.innerHTML='<div class="statusText">تم إرسال إجابتك لفريقك 🗳️ — بانتظار بقية الفريق</div>';return}
   renderChoices(c.options,box);
   return;
  }
@@ -374,7 +441,7 @@ function renderCurrentAction(c){
  }
 }
 function renderChoices(options,parent){
- const grid=document.createElement('div');grid.className='choices';(options||[]).forEach((o,i)=>{const b=document.createElement('button');b.className='choice';b.textContent=o;b.onclick=()=>{[...grid.children].forEach(x=>x.disabled=true);send('answer',{choice:i})};grid.appendChild(b)});parent.appendChild(grid)
+ const grid=document.createElement('div');grid.className='choices';const c=state?.current;const teamVote=c?.teamVote;const teamMode=isTeamRoom()&&c?.mode==='secret';(options||[]).forEach((o,i)=>{const b=document.createElement('button');const hinted=teamMode&&c.teamHinted?.includes(i),pinged=teamMode&&c.teamPing?.choice===i;b.className='choice '+(hinted?'team-hinted ':'')+(pinged?'team-ping ':'');b.textContent=(pinged?'📌 ':'')+o;b.disabled=Boolean(hinted||teamVote?.submitted||(teamMode&&c.relayPlayerId&&c.relayPlayerId!==myId)||(teamMode&&Number(c.teamFrozenUntil||0)>Date.now()));b.onclick=()=>{[...grid.children].forEach(x=>x.disabled=true);if(teamMode){send('team_ping',{choice:i});send('team_vote',{choice:i})}else send('answer',{choice:i})};grid.appendChild(b)});parent.appendChild(grid)
 }
 function renderPowers(c){
  const me=myPlayer(),box=$('#powers');box.innerHTML='';if(!me)return;if(c.answerOpensAt&&Date.now()<c.answerOpensAt)return;
@@ -389,12 +456,13 @@ function renderReveal(r){
 }
 function renderFinished(){
  clearInterval(tickId);stopQuestionAudio();if(!finishedAudioPlayed){finishedAudioPlayed=true;BS_AUDIO?.play?.('win');BS_AUDIO?.vibrate?.([80,50,150])}$('#lobby').classList.add('hidden');$('#match').classList.add('hidden');$('#finished').classList.remove('hidden');renderScores();
- const winner=state.winnerId?state.players.find(p=>p.id===state.winnerId):null;$('#winner').textContent=winner?'🏆 '+safeName(winner.name):'🤝 تعادل';
- $('#finalScores').innerHTML=state.players.map(p=>'<div class="result"><span>'+safeName(p.name)+'</span><span class="gain">'+p.score+'</span></div>').join('');
+ const teamWinner=String(state.winnerId||'').match(/^team:(A|B)$/)?.[1];const winner=state.winnerId?state.players.find(p=>p.id===state.winnerId):null;$('#winner').textContent=teamWinner?'🏆 الفريق '+teamName(teamWinner):winner?'🏆 '+safeName(winner.name):'🤝 تعادل';
+ const teamMode=isTeamRoom();$('#finalScores').innerHTML=(teamMode?['A','B'].map(team=>'<div class="result"><span>الفريق '+teamName(team)+'</span><span class="gain">'+Number(state.teamScores?.[team]||0)+'</span></div>').join(''):'')+state.players.map(p=>'<div class="result"><span>'+safeName(p.name)+(teamMode?' • '+teamName(p.team):'')+'</span><span class="gain">'+p.score+'</span></div>').join('');
  const me=myPlayer();$('#rematch').classList.toggle('hidden',me?.role!=='host');$('#rematch').onclick=()=>send('rematch');
 }
 
 $('#shareBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
+$('#spectateBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);invite.searchParams.set('spectate','1');if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);try{await navigator.clipboard.writeText(invite.href);toast('تم نسخ رابط المشاهدة المباشرة')}catch{toast(invite.href)}};
 $('#inviteFriendBtn').onclick=()=>{if(!state?.code)return toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'quiz',roomCode:state.code})};
 
 const quickMatchParam=qs.get('quickMatch')||qs.get('match');

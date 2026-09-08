@@ -6,9 +6,9 @@ import vm from 'node:vm';
 
 const root = new URL('../', import.meta.url).pathname;
 const publicDir = join(root, 'public');
-const games = ['memory', 'reaction', 'logic', 'puzzle', 'accuracy'];
+const games = ['memory', 'reaction', 'logic', 'puzzle'];
 
-test('all five arcade challenges are playable pages, not placeholders', async () => {
+test('all four retained arcade challenges are playable pages, not placeholders', async () => {
   for (const game of games) {
     const page = await readFile(join(publicDir, `${game}.html`), 'utf8');
     assert.doesNotMatch(page, /قيد التجهيز|قريبًا/);
@@ -18,6 +18,12 @@ test('all five arcade challenges are playable pages, not placeholders', async ()
   }
   await access(join(publicDir, 'assets/css/arcade.css'));
   await access(join(publicDir, 'assets/js/arcade-games.js'));
+});
+
+test('removed pressure-aim mode is no longer a playable game', async () => {
+  const page = await readFile(join(publicDir, 'accuracy.html'), 'utf8');
+  assert.doesNotMatch(page, /data-arcade-game="accuracy"/);
+  assert.match(page, /url=\/spotdiff/);
 });
 
 test('selected social strategy games ship as playable pages with progression', async () => {
@@ -76,7 +82,8 @@ test('matchmaking is server-backed and packaged in the Worker configuration', as
   assert.ok(config.durable_objects.bindings.some((binding) => binding.name === 'BOARD_ROOMS' && binding.class_name === 'BoardRoom'));
   assert.match(worker, /api\/matchmaking\/join/);
   assert.match(matching, /class MatchmakingRoom extends DurableObject/);
-  assert.match(matching, /Math\.abs\(Number\(x\.level\) - level\) <= 4/);
+  assert.match(matching, /x\?\.status === 'waiting' && x\.game === game/);
+  assert.doesNotMatch(matching, /Math\.abs\(Number\(x\.level\) - level\)/);
   assert.match(client, /MAX_WAIT=90_000/);
   assert.match(client, /localStorage\.setItem\('online_name'/);
 });

@@ -21,6 +21,40 @@ const TURN_TIMEOUT_MS = 60_000;
 const MOVE_TIMEOUT_MS = 25_000;
 const RATE_BUCKETS = new Map();
 
+const TEAM_GAME_MODES = new Set(["classic", "escape", "relay", "captain"]);
+const TEAM_SPECIALTIES = [
+  { id: "science", label: "العلوم", categories: ["science", "space", "inventions"] },
+  { id: "history", label: "التاريخ", categories: ["history", "saudi", "gulf", "geo"] },
+  { id: "sports", label: "الرياضة", categories: ["football", "sports", "cars"] },
+  { id: "language", label: "الكلمات", categories: ["arabic", "meanings", "logic"] },
+];
+
+function normalizeTeamMode(value, playerLimit) {
+  if (![4, 6, 8].includes(Number(playerLimit))) return "classic";
+  const mode = String(value || "classic").toLowerCase();
+  return TEAM_GAME_MODES.has(mode) ? mode : "classic";
+}
+
+function isTeamRoom(room) {
+  return /^teams-(4|6|8)$/.test(String(room?.mode || ""));
+}
+
+function teamModeLabel(mode) {
+  return ({
+    classic: "مواجهة جماعية",
+    escape: "غرفة الهروب",
+    relay: "سباق التتابع",
+    captain: "القائد والخبراء",
+  })[mode] || "مواجهة جماعية";
+}
+
+function leagueWeekKey(timestamp = Date.now()) {
+  const date = new Date(timestamp);
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() - day + 1);
+  return date.toISOString().slice(0, 10);
+}
+
 function memoryRateLimit(request, bucket, limit, windowMs) {
   const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() || "local";
   const key = `${bucket}:${ip}`;
@@ -286,7 +320,15 @@ export default {
           const res = await stub.fetch("https://room.internal/init", {
             method: "POST",
             headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code, hostKey, name, playerLimit: body.playerLimit }),
+          body: JSON.stringify({
+            code,
+            hostKey,
+            name,
+            playerLimit: body.playerLimit,
+            teamMode: normalizeTeamMode(body.teamMode, body.playerLimit),
+            teamA: body.teamA,
+            teamB: body.teamB,
+          }),
           });
           if (res.status === 201) return json({ ok: true, code, hostKey });
         }
@@ -392,6 +434,17 @@ export default {
       });
     }
 
+    if (url.pathname === "/api/league" && env.ROOMS) {
+      const limited = await rateLimit(request, env, "league", request.method === "POST" ? 30 : 120, 60_000);
+      if (limited) return limited;
+      const league = env.ROOMS.get(env.ROOMS.idFromName("__weekly-league__"));
+      return league.fetch(new Request("https://league.internal/league", {
+        method: request.method,
+        headers: { "content-type": "application/json" },
+        body: request.method === "POST" ? await request.text() : undefined,
+      }));
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -426,6 +479,28 @@ export class GameRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/league") {
+      const week = leagueWeekKey();
+      let league = (await this.ctx.storage.get("league")) || { week, teams: {} };
+      if (league.week !== week) league = { week, teams: {} };
+      if (request.method === "POST") {
+        const body = await request.json().catch(() => ({}));
+        const team = cleanName(body.team).slice(0, 28);
+        const points = Math.min(1_000_000, Math.max(0, Number(body.points) || 0));
+        if (!team || !points) return json({ ok: false, error: "نتيجة غير صالحة" }, 400);
+        const key = team.toLocaleLowerCase("ar");
+        const existing = league.teams[key] || { name: team, points: 0, matches: 0, lastRoom: null };
+        existing.name = team;
+        existing.points += points;
+        existing.matches += 1;
+        existing.lastRoom = String(body.room || "").slice(0, 6) || null;
+        league.teams[key] = existing;
+        await this.ctx.storage.put("league", league);
+      }
+      const teams = Object.values(league.teams).sort((a, b) => b.points - a.points || b.matches - a.matches).slice(0, 50);
+      return json({ ok: true, week, teams });
+    }
 
     if (url.pathname === "/rate" && request.method === "POST") {
       const body = await request.json().catch(() => ({}));
@@ -463,8 +538,15 @@ export class GameRoom extends DurableObject {
         lastReveal: null,
         recentQids: [],
         winnerId: null,
-        mode: [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
-        playerLimit: [4,6].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
+        mode: [4,6,8].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
+        teamMode: normalizeTeamMode(body.teamMode, body.playerLimit),
+        teamNames: { A: cleanName(body.teamA || "العباقرة الذهبي"), B: cleanName(body.teamB || "العباقرة البنفسجي") },
+        teamPowers: { A: { hint: 1, combo: 1, revive: 1 }, B: { hint: 1, combo: 1, revive: 1 } },
+        teamLives: { A: 3, B: 3 },
+        teamFreezeNext: { A: false, B: false },
+        teamProgress: { A: 0, B: 0 },
+        relayStreak: { A: 0, B: 0 },
+        playerLimit: [2,4,5,6,7,8].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
       await this.persist();
@@ -474,7 +556,7 @@ export class GameRoom extends DurableObject {
 
     if (url.pathname === "/status") {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
-      return json({ ok: true, status: this.room.status, players: this.room.order.length });
+      return json({ ok: true, status: this.room.status, players: this.room.order.length, mode: this.room.mode, teamMode: this.room.teamMode || "classic" });
     }
 
     if (url.pathname.endsWith("/ws")) {
@@ -486,6 +568,18 @@ export class GameRoom extends DurableObject {
       const name = cleanName(url.searchParams.get("name"));
       const { reconnectToken, hostKey, protocol } = webSocketAuth(request);
       if (!protocol) return json({ ok: false, error: "WebSocket protocol required" }, 426);
+      if (url.searchParams.get("spectate") === "1" && this.room.status === "lobby") {
+        return json({ ok: false, error: "المشاهدة تبدأ بعد بدء المباراة" }, 409);
+      }
+      if (url.searchParams.get("spectate") === "1" && this.room.status !== "lobby") {
+        const pair = new WebSocketPair();
+        const client = pair[0];
+        const server = pair[1];
+        this.ctx.acceptWebSocket(server);
+        server.serializeAttachment({ spectator: true });
+        server.send(JSON.stringify({ type: "welcome", spectator: true, playerId: null, state: this.publicState(null, true) }));
+        return webSocketResponse(client, protocol);
+      }
       let player = null;
 
       if (reconnectToken) {
@@ -539,12 +633,22 @@ export class GameRoom extends DurableObject {
 
   addPlayer(name, role) {
     const id = crypto.randomUUID();
+    const team = isTeamRoom(this.room)
+      ? (this.room.order.length % 2 === 0 ? 'A' : 'B')
+      : null;
+    const teamSlot = team ? this.room.order.filter((existingId) => this.room.players[existingId]?.team === team).length : -1;
+    const specialty = team && this.room.teamMode === "captain" && teamSlot > 0
+      ? TEAM_SPECIALTIES[(teamSlot - 1 + TEAM_SPECIALTIES.length) % TEAM_SPECIALTIES.length]?.id || null
+      : null;
     const p = {
       id,
       token: token(),
       name: cleanName(name),
       role,
-      team: this.room.mode === 'teams-4' ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : this.room.mode === 'teams-6' ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : null,
+      team,
+      teamSlot,
+      teamRole: team && this.room.teamMode === "captain" && teamSlot === 0 ? "captain" : (team ? "specialist" : null),
+      specialty,
       score: 0,
       ready: false,
       connected: true,
@@ -563,6 +667,54 @@ export class GameRoom extends DurableObject {
     } catch {
       return null;
     }
+  }
+
+  teamMembers(team) {
+    return this.room.order.filter((id) => this.room.players[id]?.team === team);
+  }
+
+  sendToPlayer(playerId, payload) {
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        if (socket.deserializeAttachment()?.playerId === playerId) {
+          socket.send(JSON.stringify(payload));
+          return true;
+        }
+      } catch {}
+    }
+    return false;
+  }
+
+  sendToTeam(team, payload, exceptId = null) {
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        const targetId = socket.deserializeAttachment()?.playerId;
+        if (!targetId || targetId === exceptId || this.room.players[targetId]?.team !== team) continue;
+        socket.send(JSON.stringify(payload));
+      } catch {}
+    }
+  }
+
+  forwardVoiceSignal(player, targetId, signal) {
+    if (!isTeamRoom(this.room) || !player.team || !targetId || player.id === targetId) return;
+    const target = this.room.players[targetId];
+    if (!target || target.team !== player.team) return;
+    const safeSignal = signal && typeof signal === "object" ? signal : null;
+    if (!safeSignal || JSON.stringify(safeSignal).length > 3200) return;
+    this.sendToPlayer(targetId, { type: "voice_signal", fromId: player.id, signal: safeSignal });
+  }
+
+  sendTeamReaction(player, reaction) {
+    if (!isTeamRoom(this.room) || !player.team) return;
+    const allowed = new Set(["highfive", "energy", "fire", "clap", "brain"]);
+    if (!allowed.has(reaction)) return;
+    this.sendToTeam(player.team, {
+      type: "team_reaction",
+      fromId: player.id,
+      fromName: player.name,
+      reaction,
+      at: Date.now(),
+    });
   }
 
   async webSocketMessage(ws, raw) {
@@ -629,6 +781,26 @@ export class GameRoom extends DurableObject {
 
         case "buzz":
           await this.handleBuzz(player);
+          break;
+
+        case "team_vote":
+          await this.handleTeamVote(player, Number(msg.choice));
+          break;
+
+        case "team_power":
+          await this.useTeamPower(player, String(msg.power || ""));
+          break;
+
+        case "team_ping":
+          await this.teamPing(player, Number(msg.choice));
+          break;
+
+        case "voice_signal":
+          this.forwardVoiceSignal(player, String(msg.targetId || ""), msg.signal);
+          break;
+
+        case "team_reaction":
+          this.sendTeamReaction(player, String(msg.reaction || ""));
           break;
 
         case "power":
@@ -726,18 +898,23 @@ export class GameRoom extends DurableObject {
     if (!this.room) return;
     this.syncConnectedFlags();
     for (const ws of this.ctx.getWebSockets()) {
-      const p = this.playerForSocket(ws);
-      if (!p) continue;
-      try { ws.send(JSON.stringify({ type: "state", state: this.publicState(p.id) })); } catch {}
+      let attachment = null;
+      try { attachment = ws.deserializeAttachment(); } catch {}
+      const p = attachment?.playerId ? this.room.players[attachment.playerId] : null;
+      if (!p && !attachment?.spectator) continue;
+      try { ws.send(JSON.stringify({ type: "state", state: this.publicState(p?.id || null, Boolean(attachment?.spectator)) })); } catch {}
     }
   }
 
-  publicState(playerId) {
+  publicState(playerId, spectator = false) {
     const me = this.room.players[playerId];
     const players = this.room.order.map((id) => {
       const p = this.room.players[id];
       return {
         id: p.id, name: p.name, role: p.role, score: p.score,
+        team: p.team || null,
+        teamRole: p.teamRole || null,
+        specialty: p.specialty || null,
         ready: p.ready, connected: Boolean(p.connected),
         powers: p.id === playerId ? p.powers : {
           double: p.powers.double, time: p.powers.time, block: p.powers.block
@@ -748,10 +925,22 @@ export class GameRoom extends DurableObject {
     const out = {
       code: this.room.code,
       status: this.room.status,
+      mode: this.room.mode,
+      teamMode: this.room.teamMode || "classic",
+      teamModeLabel: teamModeLabel(this.room.teamMode || "classic"),
+      teamNames: this.room.teamNames || { A: "العباقرة الذهبي", B: "العباقرة البنفسجي" },
+      teamLives: this.room.teamLives || { A: 3, B: 3 },
+      teamPowers: this.room.teamPowers || { A: { hint: 0, combo: 0, revive: 0 }, B: { hint: 0, combo: 0, revive: 0 } },
+      teamProgress: this.room.teamProgress || { A: 0, B: 0 },
+      relayStreak: this.room.relayStreak || { A: 0, B: 0 },
+      teamScores: isTeamRoom(this.room) ? {
+        A: this.room.order.reduce((sum, id) => sum + (this.room.players[id]?.team === 'A' ? this.room.players[id].score : 0), 0),
+        B: this.room.order.reduce((sum, id) => sum + (this.room.players[id]?.team === 'B' ? this.room.players[id].score : 0), 0),
+      } : null,
       selectedCategories: this.room.selectedCategories,
       categories: CATEGORIES.map((c) => ({ id: c.id, name: c.name, icon: c.icon, desc: c.desc })),
       players,
-      me: me ? { id: me.id, role: me.role, powers: me.powers } : null,
+      me: me ? { id: me.id, role: me.role, team: me.team || null, teamRole: me.teamRole || null, specialty: me.specialty || null, powers: me.powers } : null,
       roundIndex: this.room.roundIndex,
       roundCount: this.room.roundCount,
       winnerId: this.room.winnerId,
@@ -766,7 +955,8 @@ export class GameRoom extends DurableObject {
         phase: c.phase,
         category: c.category,
         value: c.value,
-        question: c.question,
+        question: !spectator && this.room.teamMode === "escape" && playerId ? (c.escapeClues?.[playerId] || "جزء من الشفرة — تواصل مع فريقك") : c.question,
+        sharedQuestion: this.room.teamMode === "escape" ? "اجمعوا أجزاء الشفرة من أعضاء فريقكم" : null,
         media: c.media || null,
         deadline: c.deadline,
         startedAt: c.startedAt,
@@ -775,9 +965,22 @@ export class GameRoom extends DurableObject {
         stealPlayer: c.stealPlayer,
         answeredPlayers: Object.keys(c.answers || {}),
         blocked: Boolean(c.blocked?.[playerId]),
+        relayPlayerId: c.relayPlayerByTeam?.[me?.team] || null,
+        teamHinted: c.teamHints?.[me?.team] || [],
+        teamFrozenUntil: c.teamFreezeUntil?.[me?.team] || 0,
+        teamPing: c.teamPings?.[me?.team] || null,
+        teamVote: c.teamVotes?.[me?.team] ? {
+          counts: Object.values(c.teamVotes[me.team]).reduce((out, choice) => {
+            const selected = Number(choice?.choice);
+            out[selected] = (out[selected] || 0) + 1;
+            return out;
+          }, {}),
+          submitted: Object.prototype.hasOwnProperty.call(c.teamVotes[me.team], playerId),
+          total: this.room.order.filter((id) => this.room.players[id]?.team === me.team).length,
+        } : null,
       };
 
-      if (c.mode === "secret" && c.phase === "secret") base.options = c.options;
+      if (!spectator && c.mode === "secret" && c.phase === "secret") base.options = c.options;
       if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner === playerId) base.options = c.options;
       if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer === playerId) base.options = c.options;
       out.current = base;
@@ -787,6 +990,7 @@ export class GameRoom extends DurableObject {
 
   async startMatch() {
     this.room.status = "playing";
+    if (this.room.teamMode === "relay") this.room.roundCount = 10;
     this.room.winnerId = null;
     this.room.lastReveal = null;
     this.room.roundIndex = -1;
@@ -795,6 +999,11 @@ export class GameRoom extends DurableObject {
       ...this.room.roundPlan.map((x) => x.qid),
       ...(this.room.recentQids || []),
     ])].slice(0, 96);
+    this.room.teamPowers = { A: { hint: 1, combo: 1, revive: 1 }, B: { hint: 1, combo: 1, revive: 1 } };
+    this.room.teamLives = { A: 3, B: 3 };
+    this.room.teamFreezeNext = { A: false, B: false };
+    this.room.teamProgress = { A: 0, B: 0 };
+    this.room.relayStreak = { A: 0, B: 0 };
     for (const id of this.room.order) {
       const p = this.room.players[id];
       p.score = 0;
@@ -826,12 +1035,36 @@ export class GameRoom extends DurableObject {
     const previewMs = q.media === "memory" ? Math.min(8000, Math.max(2500, Number(q.memory?.previewMs) || 4500)) : 0;
     const answerOpensAt = now + previewMs;
     const responseMs = isSecret ? 30000 : 15000;
+    const relayPlayerByTeam = {};
+    if (this.room.teamMode === "relay") {
+      for (const team of ["A", "B"]) {
+        const members = this.room.order.filter((id) => this.room.players[id]?.team === team);
+        if (members.length) relayPlayerByTeam[team] = members[this.room.roundIndex % members.length];
+      }
+    }
+    const teamFreezeUntil = {
+      A: this.room.teamFreezeNext?.A ? now + 3000 : 0,
+      B: this.room.teamFreezeNext?.B ? now + 3000 : 0,
+    };
+    this.room.teamFreezeNext = { A: false, B: false };
+    const escapeClues = {};
+    if (this.room.teamMode === "escape") {
+      for (const team of ["A", "B"]) {
+        const members = this.teamMembers(team);
+        const words = String(q.q || "").split(/\s+/).filter(Boolean);
+        members.forEach((id, index) => {
+          const part = words.filter((_, wordIndex) => wordIndex % Math.max(1, members.length) === index).join(" ");
+          escapeClues[id] = `جزءك من الشفرة: ${part || "تواصل مع فريقك"}`;
+        });
+      }
+    }
     this.room.current = {
       mode: plan.mode,
       phase: isSecret ? "secret" : "buzzer",
       category: { id: cat.id, name: cat.name, icon: cat.icon },
       value: q.v,
       question: q.q,
+      escapeClues,
       media: q.media ? {
         type: q.media, src: q.src, zoom: q.zoom || null, hintZoom: q.hintZoom || null,
         focusX: Number.isFinite(q.focusX) ? q.focusX : 50,
@@ -847,6 +1080,15 @@ export class GameRoom extends DurableObject {
       startedAt: now,
       answerOpensAt,
       answers: {},
+      teamVotes: { A: {}, B: {} },
+      teamAnswers: { A: null, B: null },
+      teamResolved: { A: false, B: false },
+      teamPings: { A: null, B: null },
+      teamHints: { A: [], B: [] },
+      teamCombo: { A: false, B: false },
+      teamRevive: { A: false, B: false },
+      teamFreezeUntil,
+      relayPlayerByTeam,
       buzzWinner: null,
       stealPlayer: null,
       double: {},
@@ -865,9 +1107,58 @@ export class GameRoom extends DurableObject {
     return false;
   }
 
+  async handleTeamVote(player, choice) {
+    const c = this.room.current;
+    if (!isTeamRoom(this.room) || this.room.status !== "playing" || !c || c.mode !== "secret" || c.phase !== "secret") return;
+    if (!player.team || !Number.isInteger(choice) || choice < 0 || choice >= c.options.length) return;
+    const now = Date.now();
+    if (now < (c.answerOpensAt || c.startedAt || 0) || now > c.deadline + 1200) return;
+    if (c.teamFreezeUntil?.[player.team] > now) return this.sendErrorForPlayer(player.id, "الفريق المنافس جمّد فريقك لثوانٍ قليلة");
+    if (c.teamHints?.[player.team]?.includes(choice)) return this.sendErrorForPlayer(player.id, "هذا الخيار استبعده تلميح الفريق");
+    const activeRelay = c.relayPlayerByTeam?.[player.team];
+    if (this.room.teamMode === "relay" && activeRelay && activeRelay !== player.id) {
+      return this.sendErrorForPlayer(player.id, "الدور الآن لزميلك في التتابع");
+    }
+    const votes = c.teamVotes[player.team] || (c.teamVotes[player.team] = {});
+    if (votes[player.id]) return;
+    votes[player.id] = { choice, at: now };
+    const required = this.room.teamMode === "relay" && activeRelay ? [activeRelay] : this.teamMembers(player.team);
+    if (required.every((id) => votes[id])) {
+      const counts = new Map();
+      for (const id of required) {
+        const vote = votes[id];
+        counts.set(vote.choice, (counts.get(vote.choice) || 0) + 1);
+      }
+      const highest = Math.max(...counts.values());
+      const tied = [...counts.entries()].filter(([, count]) => count === highest).map(([option]) => Number(option));
+      const captain = this.teamMembers(player.team).find((id) => this.room.players[id]?.teamRole === "captain");
+      const captainChoice = captain && votes[captain] ? votes[captain].choice : null;
+      const selected = tied.includes(captainChoice) ? captainChoice : tied.sort((a, b) => (votes[required.find((id) => votes[id]?.choice === a)]?.at || 0) - (votes[required.find((id) => votes[id]?.choice === b)]?.at || 0))[0];
+      c.teamAnswers[player.team] = { choice: selected, at: Math.max(...required.map((id) => votes[id].at)), contributors: required };
+      c.teamResolved[player.team] = true;
+      for (const id of required) c.answers[id] = { choice: selected, at: votes[id].at, bonus: speedBonus(c.deadline, votes[id].at) };
+    }
+    if (["A", "B"].every((team) => c.teamResolved[team])) await this.finalizeTeamSecret();
+    else await this.persistAndBroadcast();
+  }
+
+  sendErrorForPlayer(playerId, message) {
+    this.sendToPlayer(playerId, { type: "error", message });
+  }
+
+  async teamPing(player, choice) {
+    const c = this.room.current;
+    if (!isTeamRoom(this.room) || !player.team || !c || c.mode !== "secret" || !Number.isInteger(choice) || choice < 0 || choice >= c.options.length) return;
+    const now = Date.now();
+    c.teamPings[player.team] = { choice, fromId: player.id, fromName: player.name, at: now };
+    this.sendToTeam(player.team, { type: "team_ping", fromId: player.id, fromName: player.name, choice, at: now });
+    await this.persistAndBroadcast();
+  }
+
   async handleAnswer(player, choice) {
     const c = this.room.current;
     if (this.room.status !== "playing" || !c || !this.allowedToAnswer(player.id)) return;
+    if (isTeamRoom(this.room) && c.mode === "secret") return this.handleTeamVote(player, choice);
     if (!Number.isInteger(choice) || choice < 0 || choice >= c.options.length) return;
     const now = Date.now();
     if (now < (c.answerOpensAt || c.startedAt || 0)) return;
@@ -946,10 +1237,87 @@ export class GameRoom extends DurableObject {
     await this.persistAndBroadcast();
   }
 
+  async useTeamPower(player, power) {
+    const c = this.room.current;
+    if (!isTeamRoom(this.room) || this.room.status !== "playing" || !c || !player.team) return;
+    if (!['hint', 'combo', 'revive'].includes(power)) return;
+    if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
+    if (this.room.teamMode === "captain" && power === "combo" && player.teamRole !== "captain") {
+      return this.sendErrorForPlayer(player.id, "قدرة الهجوم الجماعي للقائد فقط");
+    }
+    const pool = this.room.teamPowers?.[player.team];
+    if (!pool || Number(pool[power] || 0) < 1) return this.sendErrorForPlayer(player.id, "استخدم فريقك هذه القدرة سابقًا");
+    if (power === "hint") {
+      if (c.teamResolved?.[player.team]) return;
+      const wrong = c.options.map((_, index) => index).filter((index) => index !== c.correctIndex).slice(0, 2);
+      c.teamHints[player.team] = wrong;
+    } else if (power === "combo") {
+      if (c.teamResolved?.[player.team]) return;
+      c.teamCombo[player.team] = true;
+    } else if (power === "revive") {
+      if (player.score < 1 || c.teamResolved?.[player.team]) return this.sendErrorForPlayer(player.id, "تحتاج نقاطًا لاستخدام الإنعاش");
+      player.score = Math.floor(player.score / 2);
+      c.teamRevive[player.team] = true;
+      this.room.teamLives[player.team] = Math.min(3, Number(this.room.teamLives[player.team] || 0) + 1);
+    }
+    pool[power] -= 1;
+    await this.persistAndBroadcast();
+  }
+
+  async finalizeTeamSecret() {
+    const c = this.room.current;
+    if (!c || c.mode !== "secret" || !isTeamRoom(this.room)) return;
+    this.room.teamFreezeNext ||= { A: false, B: false };
+    this.room.teamProgress ||= { A: 0, B: 0 };
+    this.room.relayStreak ||= { A: 0, B: 0 };
+    this.room.teamLives ||= { A: 3, B: 3 };
+    const results = Object.fromEntries(this.room.order.map((id) => [id, { correct: false, gain: 0, choice: null }]));
+    for (const team of ["A", "B"]) {
+      const answer = c.teamAnswers?.[team];
+      const members = this.teamMembers(team);
+      const contributors = answer?.contributors || [];
+      const correct = Boolean(answer && answer.choice === c.correctIndex);
+      let gain = correct ? c.value + speedBonus(c.deadline, answer.at || Date.now()) : 0;
+      const specialist = contributors.some((id) => {
+        const specialty = TEAM_SPECIALTIES.find((item) => item.id === this.room.players[id]?.specialty);
+        return specialty?.categories.includes(c.category.id);
+      });
+      if (correct && this.room.teamMode === "captain" && specialist) gain *= 2;
+      const times = contributors.map((id) => c.teamVotes?.[team]?.[id]?.at).filter(Boolean);
+      const combo = Boolean(correct && c.teamCombo?.[team] && times.length > 1 && Math.max(...times) - Math.min(...times) <= 3000);
+      if (combo) {
+        gain += 100;
+        this.room.teamFreezeNext[team === "A" ? "B" : "A"] = true;
+      }
+      if (correct) {
+        this.room.teamProgress[team] = Math.min(10, Number(this.room.teamProgress[team] || 0) + 1);
+        this.room.relayStreak[team] = Number(this.room.relayStreak[team] || 0) + 1;
+      } else {
+        this.room.relayStreak[team] = 0;
+        if (this.room.teamMode === "escape") {
+          if (c.teamRevive?.[team]) c.teamRevive[team] = false;
+          else this.room.teamLives[team] = Math.max(0, Number(this.room.teamLives[team] || 0) - 1);
+        }
+      }
+      const share = members.length ? Math.floor(gain / members.length) : 0;
+      let remainder = members.length ? gain - share * members.length : 0;
+      for (const id of members) {
+        const playerGain = share + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder -= 1;
+        if (playerGain) this.room.players[id].score += playerGain;
+        results[id] = { correct, gain: playerGain, choice: answer?.choice ?? null, combo, specialist };
+      }
+    }
+    await this.revealRound(results);
+  }
+
   pointsFor(playerId, answer) {
     const c = this.room.current;
     let pts = c.value + (answer?.bonus ?? speedBonus(c.deadline, answer?.at || Date.now()));
     if (c.double[playerId]) pts *= 2;
+    const player = this.room.players[playerId];
+    const specialty = TEAM_SPECIALTIES.find((item) => item.id === player?.specialty);
+    if (isTeamRoom(this.room) && this.room.teamMode === "captain" && specialty?.categories.includes(c.category.id)) pts *= 2;
     return pts;
   }
 
@@ -1001,14 +1369,31 @@ export class GameRoom extends DurableObject {
     await this.ctx.storage.setAlarm(this.room.lastReveal.nextAt);
   }
 
+  async recordLeagueScores(totals) {
+    if (!this.env.ROOMS || !this.room?.teamNames) return;
+    try {
+      const league = this.env.ROOMS.get(this.env.ROOMS.idFromName("__weekly-league__"));
+      for (const item of totals) {
+        await league.fetch("https://league.internal/league", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ team: this.room.teamNames[item.team], points: item.score, room: this.room.code }),
+        });
+      }
+    } catch (error) {
+      console.error("league score failed", error);
+    }
+  }
+
   async finishMatch() {
     this.room.status = "finished";
     this.room.current = null;
     this.room.lastReveal = null;
-    if (this.room.mode === 'teams-4' || this.room.mode === 'teams-6') {
+    if (isTeamRoom(this.room)) {
       const totals = ['A','B'].map(team => ({team, score:this.room.order.reduce((s,id)=>s+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})).sort((a,b)=>b.score-a.score);
       this.room.winnerId = totals[0].score === totals[1].score ? null : `team:${totals[0].team}`;
       this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      await this.recordLeagueScores(totals);
       await this.persistAndBroadcast(); await this.scheduleLobbyAlarm(); return;
     }
     const ranked = this.room.order.map((id) => this.room.players[id]).filter(Boolean).sort((x,y)=>(y.score||0)-(x.score||0));
@@ -1076,7 +1461,8 @@ export class GameRoom extends DurableObject {
     }
 
     if (c.mode === "secret" && c.phase === "secret") {
-      await this.finalizeSecret();
+      if (isTeamRoom(this.room)) await this.finalizeTeamSecret();
+      else await this.finalizeSecret();
       return;
     }
 

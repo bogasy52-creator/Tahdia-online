@@ -177,6 +177,18 @@ export function pickPhoto(exclude = []) {
 // placement + retry). Percentage space (0-100); r is also in percentage
 // of the canvas's shorter side.
 export function generateDiffPoints(count = 5, margin = 14, rMin = 7, rMax = 13) {
+  // The phone round is intentionally balanced: four separate zones, large
+  // enough to inspect without zooming and never stacked on one detail.
+  if (count === 4) {
+    const anchors = [[25, 27], [74, 30], [29, 72], [73, 70]];
+    const radius = Math.max(rMin, Math.min(rMax, 13));
+    return anchors.map(([x, y], i) => ({
+      id: `d${i}`,
+      x: Math.round((x + (Math.random() * 6 - 3)) * 10) / 10,
+      y: Math.round((y + (Math.random() * 6 - 3)) * 10) / 10,
+      r: radius,
+    }));
+  }
   const cols = Math.ceil(Math.sqrt(count * 1.3));
   const rows = Math.ceil(count / cols);
   const cellW = (100 - margin * 2) / cols;
@@ -202,7 +214,7 @@ export function generateDiffPoints(count = 5, margin = 14, rMin = 7, rMax = 13) 
 // client (renders the picker + labels). Easy = fewer, bigger, more time.
 // Hard = more, smaller, less time.
 export const DIFFICULTIES = {
-  easy:   { key: "easy",   label: "سهل",   icon: "🙂", count: 4, margin: 15, rMin: 10, rMax: 15, duration: 90_000 },
+  easy:   { key: "easy",   label: "متوازن", icon: "◉", count: 4, margin: 15, rMin: 12, rMax: 15, duration: 90_000 },
   medium: { key: "medium", label: "متوسط", icon: "😐", count: 5, margin: 14, rMin: 7,  rMax: 13, duration: 75_000 },
   hard:   { key: "hard",   label: "صعب",   icon: "🔥", count: 6, margin: 12, rMin: 5,  rMax: 9,  duration: 60_000 },
 };

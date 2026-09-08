@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080914">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="assets/css/platform.css">
+<title>دوري الفرق — تحدي العباقرة</title>
+<style>
+:root{--bg:#080914;--panel:#111526;--line:#313858;--mut:#aab2c8;--gold:#f0b94a;--vio:#7c3aed;--cyan:#22d3ee;--txt:#fbfbff}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#241440,#0c0e1a 45%,#070812 86%);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}.page{width:min(780px,100%);margin:auto;padding:14px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.brand{display:flex;align-items:center;gap:10px}.mark{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,var(--vio),#d946ef);font-size:25px}.mut{color:var(--mut);font-size:12px;line-height:1.7}.panel{padding:16px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,#15192c,#0e1220);box-shadow:0 18px 55px #0004}.hero{padding:22px;background:radial-gradient(circle at 15% 0,#22d3ee18,transparent 40%),radial-gradient(circle at 90% 0,#7c3aed2d,transparent 46%),linear-gradient(180deg,#171a31,#101421)}h1{margin:0;font-size:clamp(25px,6vw,42px)}h1 span{color:var(--gold)}.week{margin-top:4px;color:#cdd3e4;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 13px;border:1px solid var(--line);border-radius:13px;background:#090d18;color:#fff;text-decoration:none;font-weight:900}.btn.gold{background:linear-gradient(135deg,#d49a31,#f2c25a);color:#211607;border:0}.rows{display:grid;gap:8px;margin-top:12px}.row{display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:9px;padding:12px;border:1px solid var(--line);border-radius:15px;background:#0a0e1a}.row.top3{border-color:#f0b94a66;background:linear-gradient(90deg,#302614,#0a0e1a)}.rank{font-size:20px;font-weight:1000;color:var(--gold);text-align:center}.team{font-weight:1000}.meta{font-size:10px;color:var(--mut);margin-top:3px}.score{font-size:22px;font-weight:1000;color:#f2c76f}.empty{text-align:center;color:var(--mut);padding:25px}.note{margin-top:12px;font-size:11px;color:var(--mut);line-height:1.7}@media(max-width:500px){.row{grid-template-columns:36px 1fr auto}.score{font-size:18px}}
+</style>
+</head>
+<body>
+<main class="page">
+<header class="top"><div class="brand"><div class="mark">🏆</div><div><b>تحدي العباقرة</b><div class="mut">التحالفات والبطولات الجماعية</div></div></div><a class="btn" href="/">⌂ الرئيسية</a></header>
+<section class="panel hero"><div class="mut">WEEKLY TEAM LEAGUE</div><h1>دوري <span>الفرق</span></h1><div id="week" class="week">جاري تحميل الجولة الأسبوعية…</div><div class="actions"><a class="btn gold" href="/online">🎮 ادخل مباراة فرق</a><button id="refresh" class="btn">↻ تحديث الترتيب</button></div></section>
+<section class="panel" style="margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:end"><div><b>ترتيب التحالفات</b><div class="mut">كل مباراة فرق تضيف نقاطها تلقائيًا إلى ترتيب الأسبوع.</div></div><span id="status" class="mut"></span></div><div id="rows" class="rows"></div><div class="note">في نسخة الإطلاق، اسم الفريق الافتراضي هو «العباقرة الذهبي» أو «العباقرة البنفسجي». سيتم ربط أسماء التحالفات والحسابات الاجتماعية في تحديث الحسابات الاجتماعية.</div></section>
+</main>
+<script>
+const rows=document.getElementById('rows'),week=document.getElementById('week'),status=document.getElementById('status');
+async function load(){status.textContent='تحديث…';try{const r=await fetch('/api/league',{cache:'no-store'});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'تعذر التحميل');week.textContent='أسبوع يبدأ في '+d.week;rows.innerHTML=d.teams?.length?d.teams.map((t,i)=>'<div class="row '+(i<3?'top3':'')+'"><div class="rank">'+(i+1)+'</div><div><div class="team">'+String(t.name||'تحالف').replace(/[<>&]/g,'')+'</div><div class="meta">'+Number(t.matches||0)+' مباراة مكتملة</div></div><div class="score">'+Number(t.points||0)+'</div></div>').join(''):'<div class="empty">لا توجد نتائج بعد — كن أول فريق في الدوري!</div>';status.textContent='مباشر'}catch(e){week.textContent='الدوري يحتاج نشر Worker كاملًا';rows.innerHTML='<div class="empty">تعذر جلب الترتيب حاليًا.</div>';status.textContent='غير متاح'}}
+document.getElementById('refresh').onclick=load;load();setInterval(load,30000);
+</script>
+</body>
+</html>

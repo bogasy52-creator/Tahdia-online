@@ -1,0 +1,30 @@
+/* Final mobile quiz board: every deck has a recognisable colour and icon treatment. */
+.catCard{position:relative!important;overflow:hidden!important;isolation:isolate!important;border:1px solid color-mix(in srgb,var(--cat-accent,#8b7bff) 42%,transparent)!important;background:linear-gradient(145deg,var(--cat-tint,#11182a),#080c16 78%)!important}
+.catCard::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 88% 8%,color-mix(in srgb,var(--cat-accent,#8b7bff) 32%,transparent),transparent 44%),linear-gradient(135deg,var(--cat-tint,#11182a),transparent 68%)!important;opacity:.94!important}
+.catCard::after{content:"";position:absolute;inset:auto 10px 0;height:3px;border-radius:99px;background:var(--cat-accent,#8b7bff);box-shadow:0 0 18px color-mix(in srgb,var(--cat-accent,#8b7bff) 70%,transparent);opacity:.9;pointer-events:none}
+.catCard .catArt{position:relative!important;overflow:hidden!important;background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--cat-accent,#8b7bff) 30%,transparent),transparent 54%),linear-gradient(145deg,var(--cat-tint,#11182a),#090e19)!important;border-bottom:1px solid color-mix(in srgb,var(--cat-accent,#8b7bff) 48%,transparent)!important}
+.catCard .catArt::after{border-color:var(--cat-accent)!important;box-shadow:0 0 26px color-mix(in srgb,var(--cat-accent) 55%,transparent)!important}
+.catCard .catArt .catIcon{color:var(--cat-accent)!important;filter:drop-shadow(0 5px 12px color-mix(in srgb,var(--cat-accent) 55%,transparent))!important}
+.catCard .catText b{color:#fff!important}.catCard .catText span{color:color-mix(in srgb,var(--cat-accent) 32%,#d8deed)!important}
+.catCard.active{border-color:var(--cat-accent)!important;background:linear-gradient(145deg,color-mix(in srgb,var(--cat-accent) 18%,var(--cat-tint)),#080c16 78%)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--cat-accent) 46%,transparent),0 16px 34px rgba(0,0,0,.28)!important}
+
+/* The live board uses the same visual identity as the category picker. */
+#game .col{--col-accent:#8b7bff;--col-tint:#171532;position:relative!important;overflow:hidden!important;border-color:color-mix(in srgb,var(--col-accent) 40%,transparent)!important;background:linear-gradient(155deg,var(--col-tint),#070b13 80%)!important}
+#game .col::after{content:"";position:absolute;inset:auto 8px 0;height:3px;border-radius:99px;background:var(--col-accent);box-shadow:0 0 16px color-mix(in srgb,var(--col-accent) 70%,transparent);pointer-events:none}
+#game .colHead{border-color:color-mix(in srgb,var(--col-accent) 46%,transparent)!important;background:radial-gradient(circle at 90% 0,color-mix(in srgb,var(--col-accent) 22%,transparent),transparent 52%),linear-gradient(145deg,var(--col-tint),#0b101c)!important}
+#game .colVisual{background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--col-accent) 30%,transparent),transparent 60%),#0b101c!important;border-color:color-mix(in srgb,var(--col-accent) 35%,transparent)!important}
+#game .colVisual .catIcon{color:var(--col-accent)!important;filter:drop-shadow(0 5px 10px color-mix(in srgb,var(--col-accent) 58%,transparent))!important}
+#game .colHead b{color:color-mix(in srgb,var(--col-accent) 38%,#fff)!important}
+#game .tile{border-color:color-mix(in srgb,var(--col-accent) 36%,transparent)!important;background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--col-accent) 18%,transparent),transparent 54%),linear-gradient(145deg,#151b2d,#090e19)!important;color:color-mix(in srgb,var(--col-accent) 62%,#fff)!important}
+#game .tile:hover{border-color:var(--col-accent)!important;box-shadow:0 0 18px color-mix(in srgb,var(--col-accent) 24%,transparent),inset 0 1px #fff2!important}
+#game .tile small{color:color-mix(in srgb,var(--col-accent) 36%,#8995aa)!important}
+#game .col:nth-child(6n+1){--col-accent:#f4c76d;--col-tint:#4b3514}
+#game .col:nth-child(6n+2){--col-accent:#a78bfa;--col-tint:#30215f}
+#game .col:nth-child(6n+3){--col-accent:#22d3ee;--col-tint:#0a4252}
+#game .col:nth-child(6n+4){--col-accent:#34d399;--col-tint:#17483d}
+#game .col:nth-child(6n+5){--col-accent:#fb7185;--col-tint:#4b2237}
+#game .col:nth-child(6n){--col-accent:#60a5fa;--col-tint:#173c63}
+
+/* Prevent the Android status bar from clipping the first row of the game. */
+#home,.app{padding-top:max(10px,env(safe-area-inset-top))!important}
+@media(max-width:620px){#game .col{border-radius:15px!important}#game .col::after{inset-inline:6px}.catCard .catText b{font-size:12px!important}}

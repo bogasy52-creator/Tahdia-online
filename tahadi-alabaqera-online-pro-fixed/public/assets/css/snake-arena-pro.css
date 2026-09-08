@@ -1,0 +1,40 @@
+/* The Snake board is a live game surface, not a decorative background image. */
+body.game-snakes.game-running .bs-shell{width:min(1180px,100%);padding-inline:clamp(8px,2vw,24px)!important}
+#game.pro-snake-board{width:100%!important;max-width:1180px!important;margin:0 auto!important;padding:clamp(8px,1.8vw,20px)!important;border:1px solid rgba(91,235,220,.16)!important;border-radius:clamp(20px,3vw,32px)!important;background:radial-gradient(circle at 10% 0,rgba(80,227,218,.12),transparent 30%),radial-gradient(circle at 95% 100%,rgba(139,92,246,.15),transparent 30%),linear-gradient(155deg,#0c1d25,#050b12 72%)!important;box-shadow:0 28px 80px rgba(0,0,0,.46),inset 0 1px rgba(255,255,255,.06)!important;overflow:visible!important}
+#game.pro-snake-board .game-toolbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-bottom:10px!important;padding:4px 3px 12px!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
+#game.pro-snake-board .toolbar-title h1{font-size:clamp(24px,4vw,42px)!important;background:linear-gradient(90deg,#f7d883,#65efe0 58%,#a78bfa)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;text-shadow:none!important}
+#game.pro-snake-board .toolbar-title p{color:#9bb6bd!important;font-size:12px!important}
+#game.pro-snake-board .toolbar-actions{display:flex!important;gap:7px!important}
+#game.pro-snake-board .game-livebar:not(.hidden){display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;min-height:30px!important;margin:0 0 8px!important;color:#94adb4!important;font-size:10px!important}
+#game.pro-snake-board .game-layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(245px,310px)!important;gap:14px!important;align-items:start!important}
+#game.pro-snake-board .game-main{min-width:0!important;padding:clamp(8px,1.5vw,15px)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:24px!important;background:linear-gradient(160deg,rgba(12,29,37,.94),rgba(4,10,15,.97))!important;box-shadow:inset 0 1px rgba(255,255,255,.05),0 18px 40px rgba(0,0,0,.25)!important}
+#game.pro-snake-board .snake-board-wrap{width:min(100%,760px)!important;height:auto!important;aspect-ratio:1!important;margin:0 auto!important;border-radius:22px!important}
+#game.pro-snake-board .snake-board{aspect-ratio:1!important;border-radius:16px!important}
+#game.pro-snake-board .snake-side{position:relative!important;min-width:0!important;padding:14px!important;border:1px solid rgba(244,207,119,.18)!important;border-radius:24px!important;background:linear-gradient(160deg,rgba(16,33,42,.98),rgba(5,11,17,.98))!important;box-shadow:inset 0 1px rgba(255,255,255,.06),0 18px 40px rgba(0,0,0,.24)!important}
+#game.pro-snake-board .snake-side::before{content:"SNAKE ARENA  •  LIVE";display:block;margin-bottom:10px;color:#f4cf77;font-size:9px;font-weight:1000;letter-spacing:.15em}
+#game.pro-snake-board .player-list{gap:7px!important}
+#game.pro-snake-board .player-row{border-color:rgba(255,255,255,.11)!important;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.015))!important}
+#game.pro-snake-board .game-status{margin:10px 0!important;border-radius:14px!important;font-weight:1000!important}
+#game.pro-snake-board .dice-stage{min-height:122px!important;border-radius:18px!important;background:radial-gradient(circle at 50% 45%,rgba(244,207,119,.10),transparent 58%),rgba(0,0,0,.16)!important;border:1px solid rgba(244,207,119,.12)!important}
+#game.pro-snake-board .die{filter:drop-shadow(0 14px 8px rgba(0,0,0,.55))!important}
+#game.pro-snake-board #roll{width:100%!important;min-height:54px!important;border-radius:15px!important;background:linear-gradient(135deg,#1a9c99,#126276 52%,#273d83)!important;box-shadow:0 12px 26px rgba(44,214,201,.16),inset 0 1px rgba(255,255,255,.18)!important}
+#game.pro-snake-board .snake-legend{display:flex!important;justify-content:center!important;gap:7px!important;flex-wrap:wrap!important;margin:10px 0 0!important}
+#game.pro-snake-board .snake-legend span{border:1px solid rgba(255,255,255,.09)!important;border-radius:999px!important;background:rgba(255,255,255,.035)!important;padding:5px 8px!important;color:#a9c6c8!important;font-size:10px!important}
+#game.pro-snake-board .snake-cell{transition:transform .16s ease,filter .16s ease!important}
+#game.pro-snake-board .snake-cell:hover{filter:brightness(1.16)!important;transform:translateY(-1px)!important}
+.classic-launch-note{margin-top:8px!important;padding:8px 10px;border:1px solid rgba(34,211,238,.18);border-radius:12px;background:rgba(34,211,238,.06);color:#a8dce5!important;text-align:center}
+.setup-actions #classicStartBtn{border:1px solid rgba(34,211,238,.45);background:linear-gradient(135deg,#0b718d,#5b21b6);box-shadow:0 10px 22px rgba(34,211,238,.12)}
+@media(max-width:760px){
+ body.game-snakes.game-running .bs-shell{padding-inline:5px!important}
+ #game.pro-snake-board{padding:8px!important;border-radius:20px!important}
+ #game.pro-snake-board .game-layout{grid-template-columns:1fr!important;gap:8px!important}
+ #game.pro-snake-board .game-toolbar{padding-bottom:8px!important}
+ #game.pro-snake-board .toolbar-actions .bs-btn{min-height:36px!important;padding:5px 8px!important;font-size:11px!important}
+ #game.pro-snake-board .game-main{padding:6px!important;border-radius:18px!important}
+ #game.pro-snake-board .snake-board-wrap{border-radius:17px!important}
+ #game.pro-snake-board .snake-side{padding:9px!important;border-radius:18px!important}
+ #game.pro-snake-board .snake-side::before{margin-bottom:6px}
+ #game.pro-snake-board .dice-stage{min-height:92px!important}
+ #game.pro-snake-board .snake-side #roll{min-height:48px!important}
+}
+@media(max-width:430px){#game.pro-snake-board .toolbar-title p{font-size:10px!important}#game.pro-snake-board .snake-legend span{font-size:9px!important;padding:4px 6px!important}}
