@@ -99,27 +99,34 @@
   }
   function ensureNewGames() {
     const list = document.querySelector('#games .games');
-    if (!list || list.querySelector('[data-new-game-link]')) return;
+    if (!list) return;
     const games = [
-      ['draw', '🎨', 'ارسم وخمّن', 'ارسم الكلمة بسرعة واجعل خصمك يلتقط الفكرة.'],
-      ['secret', '🔐', 'كلمة السر', 'فك الدليل واختر الكلمة قبل خصمك.'],
-      ['order', '🏁', 'سباق الترتيب', 'رتّب العناصر بسرعة ودقة.'],
-      ['auction', '💰', 'المزاد الذكي', 'راهن بذكاء واربح نقاطًا مضاعفة.'],
-      ['cipher', '🔮', 'شفرة العباقرة', 'اكتشف الرمز الناقص وافتح القفل.'],
+      ['draw', '🎨', 'ارسم وخمّن', 'ارسم الكلمة بسرعة واجعل خصمك يلتقط الفكرة.', 'إبداع • سرعة', 'AI', 'جولة 90 ثانية'],
+      ['secret', '🔐', 'كلمة السر', 'فك الدليل واختر الكلمة قبل خصمك.', 'لغز • معرفة', 'AI', '6 جولات'],
+      ['order', '🏁', 'سباق الترتيب', 'رتّب العناصر بسرعة ودقة.', 'ترتيب • تركيز', 'AI', '5 جولات'],
+      ['memory', '🧠', 'تحدي الذاكرة', 'احفظ الأرقام والرموز والصور قبل اختفائها.', 'ذاكرة • ملاحظة', 'AI', '18 سؤالًا'],
+      ['auction', '💰', 'المزاد الذكي', 'راهن بذكاء واربح نقاطًا مضاعفة.', 'مخاطرة • قرار', 'AI', '5 جولات'],
+      ['cipher', '🔮', 'شفرة العباقرة', 'اكتشف الرمز الناقص وافتح القفل.', 'منطق • أنماط', 'AI', '6 شفرات'],
+      ['spotdiff', '🔍', 'فرق تعرف', 'اكتشف الفروقات الخمسة قبل خصمك.', 'ملاحظة • سرعة', 'فردي + أونلاين', '5 فروقات'],
     ];
+    list.innerHTML = '';
     const fragment = document.createDocumentFragment();
-    for (const [route, icon, title, desc] of games) {
+    games.forEach(([route, icon, title, desc, difference, mode, duration], index) => {
       const card = document.createElement('a');
       card.className = 'bs-panel game'; card.href = `/${route}`; card.dataset.newGameLink = route;
-      card.innerHTML = `<div class="ico">${icon}</div><div><h3>${title}</h3><p>${desc}</p></div><span class="bs-chip">جديد • AI</span>`;
+      card.innerHTML = `<div class="game-topline"><span class="game-rank">${index + 1}</span><span class="ico">${icon}</span><span class="bs-chip">${mode}</span></div><div><h3>${title}</h3><p>${desc}</p></div><div class="game-difference"><span>${difference}</span><span>${duration}</span></div>`;
       fragment.appendChild(card);
-    }
-    list.prepend(fragment);
+    });
+    list.appendChild(fragment);
     const count = document.querySelector('.hero-showcase .stat:nth-of-type(2) b');
     if (count) count.textContent = String(list.querySelectorAll('.game').length);
   }
   function refreshHome() {
     ensureNewGames();
+    const gamesHeading = document.querySelector('#games .head h2');
+    const gamesCopy = document.querySelector('#games .head p');
+    if (gamesHeading) gamesHeading.textContent = 'ترتيب الألعاب والفروقات';
+    if (gamesCopy) gamesCopy.textContent = 'من الأعلى إلى الأسفل — كل بطاقة توضّح نوع التحدي ومدته وما يميّزه.';
     const byId = (id) => document.getElementById(id);
     if (!byId('playerName')) return;
     const p = read();

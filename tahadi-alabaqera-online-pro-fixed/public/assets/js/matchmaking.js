@@ -84,6 +84,7 @@
     unsubscribe: null,
     heartbeat: null,
     claimTimer: null,
+    waitTimer: null,
     stopSound: null,
     identity: null,
     redirecting: false,
@@ -130,6 +131,9 @@
         });
         await claim();
         this.claimTimer = setInterval(claim, CLAIM_MS);
+        this.waitTimer = setTimeout(() => {
+          if (this.active && !this.redirecting) this.fail(new Error("لم نجد منافسًا متاحًا الآن — جرّب مرة أخرى"));
+        }, MAX_WAIT);
       } catch (error) {
         this.fail(error);
       }
@@ -197,8 +201,10 @@
       if (this.unsubscribe) { try { this.unsubscribe(); } catch {} this.unsubscribe = null; }
       if (this.heartbeat) clearInterval(this.heartbeat);
       if (this.claimTimer) clearInterval(this.claimTimer);
+      if (this.waitTimer) clearTimeout(this.waitTimer);
       this.heartbeat = null;
       this.claimTimer = null;
+      this.waitTimer = null;
     },
 
     async cancel() {

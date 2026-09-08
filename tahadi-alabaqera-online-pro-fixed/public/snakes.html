@@ -105,6 +105,7 @@ body.bs-page:after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 import {createSnakesGame,playSnakesRoll,DEFAULT_SNAKES_JUMPS} from './assets/js/engines/snakes-engine.js';
 import {BoardOnlineClient,renderRoomPlayers,bindRoomCountdown} from './assets/js/board-online.js';
 import {createBoardMovePlan,createReactionPlan,createSmoothMotionFrames,createSnakeBodyProgress,getPieceProfile} from './assets/js/snakes-v4-fx.js';
+import './assets/js/snake-classic.js';
 function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const colors=['#12bff5','#a855f7','#f0b94a','#22c55e'],$=s=>document.querySelector(s),wait=ms=>new Promise(r=>setTimeout(r,ms)),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;let state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),confettiShown=false;
 $('#roll')?.setAttribute('aria-label','ارمِ النرد');
@@ -271,7 +272,7 @@ async function rollTurn(){
   }
 }
 $('#roll').onclick=rollTurn;
-function startLocal(){mode='local';snakeMeals.clear();confettiShown=false;state=createSnakesGame(names());enterGame();BS_AUDIO.play('launch')}
+function startLocal(){mode='local';snakeMeals.clear();confettiShown=false;window.TAHDIA_CLASSIC_SNAKE?.start?.();try{BS_AUDIO.play('launch')}catch{}}
 function enterGame(){document.body.classList.add('game-running');buildBoard();$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#game').classList.add('reference-skin');$('#game').classList.toggle('has-rolled',Boolean(state?.lastRoll));$('#winnerOverlay').classList.remove('show');$('#livebar').classList.toggle('hidden',mode!=='online');if(mode==='online')$('#gameRoomCode').textContent=room.code;$('#die').dataset.value=state?.lastRoll||1;$('#status')?.setAttribute('aria-live','polite');render();window.BS_GAME_FULLSCREEN?.fit?.()}
 function setMode(next){mode=next;$('#modeLocal').classList.toggle('active',next==='local');$('#modeOnline').classList.toggle('active',next==='online');$('#localSetup').classList.toggle('hidden',next!=='local');$('#onlineSetup').classList.toggle('hidden',next!=='online');$('#roomLobby').classList.add('hidden');client?.close();client=null;room=null}
 function net(s){for(const id of ['#netBadge','#liveNet']){const e=$(id);if(!e)continue;e.classList.toggle('online',!!s.online);e.classList.toggle('reconnecting',!!s.reconnecting);e.querySelector('span').textContent=s.text||''}if(s.online)BS_AUDIO.play('connect',{volume:.35})}
