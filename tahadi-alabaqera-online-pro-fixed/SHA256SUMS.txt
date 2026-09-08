@@ -26,6 +26,7 @@ ba34926f4c2bd7545a9093e6497c221fdec8df7a678814b7ea0ff7571ce03332  ./public/accur
 9068cd42ec0eb00df1f34aae3a011365a0682f13005c7d4ebbfe08aa3d49f52b  ./public/assets/css/board-premium.css
 3806f80d8deb9d3774f6e69f48f02b0139ba393cf0bb40d2a8fc818098534595  ./public/assets/css/fullscreen-board.css
 18248ea425fc1e2ff5fff4ddf2e3703743e56bd153794bc4b64d3f2c38caada2  ./public/assets/css/game-kit.css
+f58a165cdf865accd5b0cd0c32038fc377ea677f17de3389b795f000a1998dda  ./public/assets/css/home-shell.css
 bb7caa7549beccb389ac9d677814454a8d9bb783d56a56c89ba94b37abdb496b  ./public/assets/css/jackaroo-next.css
 f5cff9ccfa763062bd72f6db60275ea2d4b81ec42966077b840011ee4c365698  ./public/assets/css/jackaroo-premium.css
 5457eca2ab5ebcea9761b3fcbf892123840e46fab35d75034f23e11c12832c6a  ./public/assets/css/luxury-game-ui.css
@@ -375,7 +376,7 @@ c6981399ffa640948820ea6183218a198cf95e6abc51992e2dd642e07a608405  ./public/draw.
 bffd11e894c2a240c2de17a45a9f290efdcf16383039148d081b868520706a7d  ./public/firebase-config.js
 043360716f16b91a640c0f64a705e1e129c282e3acb6ba6e6b9b8d01b14bfb62  ./public/icon-192.png
 a5b0821599e6ba6b53b5f8d71c54d64f8a6e53822ba26080197e73a1de332448  ./public/icon-512.png
-8f41007fe90c588e14ce146640ab0959e1fed40d0b85c53e5f898294ef6e6872  ./public/index.html
+9981d7a1ce068914583c1dca1a114a8eee59dfd75521dd766d8def2235f8af1c  ./public/index.html
 a0fb62ab5efff8d423a9d6785fa1b73046a662d2b1a486e0eb59c42936805cfe  ./public/jackaroo.html
 1d793d5f6db5487f2a35b151929d74124d0a5353ef40c56de70ce6b7b7250d9d  ./public/letters.html
 87ce5c8a7956b00599d6b31d6486d3af794e4ee674634aa61d1ad3a02c8cb1a0  ./public/local.html
@@ -388,7 +389,7 @@ d44275d8a2ef94453022efdc191506172f9d659c1f60e5fbb2735de22ae599b5  ./public/order
 6dcf077223730aed39dda4fa93afff055fbe1e10e10a4cb06372289b3a9f3f56  ./public/puzzle.html
 cd63a3338a40dcd74147993cceffb1ae3a4a3c73db16bb514c74da1c693d2fbb  ./public/reaction.html
 452a8abc040710da4d23168353772e2d99ca40e3b6252a8399845da1d4259c77  ./public/secret.html
-3a3001e5d0f9740b4c37d0d88b5bbaf053edc96ce730ccd53b1f17ca1a63b053  ./public/service-worker.js
+04dd9c279c9b84829b435f01f8013321e241fb368de96b8a808ea6ecc3889f73  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
 cbc634ae63b0c16cb39152299dee6ac345eb1119915145269819f47b070e59da  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
