@@ -1,0 +1,59 @@
+/* Snake & Ladders PRO motion pass — one compositor-friendly layer. */
+body.game-snakes.game-running .snake-board-wrap,
+body.game-snakes.game-running .snake-board,
+body.game-snakes.game-running .board-paths{contain:layout paint;}
+
+body.game-snakes.game-running .snake-board-wrap.board-moving,
+body.game-snakes.game-running .snake-travel-pawn,
+body.game-snakes.game-running .snake-food-bulge{will-change:transform,left,top,opacity;}
+
+/* The compact die belongs to the control dock, not the centre of the board. */
+body.game-snakes.game-running .snake-side .dice-stage{min-height:96px!important;}
+body.game-snakes.game-running .snake-side .dice-stage:before{width:108px;height:108px;}
+body.game-snakes.game-running .snake-side .dice-stage:after{width:84px;height:84px;}
+body.game-snakes.game-running .snake-side .die{
+  width:min(74px,18vw)!important;height:min(74px,18vw)!important;
+  --die-half:34px;border-radius:18px!important;filter:drop-shadow(0 9px 7px rgba(0,0,0,.48))!important;
+}
+body.game-snakes.game-running .snake-side .lux-die-face{border-radius:20%!important;padding:12%!important;}
+body.game-snakes.game-running .snake-side .lux-pip{width:clamp(8px,22%,16px)!important;}
+body.game-snakes.game-running .snake-side .die:before{inset:-11%;filter:blur(10px);}
+body.game-snakes.game-running .snake-side .die:after{bottom:-24%;height:20%;}
+
+/* Occupied squares form a readable little cluster instead of a pile of circles. */
+body.game-snakes.game-running .token-stack{
+  position:absolute;inset:18% 10% 4%;z-index:32;display:flex;align-items:flex-end;justify-content:center;
+  gap:clamp(-8px,-.5vw,-3px);isolation:isolate;pointer-events:none;
+}
+body.game-snakes.game-running .token-stack .snake-token{
+  flex:0 0 auto;translate:0 calc(var(--stack-index,0) * -2px);
+  rotate:var(--stack-angle,0deg);filter:drop-shadow(0 5px 3px rgba(0,0,0,.44));
+}
+body.game-snakes.game-running .token-stack .snake-token.active{z-index:12;}
+body.game-snakes.game-running .token-stack .snake-token[data-stack="1"]{scale:.94;}
+body.game-snakes.game-running .token-stack .snake-token[data-stack="2"]{scale:.88;}
+body.game-snakes.game-running .token-stack .snake-token[data-stack="3"]{scale:.82;}
+
+/* Static snakes are painted once; only the creature currently reacting spends
+   frames on scale-flow and breathing. This removes the mobile GPU hotspot. */
+body.game-snakes.game-running .snake-spine-line,
+body.game-snakes.game-running .snake-scale-line,
+body.game-snakes.game-running .snake-tail-fin,
+body.game-snakes.game-running .snake-creature .snake-path{animation-play-state:paused!important;}
+body.game-snakes.game-running .snake-board-wrap.snake-active .snake-spine-line,
+body.game-snakes.game-running .snake-board-wrap.snake-active .snake-scale-line,
+body.game-snakes.game-running .snake-board-wrap.snake-active .snake-tail-fin,
+body.game-snakes.game-running .snake-board-wrap.snake-active .snake-creature .snake-path,
+body.game-snakes.game-running .snake-board-wrap.ladder-active .snake-creature .snake-path{animation-play-state:running!important;}
+
+@media(max-width:650px){
+  body.game-snakes.game-running .snake-side .dice-stage{min-height:82px!important;}
+  body.game-snakes.game-running .snake-side .die{width:min(66px,18vw)!important;height:min(66px,18vw)!important;--die-half:30px;}
+  body.game-snakes.game-running .snake-side .lux-pip{width:clamp(7px,22%,14px)!important;}
+  body.game-snakes.game-running .token-stack{inset:20% 6% 3%;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.game-snakes.game-running .snake-board-wrap,
+  body.game-snakes.game-running .snake-travel-pawn{will-change:auto;}
+}

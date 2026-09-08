@@ -42,6 +42,7 @@ abf322aca8309d2f5143c118db3e77f4c088feefdce3ee7b8a2581ffb954e01f  ./public/asset
 1d53b6196b5f8419224f45f5069e7848ea0d7a8fe72cf4c72b05b87015b0858a  ./public/assets/css/snake-arena-pro.css
 070e63ff99ad81bfd9f0ffa7b14a5544aa0737987e522a57e12849a1464f4830  ./public/assets/css/snake-classic.css
 9bd9ac3db31506406afa88c40e3ddbb19e196848cd4cdbb3393d96b76f8bc4bc  ./public/assets/css/snake-reference-skin.css
+bc7fa7b04a0fedab77884e1a666cf64fef6c6fe08775e4bce40eaa838fd26427  ./public/assets/css/snakes-motion-pro.css
 99d3c321a65b722d7f23bed071fe131253d0525480b51b3c4fdc375689310d14  ./public/assets/css/snakes-premium.css
 b8502759d2f74a606c4f9d73ca14a13b876cceeb49273da52adb2766158a15c9  ./public/assets/css/snakes-v4-board.css
 3ef75c688cbf26854a2f20d510bf4eff74aa34b40e571800ac66fcc1d3b9471e  ./public/assets/css/snakes-v4-interactions.css
@@ -73,6 +74,7 @@ c3255e5daf15c905ee522c65c4b231f531b6fefd39f2256cd2d805c46ded7c4a  ./public/asset
 690b8a4d0e0a07dfcdd100e6bc2849bee33facaff23d6b5d0a8a41bcd4f9dc11  ./public/assets/js/quiz-media.js
 0fcdd87df0703eaf170995ee05e1547ac93d4348356e58a8cb8d3b09487b9443  ./public/assets/js/snake-classic.js
 0789d148c44ee948638c124b1595d753d1e26bf58f3b575f69ac548d07b10705  ./public/assets/js/snake-pro-upgrade.js
+b84e37d6e0b4f373c23f872a219de7e24cd3ecda36bfbb8ec4167c631f639560  ./public/assets/js/snakes-motion-engine.js
 0f7bd76c52bef077472a1cc510176843ea40cd7b74ba4c3dfb128167d97b14db  ./public/assets/js/snakes-v4-fx.js
 a93ba42a444e9f29635d940f5eb413ed7065ec1cbdc99d4559341608d098c564  ./public/assets/js/social-client.js
 572efbd98b1c2029082f05fad5987870442bfb4b19c4c7e3cb9ae74b1e0a2f1f  ./public/assets/quiz_photos/astronaut_glove.webp
@@ -394,9 +396,9 @@ d44275d8a2ef94453022efdc191506172f9d659c1f60e5fbb2735de22ae599b5  ./public/order
 6dcf077223730aed39dda4fa93afff055fbe1e10e10a4cb06372289b3a9f3f56  ./public/puzzle.html
 cd63a3338a40dcd74147993cceffb1ae3a4a3c73db16bb514c74da1c693d2fbb  ./public/reaction.html
 452a8abc040710da4d23168353772e2d99ca40e3b6252a8399845da1d4259c77  ./public/secret.html
-f32264f7914f0d54394f7a02bc990fe9b91ca4bea38c005220a872b40e7b1a64  ./public/service-worker.js
+0e5cecdde4e86e20518b87eda0e0e98feaba810ae3975810d3c89063c0c22ade  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
-297d5e91708f00f1c49f4a28813d693fc6c434bbf9d40139b5629858a97010d9  ./public/snakes.html
+f1f586f2b03439a64aa188fa98c7ee88a7b96f5a2a76346624a9912b98844f85  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
 7633c82edbeaedcfc4d7278d1b10d5d3b4b976bcddad615bfdd3365dbd718753  ./public/spotdiff.html
 a83211efe0c350c0d3e48af5cac8908c37890270674b8c061bc1cf96e050d808  ./public/v5.html
@@ -444,6 +446,7 @@ b13f51fd32be982e3db3f35c9c9c7accad30c467cb2cd68d371477a90b5dc956  ./test/room-lo
 33d96fad07605a10724ccbf67c35af79d5cddca750de013b9015605b1a83ab73  ./test/runtime-cleanup.test.js
 65a039672633f7e182d09b4f82a2aec389455b7a624811e1123af085a36988db  ./test/snake-reference-skin.test.js
 867a28af341fdd9e668d5e6f52af0d4ca6402750403de7c70a4510038b25e739  ./test/snakes-engine.test.js
+085528e7925cfbe2074eb073ec495d7f43d8ab8ef6e39271f4179e90f5377dae  ./test/snakes-motion-engine.test.js
 c3251cc6b252fd38b8e5e7d535847a8c96492e844c1ef262a9eb755aa1f33526  ./test/snakes-premium-ui.test.js
 3669d402d5eea801dec64b432bd852e4fcead5d8f886e92eacb87bc3286c6843  ./test/snakes-reference-skin.test.js
 99cd0b012fe7aaa0124d7246196fd5e6d4c6d345f997ea68a4df5ea309285941  ./test/snakes-solo-reference.test.js

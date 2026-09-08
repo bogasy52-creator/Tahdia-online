@@ -91,7 +91,7 @@ body.bs-page:after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 #game.reference-skin .game-side .die{width:clamp(62px,16vw,118px);height:clamp(62px,16vw,118px);opacity:.96}
 #game.reference-skin .game-side #roll{position:absolute;left:13%;width:74%;bottom:1.1%;height:8.6%;min-height:0;border-radius:18px;font-size:clamp(18px,4vw,32px);z-index:30}
 @media(max-width:520px){#game.reference-skin{height:calc(100vw * 2.1678)}#game.reference-skin .game-side .player-list{top:72.8%;height:8.4%}#game.reference-skin .game-side .game-status{top:64.8%}#game.reference-skin .game-side .dice-stage{top:81.5%;height:11%}}
-</style><link rel="stylesheet" href="assets/css/luxury-game-ui.css"><link rel="stylesheet" href="assets/css/mobile-game.css"><link rel="stylesheet" href="assets/css/fullscreen-board.css"><link rel="stylesheet" href="assets/css/snakes-premium.css"><link rel="stylesheet" href="assets/css/snakes-v4-board.css"><link rel="stylesheet" href="assets/css/snakes-v4-interactions.css"><link rel="stylesheet" href="assets/css/snake-reference-skin.css"><link rel="stylesheet" href="assets/css/snake-arena-pro.css"></head><body class="bs-page board-game game-snakes"><main class="bs-shell">
+</style><link rel="stylesheet" href="assets/css/luxury-game-ui.css"><link rel="stylesheet" href="assets/css/mobile-game.css"><link rel="stylesheet" href="assets/css/fullscreen-board.css"><link rel="stylesheet" href="assets/css/snakes-premium.css"><link rel="stylesheet" href="assets/css/snakes-v4-board.css"><link rel="stylesheet" href="assets/css/snakes-v4-interactions.css"><link rel="stylesheet" href="assets/css/snake-reference-skin.css"><link rel="stylesheet" href="assets/css/snake-arena-pro.css"><link rel="stylesheet" href="assets/css/snakes-motion-pro.css"></head><body class="bs-page board-game game-snakes"><main class="bs-shell">
 <header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الثعبان</b><span>BUSRAJ TABLETOP</span></span></a><div class="bs-actions"><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" aria-label="الرئيسية" style="text-decoration:none">⌂</a></div></header>
 <section id="setup" class="bs-panel setup-wrap" style="max-width:820px"><div class="premium-hero"><div class="premium-kicker">BUSRAJ ARCADE</div><h1>🐍 الثعبان</h1><p>لوحة حية وسريعة: تحرّك بسلاسة، اصعد بالسلالم، وإذا وصلت لرأس الثعبان شاهد هجومه قبل أن ينزلك إلى الذيل.</p><div class="feature-row"><span class="feature-pill">🪜 سلالم مجسمة</span><span class="feature-pill">🐍 ثعابين مرسومة</span><span class="feature-pill">🌐 غرف أونلاين</span><span class="feature-pill">📱 ملء الشاشة</span></div></div>
 <div class="play-mode"><button id="modeLocal" class="active">👥 نفس الجهاز</button><button id="modeOnline">🌐 أونلاين</button></div>
@@ -105,9 +105,13 @@ body.bs-page:after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 import {createSnakesGame,playSnakesRoll,DEFAULT_SNAKES_JUMPS} from './assets/js/engines/snakes-engine.js';
 import {BoardOnlineClient,renderRoomPlayers,bindRoomCountdown} from './assets/js/board-online.js';
 import {createBoardMovePlan,createReactionPlan,createSmoothMotionFrames,createSnakeBodyProgress,getPieceProfile} from './assets/js/snakes-v4-fx.js';
+import {createMotionScheduler,animateTimeline} from './assets/js/snakes-motion-engine.js';
 import './assets/js/snake-classic.js';
 function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const colors=['#12bff5','#a855f7','#f0b94a','#22c55e'],$=s=>document.querySelector(s),wait=ms=>new Promise(r=>setTimeout(r,ms)),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;let state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),confettiShown=false;
+const colors=['#12bff5','#a855f7','#f0b94a','#22c55e'],$=s=>document.querySelector(s),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
+const motion=createMotionScheduler({reducedMotion:reducedMotion()}),wait=ms=>motion.delay(ms).catch(()=>{});
+const activeAnimations=new Set();
+let motionEpoch=0,state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),confettiShown=false;
 $('#roll')?.setAttribute('aria-label','ارمِ النرد');
 if($('#playerCount')&&!$('#playerCount option[data-solo]')){const o=document.createElement('option');o.value='1';o.dataset.solo='true';o.textContent='تدريب فردي ضد الذكاء الاصطناعي';$('#playerCount').prepend(o)}
 bindRoomCountdown($('#turnTimer'),()=>room);
@@ -153,16 +157,33 @@ function launchConfetti(){
     fragment.appendChild(piece);
   }
   document.body.appendChild(fragment);
-  setTimeout(()=>document.querySelectorAll('.confetti-piece').forEach(piece=>piece.remove()),4200);
+  motion.delay(4200).then(()=>document.querySelectorAll('.confetti-piece').forEach(piece=>piece.remove())).catch(()=>{});
   try{window.SnakePro?.finish?.(100)}catch{}
 }
 function decoratePawn(element,player){const profile=getPieceProfile(player),ring=document.createElement('i'),emblem=document.createElement('b'),label=document.createElement('span');element.dataset.material=profile.material;ring.className='pawn-energy-ring';emblem.className='pawn-emblem';emblem.textContent=profile.symbol;label.className='pawn-label';label.textContent=state.players[player].name.slice(0,1);element.append(ring,emblem,label);return profile}
-function renderTokens(positions=state.players.map(p=>p.position)){document.querySelectorAll('.token-stack').forEach(x=>x.innerHTML='');document.querySelectorAll('.snake-cell.active-cell,.snake-cell.occupied-cell').forEach(x=>{x.classList.remove('active-cell','occupied-cell');x.style.removeProperty('--active-color')});$('#startLane').innerHTML='';$('#mobileStartLane').innerHTML='';const startTarget=document.body.classList.contains('game-running')?$('#mobileStartLane'):$('#startLane');positions.forEach((pos,i)=>{const t=document.createElement('span');t.className=pos?'snake-token'+(state.turn===i&&state.winner===null?' active':''):'start-token';t.dataset.player=i;t.style.setProperty('--pc',colors[i]);const profile=decoratePawn(t,i);t.title=`${state.players[i].name} — ${profile.name}`;t.setAttribute('aria-label',t.title);if(pos){const cell=document.querySelector(`.snake-cell[data-n="${pos}"]`);cell?.classList.add('occupied-cell');cell?.querySelector('.token-stack')?.appendChild(t);if(state.turn===i&&state.winner===null){cell?.classList.add('active-cell');cell?.style.setProperty('--active-color',colors[i])}}else startTarget.appendChild(t)})}
+function renderTokens(positions=state.players.map(p=>p.position)){
+  document.querySelectorAll('.token-stack').forEach(x=>x.innerHTML='');
+  document.querySelectorAll('.snake-cell.active-cell,.snake-cell.occupied-cell').forEach(x=>{x.classList.remove('active-cell','occupied-cell');x.style.removeProperty('--active-color')});
+  $('#startLane').innerHTML='';$('#mobileStartLane').innerHTML='';
+  const startTarget=document.body.classList.contains('game-running')?$('#mobileStartLane'):$('#startLane'),stacks=new Map();
+  positions.forEach((pos,i)=>{
+    const t=document.createElement('span');
+    t.className=pos?'snake-token'+(state.turn===i&&state.winner===null?' active':''):'start-token';
+    t.dataset.player=i;t.style.setProperty('--pc',colors[i]);
+    const profile=decoratePawn(t,i);t.title=`${state.players[i].name} — ${profile.name}`;t.setAttribute('aria-label',t.title);
+    if(pos){
+      const cell=document.querySelector(`.snake-cell[data-n="${pos}"]`),stackIndex=stacks.get(pos)||0;stacks.set(pos,stackIndex+1);
+      t.dataset.stack=stackIndex;t.style.setProperty('--stack-index',stackIndex);t.style.setProperty('--stack-angle',`${(stackIndex-1.5)*7}deg`);
+      cell?.classList.add('occupied-cell');cell?.querySelector('.token-stack')?.appendChild(t);
+      if(state.turn===i&&state.winner===null){cell?.classList.add('active-cell');cell?.style.setProperty('--active-color',colors[i])}
+    }else startTarget.appendChild(t);
+  });
+}
 function canAct(){return mode==='local'?(Number($('#playerCount').value)!==1||state?.turn===0):(room?.me?.index===state?.turn&&room?.status==='playing')}
 function render(){if(!state)return;renderPlayers();renderTokens();$('#roll').disabled=busy||state.winner!==null||!canAct();if(state.lastRoll){$('#die').dataset.value=state.lastRoll;$('#game').classList.add('has-rolled')}if(state.winner!==null){$('#winnerName').textContent=state.players[state.winner].name;$('#winnerOverlay').classList.add('show');launchConfetti();return}const p=state.players[state.turn];$('#status').textContent=canAct()?`دور ${p.name}`:`بانتظار ${p.name}…`}
-function fx(sym){const r=$('#die').getBoundingClientRect(),e=document.createElement('div');e.className='fx-pop';e.textContent=sym;e.style.left=(r.left+r.width/2)+'px';e.style.top=(r.top+r.height/2)+'px';document.body.appendChild(e);setTimeout(()=>e.remove(),900)}
-function actionFx(type,text){const wrap=$('#boardWrap'),banner=$('#actionBanner'),flash=$('#actionFlash'),linger=type==='snake'?1650:type==='ladder'?1050:760;banner.className=`action-banner ${type}`;banner.textContent=text;void banner.offsetWidth;banner.classList.add('show');wrap.classList.remove('ladder-hit','snake-hit','six-hit');void wrap.offsetWidth;wrap.classList.add(type==='ladder'?'ladder-hit':type==='snake'?'snake-hit':'six-hit');flash.className=`action-flash ${type}`;void flash.offsetWidth;flash.classList.add('go');setTimeout(()=>banner.classList.remove('show'),linger);setTimeout(()=>wrap.classList.remove('ladder-hit','snake-hit','six-hit'),linger)}
-function hitCell(n,cls='step-hit'){const cell=document.querySelector(`.snake-cell[data-n="${n}"]`);if(!cell)return;cell.classList.remove(cls);void cell.offsetWidth;cell.classList.add(cls);setTimeout(()=>cell.classList.remove(cls),650)}
+function fx(sym){const r=$('#die').getBoundingClientRect(),e=document.createElement('div');e.className='fx-pop';e.textContent=sym;e.style.left=(r.left+r.width/2)+'px';e.style.top=(r.top+r.height/2)+'px';document.body.appendChild(e);motion.delay(900).then(()=>e.remove()).catch(()=>{})}
+function actionFx(type,text){const wrap=$('#boardWrap'),banner=$('#actionBanner'),flash=$('#actionFlash'),linger=type==='snake'?1650:type==='ladder'?1050:760;banner.className=`action-banner ${type}`;banner.textContent=text;void banner.offsetWidth;banner.classList.add('show');wrap.classList.remove('ladder-hit','snake-hit','six-hit');void wrap.offsetWidth;wrap.classList.add(type==='ladder'?'ladder-hit':type==='snake'?'snake-hit':'six-hit');flash.className=`action-flash ${type}`;void flash.offsetWidth;flash.classList.add('go');motion.delay(linger).then(()=>banner.classList.remove('show')).catch(()=>{});motion.delay(linger).then(()=>wrap.classList.remove('ladder-hit','snake-hit','six-hit')).catch(()=>{})}
+function hitCell(n,cls='step-hit'){const cell=document.querySelector(`.snake-cell[data-n="${n}"]`);if(!cell)return;cell.classList.remove(cls);void cell.offsetWidth;cell.classList.add(cls);motion.delay(650).then(()=>cell.classList.remove(cls)).catch(()=>{})}
 function cellCenterRect(pos){
   const wrap=$('#boardWrap').getBoundingClientRect();
   const el=pos?document.querySelector(`.snake-cell[data-n="${pos}"]`):$('#mobileStartLane');
@@ -177,50 +198,78 @@ function makeTravelPawn(player,fromPos){
   const head=document.createElement('i'),body=document.createElement('b'),emblem=document.createElement('span'),ring=document.createElement('span');head.className='pawn-head';body.className='pawn-body';emblem.className='pawn-emblem';emblem.textContent=profile.symbol;ring.className='pawn-energy-ring';ghost.append(head,body,ring,emblem);wrap.appendChild(ghost);
   const pt=cellCenterRect(fromPos);ghost.style.left=pt.x+'px';ghost.style.top=pt.y+'px';ghost.title=p?.name||'';return ghost;
 }
-async function runAnimation(element,frames,options){const duration=Math.max(0,Number(options?.duration)||0);if(!element?.animate){await wait(duration);return}try{await element.animate(frames,{...options,duration}).finished}catch{await wait(Math.min(duration,80))}}
+async function runAnimation(element,frames,options){
+  const duration=Math.max(0,Number(options?.duration)||0),epoch=motionEpoch;
+  if(!element?.animate){await wait(duration);return epoch===motionEpoch}
+  const animation=element.animate(frames,{...options,duration});activeAnimations.add(animation);
+  try{await animation.finished;return epoch===motionEpoch}catch{return false}finally{activeAnimations.delete(animation)}
+}
+function cancelBoardMotion(){
+  motionEpoch+=1;motion.cancelAll();
+  for(const animation of activeAnimations){try{animation.cancel()}catch{}}
+  activeAnimations.clear();
+  document.querySelectorAll('.snake-travel-pawn').forEach(node=>node.remove());
+  document.querySelectorAll('.motion-hidden').forEach(node=>node.classList.remove('motion-hidden'));
+  document.querySelectorAll('.snake-creature,.snake-head-creature,.ladder-creature').forEach(node=>node.classList.remove('tracking','attacking','swallowing','digesting','releasing','activating','climbing','landing'));
+  $('#boardWrap')?.classList.remove('board-moving','snake-active','ladder-active');
+}
 function cuePhase(phase){if(phase?.sound)BS_AUDIO.play(phase.sound);if(phase?.haptic)BS_AUDIO.vibrate(phase.haptic)}
 function setSnakePhase(parts,phase){for(const part of parts){part.classList.remove('tracking','attacking','swallowing','digesting','releasing');if(phase)part.classList.add(phase)}}
 async function animatePawnPath(player,fromPos,toPos,positions){
   if(toPos===fromPos)return;
-  const plan=createBoardMovePlan(fromPos,toPos,{reducedMotion:reducedMotion()}),ghost=makeTravelPawn(player,fromPos),points=[cellCenterRect(fromPos),...plan.cells.map(cellCenterRect)],wrap=$('#boardWrap');
+  const epoch=motionEpoch,plan=createBoardMovePlan(fromPos,toPos,{reducedMotion:reducedMotion()}),ghost=makeTravelPawn(player,fromPos),points=[cellCenterRect(fromPos),...plan.cells.map(cellCenterRect)],wrap=$('#boardWrap');
   const frames=createSmoothMotionFrames(points,{lift:Math.max(10,Math.min(19,wrap.clientWidth*.024))}).map(frame=>({left:`${frame.x}px`,top:`${frame.y}px`,offset:frame.offset,transform:`translate(-50%,-74%) rotate(${frame.rotate}deg) scale(${frame.scale})`}));
   wrap.classList.add('board-moving');
-  plan.pulses.forEach(pulse=>setTimeout(()=>{const cell=document.querySelector(`.snake-cell[data-n="${pulse.cell}"]`);cell?.classList.add('trail-lit');setTimeout(()=>cell?.classList.remove('trail-lit'),720);hitCell(pulse.cell);BS_AUDIO.play('boardStep',{volume:.32})},Math.max(0,pulse.at-30)));
-  await runAnimation(ghost,frames,{duration:plan.duration,easing:'linear',fill:'forwards'});
+  const timeline=animateTimeline(motion,plan.duration,plan.pulses.map(pulse=>({at:Math.max(0,pulse.at-30),run:()=>{
+    if(epoch!==motionEpoch)return;
+    const cell=document.querySelector(`.snake-cell[data-n="${pulse.cell}"]`);cell?.classList.add('trail-lit');hitCell(pulse.cell);BS_AUDIO.play('boardStep',{volume:.32});
+    motion.delay(420).then(()=>cell?.classList.remove('trail-lit')).catch(()=>{});
+  }})));
+  await Promise.all([runAnimation(ghost,frames,{duration:plan.duration,easing:'linear',fill:'forwards'}),timeline]);
+  if(epoch!==motionEpoch)return;
   wrap.classList.remove('board-moving');ghost.remove();positions[player]=toPos;renderTokens(positions);hitCell(toPos,'landing-hit');BS_AUDIO.play('boardLand');BS_AUDIO.vibrate(22);
 }
 async function animateLadderRide(player,fromPos,toPos,positions){
-  const plan=createReactionPlan('ladder',{reducedMotion:reducedMotion()}),[wake,climb,land]=plan.phases,ladder=document.querySelector(`.ladder-creature[data-from="${fromPos}"]`),ghost=makeTravelPawn(player,fromPos),a=cellCenterRect(fromPos),b=cellCenterRect(toPos),wrap=$('#boardWrap');
+  const epoch=motionEpoch,plan=createReactionPlan('ladder',{reducedMotion:reducedMotion()}),[wake,climb,land]=plan.phases,ladder=document.querySelector(`.ladder-creature[data-from="${fromPos}"]`),ghost=makeTravelPawn(player,fromPos),a=cellCenterRect(fromPos),b=cellCenterRect(toPos),wrap=$('#boardWrap');
   ladder?.classList.add('activating');wrap.classList.add('ladder-active');cuePhase(wake);
   await runAnimation(ghost,[{transform:'translate(-50%,-74%) scale(1)'},{transform:'translate(-50%,-86%) scale(1.1)'},{transform:'translate(-50%,-74%) scale(1)'}],{duration:wake.duration,easing:'ease-in-out'});
   ladder?.classList.remove('activating');ladder?.classList.add('climbing');cuePhase(climb);
   const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,points=Array.from({length:9},(_,index)=>{const t=index/8,wave=Math.sin(t*Math.PI*8)*4;return{x:a.x+dx*t+nx*wave,y:a.y+dy*t+ny*wave}});
   const frames=createSmoothMotionFrames(points,{lift:4}).map(frame=>({left:`${frame.x}px`,top:`${frame.y}px`,offset:frame.offset,transform:`translate(-50%,-74%) rotate(${frame.rotate}deg) scale(${frame.scale})`}));
-  const rungs=[...(ladder?.querySelectorAll('.ladder-rung')||[])];rungs.forEach((rung,index)=>setTimeout(()=>{rung.classList.add('is-lit');if(index%2===0)BS_AUDIO.play('ladderStep',{volume:.34});setTimeout(()=>rung.classList.remove('is-lit'),420)},index/Math.max(1,rungs.length)*climb.duration));
-  await runAnimation(ghost,frames,{duration:climb.duration,easing:'linear',fill:'forwards'});
+  const rungs=[...(ladder?.querySelectorAll('.ladder-rung')||[])],rungTimeline=animateTimeline(motion,climb.duration,rungs.map((rung,index)=>({at:index/Math.max(1,rungs.length)*climb.duration,run:()=>{
+    if(epoch!==motionEpoch)return;rung.classList.add('is-lit');if(index%2===0)BS_AUDIO.play('ladderStep',{volume:.34});motion.delay(280).then(()=>rung.classList.remove('is-lit')).catch(()=>{});
+  }})));
+  await Promise.all([runAnimation(ghost,frames,{duration:climb.duration,easing:'linear',fill:'forwards'}),rungTimeline]);
+  if(epoch!==motionEpoch)return;
   ladder?.classList.remove('climbing');ladder?.classList.add('landing');cuePhase(land);
   await runAnimation(ghost,[{left:`${b.x}px`,top:`${b.y}px`,transform:'translate(-50%,-82%) scale(1.12)'},{left:`${b.x}px`,top:`${b.y}px`,transform:'translate(-50%,-74%) scale(.96)',offset:.62},{left:`${b.x}px`,top:`${b.y}px`,transform:'translate(-50%,-74%) scale(1)'}],{duration:land.duration,easing:'cubic-bezier(.2,.8,.25,1)',fill:'forwards'});
   ghost.remove();ladder?.classList.remove('landing');wrap.classList.remove('ladder-active');positions[player]=toPos;renderTokens(positions);hitCell(toPos,'landing-hit');
 }
 function createSnakeBulge(snake,path,player){if(!snake||!path?.getTotalLength)return null;const bulge=document.createElementNS('http://www.w3.org/2000/svg','circle');bulge.classList.add('snake-food-bulge');bulge.setAttribute('cx','0');bulge.setAttribute('cy','0');bulge.setAttribute('r','14');bulge.style.setProperty('--food-color',colors[player]);snake.appendChild(bulge);const length=path.getTotalLength(),frames=createSnakeBodyProgress(22).map(point=>{const pos=path.getPointAtLength(length*point.distance);return{transform:`translate(${pos.x}px,${pos.y}px) scale(${point.scale})`,opacity:point.opacity,offset:point.distance}});return{bulge,frames}}
 async function animateSnakeEat(player,fromPos,toPos,positions){
-  const parts=snakeVisualParts(fromPos),snake=parts.find(part=>part.classList.contains('snake-creature')),head=parts.find(part=>part.classList.contains('snake-head-creature')),path=snake?.querySelector('.snake-path'),plan=createReactionPlan('snake',{reducedMotion:reducedMotion()}),[track,strike,swallow,grow,release]=plan.phases,ghost=makeTravelPawn(player,fromPos),a=cellCenterRect(fromPos),b=cellCenterRect(toPos),wrap=$('#boardWrap');
+  const epoch=motionEpoch,parts=snakeVisualParts(fromPos),snake=parts.find(part=>part.classList.contains('snake-creature')),head=parts.find(part=>part.classList.contains('snake-head-creature')),path=snake?.querySelector('.snake-path'),plan=createReactionPlan('snake',{reducedMotion:reducedMotion()}),[track,strike,swallow,grow,release]=plan.phases,ghost=makeTravelPawn(player,fromPos),a=cellCenterRect(fromPos),b=cellCenterRect(toPos),wrap=$('#boardWrap');
   wrap.classList.add('snake-active');setSnakePhase(parts,'tracking');cuePhase(track);
   await runAnimation(ghost,[{transform:'translate(-50%,-74%) rotate(0)'},{transform:'translate(-56%,-78%) rotate(-7deg)'},{transform:'translate(-44%,-76%) rotate(7deg)'},{transform:'translate(-50%,-74%) rotate(0)'}],{duration:track.duration,easing:'ease-in-out'});
+  if(epoch!==motionEpoch)return;
   setSnakePhase(parts,'attacking');void head?.getBBox?.();cuePhase(strike);
   await runAnimation(ghost,[{left:`${a.x}px`,top:`${a.y}px`,transform:'translate(-50%,-74%) scale(1)',opacity:1},{left:`${a.x-4}px`,top:`${a.y+2}px`,transform:'translate(-50%,-72%) scale(.48) rotate(-12deg)',opacity:.94,offset:.58},{left:`${a.x}px`,top:`${a.y}px`,transform:'translate(-50%,-70%) scale(.04) rotate(25deg)',opacity:0}],{duration:strike.duration,easing:'cubic-bezier(.3,.02,.48,1)',fill:'forwards'});
+  if(epoch!==motionEpoch)return;
   setSnakePhase(parts,'swallowing');cuePhase(swallow);const bodyFx=createSnakeBulge(snake,path,player);
   if(bodyFx)await runAnimation(bodyFx.bulge,bodyFx.frames,{duration:swallow.duration,easing:'linear',fill:'forwards'});else await wait(swallow.duration);
+  if(epoch!==motionEpoch)return;
   bodyFx?.bulge.remove();setSnakePhase(parts,'digesting');const meals=Math.min(5,(snakeMeals.get(Number(fromPos))||0)+1);snakeMeals.set(Number(fromPos),meals);for(const part of parts){part.dataset.meals=meals;part.style.setProperty('--snake-meals',meals);part.style.setProperty('--snake-growth',`${25+meals*1.35}px`);part.style.setProperty('--snake-head-scale',1+meals*.012)}cuePhase(grow);await wait(grow.duration);
   setSnakePhase(parts,'releasing');cuePhase(release);ghost.style.left=`${b.x}px`;ghost.style.top=`${b.y-34}px`;ghost.style.opacity='0';
   await runAnimation(ghost,[{left:`${b.x}px`,top:`${b.y-35}px`,transform:'translate(-50%,-74%) scale(.22)',opacity:0},{left:`${b.x}px`,top:`${b.y-10}px`,transform:'translate(-50%,-82%) scale(1.16)',opacity:1,offset:.62},{left:`${b.x}px`,top:`${b.y}px`,transform:'translate(-50%,-74%) scale(1)',opacity:1}],{duration:release.duration,easing:'cubic-bezier(.16,.8,.22,1)',fill:'forwards'});
+  if(epoch!==motionEpoch)return;
   ghost.remove();setSnakePhase(parts,null);wrap.classList.remove('snake-active');positions[player]=toPos;renderTokens(positions);hitCell(toPos,'landing-hit');
 }
 async function animateEvent(prev,next){
-  const e=next.lastEvent;if(!e)return;const positions=prev.players.map(p=>p.position);
+  const epoch=motionEpoch,e=next.lastEvent;if(!e)return;const positions=prev.players.map(p=>p.position);
   await animatePawnPath(e.player,e.from,e.landed,positions);
+  if(epoch!==motionEpoch)return;
   if(e.to!==e.landed){
     await wait(70);
+    if(epoch!==motionEpoch)return;
     if(e.jumpType==='ladder'){actionFx('ladder','🪜 صعود!');fx('✨');await animateLadderRide(e.player,e.landed,e.to,positions)}
     else{actionFx('snake','🐍 الثعبان أمسكك!');fx('💥');await animateSnakeEat(e.player,e.landed,e.to,positions)}
     await wait(90)
@@ -272,7 +321,7 @@ async function rollTurn(){
   }
 }
 $('#roll').onclick=rollTurn;
-function startLocal(){mode='local';snakeMeals.clear();confettiShown=false;lastVersion=-1;state=createSnakesGame(names());enterGame();try{BS_AUDIO.play('launch')}catch{}}
+function startLocal(){cancelBoardMotion();mode='local';snakeMeals.clear();confettiShown=false;lastVersion=-1;state=createSnakesGame(names());enterGame();try{BS_AUDIO.play('launch')}catch{}}
 function enterGame(){document.body.classList.add('game-running');buildBoard();$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#game').classList.remove('reference-skin');$('#game').classList.add('pro-snake-board');$('#game').classList.toggle('has-rolled',Boolean(state?.lastRoll));$('#winnerOverlay').classList.remove('show');$('#livebar').classList.toggle('hidden',mode!=='online');if(mode==='online')$('#gameRoomCode').textContent=room.code;$('#die').dataset.value=state?.lastRoll||1;$('#status')?.setAttribute('aria-live','polite');render();window.BS_GAME_FULLSCREEN?.fit?.()}
 function setMode(next){mode=next;$('#modeLocal').classList.toggle('active',next==='local');$('#modeOnline').classList.toggle('active',next==='online');$('#localSetup').classList.toggle('hidden',next!=='local');$('#onlineSetup').classList.toggle('hidden',next!=='online');$('#roomLobby').classList.add('hidden');client?.close();client=null;room=null}
 function net(s){for(const id of ['#netBadge','#liveNet']){const e=$(id);if(!e)continue;e.classList.toggle('online',!!s.online);e.classList.toggle('reconnecting',!!s.reconnecting);e.querySelector('span').textContent=s.text||''}if(s.online)BS_AUDIO.play('connect',{volume:.35})}
@@ -285,7 +334,7 @@ function onRoomState(next){
   onlineQueue=onlineQueue.then(async()=>{
     const prev=state?structuredClone(state):null;
     state=next.state;
-    if(prev?.moveCount>0&&state.moveCount===0){snakeMeals.clear();requestAnimationFrame(drawPaths);confettiShown=false}
+    if(prev?.moveCount>0&&state.moveCount===0){cancelBoardMotion();snakeMeals.clear();requestAnimationFrame(drawPaths);confettiShown=false}
     if($('#game').classList.contains('hidden'))enterGame();
     if(prev&&next.version!==lastVersion&&state.moveCount!==prev.moveCount){
       busy=true;
@@ -303,7 +352,7 @@ async function createRoom(){setupClient();try{await client.create($('#onlineName
 async function joinRoom(){setupClient();try{await client.join($('#joinCode').value,$('#onlineName').value);BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}}
 $('#modeLocal').onclick=()=>setMode('local');$('#modeOnline').onclick=()=>setMode('online');$('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;$('#readyBtn').onclick=()=>{const me=room?.players.find(p=>p.id===room.me?.id);client?.send('ready',{ready:!me?.ready})};$('#hostStart').onclick=()=>client?.send('start');$('#copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);BS_PLATFORM.toast('تم نسخ رمز الغرفة')}catch{BS_PLATFORM.toast(room.code)}};$('#inviteFriends').onclick=()=>{if(!room?.code)return BS_PLATFORM.toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'snakes',roomCode:room.code})};
 const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)$('#onlineName').value=socialProfile.displayName;
-const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;setTimeout(()=>joinRoom(),80)}
+const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;queueMicrotask(()=>joinRoom())}
 
 $('#startBtn').onclick=startLocal;$('#classicStartBtn').onclick=()=>window.TAHDIA_CLASSIC_SNAKE?.start?.();$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
 $('#playerCount').onchange=()=>{const c=Number($('#playerCount').value);for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',i>=c)};$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});window.addEventListener('resize',()=>state&&drawPaths());window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(drawPaths));
