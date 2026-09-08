@@ -83,6 +83,16 @@
 .hub-quick span { display: block; margin-top: 3px; color: var(--hub-muted); font-size: 10px; }
 .hub-bottom-nav { display: none; }
 .hub-footer { margin: 25px 0 0; }
+/* Every game gets its own visual identity; the text remains part of the card,
+   never a browser-looking underlined link. */
+.hub-game, .hub-game *, .hub-quick, .hub-quick *, .hub-nav a, .hub-bottom-nav a { text-decoration: none !important; }
+.hub-game { --game-accent:#a78bfa; --game-soft:#2d2254; border-top:2px solid var(--game-accent); }
+.hub-game .hub-game-icon { color:var(--game-accent); border-color:color-mix(in srgb, var(--game-accent), white 12%); background:linear-gradient(145deg,var(--game-soft),rgba(10,14,27,.98)); box-shadow:0 0 24px color-mix(in srgb, var(--game-accent), transparent 78%),inset 0 1px rgba(255,255,255,.1); }
+.hub-game .bs-chip { color:var(--game-accent); border-color:color-mix(in srgb, var(--game-accent), transparent 52%); background:color-mix(in srgb, var(--game-accent), transparent 88%); }
+.hub-game:nth-child(1){--game-accent:#f4c76d;--game-soft:#4a3517}.hub-game:nth-child(2){--game-accent:#22d3ee;--game-soft:#093a49}.hub-game:nth-child(3){--game-accent:#fb7185;--game-soft:#4a203b}.hub-game:nth-child(4){--game-accent:#a78bfa;--game-soft:#30235e}.hub-game:nth-child(5){--game-accent:#34d399;--game-soft:#103f3a}.hub-game:nth-child(6){--game-accent:#63e7ff;--game-soft:#103d4b}.hub-game:nth-child(7){--game-accent:#f59e0b;--game-soft:#4a2d0d}.hub-game:nth-child(8){--game-accent:#f472b6;--game-soft:#4a1e3d}.hub-game:nth-child(9){--game-accent:#60a5fa;--game-soft:#17335c}
+.hub-game h3{color:#fff;}.hub-game-note{color:color-mix(in srgb, var(--game-accent), white 22%);}
+.hub-hero .showcase-games{color:#f4c76d;text-shadow:0 0 25px #f4c76d,0 0 60px #8b5cf6;}
+.hub-bottom-nav a span:first-child{font-variant-emoji:text;}
 @media (max-width: 840px) {
   .hub-shell { padding-inline: 14px; }
   .hub-hero { grid-template-columns: 1fr; }

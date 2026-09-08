@@ -1,7 +1,7 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
-const CACHE_NAME = 'busraj-games-v27-home-hub';
+const CACHE_NAME = 'busraj-games-v28-full-ui-polish';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -32,6 +32,8 @@ const APP_SHELL = [
   '/apple-touch-icon.png',
   '/assets/css/platform.css',
   '/assets/css/home-shell.css',
+  '/assets/css/quiz-polish.css',
+  '/assets/css/spotdiff-pro.css',
   '/assets/css/arcade.css',
   '/assets/css/new-games.css',
   '/assets/css/social.css',

@@ -43,6 +43,7 @@
 .sd-over-actions a,.sd-over-actions button{flex:1}
 #sdOnlineSetup .setup-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 </style>
+<link rel="stylesheet" href="assets/css/spotdiff-pro.css">
 </head>
 <body class="bs-page">
 <main class="bs-shell sd-shell">
@@ -59,14 +60,14 @@
     <button id="sdModeOnline">⚔️ أونلاين 1×1</button>
   </div>
 
-  <div class="sd-diff" id="sdDiffLocal">
-    <button data-diff="easy">🙂 سهل</button>
-    <button data-diff="medium" class="active">😐 متوسط</button>
+  <div class="sd-diff hidden" id="sdDiffLocal" aria-hidden="true">
+    <button data-diff="easy" class="active">🙂 سهل</button>
+    <button data-diff="medium">😐 متوسط</button>
     <button data-diff="hard">🔥 صعب</button>
   </div>
 
   <!-- ONLINE SETUP -->
-  <section id="sdOnlineSetup" class="bs-panel" style="padding:18px">
+  <section id="sdOnlineSetup" class="bs-panel hidden" style="padding:18px">
     <label class="bs-field"><span>اسمك</span><input id="sdName" value="لاعب" maxlength="20"></label>
     <div class="setup-actions">
       <button id="sdCreate" class="bs-btn gold">➕ إنشاء غرفة</button>
@@ -80,9 +81,9 @@
   <section id="sdLobby" class="bs-panel room-lobby hidden" style="padding:18px">
     <div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="sdCopyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="sdNetBadge" class="net-badge"><i></i><span>اتصال…</span></span></div>
     <div id="sdRoomPlayers" class="room-players"></div>
-    <div class="sd-diff" id="sdDiffLobby">
-      <button data-diff="easy">🙂 سهل</button>
-      <button data-diff="medium" class="active">😐 متوسط</button>
+    <div class="sd-diff hidden" id="sdDiffLobby" aria-hidden="true">
+      <button data-diff="easy" class="active">🙂 سهل</button>
+      <button data-diff="medium">😐 متوسط</button>
       <button data-diff="hard">🔥 صعب</button>
     </div>
     <div class="lobby-controls">
@@ -93,15 +94,16 @@
   </section>
 
   <!-- GAME -->
-  <section id="sdGame" class="hidden">
+  <section id="sdGame" class="bs-panel sd-game-card hidden">
+    <div class="sd-game-intro"><span class="sd-game-icon" aria-hidden="true">◉</span><div><b>اكتشف 4 فروقات واضحة</b><small>اضغط على أي صورة عند مكان الاختلاف</small></div></div>
     <div class="sd-hud">
-      <div class="sd-score"><b id="sdMyScore">0</b><small>نقاطي</small></div>
+      <div class="sd-score"><b id="sdMyScore">0</b><small>من 4 فروقات</small></div>
       <div><div class="sd-timer" id="sdTimer">01:15</div><div class="sd-diff-label" id="sdDiffLive" style="margin:2px 0 0"></div></div>
       <div class="sd-score sd-opp" id="sdOppWrap"><b id="sdOppScore">0</b><small id="sdOppLabel">—</small></div>
     </div>
     <div class="sd-boards">
       <div class="sd-board" id="sdBoardLeft"><span class="sd-label">الأصلية</span><canvas id="sdCanvasLeft"></canvas></div>
-      <div class="sd-board" id="sdBoardRight"><span class="sd-label">ابحث هنا 🔍</span><canvas id="sdCanvasRight"></canvas></div>
+      <div class="sd-board" id="sdBoardRight"><span class="sd-label">حدد الفرق هنا ◉</span><canvas id="sdCanvasRight"></canvas></div>
     </div>
     <div class="sd-actions">
       <button class="bs-btn" id="sdNewLocal">🔄 صورة جديدة</button>
@@ -111,9 +113,9 @@
   <details class="rules bs-panel" style="padding:14px;margin-top:18px">
     <summary>كيف ألعب؟</summary>
     <ul>
-      <li>صورتان متشابهتان بينهما 5 فروقات — اضغط على الفرق بأي من الصورتين.</li>
-      <li>بالوضع الفردي: اعثر على أكبر عدد فروقات قبل نفاد الوقت.</li>
-      <li>بالوضع الأونلاين: كل نقرة صحيحة تُرى فورًا لخصمك — أول من يجمع الفروقات الخمس يفوز!</li>
+      <li>صورتان بينهما 4 فروقات واضحة ومعقولة — اضغط على الفرق بأي من الصورتين.</li>
+      <li>لا توجد مستويات مشتتة؛ صعوبة واحدة متوازنة و90 ثانية للجولة.</li>
+      <li>بالوضع الأونلاين: كل نقرة صحيحة تُرى فورًا لخصمك — أول من يجمع الفروقات يفوز.</li>
     </ul>
   </details>
 
@@ -153,7 +155,7 @@ const HUE_BIAS = [
   [0.55, 0.95, 0.70],
   [0.95, 0.55, 0.65],
 ];
-const TARGET_DELTA = 42; // Euclidean RGB distance — visible without looking fake
+const TARGET_DELTA = 78; // A clear, calibrated change that stays inside the selected object area.
 
 function drawCover(ctx, img, size){
   ctx.clearRect(0,0,size,size);
@@ -203,6 +205,20 @@ function applyDiffMarks(ctx, size, diffs, allDiffs){
       }
     }
     ctx.putImageData(imgData, x0, y0);
+    // Add one small object-level change in the centre of the edited region.
+    // This makes the difference genuinely visible on a phone instead of
+    // relying on a near-imperceptible colour filter.
+    ctx.save();
+    ctx.globalAlpha = .82;
+    ctx.fillStyle = avgLum > 140 ? '#14203a' : '#ffd166';
+    ctx.shadowColor = avgLum > 140 ? '#06101f' : '#ffb347';
+    ctx.shadowBlur = Math.max(3, rad * .16);
+    ctx.beginPath();
+    if(idx % 2 === 0) ctx.arc(cx, cy, Math.max(4, rad * .18), 0, Math.PI * 2);
+    else if (typeof ctx.roundRect === 'function') ctx.roundRect(cx-rad*.28, cy-rad*.09, rad*.56, rad*.18, rad*.08);
+    else ctx.rect(cx-rad*.28, cy-rad*.09, rad*.56, rad*.18);
+    ctx.fill();
+    ctx.restore();
   });
 }
 
@@ -225,7 +241,7 @@ let currentImg = null, currentDiffs = [];
 let foundLocal = new Set();
 let localScore = 0, localTimer = null, localEndsAt = 0;
 let recentPhotos = [];
-let localDifficulty = 'medium', hostDifficulty = 'medium';
+let localDifficulty = 'easy', hostDifficulty = 'easy';
 let client = null, room = null, stopCountdown = null;
 
 async function renderPhoto(photoSrc, diffs, foundMap){
@@ -291,7 +307,7 @@ async function startLocal(){
   const { points, duration } = diffPointsForDifficulty(localDifficulty);
   await renderPhoto(photo, points, new Map());
   const d = DIFFICULTIES[localDifficulty];
-  $('#sdDiffLive').textContent = `${d.icon} ${d.label}`;
+  $('#sdDiffLive').textContent = '4 فروقات واضحة';
   localEndsAt = Date.now() + duration;
   clearInterval(localTimer);
   localTimer = setInterval(tickLocal, 200);
@@ -361,7 +377,7 @@ async function onRoomState(next){
   const oppPlayer = next.players[oppIdx];
   $('#sdOppLabel').textContent = oppPlayer ? oppPlayer.name : 'الخصم';
   const dInfo = DIFFICULTIES[st.difficulty] || DIFFICULTIES.medium;
-  $('#sdDiffLive').textContent = `${dInfo.icon} ${dInfo.label}`;
+  $('#sdDiffLive').textContent = '4 فروقات واضحة';
   $('#sdMyScore').textContent = st.scores?.[meIdx] ?? 0;
   $('#sdOppScore').textContent = st.scores?.[oppIdx] ?? 0;
   const map = new Map();
