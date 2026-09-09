@@ -1,5 +1,3 @@
-import { CATEGORIES } from "./questions-data.js";
-
 const params = new URLSearchParams(location.search);
 const matchId = params.get("quickMatch") || params.get("match") || "";
 const byId = (id) => document.getElementById(id);
@@ -26,6 +24,9 @@ function waitForFirebase(timeout = 10_000) {
 
 const playable = [];
 const categoryByQuestion = new Map();
+// online.html loads questions-data.js as a classic script before this module;
+// using the shared global avoids the broken named-export import that stalled matches.
+const CATEGORIES = Array.isArray(window.BS_QUIZ_CATEGORIES) ? window.BS_QUIZ_CATEGORIES : [];
 for (const category of CATEGORIES) {
   for (const q of category.questions || []) {
     if (!q?.id || !q?.q || !q?.a || !Array.isArray(q.distractors) || q.distractors.length < 3) continue;
@@ -86,17 +87,14 @@ if (!matchId) {
 } else {
   startQuickMatch().catch((error) => {
     console.error("quick match failed", error);
-    // Don't strand the player on a dead error card — clear the stale
-    // match link and send them back to the normal entry screen (private
-    // rooms included) instead of a dead end with no way forward.
-    const clean = new URL(location.href);
-    clean.searchParams.delete("quickMatch");
-    clean.searchParams.delete("match");
-    history.replaceState(null, "", clean.pathname + clean.search);
-    byId("quickArena")?.classList.add("hidden");
+    byId("entry")?.classList.add("hidden");
     byId("room")?.classList.add("hidden");
-    byId("entry")?.classList.remove("hidden");
-    showToast(error?.message || "تعذر فتح المواجهة — جرّب مرة ثانية");
+    byId("quickArena")?.classList.remove("hidden");
+    const q = byId("qmQuestion");
+    if (q) q.textContent = "تعذر فتح المواجهة";
+    const status = byId("qmStatus");
+    if (status) status.textContent = error?.message || "خطأ اتصال";
+    byId("qmChoices")?.replaceChildren();
   });
 }
 

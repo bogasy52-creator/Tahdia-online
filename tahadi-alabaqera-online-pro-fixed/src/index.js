@@ -717,6 +717,19 @@ export class GameRoom extends DurableObject {
     });
   }
 
+  sendTeamVoiceLine(player, line) {
+    if (!isTeamRoom(this.room) || !player.team) return;
+    const lines = new Set(['bravo', 'focus', 'correct', 'wrong', 'hurry', 'nice']);
+    if (!lines.has(line)) return;
+    this.sendToTeam(player.team, {
+      type: 'team_voice_line',
+      fromId: player.id,
+      fromName: player.name,
+      line,
+      at: Date.now(),
+    });
+  }
+
   async webSocketMessage(ws, raw) {
     if (!this.room) return;
     const player = this.playerForSocket(ws);
@@ -801,6 +814,10 @@ export class GameRoom extends DurableObject {
 
         case "team_reaction":
           this.sendTeamReaction(player, String(msg.reaction || ""));
+          break;
+
+        case "team_voice_line":
+          this.sendTeamVoiceLine(player, String(msg.line || ""));
           break;
 
         case "power":

@@ -37,6 +37,7 @@
 .team-badge{display:inline-flex;align-items:center;gap:5px;margin-inline-start:6px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-weight:1000}.team-badge.a{color:#f4c76d;background:#f4c76d12}.team-badge.b{color:#a78bfa;background:#a78bfa14}.team-score-card{position:relative;overflow:hidden}.team-score-card.a{border-color:#f4c76d66;background:linear-gradient(145deg,#322713,#0c101d)}.team-score-card.b{border-color:#a78bfa66;background:linear-gradient(145deg,#251947,#0c101d)}.team-members{margin-top:4px;color:var(--mut);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .teamHub{display:grid;gap:8px;margin:10px 0;padding:11px;border:1px solid #5a4b91;border-radius:18px;background:linear-gradient(135deg,#17162e,#0b1020)}.teamHubTop{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.teamIdentity{font-weight:1000;color:#f4c76d}.teamIdentity.b{color:#b9a4ff}.teamModeNote{color:#c2c8da;font-size:11px}.teamTools{display:flex;gap:6px;flex-wrap:wrap}.teamTool{min-height:38px;border:1px solid var(--line);border-radius:11px;background:#090d18;color:#fff;padding:6px 9px;font-size:11px;font-weight:900}.teamTool:disabled{opacity:.35}.teamVoteNote{color:#91e8bd;font-size:11px;margin-top:4px}.teamVoice{display:flex;gap:6px;align-items:center}.teamVoice button{min-height:38px}.teamReactions{display:flex;gap:5px;flex-wrap:wrap}.reactionBtn{min-width:39px;min-height:35px;border:1px solid var(--line);border-radius:10px;background:#0b1020;color:#fff}.teamProgress{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--mut)}.teamProgress b{color:#f4c76d}.choice.team-voted{border-color:#22d3ee;background:#22d3ee16}.choice.team-ping{box-shadow:0 0 0 2px #f4c76d inset}.choice.team-hinted{opacity:.28;filter:grayscale(1)}.relayNotice{padding:9px;border:1px solid #5a4b91;border-radius:13px;background:#7c3aed18;color:#e8ddff;font-weight:900;font-size:12px}.voice-status{font-size:10px;color:var(--mut)}.reaction-float{position:fixed;left:50%;top:19%;transform:translateX(-50%);z-index:80;padding:11px 15px;border:1px solid #8b6ce3;border-radius:999px;background:#0a0d19e8;color:#fff;box-shadow:0 16px 40px #0008;font-weight:1000;animation:reaction-pop 1.8s ease forwards}@keyframes reaction-pop{0%{opacity:0;transform:translate(-50%,18px) scale(.85)}18%,72%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-24px) scale(1.05)}}
 </style>
+<style>.teamVoiceLines{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.teamVoiceLines:before{content:'عبارات سريعة';width:100%;color:#aeb6ca;font-size:10px;font-weight:900}.teamVoiceLines .reactionBtn{padding:6px 9px;color:#f4d27d;border-color:#806638;background:#17130b}</style>
 <link rel="stylesheet" href="assets/css/quiz-board-v2.css">
 <link rel="stylesheet" href="assets/css/quiz-polish.css">
 <link rel="stylesheet" href="assets/css/quiz-pro-overrides.css">
@@ -186,6 +187,7 @@ function isTeamRoom(){return state?.mode==='teams-4'||state?.mode==='teams-6'||s
 function teamName(team){return state?.teamNames?.[team]||(team==='A'?'الذهبي':'البنفسجي')}
 function specialtyName(id){return ({science:'العلوم',history:'التاريخ',language:'الكلمات',sports:'الرياضة'})[id]||''}
 function showReaction(text){const el=document.createElement('div');el.className='reaction-float';el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),1900)}
+function speakTeamLine(line){const text={bravo:'كفو يا أبطال',focus:'ركزوا يا فريق',correct:'إجابة صحيحة',wrong:'مو مشكلة، الجولة الجاية',hurry:'أسرعوا، الوقت يخلص',nice:'لعب ممتاز'}[line];if(!text)return;try{window.speechSynthesis?.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ar-SA';u.rate=.96;u.pitch=1.05;u.volume=.9;window.speechSynthesis?.speak(u)}catch{}}
 function opponent(){return state?.players?.find(p=>p.id!==myId)||null}
 function safeName(n){return String(n||'لاعب').replace(/[<>&]/g,'')}
 function originCandidateList(){
@@ -278,7 +280,7 @@ async function connect(){
    try{thisWs.close()}catch{}
  },9000);
  ws.onopen=()=>{if(ws!==thisWs)return;clearTimeout(openTimer);setNet('ok','متصل');reconnectDelay=800};
- ws.onmessage=e=>{if(ws!==thisWs)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId||null;if(m.token)store('roomToken:'+roomCode,m.token);try{if(m.token===null)localStorage.removeItem('roomToken:'+roomCode);if(!spectatorMode)localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render();syncVoicePeers()}else if(m.type==='voice_signal'){handleVoiceSignal(m.fromId,m.signal)}else if(m.type==='team_reaction'){const labels={highfive:'🙌 هاي فايف من ',energy:'🥤 مشروب طاقة من ',fire:'🔥 حماس من ',clap:'👏 تشجيع من ',brain:'🧠 عبقرية من '};showReaction((labels[m.reaction]||'✨ من ')+safeName(m.fromName))}else if(m.type==='team_ping'){showReaction('📌 زميلك يقترح الخيار '+(Number(m.choice)+1))}else if(m.type==='error')toast(m.message||'خطأ')};
+ ws.onmessage=e=>{if(ws!==thisWs)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId||null;if(m.token)store('roomToken:'+roomCode,m.token);try{if(m.token===null)localStorage.removeItem('roomToken:'+roomCode);if(!spectatorMode)localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render();syncVoicePeers()}else if(m.type==='voice_signal'){handleVoiceSignal(m.fromId,m.signal)}else if(m.type==='team_reaction'){const labels={highfive:'🙌 هاي فايف من ',energy:'🥤 مشروب طاقة من ',fire:'🔥 حماس من ',clap:'👏 تشجيع من ',brain:'🧠 عبقرية من '};showReaction((labels[m.reaction]||'✨ من ')+safeName(m.fromName))}else if(m.type==='team_voice_line'){showReaction('🔊 '+({bravo:'كفو يا أبطال',focus:'ركزوا يا فريق',correct:'إجابة صحيحة',wrong:'مو مشكلة',hurry:'أسرعوا',nice:'لعب ممتاز'}[m.line]||'تشجيع'));speakTeamLine(m.line)}else if(m.type==='team_ping'){showReaction('📌 زميلك يقترح الخيار '+(Number(m.choice)+1))}else if(m.type==='error')toast(m.message||'خطأ')};
  ws.onclose=()=>{if(ws!==thisWs)return;clearTimeout(openTimer);if(!openTimedOut)setNet('bad','انقطع الاتصال');if(!manualClose)scheduleReconnect()};
  ws.onerror=()=>{if(ws!==thisWs)return;setNet('bad','مشكلة اتصال')};
 }
@@ -337,10 +339,11 @@ function renderTeamHub(){
  const vote=c?.teamVote, counts=vote?.counts||{};
  const countText=Object.keys(counts).length?Object.entries(counts).map(([choice,count])=>'الخيار '+(Number(choice)+1)+': '+count).join(' • '):'لم يصوّت أحد بعد';
  const relay=c?.relayPlayerId?state.players.find(p=>p.id===c.relayPlayerId):null;
- box.innerHTML='<div class="teamHubTop"><div><div class="teamIdentity '+(team==='B'?'b':'')+'">'+(teamName(team))+' • '+role+'</div><div class="teamModeNote">'+safeName(state.teamModeLabel||'مواجهة جماعية')+' • '+members+'</div></div><div class="teamVoice"><button id="voiceBtn" class="teamTool">'+(voiceEnabled?'🎙️ إيقاف الصوت':'🎙️ صوت الفريق')+'</button><span class="voice-status">'+(voiceEnabled?'القناة مفتوحة':'صوت اختياري')+'</span></div></div><div class="teamProgress"><span>🏁 التقدم <b>'+progress+'/10</b></span><span>❤️ الأرواح <b>'+lives+'</b></span><span>⚡ التتابع <b>'+(state.relayStreak?.[team]||0)+'</b></span></div>'+(relay?'<div class="relayNotice">🏃 الدور الآن: '+safeName(relay.name)+(relay.id===myId?' — أنت':'')+'</div>':'')+(c?.mode==='secret'?'<div class="teamVoteNote">🗳️ '+countText+(vote?.submitted?' • تم تسجيل صوتك':'')+'</div>':'')+'<div class="teamTools"><button class="teamTool" data-team-power="hint" '+(pool.hint?'':'disabled')+'>💡 تلميح ('+(pool.hint||0)+')</button><button class="teamTool" data-team-power="combo" '+(pool.combo?'':'disabled')+'>⚡ هجوم جماعي ('+(pool.combo||0)+')</button><button class="teamTool" data-team-power="revive" '+(pool.revive?'':'disabled')+'>🛟 إنعاش ('+(pool.revive||0)+')</button></div><div class="teamReactions"><button class="reactionBtn" data-reaction="highfive">🙌</button><button class="reactionBtn" data-reaction="energy">🥤</button><button class="reactionBtn" data-reaction="fire">🔥</button><button class="reactionBtn" data-reaction="clap">👏</button><button class="reactionBtn" data-reaction="brain">🧠</button></div>';
+ box.innerHTML='<div class="teamHubTop"><div><div class="teamIdentity '+(team==='B'?'b':'')+'">'+(teamName(team))+' • '+role+'</div><div class="teamModeNote">'+safeName(state.teamModeLabel||'مواجهة جماعية')+' • '+members+'</div></div><div class="teamVoice"><button id="voiceBtn" class="teamTool">'+(voiceEnabled?'🎙️ إيقاف الصوت':'🎙️ صوت الفريق')+'</button><span class="voice-status">'+(voiceEnabled?'القناة مفتوحة':'صوت اختياري')+'</span></div></div><div class="teamProgress"><span>🏁 التقدم <b>'+progress+'/10</b></span><span>❤️ الأرواح <b>'+lives+'</b></span><span>⚡ التتابع <b>'+(state.relayStreak?.[team]||0)+'</b></span></div>'+(relay?'<div class="relayNotice">🏃 الدور الآن: '+safeName(relay.name)+(relay.id===myId?' — أنت':'')+'</div>':'')+(c?.mode==='secret'?'<div class="teamVoteNote">🗳️ '+countText+(vote?.submitted?' • تم تسجيل صوتك':'')+'</div>':'')+'<div class="teamTools"><button class="teamTool" data-team-power="hint" '+(pool.hint?'':'disabled')+'>💡 تلميح ('+(pool.hint||0)+')</button><button class="teamTool" data-team-power="combo" '+(pool.combo?'':'disabled')+'>⚡ هجوم جماعي ('+(pool.combo||0)+')</button><button class="teamTool" data-team-power="revive" '+(pool.revive?'':'disabled')+'>🛟 إنعاش ('+(pool.revive||0)+')</button></div><div class="teamReactions"><button class="reactionBtn" data-reaction="highfive">🙌</button><button class="reactionBtn" data-reaction="energy">🥤</button><button class="reactionBtn" data-reaction="fire">🔥</button><button class="reactionBtn" data-reaction="clap">👏</button><button class="reactionBtn" data-reaction="brain">🧠</button></div><div class="teamVoiceLines"><button class="reactionBtn" data-voice-line="bravo">🔊 كفو</button><button class="reactionBtn" data-voice-line="focus">🎯 ركّز</button><button class="reactionBtn" data-voice-line="correct">✅ صح</button><button class="reactionBtn" data-voice-line="hurry">⏱️ أسرع</button><button class="reactionBtn" data-voice-line="nice">👏 ممتاز</button></div>';
  $('#voiceBtn').onclick=toggleVoice;
  box.querySelectorAll('[data-team-power]').forEach(button=>button.onclick=()=>send('team_power',{power:button.dataset.teamPower}));
  box.querySelectorAll('[data-reaction]').forEach(button=>button.onclick=()=>send('team_reaction',{reaction:button.dataset.reaction}));
+ box.querySelectorAll('[data-voice-line]').forEach(button=>button.onclick=()=>{const line=button.dataset.voiceLine;speakTeamLine(line);send('team_voice_line',{line})});
  if(voiceEnabled) syncVoicePeers();
 }
 
@@ -448,31 +451,11 @@ function renderPowers(c){
  const blocked=c.blocked;
  [['double','✦','دبل','ضاعف نقاطك'],['time','+7','وقت','7 ثوانٍ'],['block','🔒','تعطيل','امنع مساعدة الخصم']].forEach(([key,ico,title,sub])=>{const b=document.createElement('button');const avail=me.powers[key];b.className='power '+(!avail?'used':'')+(blocked?' blocked':'');b.disabled=!avail||blocked;b.innerHTML='<b>'+ico+' '+title+'</b><small>'+sub+'</small>';b.onclick=()=>send('power',{power:key});box.appendChild(b)})
 }
-const HYPE_PHRASES={
- correctLead:['🔥 قوي! واصل بنفس الروح','💪 هذا اللي أبيه بالضبط','🚀 ما حد يوقفك اليوم'],
- correctBehind:['⚡ رجعة قوية، كمّل كذا!','🎯 خطوة أقرب للفوز','👏 أحسنت، المطاردة بدأت'],
- wrongLead:['😅 ولا يهمك، لسه متقدم','🙂 هذي تحصل، ركّز الجولة الجاية'],
- wrongBehind:['😬 يلا لسه فيه وقت ترجع','🔄 خطأ بسيط، ما ينهي المباراة'],
- tauntWin:['😏 شكلك محتاج مساعدة','🏆 هذا مستواي، خلك واقعي','😎 من زمان ما شفت خصم بهالسهولة','🥱 توقعت تحدي أكبر من كذا'],
- tauntClose:['👀 قريب ألحقك، خلك مركّز','⏳ الوقت يمشي وأنا أقرب'],
-};
-function hypePhrase(myCorrect,myScore,oppScore){
- const diff=myScore-oppScore;
- let pool;
- if(myCorrect) pool=diff>=0?HYPE_PHRASES.correctLead:HYPE_PHRASES.correctBehind;
- else pool=diff>=0?HYPE_PHRASES.wrongLead:HYPE_PHRASES.wrongBehind;
- if(diff>=200&&Math.random()<0.4) pool=HYPE_PHRASES.tauntWin;
- else if(diff<0&&diff>-100&&Math.random()<0.3) pool=HYPE_PHRASES.tauntClose;
- return pool[Math.floor(Math.random()*pool.length)];
-}
 function renderReveal(r){
  if(lastRevealAudio!==r.roundIndex){lastRevealAudio=r.roundIndex;BS_AUDIO?.play?.('reveal');const mine=r.results?.[myId];setTimeout(()=>BS_AUDIO?.play?.(mine?.correct?'correct':'wrong'),120)}
  $('#qmeta').innerHTML='<span class="pill">'+r.category.name+'</span><span class="pill gold">'+r.value+' نقطة</span><span class="pill">كشف النتيجة</span>';$('#question').textContent=r.question;renderMedia(r.media,true);$('#action').innerHTML='';
  const d=document.createElement('div');d.className='reveal';d.innerHTML='<div class="mut">الإجابة الصحيحة</div><div class="answer">'+r.correctAnswer+'</div>';
- const rows=document.createElement('div');rows.className='resultRows';state.players.forEach(p=>{const rr=r.results[p.id]||{};const row=document.createElement('div');row.className='result';row.innerHTML='<span>'+safeName(p.name)+' — '+(rr.correct?'✅ صحيح':'❌ لم يسجل')+'</span><span class="gain">'+(rr.gain?('+'+rr.gain):'0')+'</span>';rows.appendChild(row)});d.appendChild(rows);
- const me=myPlayer(),opp=state.players.find(p=>p.id!==myId);
- if(me&&opp){const hype=document.createElement('div');hype.className='countdownNote';hype.style.cssText='margin-top:6px;font-weight:900;color:#f2c76f';hype.textContent=hypePhrase(Boolean(r.results?.[myId]?.correct),Number(me.score||0),Number(opp.score||0));d.appendChild(hype)}
- const note=document.createElement('div');note.className='countdownNote';note.textContent='الجولة التالية تبدأ تلقائيًا';d.appendChild(note);$('#action').appendChild(d);$('#powers').innerHTML='';
+ const rows=document.createElement('div');rows.className='resultRows';state.players.forEach(p=>{const rr=r.results[p.id]||{};const row=document.createElement('div');row.className='result';row.innerHTML='<span>'+safeName(p.name)+' — '+(rr.correct?'✅ صحيح':'❌ لم يسجل')+'</span><span class="gain">'+(rr.gain?('+'+rr.gain):'0')+'</span>';rows.appendChild(row)});d.appendChild(rows);const note=document.createElement('div');note.className='countdownNote';note.textContent='الجولة التالية تبدأ تلقائيًا';d.appendChild(note);$('#action').appendChild(d);$('#powers').innerHTML='';
 }
 function renderFinished(){
  clearInterval(tickId);stopQuestionAudio();if(!finishedAudioPlayed){finishedAudioPlayed=true;BS_AUDIO?.play?.('win');BS_AUDIO?.vibrate?.([80,50,150])}$('#lobby').classList.add('hidden');$('#match').classList.add('hidden');$('#finished').classList.remove('hidden');renderScores();
@@ -486,24 +469,9 @@ $('#spectateBtn').onclick=async()=>{const invite=new URL('/online.html',location
 $('#inviteFriendBtn').onclick=()=>{if(!state?.code)return toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'quiz',roomCode:state.code})};
 
 const quickMatchParam=qs.get('quickMatch')||qs.get('match');
-if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){
-  $('#entry').classList.add('hidden');setNet('','مزامنة المواجهة');
-  // quick-match-game.js takes over from here and shows #quickArena once it
-  // connects. If that never happens (Firebase unreachable, stale/expired
-  // match link, etc.) don't leave the player stuck on a frozen screen —
-  // fall back to the normal entry screen (private rooms included) and
-  // strip the dead param so a refresh doesn't re-trigger the same hang.
-  setTimeout(()=>{
-    if($('#quickArena').classList.contains('hidden')){
-      const clean=new URL(location.href);clean.searchParams.delete('quickMatch');clean.searchParams.delete('match');
-      history.replaceState(null,'',clean.pathname+clean.search);
-      $('#entry').classList.remove('hidden');
-      setNet('bad','تعذر فتح المواجهة — جرّب البحث عن منافس مرة ثانية');
-      toast('تعذر فتح المواجهة السريعة، جرّب مرة ثانية أو العب بغرفة خاصة');
-    }
-  },12000);
-}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
+if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
+<script src="assets/js/questions-data.js"></script>
 <script type="module" src="assets/js/quick-match-game.js"></script>
 </body></html>
