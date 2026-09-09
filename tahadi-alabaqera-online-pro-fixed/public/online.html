@@ -448,11 +448,31 @@ function renderPowers(c){
  const blocked=c.blocked;
  [['double','✦','دبل','ضاعف نقاطك'],['time','+7','وقت','7 ثوانٍ'],['block','🔒','تعطيل','امنع مساعدة الخصم']].forEach(([key,ico,title,sub])=>{const b=document.createElement('button');const avail=me.powers[key];b.className='power '+(!avail?'used':'')+(blocked?' blocked':'');b.disabled=!avail||blocked;b.innerHTML='<b>'+ico+' '+title+'</b><small>'+sub+'</small>';b.onclick=()=>send('power',{power:key});box.appendChild(b)})
 }
+const HYPE_PHRASES={
+ correctLead:['🔥 قوي! واصل بنفس الروح','💪 هذا اللي أبيه بالضبط','🚀 ما حد يوقفك اليوم'],
+ correctBehind:['⚡ رجعة قوية، كمّل كذا!','🎯 خطوة أقرب للفوز','👏 أحسنت، المطاردة بدأت'],
+ wrongLead:['😅 ولا يهمك، لسه متقدم','🙂 هذي تحصل، ركّز الجولة الجاية'],
+ wrongBehind:['😬 يلا لسه فيه وقت ترجع','🔄 خطأ بسيط، ما ينهي المباراة'],
+ tauntWin:['😏 شكلك محتاج مساعدة','🏆 هذا مستواي، خلك واقعي','😎 من زمان ما شفت خصم بهالسهولة','🥱 توقعت تحدي أكبر من كذا'],
+ tauntClose:['👀 قريب ألحقك، خلك مركّز','⏳ الوقت يمشي وأنا أقرب'],
+};
+function hypePhrase(myCorrect,myScore,oppScore){
+ const diff=myScore-oppScore;
+ let pool;
+ if(myCorrect) pool=diff>=0?HYPE_PHRASES.correctLead:HYPE_PHRASES.correctBehind;
+ else pool=diff>=0?HYPE_PHRASES.wrongLead:HYPE_PHRASES.wrongBehind;
+ if(diff>=200&&Math.random()<0.4) pool=HYPE_PHRASES.tauntWin;
+ else if(diff<0&&diff>-100&&Math.random()<0.3) pool=HYPE_PHRASES.tauntClose;
+ return pool[Math.floor(Math.random()*pool.length)];
+}
 function renderReveal(r){
  if(lastRevealAudio!==r.roundIndex){lastRevealAudio=r.roundIndex;BS_AUDIO?.play?.('reveal');const mine=r.results?.[myId];setTimeout(()=>BS_AUDIO?.play?.(mine?.correct?'correct':'wrong'),120)}
  $('#qmeta').innerHTML='<span class="pill">'+r.category.name+'</span><span class="pill gold">'+r.value+' نقطة</span><span class="pill">كشف النتيجة</span>';$('#question').textContent=r.question;renderMedia(r.media,true);$('#action').innerHTML='';
  const d=document.createElement('div');d.className='reveal';d.innerHTML='<div class="mut">الإجابة الصحيحة</div><div class="answer">'+r.correctAnswer+'</div>';
- const rows=document.createElement('div');rows.className='resultRows';state.players.forEach(p=>{const rr=r.results[p.id]||{};const row=document.createElement('div');row.className='result';row.innerHTML='<span>'+safeName(p.name)+' — '+(rr.correct?'✅ صحيح':'❌ لم يسجل')+'</span><span class="gain">'+(rr.gain?('+'+rr.gain):'0')+'</span>';rows.appendChild(row)});d.appendChild(rows);const note=document.createElement('div');note.className='countdownNote';note.textContent='الجولة التالية تبدأ تلقائيًا';d.appendChild(note);$('#action').appendChild(d);$('#powers').innerHTML='';
+ const rows=document.createElement('div');rows.className='resultRows';state.players.forEach(p=>{const rr=r.results[p.id]||{};const row=document.createElement('div');row.className='result';row.innerHTML='<span>'+safeName(p.name)+' — '+(rr.correct?'✅ صحيح':'❌ لم يسجل')+'</span><span class="gain">'+(rr.gain?('+'+rr.gain):'0')+'</span>';rows.appendChild(row)});d.appendChild(rows);
+ const me=myPlayer(),opp=state.players.find(p=>p.id!==myId);
+ if(me&&opp){const hype=document.createElement('div');hype.className='countdownNote';hype.style.cssText='margin-top:6px;font-weight:900;color:#f2c76f';hype.textContent=hypePhrase(Boolean(r.results?.[myId]?.correct),Number(me.score||0),Number(opp.score||0));d.appendChild(hype)}
+ const note=document.createElement('div');note.className='countdownNote';note.textContent='الجولة التالية تبدأ تلقائيًا';d.appendChild(note);$('#action').appendChild(d);$('#powers').innerHTML='';
 }
 function renderFinished(){
  clearInterval(tickId);stopQuestionAudio();if(!finishedAudioPlayed){finishedAudioPlayed=true;BS_AUDIO?.play?.('win');BS_AUDIO?.vibrate?.([80,50,150])}$('#lobby').classList.add('hidden');$('#match').classList.add('hidden');$('#finished').classList.remove('hidden');renderScores();
@@ -466,7 +486,23 @@ $('#spectateBtn').onclick=async()=>{const invite=new URL('/online.html',location
 $('#inviteFriendBtn').onclick=()=>{if(!state?.code)return toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'quiz',roomCode:state.code})};
 
 const quickMatchParam=qs.get('quickMatch')||qs.get('match');
-if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
+if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){
+  $('#entry').classList.add('hidden');setNet('','مزامنة المواجهة');
+  // quick-match-game.js takes over from here and shows #quickArena once it
+  // connects. If that never happens (Firebase unreachable, stale/expired
+  // match link, etc.) don't leave the player stuck on a frozen screen —
+  // fall back to the normal entry screen (private rooms included) and
+  // strip the dead param so a refresh doesn't re-trigger the same hang.
+  setTimeout(()=>{
+    if($('#quickArena').classList.contains('hidden')){
+      const clean=new URL(location.href);clean.searchParams.delete('quickMatch');clean.searchParams.delete('match');
+      history.replaceState(null,'',clean.pathname+clean.search);
+      $('#entry').classList.remove('hidden');
+      setNet('bad','تعذر فتح المواجهة — جرّب البحث عن منافس مرة ثانية');
+      toast('تعذر فتح المواجهة السريعة، جرّب مرة ثانية أو العب بغرفة خاصة');
+    }
+  },12000);
+}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
 <script type="module" src="assets/js/quick-match-game.js"></script>

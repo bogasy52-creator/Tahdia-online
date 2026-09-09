@@ -86,14 +86,17 @@ if (!matchId) {
 } else {
   startQuickMatch().catch((error) => {
     console.error("quick match failed", error);
-    byId("entry")?.classList.add("hidden");
+    // Don't strand the player on a dead error card — clear the stale
+    // match link and send them back to the normal entry screen (private
+    // rooms included) instead of a dead end with no way forward.
+    const clean = new URL(location.href);
+    clean.searchParams.delete("quickMatch");
+    clean.searchParams.delete("match");
+    history.replaceState(null, "", clean.pathname + clean.search);
+    byId("quickArena")?.classList.add("hidden");
     byId("room")?.classList.add("hidden");
-    byId("quickArena")?.classList.remove("hidden");
-    const q = byId("qmQuestion");
-    if (q) q.textContent = "تعذر فتح المواجهة";
-    const status = byId("qmStatus");
-    if (status) status.textContent = error?.message || "خطأ اتصال";
-    byId("qmChoices")?.replaceChildren();
+    byId("entry")?.classList.remove("hidden");
+    showToast(error?.message || "تعذر فتح المواجهة — جرّب مرة ثانية");
   });
 }
 

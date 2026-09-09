@@ -72,7 +72,7 @@ b25efbc1c6edc35367b4c731de5068a64cb7515d2656558e631587b56ddea446  ./public/asset
 3642ae1cec7c5671468772f6bed48b3d1214f6ae6783a5caaacce29b47807bae  ./public/assets/js/platform.js
 58a2d26fc4336b04a076251dd946a69ce398ef6c998756a9b877b3c87c56eaad  ./public/assets/js/progression.js
 211be816f8f2e1c2d5f60eeb99daf7826a271f30a8cc30d090f09067c3f79adb  ./public/assets/js/questions-data.js
-c3255e5daf15c905ee522c65c4b231f531b6fefd39f2256cd2d805c46ded7c4a  ./public/assets/js/quick-match-game.js
+b7d6f46977e0d04dac4089253d7749fcd0313c96a37f7522e2a96d2258c29960  ./public/assets/js/quick-match-game.js
 8b2fae174893f30800422dd1f0e4faef9b271b3fab0106b7599405f63cc2820c  ./public/assets/js/quiz-media.js
 3637201d2595ec4fb3d90ec5b22af18e570c6b3be1f984d75763e4e60b09602d  ./public/assets/js/snake-classic.js
 0789d148c44ee948638c124b1595d753d1e26bf58f3b575f69ac548d07b10705  ./public/assets/js/snake-pro-upgrade.js
@@ -393,7 +393,7 @@ ab32c474c1cbb8d7b24a92c3a0b2e37b937c7486c309cf11d14e86e455fb062a  ./public/logic
 2c85788e8f9ee512e526bc154e3fd3c06d6b1a4eb34c17cfe7b2dac10559e9ee  ./public/manifest.webmanifest
 8f3658547252fa25691fbee80ff6401e995d0c9ef2c8145ee0c3d4114aaeb87c  ./public/matchmaking.html
 29aa9133dc53177f79ae093dc4484baa3546636e9203a38c16415f95f2fa690a  ./public/memory.html
-c8057c76674a61f5737683fb4dd1c23a704708f4e30af3fdcf6793d97cd841ca  ./public/online.html
+3fb7a590202bda1c1587ad9ed48c7b76fed3059e03ec72cd9e276cecdafde03e  ./public/online.html
 d44275d8a2ef94453022efdc191506172f9d659c1f60e5fbb2735de22ae599b5  ./public/order.html
 6dcf077223730aed39dda4fa93afff055fbe1e10e10a4cb06372289b3a9f3f56  ./public/puzzle.html
 cd63a3338a40dcd74147993cceffb1ae3a4a3c73db16bb514c74da1c693d2fbb  ./public/reaction.html
