@@ -1,3 +1,4 @@
+@import url('./board-fullscreen-pro.css');
 /* Busraj 3.2 — Jackaroo Black Table. Modern, high-contrast and mobile board-first. */
 body.game-jackaroo.game-running{background:radial-gradient(circle at 15% 8%,rgba(240,185,74,.10),transparent 28%),radial-gradient(circle at 85% 88%,rgba(34,211,238,.07),transparent 28%),#05070c!important}
 body.game-jackaroo.game-running .jack-layout{grid-template-columns:minmax(0,1fr) clamp(300px,27vw,370px)!important;gap:8px!important;margin-top:6px!important;align-items:start}

@@ -23,11 +23,12 @@ ca1ca347e95e68aeb94c0cde9f2e024a6dce58e30208c7f2d46112e82c53e680  ./PART2-NOTES-
 e1246638afda19a54fea2612a0db80bd4790d15f5dcdd084b4e4bf1fb47c9e14  ./public/accuracy.html
 3c71fb17908278161e69f7903a11431d8f150b59e60d4528cccf6dc54c2e415e  ./public/apple-touch-icon.png
 560b9921fe297f7a62ca5ebc1f359c56aa58c24583c7e963a82f8d57f69e64ac  ./public/assets/css/arcade.css
+46b0186354b4fe82af2c44d469059d86305d97fbbbd789591fb2ba37a64890d3  ./public/assets/css/board-fullscreen-pro.css
 9068cd42ec0eb00df1f34aae3a011365a0682f13005c7d4ebbfe08aa3d49f52b  ./public/assets/css/board-premium.css
-3806f80d8deb9d3774f6e69f48f02b0139ba393cf0bb40d2a8fc818098534595  ./public/assets/css/fullscreen-board.css
+8bb8589e0b87b741a8460025b0978ececbc4ad0f050b5b393a6cd23fc9594fa1  ./public/assets/css/fullscreen-board.css
 18248ea425fc1e2ff5fff4ddf2e3703743e56bd153794bc4b64d3f2c38caada2  ./public/assets/css/game-kit.css
 53fde6007af0a8835a96d0867314438abf2332a9b00198fe5ed94d06b9d604b2  ./public/assets/css/home-shell.css
-bb7caa7549beccb389ac9d677814454a8d9bb783d56a56c89ba94b37abdb496b  ./public/assets/css/jackaroo-next.css
+9e6fbd3e5206beeb9bb272179bac317aea972ba45073ca873f4c124e98b623df  ./public/assets/css/jackaroo-next.css
 f5cff9ccfa763062bd72f6db60275ea2d4b81ec42966077b840011ee4c365698  ./public/assets/css/jackaroo-premium.css
 5457eca2ab5ebcea9761b3fcbf892123840e46fab35d75034f23e11c12832c6a  ./public/assets/css/luxury-game-ui.css
 825ec5977cc516cc1b20f202b385fc8409efc47a838153ae05b62c53f5c29dc4  ./public/assets/css/mobile-game.css
@@ -42,7 +43,7 @@ abf322aca8309d2f5143c118db3e77f4c088feefdce3ee7b8a2581ffb954e01f  ./public/asset
 1d53b6196b5f8419224f45f5069e7848ea0d7a8fe72cf4c72b05b87015b0858a  ./public/assets/css/snake-arena-pro.css
 070e63ff99ad81bfd9f0ffa7b14a5544aa0737987e522a57e12849a1464f4830  ./public/assets/css/snake-classic.css
 9bd9ac3db31506406afa88c40e3ddbb19e196848cd4cdbb3393d96b76f8bc4bc  ./public/assets/css/snake-reference-skin.css
-bc7fa7b04a0fedab77884e1a666cf64fef6c6fe08775e4bce40eaa838fd26427  ./public/assets/css/snakes-motion-pro.css
+acdab6d82706edd33ce4af0755c83765438455fbad69e7e7a435220e4b56e4de  ./public/assets/css/snakes-motion-pro.css
 99d3c321a65b722d7f23bed071fe131253d0525480b51b3c4fdc375689310d14  ./public/assets/css/snakes-premium.css
 b8502759d2f74a606c4f9d73ca14a13b876cceeb49273da52adb2766158a15c9  ./public/assets/css/snakes-v4-board.css
 3ef75c688cbf26854a2f20d510bf4eff74aa34b40e571800ac66fcc1d3b9471e  ./public/assets/css/snakes-v4-interactions.css
@@ -396,7 +397,7 @@ d44275d8a2ef94453022efdc191506172f9d659c1f60e5fbb2735de22ae599b5  ./public/order
 6dcf077223730aed39dda4fa93afff055fbe1e10e10a4cb06372289b3a9f3f56  ./public/puzzle.html
 cd63a3338a40dcd74147993cceffb1ae3a4a3c73db16bb514c74da1c693d2fbb  ./public/reaction.html
 452a8abc040710da4d23168353772e2d99ca40e3b6252a8399845da1d4259c77  ./public/secret.html
-0e5cecdde4e86e20518b87eda0e0e98feaba810ae3975810d3c89063c0c22ade  ./public/service-worker.js
+6e76fc62d390a94b7c19ac5cfff578893b4e05bfc0bb483c61002d966616dcea  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
 f1f586f2b03439a64aa188fa98c7ee88a7b96f5a2a76346624a9912b98844f85  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html

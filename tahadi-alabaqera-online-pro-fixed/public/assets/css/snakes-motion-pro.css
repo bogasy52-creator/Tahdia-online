@@ -57,3 +57,44 @@ body.game-snakes.game-running .snake-board-wrap.ladder-active .snake-creature .s
   body.game-snakes.game-running .snake-board-wrap,
   body.game-snakes.game-running .snake-travel-pawn{will-change:auto;}
 }
+
+/* Visible art direction pass: a real arena surface instead of a plain grid. */
+body.game-snakes.game-running .game-toolbar .toolbar-title h1{letter-spacing:-.035em;text-shadow:0 5px 22px rgba(34,211,238,.22);}
+body.game-snakes.game-running .game-toolbar .toolbar-title h1:before{content:'🐍 ';filter:drop-shadow(0 3px 8px rgba(34,211,238,.46));}
+body.game-snakes.game-running .game-toolbar .toolbar-title p{color:#a9e9ea!important;}
+body.game-snakes.game-running .game-toolbar .toolbar-title p:after{content:'  •  حيّ';color:#f4cf77;font-weight:900;}
+body.game-snakes.game-running .snake-board-wrap{
+  isolation:isolate!important;border:1px solid rgba(81,231,230,.38)!important;
+  background:linear-gradient(145deg,#0c2430 0%,#07131f 50%,#0b1020 100%)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 5px rgba(3,9,15,.72),0 0 38px rgba(34,211,238,.12)!important;
+}
+body.game-snakes.game-running .snake-board-wrap:after{
+  content:'JUNGLE RUN  •  100';position:absolute;top:8px;left:14px;z-index:35;
+  padding:4px 10px;border:1px solid rgba(164,244,238,.26);border-radius:999px;
+  color:#b5f5ee;background:rgba(4,17,27,.72);font:900 clamp(7px,1.2vw,11px)/1 system-ui,sans-serif;
+  letter-spacing:.18em;pointer-events:none;text-shadow:0 0 10px rgba(34,211,238,.5);
+}
+body.game-snakes.game-running .snake-cell{
+  background:
+    radial-gradient(circle at 24% 16%,rgba(255,255,255,.18),transparent 28%),
+    linear-gradient(145deg,hsl(calc(184 + (var(--tile-index,1) * 17) % 76) 48% 22%),hsl(calc(196 + (var(--tile-index,1) * 13) % 62) 46% 10%))!important;
+  border-color:rgba(104,225,220,.25)!important;border-radius:clamp(7px,1.1vw,15px)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -7px 14px rgba(0,0,0,.20),0 2px 5px rgba(0,0,0,.22)!important;
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease!important;
+}
+body.game-snakes.game-running .snake-cell:nth-child(3n){background:linear-gradient(145deg,#173b43,#0b1d29)!important;}
+body.game-snakes.game-running .snake-cell:nth-child(5n){background:linear-gradient(145deg,#332b52,#14162d)!important;}
+body.game-snakes.game-running .snake-cell:nth-child(10n+1){background:linear-gradient(145deg,#4b3b22,#1e1a16)!important;border-color:rgba(244,207,119,.4)!important;}
+body.game-snakes.game-running .snake-cell:hover{filter:brightness(1.24);transform:translateY(-1px);z-index:40;}
+body.game-snakes.game-running .snake-cell>b{color:#eafbf7!important;text-shadow:0 2px 4px rgba(0,0,0,.72)!important;font-weight:1000!important;}
+body.game-snakes.game-running .jump-mark{filter:drop-shadow(0 3px 4px rgba(0,0,0,.62));font-size:clamp(12px,2vw,22px)!important;}
+body.game-snakes.game-running .snake-side{border:1px solid rgba(81,231,230,.28)!important;background:linear-gradient(160deg,rgba(11,28,40,.98),rgba(6,12,23,.98))!important;}
+body.game-snakes.game-running .snake-side:after{content:'لوحة القيادة  •  LIVE';position:absolute;top:9px;right:12px;color:#a9e9ea;font:900 9px/1 system-ui,sans-serif;letter-spacing:.08em;opacity:.88;pointer-events:none;}
+body.game-snakes.game-running .snake-side .game-status{border-color:rgba(244,207,119,.35)!important;color:#f9e5a6!important;}
+body.game-snakes.game-running .snake-side #roll{border-radius:16px!important;letter-spacing:-.02em;box-shadow:0 10px 24px rgba(90,42,181,.4),0 0 20px rgba(34,211,238,.12)!important;}
+body.game-snakes.game-running .snake-token{box-shadow:0 0 0 2px rgba(255,255,255,.62),0 8px 12px rgba(0,0,0,.5),0 0 14px var(--pc)!important;}
+body.game-snakes.game-running .snake-token:after{content:'✦';position:absolute;inset:0;display:grid;place-items:center;color:#fff9;font-size:.7em;pointer-events:none;}
+@media(max-width:650px){
+  body.game-snakes.game-running .snake-board-wrap:after{top:5px;left:8px;font-size:7px;}
+  body.game-snakes.game-running .snake-side:after{top:6px;right:8px;font-size:8px;}
+}

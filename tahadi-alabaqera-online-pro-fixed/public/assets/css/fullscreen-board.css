@@ -1,3 +1,4 @@
+@import url('./board-fullscreen-pro.css');
 /* Busraj 3.0.1 — canonical fullscreen stage for Snakes + Zahra.
    This file intentionally loads after mobile-game.css and owns the complete
    in-match layout for these two games on phones, tablets and desktops. */
