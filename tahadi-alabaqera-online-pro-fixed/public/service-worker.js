@@ -1,7 +1,7 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
-const CACHE_NAME = 'busraj-games-v33-board-games-fullscreen-release';
+const CACHE_NAME = 'busraj-games-v34-playability-fixes-release';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -66,6 +66,7 @@ const APP_SHELL = [
   '/assets/js/platform.js',
   '/assets/js/progression.js',
   '/assets/js/arcade-games.js',
+  '/assets/js/memory-pro.js',
   '/assets/js/new-games.js',
   '/assets/js/engines/spotdiff-scenes.js',
   '/assets/js/social-client.js',

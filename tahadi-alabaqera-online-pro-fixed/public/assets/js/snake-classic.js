@@ -125,7 +125,12 @@
   function bind() {
     $('classicStart')?.addEventListener('click', start); $('classicPause')?.addEventListener('click', pause); $('classicExit')?.addEventListener('click', exit);
     $('classicSound')?.addEventListener('click', () => { soundOn = !soundOn; $('classicSound').classList.toggle('on', soundOn); $('classicSound').setAttribute('aria-pressed', String(soundOn)); });
-    document.querySelectorAll('.classic-controls [data-dir]').forEach((button) => button.addEventListener('click', () => { const dirs = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } }; setDirection(dirs[button.dataset.dir]); }));
+    const dirs = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } };
+    document.querySelectorAll('.classic-controls [data-dir]').forEach((button) => {
+      const push = (event) => { event.preventDefault(); setDirection(dirs[button.dataset.dir]); };
+      button.addEventListener('pointerdown', push, { passive: false });
+      button.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') push(event); });
+    });
     document.addEventListener('keydown', (event) => { const keys = { ArrowUp: { x: 0, y: -1 }, w: { x: 0, y: -1 }, ArrowDown: { x: 0, y: 1 }, s: { x: 0, y: 1 }, ArrowLeft: { x: -1, y: 0 }, a: { x: -1, y: 0 }, ArrowRight: { x: 1, y: 0 }, d: { x: 1, y: 0 } }; if (keys[event.key]) { event.preventDefault(); setDirection(keys[event.key]); } if (event.key === ' ' && running) { event.preventDefault(); pause(); } });
     let touch = null; canvas.addEventListener('touchstart', (event) => { const t = event.changedTouches[0]; touch = { x: t.clientX, y: t.clientY }; }, { passive: true }); canvas.addEventListener('touchend', (event) => { if (!touch) return; const t = event.changedTouches[0], dx = t.clientX - touch.x, dy = t.clientY - touch.y; touch = null; if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return; setDirection(Math.abs(dx) > Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) }); }, { passive: true });
     window.addEventListener('resize', resize); resetState(); resize();

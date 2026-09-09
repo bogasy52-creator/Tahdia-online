@@ -187,6 +187,7 @@ export function generateDiffPoints(count = 5, margin = 14, rMin = 7, rMax = 13) 
       x: Math.round((x + (Math.random() * 6 - 3)) * 10) / 10,
       y: Math.round((y + (Math.random() * 6 - 3)) * 10) / 10,
       r: radius,
+      kind: i % 2 === 0 ? "remove" : "color",
     }));
   }
   const cols = Math.ceil(Math.sqrt(count * 1.3));
@@ -206,7 +207,7 @@ export function generateDiffPoints(count = 5, margin = 14, rMin = 7, rMax = 13) 
     const jitterW = Math.max(0, cellW - pad * 2), jitterH = Math.max(0, cellH - pad * 2);
     const x = baseX + pad + Math.random() * jitterW;
     const y = baseY + pad + Math.random() * jitterH;
-    return { id: `d${i}`, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, r: Math.round(r * 10) / 10 };
+    return { id: `d${i}`, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, r: Math.round(r * 10) / 10, kind: i % 2 === 0 ? "remove" : "color" };
   });
 }
 

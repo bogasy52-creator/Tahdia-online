@@ -21,6 +21,8 @@
   }
   function renderSound(container, media, opts){
     const card=document.createElement('div');card.className='quiz-sound-card quiz-media-shell';
+    const soundKey=media.soundKey||String(media.src||'').split('/').pop().replace(/\.wav$/i,'');
+    card.dataset.soundKey=soundKey;
     const top=document.createElement('div');top.className='quiz-sound-top';
     const title=document.createElement('div');title.className='quiz-sound-title';title.textContent='🎧 SOUND CHALLENGE';
     const badge=document.createElement('div');badge.className='quiz-sound-badge';badge.textContent='استماع محدود';
@@ -28,11 +30,11 @@
     const {wave,els}=makeWave(card,27);
     const btn=document.createElement('button');btn.type='button';btn.className='quiz-sound-play';btn.textContent='▶ تشغيل الصوت';card.appendChild(btn);
     const foot=document.createElement('div');foot.className='quiz-sound-foot';
-    const hint=document.createElement('span');hint.textContent='استمع للتفاصيل، المقطع لا يكشف الإجابة';
+    const hint=document.createElement('span');hint.textContent='استمع للتفاصيل — المقطع مرتبط بإجابته الصحيحة';
     const dots=document.createElement('span');dots.className='quiz-listen-dots';foot.append(hint,dots);card.appendChild(foot);
     container.appendChild(card);
     const max=Math.max(1,Number(media.replays)||2);let plays=0,raf=0,source=null,analyser=null,data=null,ended=false;
-    const audio=new Audio(media.src);audio.preload='auto';audio.crossOrigin = media.src.startsWith('http') ? 'anonymous' : '';
+    const audio=new Audio(media.src);audio.preload='auto';audio.playbackRate=1;audio.volume=Math.max(.45,Math.min(1,Number(localStorage.getItem('bs_audio_volume')||.92)));audio.crossOrigin = media.src.startsWith('http') ? 'anonymous' : '';
     function updateDots(){dots.innerHTML='';for(let i=0;i<max;i++){const d=document.createElement('span');d.textContent='●';if(i<plays)d.className='used';dots.appendChild(d)}badge.textContent=`${plays} / ${max} استماع`}
     function idleWave(){els.forEach((b,i)=>{b.style.height=`${7+(i%5)*2}px`;b.style.opacity='.38'})}
     function draw(){

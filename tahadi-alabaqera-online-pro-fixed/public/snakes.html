@@ -109,6 +109,8 @@ import {createMotionScheduler,animateTimeline} from './assets/js/snakes-motion-e
 import './assets/js/snake-classic.js';
 function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const colors=['#12bff5','#a855f7','#f0b94a','#22c55e'],$=s=>document.querySelector(s),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
+let lastLocalRoll=null;
+function fairLocalRoll(){let roll=Math.floor(Math.random()*6)+1;if(Number.isInteger(lastLocalRoll)&&roll===lastLocalRoll)roll=roll===6?1:roll+1;lastLocalRoll=roll;return roll}
 const motion=createMotionScheduler({reducedMotion:reducedMotion()}),wait=ms=>motion.delay(ms).catch(()=>{});
 const activeAnimations=new Set();
 let motionEpoch=0,state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),confettiShown=false;
@@ -211,6 +213,7 @@ function cancelBoardMotion(){
   document.querySelectorAll('.snake-travel-pawn').forEach(node=>node.remove());
   document.querySelectorAll('.motion-hidden').forEach(node=>node.classList.remove('motion-hidden'));
   document.querySelectorAll('.snake-creature,.snake-head-creature,.ladder-creature').forEach(node=>node.classList.remove('tracking','attacking','swallowing','digesting','releasing','activating','climbing','landing'));
+  document.querySelectorAll('.snake-food-bulge,.trail-lit,.step-hit,.landing-hit').forEach(node=>{if(node.classList.contains('snake-food-bulge'))node.remove();else node.classList.remove('trail-lit','step-hit','landing-hit')});
   $('#boardWrap')?.classList.remove('board-moving','snake-active','ladder-active');
 }
 function cuePhase(phase){if(phase?.sound)BS_AUDIO.play(phase.sound);if(phase?.haptic)BS_AUDIO.vibrate(phase.haptic)}
@@ -285,7 +288,7 @@ async function runSoloAi(){
   try{
     await wait(650);
     do{
-      const roll=Math.floor(Math.random()*6)+1;
+      const roll=fairLocalRoll();
       await spinDie(roll);
       const prev=structuredClone(state),next=playSnakesRoll(state,roll);
       await animateEvent(prev,next);
@@ -306,7 +309,7 @@ async function rollTurn(){
       if(!waitingForRemote){busy=false;render()}
       return;
     }
-    const roll=Math.floor(Math.random()*6)+1;
+    const roll=fairLocalRoll();
     await spinDie(roll);
     const prev=structuredClone(state),next=playSnakesRoll(state,roll);
     await animateEvent(prev,next);
@@ -321,7 +324,7 @@ async function rollTurn(){
   }
 }
 $('#roll').onclick=rollTurn;
-function startLocal(){cancelBoardMotion();mode='local';snakeMeals.clear();confettiShown=false;lastVersion=-1;state=createSnakesGame(names());enterGame();try{BS_AUDIO.play('launch')}catch{}}
+function startLocal(){cancelBoardMotion();mode='local';lastLocalRoll=null;snakeMeals.clear();confettiShown=false;lastVersion=-1;state=createSnakesGame(names());enterGame();try{BS_AUDIO.play('launch')}catch{}}
 function enterGame(){document.body.classList.add('game-running');buildBoard();$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#game').classList.remove('reference-skin');$('#game').classList.add('pro-snake-board');$('#game').classList.toggle('has-rolled',Boolean(state?.lastRoll));$('#winnerOverlay').classList.remove('show');$('#livebar').classList.toggle('hidden',mode!=='online');if(mode==='online')$('#gameRoomCode').textContent=room.code;$('#die').dataset.value=state?.lastRoll||1;$('#status')?.setAttribute('aria-live','polite');render();window.BS_GAME_FULLSCREEN?.fit?.()}
 function setMode(next){mode=next;$('#modeLocal').classList.toggle('active',next==='local');$('#modeOnline').classList.toggle('active',next==='online');$('#localSetup').classList.toggle('hidden',next!=='local');$('#onlineSetup').classList.toggle('hidden',next!=='online');$('#roomLobby').classList.add('hidden');client?.close();client=null;room=null}
 function net(s){for(const id of ['#netBadge','#liveNet']){const e=$(id);if(!e)continue;e.classList.toggle('online',!!s.online);e.classList.toggle('reconnecting',!!s.reconnecting);e.querySelector('span').textContent=s.text||''}if(s.online)BS_AUDIO.play('connect',{volume:.35})}

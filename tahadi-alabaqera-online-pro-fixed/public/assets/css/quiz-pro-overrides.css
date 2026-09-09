@@ -28,3 +28,13 @@
 /* Prevent the Android status bar from clipping the first row of the game. */
 #home,.app{padding-top:max(10px,env(safe-area-inset-top))!important}
 @media(max-width:620px){#game .col{border-radius:15px!important}#game .col::after{inset-inline:6px}.catCard .catText b{font-size:12px!important}}
+/* Printed-in-the-interface typography: labels read as part of the component,
+   not as an unstyled paragraph underneath it. */
+.catCard .catText,.colHead,.tile{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.catCard .catText b{display:flex;align-items:center;gap:6px;letter-spacing:-.02em;text-shadow:0 2px 14px color-mix(in srgb,var(--cat-accent,#8b7bff) 28%,transparent)!important}
+.catCard .catText b:before{content:'◆';font-size:8px;color:var(--cat-accent);filter:drop-shadow(0 0 6px var(--cat-accent))}
+#game .colHead{box-shadow:inset 0 1px #ffffff10,0 10px 26px #0004!important}
+#game .colHead b{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:1000;letter-spacing:-.02em;text-shadow:0 2px 12px color-mix(in srgb,var(--col-accent) 38%,transparent)!important}
+#game .colHead b:after{content:'•';font-size:12px;color:var(--col-accent);opacity:.8}
+#game .tile strong{font-variant-numeric:tabular-nums;text-shadow:0 3px 12px color-mix(in srgb,var(--col-accent) 34%,transparent)!important}
+#game .tile small{font-weight:850;letter-spacing:.02em}

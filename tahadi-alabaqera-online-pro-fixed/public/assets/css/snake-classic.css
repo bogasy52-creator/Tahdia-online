@@ -9,6 +9,20 @@
 #setup .premium-hero p{font-size:0}#setup .premium-hero p:after{content:"لعبة ثعبان حقيقية مرسومة بالكامل: تحرّك، كل الطاقة، وكبّر ثعبانك مع مؤثرات صوتية وتفاعل مستمر.";font-size:14px;line-height:1.8;color:var(--bs-muted)}
 /* The old online board keeps its multiplayer route, but the local game no longer uses its image skin. */
 body.game-snakes .snake-stage.classic-hidden{display:none!important}
+/* On a phone the board is the hero: controls sit immediately below it and
+   the round button follows the arrows, instead of being lost in a side rail. */
+@media(max-width:760px){
+  .classic-shell{display:grid;grid-template-columns:1fr;grid-template-areas:"board" "controls" "status" "goal";gap:9px}
+  .classic-board-card{grid-area:board}
+  .classic-side{display:contents}
+  .classic-side .classic-panel:nth-child(1){grid-area:status;order:3}
+  .classic-side .classic-panel:nth-child(2){grid-area:controls;order:2}
+  .classic-side .classic-panel:nth-child(3){grid-area:goal;order:4}
+  .classic-controls{margin:5px auto 0;max-width:240px;gap:8px}
+  .classic-controls button{min-height:48px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .classic-panel{padding:11px 12px}
+  .classic-actions{margin-top:2px}
+}
 body.game-snakes .snake-side .die{width:96px;height:96px;border-radius:22px;background:linear-gradient(145deg,#fffaf0 0%,#e8dfcf 56%,#c7bba7 100%)!important;border:1px solid #fff8!important;box-shadow:inset -9px -10px 18px #675a441c,inset 6px 6px 13px #fff,0 16px 32px #0009,0 0 20px #f4c76d20!important;transform:none!important}.snake-side .dice-stage:before{width:148px;height:148px;border:1px solid #f4c76d22!important;box-shadow:0 0 20px #f4c76d0c!important}.snake-side .dice-stage:after{width:120px;height:120px;border:0!important;box-shadow:inset 0 0 20px #ffffff08!important}
 @media(max-width:860px){.classic-shell{grid-template-columns:1fr}.classic-side{grid-template-columns:1.1fr .9fr}.classic-side .classic-panel:first-child{grid-row:span 2}}
 @media(max-width:560px){.classic-arena{padding-top:5px}.classic-hud{grid-template-columns:repeat(2,1fr)}.classic-side{grid-template-columns:1fr}.classic-side .classic-panel:first-child{grid-row:auto}.classic-board-card{padding:7px;border-radius:20px}}
@@ -23,3 +37,12 @@ body.game-snakes .snake-side .die{width:96px;height:96px;border-radius:22px;back
 .classic-board-card{padding:11px;border-color:rgba(99,231,255,.3);background:linear-gradient(145deg,#0d1b2b,#060b13);box-shadow:0 24px 70px #0009,0 0 55px #22d3ee13,inset 0 1px #ffffff10}.classic-board-label{position:relative;z-index:2;display:flex;justify-content:space-between;gap:8px;padding:0 4px 9px;color:#7086a1;font-size:9px;font-weight:950;letter-spacing:.08em}.classic-board-label span:first-child{color:#f4c76d}.classic-canvas-wrap{border-color:rgba(99,231,255,.35);box-shadow:inset 0 0 34px #03070d,0 0 0 1px #020812}.classic-canvas-wrap:before{content:"";position:absolute;z-index:1;inset:11px;border:1px solid rgba(99,231,255,.08);border-radius:14px;pointer-events:none}.classic-legend{position:relative;z-index:2;margin-top:9px}.classic-legend span{display:inline-flex;align-items:center;gap:4px;padding:6px 9px;background:rgba(4,10,18,.7);border-color:#ffffff16}.classic-legend i{font-style:normal;color:#f4c76d}.classic-legend .snake i{color:#63e7ff}.classic-legend .food i{color:#ffbd67}
 .classic-panel{border-color:rgba(126,158,208,.2);background:linear-gradient(160deg,rgba(17,31,50,.98),rgba(7,13,24,.98));box-shadow:inset 0 1px #ffffff08,0 15px 35px #0005}.classic-panel-heading{display:flex;align-items:center;gap:8px;margin-bottom:8px}.classic-panel-heading h2{margin:0}.panel-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#22d3ee33,#7c3aed55);color:#8cf1ff;font-weight:950}.classic-controls{direction:ltr;grid-template-columns:repeat(3,1fr);width:min(210px,100%);gap:8px}.classic-controls button{display:grid;place-items:center;min-height:48px;border-color:#355d80;background:linear-gradient(145deg,#162b45,#0a1525);color:#d9f8ff;font-size:25px;line-height:1;box-shadow:inset 0 1px #ffffff10,0 7px 15px #0005}.classic-controls button:hover{border-color:#63e7ff;color:#fff;background:linear-gradient(145deg,#214263,#0b1728)}.classic-controls button span{display:block;transform:none!important}.classic-controls button[data-dir="up"]{grid-column:2}.classic-controls button[data-dir="left"]{grid-column:1;grid-row:2}.classic-controls button[data-dir="down"]{grid-column:2;grid-row:2}.classic-controls button[data-dir="right"]{grid-column:3;grid-row:2}.classic-sound{color:#b9c9dc}.classic-sound>span{display:flex;align-items:center;gap:5px}.classic-sound>span i{font-style:normal;color:#a78bfa;font-size:15px}.classic-help{font-size:12px}.classic-btn{letter-spacing:.01em}.classic-btn.gold{box-shadow:0 12px 24px #f4c76d2b,inset 0 1px #fff8}.classic-btn.gold span{float:left;font-size:18px}
 @media(max-width:560px){.classic-hud{gap:6px}.classic-stat{min-height:62px;padding:9px 5px}.classic-stat b{font-size:21px}.classic-stat.live-stat b{font-size:14px}.classic-board-label{font-size:8px}.classic-controls{width:min(238px,100%)}.classic-controls button{min-height:52px}}
+/* Final mobile order override (after the legacy responsive rules above). */
+@media(max-width:760px){
+  .classic-shell{display:grid!important;grid-template-columns:1fr!important;grid-template-areas:"board" "controls" "status" "goal"!important;gap:9px!important}
+  .classic-board-card{grid-area:board!important}
+  .classic-side{display:contents!important}
+  .classic-side .classic-panel:nth-child(1){grid-area:status!important;grid-row:auto!important}
+  .classic-side .classic-panel:nth-child(2){grid-area:controls!important;grid-row:auto!important}
+  .classic-side .classic-panel:nth-child(3){grid-area:goal!important;grid-row:auto!important}
+}

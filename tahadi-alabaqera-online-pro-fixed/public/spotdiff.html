@@ -101,6 +101,7 @@
       <div><div class="sd-timer" id="sdTimer">01:15</div><div class="sd-diff-label" id="sdDiffLive" style="margin:2px 0 0"></div></div>
       <div class="sd-score sd-opp" id="sdOppWrap"><b id="sdOppScore">0</b><small id="sdOppLabel">—</small></div>
     </div>
+    <div class="sd-miss-limit" role="status"><span>محاولات خاطئة</span><b id="sdMisses">0 / 5</b></div>
     <div class="sd-boards">
       <div class="sd-board" id="sdBoardLeft"><span class="sd-label">الأصلية</span><canvas id="sdCanvasLeft"></canvas></div>
       <div class="sd-board" id="sdBoardRight"><span class="sd-label">حدد الفرق هنا ◉</span><canvas id="sdCanvasRight"></canvas></div>
@@ -179,15 +180,21 @@ function applyDiffMarks(ctx, size, diffs, allDiffs, img){
     const w=x1-x0, h=y1-y0;
     if(w<=0||h<=0) return;
     const [dx,dy] = shifts[idx % shifts.length];
-    // Move a small, irregular piece of the real photograph. This creates a
-    // believable object/detail change instead of a coloured circle or answer
-    // marker painted over the image.
+    // Every difference is a visible operation on the photograph: remove a
+    // detail or recolour it. The answer is never drawn as a hint overlay.
     ctx.save();
     organicClip(ctx,cx,cy,rad,idx+1);
-    ctx.globalAlpha = .98;
-    ctx.drawImage(img,
-      sx+(x0+dx)/scale, sy+(y0+dy)/scale, w/scale, h/scale,
-      x0, y0, w, h);
+    ctx.globalAlpha = 1;
+    if(p.kind === 'color'){
+      ctx.filter = 'hue-rotate(128deg) saturate(2.25) contrast(1.14)';
+      ctx.drawImage(img, sx+x0/scale, sy+y0/scale, w/scale, h/scale, x0, y0, w, h);
+    }else{
+      ctx.filter = 'blur(5px) brightness(.72) saturate(.35)';
+      ctx.drawImage(img, sx+(x0+dx*3.4)/scale, sy+(y0+dy*3.4)/scale, w/scale, h/scale, x0, y0, w, h);
+      ctx.filter = 'none';
+      ctx.fillStyle = 'rgba(8,13,22,.16)';
+      ctx.fillRect(x0,y0,w,h);
+    }
     ctx.restore();
   });
 }
@@ -209,7 +216,8 @@ const leftCtx = leftCanvas.getContext('2d'), rightCtx = rightCanvas.getContext('
 let mode = 'local';
 let currentImg = null, currentDiffs = [];
 let foundLocal = new Set();
-let localScore = 0, localTimer = null, localEndsAt = 0;
+let localScore = 0, localTimer = null, localEndsAt = 0, localMisses = 0;
+const MAX_LOCAL_MISSES = 5;
 let recentPhotos = [];
 let localDifficulty = 'easy', hostDifficulty = 'easy';
 let client = null, room = null, stopCountdown = null;
@@ -268,7 +276,9 @@ function clickToPct(e, board){
 async function startLocal(){
   foundLocal = new Set();
   localScore = 0;
+  localMisses = 0;
   $('#sdMyScore').textContent = '0';
+  $('#sdMisses').textContent = `0 / ${MAX_LOCAL_MISSES}`;
   $('#sdOppWrap').classList.add('hidden');
   $('#sdOver').classList.remove('show');
   const photo = pickPhoto(recentPhotos);
@@ -277,7 +287,7 @@ async function startLocal(){
   const { points, duration } = diffPointsForDifficulty(localDifficulty);
   await renderPhoto(photo, points, new Map());
   const d = DIFFICULTIES[localDifficulty];
-  $('#sdDiffLive').textContent = '4 فروقات واضحة';
+  $('#sdDiffLive').textContent = `${d.count} فروقات واضحة`;
   localEndsAt = Date.now() + duration;
   clearInterval(localTimer);
   localTimer = setInterval(tickLocal, 200);
@@ -305,15 +315,18 @@ function handleLocalClick(e, board){
     play('correct');
     if(foundLocal.size >= currentDiffs.length){ clearInterval(localTimer); return endLocal(); }
   } else {
+    localMisses++;
+    $('#sdMisses').textContent = `${localMisses} / ${MAX_LOCAL_MISSES}`;
     missFlash(board, x, y);
     play('wrong');
+    if(localMisses >= MAX_LOCAL_MISSES){ clearInterval(localTimer); return endLocal('misses'); }
   }
 }
-function endLocal(){
+function endLocal(reason='time'){
   const win = foundLocal.size >= currentDiffs.length;
-  $('#sdOverIcon').textContent = win ? '🏆' : '⏱';
-  $('#sdOverTitle').textContent = win ? 'أحسنت! لقطتها كاملة' : 'انتهى الوقت';
-  $('#sdOverSub').textContent = `وجدت ${foundLocal.size} من ${currentDiffs.length} فروقات`;
+  $('#sdOverIcon').textContent = win ? '🏆' : (reason==='misses' ? '🚫' : '⏱');
+  $('#sdOverTitle').textContent = win ? 'أحسنت! لقطتها كاملة' : (reason==='misses' ? 'انتهت المحاولات' : 'انتهى الوقت');
+  $('#sdOverSub').textContent = `وجدت ${foundLocal.size} من ${currentDiffs.length} فروقات • أخطاء ${localMisses}/${MAX_LOCAL_MISSES}`;
   $('#sdOver').classList.add('show');
   play(win ? 'finish' : 'buzzer');
 }
@@ -347,7 +360,7 @@ async function onRoomState(next){
   const oppPlayer = next.players[oppIdx];
   $('#sdOppLabel').textContent = oppPlayer ? oppPlayer.name : 'الخصم';
   const dInfo = DIFFICULTIES[st.difficulty] || DIFFICULTIES.medium;
-  $('#sdDiffLive').textContent = '4 فروقات واضحة';
+  $('#sdDiffLive').textContent = `${dInfo.count} فروقات واضحة`;
   $('#sdMyScore').textContent = st.scores?.[meIdx] ?? 0;
   $('#sdOppScore').textContent = st.scores?.[oppIdx] ?? 0;
   const map = new Map();
