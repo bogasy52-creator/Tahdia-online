@@ -58,6 +58,23 @@ body.game-snakes.game-running .snake-board-wrap.ladder-active .snake-creature .s
   body.game-snakes.game-running .snake-travel-pawn{will-change:auto;}
 }
 
+/* Final visibility/performance pass: the procedural creatures stay visible
+   before any move, while mobile disables only the expensive blur layers. */
+body.game-snakes.game-running .board-paths{opacity:1!important;visibility:visible!important}
+body.game-snakes.game-running .snake-creature,
+body.game-snakes.game-running .snake-head-creature,
+body.game-snakes.game-running .ladder-creature{display:block!important;visibility:visible!important;opacity:1!important}
+body.game-snakes.game-running .snake-path{stroke-width:clamp(22px,2.8vw,33px)!important;opacity:1!important}
+body.game-snakes.game-running .snake-head-shell{opacity:1!important}
+body.game-snakes.game-running .ladder-rail,
+body.game-snakes.game-running .ladder-rung{opacity:1!important}
+@media(max-width:650px){
+  body.game-snakes.game-running .snake-path-shadow,
+  body.game-snakes.game-running .ladder-shadow,
+  body.game-snakes.game-running .snake-head-halo{filter:none!important}
+  body.game-snakes.game-running .snake-path{filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))!important}
+}
+
 /* Visible art direction pass: a real arena surface instead of a plain grid. */
 body.game-snakes.game-running .game-toolbar .toolbar-title h1{letter-spacing:-.035em;text-shadow:0 5px 22px rgba(34,211,238,.22);}
 body.game-snakes.game-running .game-toolbar .toolbar-title h1:before{content:'🐍 ';filter:drop-shadow(0 3px 8px rgba(34,211,238,.46));}

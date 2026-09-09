@@ -118,7 +118,10 @@
   function start() {
     $('setup')?.classList.add('hidden'); $('game')?.classList.add('classic-hidden'); $('classicArena')?.classList.remove('classic-hidden');
     resetState(); running = true; paused = false; status('تحرّك الآن — كل كرة تكبّرك وتزيد نقاطك', 'live');
-    $('classicStart')?.classList.add('classic-hidden'); $('classicPause')?.classList.remove('classic-hidden'); $('classicPause') && ($('classicPause').textContent = 'إيقاف مؤقت'); tone(440, .08, 'triangle', .04); draw(); schedule();
+    $('classicStart')?.classList.add('classic-hidden'); $('classicPause')?.classList.remove('classic-hidden'); $('classicPause') && ($('classicPause').textContent = 'إيقاف مؤقت'); tone(440, .08, 'triangle', .04);
+    // The arena is created while hidden, so its canvas can be 1×1. Resize
+    // after revealing it or the snake appears blank on the first launch.
+    requestAnimationFrame(() => { resize(); draw(); schedule(); });
   }
   function pause() { if (!running) return; paused = !paused; $('classicPause').textContent = paused ? 'متابعة اللعب' : 'إيقاف مؤقت'; status(paused ? 'متوقف مؤقتًا' : 'استمر — الثعبان يتحرك', paused ? '' : 'live'); if (paused) clearTimeout(timer); else schedule(); draw(); }
   function exit() { clearTimeout(timer); running = false; paused = false; $('classicArena')?.classList.add('classic-hidden'); $('setup')?.classList.remove('hidden'); $('classicStart')?.classList.remove('classic-hidden'); }

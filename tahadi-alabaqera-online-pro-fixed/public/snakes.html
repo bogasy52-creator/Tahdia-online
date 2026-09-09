@@ -95,7 +95,7 @@ body.bs-page:after{content:"";position:fixed;inset:0;pointer-events:none;z-index
 <header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الثعبان</b><span>BUSRAJ TABLETOP</span></span></a><div class="bs-actions"><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" aria-label="الرئيسية" style="text-decoration:none">⌂</a></div></header>
 <section id="setup" class="bs-panel setup-wrap" style="max-width:820px"><div class="premium-hero"><div class="premium-kicker">BUSRAJ ARCADE</div><h1>🐍 الثعبان</h1><p>لوحة حية وسريعة: تحرّك بسلاسة، اصعد بالسلالم، وإذا وصلت لرأس الثعبان شاهد هجومه قبل أن ينزلك إلى الذيل.</p><div class="feature-row"><span class="feature-pill">🪜 سلالم مجسمة</span><span class="feature-pill">🐍 ثعابين مرسومة</span><span class="feature-pill">🌐 غرف أونلاين</span><span class="feature-pill">📱 ملء الشاشة</span></div></div>
 <div class="play-mode"><button id="modeLocal" class="active">👥 نفس الجهاز</button><button id="modeOnline">🌐 أونلاين</button></div>
-<div id="localSetup"><div class="setup-grid"><label class="bs-field"><span>عدد اللاعبين</span><select id="playerCount"><option selected>2</option><option>3</option><option>4</option></select></label><div></div><label class="bs-field"><span>اللاعب الأول</span><input id="n0" value="اللاعب الأول" maxlength="20"></label><label class="bs-field"><span>اللاعب الثاني</span><input id="n1" value="اللاعب الثاني" maxlength="20"></label><label class="bs-field"><span>اللاعب الثالث</span><input id="n2" value="اللاعب الثالث" maxlength="20"></label><label class="bs-field"><span>اللاعب الرابع</span><input id="n3" value="اللاعب الرابع" maxlength="20"></label></div><div class="setup-actions"><button id="startBtn" class="bs-btn gold">ابدأ لوحة الثعبان ✨</button><button id="classicStartBtn" class="bs-btn cyan" type="button">🐍 الثعبان الكلاسيكي — يكبر ويأكل</button></div><div class="mini-note classic-launch-note">طور الثعبان الكلاسيكي تفاعلي: حركة باللمس والأسهم، أكل، نمو، أصوات، ومستويات متصاعدة.</div></div>
+<div id="localSetup"><div class="setup-grid"><label class="bs-field"><span>عدد اللاعبين</span><select id="playerCount"><option selected>2</option><option>3</option><option>4</option></select></label><div></div><label class="bs-field"><span>اللاعب الأول</span><input id="n0" value="اللاعب الأول" maxlength="20"></label><label class="bs-field"><span>اللاعب الثاني</span><input id="n1" value="اللاعب الثاني" maxlength="20"></label><label class="bs-field"><span>اللاعب الثالث</span><input id="n2" value="اللاعب الثالث" maxlength="20"></label><label class="bs-field"><span>اللاعب الرابع</span><input id="n3" value="اللاعب الرابع" maxlength="20"></label></div><div class="setup-actions"><button id="startBtn" class="bs-btn gold">🐍 ابدأ الثعبان التفاعلي</button><button id="classicStartBtn" class="bs-btn cyan" type="button">🪜 الثعبان والسلالم</button></div><div class="mini-note classic-launch-note">الثعبان التفاعلي هو الوضع الأول: يظهر فورًا، يتحرك بسرعة، يأكل الطاقة، ويكبر معك. والثعبان والسلالم له زر مستقل.</div></div>
 <div id="onlineSetup" class="online-box hidden"><label class="bs-field"><span>اسمك</span><input id="onlineName" value="لاعب" maxlength="20"></label><label class="bs-field"><span>عدد اللاعبين في الغرفة</span><select id="onlineCount"><option>2</option><option>3</option><option selected>4</option></select></label><div class="online-actions"><button id="createRoom" class="bs-btn gold">＋ إنشاء غرفة</button><div class="join-line"><input id="joinCode" class="room-code-input" inputmode="numeric" maxlength="6" placeholder="000000"><button id="joinRoom" class="bs-btn cyan">دخول</button></div></div><div class="mini-note">يمكنك الرجوع لنفس الغرفة بعد انقطاع الشبكة؛ إعادة الاتصال تلقائية.</div></div>
 <section id="roomLobby" class="bs-panel room-lobby hidden"><div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="copyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="netBadge" class="net-badge"><i></i><span>اتصال…</span></span></div><div id="roomPlayers" class="room-players"></div><div class="lobby-controls"><button id="readyBtn" class="bs-btn primary">✓ أنا جاهز</button><button id="inviteFriends" class="bs-btn cyan">👥 دعوة صديق</button><button id="hostStart" class="bs-btn gold" disabled>ابدأ المباراة</button></div></section>
 </section>
@@ -296,7 +296,7 @@ async function runSoloAi(){
       if(state.winner!==null||state.turn!==1)break;
       await wait(420);
     }while(state.lastRoll===6);
-  }catch(error){console.error('Solo AI turn failed',error);window.BS_PLATFORM?.toast?.('تعذر إكمال دور الخصم — حاول الرمية التالية')}
+  }catch(error){cancelBoardMotion();console.error('Solo AI turn failed',error);window.BS_PLATFORM?.toast?.('تعذر إكمال دور الخصم — حاول الرمية التالية')}
   finally{busy=false;render()}
 }
 async function rollTurn(){
@@ -317,6 +317,7 @@ async function rollTurn(){
     if(state.winner!==null){BS_AUDIO.play('win');BS_AUDIO.vibrate([100,60,160])}
     if(Number($('#playerCount').value)===1&&state.turn===1&&state.winner===null)runSoloAi();
   }catch(error){
+    cancelBoardMotion();
     console.error('Snake turn failed',error);
     window.BS_PLATFORM?.toast?.('حدث خطأ بسيط — أعد الرمية');
   }finally{
@@ -348,7 +349,7 @@ function onRoomState(next){
     }
     lastVersion=next.version;render();
     if(state.winner!==null&&prev?.winner===null){BS_AUDIO.play('win');BS_AUDIO.vibrate([100,60,160])}
-  }).catch(error=>{busy=false;console.error('Online state update failed',error);render()});
+  }).catch(error=>{busy=false;cancelBoardMotion();console.error('Online state update failed',error);render()});
 }
 function renderLobby(){if(!room)return;$('#roomLobby').classList.remove('hidden');$('#copyCode').textContent=room.code;renderRoomPlayers($('#roomPlayers'),room,colors);const me=room.players.find(p=>p.id===room.me?.id);$('#readyBtn').textContent=me?.ready?'✓ جاهز — إلغاء':'✓ أنا جاهز';const all=room.players.length===room.playerLimit&&room.players.every(p=>p.ready&&p.connected);$('#hostStart').classList.toggle('hidden',room.me?.role!=='host');$('#hostStart').disabled=!all}
 async function createRoom(){setupClient();try{await client.create($('#onlineName').value,Number($('#onlineCount').value));BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}}
@@ -357,6 +358,6 @@ $('#modeLocal').onclick=()=>setMode('local');$('#modeOnline').onclick=()=>setMod
 const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)$('#onlineName').value=socialProfile.displayName;
 const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;queueMicrotask(()=>joinRoom())}
 
-$('#startBtn').onclick=startLocal;$('#classicStartBtn').onclick=()=>window.TAHDIA_CLASSIC_SNAKE?.start?.();$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
+$('#startBtn').onclick=()=>window.TAHDIA_CLASSIC_SNAKE?.start?.();$('#classicStartBtn').onclick=startLocal;$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
 $('#playerCount').onchange=()=>{const c=Number($('#playerCount').value);for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',i>=c)};$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});window.addEventListener('resize',()=>state&&drawPaths());window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(drawPaths));
 </script></body></html>

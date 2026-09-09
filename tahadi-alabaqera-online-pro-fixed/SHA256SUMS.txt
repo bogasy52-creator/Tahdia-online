@@ -27,7 +27,7 @@ d06305727464734d8f1185a49cb0cd670946a1c0095193789b7701475f23c8b4  ./public/asset
 9068cd42ec0eb00df1f34aae3a011365a0682f13005c7d4ebbfe08aa3d49f52b  ./public/assets/css/board-premium.css
 8bb8589e0b87b741a8460025b0978ececbc4ad0f050b5b393a6cd23fc9594fa1  ./public/assets/css/fullscreen-board.css
 18248ea425fc1e2ff5fff4ddf2e3703743e56bd153794bc4b64d3f2c38caada2  ./public/assets/css/game-kit.css
-53fde6007af0a8835a96d0867314438abf2332a9b00198fe5ed94d06b9d604b2  ./public/assets/css/home-shell.css
+a285e3536c2dc20a1a0cb825e062a01b67b2fe6305d7020878f1518aa4544faf  ./public/assets/css/home-shell.css
 9e6fbd3e5206beeb9bb272179bac317aea972ba45073ca873f4c124e98b623df  ./public/assets/css/jackaroo-next.css
 f5cff9ccfa763062bd72f6db60275ea2d4b81ec42966077b840011ee4c365698  ./public/assets/css/jackaroo-premium.css
 5457eca2ab5ebcea9761b3fcbf892123840e46fab35d75034f23e11c12832c6a  ./public/assets/css/luxury-game-ui.css
@@ -43,7 +43,7 @@ cd2a907960e529838f9098a7722e17212aa873f1cc0df5e78dd1dc87f7949d5e  ./public/asset
 1d53b6196b5f8419224f45f5069e7848ea0d7a8fe72cf4c72b05b87015b0858a  ./public/assets/css/snake-arena-pro.css
 b68fb241355ee028ce090da2840717a22d3cfea69804bf8e30f5bdbbb7527997  ./public/assets/css/snake-classic.css
 9bd9ac3db31506406afa88c40e3ddbb19e196848cd4cdbb3393d96b76f8bc4bc  ./public/assets/css/snake-reference-skin.css
-acdab6d82706edd33ce4af0755c83765438455fbad69e7e7a435220e4b56e4de  ./public/assets/css/snakes-motion-pro.css
+4368279d4483a22c77445bf761adebea8a014117094a1d556160238cd3c70980  ./public/assets/css/snakes-motion-pro.css
 99d3c321a65b722d7f23bed071fe131253d0525480b51b3c4fdc375689310d14  ./public/assets/css/snakes-premium.css
 b8502759d2f74a606c4f9d73ca14a13b876cceeb49273da52adb2766158a15c9  ./public/assets/css/snakes-v4-board.css
 3ef75c688cbf26854a2f20d510bf4eff74aa34b40e571800ac66fcc1d3b9471e  ./public/assets/css/snakes-v4-interactions.css
@@ -74,7 +74,7 @@ b25efbc1c6edc35367b4c731de5068a64cb7515d2656558e631587b56ddea446  ./public/asset
 211be816f8f2e1c2d5f60eeb99daf7826a271f30a8cc30d090f09067c3f79adb  ./public/assets/js/questions-data.js
 c3255e5daf15c905ee522c65c4b231f531b6fefd39f2256cd2d805c46ded7c4a  ./public/assets/js/quick-match-game.js
 8b2fae174893f30800422dd1f0e4faef9b271b3fab0106b7599405f63cc2820c  ./public/assets/js/quiz-media.js
-a38ce0a6e83c96a9e5ad785de976161e868190947396cd45f646699afb436191  ./public/assets/js/snake-classic.js
+3637201d2595ec4fb3d90ec5b22af18e570c6b3be1f984d75763e4e60b09602d  ./public/assets/js/snake-classic.js
 0789d148c44ee948638c124b1595d753d1e26bf58f3b575f69ac548d07b10705  ./public/assets/js/snake-pro-upgrade.js
 b84e37d6e0b4f373c23f872a219de7e24cd3ecda36bfbb8ec4167c631f639560  ./public/assets/js/snakes-motion-engine.js
 0f7bd76c52bef077472a1cc510176843ea40cd7b74ba4c3dfb128167d97b14db  ./public/assets/js/snakes-v4-fx.js
@@ -384,7 +384,7 @@ c6981399ffa640948820ea6183218a198cf95e6abc51992e2dd642e07a608405  ./public/draw.
 bffd11e894c2a240c2de17a45a9f290efdcf16383039148d081b868520706a7d  ./public/firebase-config.js
 043360716f16b91a640c0f64a705e1e129c282e3acb6ba6e6b9b8d01b14bfb62  ./public/icon-192.png
 a5b0821599e6ba6b53b5f8d71c54d64f8a6e53822ba26080197e73a1de332448  ./public/icon-512.png
-57e34f67e4dc3b80c339193e0a20aa612c8c479da0bad229307e7a04c35cb961  ./public/index.html
+8656cfb6f7527f830414bd5f9860d794070203ebfd71f563b4c3d9579c679847  ./public/index.html
 a0fb62ab5efff8d423a9d6785fa1b73046a662d2b1a486e0eb59c42936805cfe  ./public/jackaroo.html
 47f7cc46926fe25084af6b2ae99dcc5746ffabc125f5c1fff7e879c74e6e0959  ./public/league.html
 1d793d5f6db5487f2a35b151929d74124d0a5353ef40c56de70ce6b7b7250d9d  ./public/letters.html
@@ -398,11 +398,11 @@ d44275d8a2ef94453022efdc191506172f9d659c1f60e5fbb2735de22ae599b5  ./public/order
 6dcf077223730aed39dda4fa93afff055fbe1e10e10a4cb06372289b3a9f3f56  ./public/puzzle.html
 cd63a3338a40dcd74147993cceffb1ae3a4a3c73db16bb514c74da1c693d2fbb  ./public/reaction.html
 452a8abc040710da4d23168353772e2d99ca40e3b6252a8399845da1d4259c77  ./public/secret.html
-7d61f119711be40b40ee60a31b5ac5fab9341076e93dd50d504a4f985dc940ff  ./public/service-worker.js
+dcb13f0073912adb97c6d5d66c293cd12f28ded401dcdbb6af6a294c91dc04e5  ./public/service-worker.js
 3f51b049d5d9806065b36e0ab49c296830c3e7ef2437effcb57e1dfea9d2ad15  ./public/snake-preview.svg
-f79050d2dc502f25ff396a294c8fba19e0c9033662489f863470569bd9d6551d  ./public/snakes.html
+924b1686dca2351e197ffa90eef574653f7032447a42b69aedc33b9ad82fe196  ./public/snakes.html
 12d63d58ffa84e8c8c09495fcad173f1c14b6139779e550a342f1ce3c91ac060  ./public/social.html
-57e4aa954017fc842367daa5305ecbcd0a5dfa70269661c299ef0e7835f5b416  ./public/spotdiff.html
+3dfa83aace9087705b0b8915af4344c1262e38948e0503e0eeb34c12494a5c49  ./public/spotdiff.html
 a83211efe0c350c0d3e48af5cac8908c37890270674b8c061bc1cf96e050d808  ./public/v5.html
 feea9e90199cc383b82c6f5f870b15bbb0676b163f9d7ee5e6484175d48eb657  ./public/zahra.html
 63125b770e8d7e716bb0478e11384265d993e21696543f9caab6aff4e9e39274  ./README-AR.md

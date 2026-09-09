@@ -186,14 +186,23 @@ function applyDiffMarks(ctx, size, diffs, allDiffs, img){
     organicClip(ctx,cx,cy,rad,idx+1);
     ctx.globalAlpha = 1;
     if(p.kind === 'color'){
-      ctx.filter = 'hue-rotate(128deg) saturate(2.25) contrast(1.14)';
-      ctx.drawImage(img, sx+x0/scale, sy+y0/scale, w/scale, h/scale, x0, y0, w, h);
-    }else{
-      ctx.filter = 'blur(5px) brightness(.72) saturate(.35)';
-      ctx.drawImage(img, sx+(x0+dx*3.4)/scale, sy+(y0+dy*3.4)/scale, w/scale, h/scale, x0, y0, w, h);
-      ctx.filter = 'none';
-      ctx.fillStyle = 'rgba(8,13,22,.16)';
+      // A natural colour change: tint the real pixels instead of painting a
+      // neon polygon on top of the photo (which looked like an answer mark).
+      ctx.globalCompositeOperation = 'hue';
+      ctx.globalAlpha = .62;
+      ctx.fillStyle = idx % 2 ? '#d89b48' : '#4aa7b4';
       ctx.fillRect(x0,y0,w,h);
+      ctx.globalCompositeOperation = 'color';
+      ctx.globalAlpha = .18;
+      ctx.fillStyle = '#fff4bf';
+      ctx.fillRect(x0,y0,w,h);
+    }else{
+      // Remove a detail by replacing it with a close, shifted sample of the
+      // same photograph.  The tiny blur hides seams without leaving a dark
+      // blob or an artificial answer-shaped patch.
+      ctx.filter = 'blur(1.35px)';
+      ctx.globalAlpha = .98;
+      ctx.drawImage(img, sx+(x0+dx*1.1)/scale, sy+(y0+dy*1.1)/scale, w/scale, h/scale, x0, y0, w, h);
     }
     ctx.restore();
   });
