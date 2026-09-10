@@ -1,0 +1,180 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080b17"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="assets/css/platform.css"><link rel="stylesheet" href="assets/css/game-kit.css"><link rel="stylesheet" href="assets/css/board-premium.css"><title>دومينو فاخر — بوسراج</title><style>
+:root{--dom-felt:#0c3d2c;--dom-gold:#f0b94a}
+.dom-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;margin-top:10px}
+.dom-main,.dom-side{padding:14px}
+.dom-table{position:relative;min-height:320px;border-radius:22px;padding:22px 14px;background:radial-gradient(ellipse at 50% 0%,#12513c,#07271c 72%);box-shadow:0 30px 70px rgba(0,0,0,.5),inset 0 0 0 2px rgba(240,185,74,.16),inset 0 0 60px rgba(0,0,0,.4)}
+.dom-chain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;min-height:120px}
+.dom-tile{display:flex;border:2px solid #f4efe6;border-radius:8px;background:linear-gradient(150deg,#fff,#e7e3da);box-shadow:0 6px 14px rgba(0,0,0,.35);overflow:hidden}
+.dom-tile .half{width:30px;height:30px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:4px;border-left:2px solid #cfc8b8}
+.dom-tile .half:first-child{border-left:0;border-right:2px solid #cfc8b8}
+.dom-tile .dot{border-radius:50%;background:transparent}
+.dom-tile .dot.on{background:#181828}
+.dom-end-zone{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px dashed rgba(240,185,74,.5);color:#f0b94a;font-weight:900;cursor:pointer;flex:0 0 auto}
+.dom-end-zone.active{background:rgba(240,185,74,.14);animation:domPulse 1.4s infinite ease-in-out}
+.dom-end-zone.disabled{opacity:.25;cursor:default;animation:none}
+@keyframes domPulse{0%,100%{box-shadow:0 0 0 rgba(240,185,74,.4)}50%{box-shadow:0 0 18px rgba(240,185,74,.5)}}
+.dom-hand{display:flex;gap:8px;overflow-x:auto;padding:10px 3px 14px;scrollbar-width:thin;justify-content:center}
+.dom-hand .dom-tile{cursor:pointer;transition:.15s transform}
+.dom-hand .dom-tile .half{width:34px;height:34px}
+.dom-hand .dom-tile:hover{transform:translateY(-4px)}
+.dom-hand .dom-tile.selected{transform:translateY(-10px);box-shadow:0 0 0 3px rgba(240,185,74,.5),0 16px 26px rgba(0,0,0,.4)}
+.dom-hand .dom-tile.disabled{opacity:.35;cursor:default}
+.dom-boneyard{position:absolute;top:14px;left:14px;padding:8px 12px;border-radius:12px;background:#0009;border:1px solid rgba(240,185,74,.3);color:#f0b94a;font-weight:900;font-size:12px}
+.player-dom{padding:10px;border:1px solid var(--bs-line);border-radius:14px;background:#0b0f1e;display:grid;grid-template-columns:11px 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.player-dom.turn{border-color:#c79c52;background:linear-gradient(135deg,rgba(240,185,74,.12),#0b0f1e);box-shadow:0 0 22px rgba(240,185,74,.08)}
+.player-dom.bot span.bot-badge{color:#22d3ee}
+.dom-controls{display:flex;gap:8px;margin-top:10px;justify-content:center;flex-wrap:wrap}
+.bot-diff-row{display:flex;gap:8px;margin-top:8px}
+.bot-diff-row button{flex:1}
+.bot-diff-row button.active{border-color:#f0b94a;background:#f0b94a22;color:#f0b94a}
+@media(max-width:980px){.dom-layout{grid-template-columns:1fr}.dom-side{order:-1}}
+</style><link rel="stylesheet" href="assets/css/luxury-game-ui.css"><link rel="stylesheet" href="assets/css/mobile-game.css"></head>
+<body class="bs-page board-game game-domino"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>دومينو</b><span>Premium Table</span></span></a><div class="bs-actions"><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header>
+
+<section id="setup" class="bs-panel setup-wrap" style="max-width:850px"><div class="premium-hero"><div class="premium-kicker">BUSRAJ TABLE</div><h1>🁫 دومينو فاخر</h1><p>طاولة خضراء فاخرة بحواف ذهبية، حركة سلسة، ولعب فردي ضد بوت ذكي أو أونلاين مع أصدقائك.</p><div class="feature-row"><span class="feature-pill">🤖 بوت متوسط / محترف</span><span class="feature-pill">🌐 حتى 4 لاعبين أونلاين</span><span class="feature-pill">🁢 طقم 28 قطعة كلاسيكي</span></div></div>
+<div class="play-mode"><button id="modeLocal" class="active">📱 محلي</button><button id="modeOnline">🌐 أونلاين</button></div>
+
+<div id="localSetup"><div class="setup-grid"><label class="bs-field"><span>اسمك</span><input id="p0name" value="أنت"></label><label class="bs-field"><span>الخصم</span><input id="p1name" value="بوت" disabled></label></div>
+<div class="bot-diff-row"><button id="diffMedium" class="bs-btn active">🤖 بوت متوسط</button><button id="diffPro" class="bs-btn">🎯 بوت محترف</button></div>
+<div class="setup-actions"><button id="startBtn" class="bs-btn gold">ابدأ ضد البوت ✨</button></div></div>
+
+<div id="onlineSetup" class="online-box hidden"><label class="bs-field"><span>اسمك</span><input id="onlineName" value="لاعب" maxlength="20"></label><label class="bs-field"><span>عدد اللاعبين في الغرفة</span><select id="onlineCount"><option selected>2</option><option>3</option><option>4</option></select></label><div class="online-actions"><button id="createRoom" class="bs-btn gold">＋ إنشاء غرفة</button><div class="join-line"><input id="joinCode" class="room-code-input" inputmode="numeric" maxlength="6" placeholder="000000"><button id="joinRoom" class="bs-btn cyan">دخول</button></div></div><div class="mini-note">ما فيه لاعبين معك؟ من داخل غرفة الانتظار تقدر تضيف بوت يكمّل المقاعد.</div></div>
+
+<section id="roomLobby" class="bs-panel room-lobby hidden"><div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="copyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="netBadge" class="net-badge"><i></i><span>اتصال…</span></span></div><div id="roomPlayers" class="room-players"></div>
+<div class="bot-diff-row" id="lobbyBotRow"><button id="lobbyDiffMedium" class="bs-btn active">🤖 متوسط</button><button id="lobbyDiffPro" class="bs-btn">🎯 محترف</button><button id="addBotBtn" class="bs-btn cyan">＋ أضف بوت</button></div>
+<div class="lobby-controls"><button id="readyBtn" class="bs-btn primary">✓ أنا جاهز</button><button id="inviteFriends" class="bs-btn cyan">👥 دعوة صديق</button><button id="hostStart" class="bs-btn gold" disabled>ابدأ المباراة</button></div></section></section>
+
+<section id="game" class="hidden"><div class="game-toolbar"><div class="toolbar-title"><h1>دومينو</h1><p id="modeHint">اختر قطعة من يدك ثم اضغط طرف اللوح المناسب</p></div><button id="restart" class="bs-btn">إعادة</button></div>
+<div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span>الغرفة <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div>
+<div class="dom-layout"><section class="bs-panel dom-main"><div class="dom-table"><span id="boneyardCount" class="dom-boneyard">صندوق السحب: 0</span><div id="chainWrap" style="display:flex;align-items:center;justify-content:center;gap:8px"><div id="endLeft" class="dom-end-zone disabled">؟</div><div id="chain" class="dom-chain"></div><div id="endRight" class="dom-end-zone disabled">؟</div></div></div>
+<div class="dom-controls"><button id="drawBtn" class="bs-btn cyan hidden">🁢 اسحب من الصندوق</button><button id="passBtn" class="bs-btn hidden">⏭ مرّر الدور</button></div>
+<div class="hand-title"><b>قطعك</b><span id="handHint" class="mini-note">اختر قطعة</span></div><div id="hand" class="dom-hand"></div></section>
+<aside class="bs-panel dom-side"><div id="players"></div><div id="status" class="game-status"></div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد المستخدمة</summary><ul><li>طقم كلاسيكي 28 قطعة (دبل-6).</li><li>يبدأ صاحب أعلى دبل.</li><li>طابق أحد طرفي اللوح لتلعب.</li><li>ما عندك حركة؟ اسحب من الصندوق حتى تقدر تلعب.</li><li>الصندوق فاضي وما فيه حركة؟ مرّر.</li><li>أول من يفرغ يده يفوز، أو الأقل نقاطًا عند الانسداد.</li></ul></details></aside></div></section>
+
+<div id="winnerOverlay" class="winner-overlay"><div class="bs-panel winner-card"><div class="winner-icon">🏆🁫</div><h2 id="winnerName"></h2><p id="winnerNote"></p><button id="again" class="bs-btn gold">مباراة جديدة</button></div></div><div class="bs-toast"></div>
+<script src="assets/js/audio-manager.js"></script><script src="assets/js/luxury-game-ui.js"></script><script src="assets/js/platform.js"></script><script src="assets/js/social-client.js"></script>
+<script type="module">
+import {createDominoGame,getDominoActions,playDominoAction} from './assets/js/engines/domino-engine.js';
+import {chooseDominoBotAction} from './assets/js/engines/bot-ai.js';
+import {BoardOnlineClient,renderRoomPlayers,bindRoomCountdown} from './assets/js/board-online.js';
+const $=s=>document.querySelector(s),colors=['#8b5cf6','#22d3ee','#f0b94a','#22c55e'];
+let state=null,selected=null,mode='local',client=null,room=null,lastVersion=-1,pendingAction=false,botDifficulty='medium',lobbyBotDifficulty='medium';
+bindRoomCountdown($('#turnTimer'),()=>room);
+
+function pipDots(n){const map={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};const on=new Set(map[n]||[]);let html='';for(let i=0;i<9;i++)html+=`<i class="dot ${on.has(i)?'on':''}"></i>`;return html}
+function tileEl(tile,opts={}){const el=document.createElement(opts.button?'button':'div');el.className='dom-tile'+(opts.cls?' '+opts.cls:'');el.innerHTML=`<div class="half">${pipDots(tile[0])}</div><div class="half">${pipDots(tile[1])}</div>`;return el}
+
+function myIndex(){return mode==='online'?room?.me?.index:state?.turn}
+function isMyTurn(){return mode==='local'?state?.turn===0:myIndex()===state?.turn}
+function isBotPlaying(){return mode==='local'&&state?.turn===1}
+
+function render(){
+  if(!state)return;
+  $('#chain').innerHTML='';
+  state.board.forEach(t=>$('#chain').appendChild(tileEl(t)));
+  $('#boneyardCount').textContent=`صندوق السحب: ${Array.isArray(state.boneyard)?state.boneyard.length:(state.boneyard??0)}`;
+  const legal=isMyTurn()&&state.status!=='finished'?getDominoActions(state,state.turn):[];
+  const canLeft=legal.some(a=>a.type==='play'&&a.side==='left'),canRight=legal.some(a=>a.type==='play'&&a.side==='right');
+  $('#endLeft').textContent=state.leftEnd===null?'؟':state.leftEnd;$('#endRight').textContent=state.rightEnd===null?'؟':state.rightEnd;
+  $('#endLeft').classList.toggle('disabled',!canLeft||selected===null);$('#endLeft').classList.toggle('active',canLeft&&selected!==null);
+  $('#endRight').classList.toggle('disabled',!canRight||selected===null);$('#endRight').classList.toggle('active',canRight&&selected!==null);
+  $('#drawBtn').classList.toggle('hidden',!legal.some(a=>a.type==='draw'));
+  $('#passBtn').classList.toggle('hidden',!legal.some(a=>a.type==='pass'));
+  renderHand();renderPlayers();
+  if(state.status==='finished'){
+    const w=state.winner;
+    $('#winnerName').textContent=w==='draw'?'تعادل':`${state.players[w]?.name||'—'} فاز 🎉`;
+    $('#winnerNote').textContent=state.lastEvent?.emptiedHand?'أفرغ يده أولًا.':'أقل مجموع نقاط عند انسداد اللوح.';
+    $('#winnerOverlay').classList.add('show');
+  }
+  $('#status').textContent=state.status==='finished'?'':isMyTurn()?'دورك — اختر قطعة ثم اضغط الطرف المناسب':`بانتظار ${state.players[state.turn]?.name||'الخصم'}…`;
+}
+function renderHand(){
+  const box=$('#hand');box.innerHTML='';
+  const me=mode==='local'?0:myIndex();
+  const hand=state.hands[me]||[];
+  hand.forEach((t,i)=>{
+    if(t==='?')return;
+    const el=tileEl(t,{button:true,cls:selected===i?'selected':(!isMyTurn()?'disabled':'')});
+    el.disabled=!isMyTurn()||pendingAction;
+    el.onclick=()=>{selected=i;BS_AUDIO.play('select');render()};
+    box.appendChild(el);
+  });
+  $('#handHint').textContent=isMyTurn()?`${hand.length} قطعة — اختر ثم العب`:`${hand.length} قطعة`;
+}
+function renderPlayers(){
+  const box=$('#players');box.innerHTML='';
+  state.players.forEach((p,i)=>{
+    const count=Array.isArray(state.hands[i])?state.hands[i].length:(state.handCounts?.[i]??0);
+    const bot=mode==='online'?room?.players?.find(rp=>rp.index===i)?.isBot:(i===1&&mode==='local');
+    const row=document.createElement('div');
+    row.className='player-dom '+(state.turn===i&&state.status!=='finished'?'turn':'')+(bot?' bot':'');
+    row.innerHTML=`<i class="player-dot" style="background:${colors[i]||'#888'}"></i><div><b>${escHtml(p.name)}</b>${bot?' <span class="bot-badge">🤖</span>':''}</div><b>${count}</b>`;
+    box.appendChild(row);
+  });
+}
+function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+async function doAction(action){
+  if(pendingAction)return;
+  const actor=state.turn;
+  if(mode==='online'){
+    pendingAction=true;
+    const sent=client.send('domino_play',{action});
+    if(!sent)pendingAction=false;
+    selected=null;BS_AUDIO.play('card');render();
+    return;
+  }
+  try{state=playDominoAction(state,actor,action)}catch(e){BS_AUDIO.play('error');return BS_PLATFORM.toast('حركة غير صالحة')}
+  BS_AUDIO.play(action.type==='play'?'move':action.type==='draw'?'card':'wrong');
+  selected=null;render();
+  if(state.status==='finished'){BS_AUDIO.play('win');return}
+  if(state.turn===1)setTimeout(runLocalBot,550);
+}
+function runLocalBot(){
+  if(mode!=='local'||state.status==='finished'||state.turn!==1)return;
+  let guard=0;
+  const step=()=>{
+    if(guard++>10||state.status==='finished'||state.turn!==1)return render();
+    const action=chooseDominoBotAction(state,1,botDifficulty,getDominoActions);
+    if(!action)return render();
+    try{state=playDominoAction(state,1,action)}catch{return render()}
+    render();
+    if(state.status==='finished'){BS_AUDIO.play('win');return}
+    if(action.type==='draw')return setTimeout(step,350);
+  };
+  step();
+}
+$('#endLeft').onclick=()=>{if(selected===null||!isMyTurn())return;const legal=getDominoActions(state,state.turn);if(!legal.some(a=>a.type==='play'&&a.side==='left'&&a.tileIndex===selected))return BS_PLATFORM.toast('لا تطابق هذا الطرف');doAction({type:'play',tileIndex:selected,side:'left'})};
+$('#endRight').onclick=()=>{if(selected===null||!isMyTurn())return;const legal=getDominoActions(state,state.turn);if(!legal.some(a=>a.type==='play'&&a.side==='right'&&a.tileIndex===selected))return BS_PLATFORM.toast('لا تطابق هذا الطرف');doAction({type:'play',tileIndex:selected,side:'right'})};
+$('#drawBtn').onclick=()=>doAction({type:'draw'});
+$('#passBtn').onclick=()=>doAction({type:'pass'});
+
+function startLocal(){mode='local';selected=null;state=createDominoGame([$('#p0name').value.trim()||'أنت',$('#p1name').value.trim()||'بوت']);enterGame();BS_AUDIO.play('shuffle');
+  if(state.turn===1)setTimeout(runLocalBot,600);
+}
+function enterGame(){document.body.classList.add('game-running');$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#winnerOverlay').classList.remove('show');$('#livebar').classList.toggle('hidden',mode!=='online');$('#modeHint').textContent=mode==='online'?'مزامنة مباشرة مع السيرفر':'اختر قطعة ثم اضغط طرف اللوح المناسب';if(mode==='online')$('#gameRoomCode').textContent=room.code;render()}
+function setMode(next){mode=next;$('#modeLocal').classList.toggle('active',next==='local');$('#modeOnline').classList.toggle('active',next==='online');$('#localSetup').classList.toggle('hidden',next!=='local');$('#onlineSetup').classList.toggle('hidden',next!=='online');$('#roomLobby').classList.add('hidden');client?.close();client=null;room=null}
+$('#diffMedium').onclick=()=>{botDifficulty='medium';$('#diffMedium').classList.add('active');$('#diffPro').classList.remove('active')};
+$('#diffPro').onclick=()=>{botDifficulty='pro';$('#diffPro').classList.add('active');$('#diffMedium').classList.remove('active')};
+$('#lobbyDiffMedium').onclick=()=>{lobbyBotDifficulty='medium';$('#lobbyDiffMedium').classList.add('active');$('#lobbyDiffPro').classList.remove('active')};
+$('#lobbyDiffPro').onclick=()=>{lobbyBotDifficulty='pro';$('#lobbyDiffPro').classList.add('active');$('#lobbyDiffMedium').classList.remove('active')};
+$('#addBotBtn').onclick=()=>{client?.send('add_bot',{difficulty:lobbyBotDifficulty});BS_AUDIO.play('join')};
+
+function net(s){for(const id of ['#netBadge','#liveNet']){const e=$(id);if(!e)continue;e.classList.toggle('online',!!s.online);e.classList.toggle('reconnecting',!!s.reconnecting);e.querySelector('span').textContent=s.text||''}}
+function setupClient(){client?.close();client=new BoardOnlineClient('domino',{onStatus:net,onError:m=>{BS_AUDIO.play('error');BS_PLATFORM.toast(m)},onState:onRoomState})}
+function onRoomState(next){room=next;if(next.status!=='lobby')pendingAction=false;if(next.status==='lobby'){renderLobby();return}if(!next.state)return;state=next.state;selected=null;if($('#game').classList.contains('hidden')){enterGame();BS_AUDIO.play('shuffle')}if(next.version!==lastVersion){lastVersion=next.version;if(isMyTurn())BS_AUDIO.play('turn')}render()}
+function renderLobby(){if(!room)return;$('#roomLobby').classList.remove('hidden');$('#copyCode').textContent=room.code;renderRoomPlayers($('#roomPlayers'),room,colors);const me=room.players.find(p=>p.id===room.me?.id);$('#readyBtn').textContent=me?.ready?'✓ جاهز — إلغاء':'✓ أنا جاهز';const all=room.players.length===room.playerLimit&&room.players.every(p=>p.ready&&p.connected);$('#hostStart').classList.toggle('hidden',room.me?.role!=='host');$('#hostStart').disabled=!all;$('#lobbyBotRow').classList.toggle('hidden',room.me?.role!=='host'||room.players.length>=room.playerLimit)}
+async function createRoom(){setupClient();try{await client.create($('#onlineName').value,Number($('#onlineCount').value));BS_AUDIO.play('join')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}}
+async function joinRoom(){setupClient();try{await client.join($('#joinCode').value,$('#onlineName').value);BS_AUDIO.play('join')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}}
+$('#modeLocal').onclick=()=>setMode('local');$('#modeOnline').onclick=()=>setMode('online');$('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;
+$('#readyBtn').onclick=()=>{const me=room?.players.find(p=>p.id===room.me?.id);client?.send('ready',{ready:!me?.ready})};
+$('#hostStart').onclick=()=>client?.send('start');
+$('#copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);BS_PLATFORM.toast('تم نسخ الرمز')}catch{BS_PLATFORM.toast(room.code)}};
+$('#inviteFriends').onclick=()=>{if(!room?.code)return BS_PLATFORM.toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'domino',roomCode:room.code})};
+const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)$('#onlineName').value=socialProfile.displayName;
+const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;setTimeout(()=>joinRoom(),80)}
+$('#startBtn').onclick=startLocal;
+$('#restart').onclick=()=>mode==='online'?(room?.status==='finished'&&room?.me?.role==='host'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();
+$('#again').onclick=()=>mode==='online'?(room?.me?.role==='host'?client.send('rematch'):BS_PLATFORM.toast('المضيف يبدأ المباراة الجديدة')):startLocal();
+</script></main></body></html>

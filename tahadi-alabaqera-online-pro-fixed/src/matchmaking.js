@@ -1,7 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 
 const WAIT_MS = 90_000;
-const GAMES = new Set(['quiz', 'snakes', 'zahra', 'jackaroo']);
+const GAMES = new Set(['quiz', 'snakes', 'zahra', 'jackaroo', 'domino']);
+const BOT_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'domino']); // اللي عندها بوت عند عدم توفر لاعبين
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -56,6 +57,28 @@ export class MatchmakingRoom extends DurableObject {
     throw new Error('room_create_failed');
   }
 
+  // ما فيه لاعبين متاحين؟ ننشئ غرفة ونعبّي المقاعد المتبقية ببوت (متوسط/محترف)
+  async createBotRoom(game, host, difficulty) {
+    if (!this.env.BOARD_ROOMS) throw new Error('room_binding_missing');
+    const playerLimit = game === 'jackaroo' ? 4 : 2;
+    const hostKey = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const code = roomCode();
+      const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
+      const res = await stub.fetch('https://board.internal/init', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code, hostKey, game, playerLimit, name: host.name }),
+      });
+      if (res.status !== 201) continue;
+      await stub.fetch('https://board.internal/add-bot', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ difficulty, count: playerLimit - 1 }),
+      });
+      return { code, hostKey, playerLimit };
+    }
+    throw new Error('room_create_failed');
+  }
+
   async fetch(request) {
     const url = new URL(request.url);
     const now = Date.now();
@@ -69,7 +92,8 @@ export class MatchmakingRoom extends DurableObject {
       // في بداية الإطلاق نريد إدخال اللاعب مع أول منافس متاح في نفس اللعبة
       // بدل إبقائه عالقًا بانتظار لاعب قريب منه بالنقاط أو الخبرة.
       const level = Math.max(1, Math.min(100, Number(body.level) || 1));
-      const current = { id: crypto.randomUUID(), name: name(body.name), level, game, createdAt: now, status: 'waiting', result: null };
+      const botDifficulty = String(body.botDifficulty || 'medium').toLowerCase() === 'pro' ? 'pro' : 'medium';
+      const current = { id: crypto.randomUUID(), name: name(body.name), level, game, botDifficulty, createdAt: now, status: 'waiting', result: null };
       const candidate = Object.values(this.tickets)
         .filter((x) => x?.status === 'waiting' && x.game === game)
         .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))[0];
@@ -97,7 +121,23 @@ export class MatchmakingRoom extends DurableObject {
       const record = this.tickets[ticket];
       if (!record) return json({ ok: false, error: 'تذكرة البحث غير موجودة أو انتهت' }, 404);
       if (record.status === 'matched') return json({ ok: true, ticket, status: 'matched', ...record.result });
-      return json({ ok: true, ticket, status: 'searching', game: record.game, waitedMs: Math.max(0, now - record.createdAt) });
+      const waitedMs = Math.max(0, now - record.createdAt);
+      if (waitedMs >= WAIT_MS && BOT_GAMES.has(record.game)) {
+        try {
+          const room = await this.createBotRoom(record.game, record, record.botDifficulty);
+          record.status = 'matched';
+          record.result = {
+            code: room.code, game: record.game, role: 'host', hostKey: room.hostKey,
+            playerLimit: room.playerLimit, opponent: 'بوت', vsBot: true, matchedAt: Date.now(),
+          };
+          this.tickets[ticket] = record;
+          await this.persist();
+          return json({ ok: true, ticket, status: 'matched', ...record.result });
+        } catch {
+          // تعذر إنشاء غرفة بوت الآن — نكمل الانتظار العادي
+        }
+      }
+      return json({ ok: true, ticket, status: 'searching', game: record.game, waitedMs });
     }
 
     if (url.pathname === '/cancel' && request.method === 'POST') {

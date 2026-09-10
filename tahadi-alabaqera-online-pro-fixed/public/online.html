@@ -94,6 +94,7 @@
 <div class="roomHead"><div><b>اختيار الفئات</b><div id="lobbyHelp" class="mut">المضيف يختار 6 فئات.</div></div><b id="catCount" style="color:#f0c36c">0 / 6</b></div>
 <div id="cats" class="lobbyGrid"></div>
 <div id="hostActions" class="lobbyActions hidden"><button id="saveCats" class="btn sec">اعتماد الفئات</button><button id="randomCats" class="btn cyan">🎲 اختيار 6 فئات عشوائيًا</button><div class="roundPicker" id="roundPicker"><b>عدد الجولات</b><div><button class="roundOpt" data-round="12">12</button><button class="roundOpt" data-round="18">18</button><button class="roundOpt" data-round="24">24</button></div></div></div>
+<div id="botRow" class="lobbyActions hidden"><button id="botDiffMedium" class="btn sec">🤖 متوسط</button><button id="botDiffPro" class="btn sec">🎯 محترف</button><button id="addBotBtn" class="btn cyan">＋ أضف بوت</button></div>
 <div class="ready"><strong id="readyText">غير جاهز</strong><div class="mut">كل لاعب يضغط جاهز قبل البداية.</div><button id="readyBtn" class="btn" style="margin-top:8px;width:100%">أنا جاهز</button></div>
 <div id="startWrap" class="hidden"><button id="startBtn" class="btn gold" style="width:100%;margin-top:10px">⚔️ بدء المواجهة</button></div>
 </div>
@@ -160,7 +161,10 @@ shuffle:'<path d="M4 7h3c5 0 5 10 10 10h3M17 14l3 3-3 3M4 17h3c2 0 3-2 4-4M14 7c
 install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>',
 memory:'<path d="M9 4a3 3 0 0 0-5 2 3 3 0 0 0 1 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V6a3 3 0 0 0-3-2zM15 4a3 3 0 0 1 5 2 3 3 0 0 1-1 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V6a3 3 0 0 1 3-2zM9 8h3M12 12H8M12 15h3"/>'
 };return '<span class="catIcon"><svg viewBox="0 0 24 24">'+p[k]+'</svg></span>'}
-let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false,questionAudio=null,questionAudioRAF=0,activeZoomImg=null,voiceStream=null,voicePeers=new Map(),voiceEnabled=false;
+let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false,questionAudio=null,questionAudioRAF=0,activeZoomImg=null,voiceStream=null,voicePeers=new Map(),voiceEnabled=false,botDifficulty='medium';
+$('#botDiffMedium').onclick=()=>{botDifficulty='medium';$('#botDiffMedium').style.borderColor='#f0b94a';$('#botDiffPro').style.borderColor=''};
+$('#botDiffPro').onclick=()=>{botDifficulty='pro';$('#botDiffPro').style.borderColor='#f0b94a';$('#botDiffMedium').style.borderColor=''};
+$('#addBotBtn').onclick=()=>send('add_bot',{difficulty:botDifficulty});
 const soundPlayCounts=new Map(),waveCache=new Map(),zoomLevels=new Map();
 const qs=new URLSearchParams(location.search);
 roomCode=(qs.get('room')||'').replace(/\D/g,'').slice(0,6);
@@ -314,6 +318,7 @@ function renderLobby(){
  const box=$('#cats');box.innerHTML='';
  state.categories.forEach((c,idx)=>{const b=document.createElement('button');const sel=host?hostSel.has(c.id):state.selectedCategories.includes(c.id);b.className='cat '+(sel?'sel':'');b.dataset.cat=c.id;b.style.setProperty('--cat-accent',c.id==='memory'?'#22d3ee':['#f4c76d','#a78bfa','#22d3ee','#34d399','#fb7185','#60a5fa'][idx%6]);b.disabled=!host;b.innerHTML=icon(c.icon)+'<b>'+c.name+'</b><span>'+c.desc+'</span>';b.onclick=()=>{if(!host)return;if(hostSel.has(c.id))hostSel.delete(c.id);else{if(hostSel.size>=6)return toast('اختر 6 فئات فقط');hostSel.add(c.id)}renderLobby()};box.appendChild(b)});
  $('#readyText').textContent=me.ready?'جاهز ✅':'غير جاهز';$('#readyBtn').textContent=me.ready?'إلغاء الجاهزية':'أنا جاهز';$('#readyBtn').onclick=()=>send('ready',{ready:!me.ready});
+ $('#botRow').classList.toggle('hidden',!host||state.players.length>=(state.playerLimit||8));
  $('#saveCats').onclick=()=>{if(hostSel.size!==6)return toast('اختر 6 فئات');send('set_categories',{categories:[...hostSel]})};
  $('#randomCats').onclick=()=>{hostSel.clear();send('random_categories')};
  document.querySelectorAll('.roundOpt').forEach(b=>{const n=Number(b.dataset.round);b.classList.toggle('active',n===state.roundCount);b.disabled=!host;b.onclick=()=>send('set_round_count',{roundCount:n})});

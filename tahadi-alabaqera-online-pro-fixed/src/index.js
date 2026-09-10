@@ -4,6 +4,8 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesGame, playSnakesRoll } from "../public/assets/js/engines/snakes-engine.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
+import { createDominoGame, getDominoActions, playDominoAction } from "../public/assets/js/engines/domino-engine.js";
+import { chooseJackarooBotAction, chooseDominoBotAction, chooseLudoBotMove } from "../public/assets/js/engines/bot-ai.js";
 import { handleSocialRequest } from "./social/social-api.js";
 import { createSocialUserClass } from "./social/social-user.js";
 import { generateSafeQuestions } from "./ai-questions.js";
@@ -257,6 +259,19 @@ function speedBonus(deadline, answeredAt) {
   return Math.min(50, Math.max(0, Math.round(remain / 1000 * 2)));
 }
 
+// ---------- بوت تحدي العباقرة ----------
+function pickBotChoice(c, difficulty) {
+  const p = difficulty === "pro" ? 0.82 : 0.55;
+  if (Math.random() < p) return c.correctIndex;
+  const wrongs = c.options.map((_, i) => i).filter((i) => i !== c.correctIndex);
+  return wrongs.length ? wrongs[Math.floor(Math.random() * wrongs.length)] : c.correctIndex;
+}
+function botReactionDelay(difficulty, quick = false) {
+  const base = quick ? (difficulty === "pro" ? 800 : 1800) : (difficulty === "pro" ? 1200 : 3000);
+  const jitter = quick ? (difficulty === "pro" ? 1200 : 2200) : (difficulty === "pro" ? 2000 : 4000);
+  return base + Math.random() * jitter;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -345,7 +360,7 @@ export default {
       if (!env.MATCHMAKING) return json({ ok: false, error: "محرك البحث عن المنافسين غير مفعّل" }, 503);
       const body = await request.json().catch(() => ({}));
       const game = String(body.game || "quiz").toLowerCase();
-      if (!["quiz", "snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة للبحث السريع" }, 400);
+      if (!["quiz", "snakes", "zahra", "jackaroo", "domino"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة للبحث السريع" }, 400);
       const stub = env.MATCHMAKING.get(env.MATCHMAKING.idFromName(game));
       return stub.fetch("https://match.internal/join", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, game }) });
     }
@@ -354,7 +369,7 @@ export default {
     if (matchmakingStatus) {
       if (!env.MATCHMAKING) return json({ ok: false, error: "محرك البحث عن المنافسين غير مفعّل" }, 503);
       const game = String(url.searchParams.get("game") || "quiz").toLowerCase();
-      if (!["quiz", "snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+      if (!["quiz", "snakes", "zahra", "jackaroo", "domino"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       const stub = env.MATCHMAKING.get(env.MATCHMAKING.idFromName(game));
       if (url.pathname.endsWith("/cancel")) {
         const cancelBody = await request.json().catch(() => ({}));
@@ -389,7 +404,7 @@ export default {
         let body = {};
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
-        if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        if (!["snakes", "zahra", "jackaroo", "domino"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
         const playerLimit = game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
@@ -559,6 +574,23 @@ export class GameRoom extends DurableObject {
       return json({ ok: true, status: this.room.status, players: this.room.order.length, mode: this.room.mode, teamMode: this.room.teamMode || "classic" });
     }
 
+    if (url.pathname === "/add-bot" && request.method === "POST") {
+      if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
+      const body = await request.json().catch(() => ({}));
+      try {
+        const count = Math.max(1, Math.min(3, Number(body.count) || 1));
+        const added = [];
+        for (let i = 0; i < count; i++) {
+          if (this.room.order.length >= (this.room.playerLimit || 8)) break;
+          added.push(this.addBotToRoom(body.difficulty, body.name));
+        }
+        await this.persistAndBroadcast();
+        return json({ ok: true, added: added.length });
+      } catch (err) {
+        return json({ ok: false, error: String(err?.message || err) }, 400);
+      }
+    }
+
     if (url.pathname.endsWith("/ws")) {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
       if (request.headers.get("Upgrade") !== "websocket") return json({ ok: false, error: "WebSocket required" }, 426);
@@ -653,6 +685,29 @@ export class GameRoom extends DurableObject {
       ready: false,
       connected: true,
       disconnectedAt: null,
+      isBot: false,
+      botDifficulty: null,
+      powers: { double: true, time: true, block: true },
+    };
+    this.room.players[id] = p;
+    this.room.order.push(id);
+    return p;
+  }
+
+  addBotToRoom(difficulty, name) {
+    if (!this.room) throw new Error("room_not_found");
+    if (this.room.status !== "lobby") throw new Error("not_in_lobby");
+    if (this.room.order.length >= (this.room.playerLimit || 8)) throw new Error("room_full");
+    const id = "bot-" + crypto.randomUUID();
+    const team = isTeamRoom(this.room) ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : null;
+    const teamSlot = team ? this.room.order.filter((existingId) => this.room.players[existingId]?.team === team).length : -1;
+    const botIndex = this.room.order.filter((pid) => this.room.players[pid]?.isBot).length + 1;
+    const p = {
+      id, token: token(), name: cleanName(name) || `بوت ${botIndex}`,
+      role: "guest", team, teamSlot,
+      teamRole: team && this.room.teamMode === "captain" && teamSlot === 0 ? "captain" : (team ? "specialist" : null),
+      specialty: null, score: 0, ready: true, connected: true, disconnectedAt: null,
+      isBot: true, botDifficulty: difficulty === "pro" ? "pro" : "medium",
       powers: { double: true, time: true, block: true },
     };
     this.room.players[id] = p;
@@ -746,6 +801,18 @@ export class GameRoom extends DurableObject {
         case "ready":
           if (this.room.status !== "lobby") break;
           player.ready = Boolean(msg.ready);
+          await this.persistAndBroadcast();
+          break;
+
+        case "add_bot":
+          if (player.role !== "host") return this.sendError(ws, "إضافة البوت للمضيف فقط");
+          if (this.room.status !== "lobby") return this.sendError(ws, "لا يمكن إضافة بوت بعد بدء المباراة");
+          if (this.room.order.length >= (this.room.playerLimit || 8)) return this.sendError(ws, "الغرفة ممتلئة");
+          try {
+            this.addBotToRoom(msg.difficulty, msg.name);
+          } catch (err) {
+            return this.sendError(ws, "تعذر إضافة البوت");
+          }
           await this.persistAndBroadcast();
           break;
 
@@ -933,6 +1000,7 @@ export class GameRoom extends DurableObject {
         teamRole: p.teamRole || null,
         specialty: p.specialty || null,
         ready: p.ready, connected: Boolean(p.connected),
+        isBot: Boolean(p.isBot), botDifficulty: p.botDifficulty || null,
         powers: p.id === playerId ? p.powers : {
           double: p.powers.double, time: p.powers.time, block: p.powers.block
         },
@@ -960,6 +1028,7 @@ export class GameRoom extends DurableObject {
       me: me ? { id: me.id, role: me.role, team: me.team || null, teamRole: me.teamRole || null, specialty: me.specialty || null, powers: me.powers } : null,
       roundIndex: this.room.roundIndex,
       roundCount: this.room.roundCount,
+      playerLimit: this.room.playerLimit,
       winnerId: this.room.winnerId,
       lastReveal: this.room.lastReveal,
       current: null,
@@ -1110,9 +1179,11 @@ export class GameRoom extends DurableObject {
       stealPlayer: null,
       double: {},
       blocked: {},
+      botActions: [],
     };
+    this.scheduleBots();
     await this.persistAndBroadcast();
-    await this.ctx.storage.setAlarm(this.room.current.deadline);
+    await this.armAlarmForCurrent();
   }
 
   allowedToAnswer(playerId) {
@@ -1200,8 +1271,9 @@ export class GameRoom extends DurableObject {
           c.phase = "steal";
           c.stealPlayer = opponentId;
           c.deadline = Date.now() + 8000;
+          if (this.room.players[opponentId]?.isBot) this.scheduleBotAnswer(this.room.players[opponentId], c, "steal_answer");
           await this.persistAndBroadcast();
-          await this.ctx.storage.setAlarm(c.deadline);
+          await this.armAlarmForCurrent();
         }
       }
       return;
@@ -1220,8 +1292,67 @@ export class GameRoom extends DurableObject {
     c.buzzWinner = player.id;
     c.phase = "buzzer_answer";
     c.deadline = Date.now() + 10000;
+    if (player.isBot) this.scheduleBotAnswer(player, c, "buzzer_answer");
     await this.persistAndBroadcast();
-    await this.ctx.storage.setAlarm(c.deadline);
+    await this.armAlarmForCurrent();
+  }
+
+  // ---------- جدولة ردود فعل البوت ----------
+  scheduleBotAnswer(bot, c, kind) {
+    c.botActions = c.botActions || [];
+    c.botActions.push({ playerId: bot.id, at: Date.now() + botReactionDelay(bot.botDifficulty, true), kind });
+  }
+
+  scheduleBots() {
+    const c = this.room.current;
+    if (!c) return;
+    c.botActions = c.botActions || [];
+    const bots = this.room.order.map((id) => this.room.players[id]).filter((p) => p?.isBot);
+    for (const bot of bots) {
+      if (c.mode === "buzzer" && c.phase === "buzzer") {
+        c.botActions.push({ playerId: bot.id, at: Date.now() + botReactionDelay(bot.botDifficulty), kind: "buzz" });
+      } else if (c.mode === "secret" && c.phase === "secret") {
+        if (this.room.teamMode === "escape") continue; // البوت لا يدعم نمط الهروب التعاوني حاليًا
+        if (isTeamRoom(this.room)) {
+          if (!bot.team) continue;
+          const activeRelay = c.relayPlayerByTeam?.[bot.team];
+          if (this.room.teamMode === "relay" && activeRelay && activeRelay !== bot.id) continue;
+        }
+        c.botActions.push({ playerId: bot.id, at: Date.now() + botReactionDelay(bot.botDifficulty), kind: "vote" });
+      }
+    }
+  }
+
+  async armAlarmForCurrent() {
+    const c = this.room?.current;
+    if (!c) return;
+    const times = [c.deadline, ...(c.botActions || []).map((a) => a.at)].filter(Number.isFinite);
+    if (!times.length) return;
+    await this.ctx.storage.setAlarm(Math.min(...times));
+  }
+
+  async runBotAction(action) {
+    const c = this.room?.current;
+    if (!c) return;
+    const bot = this.room.players[action.playerId];
+    if (!bot?.isBot) return;
+    if (action.kind === "buzz") {
+      if (c.mode === "buzzer" && c.phase === "buzzer" && !c.buzzWinner) await this.handleBuzz(bot);
+    } else if (action.kind === "vote") {
+      if (c.mode === "secret" && c.phase === "secret" && !c.answers?.[bot.id]) {
+        const choice = pickBotChoice(c, bot.botDifficulty);
+        if (isTeamRoom(this.room) && bot.team) await this.handleTeamVote(bot, choice);
+        else await this.handleAnswer(bot, choice);
+      }
+    } else if (action.kind === "buzzer_answer") {
+      if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner === bot.id) {
+        await this.handleAnswer(bot, pickBotChoice(c, bot.botDifficulty));
+      }
+    } else if (action.kind === "steal_answer") {
+      if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer === bot.id) {
+        await this.handleAnswer(bot, pickBotChoice(c, bot.botDifficulty));
+      }
+    }
   }
 
   async usePower(player, power) {
@@ -1472,6 +1603,18 @@ export class GameRoom extends DurableObject {
     }
 
     const c = this.room.current;
+    if (c?.botActions?.length) {
+      const due = c.botActions.filter((a) => a.at <= now + 300);
+      if (due.length) {
+        c.botActions = c.botActions.filter((a) => a.at > now + 300);
+        for (const action of due) {
+          await this.runBotAction(action);
+          if (this.room?.current !== c) break; // انتهت الجولة أثناء تنفيذ حركة البوت
+        }
+        if (this.room?.current === c) await this.armAlarmForCurrent();
+        return;
+      }
+    }
     if (!c || now + 300 < c.deadline) {
       if (c) await this.ctx.storage.setAlarm(c.deadline);
       return;
@@ -1542,7 +1685,23 @@ export class BoardRoom extends DurableObject {
 
   addPlayer(name, role) {
     const id = crypto.randomUUID();
-    const p = { id, token: token(), name: cleanName(name), role, ready: false, connected: true, disconnectedAt: null };
+    const p = { id, token: token(), name: cleanName(name), role, ready: false, connected: true, disconnectedAt: null, isBot: false, botDifficulty: null };
+    this.room.players[id] = p;
+    this.room.order.push(id);
+    return p;
+  }
+
+  addBotToRoom(difficulty, name) {
+    if (!this.room) throw new Error("room_not_found");
+    if (this.room.status !== "lobby") throw new Error("not_in_lobby");
+    if (this.room.order.length >= this.room.playerLimit) throw new Error("room_full");
+    const id = "bot-" + crypto.randomUUID();
+    const botIndex = this.room.order.filter((pid) => this.room.players[pid]?.isBot).length + 1;
+    const p = {
+      id, token: token(), name: cleanName(name) || `بوت ${botIndex}`,
+      role: "guest", ready: true, connected: true, disconnectedAt: null,
+      isBot: true, botDifficulty: difficulty === "pro" ? "pro" : "medium",
+    };
     this.room.players[id] = p;
     this.room.order.push(id);
     return p;
@@ -1592,6 +1751,12 @@ export class BoardRoom extends DurableObject {
       state.discard = Array(state.discard?.length || 0).fill("?");
       state.hands = (state.hands || []).map((hand, i) => i === me ? hand : Array(hand.length).fill("?"));
     }
+    if (this.room.game === "domino") {
+      const me = this.playerIndex(playerId);
+      state.boneyard = Array(state.boneyard?.length || 0).fill("?");
+      state.handCounts = (state.hands || []).map((h) => h.length);
+      state.hands = (state.hands || []).map((hand, i) => i === me ? hand : Array(hand.length).fill("?"));
+    }
     return state;
   }
 
@@ -1607,7 +1772,7 @@ export class BoardRoom extends DurableObject {
       version: this.room.version || 0,
       players: this.room.order.map((id, index) => {
         const p = this.room.players[id];
-        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected) };
+        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), isBot: Boolean(p.isBot), botDifficulty: p.botDifficulty || null };
       }),
       me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
       pendingRoll: this.room.pendingRoll,
@@ -1689,7 +1854,7 @@ export class BoardRoom extends DurableObject {
       if (this.room) return json({ ok: false, error: "room_exists" }, 409);
       const body = await request.json();
       const game = String(body.game || "");
-      if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
+      if (!["snakes", "zahra", "jackaroo", "domino"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
       const now = Date.now();
       this.room = {
         code: body.code, hostKey: body.hostKey, game,
@@ -1705,6 +1870,23 @@ export class BoardRoom extends DurableObject {
     if (url.pathname === "/status") {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
       return json({ ok: true, game: this.room.game, status: this.room.status, players: this.room.order.length, playerLimit: this.room.playerLimit });
+    }
+
+    if (url.pathname === "/add-bot" && request.method === "POST") {
+      if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
+      const body = await request.json().catch(() => ({}));
+      try {
+        const count = Math.max(1, Math.min(3, Number(body.count) || 1));
+        const added = [];
+        for (let i = 0; i < count; i++) {
+          if (this.room.order.length >= this.room.playerLimit) break;
+          added.push(this.addBotToRoom(body.difficulty, body.name));
+        }
+        await this.saveAndBroadcast();
+        return json({ ok: true, added: added.length });
+      } catch (err) {
+        return json({ ok: false, error: String(err?.message || err) }, 400);
+      }
     }
 
     if (url.pathname.endsWith("/ws")) {
@@ -1767,6 +1949,17 @@ export class BoardRoom extends DurableObject {
         player.ready = Boolean(msg.ready);
         return await this.saveAndBroadcast();
       }
+      if (msg.type === "add_bot") {
+        if (player.role !== "host") return this.sendError(ws, "إضافة البوت للمضيف فقط");
+        if (this.room.status !== "lobby") return this.sendError(ws, "لا يمكن إضافة بوت بعد بدء المباراة");
+        if (this.room.order.length >= this.room.playerLimit) return this.sendError(ws, "الغرفة ممتلئة");
+        try {
+          this.addBotToRoom(msg.difficulty, msg.name);
+        } catch (err) {
+          return this.sendError(ws, "تعذر إضافة البوت");
+        }
+        return await this.saveAndBroadcast();
+      }
       if (msg.type === "start") {
         if (player.role !== "host") return this.sendError(ws, "بدء المباراة للمضيف فقط");
         if (this.room.status !== "lobby") return;
@@ -1790,7 +1983,8 @@ export class BoardRoom extends DurableObject {
         this.room.version++;
         if (this.room.state.winner !== null) this.finishGame();
         else this.setTurnDeadline();
-        return await this.saveAndBroadcast();
+        await this.saveAndBroadcast();
+        return await this.maybeRunBots();
       }
       if (this.room.game === "zahra") {
         if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
@@ -1804,7 +1998,8 @@ export class BoardRoom extends DurableObject {
           } else this.room.pendingRoll = roll;
           this.room.version++;
           this.setTurnDeadline(this.room.pendingRoll !== null ? MOVE_TIMEOUT_MS : TURN_TIMEOUT_MS);
-          return await this.saveAndBroadcast();
+          await this.saveAndBroadcast();
+          return await this.maybeRunBots();
         }
         if (msg.type === "ludo_move") {
           if (this.room.pendingRoll === null) return this.sendError(ws, "ارمِ الزهرة أولًا");
@@ -1813,7 +2008,8 @@ export class BoardRoom extends DurableObject {
           this.room.version++;
           if (this.room.state.winner !== null) this.finishGame();
           else this.setTurnDeadline();
-          return await this.saveAndBroadcast();
+          await this.saveAndBroadcast();
+          return await this.maybeRunBots();
         }
       }
       if (this.room.game === "jackaroo" && msg.type === "jackaroo_play") {
@@ -1827,7 +2023,17 @@ export class BoardRoom extends DurableObject {
         this.room.version++;
         if (this.room.state.winnerTeam !== null) this.finishGame();
         else this.setTurnDeadline();
-        return await this.saveAndBroadcast();
+        await this.saveAndBroadcast();
+        return await this.maybeRunBots();
+      }
+      if (this.room.game === "domino" && msg.type === "domino_play") {
+        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
+        this.room.state = playDominoAction(this.room.state, actor, msg.action);
+        this.room.version++;
+        if (this.room.state.status === "finished") this.finishGame();
+        else this.setTurnDeadline();
+        await this.saveAndBroadcast();
+        return await this.maybeRunBots();
       }
       this.sendError(ws, "أمر غير معروف");
     } catch (err) {
@@ -1840,6 +2046,7 @@ export class BoardRoom extends DurableObject {
     const names = this.room.order.map((id) => this.room.players[id].name);
     if (this.room.game === "snakes") this.room.state = createSnakesGame(names);
     else if (this.room.game === "zahra") this.room.state = createLudoGame(names);
+    else if (this.room.game === "domino") this.room.state = createDominoGame(names);
     else this.room.state = createJackarooGame(names);
     this.room.status = "playing";
     this.room.pendingRoll = null;
@@ -1847,6 +2054,84 @@ export class BoardRoom extends DurableObject {
     this.setTurnDeadline();
     for (const id of this.room.order) this.room.players[id].ready = true;
     await this.saveAndBroadcast();
+    await this.maybeRunBots();
+  }
+
+  // ---------- بوت اللعب التلقائي ----------
+  async maybeRunBots() {
+    let guard = 0;
+    while (this.room && this.room.status === "playing" && this.room.state && guard < 60) {
+      guard++;
+      const actorId = this.room.order[this.room.state.turn];
+      const actor = actorId ? this.room.players[actorId] : null;
+      if (!actor?.isBot) break;
+      const acted = await this.runBotTurn(actor);
+      if (!acted) break;
+    }
+  }
+
+  async runBotTurn(player) {
+    const actorSeat = this.playerIndex(player.id);
+    const difficulty = player.botDifficulty === "pro" ? "pro" : "medium";
+    if (this.room.game === "snakes") {
+      this.room.state = playSnakesRoll(this.room.state, this.randomDie());
+      this.room.version++;
+      if (this.room.state.winner !== null) this.finishGame();
+      else this.setTurnDeadline();
+      await this.saveAndBroadcast();
+      return true;
+    }
+    if (this.room.game === "zahra") {
+      let roll = this.room.pendingRoll;
+      if (roll === null) {
+        roll = this.randomDie();
+        const legal0 = getLegalLudoMoves(this.room.state, roll);
+        if (!legal0.length) {
+          this.room.state = passLudoTurn(this.room.state, roll);
+          this.room.pendingRoll = null;
+          this.room.version++;
+          if (this.room.state.winner !== null) this.finishGame();
+          else this.setTurnDeadline();
+          await this.saveAndBroadcast();
+          return true;
+        }
+        this.room.pendingRoll = roll;
+      }
+      const legal = getLegalLudoMoves(this.room.state, this.room.pendingRoll);
+      const choice = legal.length ? chooseLudoBotMove(this.room.state, legal, this.room.pendingRoll, difficulty) : null;
+      if (choice === null) {
+        this.room.state = passLudoTurn(this.room.state, this.room.pendingRoll);
+      } else {
+        this.room.state = applyLudoMove(this.room.state, choice, this.room.pendingRoll);
+      }
+      this.room.pendingRoll = null;
+      this.room.version++;
+      if (this.room.state.winner !== null) this.finishGame();
+      else this.setTurnDeadline();
+      await this.saveAndBroadcast();
+      return true;
+    }
+    if (this.room.game === "jackaroo") {
+      const choice = chooseJackarooBotAction(this.room.state, actorSeat, difficulty, getJackarooActions);
+      if (!choice) { this.setTurnDeadline(); await this.saveAndBroadcast(); return false; }
+      this.room.state = playJackarooAction(this.room.state, choice.cardIndex, choice.action, actorSeat);
+      this.room.version++;
+      if (this.room.state.winnerTeam !== null) this.finishGame();
+      else this.setTurnDeadline();
+      await this.saveAndBroadcast();
+      return true;
+    }
+    if (this.room.game === "domino") {
+      const action = chooseDominoBotAction(this.room.state, actorSeat, difficulty, getDominoActions);
+      if (!action) { this.setTurnDeadline(); await this.saveAndBroadcast(); return false; }
+      this.room.state = playDominoAction(this.room.state, actorSeat, action);
+      this.room.version++;
+      if (this.room.state.status === "finished") this.finishGame();
+      else this.setTurnDeadline();
+      await this.saveAndBroadcast();
+      return true;
+    }
+    return false;
   }
 
   async resetForRematch() {
@@ -1867,7 +2152,8 @@ export class BoardRoom extends DurableObject {
       this.room.version++;
       if (this.room.state.winner !== null) this.finishGame();
       else this.setTurnDeadline();
-      return await this.saveAndBroadcast();
+      await this.saveAndBroadcast();
+      return await this.maybeRunBots();
     }
     if (this.room.game === "zahra") {
       let roll = this.room.pendingRoll;
@@ -1883,7 +2169,8 @@ export class BoardRoom extends DurableObject {
       this.room.version++;
       if (this.room.state.winner !== null) this.finishGame();
       else this.setTurnDeadline();
-      return await this.saveAndBroadcast();
+      await this.saveAndBroadcast();
+      return await this.maybeRunBots();
     }
     if (this.room.game === "jackaroo") {
       const candidates = [];
@@ -1901,7 +2188,22 @@ export class BoardRoom extends DurableObject {
       } else {
         this.setTurnDeadline();
       }
-      return await this.saveAndBroadcast();
+      await this.saveAndBroadcast();
+      return await this.maybeRunBots();
+    }
+    if (this.room.game === "domino") {
+      const legal = getDominoActions(this.room.state, actor);
+      if (legal.length) {
+        const chosen = pick(legal);
+        this.room.state = playDominoAction(this.room.state, actor, chosen);
+        this.room.version++;
+        if (this.room.state.status === "finished") this.finishGame();
+        else this.setTurnDeadline();
+      } else {
+        this.setTurnDeadline();
+      }
+      await this.saveAndBroadcast();
+      return await this.maybeRunBots();
     }
   }
 
