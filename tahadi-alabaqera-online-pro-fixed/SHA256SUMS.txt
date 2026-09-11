@@ -408,7 +408,7 @@ c5fef21e1fab3936f3a65e16170788e7e2b0a103d78800edb614bb110618590d  ./public/logic
 e6c2727daf7cf591432981ae2abae7a6867df8881e5be5024a4983206de81847  ./public/manifest.webmanifest
 52ca9bedcd82f96294e6893a2fcb03b84c62014fdc86e60a84da8a86a71a8fc5  ./public/matchmaking.html
 19de9177a542ce58950c411d58911ee05f119fbfe6f951658a63b1ee85fc8490  ./public/memory.html
-00f1151975449718554ed1ca37bd7e7a3776afecdad89095cfb1a57d50898dbe  ./public/online.html
+3314a1e40a56ba6cf785708d53d0d6e8ba8ab1ea7812898bb23fbe0c38180038  ./public/online.html
 fafd94999e2e3f18bb5d1de4f8a8bb203daa0ab1418fcbbd7e48fb1ae36ef22d  ./public/order.html
 efd08f84c5ac3e66f04667ff99118a8817dc9524efa6ebfaa377db341d5e815d  ./public/puzzle.html
 9d5adffc9c6f8a13252bb8ccfeca6b62f411b64471e7264cdb54d700e64b0c34  ./public/reaction.html
@@ -434,7 +434,7 @@ cb059925026d40f2c363f2c4c6e3442a85164adaddcc23a31708d4fd03483d92  ./scripts/veri
 dc13a3956504c61254b40c21c562b8616683d73d69d0c64d4ae0435d0037da99  ./src/ai-questions.js
 09d0c36594f63674629c7a67258739cc5e2bb3a6cf0d8517ad306f4350c51b9c  ./src/games/jackaroo-server.js
 28318c6655f1d7362e3a0e181465489eecf2dd9322fd59254f34009f258d9556  ./src/games/snakes-server.js
-2a802cd1a676aa4332bd7b5bcbf54b09f756b09225c32fce4252a62e97f7da57  ./src/index.js
+01c66fe831d45dde347573bc1f4fa8591552615479c670e274a16167ec729af3  ./src/index.js
 79aa3a68e6a179c08d6a4ff9ce09eab672794ff10df66981c744af3a79b493d1  ./src/matchmaking.js
 e797f331a5fd0e7dc332e280878caad1a0ba2081695e87ff4014146bb0e1a4cb  ./src/questions.js
 6db467376fa88dc4fcdc860178fd2428064856e8625ab2e5a2b3477c2b79e2a0  ./src/rooms/board-game-core.js
@@ -464,7 +464,7 @@ d77f7e8fc651ecba2e831e21a4bc266d7c15fa5ea339b4c43234e98f7bf8517d  ./test/player-
 26bf8be337b3d19d42fdaf166d7ff4fd7b5ba0d0f42d5c75f633e8a1a9d32a1d  ./test/progression-sync.test.js
 8a8d65c49e186a2391e9d2cf578a0ef12daa6bd4cde8268f3e78b96981c4bc67  ./test/quick-match-firestore.test.js
 d0363547fbca0e8e626b7ae50c240eee733d13b4acc39f124f09c6e1fc4a5aba  ./test/quiz-memory-premium.test.js
-8c0a0f106c23d2f53d863bb644729db86b74c484ac15de767d61412fced8a2c7  ./test/quiz-pro.test.js
+a21404abced2e4119f45312504a6cdfcaf04e23abd60203acb18ba28c8d591a2  ./test/quiz-pro.test.js
 1a013f59fdfe79e767c2c41f8b41e72cc17f731e42592596fefaf028d82ebc81  ./test/release-3.2-redesign.test.js
 b13f51fd32be982e3db3f35c9c9c7accad30c467cb2cd68d371477a90b5dc956  ./test/room-lobby.test.js
 33d96fad07605a10724ccbf67c35af79d5cddca750de013b9015605b1a83ab73  ./test/runtime-cleanup.test.js

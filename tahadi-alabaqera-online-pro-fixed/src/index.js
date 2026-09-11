@@ -201,20 +201,6 @@ function questionRef(cat, q) {
   return `${cat.id}:${cat.questions.indexOf(q)}`;
 }
 
-function balancedModes(rounds) {
-  const modes = Array.from({ length: rounds }, (_, i) => i < Math.ceil(rounds / 2) ? "secret" : "buzzer");
-  for (let tries = 0; tries < 24; tries++) {
-    const candidate = shuffle(modes);
-    let streak = 1, ok = true;
-    for (let i = 1; i < candidate.length; i++) {
-      streak = candidate[i] === candidate[i - 1] ? streak + 1 : 1;
-      if (streak > 2) { ok = false; break; }
-    }
-    if (ok) return candidate;
-  }
-  return modes.map((_, i) => i % 2 === 0 ? "secret" : "buzzer");
-}
-
 function makePlan(categoryIds, rounds = 12, recentQids = []) {
   const chosen = categoryIds.map((id) => CATEGORY_MAP.get(id)).filter(Boolean);
   if (!chosen.length) return [];
@@ -242,8 +228,7 @@ function makePlan(categoryIds, rounds = 12, recentQids = []) {
   while (plan.length < rounds) addQuestion(pick(chosen), null);
 
   const order = shuffle(plan.slice(0, rounds));
-  const modes = balancedModes(order.length);
-  return order.map((x, i) => ({ ...x, mode: modes[i] }));
+  return order.map((x) => ({ ...x, mode: "secret" }));
 }
 
 function qFromRef(catId, qid) {
@@ -473,6 +458,27 @@ export class GameRoom extends DurableObject {
     this.room = null;
     this.ctx.blockConcurrencyWhile(async () => {
       this.room = (await this.ctx.storage.get("room")) || null;
+      if (this.room) {
+        let migrated = false;
+        if (Array.isArray(this.room.roundPlan)) {
+          this.room.roundPlan = this.room.roundPlan.map((round) => {
+            if (round?.mode === "secret") return round;
+            migrated = true;
+            return { ...round, mode: "secret" };
+          });
+        }
+        if (this.room.current?.mode && this.room.current.mode !== "secret") {
+          const now = Date.now();
+          this.room.current.mode = "secret";
+          this.room.current.phase = "secret";
+          this.room.current.answers ||= {};
+          this.room.current.deadline = Math.max(Number(this.room.current.deadline) || 0, now + 30_000);
+          delete this.room.current.buzzWinner;
+          delete this.room.current.stealPlayer;
+          migrated = true;
+        }
+        if (migrated) await this.ctx.storage.put("room", this.room);
+      }
       this.syncConnectedFlags();
     });
   }
@@ -563,7 +569,7 @@ export class GameRoom extends DurableObject {
         teamFreezeNext: { A: false, B: false },
         teamProgress: { A: 0, B: 0 },
         relayStreak: { A: 0, B: 0 },
-        playerLimit: [2,4,5,6,7,8].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
+        playerLimit: [2,4,5,6,7,8,10].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 10,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
       await this.persist();
@@ -612,7 +618,7 @@ export class GameRoom extends DurableObject {
         if (this.room.order.length === 0) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
         this.cleanupLobbySeats();
-        if (this.room.order.length >= (this.room.playerLimit || 8)) return json({ ok: false, error: `الغرفة ممتلئة (الحد الأقصى ${this.room.playerLimit || 8} لاعبين)` }, 409);
+        if (this.room.order.length >= (this.room.playerLimit || 10)) return json({ ok: false, error: `الغرفة ممتلئة (الحد الأقصى ${this.room.playerLimit || 10} لاعبين)` }, 409);
         player = this.addPlayer(name, "guest");
       } else if (name) {
         player.name = name;
@@ -800,6 +806,13 @@ export class GameRoom extends DurableObject {
         case "start":
           if (player.role !== "host") return this.sendError(ws, "للمضيف فقط");
           if (this.room.status !== "lobby") return;
+          if (msg.categories !== undefined) {
+            const ids = [...new Set(Array.isArray(msg.categories) ? msg.categories : [])]
+              .filter((id) => CATEGORY_MAP.has(id))
+              .slice(0, 6);
+            if (ids.length !== 6) return this.sendError(ws, "اختر 6 فئات");
+            this.room.selectedCategories = ids;
+          }
           if (this.room.order.length < 2) return this.sendError(ws, "يلزم لاعبان على الأقل");
           if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال اللاعبين");
           if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "يجب أن يكون جميع اللاعبين جاهزين");
@@ -811,9 +824,6 @@ export class GameRoom extends DurableObject {
           await this.handleAnswer(player, Number(msg.choice));
           break;
 
-        case "buzz":
-          await this.handleBuzz(player);
-          break;
 
         case "team_vote":
           await this.handleTeamVote(player, Number(msg.choice));
@@ -997,8 +1007,6 @@ export class GameRoom extends DurableObject {
         deadline: c.deadline,
         startedAt: c.startedAt,
         answerOpensAt: c.answerOpensAt || c.startedAt,
-        buzzWinner: c.buzzWinner,
-        stealPlayer: c.stealPlayer,
         answeredPlayers: Object.keys(c.answers || {}),
         blocked: Boolean(c.blocked?.[playerId]),
         relayPlayerId: c.relayPlayerByTeam?.[me?.team] || null,
@@ -1017,8 +1025,6 @@ export class GameRoom extends DurableObject {
       };
 
       if (!spectator && c.mode === "secret" && c.phase === "secret") base.options = c.options;
-      if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner === playerId) base.options = c.options;
-      if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer === playerId) base.options = c.options;
       out.current = base;
     }
     return out;
@@ -1067,10 +1073,9 @@ export class GameRoom extends DurableObject {
     const { cat, q } = found;
     const { options, correctIndex } = buildChoices(cat, q);
     const now = Date.now();
-    const isSecret = plan.mode === "secret";
     const previewMs = q.media === "memory" ? Math.min(8000, Math.max(2500, Number(q.memory?.previewMs) || 4500)) : 0;
     const answerOpensAt = now + previewMs;
-    const responseMs = isSecret ? 30000 : 15000;
+    const responseMs = 30000;
     const relayPlayerByTeam = {};
     if (this.room.teamMode === "relay") {
       for (const team of ["A", "B"]) {
@@ -1095,8 +1100,8 @@ export class GameRoom extends DurableObject {
       }
     }
     this.room.current = {
-      mode: plan.mode,
-      phase: isSecret ? "secret" : "buzzer",
+      mode: "secret",
+      phase: "secret",
       category: { id: cat.id, name: cat.name, icon: cat.icon },
       value: q.v,
       question: q.q,
@@ -1125,8 +1130,6 @@ export class GameRoom extends DurableObject {
       teamRevive: { A: false, B: false },
       teamFreezeUntil,
       relayPlayerByTeam,
-      buzzWinner: null,
-      stealPlayer: null,
       double: {},
       blocked: {},
     };
@@ -1136,11 +1139,7 @@ export class GameRoom extends DurableObject {
 
   allowedToAnswer(playerId) {
     const c = this.room.current;
-    if (!c) return false;
-    if (c.mode === "secret" && c.phase === "secret") return !c.answers[playerId];
-    if (c.mode === "buzzer" && c.phase === "buzzer_answer") return c.buzzWinner === playerId;
-    if (c.mode === "buzzer" && c.phase === "steal") return c.stealPlayer === playerId;
-    return false;
+    return Boolean(c && c.mode === "secret" && c.phase === "secret" && !c.answers[playerId]);
   }
 
   async handleTeamVote(player, choice) {
@@ -1194,53 +1193,15 @@ export class GameRoom extends DurableObject {
   async handleAnswer(player, choice) {
     const c = this.room.current;
     if (this.room.status !== "playing" || !c || !this.allowedToAnswer(player.id)) return;
-    if (isTeamRoom(this.room) && c.mode === "secret") return this.handleTeamVote(player, choice);
+    if (isTeamRoom(this.room)) return this.handleTeamVote(player, choice);
     if (!Number.isInteger(choice) || choice < 0 || choice >= c.options.length) return;
     const now = Date.now();
     if (now < (c.answerOpensAt || c.startedAt || 0)) return;
     if (now > c.deadline + 1200) return;
 
     c.answers[player.id] = { choice, at: now, bonus: speedBonus(c.deadline, now) };
-
-    if (c.mode === "secret") {
-      if (Object.keys(c.answers).length >= this.room.order.length) await this.finalizeSecret();
-      else await this.persistAndBroadcast();
-      return;
-    }
-
-    if (c.phase === "buzzer_answer") {
-      if (choice === c.correctIndex) {
-        await this.finalizeBuzzer(player.id, true, false);
-      } else {
-        const opponentId = this.room.order.find((id) => id !== player.id);
-        if (c.blocked?.[opponentId]) {
-          await this.finalizeBuzzer(player.id, false, false);
-        } else {
-          c.phase = "steal";
-          c.stealPlayer = opponentId;
-          c.deadline = Date.now() + 8000;
-          await this.persistAndBroadcast();
-          await this.ctx.storage.setAlarm(c.deadline);
-        }
-      }
-      return;
-    }
-
-    if (c.phase === "steal") {
-      await this.finalizeBuzzer(player.id, choice === c.correctIndex, true);
-    }
-  }
-
-  async handleBuzz(player) {
-    const c = this.room.current;
-    if (this.room.status !== "playing" || !c || c.mode !== "buzzer" || c.phase !== "buzzer") return;
-    if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
-    if (Date.now() > c.deadline) return;
-    c.buzzWinner = player.id;
-    c.phase = "buzzer_answer";
-    c.deadline = Date.now() + 10000;
-    await this.persistAndBroadcast();
-    await this.ctx.storage.setAlarm(c.deadline);
+    if (Object.keys(c.answers).length >= this.room.order.length) await this.finalizeSecret();
+    else await this.persistAndBroadcast();
   }
 
   async usePower(player, power) {
@@ -1251,16 +1212,13 @@ export class GameRoom extends DurableObject {
     if (!player.powers[power]) return;
     if (c.blocked?.[player.id]) return;
 
-    const phaseOpen = ["secret", "buzzer", "buzzer_answer", "steal"].includes(c.phase);
-    if (!phaseOpen) return;
+    if (c.mode !== "secret" || c.phase !== "secret") return;
 
     if (power === "double") {
       if (c.answers[player.id]) return;
       c.double[player.id] = true;
     } else if (power === "time") {
       if (c.answers[player.id]) return;
-      if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner !== player.id) return;
-      if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer !== player.id) return;
       c.deadline += 7000;
       await this.ctx.storage.setAlarm(c.deadline);
     } else if (power === "block") {
@@ -1367,19 +1325,6 @@ export class GameRoom extends DurableObject {
       const gain = correct ? this.pointsFor(id, a) : 0;
       if (gain) this.room.players[id].score += gain;
       results[id] = { correct, gain, choice: a?.choice ?? null };
-    }
-    await this.revealRound(results);
-  }
-
-  async finalizeBuzzer(playerId, correct, stolen) {
-    const c = this.room.current;
-    const results = {};
-    for (const id of this.room.order) results[id] = { correct: false, gain: 0, choice: c.answers[id]?.choice ?? null };
-    if (correct) {
-      const a = c.answers[playerId];
-      const gain = this.pointsFor(playerId, a);
-      this.room.players[playerId].score += gain;
-      results[playerId] = { correct: true, gain, choice: a?.choice ?? null, stolen: Boolean(stolen) };
     }
     await this.revealRound(results);
   }
@@ -1496,36 +1441,13 @@ export class GameRoom extends DurableObject {
       return;
     }
 
+
     if (c.mode === "secret" && c.phase === "secret") {
       if (isTeamRoom(this.room)) await this.finalizeTeamSecret();
       else await this.finalizeSecret();
-      return;
-    }
-
-    if (c.mode === "buzzer" && c.phase === "buzzer") {
-      const results = Object.fromEntries(this.room.order.map((id) => [id, { correct: false, gain: 0, choice: null }]));
-      await this.revealRound(results);
-      return;
-    }
-
-    if (c.mode === "buzzer" && c.phase === "buzzer_answer") {
-      const opponentId = this.room.order.find((id) => id !== c.buzzWinner);
-      if (opponentId && !c.blocked?.[opponentId]) {
-        c.phase = "steal";
-        c.stealPlayer = opponentId;
-        c.deadline = Date.now() + 8000;
-        await this.persistAndBroadcast();
-        await this.ctx.storage.setAlarm(c.deadline);
-      } else {
-        await this.finalizeBuzzer(c.buzzWinner, false, false);
-      }
-      return;
-    }
-
-    if (c.mode === "buzzer" && c.phase === "steal") {
-      await this.finalizeBuzzer(c.stealPlayer, false, true);
     }
   }
+
 }
 
 export { MatchmakingRoom };

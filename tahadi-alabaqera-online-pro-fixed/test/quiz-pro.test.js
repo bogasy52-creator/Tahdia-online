@@ -64,7 +64,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
   const html=await readFile(join(pub,'online.html'),'utf8');
   const worker=await readFile(join(root,'src/index.js'),'utf8');
   for(const marker of ['data-round="12"','data-round="18"','data-round="24"','soundPlayCounts','drawSoundWave','hintZoom','focusX','focusY']) assert.ok(html.includes(marker),`online missing ${marker}`);
-  for(const marker of ['set_round_count','recentQids','balancedModes','q.distractors']) assert.ok(worker.includes(marker),`worker missing ${marker}`);
+  for(const marker of ['set_round_count','recentQids','mode: "secret"','q.distractors']) assert.ok(worker.includes(marker),`worker missing ${marker}`);
 });
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
