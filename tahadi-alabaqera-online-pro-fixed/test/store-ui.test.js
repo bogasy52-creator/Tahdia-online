@@ -26,6 +26,7 @@ test('catalog contains the complete approved cosmetic inventory with unique stab
   assert.ok(window.TAHADI_STORE_CATALOG.filter((item) => item.interactive).length >= 10);
   assert.ok(window.TAHADI_STORE_CATALOG.filter((item) => item.category === 'avatar' && item.personality).length >= 4);
   assert.ok(window.TAHADI_STORE_CATALOG.filter((item) => item.category === 'sound').every((item) => item.phrases?.length >= 4));
+  assert.ok(window.TAHADI_STORE_CATALOG.every((item) => !/\p{Extended_Pictographic}/u.test(item.preview)), 'store previews must not use emoji artwork');
 });
 
 test('daily rotation is deterministic, includes every category, and changes by day', async () => {
@@ -45,6 +46,7 @@ test('item status distinguishes equipped, owned, level-locked, affordable, and o
   assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 2, coins: 500, inventory: [], equipped: {} }, false).kind, 'level_locked');
   assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 3, coins: 100, inventory: [], equipped: {} }, false).kind, 'insufficient');
   assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 3, coins: 500, inventory: [], equipped: {} }, false).kind, 'buy');
+  assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 3, coins: 500, inventory: [], equipped: {} }, false).label, 'شراء • 240 CR');
   assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 3, coins: 0, inventory: ['frame-gold'], equipped: {} }, false).kind, 'owned');
   assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 3, coins: 0, inventory: ['frame-gold'], equipped: { frame: 'frame-gold' } }, false).kind, 'equipped');
   assert.equal(window.TAHADI_STORE_UI.statusForItem(item, { level: 1, coins: 0, inventory: [], equipped: {} }, true).kind, 'owner');
@@ -58,9 +60,14 @@ test('store renders real category artwork and explains where every item is activ
     const entry = window.TAHADI_STORE_CATALOG.find((item) => item.category === category);
     const artwork = ui.renderArtwork(entry);
     assert.match(artwork, /<svg\b/);
+    assert.match(artwork, /data-art-system="noir-mythic"/);
     assert.match(artwork, new RegExp(`data-cosmetic-category="${category}"`));
     assert.ok(ui.usageForCategory(category).length > 12);
   }
+  const avatars = window.TAHADI_STORE_CATALOG.filter((item) => item.category === 'avatar');
+  const portraits = avatars.map((entry) => ui.renderArtwork(entry));
+  assert.ok(portraits.every((artwork) => /class="nm-avatar-helmet"/.test(artwork)));
+  assert.equal(new Set(portraits).size, avatars.length);
 });
 
 test('store loadout exposes all six equipped slots instead of hiding purchased items', async () => {
@@ -85,7 +92,7 @@ test('shop page exposes accessible navigation, preview, rewards, missions, and h
   assert.match(html, /id="shopTry"/);
   assert.match(html, /id="shopSpotlight"/);
   assert.match(html, /id="shopCollection"/);
-  assert.match(html, /class="[^"]*store-vault/);
+  assert.match(html, /class="[^"]*store-noir/);
   assert.match(html, /id="dailyReward"/);
   assert.match(html, /id="weeklyMissions"/);
   assert.match(html, /id="purchaseHistory"/);
@@ -94,8 +101,10 @@ test('shop page exposes accessible navigation, preview, rewards, missions, and h
   assert.match(html, /assets\/js\/progression\.js/);
   assert.match(html, /assets\/js\/store\.js/);
   assert.match(css, /\.sr-only\{[^}]*clip-path:inset\(50%\)/);
+  assert.match(css, /\.store-noir/);
   assert.match(css, /\.store-spotlight/);
   assert.match(css, /\.shop-item\.interactive/);
+  assert.doesNotMatch(html, /\p{Extended_Pictographic}/u);
 });
 
 test('home page makes the shop visible on desktop, mobile, and quick actions', async () => {

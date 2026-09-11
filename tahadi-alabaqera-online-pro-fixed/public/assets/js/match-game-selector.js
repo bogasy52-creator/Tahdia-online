@@ -8,7 +8,8 @@
     Object.freeze({ id: 'jackaroo', name: 'جاكارو', icon: '🃏', note: 'فرق وبطاقات وتكتيك', transport: 'board' }),
     Object.freeze({ id: 'spotdiff', name: 'اكتشف الفروقات', icon: '🔍', note: 'سرعة ملاحظة مباشرة', transport: 'board' }),
   ]);
-  let selectedId = 'quiz';
+  const requestedId = new URLSearchParams(global.location?.search || '').get('game');
+  let selectedId = games.some((game) => game.id === requestedId) ? requestedId : 'quiz';
 
   function findGame(id) {
     return games.find((game) => game.id === String(id || '')) || null;

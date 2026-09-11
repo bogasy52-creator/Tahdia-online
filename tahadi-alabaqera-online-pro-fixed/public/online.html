@@ -48,7 +48,7 @@
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">مواجهات فردية وفرق • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
 
 <section id="entry">
-<div class="card quizOnlineHero"><div><div class="mut">V5.2 • ONLINE DUEL</div><h2>اختر لعبتك.<br><span>والتحدي يبدأ.</span></h2><p class="mut">اللعب السريع يفتح لك قائمة الألعاب أولًا، ثم يبحث عن منافس لنفس اللعبة ويجهّز BOT تلقائيًا عند عدم وجود لاعب.</p></div><div class="onlineHeroOrb" aria-hidden="true">🎮</div></div>
+<div class="card quizOnlineHero"><div><div class="mut">V5.3 • ONLINE DUEL</div><h2>اختر لعبتك.<br><span>والتحدي يبدأ.</span></h2><p class="mut">اللعب السريع يفتح لك قائمة الألعاب أولًا، ثم يبحث عن منافس لنفس اللعبة ويجهّز BOT تلقائيًا عند عدم وجود لاعب.</p></div><div class="onlineHeroOrb" aria-hidden="true">🎮</div></div>
 <div class="entry">
 <div class="card online-fast-card">
   <div class="quick-main">
@@ -229,7 +229,7 @@ async function apiFetch(path,opts={}){const origin=activeApiOrigin||await probeB
 function websocketUrl(path){const u=new URL(path,activeApiOrigin||DEFAULT_CLOUD_API);u.protocol=u.protocol==='https:'?'wss:':'ws:';return u}
 
 function quickPlay(){
- location.href='/matchmaking';
+ location.href='/matchmaking.html';
 }
 
 async function createRoom(){

@@ -26,7 +26,7 @@ test('board quick-match keeps the page game when the click event is passed', asy
 
 test('BOT fallback and real rooms both open the selected game, not matchmaking', async () => {
   const api = await boot('/matchmaking');
-  assert.equal(api.destinationFor('snakes', { bot: '1', difficulty: 'medium' }), 'https://games.example/snakes?bot=1&difficulty=medium');
-  assert.equal(api.destinationFor('jackaroo', { room: 'ABCD', quick: '1' }), 'https://games.example/jackaroo?room=ABCD&quick=1');
+  assert.equal(api.destinationFor('snakes', { bot: '1', difficulty: 'medium' }), 'https://games.example/snakes.html?bot=1&difficulty=medium');
+  assert.equal(api.destinationFor('jackaroo', { room: 'ABCD', quick: '1' }), 'https://games.example/jackaroo.html?room=ABCD&quick=1');
   assert.equal(api.destinationFor('bad-game', { bot: '1' }), null);
 });

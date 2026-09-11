@@ -1,7 +1,14 @@
 /* Offline cosmetic catalog. IDs are permanent because saved profiles reference them. */
 (function () {
-  const item = (id, category, name, price, rarity, level, preview, extra = {}) =>
-    Object.freeze({ id, category, name, price, rarity, level, preview, ...extra });
+  const categoryCounts = new Map();
+  const categoryCodes = { avatar: 'AV', frame: 'FR', table: 'TB', entrance: 'EN', victory: 'VX', sound: 'AU' };
+  const item = (id, category, name, price, rarity, level, _legacyPreview, extra = {}) => {
+    const index = (categoryCounts.get(category) || 0) + 1;
+    categoryCounts.set(category, index);
+    const slug = String(id).split('-').slice(1).join('').replace(/[^a-z0-9]/gi, '').toUpperCase();
+    const preview = category === 'avatar' ? (slug.slice(0, 2) || `A${index}`) : `${categoryCodes[category] || 'IT'}${index}`;
+    return Object.freeze({ id, category, name, price, rarity, level, preview, ...extra });
+  };
 
   const catalog = [
     item('avatar-nova', 'avatar', 'نوفا', 0, 'free', 1, '🧠', { colors: ['#8b5cf6', '#22d3ee'] }),

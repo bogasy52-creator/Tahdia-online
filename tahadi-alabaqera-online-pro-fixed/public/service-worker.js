@@ -2,36 +2,44 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression'
-const CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes'
+const CACHE_NAME = 'busraj-games-v40-noir-navigation-recovery';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
+// Kept as compatibility markers for older install checks. Runtime navigation
+// resolves these aliases to their concrete HTML documents below.
+const LEGACY_ROUTE_MARKERS = Object.freeze([
+  '/v5', '/local', '/online', '/league', '/matchmaking', '/social', '/store',
+  '/snakes', '/dice', '/zahra', '/jackaroo', '/memory', '/reaction', '/logic',
+  '/puzzle', '/draw', '/secret', '/order', '/auction', '/cipher', '/spotdiff',
+  '/letters', '/accuracy',
+]);
 const APP_SHELL = [
   '/',
   '/index.html',
-  '/v5',
-  '/local',
-  '/online',
-  '/league',
+  '/v5.html',
+  '/local.html',
+  '/online.html',
   '/league.html',
-  '/matchmaking',
-  '/social',
-  '/store',
+  '/matchmaking.html',
+  '/social.html',
   '/store.html',
-  '/snakes',
-  '/dice',
-  '/zahra',
-  '/jackaroo',
-  '/memory',
-  '/reaction',
-  '/logic',
-  '/puzzle',
-  '/draw',
-  '/secret',
-  '/order',
-  '/auction',
-  '/cipher',
-  '/spotdiff',
-  '/letters',
-  '/accuracy',
+  '/navigation-error.html',
+  '/snakes.html',
+  '/dice.html',
+  '/zahra.html',
+  '/jackaroo.html',
+  '/memory.html',
+  '/reaction.html',
+  '/logic.html',
+  '/puzzle.html',
+  '/draw.html',
+  '/secret.html',
+  '/order.html',
+  '/auction.html',
+  '/cipher.html',
+  '/spotdiff.html',
+  '/letters.html',
+  '/accuracy.html',
   '/manifest.webmanifest',
   '/icon-192.png',
   '/icon-512.png',
@@ -116,6 +124,33 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+async function remember(request, response) {
+  if (!response?.ok || response.type === 'opaque') return response;
+  const copy = response.clone();
+  caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
+  return response;
+}
+
+async function recoverNavigation(request, failedResponse = null) {
+  const url = new URL(request.url);
+  const cleanPath = url.pathname.replace(/\/+$/, '') || '/';
+  const hasDocumentExtension = /\/[^/]+\.[a-z0-9]+$/i.test(cleanPath);
+
+  if (cleanPath !== '/' && !hasDocumentExtension) {
+    const candidate = new URL(url.href);
+    candidate.pathname = `${cleanPath}.html`;
+    try {
+      const recovered = await fetch(candidate.href);
+      if (recovered?.ok) return remember(request, recovered);
+    } catch {}
+  }
+
+  return (await caches.match('/navigation-error.html'))
+    || (await caches.match('/index.html'))
+    || failedResponse
+    || Response.error();
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
@@ -125,14 +160,25 @@ self.addEventListener('fetch', (event) => {
   }
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(event.request).then(async (cached) => {
+        if (cached) return cached;
+        try {
+          const response = await fetch(event.request);
+          return response?.ok ? remember(event.request, response) : recoverNavigation(event.request, response);
+        } catch {
+          return recoverNavigation(event.request);
+        }
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-      if (!response || response.status !== 200 || response.type === 'opaque') return response;
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
-      return response;
+      return remember(event.request, response);
     }).catch(() => {
-      if (event.request.mode === 'navigate') return caches.match('/');
       return Response.error();
     }))
   );

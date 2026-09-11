@@ -233,7 +233,6 @@
     const cosmetic = kind === 'entrance' ? kit.entrance : kit.victory;
     const colors = cosmetic?.colors || (kind === 'entrance' ? ['#8b5cf6', '#22d3ee'] : ['#f0b94a', '#fff7cc']);
     const layer = document.createElement('section');
-    layer.__tahadiBornAt = Date.now();
     layer.className = `tahadi-match-fx tahadi-${kind} effect-${safeClass(cosmetic?.id)}`;
     layer.style.setProperty('--fx-a', colors[0]);
     layer.style.setProperty('--fx-b', colors[1]);
@@ -328,14 +327,6 @@
     global.addEventListener('tahadi-audio-cue', (event) => setAvatarMood(moodForCue(event.detail?.name)));
     watchGameScreens();
     if (new URLSearchParams(location.search).get('bot') === '1') setTimeout(() => showEntrance({ subtitle: 'تم تجهيز منافس BOT — حظًا موفقًا' }), 380);
-    // شبكة أمان: أي طبقة تأثير تبقى عالقة أكثر من 6 ثوانٍ (لأي سبب) تُزال قسرًا
-    // كي لا تحجب الشاشة نهائيًا عن اللاعب.
-    setInterval(() => {
-      document.querySelectorAll('.tahadi-match-fx').forEach((layer) => {
-        const age = Date.now() - (layer.__tahadiBornAt || 0);
-        if (age > 6000) { clearTimeout(layer.__tahadiTimer); clearInterval(layer.__tahadiCountdown); layer.remove(); }
-      });
-    }, 1500);
   }
 
   global.TAHADI_PRESENTATION = Object.freeze({ applyCosmetics, mountVoiceDock, setAvatarMood, speakPhrase, showEntrance, resetEntrance, showVictory, cleanup });
