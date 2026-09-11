@@ -28,6 +28,7 @@
 
   const LUDO_STARTS = [0, 13, 26, 39];
   const LUDO_SAFE = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
+  const BOT_CONTROL_SELECTOR = '.bot-difficulty-control[data-bot-difficulty]';
   const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
   const randomBetween = (min, max, rng = Math.random) => Math.round(min + clamp(rng(), 0, 0.999999) * (max - min));
 
@@ -190,7 +191,7 @@
     if (typeof document === 'undefined' || !document?.body) return false;
     const active = isGameActive(document);
     document.body.classList.toggle('tahadi-game-active', active);
-    const control = document.querySelector('[data-bot-difficulty]');
+    const control = document.querySelector(BOT_CONTROL_SELECTOR);
     if (control) {
       control.hidden = active;
       control.setAttribute('aria-hidden', String(active));
@@ -200,7 +201,7 @@
 
   function mountDifficultyControl(target) {
     if (typeof document === 'undefined' || !document?.createElement) return null;
-    if (document.querySelector('[data-bot-difficulty]')) return document.querySelector('[data-bot-difficulty]');
+    if (document.querySelector(BOT_CONTROL_SELECTOR)) return document.querySelector(BOT_CONTROL_SELECTOR);
     const host = target || document.querySelector('#setup,#home,#entry,.arcade-hero-row,.game-setup,.lobby-panel,.online-card');
     if (!host) return null;
     const requested = global.TAHADI_PROGRESS?.botDifficulty?.() || 'auto';

@@ -1,4 +1,4 @@
-بوسراج للألعاب 5.3.2 — طريقة النشر الآمن
+بوسراج للألعاب 5.3.3 — طريقة النشر الآمن
 
 1) فك ملف ZIP.
 2) افتح Terminal داخل المجلد الذي يحتوي package.json وwrangler.jsonc.
@@ -28,7 +28,7 @@ quizOnline:true
 boardOnline:true
 matchmakingOnline:true
 socialOnline:true
-version:"5.3.2"
+version:"5.3.3"
 
 Cloudflare:
 - ROOMS -> GameRoom
@@ -48,7 +48,7 @@ Cloudflare:
 - في جاكارو استخدم 4 جلسات وتأكد أن كل لاعب يرى أوراقه فقط.
 
 PWA:
-App shell cache = busraj-games-v42-canonical-match-navigation
+App shell cache = busraj-games-v43-document-visibility-fix
 Quiz media cache = busraj-quiz-media-v3
 
 مهم:

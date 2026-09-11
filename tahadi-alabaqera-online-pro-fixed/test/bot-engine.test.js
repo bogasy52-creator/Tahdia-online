@@ -6,10 +6,10 @@ import vm from 'node:vm';
 const root = new URL('../', import.meta.url).pathname;
 const pub = `${root}public/`;
 
-async function loadBot() {
+async function loadBot(document = null) {
   const source = await readFile(`${pub}assets/js/bot-engine.js`, 'utf8').catch(() => '');
-  const window = { addEventListener() {}, TAHADI_PROGRESS: null };
-  vm.runInNewContext(source, { window, document: null, Math, Date, Set, Object });
+  const window = { addEventListener() {}, TAHADI_PROGRESS: null, location: { search: '' } };
+  vm.runInNewContext(source, { window, document, Math, Date, Set, Object, Array, Number, URLSearchParams });
   return window.TAHADI_BOT;
 }
 
@@ -106,6 +106,79 @@ test('bot difficulty selector is restricted to setup and hides when play starts'
   const css = await readFile(`${pub}assets/css/platform.css`, 'utf8');
   assert.match(css, /tahadi-game-active[^{}]*\[data-bot-difficulty\][^{]*\{[^}]*display\s*:\s*none\s*!important/);
   assert.doesNotMatch(source, /#modeBot/, 'choosing BOT mode is still setup, not game start');
+});
+
+test('starting any game hides only the bot selector and never the document root', async () => {
+  const attributes = new Map();
+  const root = {
+    dataset: {},
+    hidden: false,
+    setAttribute(name, value) { attributes.set(name, String(value)); },
+  };
+  const controlAttributes = new Map();
+  const control = {
+    hidden: false,
+    setAttribute(name, value) { controlAttributes.set(name, String(value)); },
+  };
+  const body = {
+    classList: {
+      contains(name) { return name === 'tahadi-game-active'; },
+      toggle() {},
+    },
+  };
+  const document = {
+    documentElement: root,
+    body,
+    readyState: 'loading',
+    addEventListener() {},
+    querySelector(selector) {
+      if (selector === '[data-bot-difficulty]') return root;
+      if (selector === '.bot-difficulty-control[data-bot-difficulty]') return control;
+      return null;
+    },
+    querySelectorAll() { return []; },
+  };
+  const bot = await loadBot(document);
+  bot.applyDifficulty('medium');
+  bot.syncDifficultyVisibility();
+
+  assert.equal(root.hidden, false);
+  assert.equal(attributes.has('aria-hidden'), false);
+  assert.equal(control.hidden, true);
+  assert.equal(controlAttributes.get('aria-hidden'), 'true');
+});
+
+test('difficulty state on the document root does not block mounting the actual selector', async () => {
+  let mounted = null;
+  const root = { dataset: { botDifficulty: 'medium' } };
+  const body = {
+    classList: { contains() { return false; }, toggle() {} },
+  };
+  const select = { value: '', addEventListener() {} };
+  const control = {
+    className: '', dataset: {}, hidden: false, innerHTML: '',
+    querySelector(selector) { return selector === 'select' ? select : null; },
+    setAttribute() {},
+  };
+  const target = { appendChild(node) { mounted = node; } };
+  const document = {
+    documentElement: root,
+    body,
+    readyState: 'loading',
+    addEventListener() {},
+    createElement(tag) { return tag === 'label' ? control : null; },
+    querySelector(selector) {
+      if (selector === '[data-bot-difficulty]') return root;
+      if (selector === '.bot-difficulty-control[data-bot-difficulty]') return mounted;
+      return null;
+    },
+    querySelectorAll() { return []; },
+  };
+  const bot = await loadBot(document);
+  const result = bot.mountDifficultyControl(target);
+
+  assert.equal(result, control);
+  assert.equal(mounted, control);
 });
 
 test('bot fallback validates and applies the requested difficulty before game startup', async () => {

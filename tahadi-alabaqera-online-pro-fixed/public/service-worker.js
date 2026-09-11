@@ -5,7 +5,8 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v40-noir-navigation-recovery'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v41-post-match-route-fix'
-const CACHE_NAME = 'busraj-games-v42-canonical-match-navigation';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v42-canonical-match-navigation'
+const CACHE_NAME = 'busraj-games-v43-document-visibility-fix';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const BROWSER_MANAGED_MATCH_DOCUMENTS = new Set([
   '/matchmaking.html', '/online.html', '/snakes.html',

@@ -57,9 +57,9 @@ test('package exposes repeatable test and verification commands', async () => {
   assert.equal(pkg.scripts['verify:cloudflare'], 'npm run verify && npm run check:cloudflare');
 });
 
-test('health endpoint reports the 5.3.2 canonical match-route release', async () => {
+test('health endpoint reports the 5.3.3 document-visibility fix release', async () => {
   const worker = await readFile(join(root, 'src/index.js'), 'utf8');
-  assert.match(worker, /version:\s*["']5\.3\.2["']/);
+  assert.match(worker, /version:\s*["']5\.3\.3["']/);
 });
 
 test('wrangler deploys to the existing tahdia-online worker', async () => {
