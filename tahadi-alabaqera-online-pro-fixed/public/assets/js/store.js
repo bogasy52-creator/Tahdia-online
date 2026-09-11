@@ -210,8 +210,15 @@
     if (!panel || !entry) return;
     const status = statusForItem(entry, profile(), owner());
     panel.dataset.category = entry.category;
-    const personality = entry.personality ? `<div class="preview-personality"><span>شخصية ذكية</span><b>${entry.personality.title}</b><p>«${entry.personality.greeting}»</p><div><i>تتفاعل مع الإجابة</i><i>تحتفل بالفوز</i><i>تساند عند الخطأ</i></div></div>` : '';
-    const phrases = entry.category === 'sound' ? `<div class="preview-phrases"><b>عبارات الحزمة</b>${(entry.phrases || []).map((phrase) => `<button type="button" data-preview-phrase="${phrase}">${phrase}</button>`).join('')}</div>` : '';
+    const personality = entry.personality ? `<div class="preview-personality"><span>شخصية ذكية</span><b>${entry.personality.title}</b><p>«${entry.personality.greeting}»</p><div><i>تتفاعل مع الإجابة</i><i>تحتفل بالفوز</i><i>تساند عند الخطأ</i><i>صوت: ${voiceSignatureLabel(entry.personality)}</i></div></div>` : '';
+    const personalityMoments = entry.personality ? [
+      ['التحية', entry.personality.greeting], ['إجابة صحيحة', entry.personality.correct],
+      ['إجابة خاطئة', entry.personality.wrong], ['عند الفوز', entry.personality.win],
+      ['سلسلة إجابات', entry.personality.streak], ['ضغط الوقت', entry.personality.timeout],
+    ].filter(([, text]) => Boolean(text)) : [];
+    const phrases = entry.category === 'sound'
+      ? `<div class="preview-phrases"><b>عبارات الحزمة</b>${(entry.phrases || []).map((phrase) => `<button type="button" data-preview-phrase="${phrase}">${phrase}</button>`).join('')}</div>`
+      : (personalityMoments.length ? `<div class="preview-phrases"><b>استمع لعبارات الشخصية</b>${personalityMoments.map(([label, text]) => `<button type="button" data-preview-phrase="${text}" title="${label}">${label}</button>`).join('')}</div>` : '');
     panel.innerHTML = `<div class="preview-stage${entry.interactive ? ' interactive' : ''}" style="--item-one:${colors(entry)[0]};--item-two:${colors(entry)[1]}">${glyph(entry, true)}<div class="preview-rings" aria-hidden="true"></div><span class="preview-live-badge">${entry.interactive ? 'INTERACTIVE' : 'LIVE PREVIEW'}</span></div>
       <div class="preview-copy"><span class="preview-kicker">${rarityLabels[entry.rarity]} • ${labels[entry.category]}</span><h2>${entry.name}</h2><p>${previewDescription(entry)}</p>${personality}${phrases}<div class="preview-usage"><b>مكان التفعيل</b><span>${usageForCategory(entry.category)}</span></div><div class="preview-meta"><span>المستوى ${entry.level}</span><span>${entry.price ? `${entry.price} CR` : 'مجاني'}</span></div>${actionMarkup(entry, status)}</div>`;
     byId('shopAction')?.addEventListener('click', () => actOn(entry, status));
@@ -259,13 +266,47 @@
       oscillator.stop(context.currentTime + duration + .02);
     } catch { window.BS_AUDIO?.play?.('round'); }
   }
+  let cachedVoices = [];
+  if (window.speechSynthesis) {
+    cachedVoices = window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => { cachedVoices = window.speechSynthesis.getVoices(); };
+  }
+  function voiceParams(entry) {
+    const v = entry?.personality?.voice;
+    if (v) return { pitch: v.pitch ?? 1, rate: v.rate ?? 1, gender: v.gender || null };
+    return {
+      pitch: entry?.sound === 'cyber' ? 1.18 : entry?.sound === 'royal' ? .88 : 1,
+      rate: entry?.sound === 'arcade' ? 1.08 : entry?.sound === 'calm' ? .9 : .98,
+      gender: null,
+    };
+  }
+  function pickArabicVoice(gender) {
+    const pool = cachedVoices.filter((v) => /^ar/i.test(v.lang || ''));
+    if (!pool.length) return null;
+    if (!gender) return pool[0];
+    const pattern = gender === 'female' ? /hoda|zeina|laila|salma|amina|female|أنثى/i : /naayf|majed|tarik|hamed|male|ذكر/i;
+    return pool.find((v) => pattern.test(v.name || '')) || pool[0];
+  }
+  function voiceSignatureLabel(personality) {
+    const v = personality?.voice;
+    if (!v) return 'صوت افتراضي';
+    const tone = v.pitch >= 1.06 ? 'حادة' : v.pitch <= 0.9 ? 'عميقة' : 'معتدلة';
+    const pace = v.rate >= 1.06 ? 'وسريعة' : v.rate <= 0.9 ? 'وهادئة' : 'ومتزنة';
+    return `نبرة ${tone} ${pace}`;
+  }
   function speakStorePhrase(phrase, entry) {
+    const text = String(phrase || '').trim();
+    if (!text) return;
     try {
       if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(String(phrase || ''));
+        const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ar-SA';
-        utterance.rate = entry?.sound === 'arcade' ? 1.08 : entry?.sound === 'calm' ? .9 : .98;
+        const params = voiceParams(entry);
+        utterance.rate = params.rate;
+        utterance.pitch = params.pitch;
+        const voice = pickArabicVoice(params.gender);
+        if (voice) utterance.voice = voice;
         window.speechSynthesis.speak(utterance);
       } else previewSound(entry || { sound: 'classic' });
     } catch { previewSound(entry || { sound: 'classic' }); }

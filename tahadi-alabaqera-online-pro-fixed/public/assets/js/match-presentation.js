@@ -60,6 +60,35 @@
     return personality?.[key] || ({ cheer: 'أحسنت!', concern: 'ركّز في التالية', win: 'فوز مستحق!', focus: 'جاهز للجولة' }[mood] || 'أنا معك');
   }
 
+  let cachedVoices = [];
+  if (global.speechSynthesis) {
+    cachedVoices = global.speechSynthesis.getVoices();
+    global.speechSynthesis.onvoiceschanged = () => { cachedVoices = global.speechSynthesis.getVoices(); };
+  }
+  function voiceParams(avatar, sound) {
+    const v = avatar?.personality?.voice;
+    if (v) return { pitch: v.pitch ?? 1, rate: v.rate ?? 1, gender: v.gender || null };
+    return {
+      rate: sound?.sound === 'arcade' ? 1.08 : sound?.sound === 'calm' ? .9 : .98,
+      pitch: sound?.sound === 'cyber' ? 1.18 : sound?.sound === 'royal' ? .88 : 1,
+      gender: null,
+    };
+  }
+  function pickArabicVoice(gender) {
+    const pool = cachedVoices.filter((v) => /^ar/i.test(v.lang || ''));
+    if (!pool.length) return null;
+    if (!gender) return pool[0];
+    const pattern = gender === 'female' ? /hoda|zeina|laila|salma|amina|female|أنثى/i : /naayf|majed|tarik|hamed|male|ذكر/i;
+    return pool.find((v) => pattern.test(v.name || '')) || pool[0];
+  }
+  function characterPhrases(kit) {
+    const personality = kit.avatar?.personality;
+    if (personality) {
+      return [personality.greeting, personality.correct, personality.wrong, personality.win].filter(Boolean);
+    }
+    return phrasesForSound(kit.sound);
+  }
+
   function setAvatarMood(mood = 'focus', message = '') {
     const dock = document.getElementById('tahadiVoiceDock');
     if (!dock) return;
@@ -87,7 +116,7 @@
     return 'focus';
   }
 
-  function speakPhrase(text, sound) {
+  function speakPhrase(text, avatar, sound) {
     const phrase = String(text || '').trim().slice(0, 80);
     if (!phrase) return false;
     if (global.BS_AUDIO?.getSettings?.()?.muted) return false;
@@ -96,8 +125,11 @@
         global.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(phrase);
         utterance.lang = 'ar-SA';
-        utterance.rate = sound?.sound === 'arcade' ? 1.08 : sound?.sound === 'calm' ? .9 : .98;
-        utterance.pitch = sound?.sound === 'cyber' ? 1.18 : sound?.sound === 'royal' ? .88 : 1;
+        const params = voiceParams(avatar, sound);
+        utterance.rate = params.rate;
+        utterance.pitch = params.pitch;
+        const voice = pickArabicVoice(params.gender);
+        if (voice) utterance.voice = voice;
         global.speechSynthesis.speak(utterance);
         return true;
       }
@@ -112,7 +144,7 @@
     const colors = kit.avatar?.colors || ['#8b5cf6', '#22d3ee'];
     dock.style.setProperty('--voice-a', colors[0]);
     dock.style.setProperty('--voice-b', colors[1]);
-    const phrases = phrasesForSound(kit.sound);
+    const phrases = characterPhrases(kit);
     const muted = global.BS_AUDIO?.getSettings?.()?.muted === true;
     dock.innerHTML = `<button type="button" class="tahadi-voice-toggle" data-voice-toggle aria-expanded="${dock.classList.contains('open')}" aria-controls="tahadiVoicePanel"><span>${escapeHtml(kit.avatar?.preview || '🧠')}</span><b>الصوتيات والعبارات</b><i aria-hidden="true">⌃</i></button><section id="tahadiVoicePanel" class="tahadi-voice-panel" aria-label="العبارات السريعة"><div class="tahadi-character-row"><div class="tahadi-smart-avatar" data-mood="focus"><span>${escapeHtml(kit.avatar?.preview || '🧠')}</span><i></i><em></em></div><div><small>${escapeHtml(kit.avatar?.personality?.title || 'رفيقك داخل المباراة')}</small><b>${escapeHtml(kit.avatar?.name || 'نوفا')}</b><p data-avatar-bubble>${escapeHtml(avatarLine(kit, 'focus'))}</p></div></div><div class="tahadi-phrase-grid">${phrases.map((phrase) => `<button type="button" data-quick-phrase="${escapeHtml(phrase)}">${escapeHtml(phrase)}</button>`).join('')}</div><div class="tahadi-voice-actions"><button type="button" data-voice-sound>♪ اختبر ${escapeHtml(kit.sound?.name || 'الصوت')}</button><button type="button" data-voice-mute>${muted ? 'تشغيل الصوت' : 'كتم الصوت'}</button></div><small class="tahadi-voice-note">تُسمع العبارة فقط عند ضغطك عليها</small></section>`;
   }
@@ -137,7 +169,7 @@
         if (phraseButton) {
           const phrase = phraseButton.dataset.quickPhrase;
           const current = equippedItems();
-          speakPhrase(phrase, current.sound);
+          speakPhrase(phrase, current.avatar, current.sound);
           setAvatarMood('cheer', phrase);
           try { global.dispatchEvent(new CustomEvent('tahadi-phrase', { detail: { phrase } })); } catch {}
           return;

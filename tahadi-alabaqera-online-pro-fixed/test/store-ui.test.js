@@ -21,8 +21,8 @@ test('catalog contains the complete approved cosmetic inventory with unique stab
     category,
     window.TAHADI_STORE_CATALOG.filter((item) => item.category === category).length,
   ]));
-  assert.deepEqual(counts, { avatar: 16, frame: 9, table: 7, entrance: 7, victory: 7, sound: 7 });
-  assert.equal(new Set(window.TAHADI_STORE_CATALOG.map((item) => item.id)).size, 53);
+  assert.deepEqual(counts, { avatar: 22, frame: 9, table: 7, entrance: 7, victory: 7, sound: 7 });
+  assert.equal(new Set(window.TAHADI_STORE_CATALOG.map((item) => item.id)).size, 59);
   assert.ok(window.TAHADI_STORE_CATALOG.filter((item) => item.interactive).length >= 10);
   assert.ok(window.TAHADI_STORE_CATALOG.filter((item) => item.category === 'avatar' && item.personality).length >= 4);
   assert.ok(window.TAHADI_STORE_CATALOG.filter((item) => item.category === 'sound').every((item) => item.phrases?.length >= 4));
