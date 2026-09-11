@@ -6,3 +6,6 @@
 @keyframes tahadiFxSpin{to{transform:rotate(360deg)}}@keyframes tahadiFxFloat{to{transform:translateY(-8px) rotate(-4deg)}}@keyframes tahadiBurst{0%{opacity:0;transform:rotate(calc(var(--i)*13deg)) translateY(-45px) scale(.3)}18%{opacity:1}100%{opacity:0;transform:rotate(calc(var(--i)*13deg)) translateY(-48vh) scale(1.1)}}@keyframes tahadiFlash{50%{filter:brightness(1.9)}}
 @media(max-width:600px){.tahadi-loadout{bottom:7px;left:7px;padding:4px}.tahadi-loadout>span:last-child{display:none}.tahadi-loadout-avatar{width:31px;height:31px}.tahadi-fx-card{padding:24px 4px}.tahadi-versus{gap:7px}.tahadi-player-card{padding:13px 6px}.tahadi-player-card span{font-size:37px}.tahadi-fx-countdown{width:46px;height:46px;font-size:19px}.tahadi-fx-frame{width:104px;height:104px}.tahadi-victory .tahadi-fx-frame{width:120px;height:120px}.tahadi-fx-frame span{font-size:48px}}
 @media(prefers-reduced-motion:reduce){.tahadi-match-fx *,.tahadi-match-fx,.tahadi-table-ambience{animation:none!important;transition:none!important}.tahadi-fx-card{transform:none!important}}
+.tahadi-loadout .cosmetic-glyph{width:34px;margin:0;flex:none}
+.tahadi-fx-frame .cosmetic-glyph{width:80%;height:80%;margin:0}
+.tahadi-player-card .cosmetic-glyph{width:70px;margin:0 auto 7px}

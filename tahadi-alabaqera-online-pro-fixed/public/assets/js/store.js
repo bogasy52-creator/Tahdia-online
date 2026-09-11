@@ -47,6 +47,7 @@
     window.BS_PLATFORM?.toast?.(message);
   }
   function glyph(entry, large = false) {
+    if (window.TAHADI_ICONS?.render) return window.TAHADI_ICONS.render(entry, { large });
     const [one, two] = colors(entry);
     return `<span class="cosmetic-glyph ${large ? 'large' : ''} cat-${entry.category}" style="--item-one:${one};--item-two:${two}" aria-hidden="true"><i>${entry.preview}</i></span>`;
   }
@@ -110,6 +111,71 @@
   function transactionId(entry) {
     return window.crypto?.randomUUID?.() || `${Date.now()}-${entry.id}`;
   }
+  function closePurchaseModal() {
+    document.getElementById('shopPurchaseModal')?.remove();
+  }
+  function flyCoins(fromEl) {
+    if (!fromEl) return;
+    const wallet = byId('shopBalance');
+    if (!wallet) return;
+    const start = fromEl.getBoundingClientRect();
+    const end = wallet.getBoundingClientRect();
+    for (let i = 0; i < 6; i++) {
+      const coin = document.createElement('span');
+      coin.className = 'coin-fly';
+      coin.textContent = '🪙';
+      coin.style.left = `${start.left + start.width / 2}px`;
+      coin.style.top = `${start.top + start.height / 2}px`;
+      coin.style.setProperty('--dx', `${end.left - start.left + (Math.random() * 20 - 10)}px`);
+      coin.style.setProperty('--dy', `${end.top - start.top}px`);
+      coin.style.animationDelay = `${i * 45}ms`;
+      document.body.appendChild(coin);
+      coin.addEventListener('animationend', () => coin.remove());
+    }
+  }
+  function showPurchaseModal(entry, status) {
+    closePurchaseModal();
+    const p = profile();
+    const balance = owner() ? '∞' : Number(p.coins || 0);
+    const after = owner() ? '∞' : Math.max(0, Number(p.coins || 0) - Number(entry.price || 0));
+    const modal = document.createElement('div');
+    modal.id = 'shopPurchaseModal';
+    modal.className = 'shop-modal-backdrop';
+    modal.innerHTML = `<div class="shop-modal" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
+      <button type="button" class="shop-modal-close" data-modal-close aria-label="إغلاق">✕</button>
+      ${glyph(entry, true)}
+      <span class="preview-kicker">${rarityLabels[entry.rarity]} • ${labels[entry.category]}</span>
+      <h2 id="shopModalTitle">تأكيد شراء «${entry.name}»</h2>
+      <div class="shop-modal-ledger">
+        <div><span>السعر</span><b>${entry.price} 🪙</b></div>
+        <div><span>رصيدك الحالي</span><b>${balance}</b></div>
+        <div class="after"><span>الرصيد بعد الشراء</span><b>${after}</b></div>
+      </div>
+      <div class="shop-modal-actions">
+        <button type="button" class="bs-btn gold" data-modal-confirm>تأكيد الشراء</button>
+        <button type="button" class="bs-btn" data-modal-cancel>إلغاء</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('show'));
+    const close = () => { modal.classList.remove('show'); document.removeEventListener('keydown', onKey); setTimeout(() => modal.remove(), 200); };
+    const onKey = (event) => { if (event.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
+    modal.querySelector('[data-modal-close]')?.addEventListener('click', close);
+    modal.querySelector('[data-modal-cancel]')?.addEventListener('click', close);
+    modal.querySelector('[data-modal-confirm]')?.addEventListener('click', () => {
+      const glyphEl = modal.querySelector('.cosmetic-glyph');
+      const result = window.TAHADI_PROGRESS.purchase(entry.id, transactionId(entry));
+      if (!result.ok) { announce(result.error === 'insufficient_coins' ? 'رصيدك لا يكفي لهذا العنصر' : 'تعذر إتمام الشراء'); return close(); }
+      window.TAHADI_PROGRESS.equip(entry.id);
+      flyCoins(glyphEl);
+      announce(`تم شراء وتجهيز ${entry.name}`);
+      window.BS_AUDIO?.play?.('coin');
+      close();
+      refresh();
+    });
+  }
   function actOn(entry, status) {
     if (status.kind === 'owned' || status.kind === 'owner') {
       const result = window.TAHADI_PROGRESS.equip(entry.id);
@@ -117,13 +183,7 @@
       return refresh();
     }
     if (status.kind !== 'buy') return;
-    const accepted = window.confirm(`شراء «${entry.name}» مقابل ${entry.price} عملة؟`);
-    if (!accepted) return;
-    const result = window.TAHADI_PROGRESS.purchase(entry.id, transactionId(entry));
-    if (!result.ok) return announce(result.error === 'insufficient_coins' ? 'رصيدك لا يكفي لهذا العنصر' : 'تعذر إتمام الشراء');
-    window.TAHADI_PROGRESS.equip(entry.id);
-    announce(`تم شراء وتجهيز ${entry.name}`);
-    refresh();
+    showPurchaseModal(entry, status);
   }
   function renderDaily() {
     const p = profile();

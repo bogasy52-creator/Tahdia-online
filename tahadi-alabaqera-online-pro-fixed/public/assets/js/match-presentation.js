@@ -59,7 +59,8 @@
       const avatarColors = kit.avatar?.colors || ['#8b5cf6', '#22d3ee'];
       loadout.style.setProperty('--avatar-a', avatarColors[0]);
       loadout.style.setProperty('--avatar-b', avatarColors[1]);
-      loadout.innerHTML = `<span class="tahadi-loadout-avatar">${escapeHtml(kit.avatar?.preview || '🧠')}</span><span><b>${escapeHtml(kit.profile.name || 'لاعب العباقرة')}</b><small>${escapeHtml(kit.table?.name || 'منتصف الليل')}</small></span>`;
+      const avatarBadge = kit.avatar && global.TAHADI_ICONS?.render ? global.TAHADI_ICONS.render(kit.avatar, { large: false }) : `<span class="tahadi-loadout-avatar">${escapeHtml(kit.avatar?.preview || '🧠')}</span>`;
+      loadout.innerHTML = `${avatarBadge}<span><b>${escapeHtml(kit.profile.name || 'لاعب العباقرة')}</b><small>${escapeHtml(kit.table?.name || 'منتصف الليل')}</small></span>`;
     }
     return kit;
   }
@@ -94,10 +95,12 @@
     layer.setAttribute('aria-modal', 'true');
     layer.setAttribute('aria-live', 'polite');
     const avatar = kit.avatar?.preview || '🧠';
+    const avatarBadge = kit.avatar && global.TAHADI_ICONS?.render ? global.TAHADI_ICONS.render(kit.avatar, { large: false }) : `<span>${escapeHtml(avatar)}</span>`;
     const defaultTitle = kind === 'entrance' ? `${kit.profile.name || 'لاعب العباقرة'} دخل التحدي` : 'انتصار احترافي!';
     const opponent = options.opponent || (new URLSearchParams(location.search).get('bot') === '1' ? 'BOT' : 'المنافس');
-    const entranceBody = `<div class="tahadi-versus"><div class="tahadi-player-card"><span>${escapeHtml(avatar)}</span><b>${escapeHtml(options.playerName || kit.profile.name || 'أنت')}</b></div><div class="tahadi-versus-center"><em>VS</em><strong class="tahadi-fx-countdown">3</strong></div><div class="tahadi-player-card opponent"><span>🤖</span><b>${escapeHtml(opponent)}</b></div></div>`;
-    const victoryBody = `<div class="tahadi-fx-frame"><span>${escapeHtml(cosmetic?.preview || '🏆')}</span></div><div class="tahadi-fx-actions"><button type="button" data-fx-replay>إعادة اللعب</button><a href="/">الرئيسية</a><a href="/store">المتجر</a></div>`;
+    const entranceBody = `<div class="tahadi-versus"><div class="tahadi-player-card">${avatarBadge}<b>${escapeHtml(options.playerName || kit.profile.name || 'أنت')}</b></div><div class="tahadi-versus-center"><em>VS</em><strong class="tahadi-fx-countdown">3</strong></div><div class="tahadi-player-card opponent"><span>🤖</span><b>${escapeHtml(opponent)}</b></div></div>`;
+    const victoryGlyph = cosmetic && global.TAHADI_ICONS?.render ? global.TAHADI_ICONS.render(cosmetic, { large: true }) : `<span>${escapeHtml(cosmetic?.preview || '🏆')}</span>`;
+    const victoryBody = `<div class="tahadi-fx-frame">${victoryGlyph}</div><div class="tahadi-fx-actions"><button type="button" data-fx-replay>إعادة اللعب</button><a href="/">الرئيسية</a><a href="/store">المتجر</a></div>`;
     layer.innerHTML = `<div class="tahadi-fx-particles">${particles(colors, kind === 'victory' ? 28 : 18)}</div><button type="button" class="tahadi-fx-skip" data-fx-skip aria-label="تخطي المؤثر">تخطي</button><div class="tahadi-fx-card">${kind === 'entrance' ? entranceBody : victoryBody}<small>${escapeHtml(cosmetic?.name || (kind === 'entrance' ? 'دخول احترافي' : 'احتفال الفوز'))}</small><h2>${escapeHtml(options.title || defaultTitle)}</h2><p>${escapeHtml(options.subtitle || (kind === 'entrance' ? 'استعد… الجولة تبدأ الآن' : 'تمت إضافة المكافأة والتقدم إلى حسابك'))}</p></div>`;
     document.body.appendChild(layer);
     requestAnimationFrame(() => layer.classList.add('show'));
@@ -153,10 +156,19 @@
   }
 
   function watchGameScreens() {
+    const containerSelector = '#game,#sdGame,#quickArena,#gameMount';
+    const shownFor = new WeakSet();
     const observer = new MutationObserver((records) => {
       for (const record of records) {
-        const screen = record.target instanceof Element ? record.target.closest('#game,#sdGame,#quickArena,#gameMount') : null;
-        if (screen && !screen.classList.contains('hidden')) { showEntrance(); break; }
+        const el = record.target;
+        // نتابع فقط حاوية شاشة اللعبة نفسها (وليس أي عنصر بداخلها كالأزرار والمؤقتات)
+        // كي لا تتكرر شاشة الدخول مع كل تغيير حالة أثناء الأسئلة.
+        if (!(el instanceof Element) || !el.matches(containerSelector)) continue;
+        const isHidden = el.classList.contains('hidden');
+        if (isHidden) { shownFor.delete(el); continue; }
+        if (shownFor.has(el)) continue; // ظهرت مسبقًا لهذه المباراة، لا تُعاد
+        shownFor.add(el);
+        showEntrance();
       }
     });
     observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
