@@ -21,7 +21,7 @@
   function destinationFor(requestedGame, params = {}) {
     const selectedGame = resolveGame(requestedGame);
     if (!selectedGame) return null;
-    const next = new URL(`/${selectedGame}.html`, location.origin);
+    const next = new URL(`/${selectedGame}`, location.origin);
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') next.searchParams.set(key, String(value));
     });

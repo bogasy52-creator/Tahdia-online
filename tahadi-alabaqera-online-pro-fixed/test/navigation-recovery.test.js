@@ -66,3 +66,18 @@ test('an unknown navigation receives a visible recovery page instead of a blank 
   assert.equal(response.status, 200);
   assert.match(await response.text(), /تعذر فتح الصفحة/);
 });
+
+test('legacy HTML match destinations stay browser-managed so canonical redirects cannot fail inside the service worker', async () => {
+  const handler = await bootWorker({
+    fetchImpl: async () => new Response('', { status: 200 }),
+    cacheMatch: async () => null,
+  });
+  for (const pathname of ['/online.html?bot=1', '/snakes.html?room=ABCD']) {
+    let intercepted = false;
+    handler({
+      request: { method: 'GET', mode: 'navigate', url: `https://game.test${pathname}` },
+      respondWith() { intercepted = true; },
+    });
+    assert.equal(intercepted, false, `${pathname} must be handled by the browser`);
+  }
+});

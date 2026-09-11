@@ -191,7 +191,7 @@
       if (text) text.textContent = `تم العثور على ${opponentName} — تبدأ المواجهة الآن`;
       try { window.BS_AUDIO?.play?.("round"); } catch {}
       setTimeout(() => {
-        const next = new URL("/online.html", location.origin);
+        const next = new URL("/online", location.origin);
         next.searchParams.set("quickMatch", matchId);
         location.href = next.href;
       }, 650);
@@ -220,7 +220,7 @@
       console.info("Tahdia matchmaking bot fallback", reason?.message || "no_human");
       try { window.BS_AUDIO?.play?.("round"); } catch {}
       setTimeout(() => {
-        const next = new URL("/online.html", location.origin);
+        const next = new URL("/online", location.origin);
         next.searchParams.set("bot", "1");
         next.searchParams.set("difficulty", window.TAHADI_BOT?.difficulty?.() || "medium");
         location.href = next.href;

@@ -46,18 +46,18 @@ test('matchmaking atomically claims a waiting player and redirects both players 
   assert.match(match, /data\?\.status\s*===\s*"matched"\s*&&\s*data\?\.matchId/);
 });
 
-test('a found quiz opponent opens the concrete online document instead of a blank clean route', () => {
+test('a found quiz opponent opens the deployed canonical online route without a redirect hop', () => {
   const { api, location } = bootLegacyMatchmaking();
   api.active = true;
   api.found('match-123', 'منافس');
-  assert.equal(location.href, 'https://games.example/online.html?quickMatch=match-123');
+  assert.equal(location.href, 'https://games.example/online?quickMatch=match-123');
 });
 
-test('quiz bot fallback also opens the concrete online document', async () => {
+test('quiz bot fallback also opens the deployed canonical online route', async () => {
   const { api, location } = bootLegacyMatchmaking();
   api.active = true;
   await api.fallbackToBot(new Error('no_human'));
-  assert.equal(location.href, 'https://games.example/online.html?bot=1&difficulty=pro');
+  assert.equal(location.href, 'https://games.example/online?bot=1&difficulty=pro');
 });
 
 test('firebase identity supports account or stable automatic guest name', () => {

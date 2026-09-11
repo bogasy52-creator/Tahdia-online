@@ -1,4 +1,4 @@
-# بوسراج للألعاب — V5.3.1
+# بوسراج للألعاب — V5.3.2
 
 منصة ألعاب عربية تعمل محليًا وأونلاين على Cloudflare Workers وDurable Objects. الإصدار 5.3 يعالج الصفحة البيضاء ومسارات اللاعب الحقيقي، ويعيد بناء المتجر بالكامل بهوية Noir Mythic ورسومات SVG أصلية وتفاعلات واضحة داخل اللعب.
 
@@ -70,7 +70,7 @@
 - أسماء اللاعبين يتم تنظيفها وEscape قبل عرضها في واجهات تعتمد HTML ديناميكيًا.
 
 ## PWA والوسائط
-- App shell cache: **`busraj-games-v41-post-match-route-fix`**.
+- App shell cache: **`busraj-games-v42-canonical-match-navigation`**.
 - Quiz media cache: **`busraj-quiz-media-v3`**.
 - صور وأصوات تحدي العباقرة الكبيرة تُخزن Lazy Cache لتجنب تضخيم تثبيت الـService Worker.
 - الوسائط الأساسية محلية، لذلك لا تتوقف أسئلة الصور بسبب موقع صور خارجي.
@@ -121,7 +121,7 @@ quizOnline: true
 boardOnline: true
 matchmakingOnline: true
 socialOnline: true
-version: "5.3.1"
+version: "5.3.2"
 ```
 
 > لا تنشر مجلد `public` وحده؛ انشر المشروع كاملًا لأن Worker وDurable Objects جزء من الأونلاين.

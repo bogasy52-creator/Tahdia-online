@@ -287,9 +287,9 @@ export default {
       const matchmakingOnline = Boolean(env.MATCHMAKING);
       const socialOnline = Boolean(env.SOCIAL_USERS || env.BOARD_ROOMS);
       if (!quizOnline || !boardOnline) {
-        return json({ ok: false, online: false, quizOnline, boardOnline, matchmakingOnline, socialOnline, error: "Durable Object binding missing", version: "5.3.1" }, 503);
+        return json({ ok: false, online: false, quizOnline, boardOnline, matchmakingOnline, socialOnline, error: "Durable Object binding missing", version: "5.3.2" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, matchmakingOnline, socialOnline, service: "tahadi-alabaqera-online", version: "5.3.1" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, matchmakingOnline, socialOnline, service: "tahadi-alabaqera-online", version: "5.3.2" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {

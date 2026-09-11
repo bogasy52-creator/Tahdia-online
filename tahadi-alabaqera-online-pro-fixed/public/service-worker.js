@@ -4,8 +4,13 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v40-noir-navigation-recovery'
-const CACHE_NAME = 'busraj-games-v41-post-match-route-fix';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v41-post-match-route-fix'
+const CACHE_NAME = 'busraj-games-v42-canonical-match-navigation';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
+const BROWSER_MANAGED_MATCH_DOCUMENTS = new Set([
+  '/matchmaking.html', '/online.html', '/snakes.html',
+  '/zahra.html', '/jackaroo.html', '/spotdiff.html',
+]);
 // Kept as compatibility markers for older install checks. Runtime navigation
 // resolves these aliases to their concrete HTML documents below.
 const LEGACY_ROUTE_MARKERS = Object.freeze([
@@ -160,6 +165,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+
+  // Cloudflare canonicalizes these documents to extensionless URLs. Let the
+  // browser follow that redirect directly; intercepting it can surface as
+  // ERR_FAILED on Chromium-based mobile browsers after a match is found.
+  if (event.request.mode === 'navigate' && BROWSER_MANAGED_MATCH_DOCUMENTS.has(url.pathname)) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
