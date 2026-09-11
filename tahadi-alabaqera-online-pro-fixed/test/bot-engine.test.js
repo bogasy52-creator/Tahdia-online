@@ -91,6 +91,23 @@ test('bot difficulty selector mounts on every page that loads the runtime', asyn
   assert.doesNotMatch(source, /if \(document\.querySelector\('\[data-arcade-game\]/);
 });
 
+test('bot difficulty selector is restricted to setup and hides when play starts', async () => {
+  const bot = await loadBot();
+  const source = await readFile(`${pub}assets/js/bot-engine.js`, 'utf8');
+  const doc = (classes = [], gameHidden = true) => ({
+    body: { classList: { contains: (name) => classes.includes(name) } },
+    querySelector: (selector) => selector.includes('#game')
+      ? { classList: { contains: (name) => name === 'hidden' && gameHidden } }
+      : null,
+  });
+  assert.equal(bot.isGameActive(doc([], true)), false);
+  assert.equal(bot.isGameActive(doc(['game-running'], true)), true);
+  assert.equal(bot.isGameActive(doc([], false)), true);
+  const css = await readFile(`${pub}assets/css/platform.css`, 'utf8');
+  assert.match(css, /tahadi-game-active[^{}]*\[data-bot-difficulty\][^{]*\{[^}]*display\s*:\s*none\s*!important/);
+  assert.doesNotMatch(source, /#modeBot/, 'choosing BOT mode is still setup, not game start');
+});
+
 test('bot fallback validates and applies the requested difficulty before game startup', async () => {
   const source = await readFile(`${pub}assets/js/bot-engine.js`, 'utf8');
   assert.match(source, /URLSearchParams/);

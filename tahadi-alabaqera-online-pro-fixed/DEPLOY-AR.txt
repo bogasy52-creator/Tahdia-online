@@ -1,4 +1,4 @@
-بوسراج للألعاب 5.1 — طريقة النشر الآمن
+بوسراج للألعاب 5.2 — طريقة النشر الآمن
 
 1) فك ملف ZIP.
 2) افتح Terminal داخل المجلد الذي يحتوي package.json وwrangler.jsonc.
@@ -28,7 +28,7 @@ quizOnline:true
 boardOnline:true
 matchmakingOnline:true
 socialOnline:true
-version:"5.1.0"
+version:"5.2.0"
 
 Cloudflare:
 - ROOMS -> GameRoom
@@ -43,11 +43,12 @@ Cloudflare:
 - جرّب المطابقة السريعة: لاعب حقيقي أولًا، ثم BOT بعد 12 ثانية عند عدم وجود منافس.
 - جرّب المستوى المتوسط والمحترف في كل الألعاب.
 - أكمل مباراة أونلاين ثم حدّث الصفحة وتأكد أن المكافأة لا تتكرر.
-- اختبر المتجر والحفظ على جهازين بالحساب نفسه.
+- اختبر المتجر والحفظ على جهازين بالحساب نفسه، وجهّز شخصية وحزمة صوت وتأكد من ظهور زر العبارات داخل اللعبة.
+- من صفحة الأونلاين اختر كل لعبة مرة وتأكد أن المطابقة تفتح اللعبة المختارة نفسها.
 - في جاكارو استخدم 4 جلسات وتأكد أن كل لاعب يرى أوراقه فقط.
 
 PWA:
-App shell cache = busraj-games-v38-secure-bots-store-progression
+App shell cache = busraj-games-v39-mythic-store-gameplay-fixes
 Quiz media cache = busraj-quiz-media-v3
 
 مهم:

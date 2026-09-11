@@ -1,7 +1,8 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
-const CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression'
+const CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -66,6 +67,7 @@ const APP_SHELL = [
   '/firebase-config.js',
   '/assets/js/firebase-online.js',
   '/assets/js/matchmaking.js',
+  '/assets/js/match-game-selector.js',
   '/assets/js/quick-match-game.js',
   '/assets/js/questions-data.js',
   '/assets/js/luxury-game-ui.js',

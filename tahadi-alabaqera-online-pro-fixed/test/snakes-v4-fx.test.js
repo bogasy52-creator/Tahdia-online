@@ -6,6 +6,7 @@ import {
   createReactionPlan,
   createSmoothMotionFrames,
   createSnakeBodyProgress,
+  getDieMotionVariant,
   getDieRotation,
   getPieceProfile,
 } from '../public/assets/js/snakes-v4-fx.js';
@@ -45,6 +46,14 @@ test('ladder and die plans include physical activation and landing impact', () =
   assert.deepEqual(die.phases.map(phase=>phase.name),['lift','tumble','impact','settle']);
   assert.equal(die.impactAt,die.phases.find(phase=>phase.name==='impact').at);
   assert.equal(die.phases.find(phase=>phase.name==='impact').sound,'diceImpact');
+  assert.ok(die.total<=650,'the compact die should finish quickly');
+});
+
+test('die motion cycles through distinct restrained variants without changing the result', () => {
+  const variants=Array.from({length:6},(_,index)=>getDieMotionVariant(index));
+  assert.deepEqual(variants.map(variant=>variant.id),['soft','tilt','snap','soft','tilt','snap']);
+  assert.equal(new Set(variants.slice(0,3).map(variant=>`${variant.x}:${variant.rotate}`)).size,3);
+  assert.ok(variants.every(variant=>Math.abs(variant.x)<=8&&Math.abs(variant.rotate)<=8));
 });
 
 test('reduced motion keeps all game phases but finishes quickly', () => {

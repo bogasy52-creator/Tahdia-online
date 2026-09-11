@@ -177,10 +177,31 @@
     return storedDifficulty();
   }
 
+  function isGameActive(doc = document) {
+    if (!doc?.body) return false;
+    if (doc.body.classList?.contains?.('game-running') || doc.body.classList?.contains?.('tahadi-game-active')) return true;
+    const screens = doc.querySelectorAll
+      ? Array.from(doc.querySelectorAll('#game,#sdGame,#quickArena,#match,#lgGame'))
+      : ['#game', '#sdGame', '#quickArena', '#match', '#lgGame'].map((selector) => doc.querySelector?.(selector)).filter(Boolean);
+    return screens.some((screen) => !screen.classList?.contains?.('hidden'));
+  }
+
+  function syncDifficultyVisibility() {
+    if (typeof document === 'undefined' || !document?.body) return false;
+    const active = isGameActive(document);
+    document.body.classList.toggle('tahadi-game-active', active);
+    const control = document.querySelector('[data-bot-difficulty]');
+    if (control) {
+      control.hidden = active;
+      control.setAttribute('aria-hidden', String(active));
+    }
+    return active;
+  }
+
   function mountDifficultyControl(target) {
     if (typeof document === 'undefined' || !document?.createElement) return null;
     if (document.querySelector('[data-bot-difficulty]')) return document.querySelector('[data-bot-difficulty]');
-    const host = target || document.querySelector('.arcade-hero-row,.game-setup,.lobby-panel,.online-card,main');
+    const host = target || document.querySelector('#setup,#home,#entry,.arcade-hero-row,.game-setup,.lobby-panel,.online-card');
     if (!host) return null;
     const requested = global.TAHADI_PROGRESS?.botDifficulty?.() || 'auto';
     const wrap = document.createElement('label');
@@ -195,6 +216,7 @@
     });
     host.appendChild(wrap);
     applyDifficulty(select.value);
+    syncDifficultyVisibility();
     return wrap;
   }
 
@@ -205,6 +227,8 @@
     resolveDifficulty,
     difficulty: storedDifficulty,
     applyDifficulty,
+    isGameActive,
+    syncDifficultyVisibility,
     mountDifficultyControl,
     quizWillAnswerCorrect,
     chooseQuizAnswer,
@@ -225,7 +249,21 @@
 
   if (typeof document !== 'undefined' && document?.addEventListener) {
     const ready = () => mountDifficultyControl();
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready, { once: true });
-    else ready();
+    const boot = () => {
+      ready();
+      document.addEventListener('click', (event) => {
+        const button = event.target?.closest?.('[data-start],#start,#startBot,#startBtn,#classicStartBtn,#sdNewLocal,#hostStart');
+        if (button) {
+          document.body?.classList.add('tahadi-game-active');
+          syncDifficultyVisibility();
+        }
+      }, true);
+      if (global.MutationObserver && document.body) {
+        const observer = new MutationObserver(syncDifficultyVisibility);
+        observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+      }
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
   }
 }(window));

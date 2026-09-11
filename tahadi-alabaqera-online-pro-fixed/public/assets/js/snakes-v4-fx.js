@@ -2,10 +2,10 @@ const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
 const REACTIONS=Object.freeze({
   die:Object.freeze([
-    Object.freeze({name:'lift',duration:220,sound:'dice'}),
-    Object.freeze({name:'tumble',duration:440}),
-    Object.freeze({name:'impact',duration:150,sound:'diceImpact',haptic:[18,22,54]}),
-    Object.freeze({name:'settle',duration:170}),
+    Object.freeze({name:'lift',duration:100,sound:'dice'}),
+    Object.freeze({name:'tumble',duration:290}),
+    Object.freeze({name:'impact',duration:95,sound:'diceImpact',haptic:[12,18,34]}),
+    Object.freeze({name:'settle',duration:85}),
   ]),
   ladder:Object.freeze([
     Object.freeze({name:'wake',duration:160,sound:'ladderIgnite'}),
@@ -22,10 +22,16 @@ const REACTIONS=Object.freeze({
 });
 
 const REDUCED_DURATIONS=Object.freeze({
-  die:[40,90,50,40],
+  die:[20,45,25,20],
   ladder:[45,160,75],
   snake:[35,120,180,100,115],
 });
+
+const DIE_MOTION_VARIANTS=Object.freeze([
+  Object.freeze({id:'soft',x:0,rotate:2}),
+  Object.freeze({id:'tilt',x:-6,rotate:-6}),
+  Object.freeze({id:'snap',x:6,rotate:7}),
+]);
 
 const DIE_ROTATIONS=Object.freeze({
   1:Object.freeze({x:0,y:0}),
@@ -98,4 +104,9 @@ export function getDieRotation(value){
   const result=DIE_ROTATIONS[Number(value)];
   if(!result)throw new Error('invalid_die_value');
   return result;
+}
+
+export function getDieMotionVariant(index=0){
+  const safe=((Math.trunc(Number(index)||0)%DIE_MOTION_VARIANTS.length)+DIE_MOTION_VARIANTS.length)%DIE_MOTION_VARIANTS.length;
+  return DIE_MOTION_VARIANTS[safe];
 }

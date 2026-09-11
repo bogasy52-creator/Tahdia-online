@@ -52,7 +52,7 @@ try {
   let body = await response.json();
   assert.equal(body.ok, true);
   assert.equal(body.online, true);
-  assert.equal(body.version, '5.1.0');
+  assert.equal(body.version, '5.2.0');
   assert.equal(body.matchmakingOnline, false);
   assert.equal(body.socialOnline, true);
 

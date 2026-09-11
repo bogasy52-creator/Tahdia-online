@@ -16,6 +16,10 @@
     item('avatar-phoenix', 'avatar', 'العنقاء', 540, 'legendary', 10, '🔥', { colors: ['#fb7185', '#f59e0b'] }),
     item('avatar-titan', 'avatar', 'تايتن', 650, 'legendary', 12, '◆', { colors: ['#a78bfa', '#111827'] }),
     item('avatar-genius', 'avatar', 'سيد التحدي', 900, 'legendary', 15, '👑', { colors: ['#fde68a', '#7c2d12'] }),
+    item('avatar-rashid', 'avatar', 'راشد التكتيكي', 720, 'legendary', 9, '♟', { colors: ['#67e8f9', '#172554'], interactive: true, personality: { id: 'tactician', title: 'المخطط الهادئ', greeting: 'نقرأ الجولة قبل أن تبدأ.', correct: 'حركة محسوبة يا بطل.', wrong: 'معلومة جديدة، والخطة مستمرة.', win: 'الخطة اكتملت بإتقان!' } }),
+    item('avatar-lama', 'avatar', 'لمى البرق', 760, 'legendary', 10, 'ϟ', { colors: ['#fde047', '#db2777'], interactive: true, personality: { id: 'spark', title: 'سريعة البديهة', greeting: 'جاهز؟ نخطف الجولة!', correct: 'برق! هذه هي الإجابة.', wrong: 'ولا يهمك، التالية لنا.', win: 'انتصار بسرعة البرق!' } }),
+    item('avatar-shaheen', 'avatar', 'شاهين الحارس', 820, 'legendary', 12, '◈', { colors: ['#fb923c', '#0f172a'], interactive: true, personality: { id: 'guardian', title: 'ثابت تحت الضغط', greeting: 'ثبات وتركيز حتى النهاية.', correct: 'ممتاز، حافظ على هذا النسق.', wrong: 'اهدأ… ما زالت المباراة بيدك.', win: 'حُسمت بثبات الأبطال.' } }),
+    item('avatar-noura', 'avatar', 'نورا النخبة', 880, 'legendary', 14, '✧', { colors: ['#c4b5fd', '#0e7490'], interactive: true, personality: { id: 'oracle', title: 'قارئة الاحتمالات', greeting: 'كل احتمال يقودنا للفوز.', correct: 'توقّع دقيق وقرار أجمل.', wrong: 'غيّر الزاوية وستظهر الإجابة.', win: 'كما توقعت… فوز مستحق!' } }),
 
     item('frame-classic', 'frame', 'الإطار الكلاسيكي', 0, 'free', 1, '◯', { colors: ['#64748b', '#cbd5e1'] }),
     item('frame-neon', 'frame', 'نيون', 160, 'common', 1, '◎', { colors: ['#22d3ee', '#8b5cf6'] }),
@@ -25,6 +29,7 @@
     item('frame-flame', 'frame', 'اللهب', 430, 'epic', 8, '♨', { colors: ['#fb7185', '#f59e0b'] }),
     item('frame-ice', 'frame', 'الجليدي', 430, 'epic', 8, '❄', { colors: ['#bae6fd', '#0284c7'] }),
     item('frame-cosmic', 'frame', 'المجرة', 620, 'legendary', 12, '✺', { colors: ['#d946ef', '#312e81'] }),
+    item('frame-eclipse', 'frame', 'كسوف الأساطير', 780, 'legendary', 14, '◉', { colors: ['#fbbf24', '#1e1b4b'], interactive: true }),
 
     item('table-midnight', 'table', 'منتصف الليل', 0, 'free', 1, '▦', { colors: ['#111827', '#312e81'] }),
     item('table-ivory', 'table', 'العاج', 260, 'common', 2, '▦', { colors: ['#fff7ed', '#c9a86a'] }),
@@ -32,6 +37,7 @@
     item('table-royal', 'table', 'الطاولة الملكية', 520, 'epic', 7, '▦', { colors: ['#3b0764', '#f0b94a'] }),
     item('table-cyber', 'table', 'شبكة سايبر', 580, 'epic', 9, '▦', { colors: ['#071426', '#22d3ee'] }),
     item('table-desert', 'table', 'ليالي الصحراء', 700, 'legendary', 12, '▦', { colors: ['#431407', '#fbbf24'] }),
+    item('table-aurora', 'table', 'عرش الشفق', 840, 'legendary', 14, '▦', { colors: ['#0f766e', '#6d28d9'], interactive: true }),
 
     item('entrance-focus', 'entrance', 'تركيز', 0, 'free', 1, '3·2·1', { colors: ['#64748b', '#111827'] }),
     item('entrance-lightning', 'entrance', 'صاعقة', 220, 'common', 2, '⚡', { colors: ['#22d3ee', '#fde047'] }),
@@ -39,6 +45,7 @@
     item('entrance-portal', 'entrance', 'البوابة', 440, 'epic', 7, '◉', { colors: ['#a78bfa', '#22d3ee'] }),
     item('entrance-phoenix', 'entrance', 'نهضة العنقاء', 580, 'epic', 10, '🔥', { colors: ['#f97316', '#e11d48'] }),
     item('entrance-galaxy', 'entrance', 'عبور المجرة', 760, 'legendary', 14, '✺', { colors: ['#d946ef', '#1e1b4b'] }),
+    item('entrance-throne', 'entrance', 'بوابة العرش', 880, 'legendary', 15, '♜', { colors: ['#facc15', '#4c1d95'], interactive: true }),
 
     item('victory-crown', 'victory', 'التاج', 0, 'free', 1, '👑', { colors: ['#f0b94a', '#fff7cc'] }),
     item('victory-confetti', 'victory', 'مطر القصاصات', 200, 'common', 2, '🎉', { colors: ['#22d3ee', '#ec4899'] }),
@@ -46,12 +53,15 @@
     item('victory-firework', 'victory', 'الألعاب النارية', 420, 'epic', 7, '🎆', { colors: ['#f472b6', '#facc15'] }),
     item('victory-phoenix', 'victory', 'انتصار العنقاء', 600, 'epic', 10, '🪽', { colors: ['#fb7185', '#f97316'] }),
     item('victory-galaxy', 'victory', 'سيد المجرة', 800, 'legendary', 15, '🌌', { colors: ['#c084fc', '#172554'] }),
+    item('victory-legend', 'victory', 'ختم الأسطورة', 920, 'legendary', 16, '✦', { colors: ['#fef3c7', '#be123c'], interactive: true }),
 
-    item('sound-classic', 'sound', 'الصوت الكلاسيكي', 0, 'free', 1, '◖', { colors: ['#64748b', '#e2e8f0'], sound: 'classic' }),
-    item('sound-arcade', 'sound', 'أركيد', 180, 'common', 2, '♪', { colors: ['#22d3ee', '#ec4899'], sound: 'arcade' }),
-    item('sound-royal', 'sound', 'ملكي', 300, 'rare', 5, '♬', { colors: ['#f0b94a', '#7c3aed'], sound: 'royal' }),
-    item('sound-cyber', 'sound', 'سايبر', 420, 'epic', 8, '⌁', { colors: ['#34d399', '#0f172a'], sound: 'cyber' }),
-    item('sound-calm', 'sound', 'هادئ', 380, 'epic', 8, '♫', { colors: ['#93c5fd', '#312e81'], sound: 'calm' }),
+    item('sound-classic', 'sound', 'الصوت الكلاسيكي', 0, 'free', 1, '◖', { colors: ['#64748b', '#e2e8f0'], sound: 'classic', phrases: ['جاهز للتحدي!', 'أحسنت يا بطل', 'جولة جميلة', 'بالتوفيق للجميع'] }),
+    item('sound-arcade', 'sound', 'أركيد', 180, 'common', 2, '♪', { colors: ['#22d3ee', '#ec4899'], sound: 'arcade', phrases: ['لنرفع المستوى!', 'كومبو رائع!', 'اقتربنا من الفوز', 'جولة ثانية؟'] }),
+    item('sound-royal', 'sound', 'ملكي', 300, 'rare', 5, '♬', { colors: ['#f0b94a', '#7c3aed'], sound: 'royal', phrases: ['حياكم في التحدي', 'إجابة تليق بالأبطال', 'منافسة راقية', 'النصر للأفضل'] }),
+    item('sound-cyber', 'sound', 'سايبر', 420, 'epic', 8, '⌁', { colors: ['#34d399', '#0f172a'], sound: 'cyber', phrases: ['تم تفعيل وضع التركيز', 'إجابة مؤكدة', 'نعيد الحساب', 'المهمة اكتملت'] }),
+    item('sound-calm', 'sound', 'هادئ', 380, 'epic', 8, '♫', { colors: ['#93c5fd', '#312e81'], sound: 'calm', phrases: ['خذ وقتك وفكّر', 'ممتاز، استمر', 'لا بأس، حاول مجددًا', 'استمتع بالجولة'] }),
+    item('sound-stadium', 'sound', 'هتاف المدرج', 560, 'epic', 10, '≋', { colors: ['#4ade80', '#facc15'], sound: 'arcade', phrases: ['الجمهور معك!', 'يا سلام عليك!', 'الحسم قريب!', 'جولة نار!'], interactive: true }),
+    item('sound-oracle', 'sound', 'صدى العرّافة', 740, 'legendary', 13, '◌', { colors: ['#c084fc', '#22d3ee'], sound: 'calm', phrases: ['الإجابة أمامك', 'حدسك في مكانه', 'أعد قراءة الإشارة', 'المصير يبتسم لك'], interactive: true }),
   ];
 
   window.TAHADI_STORE_CATALOG = Object.freeze(catalog);

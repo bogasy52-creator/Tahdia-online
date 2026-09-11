@@ -13,7 +13,8 @@
   function equippedSoundPack(){
     let id='sound-classic';
     try{id=window.TAHADI_PROGRESS?.read?.()?.equipped?.sound||JSON.parse(localStorage.getItem('tahadi-progress-v3')||'{}')?.equipped?.sound||id}catch{}
-    return soundProfiles[String(id).replace(/^sound-/,'')]||soundProfiles.classic;
+    const declared=window.TAHADI_STORE_BY_ID?.get?.(id)?.sound;
+    return soundProfiles[declared||String(id).replace(/^sound-/,'')]||soundProfiles.classic;
   }
   let ctx=null, unlocked=false, noiseCache=null;
   const samples={round:'assets/sounds/round.wav',reveal:'assets/sounds/reveal.wav',correct:'assets/sounds/correct.wav',wrong:'assets/sounds/wrong.wav',duel:'assets/sounds/duel.wav',launch:'assets/sounds/launch.wav'};
@@ -31,7 +32,7 @@
     const t=c.currentTime+delay,src=c.createBufferSource(),g=c.createGain();src.buffer=noiseCache;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
     if(c.createBiquadFilter){const f=c.createBiquadFilter();f.type='highpass';f.frequency.setValueAtTime(highpass,t);src.connect(f).connect(g).connect(c.destination)}else src.connect(g).connect(c.destination);src.start(t);src.stop(t+duration+.02)
   }
-  function luxuryDice(){/* porcelain roll: small tumbles, weighty landing, tiny final bounce */noise(.055,.024,0,1700);tone(410,.028,.018,'triangle',0,285);noise(.04,.020,.16,1900);tone(350,.026,.016,'triangle',.16,245);noise(.04,.018,.32,1800);tone(305,.025,.015,'triangle',.32,220);noise(.065,.046,.56,850);tone(168,.085,.064,'triangle',.56,96);tone(510,.038,.025,'sine',.565,340);noise(.035,.022,.72,1250);tone(235,.052,.032,'triangle',.72,150)}
+  function luxuryDice(){/* compact porcelain roll; the dedicated impact cue handles landing */noise(.04,.021,0,1750);tone(410,.025,.016,'triangle',0,300);noise(.035,.018,.11,1850);tone(355,.024,.014,'triangle',.11,260);noise(.035,.016,.22,1700);tone(305,.024,.013,'triangle',.22,225)}
   function luxuryMove(){tone(360,.055,.022,'sine',0,520);noise(.035,.014,.018,1400);tone(650,.07,.02,'sine',.045,780)}
   function luxuryCapture(){noise(.12,.055,0,500);tone(210,.10,.06,'triangle',0,95);tone(92,.17,.075,'sine',.055,54);tone(840,.055,.025,'sine',.16,620)}
   function luxurySnake(){noise(.30,.035,0,1000);tone(310,.28,.045,'sawtooth',0,105);tone(245,.25,.028,'triangle',.08,82);noise(.10,.028,.24,450)}
@@ -48,7 +49,8 @@
   function snakeSwallow(){sequence([[240,.11,.032,'sine',0,165],[185,.13,.038,'triangle',.11,118],[130,.16,.044,'sine',.24,76]]);noise(.24,.022,.02,380)}
   function snakeGrow(){sequence([[92,.22,.045,'sine',0,68],[118,.25,.04,'triangle',.12,82],[158,.22,.027,'sine',.26,112]])}
   function snakeRelease(){noise(.08,.025,0,900);sequence([[210,.07,.025,'triangle',0,360],[420,.10,.026,'sine',.06,640]])}
-  function play(name,opts={}){if(settings.muted||!settings.effects)return;unlock();const a=audio[name];if(a){try{const pack=equippedSoundPack();a.pause();a.currentTime=0;a.playbackRate=pack.rate;a.volume=Math.min(1,(opts.volume??.9)*settings.volume*pack.gain);a.play().catch(()=>{})}catch{};return}
+  function emitCue(name){try{window.dispatchEvent(new CustomEvent('tahadi-audio-cue',{detail:{name:String(name||'')}}))}catch{}}
+  function play(name,opts={}){emitCue(name);if(settings.muted||!settings.effects)return;unlock();const a=audio[name];if(a){try{const pack=equippedSoundPack();a.pause();a.currentTime=0;a.playbackRate=pack.rate;a.volume=Math.min(1,(opts.volume??.9)*settings.volume*pack.gain);a.play().catch(()=>{})}catch{};return}
     const v4={boardStep,boardLand,diceImpact,ladderIgnite,ladderStep,ladderLand,snakeHiss,snakeBite,snakeSwallow,snakeGrow,snakeRelease};if(v4[name])return v4[name]();
     if(name==='dice')return luxuryDice();if(name==='move'||name==='step')return luxuryMove();if(name==='capture')return luxuryCapture();if(name==='snake'||name==='snakeSlide')return luxurySnake();if(name==='ladder'||name==='ladderClimb')return luxuryLadder();if(name==='win')return luxuryWin();
     const map={click:[560,.04,.02,'sine'],card:[430,.065,.028,'triangle'],select:[820,.055,.025,'sine'],buzzer:[170,.18,.06,'sawtooth'],error:[145,.16,.045,'triangle'],pop:[1040,.055,.022,'sine']};

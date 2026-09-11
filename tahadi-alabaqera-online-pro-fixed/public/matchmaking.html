@@ -12,11 +12,12 @@
     .match-status.searching{color:#e9d5ff;border-color:#8b5cf6;background:#7c3aed18;animation:searchPulse 1.3s ease-in-out infinite}
     .match-status.ok{color:#a7f3d0;border-color:#34d399;background:#34d39912}
     .match-status.bad{color:#fecdd3;border-color:#fb7185;background:#fb718512}
-    .auto-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
-    .auto-pick div{border:1px solid var(--arcade-line);border-radius:14px;background:#0b0f1e;padding:12px;text-align:center}
-    .auto-pick b{display:block;color:#fff;font-size:14px}.auto-pick small{display:block;color:var(--arcade-muted);margin-top:4px;font-size:10px}
+    .match-game-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px}
+    .match-game-option{position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;min-height:84px;padding:12px;text-align:right;color:#fff;border:1px solid var(--arcade-line);border-radius:18px;background:linear-gradient(145deg,#11172a,#090d19);cursor:pointer;transition:.18s transform,.18s border-color,.18s background}
+    .match-game-option:hover{transform:translateY(-2px);border-color:#6f5eb1}.match-game-option.selected{border-color:#a78bfa;background:linear-gradient(145deg,#2a1a50,#101629);box-shadow:0 0 0 2px #7c3aed28,0 14px 34px #0005}
+    .match-game-icon{width:48px;height:48px;display:grid;place-items:center;border:1px solid #ffffff20;border-radius:15px;background:radial-gradient(circle at 30% 20%,#ffffff22,transparent 32%),linear-gradient(145deg,#7c3aed88,#13203b);font-size:25px}.match-game-option b,.match-game-option small{display:block}.match-game-option b{font-size:14px}.match-game-option small{margin-top:4px;color:var(--arcade-muted);font-size:10px}.match-game-option>i{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#22c55e;color:#07130d;font-style:normal;font-weight:1000;opacity:0;transform:scale(.7)}.match-game-option.selected>i{opacity:1;transform:none}
     @keyframes searchPulse{50%{box-shadow:0 0 0 5px #8b5cf622}}
-    @media(max-width:560px){.auto-pick{grid-template-columns:1fr}}
+    @media(min-width:820px){.match-game-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:560px){.match-game-picker{grid-template-columns:1fr}.match-game-option{min-height:72px}.match-game-icon{width:42px;height:42px}}
   </style>
   <title>بحث تلقائي عن منافس — تحدي العباقرة</title>
 </head>
@@ -27,18 +28,18 @@
       <div class="arcade-actions"><button class="bs-icon-btn" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="bs-icon-btn" data-settings-open aria-label="الإعدادات">⚙️</button><a class="bs-btn" href="/">⌂</a></div>
     </header>
     <section class="bs-panel arcade-hero">
-      <div class="arcade-hero-row"><div><span class="arcade-eyebrow">🌐 مطابقة ذكية • بدون تصنيف</span><h1 class="arcade-title">ابحث عن <span>منافسك.</span></h1><p class="arcade-copy">اضغط الزر فقط. نختار اللعبة تلقائيًا ونضعك مع أول لاعب متاح، ثم نفتح المواجهة مباشرة.</p></div><div class="arcade-orbit">⚔️</div></div>
+      <div class="arcade-hero-row"><div><span class="arcade-eyebrow">🌐 مطابقة ذكية • بدون تصنيف</span><h1 class="arcade-title">اختر لعبتك.<span> ثم منافسك.</span></h1><p class="arcade-copy">حدد اللعبة التي تريدها، نبحث عن لاعب حقيقي أولًا، وإذا لم نجده خلال 12 ثانية يدخل BOT تلقائيًا.</p></div><div class="arcade-orbit">⚔️</div></div>
     </section>
     <section class="arcade-grid">
       <section class="bs-panel arcade-panel">
-        <h2>جاهز للتحدي؟</h2>
-        <p class="arcade-note">لا توجد قوائم لعبة أو مستوى. النظام يختار تلقائيًا ويبدأ البحث فورًا.</p>
-        <div class="auto-pick" aria-label="المطابقة التلقائية"><div><b>🎲 عشوائي</b><small>لعبة مناسبة من ألعاب المنصة</small></div><div><b>⚖️ عادل</b><small>منافس متاح في نفس اللحظة</small></div><div><b>⚡ سريع</b><small>غرفة مباشرة بعد المطابقة</small></div></div>
+        <h2>اختر لعبة الأونلاين</h2>
+        <p class="arcade-note">اختيارك يبقى واضحًا قبل بدء البحث، ويمكنك تغييره بضغطة واحدة.</p>
+        <div id="matchGamePicker" class="match-game-picker" aria-label="اختيار لعبة الأونلاين"></div>
         <div class="arcade-actions-row" style="margin-top:14px"><button id="searchBtn" class="bs-btn primary">⚔️ ابحث عن منافس</button><button id="cancelBtn" class="bs-btn hidden">إلغاء</button></div>
         <div id="searchStatus" class="match-status" aria-live="polite">اضغط «ابحث عن منافس» للبدء</div>
         <div id="opponent" class="arcade-note" aria-live="polite"></div>
       </section>
-      <section class="bs-panel arcade-panel"><h2>كيف يعمل؟</h2><div class="ai-card" style="margin-top:12px"><b><span>1. اختيار تلقائي</span><span>🎲</span></b><p class="arcade-note">يختار النظام اللعبة بدون أن تتوقف عند التصنيفات.</p></div><div class="ai-card" style="margin-top:8px"><b><span>2. لاعب حقيقي</span><span>⚔️</span></b><p class="arcade-note">نبحث عن أول منافس متاح في قائمة الانتظار.</p></div><div class="ai-card" style="margin-top:8px"><b><span>3. دخول مباشر</span><span>🔒</span></b><p class="arcade-note">عند العثور عليه تُفتح المواجهة تلقائيًا.</p></div></section>
+      <section class="bs-panel arcade-panel"><h2>كيف يعمل؟</h2><div class="ai-card" style="margin-top:12px"><b><span>1. اختر لعبتك</span><span>🎮</span></b><p class="arcade-note">الاختيار لك: أسئلة، ثعبان، زهرة، جاكارو أو فروقات.</p></div><div class="ai-card" style="margin-top:8px"><b><span>2. لاعب حقيقي أولًا</span><span>⚔️</span></b><p class="arcade-note">نبحث عن منافس لنفس اللعبة التي اخترتها.</p></div><div class="ai-card" style="margin-top:8px"><b><span>3. BOT عند الحاجة</span><span>🤖</span></b><p class="arcade-note">بعد 12 ثانية يبدأ BOT بدل إبقائك منتظرًا.</p></div></section>
     </section>
     <footer class="bs-footer">إذا لم يوجد لاعب الآن، ألغِ البحث وجرّب مرة أخرى لاحقًا أو العب ضد AI.</footer>
   </main>
@@ -50,9 +51,7 @@
   <script src="firebase-config.js"></script>
   <script type="module" src="assets/js/firebase-online.js"></script>
   <script src="assets/js/matchmaking.js"></script>
-  <script>
-    document.getElementById('searchBtn')?.addEventListener('click', () => window.TahdiaMatchmaking?.join?.());
-    document.getElementById('cancelBtn')?.addEventListener('click', () => window.TahdiaMatchmaking?.cancel?.());
-  </script>
+  <script src="assets/js/board-matchmaking.js"></script>
+  <script src="assets/js/match-game-selector.js"></script>
 </body>
 </html>

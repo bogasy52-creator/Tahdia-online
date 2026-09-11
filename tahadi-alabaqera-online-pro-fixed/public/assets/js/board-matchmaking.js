@@ -4,13 +4,38 @@
   const POLL_MS = 850;
   const SUPPORTED = new Set(['snakes', 'zahra', 'jackaroo', 'spotdiff']);
   const pathGame = location.pathname.replace(/^\/+|\/+$/g, '').split('/').at(-1);
-  const game = SUPPORTED.has(pathGame) ? pathGame : null;
+  const pageGame = SUPPORTED.has(pathGame) ? pathGame : null;
+  let game = pageGame;
   let ticket = '';
   let active = false;
   let pollTimer = null;
   let fallbackTimer = null;
   let readySent = false;
   let startSent = false;
+
+  function resolveGame(requestedGame) {
+    const candidate = typeof requestedGame === 'string' ? requestedGame : pageGame;
+    return SUPPORTED.has(candidate) ? candidate : null;
+  }
+
+  function destinationFor(requestedGame, params = {}) {
+    const selectedGame = resolveGame(requestedGame);
+    if (!selectedGame) return null;
+    const next = new URL(`/${selectedGame}`, location.origin);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') next.searchParams.set(key, String(value));
+    });
+    return next.href;
+  }
+
+  function botDestination(requestedGame) {
+    const base = destinationFor(requestedGame);
+    if (!base) return null;
+    const next = new URL(base);
+    next.searchParams.set('bot', '1');
+    next.searchParams.set('difficulty', global.TAHADI_BOT?.difficulty?.() || 'medium');
+    return next.href;
+  }
 
   function profileName() {
     return String(global.BS_SOCIAL?.profile?.()?.displayName || global.TAHADI_PROGRESS?.read?.()?.name || 'لاعب العباقرة').trim().slice(0, 20) || 'لاعب العباقرة';
@@ -73,10 +98,8 @@
     if (text) text.textContent = 'لا يوجد منافس الآن — BOT جاهز ويدخل مكانه.';
     try { global.BS_AUDIO?.play?.('round'); } catch {}
     setTimeout(() => {
-      const next = new URL(location.pathname, location.origin);
-      next.searchParams.set('bot', '1');
-      next.searchParams.set('difficulty', global.TAHADI_BOT?.difficulty?.() || 'medium');
-      location.href = next.href;
+      const next = botDestination(game);
+      if (next) location.href = next;
     }, 500);
   }
 
@@ -88,11 +111,12 @@
     if (text) text.textContent = `تم العثور على ${data.opponent || 'منافس'} — ندخل الطاولة الآن.`;
     try { global.BS_AUDIO?.play?.('join'); } catch {}
     setTimeout(() => {
-      const next = new URL(`/${game}`, location.origin);
-      next.searchParams.set('room', data.code);
-      next.searchParams.set('quick', '1');
-      if (data.role === 'host' && data.hostKey) next.searchParams.set('matchHost', data.hostKey);
-      location.href = next.href;
+      const next = destinationFor(game, {
+        room: data.code,
+        quick: '1',
+        matchHost: data.role === 'host' ? data.hostKey : null,
+      });
+      if (next) location.href = next;
     }, 500);
   }
 
@@ -107,8 +131,10 @@
     if (active) pollTimer = setTimeout(poll, POLL_MS);
   }
 
-  async function join() {
-    if (!game || active) return;
+  async function join(requestedGame) {
+    const selectedGame = resolveGame(requestedGame);
+    if (!selectedGame || active) return false;
+    game = selectedGame;
     active = true;
     overlay();
     try {
@@ -125,6 +151,7 @@
       console.info('board matchmaking unavailable', error?.message || error);
       cancel(true);
     }
+    return true;
   }
 
   function autoReady(room, client) {
@@ -144,18 +171,18 @@
   }
 
   function mount() {
-    if (!game || new URLSearchParams(location.search).has('room') || new URLSearchParams(location.search).has('bot')) return;
+    if (!pageGame || new URLSearchParams(location.search).has('room') || new URLSearchParams(location.search).has('bot')) return;
     const modes = document.querySelector('.play-mode');
     if (!modes || document.getElementById('boardQuickMatch')) return;
     const button = document.createElement('button');
     button.id = 'boardQuickMatch';
     button.type = 'button';
     button.textContent = '⚡ منافس سريع';
-    button.addEventListener('click', join);
+    button.addEventListener('click', () => join(pageGame));
     modes.appendChild(button);
   }
 
-  global.TAHADI_BOARD_MATCHMAKING = Object.freeze({ join, cancel, autoReady, WAIT_MS });
+  global.TAHADI_BOARD_MATCHMAKING = Object.freeze({ join, cancel, autoReady, resolveGame, destinationFor, botDestination, supportedGames: Object.freeze([...SUPPORTED]), WAIT_MS });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once: true });
   else mount();
 }(window));

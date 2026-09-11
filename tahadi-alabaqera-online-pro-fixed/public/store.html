@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="assets/css/store.css">
   <title>متجر العباقرة</title>
 </head>
-<body class="bs-page store-page">
+<body class="bs-page store-page store-vault">
+  <div class="vault-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
   <main class="store-shell">
     <header class="bs-topbar store-top">
       <a class="bs-brand" href="/"><span class="bs-mark">✦</span><span class="bs-brand-copy"><b>متجر العباقرة</b><span>هويتك داخل كل مواجهة</span></span></a>
@@ -23,14 +24,24 @@
     </header>
 
     <section class="store-hero">
-      <div><span class="section-kicker">BUSRAJ COLLECTION · الموسم الخامس</span><h1>اصنع حضورك.<span>قبل أول حركة.</span></h1><p>اجمع العملات من اللعب، اختر شخصيتك وطاولتك، وادخل المواجهة باحتفال يناسب أسلوبك. كل العناصر تجميلية ولا تمنح أفضلية في اللعب.</p></div>
-      <div class="store-profile-card"><div class="store-profile-orb">♛</div><div><small>ملف اللاعب</small><b id="shopPlayer">لاعب العباقرة</b><small>المستوى <span id="shopLevel">1</span> · يتزامن مع حسابك</small></div></div>
+      <div><span class="section-kicker">MYTHIC VAULT · الموسم السادس</span><h1>ادخل كمتحدٍ.<span>واخرج كأسطورة.</span></h1><p>خزانة تفاعلية متكاملة: شخصيات ذكية، طاولات حية، عبارات مسموعة، ودخول وانتصارات تعمل فعليًا داخل جميع الألعاب.</p><div class="hero-pills"><span>53 عنصرًا</span><span>4 شخصيات ذكية</span><span>تقدم محفوظ</span></div></div>
+      <div class="store-profile-card"><div id="shopHeroAvatar" class="store-profile-orb" aria-label="الشخصية المجهزة"></div><div><small>ملف اللاعب</small><b id="shopPlayer">لاعب العباقرة</b><small>المستوى <span id="shopLevel">1</span> · يتزامن مع حسابك</small></div></div>
+    </section>
+
+    <section id="shopSpotlight" class="store-spotlight" aria-label="العنصر الأسطوري المختار"></section>
+
+    <section id="shopCollection" class="store-collection" aria-label="تقدم المجموعة"></section>
+
+    <section class="store-loadout-panel" aria-labelledby="loadoutTitle">
+      <div class="store-section-head"><div><span class="section-kicker">تجهيزاتي الحالية</span><h2 id="loadoutTitle">خزانتي المفعّلة</h2><p>كل خانة مرتبطة بالمباريات فعليًا. اضغط عليها للمعاينة أو التغيير.</p></div><span class="loadout-sync">محفوظة ✓</span></div>
+      <div id="shopLoadout" class="store-loadout-grid"></div>
     </section>
 
     <section class="store-layout">
       <div class="store-main">
         <nav class="shop-tabs" aria-label="فئات المتجر">
           <button class="shop-tab active" type="button" data-category="featured">مختارات اليوم</button>
+          <button class="shop-tab smart-tab" type="button" data-category="smart">✦ الشخصيات الذكية</button>
           <button class="shop-tab" type="button" data-category="avatar">الشخصيات</button>
           <button class="shop-tab" type="button" data-category="frame">الإطارات</button>
           <button class="shop-tab" type="button" data-category="table">الطاولات</button>
@@ -47,7 +58,10 @@
         <div class="store-section-head"><div><span class="section-kicker">آخر العمليات</span><h2>سجل المشتريات</h2></div></div>
         <ul id="purchaseHistory" class="history-list"></ul>
       </div>
-      <aside class="store-aside"><section id="shopPreview" class="store-preview" aria-label="معاينة العنصر"></section></aside>
+      <aside class="store-aside">
+        <section id="shopPreview" class="store-preview" aria-label="معاينة العنصر"></section>
+        <button id="shopTry" type="button" class="store-trial">▶ جرّب العنصر الآن</button>
+      </aside>
     </section>
 
     <footer class="store-footer">جميع العناصر تجميلية · <a href="/">العودة إلى الألعاب</a></footer>
@@ -59,7 +73,6 @@
   <script src="assets/js/store-catalog.js"></script>
   <script src="assets/js/progression.js"></script>
   <script src="assets/js/social-client.js"></script>
-  <script src="assets/js/svg-icons.js"></script>
   <script src="assets/js/store.js"></script>
 </body>
 </html>
