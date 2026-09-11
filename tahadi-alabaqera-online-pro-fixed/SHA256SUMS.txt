@@ -38,7 +38,7 @@ d06305727464734d8f1185a49cb0cd670946a1c0095193789b7701475f23c8b4  ./public/asset
 9e6fbd3e5206beeb9bb272179bac317aea972ba45073ca873f4c124e98b623df  ./public/assets/css/jackaroo-next.css
 f5cff9ccfa763062bd72f6db60275ea2d4b81ec42966077b840011ee4c365698  ./public/assets/css/jackaroo-premium.css
 5457eca2ab5ebcea9761b3fcbf892123840e46fab35d75034f23e11c12832c6a  ./public/assets/css/luxury-game-ui.css
-f590fa22050c7ff881c31d5472f7545e000bac82435abb500cd9b344b18d1eb5  ./public/assets/css/match-presentation.css
+f7064352b414478bbe21be15e98e47e63fcdae35dc162aaff28cc91b1852fdff  ./public/assets/css/match-presentation.css
 825ec5977cc516cc1b20f202b385fc8409efc47a838153ae05b62c53f5c29dc4  ./public/assets/css/mobile-game.css
 1f54d3beebe14a5eca8b909606afab12ada06a0d6950d7fa77dc3a27d6cf4f2d  ./public/assets/css/new-games.css
 e4276a71ea96fa1738666849394d6dfe704fbbcd5868f383dc0f0aaab6d51bf4  ./public/assets/css/platform.css
@@ -57,7 +57,7 @@ b8502759d2f74a606c4f9d73ca14a13b876cceeb49273da52adb2766158a15c9  ./public/asset
 3ef75c688cbf26854a2f20d510bf4eff74aa34b40e571800ac66fcc1d3b9471e  ./public/assets/css/snakes-v4-interactions.css
 678c977c37b0de22a9feb5b2d97fbb108aafb3252b73791f29789d53316081c2  ./public/assets/css/social.css
 41961b282321bcd4f74e69fc0d798ceed8924a6b11ed15f5eb37e7d00c604ad9  ./public/assets/css/spotdiff-pro.css
-a4ae992fdb5a43186c8384ada8fe4144e5b176426596624cd544fc7e79e5f3ad  ./public/assets/css/store.css
+6ca281263d8e624449a2cc2dc0f06b5653b02b14a20acbc729170ba57e6d4296  ./public/assets/css/store.css
 2c93d9cbd9b7759aecda35c16108e084f1ca303ada3c6b7107454b9dcc1c8dde  ./public/assets/css/zahra-premium.css
 569c1ff1d590290658da0eea35b8735c66506d423a7df00a41ff994238e3f631  ./public/assets/js/adaptive-board-layout.js
 3da6442881c7767b849d620f97055c8591a3cad5f6e15d5b4fbfa95e88dd4352  ./public/assets/js/arcade-games.js
@@ -76,7 +76,7 @@ e8f5c54e37e6e5d4d1a22207aa9c30cc3e4d927d801f574b6a418ecae64ce60a  ./public/asset
 c55b447e0c363d9e6e40ccaef7c5c95a84f14ceae13643917da296ed9b1d443e  ./public/assets/js/games/snakes-ui.js
 59d60b858491c880f96b19f33f194787e750764b4a20babdfdb72660f4b677f0  ./public/assets/js/luxury-game-ui.js
 a9120ff04ffe2ab3693cd0443ac8098e6f605d8fa58e77da16619528993a1868  ./public/assets/js/match-game-selector.js
-74fafff9137a941cf5ab59b954780fb78313e8ee4998b973215afda8c57440cf  ./public/assets/js/match-presentation.js
+ea80c25ab92e0e5cf5802dd741b3ed3aa1b11527b3027010cdad9a7c6ce62c43  ./public/assets/js/match-presentation.js
 39dd8a08b829ae3ddf4cada7494f4113133a87a40247cd37f593327e36d4bef0  ./public/assets/js/matchmaking.js
 d58ca0daff5ff82050e2bc0d910c2b78d5faae561bd0d45e1a2c972fed961ea7  ./public/assets/js/memory-pro.js
 4cc033b8b14eae80b8b114671d1b1f91b2f1482aa65bb54e322ac96265858ea7  ./public/assets/js/new-games.js
@@ -93,7 +93,7 @@ b84e37d6e0b4f373c23f872a219de7e24cd3ecda36bfbb8ec4167c631f639560  ./public/asset
 e6394a1e5baccf8bfb14c618f0742bf3b50c64021e7318a3aac9d4aa4b75ccba  ./public/assets/js/snakes-v4-fx.js
 743156633bbabd5cf747efc9759f54767e8d2971e436858d11f5becc91980a2d  ./public/assets/js/social-client.js
 517ed2b8917a745db200ebedbafffd5e78dbfd8aac0b48070bfffda3542bf0c3  ./public/assets/js/store-catalog.js
-8d9a4aefdab4bae8ae2b032c5412be5939f3dd3dc8d112ddb36d9fe8012408ea  ./public/assets/js/store.js
+f84bbbd3ece1c119c9ddae564f2ee65b834e4d25cca7beb4e8d776d345da1481  ./public/assets/js/store.js
 572efbd98b1c2029082f05fad5987870442bfb4b19c4c7e3cb9ae74b1e0a2f1f  ./public/assets/quiz_photos/astronaut_glove.webp
 31afb9d73ab8be27949d490519ab8fa39733e5016940cb095a6eefbc8864dc14  ./public/assets/quiz_photos/astronaut_helmet.webp
 297af8376f768afc777b4a4d4175d56abb9cc7f063c33025bd5fa2d486d9a735  ./public/assets/quiz_photos/astronaut_suit.webp

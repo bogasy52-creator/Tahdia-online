@@ -58,13 +58,32 @@
     const seed = hash(id) % 4;
     let art = '';
     if (category === 'avatar') {
-      const accessory = [
+      const genericAccessory = [
         '<path d="M48 70 63 36l15 30m54 4-15-34-15 30" fill="none" stroke="#fff" stroke-opacity=".72" stroke-width="7" stroke-linecap="round"/>',
         '<path d="M45 76c16-29 74-40 91-2l-12 12H57Z" fill="url(#' + gradient + ')" stroke="#fff" stroke-opacity=".45" stroke-width="3"/>',
         '<path d="M55 59h70l-9-25-18 16-17-18-15 18-18-15Z" fill="url(#' + gradient + ')" stroke="#fff" stroke-opacity=".55" stroke-width="3"/>',
         '<path d="M43 76c7-31 32-50 47-50s40 19 47 50l-18 8H61Z" fill="#10182d" stroke="url(#' + gradient + ')" stroke-width="6"/>',
       ][seed];
-      art = `<circle cx="90" cy="90" r="76" fill="#090f20" stroke="url(#${gradient})" stroke-width="5"/><circle cx="90" cy="72" r="38" fill="#e9c7a6"/><path d="M35 158c4-40 26-60 55-60s51 20 55 60" fill="url(#${gradient})"/><path d="M56 71c5-33 62-42 70 0-13-9-22-15-35-15s-22 6-35 15Z" fill="#12182a"/>${accessory}<circle cx="76" cy="76" r="4" fill="#111827"/><circle cx="105" cy="76" r="4" fill="#111827"/><path d="M78 92q12 9 24 0" fill="none" stroke="#7c3f35" stroke-width="3" stroke-linecap="round"/><path d="M80 119h20l-10 18Z" fill="#fff" fill-opacity=".8"/>`;
+      // ملمح مميّز فريد لكل شخصية (بدل تكرار 4 أشكال فقط بين 16 شخصية) — يطابق اسم وطابع كل واحدة.
+      const themedAccessory = {
+        nova: '<g stroke="#fff" stroke-opacity=".8" stroke-width="4" stroke-linecap="round"><path d="M90 18v16M74 24l6 12M106 24l-6 12"/></g><path d="m90 14 4 10 10 2-10 3-4 10-4-10-10-3 10-2Z" fill="url(#' + gradient + ')"/>',
+        orbit: '<ellipse cx="90" cy="78" rx="58" ry="17" fill="none" stroke="url(#' + gradient + ')" stroke-width="4" transform="rotate(-14 90 78)"/><circle cx="140" cy="70" r="4" fill="' + two + '"/>',
+        falcon: '<path d="M48 70 63 36l15 30m54 4-15-34-15 30" fill="none" stroke="#fff" stroke-opacity=".78" stroke-width="7" stroke-linecap="round"/>',
+        coder: '<rect x="52" y="66" width="24" height="16" rx="5" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="4"/><rect x="104" y="66" width="24" height="16" rx="5" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="4"/><path d="M76 74h28" stroke="#fff" stroke-opacity=".8" stroke-width="4"/>',
+        knight: '<path d="M43 76c7-31 32-50 47-50s40 19 47 50l-18 8H61Z" fill="#10182d" stroke="url(#' + gradient + ')" stroke-width="6"/><path d="M60 62h60" stroke="url(#' + gradient + ')" stroke-width="6"/>',
+        queen: '<path d="M55 59h70l-9-25-18 16-17-18-15 18-18-15Z" fill="url(#' + gradient + ')" stroke="#fff" stroke-opacity=".55" stroke-width="3"/><circle cx="90" cy="34" r="4" fill="#fff"/>',
+        desert: '<path d="M40 74c8-24 30-38 50-38s42 14 50 38c-16-6-33-9-50-9s-34 3-50 9Z" fill="url(#' + gradient + ')" stroke="#fff" stroke-opacity=".4" stroke-width="3"/><path d="M118 46c10 8 16 18 18 28" fill="none" stroke="url(#' + gradient + ')" stroke-width="5" stroke-linecap="round"/>',
+        cyber: '<rect x="48" y="70" width="84" height="13" rx="6" fill="url(#' + gradient + ')" opacity=".92"/><path d="M56 83v6m14-6v9m14-9v6m14-6v9m14-9v6m14-6v9" stroke="' + two + '" stroke-width="2" opacity=".8"/>',
+        lunar: '<path d="M112 40a26 26 0 1 0 0 44 20 20 0 0 1 0-44z" fill="url(#' + gradient + ')"/><circle cx="122" cy="38" r="2.4" fill="#fff"/>',
+        phoenix: '<path d="M90 22c10 14 17 22 17 32a17 17 0 0 1-34 0c0-6 3-10 6-13-1 6 2 10 5 10 5 0 5-5 3-10-2-6-2-13 3-19z" fill="url(#' + gradient + ')"/>',
+        titan: '<path d="M42 74 90 54l48 20-10 10-38-16-38 16Z" fill="none" stroke="url(#' + gradient + ')" stroke-width="6" stroke-linejoin="round"/><path d="m90 50 6 10-6 6-6-6Z" fill="' + two + '"/>',
+        genius: '<path d="M40 62 90 44l50 18-50 18Z" fill="#10182d" stroke="url(#' + gradient + ')" stroke-width="4" stroke-linejoin="round"/><path d="M132 66v18" stroke="url(#' + gradient + ')" stroke-width="4" stroke-linecap="round"/><circle cx="132" cy="88" r="3" fill="' + two + '"/>',
+        rashid: '<path d="M54 72a36 15 0 1 0 72 0" fill="none" stroke="url(#' + gradient + ')" stroke-width="5"/><path d="M90 72v-6" stroke="url(#' + gradient + ')" stroke-width="4" stroke-linecap="round"/>',
+        lama: '<path d="M58 40 78 66l-16 4 22 30-6-30 16-2Z" fill="url(#' + gradient + ')" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-linejoin="round"/>',
+        shaheen: '<path d="M90 40 122 52v18c0 16-14 26-32 32-18-6-32-16-32-32V52Z" fill="none" stroke="url(#' + gradient + ')" stroke-width="5" stroke-linejoin="round"/><path d="M90 56v34" stroke="url(#' + gradient + ')" stroke-width="4" stroke-linecap="round"/>',
+        noura: '<g fill="' + two + '"><circle cx="60" cy="42" r="3"/><circle cx="90" cy="30" r="3.6"/><circle cx="120" cy="42" r="3"/></g><path d="M60 42c10 10 20 12 30-12 10 24 20 22 30 12" fill="none" stroke="url(#' + gradient + ')" stroke-width="2.5" stroke-dasharray="1 5"/>',
+      }[id.replace(/^avatar-/, '')] || genericAccessory;
+      art = `<circle cx="90" cy="90" r="76" fill="#090f20" stroke="url(#${gradient})" stroke-width="5"/><circle cx="90" cy="72" r="38" fill="#e9c7a6"/><path d="M35 158c4-40 26-60 55-60s51 20 55 60" fill="url(#${gradient})"/><path d="M56 71c5-33 62-42 70 0-13-9-22-15-35-15s-22 6-35 15Z" fill="#12182a"/>${themedAccessory}<circle cx="76" cy="76" r="4" fill="#111827"/><circle cx="105" cy="76" r="4" fill="#111827"/><path d="M78 92q12 9 24 0" fill="none" stroke="#7c3f35" stroke-width="3" stroke-linecap="round"/><path d="M80 119h20l-10 18Z" fill="#fff" fill-opacity=".8"/>`;
     } else if (category === 'frame') {
       art = `<circle cx="90" cy="90" r="70" fill="#0a1020"/><circle cx="90" cy="78" r="28" fill="#d9b18d"/><path d="M48 145c8-32 25-47 42-47s34 15 42 47" fill="#273552"/><rect x="22" y="20" width="136" height="140" rx="38" fill="none" stroke="url(#${gradient})" stroke-width="10"/><rect x="34" y="32" width="112" height="116" rx="29" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="m22 50 18-18m100 0 18 18M22 130l18 18m100 0 18-18" stroke="#fff" stroke-opacity=".7" stroke-width="5" stroke-linecap="round"/>`;
     } else if (category === 'table') {
@@ -230,6 +249,71 @@
   function transactionId(entry) {
     return window.crypto?.randomUUID?.() || `${Date.now()}-${entry.id}`;
   }
+  function closePurchaseModal() {
+    byId('shopPurchaseModal')?.remove();
+  }
+  function flyCoins(fromEl) {
+    const wallet = byId('shopBalance') || document.querySelector('[data-shop-balance]');
+    if (!fromEl || !wallet) return;
+    const start = fromEl.getBoundingClientRect();
+    const end = wallet.getBoundingClientRect();
+    for (let i = 0; i < 6; i++) {
+      const coin = document.createElement('span');
+      coin.className = 'coin-fly';
+      coin.textContent = '🪙';
+      coin.style.left = `${start.left + start.width / 2}px`;
+      coin.style.top = `${start.top + start.height / 2}px`;
+      coin.style.setProperty('--dx', `${end.left - start.left + (Math.random() * 20 - 10)}px`);
+      coin.style.setProperty('--dy', `${end.top - start.top}px`);
+      coin.style.animationDelay = `${i * 45}ms`;
+      document.body.appendChild(coin);
+      coin.addEventListener('animationend', () => coin.remove());
+    }
+  }
+  function showPurchaseModal(entry) {
+    closePurchaseModal();
+    const p = profile();
+    const infinite = owner();
+    const balance = infinite ? '∞' : Number(p.coins || 0);
+    const after = infinite ? '∞' : Math.max(0, Number(p.coins || 0) - Number(entry.price || 0));
+    const modal = document.createElement('div');
+    modal.id = 'shopPurchaseModal';
+    modal.className = 'shop-modal-backdrop';
+    modal.innerHTML = `<div class="shop-modal" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
+      <button type="button" class="shop-modal-close" data-modal-close aria-label="إغلاق">✕</button>
+      ${glyph(entry, true)}
+      <span class="preview-kicker">${rarityLabels[entry.rarity]} • ${labels[entry.category]}</span>
+      <h2 id="shopModalTitle">تأكيد شراء «${entry.name}»</h2>
+      <div class="shop-modal-ledger">
+        <div><span>السعر</span><b>${entry.price} 🪙</b></div>
+        <div><span>رصيدك الحالي</span><b>${balance}</b></div>
+        <div class="after"><span>الرصيد بعد الشراء</span><b>${after}</b></div>
+      </div>
+      <div class="shop-modal-actions">
+        <button type="button" class="bs-btn gold" data-modal-confirm>تأكيد الشراء</button>
+        <button type="button" class="bs-btn" data-modal-cancel>إلغاء</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('show'));
+    const close = () => { modal.classList.remove('show'); document.removeEventListener('keydown', onKey); window.setTimeout(() => modal.remove(), 200); };
+    const onKey = (event) => { if (event.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
+    modal.querySelector('[data-modal-close]')?.addEventListener('click', close);
+    modal.querySelector('[data-modal-cancel]')?.addEventListener('click', close);
+    modal.querySelector('[data-modal-confirm]')?.addEventListener('click', () => {
+      const artEl = modal.querySelector('.cosmetic-art-wrap');
+      const result = window.TAHADI_PROGRESS.purchase(entry.id, transactionId(entry));
+      if (!result.ok) { announce(result.error === 'insufficient_coins' ? 'رصيدك لا يكفي لهذا العنصر' : 'تعذر إتمام الشراء'); return close(); }
+      window.TAHADI_PROGRESS.equip(entry.id);
+      flyCoins(artEl);
+      announce(`تم شراء وتجهيز ${entry.name}`);
+      window.BS_AUDIO?.play?.('launch');
+      close();
+      refresh();
+    });
+  }
   function previewSound(entry) {
     const specs = {
       classic: [420, 'sine', .12], arcade: [620, 'square', .09], royal: [330, 'triangle', .18],
@@ -287,13 +371,7 @@
       return refresh();
     }
     if (status.kind !== 'buy') return;
-    const accepted = window.confirm(`شراء «${entry.name}» مقابل ${entry.price} عملة؟`);
-    if (!accepted) return;
-    const result = window.TAHADI_PROGRESS.purchase(entry.id, transactionId(entry));
-    if (!result.ok) return announce(result.error === 'insufficient_coins' ? 'رصيدك لا يكفي لهذا العنصر' : 'تعذر إتمام الشراء');
-    window.TAHADI_PROGRESS.equip(entry.id);
-    announce(`تم شراء وتجهيز ${entry.name}`);
-    refresh();
+    showPurchaseModal(entry);
   }
   function renderDaily() {
     const p = profile();
