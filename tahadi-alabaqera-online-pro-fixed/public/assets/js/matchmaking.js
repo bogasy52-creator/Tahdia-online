@@ -1,6 +1,6 @@
 (() => {
   // Shared timeout marker retained for the arcade client and release checks.
-  const MAX_WAIT=90_000;
+  const MAX_WAIT = 12_000;
   // localStorage.setItem('online_name', identity.name);
   const STALE_MS = 90_000;
   const HEARTBEAT_MS = 12_000;
@@ -55,7 +55,7 @@
         <div class="mm-radar" aria-hidden="true"><i></i><b>⚡</b></div>
         <span class="mm-kicker">مواجهة مباشرة</span>
         <h2>نبحث عن منافس مناسب</h2>
-        <p id="matchText">جاري تجهيز اتصالك…</p>
+        <p id="matchText">جاري تجهيز اتصالك… وإذا لم نجد لاعبًا خلال 12 ثانية يبدأ البوت تلقائيًا.</p>
         <div class="mm-dots" aria-hidden="true"><i></i><i></i><i></i></div>
         <button type="button" id="cancelMatch">إلغاء البحث</button>
       </div>`;
@@ -119,7 +119,7 @@
           if (!snap.exists() || !this.active || this.redirecting) return;
           const data = snap.data();
           if (data.status === "matched" && data.matchId) this.found(data.matchId, data.opponentName || "المنافس");
-        }, (error) => this.fail(error));
+        }, (error) => this.fallbackToBot(error));
 
         this.heartbeat = setInterval(() => {
           if (!this.active || !this.ownRef) return;
@@ -132,10 +132,10 @@
         await claim();
         this.claimTimer = setInterval(claim, CLAIM_MS);
         this.waitTimer = setTimeout(() => {
-          if (this.active && !this.redirecting) this.fail(new Error("لم نجد منافسًا متاحًا الآن — جرّب مرة أخرى"));
+          if (this.active && !this.redirecting) this.fallbackToBot(new Error("لم نجد منافسًا متاحًا"));
         }, MAX_WAIT);
       } catch (error) {
-        this.fail(error);
+        this.fallbackToBot(error);
       }
     },
 
@@ -197,6 +197,36 @@
       }, 650);
     },
 
+    async fallbackToBot(reason) {
+      if (!this.active || this.redirecting) return;
+      this.redirecting = true;
+      this.stopTimers();
+      this.stopSound?.();
+      const ref = this.ownRef;
+      if (ref && window.TahdiaOnline) {
+        try {
+          const snap = await window.TahdiaOnline.getDoc(ref);
+          const data = snap.exists() ? snap.data() : null;
+          if (data?.status === "matched" && data?.matchId) {
+            this.redirecting = false;
+            return this.found(data.matchId, data.opponentName || "المنافس");
+          }
+          if (data?.status === "waiting") await window.TahdiaOnline.deleteDoc(ref);
+        } catch {}
+      }
+      this.ownRef = null;
+      const text = document.querySelector("#matchBox #matchText");
+      if (text) text.textContent = "لا يوجد منافس متاح — تم تجهيز BOT للمواجهة";
+      console.info("Tahdia matchmaking bot fallback", reason?.message || "no_human");
+      try { window.BS_AUDIO?.play?.("round"); } catch {}
+      setTimeout(() => {
+        const next = new URL("/online", location.origin);
+        next.searchParams.set("bot", "1");
+        next.searchParams.set("difficulty", window.TAHADI_BOT?.difficulty?.() || "medium");
+        location.href = next.href;
+      }, 500);
+    },
+
     stopTimers() {
       if (this.unsubscribe) { try { this.unsubscribe(); } catch {} this.unsubscribe = null; }
       if (this.heartbeat) clearInterval(this.heartbeat);
@@ -225,14 +255,7 @@
     },
 
     fail(error) {
-      console.error("Tahdia matchmaking failed", error);
-      this.stopTimers();
-      this.stopSound?.();
-      this.active = false;
-      const text = document.querySelector("#matchBox #matchText");
-      const btn = document.querySelector("#matchBox #cancelMatch");
-      if (text) text.textContent = "تعذر بدء البحث: " + (error?.message || "خطأ غير معروف");
-      if (btn) btn.textContent = "إغلاق";
+      this.fallbackToBot(error);
     }
   };
 

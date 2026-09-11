@@ -1,8 +1,11 @@
 import { DurableObject } from 'cloudflare:workers';
 
 const WAIT_MS = 90_000;
-const GAMES = new Set(['quiz', 'snakes', 'zahra', 'jackaroo', 'domino']);
-const BOT_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'domino']); // اللي عندها بوت عند عدم توفر لاعبين
+const GAMES = new Set(['quiz', 'snakes', 'zahra', 'jackaroo', 'spotdiff']);
+
+export function requiredPlayersForGame(game) {
+  return game === 'jackaroo' ? 4 : 2;
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -16,7 +19,7 @@ function roomCode() { return String(100000 + (crypto.getRandomValues(new Uint32A
 
 /**
  * One Durable Object per game type. It keeps a short-lived queue and creates
- * a normal quiz/board room when two compatible players arrive. The game room
+ * a normal quiz/board room when enough compatible players arrive. The game room
  * remains authoritative; matchmaking only pairs players and never trusts a
  * client-provided score.
  */
@@ -57,28 +60,6 @@ export class MatchmakingRoom extends DurableObject {
     throw new Error('room_create_failed');
   }
 
-  // ما فيه لاعبين متاحين؟ ننشئ غرفة ونعبّي المقاعد المتبقية ببوت (متوسط/محترف)
-  async createBotRoom(game, host, difficulty) {
-    if (!this.env.BOARD_ROOMS) throw new Error('room_binding_missing');
-    const playerLimit = game === 'jackaroo' ? 4 : 2;
-    const hostKey = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const code = roomCode();
-      const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
-      const res = await stub.fetch('https://board.internal/init', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ code, hostKey, game, playerLimit, name: host.name }),
-      });
-      if (res.status !== 201) continue;
-      await stub.fetch('https://board.internal/add-bot', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ difficulty, count: playerLimit - 1 }),
-      });
-      return { code, hostKey, playerLimit };
-    }
-    throw new Error('room_create_failed');
-  }
-
   async fetch(request) {
     const url = new URL(request.url);
     const now = Date.now();
@@ -92,26 +73,36 @@ export class MatchmakingRoom extends DurableObject {
       // في بداية الإطلاق نريد إدخال اللاعب مع أول منافس متاح في نفس اللعبة
       // بدل إبقائه عالقًا بانتظار لاعب قريب منه بالنقاط أو الخبرة.
       const level = Math.max(1, Math.min(100, Number(body.level) || 1));
-      const botDifficulty = String(body.botDifficulty || 'medium').toLowerCase() === 'pro' ? 'pro' : 'medium';
-      const current = { id: crypto.randomUUID(), name: name(body.name), level, game, botDifficulty, createdAt: now, status: 'waiting', result: null };
-      const candidate = Object.values(this.tickets)
+      const current = { id: crypto.randomUUID(), name: name(body.name), level, game, createdAt: now, status: 'waiting', result: null };
+      const requiredPlayers = requiredPlayersForGame(game);
+      const candidates = Object.values(this.tickets)
         .filter((x) => x?.status === 'waiting' && x.game === game)
-        .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))[0];
-      if (!candidate) {
+        .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
+        .slice(0, requiredPlayers - 1);
+      if (candidates.length < requiredPlayers - 1) {
         this.tickets[current.id] = current;
         await this.persist();
         await this.ctx.storage.setAlarm(now + WAIT_MS);
         return json({ ok: true, ticket: current.id, status: 'searching', game });
       }
 
-      const room = await this.createRoom(game, candidate, current);
+      const group = [...candidates, current];
+      const room = await this.createRoom(game, group[0], group[1]);
       const matchedAt = Date.now();
-      candidate.status = 'matched';
-      candidate.result = { code: room.code, game, role: 'host', hostKey: room.hostKey, playerLimit: room.playerLimit, opponent: current.name, matchedAt };
-      current.status = 'matched';
-      current.result = { code: room.code, game, role: 'guest', hostKey: null, playerLimit: room.playerLimit, opponent: candidate.name, matchedAt };
-      this.tickets[candidate.id] = candidate;
-      this.tickets[current.id] = current;
+      for (const [index, ticket] of group.entries()) {
+        const opponents = group.filter((x) => x.id !== ticket.id).map((x) => x.name);
+        ticket.status = 'matched';
+        ticket.result = {
+          code: room.code,
+          game,
+          role: index === 0 ? 'host' : 'guest',
+          hostKey: index === 0 ? room.hostKey : null,
+          playerLimit: room.playerLimit,
+          opponent: opponents.join('، '),
+          matchedAt,
+        };
+        this.tickets[ticket.id] = ticket;
+      }
       await this.persist();
       return json({ ok: true, ticket: current.id, status: 'matched', ...current.result });
     }
@@ -121,29 +112,17 @@ export class MatchmakingRoom extends DurableObject {
       const record = this.tickets[ticket];
       if (!record) return json({ ok: false, error: 'تذكرة البحث غير موجودة أو انتهت' }, 404);
       if (record.status === 'matched') return json({ ok: true, ticket, status: 'matched', ...record.result });
-      const waitedMs = Math.max(0, now - record.createdAt);
-      if (waitedMs >= WAIT_MS && BOT_GAMES.has(record.game)) {
-        try {
-          const room = await this.createBotRoom(record.game, record, record.botDifficulty);
-          record.status = 'matched';
-          record.result = {
-            code: room.code, game: record.game, role: 'host', hostKey: room.hostKey,
-            playerLimit: room.playerLimit, opponent: 'بوت', vsBot: true, matchedAt: Date.now(),
-          };
-          this.tickets[ticket] = record;
-          await this.persist();
-          return json({ ok: true, ticket, status: 'matched', ...record.result });
-        } catch {
-          // تعذر إنشاء غرفة بوت الآن — نكمل الانتظار العادي
-        }
-      }
-      return json({ ok: true, ticket, status: 'searching', game: record.game, waitedMs });
+      return json({ ok: true, ticket, status: 'searching', game: record.game, waitedMs: Math.max(0, now - record.createdAt) });
     }
 
     if (url.pathname === '/cancel' && request.method === 'POST') {
       const body = await request.json().catch(() => ({}));
       const ticket = String(body.ticket || '');
-      if (this.tickets[ticket]) delete this.tickets[ticket];
+      const record = this.tickets[ticket];
+      if (record?.status === 'matched') {
+        return json({ ok: true, ticket, status: 'matched', ...record.result });
+      }
+      if (record) delete this.tickets[ticket];
       await this.persist();
       return json({ ok: true, status: 'cancelled' });
     }

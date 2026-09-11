@@ -224,3 +224,46 @@ export function diffPointsForDifficulty(key) {
   const d = DIFFICULTIES[key] || DIFFICULTIES.medium;
   return { points: generateDiffPoints(d.count, d.margin, d.rMin, d.rMax), duration: d.duration, key: d.key };
 }
+
+export function createSpotDiffGame(playerCount = 2, difficulty = "easy") {
+  const count = Math.max(2, Math.min(4, Number(playerCount) || 2));
+  const { points, duration, key } = diffPointsForDifficulty(difficulty);
+  return {
+    difficulty: key,
+    photo: pickPhoto(),
+    diffs: points.map((point) => ({ ...point, foundBy: null })),
+    scores: Array(count).fill(0),
+    misses: Array(count).fill(0),
+    winner: null,
+    duration,
+    lastEvent: null,
+  };
+}
+
+export function finishSpotDiffGame(state) {
+  if (!state || !Array.isArray(state.scores)) throw new Error("invalid_spotdiff_state");
+  const next = structuredClone(state);
+  const high = Math.max(...next.scores);
+  const leaders = next.scores.map((score, index) => ({ score, index })).filter((entry) => entry.score === high);
+  next.winner = leaders.length === 1 ? leaders[0].index : -1;
+  return next;
+}
+
+export function playSpotDiffClick(state, playerIndex, x, y) {
+  if (!state || state.winner !== null) return state;
+  if (!Number.isInteger(playerIndex) || playerIndex < 0 || playerIndex >= state.scores.length) throw new Error("invalid_player");
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) throw new Error("invalid_coordinates");
+  const next = structuredClone(state);
+  const hit = next.diffs.find((diff) => diff.foundBy === null && Math.hypot(diff.x - x, diff.y - y) <= diff.r);
+  if (hit) {
+    hit.foundBy = playerIndex;
+    next.scores[playerIndex] += 1;
+    next.lastEvent = { type: "found", player: playerIndex, diff: hit.id };
+    if (next.diffs.every((diff) => diff.foundBy !== null)) return finishSpotDiffGame(next);
+  } else {
+    next.misses[playerIndex] += 1;
+    next.lastEvent = { type: "miss", player: playerIndex };
+    if (next.misses[playerIndex] >= 5 && next.scores.length === 2) next.winner = playerIndex === 0 ? 1 : 0;
+  }
+  return next;
+}

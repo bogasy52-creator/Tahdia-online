@@ -84,7 +84,7 @@ test('matchmaking is server-backed and packaged in the Worker configuration', as
   assert.match(matching, /class MatchmakingRoom extends DurableObject/);
   assert.match(matching, /x\?\.status === 'waiting' && x\.game === game/);
   assert.doesNotMatch(matching, /Math\.abs\(Number\(x\.level\) - level\)/);
-  assert.match(client, /MAX_WAIT=90_000/);
+  assert.match(client, /MAX_WAIT\s*=\s*12_000/);
   assert.match(client, /localStorage\.setItem\('online_name'/);
 });
 

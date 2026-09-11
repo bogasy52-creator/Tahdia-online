@@ -4,6 +4,7 @@ import {
   normalizeRoomCode,
   normalizeUsername,
   parseSessionToken,
+  sha256,
   validUsername,
 } from "./social-core.js";
 
@@ -37,6 +38,19 @@ function stubFor(env, username) {
 
 async function readJson(response) {
   return response.json().catch(() => ({}));
+}
+
+async function ownerSignupAllowed(env, provided) {
+  const expected = String(env?.BOSRAG_OWNER_SECRET || "");
+  const candidate = String(provided || "");
+  if (expected.length < 24 || candidate.length < 24) return false;
+  const [expectedHash, candidateHash] = await Promise.all([sha256(expected), sha256(candidate)]);
+  if (expectedHash.length !== candidateHash.length) return false;
+  let difference = 0;
+  for (let index = 0; index < expectedHash.length; index += 1) {
+    difference |= expectedHash.charCodeAt(index) ^ candidateHash.charCodeAt(index);
+  }
+  return difference === 0;
 }
 
 function bearer(request) {
@@ -74,9 +88,9 @@ async function publicProfile(env, username) {
   return data.profile || null;
 }
 
-async function call(stub, path, body = {}) {
+async function call(stub, path, body = {}, method = "POST") {
   const response = await stub.fetch(`https://social.internal${path}`, {
-    method: "POST",
+    method,
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -115,10 +129,14 @@ export async function handleSocialRequest(request, env, options = {}) {
     const username = normalizeUsername(body.username);
     const stub = stubFor(env, username);
     if (!stub) return json({ ok: false, error: "اسم المستخدم غير صالح" }, 400);
+    const ownerAuthorized = username === "bosrag" ? await ownerSignupAllowed(env, body.ownerSecret) : false;
+    if (username === "bosrag" && !ownerAuthorized) {
+      return json({ ok: false, error: "حساب bosrag محجوز للمدير ويتطلب رمز التهيئة الخاص" }, 403);
+    }
     return stub.fetch("https://social.internal/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username, displayName: body.displayName, password: body.password }),
+      body: JSON.stringify({ username, displayName: body.displayName, password: body.password, ownerAuthorized }),
     });
   }
 
@@ -146,6 +164,23 @@ export async function handleSocialRequest(request, env, options = {}) {
     const { response, auth } = await requireAuth(request, env);
     if (response) return response;
     const result = await call(auth.stub, "/dashboard", { secret: auth.secret });
+    return json(result.data, result.response.status);
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/social/progress") {
+    const { response, auth } = await requireAuth(request, env);
+    if (response) return response;
+    const result = await call(auth.stub, "/progress/read", { secret: auth.secret });
+    return json(result.data, result.response.status);
+  }
+
+  if (request.method === "PUT" && url.pathname === "/api/social/progress") {
+    const { response, auth } = await requireAuth(request, env);
+    if (response) return response;
+    const body = await request.json().catch(() => ({}));
+    const progress = body.progress && typeof body.progress === "object" ? body.progress : body;
+    const expectedRevision = Number(body.expectedRevision ?? progress.serverRevision ?? 0);
+    const result = await call(auth.stub, "/progress/save", { secret: auth.secret, progress, expectedRevision }, "PUT");
     return json(result.data, result.response.status);
   }
 

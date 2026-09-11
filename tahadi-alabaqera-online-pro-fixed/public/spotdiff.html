@@ -44,6 +44,7 @@
 #sdOnlineSetup .setup-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 </style>
 <link rel="stylesheet" href="assets/css/spotdiff-pro.css">
+<link rel="stylesheet" href="assets/css/match-presentation.css">
 </head>
 <body class="bs-page">
 <main class="bs-shell sd-shell">
@@ -57,6 +58,7 @@
 
   <div class="sd-modes">
     <button id="sdModeLocal" class="active">🎯 فردي بعداد</button>
+    <button id="sdModeBot">🤖 ضد BOT</button>
     <button id="sdModeOnline">⚔️ أونلاين 1×1</button>
   </div>
 
@@ -135,6 +137,10 @@
 
 <script src="assets/js/audio-manager.js"></script>
 <script src="assets/js/platform.js"></script>
+<script src="assets/js/store-catalog.js"></script><script src="assets/js/progression.js"></script>
+<script src="assets/js/bot-engine.js"></script><script src="assets/js/match-presentation.js"></script>
+<script src="assets/js/board-matchmaking.js"></script>
+<script src="assets/js/social-client.js"></script>
 <script type="module">
 import { pickPhoto, DIFFICULTIES, diffPointsForDifficulty } from './assets/js/engines/spotdiff-scenes.js';
 import { BoardOnlineClient, renderRoomPlayers, bindRoomCountdown } from './assets/js/board-online.js';
@@ -226,6 +232,8 @@ let mode = 'local';
 let currentImg = null, currentDiffs = [];
 let foundLocal = new Set();
 let localScore = 0, localTimer = null, localEndsAt = 0, localMisses = 0;
+let botFound = new Set(), botTimer = null, botAwarded = false;
+let onlineAwarded = false;
 const MAX_LOCAL_MISSES = 5;
 let recentPhotos = [];
 let localDifficulty = 'easy', hostDifficulty = 'easy';
@@ -284,11 +292,19 @@ function clickToPct(e, board){
 /* ---------------- LOCAL MODE ---------------- */
 async function startLocal(){
   foundLocal = new Set();
+  botFound = new Set();
   localScore = 0;
   localMisses = 0;
+  botAwarded = false;
+  clearTimeout(botTimer);
   $('#sdMyScore').textContent = '0';
+  $('#sdOppScore').textContent = '0';
   $('#sdMisses').textContent = `0 / ${MAX_LOCAL_MISSES}`;
-  $('#sdOppWrap').classList.add('hidden');
+  $('#sdOppWrap').classList.toggle('hidden', mode!=='bot');
+  if(mode==='bot'){
+    const difficulty=window.TAHADI_BOT?.difficulty?.()||'medium';
+    $('#sdOppLabel').textContent=`BOT • ${window.TAHADI_BOT?.profile?.(difficulty)?.label||'متوسط'}`;
+  }
   $('#sdOver').classList.remove('show');
   const photo = pickPhoto(recentPhotos);
   recentPhotos.push(photo);
@@ -302,6 +318,24 @@ async function startLocal(){
   localTimer = setInterval(tickLocal, 200);
   tickLocal();
   play('turn');
+  if(mode==='bot') scheduleSpotBot();
+}
+function scheduleSpotBot(){
+  clearTimeout(botTimer);
+  if(mode!=='bot'||!currentDiffs.length||botFound.size>=currentDiffs.length)return;
+  const difficulty=window.TAHADI_BOT?.difficulty?.()||'medium';
+  const pace=difficulty==='pro'?2100:3300;
+  botTimer=setTimeout(()=>{
+    if(mode!=='bot'||Date.now()>=localEndsAt)return;
+    const remaining=currentDiffs.filter(diff=>!botFound.has(diff.id)&&!foundLocal.has(diff.id));
+    if(!remaining.length)return endLocal('cleared');
+    if(window.TAHADI_BOT?.quizWillAnswerCorrect?.(difficulty)??true){
+      const hit=remaining[Math.floor(Math.random()*remaining.length)];
+      botFound.add(hit.id);drawFoundRing(hit,'theirs');$('#sdOppScore').textContent=botFound.size;play('turn');
+      if(botFound.size+foundLocal.size>=currentDiffs.length)return endLocal('bot');
+    }
+    scheduleSpotBot();
+  },pace+(window.TAHADI_BOT?.thinkDelay?.(difficulty)||700));
 }
 function fmtTime(ms){
   const s = Math.max(0, Math.ceil(ms/1000));
@@ -313,16 +347,16 @@ function tickLocal(){
   if(left<=0){ clearInterval(localTimer); return endLocal(); }
 }
 function handleLocalClick(e, board){
-  if(mode!=='local' || !currentDiffs.length) return;
+  if((mode!=='local'&&mode!=='bot') || !currentDiffs.length) return;
   const {x,y} = clickToPct(e, board);
-  const hit = currentDiffs.find(d=> !foundLocal.has(d.id) && Math.hypot(d.x-x, d.y-y) <= d.r);
+  const hit = currentDiffs.find(d=> !foundLocal.has(d.id) && !botFound.has(d.id) && Math.hypot(d.x-x, d.y-y) <= d.r);
   if(hit){
     foundLocal.add(hit.id);
     localScore++;
     $('#sdMyScore').textContent = localScore;
     drawFoundRing(hit, 'mine');
     play('correct');
-    if(foundLocal.size >= currentDiffs.length){ clearInterval(localTimer); return endLocal(); }
+    if(foundLocal.size + botFound.size >= currentDiffs.length){ clearInterval(localTimer); return endLocal(); }
   } else {
     localMisses++;
     $('#sdMisses').textContent = `${localMisses} / ${MAX_LOCAL_MISSES}`;
@@ -332,11 +366,13 @@ function handleLocalClick(e, board){
   }
 }
 function endLocal(reason='time'){
-  const win = foundLocal.size >= currentDiffs.length;
-  $('#sdOverIcon').textContent = win ? '🏆' : (reason==='misses' ? '🚫' : '⏱');
-  $('#sdOverTitle').textContent = win ? 'أحسنت! لقطتها كاملة' : (reason==='misses' ? 'انتهت المحاولات' : 'انتهى الوقت');
-  $('#sdOverSub').textContent = `وجدت ${foundLocal.size} من ${currentDiffs.length} فروقات • أخطاء ${localMisses}/${MAX_LOCAL_MISSES}`;
+  clearInterval(localTimer);clearTimeout(botTimer);
+  const versusBot=mode==='bot',win=versusBot?foundLocal.size>=botFound.size:foundLocal.size>=currentDiffs.length;
+  $('#sdOverIcon').textContent = win ? '🏆' : (reason==='misses' ? '🚫' : reason==='bot'?'🤖':'⏱');
+  $('#sdOverTitle').textContent = win ? (versusBot?'فزت على BOT!':'أحسنت! لقطتها كاملة') : (reason==='misses' ? 'انتهت المحاولات' : reason==='bot'?'حسم BOT الجولة':'انتهى الوقت');
+  $('#sdOverSub').textContent = versusBot?`${foundLocal.size} لك مقابل ${botFound.size} لـ BOT • أخطاء ${localMisses}/${MAX_LOCAL_MISSES}`:`وجدت ${foundLocal.size} من ${currentDiffs.length} فروقات • أخطاء ${localMisses}/${MAX_LOCAL_MISSES}`;
   $('#sdOver').classList.add('show');
+  if(!botAwarded){botAwarded=true;window.TAHADI_PROGRESS?.award?.({game:'spotdiff',score:foundLocal.size*150,win})}
   play(win ? 'finish' : 'buzzer');
 }
 
@@ -357,7 +393,7 @@ function setupClient(){
 }
 async function onRoomState(next){
   room = next;
-  if(next.status === 'lobby'){ renderLobby(); return; }
+  if(next.status === 'lobby'){ onlineAwarded = false; renderLobby(); return; }
   $('#sdOnlineSetup').classList.add('hidden');
   $('#sdLobby').classList.add('hidden');
   $('#sdGame').classList.remove('hidden');
@@ -372,6 +408,7 @@ async function onRoomState(next){
   $('#sdDiffLive').textContent = `${dInfo.count} فروقات واضحة`;
   $('#sdMyScore').textContent = st.scores?.[meIdx] ?? 0;
   $('#sdOppScore').textContent = st.scores?.[oppIdx] ?? 0;
+  $('#sdMisses').textContent = `${st.misses?.[meIdx] ?? 0} / 5`;
   const map = new Map();
   st.diffs.forEach(d=>{ if(d.foundBy !== null) map.set(d.id, d.foundBy === meIdx ? 'mine':'theirs'); });
   await renderPhoto(st.photo, st.diffs, map);
@@ -384,6 +421,10 @@ async function onRoomState(next){
     $('#sdOverTitle').textContent = draw ? 'تعادل!' : (iWon ? 'فزت! 🎉' : 'خسرت الجولة');
     $('#sdOverSub').textContent = `${st.scores[meIdx]} مقابل ${st.scores[oppIdx]}`;
     $('#sdOver').classList.add('show');
+    if(!onlineAwarded){
+      onlineAwarded = true;
+      window.TAHADI_PROGRESS?.award?.({ game:'spotdiff', score:Number(st.scores[meIdx] || 0) * 150, win:iWon, eventId:`online:spotdiff:${room.code}:${room.version}:${room.me.id}` });
+    }
     play(iWon ? 'finish' : 'buzzer');
   } else {
     $('#sdOver').classList.remove('show');
@@ -402,6 +443,7 @@ function renderLobby(){
   $('#sdHostStart').classList.toggle('hidden', room.me?.role !== 'host');
   $('#sdHostStart').disabled = !all;
   $('#sdDiffLobby').classList.toggle('hidden', room.me?.role !== 'host');
+  window.TAHADI_BOARD_MATCHMAKING?.autoReady?.(room, client);
 }
 async function createRoom(){
   setupClient();
@@ -421,12 +463,12 @@ function handleOnlineClick(e, board){
 }
 
 /* ---------------- WIRING ---------------- */
-$('#sdBoardLeft').addEventListener('click', (e)=> mode==='local' ? handleLocalClick(e, $('#sdBoardLeft')) : handleOnlineClick(e, $('#sdBoardLeft')));
-$('#sdBoardRight').addEventListener('click', (e)=> mode==='local' ? handleLocalClick(e, $('#sdBoardRight')) : handleOnlineClick(e, $('#sdBoardRight')));
+$('#sdBoardLeft').addEventListener('click', (e)=> mode==='online' ? handleOnlineClick(e, $('#sdBoardLeft')) : handleLocalClick(e, $('#sdBoardLeft')));
+$('#sdBoardRight').addEventListener('click', (e)=> mode==='online' ? handleOnlineClick(e, $('#sdBoardRight')) : handleLocalClick(e, $('#sdBoardRight')));
 $('#sdNewLocal').addEventListener('click', startLocal);
 $('#sdRetry').addEventListener('click', ()=>{
   $('#sdOver').classList.remove('show');
-  if(mode==='local') startLocal();
+  if(mode==='local'||mode==='bot') startLocal();
   else if(room?.me?.role==='host') client?.send('rematch');
   else window.BS_PLATFORM?.toast('الإعادة بيد المضيف');
 });
@@ -443,7 +485,7 @@ document.querySelectorAll('#sdDiffLocal button[data-diff]').forEach(btn=>{
     document.querySelectorAll('#sdDiffLocal button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     localDifficulty = btn.dataset.diff;
-    if(mode==='local') startLocal();
+    if(mode==='local'||mode==='bot') startLocal();
   });
 });
 document.querySelectorAll('#sdDiffLobby button[data-diff]').forEach(btn=>{
@@ -465,16 +507,18 @@ $('#sdInvite').addEventListener('click', ()=>{
 function setMode(next){
   mode = next;
   $('#sdModeLocal').classList.toggle('active', next==='local');
+  $('#sdModeBot').classList.toggle('active', next==='bot');
   $('#sdModeOnline').classList.toggle('active', next==='online');
   clearInterval(localTimer);
+  clearTimeout(botTimer);
   stopCountdown?.();
-  if(next==='local'){
+  if(next==='local'||next==='bot'){
     client?.close(); client=null; room=null;
     $('#sdDiffLocal').classList.remove('hidden');
     $('#sdOnlineSetup').classList.add('hidden');
     $('#sdLobby').classList.add('hidden');
     $('#sdGame').classList.remove('hidden');
-    $('#sdOppWrap').classList.add('hidden');
+    $('#sdOppWrap').classList.toggle('hidden',next!=='bot');
     startLocal();
   } else {
     $('#sdDiffLocal').classList.add('hidden');
@@ -484,9 +528,16 @@ function setMode(next){
   }
 }
 $('#sdModeLocal').addEventListener('click', ()=> setMode('local'));
+$('#sdModeBot').addEventListener('click', ()=> setMode('bot'));
 $('#sdModeOnline').addEventListener('click', ()=> setMode('online'));
 
-setMode('local');
+const pageParams = new URLSearchParams(location.search);
+const invitedRoom = pageParams.get('room');
+if (/^\d{6}$/.test(invitedRoom || '')) {
+  setMode('online');
+  $('#sdJoinCode').value = invitedRoom;
+  setTimeout(joinRoom, 80);
+} else setMode(pageParams.get('bot') === '1' ? 'bot' : 'local');
 </script>
 </body>
 </html>

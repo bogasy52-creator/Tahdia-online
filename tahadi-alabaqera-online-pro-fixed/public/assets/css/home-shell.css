@@ -128,7 +128,7 @@
   .hub-game h3 { font-size: 14px; }
   .hub-game p { font-size: 10px; }
   .hub-quick-strip { grid-template-columns: 1fr; gap: 8px; }
-  .hub-bottom-nav { position: fixed; z-index: 80; right: 10px; bottom: calc(9px + env(safe-area-inset-bottom)); left: 10px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 7px; border: 1px solid rgba(170,178,222,.23); border-radius: 20px; background: rgba(10, 13, 26, .9); box-shadow: 0 16px 44px rgba(0,0,0,.44); backdrop-filter: blur(16px); }
+  .hub-bottom-nav { position: fixed; z-index: 80; right: 10px; bottom: calc(9px + env(safe-area-inset-bottom)); left: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; padding: 7px; border: 1px solid rgba(170,178,222,.23); border-radius: 20px; background: rgba(10, 13, 26, .9); box-shadow: 0 16px 44px rgba(0,0,0,.44); backdrop-filter: blur(16px); }
   .hub-bottom-nav a { display: grid; min-height: 50px; place-items: center; gap: 2px; color: var(--hub-muted); border-radius: 14px; text-decoration: none; font-size: 9px; font-weight: 800; }
   .hub-bottom-nav a span:first-child { font-size: 19px; line-height: 1; }
   .hub-bottom-nav a.active, .hub-bottom-nav a:hover { color: #fff; background: rgba(124,58,237,.25); }

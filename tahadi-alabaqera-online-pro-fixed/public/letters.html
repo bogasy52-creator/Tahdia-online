@@ -8,15 +8,18 @@
 <link rel="stylesheet" href="assets/css/platform.css">
 <link rel="stylesheet" href="assets/css/pro-theme-v6.css">
 <link rel="stylesheet" href="assets/css/game-kit.css">
+<link rel="stylesheet" href="assets/css/match-presentation.css">
 <title>حروف وصور — تحدي العباقرة</title>
 <style>
 .lg-shell{max-width:760px;margin:auto}
-.lg-hud{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:14px 0}
+.lg-hud{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:12px;align-items:center;margin:14px 0}
 .lg-hearts{display:flex;gap:5px;font-size:20px}
 .lg-hearts .lost{opacity:.25;filter:grayscale(1)}
 .lg-score{text-align:center}
 .lg-score b{display:block;font-size:26px;color:var(--st-gold);font-weight:900}
 .lg-score small{color:var(--bs-muted);font-size:11px}
+.lg-bot-score{padding:5px 10px;border:1px solid rgba(139,92,246,.34);border-radius:13px;background:rgba(139,92,246,.08)}
+.lg-bot-score b{color:#c4b5fd}
 .lg-streak{justify-self:end;font-weight:900;color:var(--st-gold-2);font-size:13px;min-height:18px}
 .lg-timerbar{height:10px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;margin:8px 0 18px;border:1px solid var(--st-line)}
 .lg-timerbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--st-gold-2),var(--st-gold));transition:width .2s linear,background .3s}
@@ -53,7 +56,7 @@
 .lg-over-card .final{font-size:40px;font-weight:900;color:var(--st-gold);margin:6px 0}
 .lg-over-actions{display:flex;gap:10px;margin-top:16px}
 .lg-over-actions a,.lg-over-actions button{flex:1}
-@media(max-width:480px){.lg-blank{width:34px;height:42px;font-size:18px}.lg-tile{width:40px;height:46px;font-size:18px}}
+@media(max-width:480px){.lg-hud{grid-template-columns:auto 1fr 1fr}.lg-streak{grid-column:1/-1;justify-self:center}.lg-blank{width:34px;height:42px;font-size:18px}.lg-tile{width:40px;height:46px;font-size:18px}}
 </style>
 </head>
 <body class="bs-page">
@@ -69,6 +72,7 @@
   <div class="lg-hud">
     <div class="lg-hearts" id="lgHearts">❤️❤️❤️</div>
     <div class="lg-score"><b id="lgScore">0</b><small>النقاط</small></div>
+    <div class="lg-score lg-bot-score"><b id="lgBotScore">0</b><small id="lgBotLabel">BOT • متوسط</small></div>
     <div class="lg-streak" id="lgStreak"></div>
   </div>
 
@@ -116,6 +120,11 @@
 
 <script src="assets/js/audio-manager.js"></script>
 <script src="assets/js/platform.js"></script>
+<script src="assets/js/store-catalog.js"></script>
+<script src="assets/js/progression.js"></script>
+<script src="assets/js/bot-engine.js"></script>
+<script src="assets/js/match-presentation.js"></script>
+<script src="assets/js/social-client.js"></script>
 <script>
 (() => {
   /* Real photos from the project's own library (public/assets/quiz_photos) —
@@ -164,11 +173,13 @@
   let deck = [], deckIdx = 0, current = null;
   let score = 0, streak = 0, lives = 3, round = 1;
   let filled = [], tiles = [], timer = null, timeLeft = ROUND_SECONDS, revealTimers = [];
-  let locked = false;
+  let locked = false, botScore = 0, botTimer = null, awarded = false;
 
   const els = {
     hearts: document.getElementById('lgHearts'),
     score: document.getElementById('lgScore'),
+    botScore: document.getElementById('lgBotScore'),
+    botLabel: document.getElementById('lgBotLabel'),
     streak: document.getElementById('lgStreak'),
     bar: document.getElementById('lgTimerBar'),
     stage: document.getElementById('lgStage'),
@@ -208,6 +219,11 @@
     els.hearts.innerHTML = Array.from({length:3},(_,i)=>`<span class="${i<lives?'':'lost'}">❤️</span>`).join('');
   }
   function updateScore(){ els.score.textContent = score; }
+  function updateBotScore(){
+    const difficulty = window.TAHADI_BOT?.difficulty?.() || 'medium';
+    els.botScore.textContent = botScore;
+    els.botLabel.textContent = `BOT • ${window.TAHADI_BOT?.profile?.(difficulty)?.label || 'متوسط'}`;
+  }
   function updateStreak(){
     els.streak.textContent = streak>=2 ? `🔥 سلسلة ×${streak}` : '';
   }
@@ -294,6 +310,7 @@
   function onCorrect(){
     locked = true;
     clearInterval(timer);
+    clearTimeout(botTimer);
     const blanks = [...els.blanks.querySelectorAll('.lg-blank:not(.gap)')];
     blanks.forEach(b=>b.classList.add('win'));
     streak++;
@@ -309,6 +326,7 @@
   function onTimeout(){
     locked = true;
     clearInterval(timer);
+    clearTimeout(botTimer);
     lives--; streak = 0;
     updateHearts(); updateStreak();
     play('buzzer');
@@ -346,6 +364,22 @@
     }, 100);
   }
 
+  function scheduleLettersBot(){
+    clearTimeout(botTimer);
+    const difficulty = window.TAHADI_BOT?.difficulty?.() || 'medium';
+    const professional = difficulty === 'pro';
+    const delay = (professional ? 2900 : 4700) + Math.round(Math.random() * (professional ? 2600 : 4200));
+    botTimer = setTimeout(()=>{
+      if(locked || lives <= 0) return;
+      if(window.TAHADI_BOT?.quizWillAnswerCorrect?.(difficulty) ?? true){
+        botScore += 100 + Math.max(0,Math.round(timeLeft*5));
+        updateBotScore();
+        showCombo('🤖 BOT حل الصورة');
+        play('turn');
+      }
+    }, delay);
+  }
+
   function nextRound(){
     locked = false;
     if(deckIdx >= deck.length) newDeck();
@@ -358,23 +392,31 @@
     buildBlanksAndTiles(current.w);
     play('turn');
     startTimerBar();
+    scheduleLettersBot();
   }
 
   function gameOver(){
+    clearTimeout(botTimer);
     const best = Number(localStorage.getItem('tahadi-letters-best')||0);
     const isBest = score > best;
+    const tied = score === botScore;
+    const won = score > botScore;
     if(isBest) localStorage.setItem('tahadi-letters-best', String(score));
     els.finalScore.textContent = score;
-    els.overTitle.textContent = isBest ? 'رقم قياسي جديد! 🎉' : 'انتهت المحاولات';
-    els.overSub.textContent = isBest ? 'تفوقت على أفضل نتيجة سابقة!' : `أفضل نتيجة سابقة: ${best}`;
-    els.overIcon.textContent = isBest ? '🏆' : '💥';
+    els.overTitle.textContent = tied ? 'تعادل مع BOT 🤝' : won ? 'فزت على BOT! 🎉' : 'فاز BOT هذه المرة';
+    els.overSub.textContent = `${score} لك مقابل ${botScore} لـ BOT${isBest ? ' • رقم قياسي جديد' : ` • أفضل نتيجة: ${best}`}`;
+    els.overIcon.textContent = tied ? '🤝' : won ? '🏆' : '🤖';
     els.over.classList.add('show');
-    play('finish');
+    if(!awarded){
+      awarded = true;
+      window.TAHADI_PROGRESS?.award?.({ game:'letters', score, win:won });
+    }
+    play(won ? 'finish' : 'buzzer');
   }
 
   function resetGame(){
-    score = 0; streak = 0; lives = 3; round = 1;
-    updateScore(); updateStreak(); updateHearts();
+    score = 0; botScore = 0; streak = 0; lives = 3; round = 1; awarded = false;
+    updateScore(); updateBotScore(); updateStreak(); updateHearts();
     els.over.classList.remove('show');
     newDeck();
     nextRound();

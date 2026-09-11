@@ -37,6 +37,97 @@ function clone(value) {
   return value == null ? value : structuredClone(value);
 }
 
+const PROGRESS_ARRAY_LIMIT = 200;
+const PROGRESS_LOG_LIMIT = 120;
+const EQUIPPED_CATEGORIES = ["avatar", "frame", "table", "entrance", "victory", "sound"];
+
+function safeNumber(value, fallback = 0, max = Number.MAX_SAFE_INTEGER) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(max, Math.round(number))) : fallback;
+}
+
+function safeStrings(value, limit = PROGRESS_ARRAY_LIMIT) {
+  return [...new Set((Array.isArray(value) ? value : [])
+    .map((entry) => String(entry || "").normalize("NFKC").slice(0, 80))
+    .filter(Boolean))].slice(0, limit);
+}
+
+function safeSigned(value, fallback = 0, max = 1_000_000) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(-max, Math.min(max, Math.round(number))) : fallback;
+}
+
+function safeCoinLog(value) {
+  const seen = new Set();
+  const entries = [];
+  for (const raw of (Array.isArray(value) ? value : []).slice(-240)) {
+    const id = String(raw?.id || "").slice(0, 120);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    entries.push({ id, kind: String(raw?.kind || "adjustment").slice(0, 24), amount: safeSigned(raw?.amount), at: safeNumber(raw?.at) });
+  }
+  return entries;
+}
+
+function sanitizeProgress(value = {}) {
+  const input = value && typeof value === "object" ? value : {};
+  const bestByGame = {};
+  for (const [key, score] of Object.entries(input.bestByGame && typeof input.bestByGame === "object" ? input.bestByGame : {}).slice(0, 80)) {
+    bestByGame[String(key).slice(0, 40)] = safeNumber(score);
+  }
+  const equipped = {};
+  for (const category of EQUIPPED_CATEGORIES) {
+    const id = String(input.equipped?.[category] || "").slice(0, 80);
+    if (id) equipped[category] = id;
+  }
+  const purchaseLog = [];
+  const seenTransactions = new Set();
+  for (const entry of (Array.isArray(input.purchaseLog) ? input.purchaseLog : []).slice(-PROGRESS_LOG_LIMIT)) {
+    const txId = String(entry?.txId || "").slice(0, 100);
+    const itemId = String(entry?.itemId || "").slice(0, 80);
+    if (!txId || !itemId || seenTransactions.has(txId)) continue;
+    seenTransactions.add(txId);
+    purchaseLog.push({ txId, itemId, price: safeNumber(entry.price, 0, 1_000_000), at: safeNumber(entry.at) });
+  }
+  return {
+    schemaVersion: 3,
+    revision: Math.max(1, safeNumber(input.revision, 1)),
+    serverRevision: safeNumber(input.serverRevision),
+    updatedAt: safeNumber(input.updatedAt),
+    name: cleanDisplayName(input.name || "لاعب العباقرة"),
+    level: Math.max(1, safeNumber(input.level, 1, 1000)),
+    xp: safeNumber(input.xp),
+    coins: safeNumber(input.coins, 0, 1_000_000_000),
+    wins: safeNumber(input.wins),
+    games: safeNumber(input.games),
+    bestScore: safeNumber(input.bestScore),
+    bestByGame,
+    titles: safeStrings(input.titles, 80),
+    achievements: safeStrings(input.achievements, 120),
+    lastGame: String(input.lastGame || "").slice(0, 40) || null,
+    streak: safeNumber(input.streak),
+    daily: { date: String(input.daily?.date || "").slice(0, 10), games: safeNumber(input.daily?.games), wins: safeNumber(input.daily?.wins) },
+    inventory: safeStrings(input.inventory),
+    equipped,
+    purchaseLog,
+    awardLog: safeStrings(input.awardLog, 240),
+    coinLog: safeCoinLog(input.coinLog),
+    starterGrantClaimed: Boolean(input.starterGrantClaimed),
+    dailyReward: { lastClaim: String(input.dailyReward?.lastClaim || "").slice(0, 10), streak: safeNumber(input.dailyReward?.streak, 0, 7) },
+    weekly: {
+      week: String(input.weekly?.week || "").slice(0, 10),
+      counters: { games: safeNumber(input.weekly?.counters?.games), wins: safeNumber(input.weekly?.counters?.wins), score: safeNumber(input.weekly?.counters?.score) },
+      claimed: safeStrings(input.weekly?.claimed, 10),
+    },
+    botDifficulty: ["auto", "medium", "pro"].includes(input.botDifficulty) ? input.botDifficulty : "auto",
+  };
+}
+
+function entitlementsFor(username) {
+  const owner = normalizeUsername(username) === "bosrag";
+  return { owner, infiniteCoins: owner, unlockAll: owner };
+}
+
 export function createSocialUserClass(DurableObject) {
   return class SocialUser extends DurableObject {
   constructor(ctx, env) {
@@ -74,6 +165,8 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/public" && request.method === "GET") return this.publicData();
     if (url.pathname === "/dashboard" && request.method === "POST") return this.dashboard(body.secret);
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);
+    if (url.pathname === "/progress/read" && request.method === "POST") return this.readProgress(body.secret);
+    if (url.pathname === "/progress/save" && request.method === "PUT") return this.saveProgress(body);
 
     if (url.pathname === "/friend/incoming" && request.method === "POST") return this.addIncomingRequest(body);
     if (url.pathname === "/friend/outgoing" && request.method === "POST") return this.addOutgoingRequest(body);
@@ -97,6 +190,9 @@ export function createSocialUserClass(DurableObject) {
     const username = normalizeUsername(body.username);
     const displayName = cleanDisplayName(body.displayName || username);
     if (!validUsername(username)) return json({ ok: false, error: "اسم المستخدم 3–20 أحرف إنجليزية أو أرقام أو _" }, 400);
+    if (username === "bosrag" && body.ownerAuthorized !== true) {
+      return json({ ok: false, error: "حساب bosrag محجوز للمدير" }, 403);
+    }
     const passwordError = validatePassword(body.password);
     if (passwordError) return json({ ok: false, error: passwordError }, 400);
     const createdAt = Date.now();
@@ -112,7 +208,7 @@ export function createSocialUserClass(DurableObject) {
     await this.ctx.storage.put("profile", this.profile);
     await this.ctx.storage.put("presence", this.presence);
     const session = await this.createSession();
-    return json({ ok: true, token: session.token, profile: publicProfile(this.profile, this.presence) }, 201);
+    return json({ ok: true, token: session.token, profile: publicProfile(this.profile, this.presence), entitlements: entitlementsFor(this.profile.username) }, 201);
   }
 
   async login(body) {
@@ -120,7 +216,7 @@ export function createSocialUserClass(DurableObject) {
     const ok = await verifyPassword(String(body.password || ""), this.profile.password);
     if (!ok) return json({ ok: false, error: "بيانات الدخول غير صحيحة" }, 401);
     const session = await this.createSession();
-    return json({ ok: true, token: session.token, profile: publicProfile(this.profile, this.presence) });
+    return json({ ok: true, token: session.token, profile: publicProfile(this.profile, this.presence), entitlements: entitlementsFor(this.profile.username) });
   }
 
   async createSession() {
@@ -128,10 +224,13 @@ export function createSocialUserClass(DurableObject) {
     const hash = await sha256(secret);
     const createdAt = Date.now();
     const expiresAt = createdAt + 30 * 24 * 60 * 60 * 1000;
-    await this.ctx.storage.put(`session:${hash}`, { createdAt, expiresAt });
-    const sessions = await this.ctx.storage.list({ prefix: "session:", reverse: true });
+    const currentKey = `session:${hash}`;
+    await this.ctx.storage.put(currentKey, { createdAt, expiresAt });
+    const sessions = await this.ctx.storage.list({ prefix: "session:" });
     if (sessions.size > 8) {
-      const keys = [...sessions.keys()].slice(8);
+      const ordered = [...sessions.entries()].sort((a, b) => Number(b[1]?.createdAt || 0) - Number(a[1]?.createdAt || 0));
+      const keep = new Set([currentKey, ...ordered.filter(([key]) => key !== currentKey).slice(0, 7).map(([key]) => key)]);
+      const keys = ordered.map(([key]) => key).filter((key) => !keep.has(key));
       if (keys.length) await this.ctx.storage.delete(keys);
     }
     return { token: createSessionToken(this.profile.username, secret), expiresAt };
@@ -151,7 +250,7 @@ export function createSocialUserClass(DurableObject) {
 
   async validateSession(secret) {
     if (!(await this.sessionValid(secret))) return json({ ok: false, error: "unauthorized" }, 401);
-    return json({ ok: true, profile: publicProfile(this.profile, this.presence) });
+    return json({ ok: true, profile: publicProfile(this.profile, this.presence), entitlements: entitlementsFor(this.profile.username) });
   }
 
   async logout(secret) {
@@ -176,12 +275,13 @@ export function createSocialUserClass(DurableObject) {
 
   async dashboard(secret) {
     if (!(await this.sessionValid(secret))) return json({ ok: false, error: "unauthorized" }, 401);
-    const [friends, incoming, outgoing, blocks, notificationsMap] = await Promise.all([
+    const [friends, incoming, outgoing, blocks, notificationsMap, storedProgress] = await Promise.all([
       this.listValues("friend:", SOCIAL_MAX_FRIENDS + 1),
       this.listValues("incoming:", SOCIAL_MAX_REQUESTS + 1),
       this.listValues("outgoing:", SOCIAL_MAX_REQUESTS + 1),
       this.listValues("block:", SOCIAL_MAX_FRIENDS + 1),
       this.ctx.storage.list({ prefix: "notification:", reverse: true, limit: SOCIAL_MAX_NOTIFICATIONS }),
+      this.ctx.storage.get("progress"),
     ]);
     const now = Date.now();
     const notifications = [...notificationsMap.values()]
@@ -197,7 +297,35 @@ export function createSocialUserClass(DurableObject) {
       blocks,
       notifications,
       unread: notifications.filter((x) => !x.read).length,
+      progress: storedProgress ? sanitizeProgress(storedProgress) : null,
+      entitlements: entitlementsFor(this.profile.username),
     });
+  }
+
+  async readProgress(secret) {
+    if (!(await this.sessionValid(secret))) return json({ ok: false, error: "unauthorized" }, 401);
+    const stored = await this.ctx.storage.get("progress");
+    return json({
+      ok: true,
+      progress: stored ? sanitizeProgress(stored) : null,
+      entitlements: entitlementsFor(this.profile.username),
+    });
+  }
+
+  async saveProgress(body) {
+    if (!(await this.sessionValid(body.secret))) return json({ ok: false, error: "unauthorized" }, 401);
+    const incoming = sanitizeProgress(body.progress);
+    const existingRaw = await this.ctx.storage.get("progress");
+    const existing = existingRaw ? sanitizeProgress(existingRaw) : null;
+    const expectedRevision = safeNumber(body.expectedRevision);
+    const currentRevision = safeNumber(existing?.serverRevision);
+    if (expectedRevision !== currentRevision) {
+      return json({ ok: false, error: "stale_revision", progress: existing, entitlements: entitlementsFor(this.profile.username) }, 409);
+    }
+    incoming.serverRevision = currentRevision + 1;
+    incoming.updatedAt = Date.now();
+    await this.ctx.storage.put("progress", incoming);
+    return json({ ok: true, progress: incoming, entitlements: entitlementsFor(this.profile.username) });
   }
 
   async updateSettings(body) {

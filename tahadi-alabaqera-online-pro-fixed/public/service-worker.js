@@ -1,7 +1,7 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
-const CACHE_NAME = 'busraj-games-v36-online-voice-fix-release';
+const CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
   '/',
@@ -13,6 +13,8 @@ const APP_SHELL = [
   '/league.html',
   '/matchmaking',
   '/social',
+  '/store',
+  '/store.html',
   '/snakes',
   '/dice',
   '/zahra',
@@ -27,6 +29,8 @@ const APP_SHELL = [
   '/auction',
   '/cipher',
   '/spotdiff',
+  '/letters',
+  '/accuracy',
   '/manifest.webmanifest',
   '/icon-192.png',
   '/icon-512.png',
@@ -36,6 +40,8 @@ const APP_SHELL = [
   '/assets/css/quiz-polish.css',
   '/assets/css/quiz-pro-overrides.css',
   '/assets/css/spotdiff-pro.css',
+  '/assets/css/store.css',
+  '/assets/css/match-presentation.css',
   '/assets/css/snake-arena-pro.css',
   '/assets/css/snakes-motion-pro.css',
   '/assets/css/board-fullscreen-pro.css',
@@ -65,6 +71,11 @@ const APP_SHELL = [
   '/assets/js/luxury-game-ui.js',
   '/assets/js/platform.js',
   '/assets/js/progression.js',
+  '/assets/js/store-catalog.js',
+  '/assets/js/store.js',
+  '/assets/js/bot-engine.js',
+  '/assets/js/board-matchmaking.js',
+  '/assets/js/match-presentation.js',
   '/assets/js/arcade-games.js',
   '/assets/js/memory-pro.js',
   '/assets/js/new-games.js',

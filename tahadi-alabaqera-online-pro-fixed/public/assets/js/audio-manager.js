@@ -3,6 +3,18 @@
   const defaults={muted:false,effects:true,timer:true,haptics:true,volume:.72};
   let settings={...defaults};
   try{settings={...defaults,...JSON.parse(localStorage.getItem(KEY)||localStorage.getItem('bs_audio_v2')||'{}')}}catch{}
+  const soundProfiles={
+    classic:{pitch:1,gain:1,rate:1,duration:1,noise:1,wave:null,filter:1},
+    arcade:{pitch:1.16,gain:1.06,rate:1.08,duration:.82,noise:.88,wave:'square',filter:1.35},
+    royal:{pitch:.94,gain:1.1,rate:.94,duration:1.18,noise:.72,wave:'triangle',filter:.82},
+    cyber:{pitch:1.3,gain:.96,rate:1.14,duration:.7,noise:1.2,wave:'sawtooth',filter:1.65},
+    calm:{pitch:.82,gain:.72,rate:.88,duration:1.35,noise:.45,wave:'sine',filter:.68},
+  };
+  function equippedSoundPack(){
+    let id='sound-classic';
+    try{id=window.TAHADI_PROGRESS?.read?.()?.equipped?.sound||JSON.parse(localStorage.getItem('tahadi-progress-v3')||'{}')?.equipped?.sound||id}catch{}
+    return soundProfiles[String(id).replace(/^sound-/,'')]||soundProfiles.classic;
+  }
   let ctx=null, unlocked=false, noiseCache=null;
   const samples={round:'assets/sounds/round.wav',reveal:'assets/sounds/reveal.wav',correct:'assets/sounds/correct.wav',wrong:'assets/sounds/wrong.wav',duel:'assets/sounds/duel.wav',launch:'assets/sounds/launch.wav'};
   const audio={};
@@ -10,9 +22,10 @@
   function save(){try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{};window.dispatchEvent(new CustomEvent('bs-audio-change',{detail:{...settings}}))}
   function ensure(){if(ctx)return ctx;const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();return ctx}
   async function unlock(){const c=ensure();if(c&&c.state==='suspended'){try{await c.resume()}catch{}}unlocked=true}
-  function tone(freq=440,duration=.055,gain=.045,type='sine',delay=0,endFreq=null){if(settings.muted)return;const c=ensure();if(!c)return;const t=c.currentTime+delay;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(endFreq&&o.frequency.exponentialRampToValueAtTime)o.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq),t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(c.destination);o.start(t);o.stop(t+duration+.02)}
+  function tone(freq=440,duration=.055,gain=.045,type='sine',delay=0,endFreq=null){if(settings.muted)return;const pack=equippedSoundPack();freq*=pack.pitch;duration*=pack.duration;gain*=pack.gain;if(pack.wave)type=pack.wave;if(endFreq)endFreq*=pack.pitch;const c=ensure();if(!c)return;const t=c.currentTime+delay;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(endFreq&&o.frequency.exponentialRampToValueAtTime)o.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq),t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(c.destination);o.start(t);o.stop(t+duration+.02)}
   function sequence(notes=[]){for(const n of notes)tone(...n)}
   function noise(duration=.08,gain=.035,delay=0,highpass=500){
+    const pack=equippedSoundPack();duration*=pack.duration;gain*=pack.noise;highpass*=pack.filter;
     const c=ensure();if(!c||!c.createBuffer||!c.createBufferSource)return;const sr=c.sampleRate||44100;
     if(!noiseCache||noiseCache.sampleRate!==sr){const b=c.createBuffer(1,Math.ceil(sr*.45),sr),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length*.38);noiseCache=b;noiseCache.sampleRate=sr}
     const t=c.currentTime+delay,src=c.createBufferSource(),g=c.createGain();src.buffer=noiseCache;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
@@ -35,7 +48,7 @@
   function snakeSwallow(){sequence([[240,.11,.032,'sine',0,165],[185,.13,.038,'triangle',.11,118],[130,.16,.044,'sine',.24,76]]);noise(.24,.022,.02,380)}
   function snakeGrow(){sequence([[92,.22,.045,'sine',0,68],[118,.25,.04,'triangle',.12,82],[158,.22,.027,'sine',.26,112]])}
   function snakeRelease(){noise(.08,.025,0,900);sequence([[210,.07,.025,'triangle',0,360],[420,.10,.026,'sine',.06,640]])}
-  function play(name,opts={}){if(settings.muted||!settings.effects)return;unlock();const a=audio[name];if(a){try{a.pause();a.currentTime=0;a.volume=Math.min(1,(opts.volume??.9)*settings.volume);a.play().catch(()=>{})}catch{};return}
+  function play(name,opts={}){if(settings.muted||!settings.effects)return;unlock();const a=audio[name];if(a){try{const pack=equippedSoundPack();a.pause();a.currentTime=0;a.playbackRate=pack.rate;a.volume=Math.min(1,(opts.volume??.9)*settings.volume*pack.gain);a.play().catch(()=>{})}catch{};return}
     const v4={boardStep,boardLand,diceImpact,ladderIgnite,ladderStep,ladderLand,snakeHiss,snakeBite,snakeSwallow,snakeGrow,snakeRelease};if(v4[name])return v4[name]();
     if(name==='dice')return luxuryDice();if(name==='move'||name==='step')return luxuryMove();if(name==='capture')return luxuryCapture();if(name==='snake'||name==='snakeSlide')return luxurySnake();if(name==='ladder'||name==='ladderClimb')return luxuryLadder();if(name==='win')return luxuryWin();
     const map={click:[560,.04,.02,'sine'],card:[430,.065,.028,'triangle'],select:[820,.055,.025,'sine'],buzzer:[170,.18,.06,'sawtooth'],error:[145,.16,.045,'triangle'],pop:[1040,.055,.022,'sine']};

@@ -1,13 +1,22 @@
-بوسراج للألعاب — SOCIAL PLATFORM 3.0
-طريقة النشر
+بوسراج للألعاب 5.1 — طريقة النشر الآمن
 
 1) فك ملف ZIP.
 2) افتح Terminal داخل المجلد الذي يحتوي package.json وwrangler.jsonc.
 3) نفذ: npm install --include=dev
 4) نفذ: npx wrangler login
-5) نفذ: npm run verify
-6) نفذ: npm run check:cloudflare
-7) إذا انتهى التحقق بدون أخطاء نفذ: npm run deploy
+5) أنشئ رمزًا سريًا عشوائيًا لا يقل عن 24 حرفًا، ثم خزّنه في Cloudflare فقط:
+   npx wrangler secret put BOSRAG_OWNER_SECRET
+6) نفذ: npm run verify
+7) نفذ: npm run check:cloudflare
+8) إذا انتهى التحقق دون أخطاء نفذ: npm run deploy
+
+تهيئة حساب المدير bosrag لأول مرة:
+- افتح صفحة «حسابي» واختر «حساب جديد».
+- اكتب اسم المستخدم: bosrag
+- سيظهر حقل «رمز تهيئة المدير»؛ أدخل نفس السر المحفوظ في Cloudflare.
+- بعد إنشاء الحساب لا تحتاج الرمز مرة أخرى؛ تسجيل الدخول المعتاد يكفي.
+- حساب bosrag الموجود مسبقًا لا يتأثر ويستمر تسجيل دخوله كالمعتاد.
+- لا تضع BOSRAG_OWNER_SECRET داخل wrangler.jsonc أو أي ملف يُرفع مع المشروع.
 
 بعد النشر افتح:
 /api/health
@@ -17,28 +26,31 @@ ok:true
 online:true
 quizOnline:true
 boardOnline:true
+matchmakingOnline:true
 socialOnline:true
-version:"3.0.1"
+version:"5.1.0"
 
 Cloudflare:
 - ROOMS -> GameRoom
 - BOARD_ROOMS -> BoardRoom
-- SOCIAL_USERS -> SocialUser
-- حافظ على migrations v1/v2/v3 وأضف v4-social-users فقط بعد v3.
+- MATCHMAKING -> MatchmakingRoom
+- الحسابات تستخدم BOARD_ROOMS في الإعداد الحالي؛ SOCIAL_USERS اختياري عند فصلها مستقبلًا.
+- حافظ على جميع migrations الموجودة في wrangler.jsonc ولا تعدّل ترتيبها.
 
 فحوص موصى بها بعد النشر:
-- حسابان: تسجيل -> طلب صداقة -> قبول -> Presence.
-- دعوة جاكارو/سباق الـ100/الزهرة/تحدي العباقرة من صديق لصديق.
-- رفض دعوة تحمل كود غرفة لعبة مختلفة أو غرفة بدأت بالفعل.
-- حظر/إلغاء حظر وخصوصية الدعوات.
-- اختبر reconnect ونقل الاستضافة للألعاب الحالية.
-- في جاكارو استخدم 4 جلسات للتأكد أن كل لاعب يرى أوراقه فقط.
+- سجل حسابين عاديين وتأكد أن اسم bosrag محجوز دون رمز المدير.
+- طلب صداقة -> قبول -> دعوة -> دخول الغرفة.
+- جرّب المطابقة السريعة: لاعب حقيقي أولًا، ثم BOT بعد 12 ثانية عند عدم وجود منافس.
+- جرّب المستوى المتوسط والمحترف في كل الألعاب.
+- أكمل مباراة أونلاين ثم حدّث الصفحة وتأكد أن المكافأة لا تتكرر.
+- اختبر المتجر والحفظ على جهازين بالحساب نفسه.
+- في جاكارو استخدم 4 جلسات وتأكد أن كل لاعب يرى أوراقه فقط.
 
 PWA:
-App shell cache = busraj-games-v14
+App shell cache = busraj-games-v38-secure-bots-store-progression
 Quiz media cache = busraj-quiz-media-v3
 
 مهم:
 - انشر المشروع كاملًا وليس public فقط.
-- لا تحذف migrations الموجودة في wrangler.jsonc.
-- في مسار ZIP، merge-worker-config.mjs يسمح فقط بإضافة Durable Object migrations آمنة Append-only.
+- تقدم الألعاب الفردية محلي أولًا، ثم يزامن مع الحساب عند توفر الاتصال.
+- امتيازات المدير تُصدر من الخادم فقط للحساب المحجوز bosrag.

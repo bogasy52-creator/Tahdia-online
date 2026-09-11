@@ -19,6 +19,7 @@
         <span class="bs-brand-copy"><b>تحدي العباقرة</b><span>العب. نافس. ارتقِ.</span></span>
       </a>
       <div class="bs-actions hub-actions">
+        <a class="bs-icon-btn" href="/store" aria-label="المتجر">🛍</a>
         <a class="bs-icon-btn" href="/social" data-social-open aria-label="الأصدقاء">♟</a>
         <button class="bs-icon-btn" data-audio-toggle aria-label="كتم الصوت">◖</button>
         <button class="bs-icon-btn" data-settings-open aria-label="الإعدادات">⚙</button>
@@ -32,6 +33,7 @@
       <a href="/matchmaking"><span aria-hidden="true">⚡</span> لعب سريع</a>
       <a href="/online"><span aria-hidden="true">🔒</span> غرف خاصة</a>
       <a href="#tournaments"><span aria-hidden="true">✦</span> البطولات</a>
+      <a href="/store"><span aria-hidden="true">🛍</span> المتجر</a>
       <a href="#profile"><span aria-hidden="true">◉</span> ملفي</a>
       <a href="/social">👥 الأصدقاء</a>
     </nav>
@@ -138,11 +140,6 @@
           <div><h3>جاكارو</h3><p>خطة، بطاقات، وقرارات جماعية في كل دور.</p></div>
           <div class="hub-game-foot"><span class="hub-game-note">استراتيجية · فريق</span><span aria-hidden="true">←</span></div>
         </a>
-        <a class="hub-game" href="/domino">
-          <div class="hub-game-top"><span class="hub-game-icon" aria-hidden="true">🁫</span><span class="bs-chip">جديد</span></div>
-          <div><h3>دومينو فاخر</h3><p>طاولة خضراء فاخرة، لعب فردي ضد بوت أو أونلاين حتى 4 لاعبين.</p></div>
-          <div class="hub-game-foot"><span class="hub-game-note">كلاسيكي · بوت</span><span aria-hidden="true">←</span></div>
-        </a>
       </div>
     </section>
 
@@ -158,6 +155,7 @@
     </section>
 
     <section class="hub-section hub-quick-strip quick-strip" aria-label="اختصارات">
+      <a class="hub-quick" href="/store"><span class="hub-game-icon" aria-hidden="true">🛍</span><span><b>متجر العباقرة</b><span>شخصيات وطاولات ومؤثرات</span></span></a>
       <a class="hub-quick" href="/social"><span class="hub-game-icon" aria-hidden="true">♟</span><span><b>الأصدقاء</b><span>دعوات وغرف خاصة</span></span></a>
       <a class="hub-quick" href="/matchmaking"><span class="hub-game-icon" aria-hidden="true">⚔</span><span><b>مواجهة سريعة</b><span>مطابقة تلقائية</span></span></a>
       <a class="hub-quick" href="/local"><span class="hub-game-icon" aria-hidden="true">⌁</span><span><b>تحدي الأسئلة</b><span>فئات وصوت وصورة</span></span></a>
@@ -170,6 +168,7 @@
     <a class="active" href="./"><span aria-hidden="true">⌂</span><span>الرئيسية</span></a>
     <a href="#games"><span aria-hidden="true">◈</span><span>الألعاب</span></a>
     <a href="/matchmaking"><span aria-hidden="true">⚡</span><span>لعب سريع</span></a>
+    <a href="/store"><span aria-hidden="true">🛍</span><span>المتجر</span></a>
     <a href="#profile"><span aria-hidden="true">◉</span><span>ملفي</span></a>
     <a href="/social"><span aria-hidden="true">♟</span><span>الأصدقاء</span></a>
   </nav>
@@ -177,6 +176,7 @@
   <div class="bs-toast"></div>
   <script src="assets/js/audio-manager.js"></script>
   <script src="assets/js/platform.js"></script>
+  <script src="assets/js/store-catalog.js"></script>
   <script src="assets/js/progression.js"></script>
   <script src="assets/js/social-client.js"></script>
   <script>
@@ -188,8 +188,9 @@
     setText('winsText', progress.wins || 0);
     setText('gamesText', progress.games || 0);
     setText('bestText', progress.bestScore || 0);
-    setText('coinsText', progress.coins || 0);
-    setText('avatar', (progress.name || 'ل').slice(0, 1));
+    setText('coinsText', window.TAHADI_PROGRESS?.balanceLabel?.(progress) || progress.coins || 0);
+    const equippedAvatar = window.TAHADI_PROGRESS?.item?.(progress.equipped?.avatar);
+    setText('avatar', equippedAvatar?.preview || (progress.name || 'ل').slice(0, 1));
     setText('titleText', (progress.titles || ['بداية العباقرة']).at(-1));
     setText('rankText', progress.level >= 15 ? 'GOLD' : progress.level >= 8 ? 'SILVER' : 'BRONZE');
     const xpBar = document.getElementById('xpBar');

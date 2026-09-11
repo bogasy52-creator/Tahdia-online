@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070913">
+  <meta name="description" content="متجر تحدي العباقرة — شخصيات وطاولات ومؤثرات وصوتيات بعملة اللعب">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="assets/css/platform.css">
+  <link rel="stylesheet" href="assets/css/store.css">
+  <title>متجر العباقرة</title>
+</head>
+<body class="bs-page store-page">
+  <main class="store-shell">
+    <header class="bs-topbar store-top">
+      <a class="bs-brand" href="/"><span class="bs-mark">✦</span><span class="bs-brand-copy"><b>متجر العباقرة</b><span>هويتك داخل كل مواجهة</span></span></a>
+      <div class="bs-actions">
+        <span id="shopOwnerBadge" class="owner-badge hidden">حساب المدير · الكل مفتوح</span>
+        <div class="store-wallet" aria-label="رصيد العملات"><i>🪙</i><span><b id="shopBalance">500</b><small>عملات العباقرة</small></span></div>
+        <button class="bs-icon-btn" data-audio-toggle aria-label="كتم الصوت">◖</button>
+        <a class="bs-icon-btn" href="/" aria-label="الرئيسية">⌂</a>
+      </div>
+    </header>
+
+    <section class="store-hero">
+      <div><span class="section-kicker">BUSRAJ COLLECTION · الموسم الخامس</span><h1>اصنع حضورك.<span>قبل أول حركة.</span></h1><p>اجمع العملات من اللعب، اختر شخصيتك وطاولتك، وادخل المواجهة باحتفال يناسب أسلوبك. كل العناصر تجميلية ولا تمنح أفضلية في اللعب.</p></div>
+      <div class="store-profile-card"><div class="store-profile-orb">♛</div><div><small>ملف اللاعب</small><b id="shopPlayer">لاعب العباقرة</b><small>المستوى <span id="shopLevel">1</span> · يتزامن مع حسابك</small></div></div>
+    </section>
+
+    <section class="store-layout">
+      <div class="store-main">
+        <nav class="shop-tabs" aria-label="فئات المتجر">
+          <button class="shop-tab active" type="button" data-category="featured">مختارات اليوم</button>
+          <button class="shop-tab" type="button" data-category="avatar">الشخصيات</button>
+          <button class="shop-tab" type="button" data-category="frame">الإطارات</button>
+          <button class="shop-tab" type="button" data-category="table">الطاولات</button>
+          <button class="shop-tab" type="button" data-category="entrance">الدخول</button>
+          <button class="shop-tab" type="button" data-category="victory">احتفالات الفوز</button>
+          <button class="shop-tab" type="button" data-category="sound">الصوتيات</button>
+        </nav>
+        <div id="shopGrid" class="shop-grid"></div>
+
+        <section id="dailyReward" class="reward-card"></section>
+        <div class="store-section-head"><div><span class="section-kicker">تتجدد كل اثنين</span><h2>المهام الأسبوعية</h2><p>العب بطريقتك واجمع مكافآت إضافية.</p></div></div>
+        <section id="weeklyMissions" class="mission-list"></section>
+
+        <div class="store-section-head"><div><span class="section-kicker">آخر العمليات</span><h2>سجل المشتريات</h2></div></div>
+        <ul id="purchaseHistory" class="history-list"></ul>
+      </div>
+      <aside class="store-aside"><section id="shopPreview" class="store-preview" aria-label="معاينة العنصر"></section></aside>
+    </section>
+
+    <footer class="store-footer">جميع العناصر تجميلية · <a href="/">العودة إلى الألعاب</a></footer>
+  </main>
+  <div id="shopLive" class="sr-only" aria-live="polite"></div>
+  <div class="bs-toast"></div>
+  <script src="assets/js/audio-manager.js"></script>
+  <script src="assets/js/platform.js"></script>
+  <script src="assets/js/store-catalog.js"></script>
+  <script src="assets/js/progression.js"></script>
+  <script src="assets/js/social-client.js"></script>
+  <script src="assets/js/store.js"></script>
+</body>
+</html>

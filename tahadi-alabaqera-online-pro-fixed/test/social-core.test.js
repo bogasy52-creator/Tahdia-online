@@ -42,8 +42,10 @@ test('password hashing verifies correct password and rejects wrong password', as
 
 test('game invites only accept currently online room games', () => {
   assert.equal(normalizeGame('JACKAROO'), 'jackaroo');
+  assert.equal(normalizeGame('spotdiff'), 'spotdiff');
   assert.equal(normalizeGame('dice'), '');
   assert.equal(normalizeRoomCode('12-34 56'), '123456');
   assert.equal(gameJoinPath('quiz', '123456'), '/online?room=123456');
   assert.equal(gameJoinPath('snakes', '654321'), '/snakes?room=654321');
+  assert.equal(gameJoinPath('spotdiff', '112233'), '/spotdiff?room=112233');
 });

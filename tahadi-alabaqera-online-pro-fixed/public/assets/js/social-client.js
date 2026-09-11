@@ -1,7 +1,7 @@
 (() => {
   const STORAGE_KEY = 'bs_social_session';
   const PROFILE_KEY = 'bs_social_profile';
-  const state = { token: '', profile: null, dashboard: null, socket: null, reconnectTimer: null, reconnectAttempt: 0, manualClose: false };
+  const state = { token: '', profile: null, dashboard: null, socket: null, reconnectTimer: null, reconnectAttempt: 0, manualClose: false, syncTimer: null, syncing: false };
   const events = new EventTarget();
 
   function readStorage(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
@@ -13,11 +13,17 @@
     if (!state.profile) state.profile = parseJson(readStorage(PROFILE_KEY));
     return state.profile;
   }
-  function setSession(nextToken, profile) {
+  function applyAccountData(data = {}) {
+    const profile = data.profile || state.profile || cachedProfile();
+    window.TAHADI_PROGRESS?.setEntitlements?.({ ...(data.entitlements || {}), username: profile?.username || '' });
+    if (data.progress && window.TAHADI_PROGRESS?.merge) window.TAHADI_PROGRESS.merge(data.progress);
+  }
+  function setSession(nextToken, profile, entitlements = null) {
     state.token = String(nextToken || '');
     state.profile = profile || null;
     writeStorage(STORAGE_KEY, state.token);
     writeStorage(PROFILE_KEY, state.profile ? JSON.stringify(state.profile) : '');
+    applyAccountData({ profile: state.profile, entitlements: entitlements || { owner: false, infiniteCoins: false, unlockAll: false } });
     decorate();
   }
 
@@ -35,20 +41,21 @@
     if (!response.ok || data.ok === false) {
       const error = new Error(data.error || 'تعذر تنفيذ الطلب');
       error.status = response.status;
+      error.data = data;
       throw error;
     }
     return data;
   }
 
-  async function signup({ username, displayName, password }) {
-    const data = await api('/api/social/signup', { method: 'POST', body: JSON.stringify({ username, displayName, password }) });
-    setSession(data.token, data.profile);
+  async function signup({ username, displayName, password, ownerSecret = '' }) {
+    const data = await api('/api/social/signup', { method: 'POST', body: JSON.stringify({ username, displayName, password, ...(ownerSecret ? { ownerSecret } : {}) }) });
+    setSession(data.token, data.profile, data.entitlements);
     connectRealtime();
     return data;
   }
   async function login({ username, password }) {
     const data = await api('/api/social/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-    setSession(data.token, data.profile);
+    setSession(data.token, data.profile, data.entitlements);
     connectRealtime();
     return data;
   }
@@ -65,9 +72,41 @@
     state.dashboard = data;
     state.profile = data.profile;
     writeStorage(PROFILE_KEY, JSON.stringify(data.profile || null));
+    applyAccountData(data);
     decorate(data);
     return data;
   }
+  async function uploadProgress() {
+    if (!token() || state.syncing || !window.TAHADI_PROGRESS?.read) return null;
+    state.syncing = true;
+    try {
+      const snapshot = window.TAHADI_PROGRESS.read();
+      const data = await api('/api/social/progress', {
+        method: 'PUT',
+        body: JSON.stringify({ progress: snapshot, expectedRevision: Number(snapshot.serverRevision || 0) }),
+      });
+      applyAccountData({ profile: state.profile, entitlements: data.entitlements });
+      window.TAHADI_PROGRESS?.acknowledgeServer?.(data.progress);
+      if (data.progress && Number(data.progress.revision) > Number(window.TAHADI_PROGRESS.read().revision || 0)) {
+        window.TAHADI_PROGRESS.merge(data.progress);
+      }
+      return data;
+    } catch (error) {
+      if (error.status === 409 && error.data?.progress && window.TAHADI_PROGRESS?.merge) {
+        window.TAHADI_PROGRESS.merge(error.data.progress);
+        queueProgressSync(120);
+      }
+      return null;
+    } finally {
+      state.syncing = false;
+    }
+  }
+  function queueProgressSync(delay = 320) {
+    if (!token()) return;
+    clearTimeout(state.syncTimer);
+    state.syncTimer = setTimeout(() => { state.syncTimer = null; uploadProgress(); }, delay);
+  }
+  function syncProgress() { return uploadProgress(); }
   async function user(username) { return api(`/api/social/users/${encodeURIComponent(String(username || '').trim())}`); }
   async function requestFriend(username) { const data = await api('/api/social/friends/request', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function respondFriend(username, accept) { const data = await api('/api/social/friends/respond', { method: 'POST', body: JSON.stringify({ username, accept }) }); state.dashboard = null; return data; }
@@ -93,7 +132,7 @@
     const title = document.createElement('b');
     title.textContent = `🎮 دعوة من ${notification.from?.displayName || notification.from?.username || 'صديق'}`;
     const sub = document.createElement('span');
-    const labels = { quiz: 'تحدي العباقرة', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة' };
+    const labels = { quiz: 'تحدي العباقرة', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة', spotdiff: 'فرق تعرف' };
     sub.textContent = `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}`;
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';
@@ -203,10 +242,11 @@
 
   const apiPublic = {
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
-    settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
+    settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker, syncProgress,
     isLoggedIn: () => Boolean(token()), profile: () => cachedProfile(), events,
   };
   window.BS_SOCIAL = apiPublic;
+  window.addEventListener('tahadi-progress', () => queueProgressSync());
   decorate();
   if (token()) {
     connectRealtime();

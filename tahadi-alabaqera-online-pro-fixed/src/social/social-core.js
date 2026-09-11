@@ -3,7 +3,7 @@ export const SOCIAL_MAX_FRIENDS = 100;
 export const SOCIAL_MAX_REQUESTS = 100;
 export const SOCIAL_MAX_NOTIFICATIONS = 60;
 export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
-export const SOCIAL_ONLINE_GAMES = new Set(["quiz", "jackaroo", "snakes", "zahra"]);
+export const SOCIAL_ONLINE_GAMES = new Set(["quiz", "jackaroo", "snakes", "zahra", "spotdiff"]);
 
 export function normalizeUsername(value) {
   return String(value || "").normalize("NFKC").trim().toLowerCase().replace(/\s+/g, "");

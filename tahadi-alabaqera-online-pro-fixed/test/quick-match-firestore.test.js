@@ -24,6 +24,7 @@ test('matchmaking atomically claims a waiting player and redirects both players 
   assert.match(match, /status:\s*"matched"/);
   assert.match(match, /quickMatch/);
   assert.match(match, /onSnapshot\(ownRef/);
+  assert.match(match, /data\?\.status\s*===\s*"matched"\s*&&\s*data\?\.matchId/);
 });
 
 test('firebase identity supports account or stable automatic guest name', () => {

@@ -1,7 +1,9 @@
 const params = new URLSearchParams(location.search);
 const matchId = params.get("quickMatch") || params.get("match") || "";
+const botMode = params.get("bot") === "1";
 const byId = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let activeBotGame = null;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -67,6 +69,15 @@ function showToast(message) {
 }
 
 async function updateIdentityLabel() {
+  if (botMode) {
+    const difficulty = window.TAHADI_BOT?.resolveDifficulty?.(params.get("difficulty") || "auto", window.TAHADI_PROGRESS?.read?.()?.level || 1) || "medium";
+    const label = byId("quickIdentity");
+    if (label) label.textContent = `منافسك: BOT • ${window.TAHADI_BOT?.profile?.(difficulty)?.label || "متوسط"}`;
+    const net = byId("net"), netText = byId("netText");
+    if (net) net.className = "net ok";
+    if (netText) netText.textContent = "وضع البوت جاهز";
+    return;
+  }
   try {
     const fb = await waitForFirebase();
     const identity = await fb.ensureIdentity();
@@ -82,7 +93,9 @@ async function updateIdentityLabel() {
 }
 updateIdentityLabel();
 
-if (!matchId) {
+if (botMode) {
+  startBotMatch();
+} else if (!matchId) {
   // الصفحة العادية للغرف واللعب السريع؛ لا نشغّل محرك المباراة هنا.
 } else {
   startQuickMatch().catch((error) => {
@@ -96,6 +109,163 @@ if (!matchId) {
     if (status) status.textContent = error?.message || "خطأ اتصال";
     byId("qmChoices")?.replaceChildren();
   });
+}
+
+function clearBotTimers(game) {
+  if (!game) return;
+  clearInterval(game.tick);
+  clearTimeout(game.deadlineTimer);
+  clearTimeout(game.botTimer);
+  clearTimeout(game.nextTimer);
+}
+
+function renderBotPlayers(game) {
+  const box = byId("qmPlayers");
+  if (!box) return;
+  box.innerHTML = [game.me, game.bot].map((player) => `
+    <div class="qm-player ${player.id === game.me.id ? "me" : "bot"}">
+      <div><span class="qm-avatar">${player.id === game.bot.id ? "🤖" : escapeHtml((player.name || "؟").slice(0, 1))}</span><b>${escapeHtml(player.name)}${player.id === game.me.id ? " • أنت" : ""}</b></div>
+      <strong>${Number(game.scores[player.id] || 0)}</strong>
+    </div>`).join("");
+}
+
+function startBotMatch() {
+  clearBotTimers(activeBotGame);
+  const difficulty = window.TAHADI_BOT?.resolveDifficulty?.(
+    params.get("difficulty") || window.TAHADI_PROGRESS?.botDifficulty?.() || "auto",
+    window.TAHADI_PROGRESS?.read?.()?.level || 1,
+  ) || "medium";
+  const profile = window.TAHADI_BOT?.profile?.(difficulty) || { label: difficulty === "pro" ? "محترف" : "متوسط" };
+  const progress = window.TAHADI_PROGRESS?.read?.() || {};
+  const ids = randomQuestionIds(10);
+  if (!ids.length) return failArena("لا توجد أسئلة نصية متاحة");
+  const me = { id: "local-player", name: progress.name || "لاعب العباقرة" };
+  const bot = { id: "local-bot", name: `BOT • ${profile.label}` };
+  activeBotGame = {
+    me, bot, difficulty, questionIds: ids, index: 0,
+    scores: { [me.id]: 0, [bot.id]: 0 },
+    correctCounts: { [me.id]: 0, [bot.id]: 0 },
+    awarded: false, tick: null, deadlineTimer: null, botTimer: null, nextTimer: null,
+  };
+  byId("entry")?.classList.add("hidden");
+  byId("room")?.classList.add("hidden");
+  byId("quickArena")?.classList.remove("hidden");
+  byId("qmFinished")?.classList.add("hidden");
+  byId("qmGameCard")?.classList.remove("hidden");
+  const net = byId("net"), netText = byId("netText");
+  if (net) net.className = "net ok";
+  if (netText) netText.textContent = `مواجهة BOT • ${profile.label}`;
+  renderBotRound(activeBotGame);
+}
+
+function renderBotRound(game) {
+  clearBotTimers(game);
+  if (game.index >= game.questionIds.length) return finishBotMatch(game);
+  const q = questionMap.get(game.questionIds[game.index]);
+  if (!q) { game.index += 1; return renderBotRound(game); }
+  const category = categoryByQuestion.get(q.id);
+  const choices = seededChoices(q);
+  const startedAt = performance.now();
+  const deadlineAt = Date.now() + 15_000;
+  const answers = {};
+  let roundDone = false;
+  renderBotPlayers(game);
+  byId("qmRound").textContent = `${game.index + 1} / ${game.questionIds.length}`;
+  byId("qmStatus").textContent = "اختر الإجابة — البوت يفكر الآن";
+  byId("qmMeta").innerHTML = `<span class="pill">${escapeHtml(category?.name || "عشوائي")}</span><span class="pill gold">${Number(q.v || 100)} نقطة</span>`;
+  byId("qmQuestion").textContent = q.q;
+  byId("qmReveal").classList.add("hidden");
+  const choicesBox = byId("qmChoices");
+  choicesBox.innerHTML = "";
+
+  const scoreAnswer = (player, choice, answeredAt) => {
+    const correct = choice === q.a;
+    const elapsed = Math.max(0, answeredAt - startedAt);
+    const speed = correct ? Math.max(0, Math.min(50, Math.round((15_000 - elapsed) / 1000 * 2))) : 0;
+    const gain = correct ? Number(q.v || 100) + speed : 0;
+    game.scores[player.id] += gain;
+    game.correctCounts[player.id] += correct ? 1 : 0;
+    return { correct, gain, choice };
+  };
+
+  const finishRound = () => {
+    if (roundDone) return;
+    roundDone = true;
+    clearInterval(game.tick);
+    clearTimeout(game.deadlineTimer);
+    clearTimeout(game.botTimer);
+    if (!answers[game.me.id]) answers[game.me.id] = scoreAnswer(game.me, null, performance.now());
+    if (!answers[game.bot.id]) answers[game.bot.id] = scoreAnswer(game.bot, null, performance.now());
+    choicesBox.querySelectorAll("button").forEach((button) => {
+      button.disabled = true;
+      if (button.textContent === q.a) button.classList.add("correct");
+    });
+    byId("qmTimer").textContent = "✓";
+    byId("qmBar").style.width = "100%";
+    const reveal = byId("qmReveal");
+    reveal.classList.remove("hidden");
+    reveal.innerHTML = `<div class="answer">الإجابة: ${escapeHtml(q.a)}</div><div class="qm-result-note">${answers[game.me.id].correct ? `✅ أنت +${answers[game.me.id].gain}` : "❌ إجابتك غير صحيحة"} · ${answers[game.bot.id].correct ? `🤖 BOT +${answers[game.bot.id].gain}` : "🤖 أخطأ BOT"}</div>`;
+    byId("qmStatus").textContent = "الجولة التالية تبدأ تلقائيًا";
+    renderBotPlayers(game);
+    try { window.BS_AUDIO?.play?.(answers[game.me.id].correct ? "correct" : "wrong"); } catch {}
+    game.nextTimer = setTimeout(() => { game.index += 1; renderBotRound(game); }, 2200);
+  };
+
+  const maybeFinish = () => {
+    if (answers[game.me.id] && answers[game.bot.id]) setTimeout(finishRound, 260);
+  };
+  for (const choice of choices) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice";
+    button.textContent = choice;
+    button.addEventListener("click", () => {
+      if (roundDone || answers[game.me.id]) return;
+      answers[game.me.id] = scoreAnswer(game.me, choice, performance.now());
+      choicesBox.querySelectorAll("button").forEach((item) => { item.disabled = true; });
+      button.classList.add("selected");
+      byId("qmStatus").textContent = "تم تسجيل إجابتك — BOT يكمل قراره";
+      maybeFinish();
+    });
+    choicesBox.appendChild(button);
+  }
+
+  const correctIndex = choices.indexOf(q.a);
+  game.botTimer = setTimeout(() => {
+    if (roundDone) return;
+    const picked = window.TAHADI_BOT?.chooseQuizAnswer?.(correctIndex, choices.length, game.difficulty) ?? correctIndex;
+    answers[game.bot.id] = scoreAnswer(game.bot, choices[picked], performance.now());
+    maybeFinish();
+  }, window.TAHADI_BOT?.thinkDelay?.(game.difficulty) || 900);
+  game.deadlineTimer = setTimeout(finishRound, 15_050);
+  const updateTimer = () => {
+    const left = Math.max(0, deadlineAt - Date.now());
+    byId("qmTimer").textContent = String(Math.ceil(left / 1000));
+    byId("qmBar").style.width = `${Math.max(0, Math.min(100, left / 15_000 * 100))}%`;
+  };
+  updateTimer();
+  game.tick = setInterval(updateTimer, 180);
+}
+
+function finishBotMatch(game) {
+  clearBotTimers(game);
+  byId("qmGameCard")?.classList.add("hidden");
+  byId("qmFinished")?.classList.remove("hidden");
+  renderBotPlayers(game);
+  const won = game.scores[game.me.id] >= game.scores[game.bot.id];
+  byId("qmWinner").textContent = won ? `🏆 ${game.me.name}` : `🤖 ${game.bot.name}`;
+  const list = byId("qmFinalScores");
+  const ranked = [game.me, game.bot].sort((a, b) => game.scores[b.id] - game.scores[a.id]);
+  if (list) list.innerHTML = ranked.map((player, index) => `
+    <div class="qm-rank-row ${player.id === game.me.id ? "me" : ""}">
+      <span><b>${index === 0 ? "🥇" : "🥈"} ${escapeHtml(player.name)}</b><small>${game.correctCounts[player.id]} إجابة صحيحة</small></span>
+      <strong>${game.scores[player.id]}</strong>
+    </div>`).join("");
+  if (!game.awarded) {
+    game.awarded = true;
+    window.TAHADI_PROGRESS?.award?.({ game: "quiz", score: game.scores[game.me.id], win: won });
+  }
+  try { window.BS_AUDIO?.play?.(won ? "win" : "wrong"); } catch {}
 }
 
 async function startQuickMatch() {
@@ -439,6 +609,7 @@ function renderFinished(game) {
   const second = ranked[1];
   const topScore = top ? Number(data.scores?.[top.id] || 0) : 0;
   const tied = second && Number(data.scores?.[second.id] || 0) === topScore;
+  const won = Array.isArray(data.winnerIds) && data.winnerIds.includes(game.me.id) && !tied;
   byId("qmWinner").textContent = tied ? "🤝 تعادل" : top ? `🏆 ${top.name}` : "انتهت المباراة";
   const list = byId("qmFinalScores");
   if (list) list.innerHTML = ranked.map((p, i) => `
@@ -446,7 +617,11 @@ function renderFinished(game) {
       <span><b>${i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"} ${escapeHtml(p.name)}</b><small>${Number(data.correctCounts?.[p.id] || 0)} إجابة صحيحة</small></span>
       <strong>${Number(data.scores?.[p.id] || 0)}</strong>
     </div>`).join("");
-  try { window.BS_AUDIO?.play?.(tied ? "reveal" : "win"); } catch {}
+  if (!game.awarded) {
+    game.awarded = true;
+    window.TAHADI_PROGRESS?.award?.({ game: "quiz", score: Number(data.scores?.[game.me.id] || 0), win: won, eventId: `online:quiz:${matchId}:${game.me.id}` });
+  }
+  try { window.BS_AUDIO?.play?.(tied ? "reveal" : won ? "win" : "wrong"); } catch {}
 }
 
 function failArena(message) {
@@ -461,6 +636,7 @@ function failArena(message) {
 byId("qmPlayAgain")?.addEventListener("click", () => {
   byId("qmFinished")?.classList.add("hidden");
   byId("qmGameCard")?.classList.remove("hidden");
-  window.TahdiaMatchmaking?.join?.();
+  if (botMode) startBotMatch();
+  else window.TahdiaMatchmaking?.join?.();
 });
 byId("qmHome")?.addEventListener("click", () => { location.href = "/"; });
