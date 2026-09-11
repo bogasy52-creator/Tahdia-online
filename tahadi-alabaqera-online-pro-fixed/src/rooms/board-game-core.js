@@ -8,18 +8,20 @@ function cleanName(value, fallback = 'لاعب') {
   return String(value || fallback).trim().replace(/[<>]/g, '').slice(0, 20) || fallback;
 }
 
-export function boardRoomCapacity(gameType) {
+export function boardRoomCapacity(gameType, mode = 'standard') {
   if (!TYPES.has(gameType)) throw new Error('invalid_game_type');
-  return 4;
+  return mode === 'elimination8' ? 8 : 4;
 }
 
-export function createBoardRoom({ code, hostKey, gameType, now = Date.now() }) {
+export function createBoardRoom({ code, hostKey, gameType, mode = 'standard', now = Date.now() }) {
   if (!/^\d{6}$/.test(String(code || ''))) throw new Error('invalid_room_code');
   if (!TYPES.has(gameType)) throw new Error('invalid_game_type');
   return {
     code: String(code),
     hostKey: String(hostKey || ''),
     gameType,
+    mode,
+    elimination: mode === 'elimination8' ? { round: 1, alive: [], spectators: [] } : null,
     createdAt: now,
     updatedAt: now,
     expiresAt: now + DAY,
@@ -33,7 +35,7 @@ export function createBoardRoom({ code, hostKey, gameType, now = Date.now() }) {
 
 export function addBoardPlayer(room, { id, token, name, role = 'guest', now = Date.now() }) {
   if (!room || room.status !== 'lobby') throw new Error('match_started');
-  if (room.order.length >= boardRoomCapacity(room.gameType)) throw new Error('room_full');
+  if (room.order.length >= boardRoomCapacity(room.gameType, room.mode)) throw new Error('room_full');
   const playerId = String(id || '');
   const reconnectToken = String(token || '');
   if (!playerId || !reconnectToken) throw new Error('player_identity_required');
@@ -46,6 +48,8 @@ export function addBoardPlayer(room, { id, token, name, role = 'guest', now = Da
     seat: room.order.length,
     ready: false,
     connected: false,
+    eliminated: false,
+    spectator: false,
   };
   room.players[playerId] = player;
   room.order.push(playerId);
@@ -64,12 +68,16 @@ export function setBoardReady(room, playerId, ready, now = Date.now()) {
 
 export function canStartBoardMatch(room) {
   const count = room.order.length;
-  const enough = room.gameType === 'snakes' ? count >= 2 && count <= 4 : count === 4;
+  const enough = room.mode === 'elimination8' ? count >= 2 && count <= 8 : (room.gameType === 'snakes' ? count >= 2 && count <= 4 : count === 4);
   return enough && room.order.every((id) => room.players[id]?.ready);
 }
 
 export function startBoardMatch(room, rng = Math.random, now = Date.now()) {
   if (!room || room.status !== 'lobby') throw new Error('not_in_lobby');
+  if (room.mode === 'elimination8') {
+    if (room.order.length < 2 || room.order.length > 8) throw new Error('elimination_requires_2_to_8_players');
+    room.elimination.alive = [...room.order];
+  }
   if (room.gameType === 'snakes') {
     if (room.order.length < 2 || room.order.length > 4) throw new Error('snakes_requires_2_to_4_players');
   } else if (room.order.length !== 4) {
@@ -106,6 +114,20 @@ export function applyBoardCommand(room, playerId, message, rng = Math.random, no
   const finished = room.gameType === 'snakes'
     ? room.game.winner !== null
     : room.game.winnerTeam !== null;
+  if (room.mode === 'elimination8' && finished) {
+    const alive = room.order.filter((id) => !room.players[id].eliminated);
+    if (alive.length > 1) {
+      const removed = alive[alive.length - 1];
+      room.players[removed].eliminated = true;
+      room.players[removed].spectator = true;
+      room.elimination.alive = alive.filter((id) => id !== removed);
+      room.elimination.spectators.push(removed);
+      room.elimination.round += 1;
+      room.status = 'lobby';
+      room.game = null;
+      return { event: { type: 'player_eliminated', playerId: removed }, finished: false };
+    }
+  }
   if (finished) {
     room.status = 'finished';
     room.expiresAt = now + DAY;
@@ -134,6 +156,8 @@ function publicPlayers(room) {
       seat: p.seat,
       ready: Boolean(p.ready),
       connected: Boolean(p.connected),
+      eliminated: Boolean(p.eliminated),
+      spectator: Boolean(p.spectator),
     };
   });
 }

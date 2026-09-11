@@ -555,6 +555,7 @@ export class GameRoom extends DurableObject {
         recentQids: [],
         winnerId: null,
         mode: [4,6,8].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
+        eliminationMode: Boolean(body.eliminationMode),
         teamMode: normalizeTeamMode(body.teamMode, body.playerLimit),
         teamNames: { A: cleanName(body.teamA || "العباقرة الذهبي"), B: cleanName(body.teamB || "العباقرة البنفسجي") },
         teamPowers: { A: { hint: 1, combo: 1, revive: 1 }, B: { hint: 1, combo: 1, revive: 1 } },
@@ -670,6 +671,8 @@ export class GameRoom extends DurableObject {
       connected: true,
       disconnectedAt: null,
       powers: { double: true, time: true, block: true },
+      eliminated: false,
+      spectator: false,
     };
     this.room.players[id] = p;
     this.room.order.push(id);
