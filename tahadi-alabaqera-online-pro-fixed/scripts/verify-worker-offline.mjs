@@ -43,7 +43,11 @@ await writeFile(tmpPath, source.replace('from "cloudflare:workers"', 'from "../s
 
 try {
   const mod = await import(pathToFileURL(tmpPath).href + `?v=${Date.now()}`);
-  const assets = { fetch: async (request) => new Response(`asset:${new URL(request.url).pathname}`) };
+  const assets = { fetch: async (request) => {
+    const url = new URL(request.url);
+    if (url.pathname === '/online') return new Response('', { status: 404 });
+    return new Response(`asset:${url.pathname}${url.search}`);
+  } };
   const binding = {};
   const env = { ROOMS: binding, BOARD_ROOMS: binding, ASSETS: assets };
 
@@ -52,7 +56,7 @@ try {
   let body = await response.json();
   assert.equal(body.ok, true);
   assert.equal(body.online, true);
-  assert.equal(body.version, '5.3.0');
+  assert.equal(body.version, '5.3.1');
   assert.equal(body.matchmakingOnline, false);
   assert.equal(body.socialOnline, true);
 
@@ -64,6 +68,10 @@ try {
 
   response = await mod.default.fetch(new Request('https://game.test/index.html'), env);
   assert.equal(await response.text(), 'asset:/index.html');
+
+  response = await mod.default.fetch(new Request('https://game.test/online?quickMatch=match-123'), env);
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'asset:/online.html?quickMatch=match-123');
 
   response = await mod.default.fetch(new Request('https://game.test/api/health', {
     headers: { Origin: 'https://foreign.example' },

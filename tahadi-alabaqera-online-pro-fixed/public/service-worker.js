@@ -3,7 +3,8 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes'
-const CACHE_NAME = 'busraj-games-v40-noir-navigation-recovery';
+// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v40-noir-navigation-recovery'
+const CACHE_NAME = 'busraj-games-v41-post-match-route-fix';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 // Kept as compatibility markers for older install checks. Runtime navigation
 // resolves these aliases to their concrete HTML documents below.

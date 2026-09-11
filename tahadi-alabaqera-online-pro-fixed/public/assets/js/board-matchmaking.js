@@ -3,7 +3,7 @@
   const WAIT_MS = 12_000;
   const POLL_MS = 850;
   const SUPPORTED = new Set(['snakes', 'zahra', 'jackaroo', 'spotdiff']);
-  const pathGame = location.pathname.replace(/^\/+|\/+$/g, '').split('/').at(-1);
+  const pathGame = location.pathname.replace(/^\/+|\/+$/g, '').replace(/\.html$/i, '').split('/').at(-1);
   const pageGame = SUPPORTED.has(pathGame) ? pathGame : null;
   let game = pageGame;
   let ticket = '';

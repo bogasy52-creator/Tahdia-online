@@ -22,6 +22,8 @@ test('board quick-match keeps the page game when the click event is passed', asy
   assert.equal(api.resolveGame({ type: 'click' }), 'snakes');
   assert.equal(api.resolveGame('zahra'), 'zahra');
   assert.equal(api.resolveGame('unknown'), null);
+  const concretePageApi = await boot('/snakes.html');
+  assert.equal(concretePageApi.resolveGame({ type: 'click' }), 'snakes');
 });
 
 test('BOT fallback and real rooms both open the selected game, not matchmaking', async () => {

@@ -259,6 +259,20 @@ function speedBonus(deadline, answeredAt) {
   return Math.min(50, Math.max(0, Math.round(remain / 1000 * 2)));
 }
 
+async function fetchStaticAsset(request, env) {
+  const response = await env.ASSETS.fetch(request);
+  if (request.method !== "GET" || response.status !== 404) return response;
+  const url = new URL(request.url);
+  const cleanPath = url.pathname.replace(/\/+$/, "") || "/";
+  if (cleanPath === "/" || cleanPath.startsWith("/api/") || /\/[^/]+\.[a-z0-9]+$/i.test(cleanPath)) return response;
+  url.pathname = `${cleanPath}.html`;
+  const recovered = await env.ASSETS.fetch(new Request(url.href, {
+    method: "GET",
+    headers: request.headers,
+  }));
+  return recovered.ok ? recovered : response;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -273,9 +287,9 @@ export default {
       const matchmakingOnline = Boolean(env.MATCHMAKING);
       const socialOnline = Boolean(env.SOCIAL_USERS || env.BOARD_ROOMS);
       if (!quizOnline || !boardOnline) {
-        return json({ ok: false, online: false, quizOnline, boardOnline, matchmakingOnline, socialOnline, error: "Durable Object binding missing", version: "5.3.0" }, 503);
+        return json({ ok: false, online: false, quizOnline, boardOnline, matchmakingOnline, socialOnline, error: "Durable Object binding missing", version: "5.3.1" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, matchmakingOnline, socialOnline, service: "tahadi-alabaqera-online", version: "5.3.0" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, matchmakingOnline, socialOnline, service: "tahadi-alabaqera-online", version: "5.3.1" });
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
@@ -447,7 +461,7 @@ export default {
       }));
     }
 
-    return env.ASSETS.fetch(request);
+    return fetchStaticAsset(request, env);
   },
 };
 
