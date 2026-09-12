@@ -66,7 +66,7 @@ test('store renders real category artwork and explains where every item is activ
   }
   const avatars = window.TAHADI_STORE_CATALOG.filter((item) => item.category === 'avatar');
   const portraits = avatars.map((entry) => ui.renderArtwork(entry));
-  assert.ok(portraits.every((artwork) => /class="nm-avatar-helmet"/.test(artwork)));
+  assert.ok(portraits.every((artwork) => /class="nm-avatar-helmet"/.test(artwork) || /class="cosmetic-art cosmetic-art-photo"/.test(artwork)));
   assert.equal(new Set(portraits).size, avatars.length);
 });
 

@@ -49,6 +49,10 @@
   }
 
   function renderArtwork(entry) {
+    if (entry?.image) {
+      const label = String(entry?.name || 'شخصية').replace(/["<>]/g, '');
+      return `<img class="cosmetic-art cosmetic-art-photo" data-art-system="noir-mythic" data-cosmetic-category="${entry?.category || 'avatar'}" src="${entry.image}" alt="${label}" loading="lazy" draggable="false">`;
+    }
     const category = categories.includes(entry?.category) ? entry.category : 'avatar';
     const id = safeToken(entry?.id);
     const one = safeColor(entry?.colors?.[0], '#8b5cf6');

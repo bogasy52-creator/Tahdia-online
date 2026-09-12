@@ -54,6 +54,10 @@
     return phrases.length === 4 ? phrases : FALLBACK_PHRASES;
   }
 
+  function avatarBadge(avatar) {
+    if (avatar?.image) return `<img class="tahadi-avatar-img" src="${avatar.image}" alt="" draggable="false">`;
+    return escapeHtml(avatar?.preview || '🧠');
+  }
   function avatarLine(kit, mood) {
     const personality = kit.avatar?.personality;
     const key = mood === 'cheer' ? 'correct' : mood === 'concern' ? 'wrong' : mood === 'win' ? 'win' : 'greeting';
@@ -146,7 +150,7 @@
     dock.style.setProperty('--voice-b', colors[1]);
     const phrases = characterPhrases(kit);
     const muted = global.BS_AUDIO?.getSettings?.()?.muted === true;
-    dock.innerHTML = `<button type="button" class="tahadi-voice-toggle" data-voice-toggle aria-expanded="${dock.classList.contains('open')}" aria-controls="tahadiVoicePanel"><span>${escapeHtml(kit.avatar?.preview || '🧠')}</span><b>الصوتيات والعبارات</b><i aria-hidden="true">⌃</i></button><section id="tahadiVoicePanel" class="tahadi-voice-panel" aria-label="العبارات السريعة"><div class="tahadi-character-row"><div class="tahadi-smart-avatar" data-mood="focus"><span>${escapeHtml(kit.avatar?.preview || '🧠')}</span><i></i><em></em></div><div><small>${escapeHtml(kit.avatar?.personality?.title || 'رفيقك داخل المباراة')}</small><b>${escapeHtml(kit.avatar?.name || 'نوفا')}</b><p data-avatar-bubble>${escapeHtml(avatarLine(kit, 'focus'))}</p></div></div><div class="tahadi-phrase-grid">${phrases.map((phrase) => `<button type="button" data-quick-phrase="${escapeHtml(phrase)}">${escapeHtml(phrase)}</button>`).join('')}</div><div class="tahadi-voice-actions"><button type="button" data-voice-sound>♪ اختبر ${escapeHtml(kit.sound?.name || 'الصوت')}</button><button type="button" data-voice-mute>${muted ? 'تشغيل الصوت' : 'كتم الصوت'}</button></div><small class="tahadi-voice-note">تُسمع العبارة فقط عند ضغطك عليها</small></section>`;
+    dock.innerHTML = `<button type="button" class="tahadi-voice-toggle" data-voice-toggle aria-expanded="${dock.classList.contains('open')}" aria-controls="tahadiVoicePanel"><span>${avatarBadge(kit.avatar)}</span><b>الصوتيات والعبارات</b><i aria-hidden="true">⌃</i></button><section id="tahadiVoicePanel" class="tahadi-voice-panel" aria-label="العبارات السريعة"><div class="tahadi-character-row"><div class="tahadi-smart-avatar" data-mood="focus"><span>${avatarBadge(kit.avatar)}</span><i></i><em></em></div><div><small>${escapeHtml(kit.avatar?.personality?.title || 'رفيقك داخل المباراة')}</small><b>${escapeHtml(kit.avatar?.name || 'نوفا')}</b><p data-avatar-bubble>${escapeHtml(avatarLine(kit, 'focus'))}</p></div></div><div class="tahadi-phrase-grid">${phrases.map((phrase) => `<button type="button" data-quick-phrase="${escapeHtml(phrase)}">${escapeHtml(phrase)}</button>`).join('')}</div><div class="tahadi-voice-actions"><button type="button" data-voice-sound>♪ اختبر ${escapeHtml(kit.sound?.name || 'الصوت')}</button><button type="button" data-voice-mute>${muted ? 'تشغيل الصوت' : 'كتم الصوت'}</button></div><small class="tahadi-voice-note">تُسمع العبارة فقط عند ضغطك عليها</small></section>`;
   }
 
   function mountVoiceDock(kit = equippedItems()) {
@@ -236,7 +240,7 @@
       const avatarColors = kit.avatar?.colors || ['#8b5cf6', '#22d3ee'];
       loadout.style.setProperty('--avatar-a', avatarColors[0]);
       loadout.style.setProperty('--avatar-b', avatarColors[1]);
-      loadout.innerHTML = `<span class="tahadi-loadout-avatar">${escapeHtml(kit.avatar?.preview || '🧠')}</span><span><b>${escapeHtml(kit.profile.name || 'لاعب العباقرة')}</b><small>${escapeHtml(kit.table?.name || 'منتصف الليل')}</small></span>`;
+      loadout.innerHTML = `<span class="tahadi-loadout-avatar">${avatarBadge(kit.avatar)}</span><span><b>${escapeHtml(kit.profile.name || 'لاعب العباقرة')}</b><small>${escapeHtml(kit.table?.name || 'منتصف الليل')}</small></span>`;
     }
     if (document.getElementById('tahadiVoiceDock')) renderVoiceDock(kit);
     return kit;

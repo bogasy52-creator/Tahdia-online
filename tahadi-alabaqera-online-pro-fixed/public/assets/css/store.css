@@ -141,7 +141,7 @@ body.store-noir:before{
 .rarity-legendary .rarity{border-color:rgba(214,180,106,.45);color:var(--nm-gold-soft)}.rarity-epic .rarity{border-color:rgba(142,126,210,.4);color:#c2b7f0}.rarity-rare .rarity{border-color:rgba(88,224,229,.3);color:#9ee9ec}
 .cosmetic-art-wrap{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:1;margin:auto;isolation:isolate}
 .cosmetic-art-wrap:before{content:"";position:absolute;width:66%;height:66%;background:radial-gradient(circle,color-mix(in srgb,var(--item-two,#58e0e5) 20%,transparent),transparent 70%);filter:blur(10px);z-index:-1}
-.cosmetic-art-wrap.large{max-width:350px}.cosmetic-art{display:block;width:100%;height:100%;overflow:visible}.nm-avatar-helmet{transform-origin:center;transition:transform .28s}.shop-item:hover .nm-avatar-helmet{transform:translateY(-3px)}.nm-visor{filter:drop-shadow(0 0 7px var(--item-two,#58e0e5))}
+.cosmetic-art-wrap.large{max-width:350px}.cosmetic-art{display:block;width:100%;height:100%;overflow:visible}.cosmetic-art-photo{object-fit:contain;filter:drop-shadow(0 10px 16px rgba(0,0,0,.6))}.nm-avatar-helmet{transform-origin:center;transition:transform .28s}.shop-item:hover .nm-avatar-helmet{transform:translateY(-3px)}.nm-visor{filter:drop-shadow(0 0 7px var(--item-two,#58e0e5))}
 .shop-item-copy{position:relative;z-index:2;display:grid;gap:3px;padding:10px 5px 4px;border-top:1px solid rgba(255,255,255,.06)}.shop-item-copy b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shop-item-copy small{color:var(--nm-muted);font-size:9px}
 
 .store-aside{position:sticky;top:64px;display:grid;gap:9px}
