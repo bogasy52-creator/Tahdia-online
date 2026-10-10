@@ -1,1 +1,380 @@
-
+name: Auto Update Game
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "*.zip"
+      - ".github/workflows/unpack.yml"
+      - ".github/scripts/find-uploaded-zip.sh"
+      - ".github/scripts/verify-project-update.sh"
+      - ".github/scripts/apply-zip-update.sh"
+      - ".github/scripts/merge-worker-config.mjs"
+      - ".github/tests/**"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: automatic-zip-update
+  cancel-in-progress: false
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      # A single edit to this workflow installs the four tested repair files.
+      # The publish step commits them together with the verified game release.
+      - name: Install verified updater repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .github/scripts .github/tests
+          cat > .github/scripts/apply-zip-update.sh <<'TAHDIA_V6_REPAIR_FILE_0'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [ "$#" -ne 2 ]; then
+            echo "Usage: apply-zip-update.sh <zip-file> <game-directory>" >&2
+            exit 2
+          fi
+          ZIP_FILE=$(realpath "$1")
+          GAME_DIR=$(realpath -m "$2")
+          SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "ZIP file not found: $ZIP_FILE" >&2
+            exit 1
+          fi
+          while IFS= read -r entry; do
+            entry=${entry%$'\r'}
+            if [[ "$entry" == /* || "$entry" == ".." || "$entry" == ../* || "$entry" == */../* || "$entry" == */.. || "$entry" =~ ^[A-Za-z]: ]]; then
+              echo "Unsafe path in ZIP: $entry" >&2
+              exit 1
+            fi
+          done < <(unzip -Z1 "$ZIP_FILE")
+          TEMP_DIR=$(mktemp -d)
+          trap 'rm -rf "$TEMP_DIR"' EXIT
+          ARCHIVE_DIR="$TEMP_DIR/archive"
+          WORKER_CONFIG_BACKUP="$TEMP_DIR/wrangler.jsonc"
+          NEXT_GAME_DIR="$TEMP_DIR/next-project"
+          mkdir -p "$ARCHIVE_DIR"
+          if [ -f "$GAME_DIR/wrangler.jsonc" ]; then
+            cp "$GAME_DIR/wrangler.jsonc" "$WORKER_CONFIG_BACKUP"
+          fi
+          unzip -q -o "$ZIP_FILE" -d "$ARCHIVE_DIR"
+          VALID_PROJECTS=()
+          while IFS= read -r -d '' package_file; do
+            candidate=$(dirname "$package_file")
+            if [ -f "$candidate/wrangler.jsonc" ] \
+              && [ -f "$candidate/public/index.html" ] \
+              && [ -f "$candidate/src/index.js" ]; then
+              VALID_PROJECTS+=("$candidate")
+            fi
+          done < <(find "$ARCHIVE_DIR" -type f -name package.json -print0)
+          if [ "${#VALID_PROJECTS[@]}" -ne 1 ]; then
+            echo "ZIP must contain exactly one valid project (package.json, wrangler.jsonc, public/index.html, and src/index.js)." >&2
+            exit 1
+          fi
+          PROJECT_ROOT=${VALID_PROJECTS[0]}
+          if find "$PROJECT_ROOT" -type l -print -quit | grep -q .; then
+            echo "ZIP project must not contain symbolic links." >&2
+            exit 1
+          fi
+          # Prepare the complete release before replacing anything. Copying over the old
+          # tree leaves obsolete source files and tests mixed into the new release.
+          mkdir -p "$NEXT_GAME_DIR"
+          cp -a "$PROJECT_ROOT"/. "$NEXT_GAME_DIR"/
+          if [ -f "$WORKER_CONFIG_BACKUP" ]; then
+            node "$SCRIPT_DIR/merge-worker-config.mjs" \
+              "$WORKER_CONFIG_BACKUP" "$PROJECT_ROOT/wrangler.jsonc" \
+              "$NEXT_GAME_DIR/wrangler.jsonc"
+          fi
+          mkdir -p "$(dirname "$GAME_DIR")"
+          if [ -e "$GAME_DIR" ]; then
+            mv "$GAME_DIR" "$TEMP_DIR/previous-project"
+          fi
+          if ! mv "$NEXT_GAME_DIR" "$GAME_DIR"; then
+            if [ -e "$TEMP_DIR/previous-project" ]; then
+              mv "$TEMP_DIR/previous-project" "$GAME_DIR"
+            fi
+            echo "Unable to install the prepared project." >&2
+            exit 1
+          fi
+          rm -f -- "$ZIP_FILE"
+          echo "ZIP update applied from: $PROJECT_ROOT"
+          TAHDIA_V6_REPAIR_FILE_0
+          cat > .github/scripts/verify-project-update.sh <<'TAHDIA_V6_REPAIR_FILE_1'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [ "$#" -ne 1 ]; then
+            echo "Usage: verify-project-update.sh <project-directory>" >&2
+            exit 2
+          fi
+          PROJECT_DIR=$(realpath "$1")
+          if [ ! -f "$PROJECT_DIR/package.json" ]; then
+            echo "Project package.json not found: $PROJECT_DIR" >&2
+            exit 1
+          fi
+          cd "$PROJECT_DIR"
+          if [ -f package-lock.json ]; then
+            npm ci --include=dev --no-audit --no-fund
+          else
+            npm install --include=dev --no-audit --no-fund
+          fi
+          VERIFY_SCRIPT=$(node -p 'require("./package.json").scripts?.["verify:release"] ? "verify:release" : "verify"')
+          npm run "$VERIFY_SCRIPT"
+          TAHDIA_V6_REPAIR_FILE_1
+          cat > .github/scripts/merge-worker-config.mjs <<'TAHDIA_V6_REPAIR_FILE_2'
+          import { readFile, writeFile } from 'node:fs/promises';
+          import { resolve } from 'node:path';
+          import { fileURLToPath } from 'node:url';
+          // Strip JSONC comments and trailing commas without changing quoted strings.
+          export function parseJsonc(raw) {
+            let clean = '', quoted = false, escaped = false;
+            for (let i = 0; i < raw.length; i++) {
+              const c = raw[i];
+              if (quoted) {
+                clean += c;
+                if (escaped) escaped = false;
+                else if (c === '\\') escaped = true;
+                else if (c === '"') quoted = false;
+              } else if (c === '"') {
+                quoted = true;
+                clean += c;
+              } else if (c === '/' && raw[i + 1] === '/') {
+                while (i + 1 < raw.length && raw[i + 1] !== '\n') i++;
+                clean += ' ';
+              } else if (c === '/' && raw[i + 1] === '*') {
+                const end = raw.indexOf('*/', i + 2);
+                if (end < 0) throw new Error('Unterminated JSONC comment');
+                clean += ' ';
+                i = end + 1;
+              } else clean += c;
+            }
+            let json = '';
+            quoted = escaped = false;
+            for (let i = 0; i < clean.length; i++) {
+              const c = clean[i];
+              if (quoted) {
+                json += c;
+                if (escaped) escaped = false;
+                else if (c === '\\') escaped = true;
+                else if (c === '"') quoted = false;
+              } else if (c === '"') {
+                quoted = true;
+                json += c;
+              } else if (c === ',' && /^[\s]*[}\]]/.test(clean.slice(i + 1))) {
+                // JSONC permits a trailing comma in either an object or an array.
+              } else json += c;
+            }
+            const value = JSON.parse(json);
+            if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error('Worker config must be an object');
+            return value;
+          }
+          function canonical(value) {
+            if (Array.isArray(value)) return value.map(canonical);
+            if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(k => [k, canonical(value[k])]));
+            return value;
+          }
+          const equal = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+          function keyed(items, key, label) {
+            if (!Array.isArray(items)) throw new Error(`${label} must be an array`);
+            const map = new Map();
+            for (const item of items) {
+              if (!item || typeof item[key] !== 'string' || !item[key] || map.has(item[key])) throw new Error(`Invalid or duplicate ${label}: ${item?.[key]}`);
+              map.set(item[key], item);
+            }
+            return map;
+          }
+          export function mergeWorkerConfig(current, incoming) {
+            const merged = structuredClone(current);
+            const migrations = structuredClone(current.migrations || []);
+            const history = keyed(migrations, 'tag', 'migration');
+            const additions = keyed(incoming.migrations || [], 'tag', 'migration');
+            const classes = new Set();
+            function applyMigration(migration) {
+              for (const name of [...(migration.new_classes || []), ...(migration.new_sqlite_classes || [])]) {
+                if (typeof name !== 'string' || !name || classes.has(name)) throw new Error(`Migration recreates an existing class: ${name}`);
+                classes.add(name);
+              }
+              for (const rename of migration.renamed_classes || []) {
+                if (!classes.has(rename.from) || classes.has(rename.to)) throw new Error(`Invalid migration rename: ${rename.from} -> ${rename.to}`);
+                classes.delete(rename.from);
+                classes.add(rename.to);
+              }
+              for (const name of migration.deleted_classes || []) classes.delete(name);
+            }
+            for (const migration of migrations) applyMigration(migration);
+            for (const [tag, migration] of additions) {
+              if (history.has(tag)) {
+                if (!equal(history.get(tag), migration)) throw new Error(`Cannot rewrite deployed migration: ${tag}`);
+                continue;
+              }
+              if (migration.deleted_classes?.length || migration.transferred_classes?.length) throw new Error(`ZIP updater only accepts additive migrations: ${tag}`);
+              applyMigration(migration);
+              migrations.push(structuredClone(migration));
+            }
+            if (migrations.length) merged.migrations = migrations;
+            const bindings = keyed(structuredClone(current.durable_objects?.bindings || []), 'name', 'Durable Object binding');
+            for (const [name, binding] of keyed(incoming.durable_objects?.bindings || [], 'name', 'Durable Object binding')) {
+              if (bindings.has(name)) {
+                if (!equal(bindings.get(name), binding)) throw new Error(`Cannot replace deployed Durable Object binding: ${name}`);
+              } else bindings.set(name, structuredClone(binding));
+            }
+            for (const binding of bindings.values()) {
+              if (!binding.script_name && !classes.has(binding.class_name)) throw new Error(`Binding has no class migration: ${binding.name} / ${binding.class_name}`);
+            }
+            if (bindings.size) merged.durable_objects = { ...current.durable_objects, bindings: [...bindings.values()] };
+            return merged;
+          }
+          if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+            try {
+              const [existingPath, incomingPath, destination] = process.argv.slice(2);
+              if (!destination) throw new Error('Usage: merge-worker-config.mjs <deployed-config> <incoming-config> <output>');
+              const oldRaw = await readFile(existingPath, 'utf8');
+              const current = parseJsonc(oldRaw);
+              const merged = mergeWorkerConfig(current, parseJsonc(await readFile(incomingPath, 'utf8')));
+              await writeFile(destination, equal(current, merged) ? oldRaw : `${JSON.stringify(merged, null, 2)}\n`);
+            } catch (error) {
+              console.error(`Worker config merge failed: ${error.message}`);
+              process.exitCode = 1;
+            }
+          }
+          TAHDIA_V6_REPAIR_FILE_2
+          cat > .github/tests/zip-update.test.mjs <<'TAHDIA_V6_REPAIR_FILE_3'
+          import test from 'node:test';
+          import assert from 'node:assert/strict';
+          import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+          import { tmpdir } from 'node:os';
+          import { join } from 'node:path';
+          import { fileURLToPath } from 'node:url';
+          import { spawnSync } from 'node:child_process';
+          import { mergeWorkerConfig, parseJsonc } from '../scripts/merge-worker-config.mjs';
+          const apply = fileURLToPath(new URL('../scripts/apply-zip-update.sh', import.meta.url));
+          const original = {
+            name: 'tahdia-online', vars: { FEATURE: 'keep' },
+            durable_objects: { bindings: [{ name: 'ROOMS', class_name: 'GameRoom' }] },
+            migrations: [{ tag: 'v1', new_sqlite_classes: ['GameRoom'] }],
+          };
+          const incoming = {
+            name: 'ignored-upload-name', vars: { FEATURE: 'overwrite' },
+            durable_objects: { bindings: [...original.durable_objects.bindings, { name: 'QUICK_ARENA', class_name: 'QuickArena' }] },
+            migrations: [...original.migrations, { tag: 'v6', new_sqlite_classes: ['QuickArena'] }],
+          };
+          test('keeps deployed settings and history while adding the V6 namespace once', () => {
+            const merged = mergeWorkerConfig(original, incoming);
+            assert.equal(merged.name, original.name);
+            assert.deepEqual(merged.vars, original.vars);
+            assert.deepEqual(merged.migrations, incoming.migrations);
+            assert.deepEqual(merged.durable_objects.bindings, incoming.durable_objects.bindings);
+            assert.deepEqual(mergeWorkerConfig(merged, incoming), merged);
+            assert.equal(original.migrations.length, 1);
+          });
+          test('JSONC parser preserves URLs, escaped quotes and comment-like strings', () => {
+            const config = parseJsonc('/* comment */ {"url":"https://game.test/a//b", "text":"/*keep*/ \\"yes\\"", // comment\n "values": [1, 2,],}');
+            assert.equal(config.url, 'https://game.test/a//b');
+            assert.equal(config.text, '/*keep*/ "yes"');
+            assert.deepEqual(config.values, [1, 2]);
+          });
+          test('rejects rewriting a deployed migration or namespace', () => {
+            const changed = structuredClone(incoming);
+            changed.migrations[0].new_sqlite_classes = ['Replacement'];
+            assert.throws(() => mergeWorkerConfig(original, changed), /rewrite deployed migration/);
+            changed.migrations = structuredClone(incoming.migrations);
+            changed.durable_objects.bindings[0].class_name = 'Replacement';
+            assert.throws(() => mergeWorkerConfig(original, changed), /replace deployed.*binding/);
+          });
+          test('rejects class recreation, duplicate tags, missing migrations and destructive changes', () => {
+            const changed = structuredClone(incoming);
+            changed.migrations[1].new_sqlite_classes = ['GameRoom'];
+            assert.throws(() => mergeWorkerConfig(original, changed), /recreates/);
+            changed.migrations = [...incoming.migrations, incoming.migrations[1]];
+            assert.throws(() => mergeWorkerConfig(original, changed), /duplicate/);
+            changed.migrations = original.migrations;
+            assert.throws(() => mergeWorkerConfig(original, changed), /no class migration/);
+            changed.migrations = [...original.migrations, { tag: 'delete', deleted_classes: ['GameRoom'] }];
+            assert.throws(() => mergeWorkerConfig(original, changed), /additive/);
+          });
+          async function fixture(t) {
+            const root = await mkdtemp(join(tmpdir(), 'v6-zip-installer-'));
+            t.after(() => rm(root, { recursive: true, force: true }));
+            const game = join(root, 'game'), payload = join(root, 'payload', 'snake_final');
+            for (const project of [game, payload]) {
+              await mkdir(join(project, 'public'), { recursive: true });
+              await mkdir(join(project, 'src'), { recursive: true });
+              await writeFile(join(project, 'package.json'), '{"name":"fixture"}\n');
+              await writeFile(join(project, 'public/index.html'), project === game ? 'old' : 'v6');
+              await writeFile(join(project, 'src/index.js'), 'export default {};\n');
+            }
+            await writeFile(join(game, 'wrangler.jsonc'), JSON.stringify(original));
+            await writeFile(join(payload, 'wrangler.jsonc'), JSON.stringify(incoming));
+            const zip = join(root, 'update.zip');
+            function run() {
+              const archive = spawnSync('zip', ['-qr', zip, '.'], { cwd: join(root, 'payload'), encoding: 'utf8' });
+              assert.equal(archive.status, 0, archive.stderr);
+              return spawnSync('bash', [apply, zip, game], { cwd: root, encoding: 'utf8' });
+            }
+            return { root, game, payload, zip, run };
+          }
+          test('installs one complete release, removes stale tests and merges its Worker config', async t => {
+            const f = await fixture(t);
+            await mkdir(join(f.game, 'test'));
+            await writeFile(join(f.game, 'test/obsolete.test.js'), 'old test');
+            await writeFile(join(f.game, 'obsolete.js'), 'old source');
+            const result = f.run();
+            assert.equal(result.status, 0, result.stderr);
+            assert.equal(await readFile(join(f.game, 'public/index.html'), 'utf8'), 'v6');
+            await assert.rejects(readFile(join(f.game, 'test/obsolete.test.js')));
+            await assert.rejects(readFile(join(f.game, 'obsolete.js')));
+            await assert.rejects(readFile(f.zip));
+            assert.deepEqual(JSON.parse(await readFile(join(f.game, 'wrangler.jsonc'), 'utf8')), mergeWorkerConfig(original, incoming));
+          });
+          test('a conflicting migration leaves the old release and upload intact', async t => {
+            const f = await fixture(t);
+            const conflict = structuredClone(incoming);
+            conflict.migrations[0].new_sqlite_classes = ['WrongClass'];
+            await writeFile(join(f.payload, 'wrangler.jsonc'), JSON.stringify(conflict));
+            const result = f.run();
+            assert.notEqual(result.status, 0);
+            assert.match(result.stderr, /rewrite deployed migration/);
+            assert.equal(await readFile(join(f.game, 'public/index.html'), 'utf8'), 'old');
+            assert.deepEqual(JSON.parse(await readFile(join(f.game, 'wrangler.jsonc'), 'utf8')), original);
+            assert.ok((await readFile(f.zip)).length > 0);
+          });
+          TAHDIA_V6_REPAIR_FILE_3
+      - name: Verify ZIP updater
+        run: node --test .github/tests/*.test.mjs
+      - name: Find uploaded ZIP
+        id: upload
+        shell: bash
+        run: |
+          ZIP=$(bash .github/scripts/find-uploaded-zip.sh)
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+      - name: Apply ZIP update
+        shell: bash
+        run: bash .github/scripts/apply-zip-update.sh "${{ steps.upload.outputs.zip }}" tahadi-alabaqera-online-pro-fixed
+      - name: Refresh checksums and verify project
+        working-directory: tahadi-alabaqera-online-pro-fixed
+        shell: bash
+        run: |
+          node scripts/verify-worker-config.mjs
+          bash ../.github/scripts/verify-project-update.sh .
+          node scripts/refresh-checksums.mjs
+          sha256sum -c SHA256SUMS.txt
+      - name: Publish verified update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # apply-zip-update.sh removes the upload after extraction. Stage the
+          # verified project and that deletion together, leaving no ZIP behind.
+          git add -A -- .
+          git commit -m "Auto update game files"
+          git pull --rebase origin main
+          git push origin main
