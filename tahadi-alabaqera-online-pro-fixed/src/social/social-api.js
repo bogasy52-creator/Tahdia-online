@@ -151,7 +151,7 @@ export async function handleSocialRequest(request, env, options = {}) {
     return json(result.data, result.response.status);
   }
 
-  if (/^\/api\/social\/career(?:\/(practice|purchase|equip|rename))?$/.test(url.pathname)) {
+  if (/^\/api\/social\/career(?:\/(practice|purchase|equip|rename|daily))?$/.test(url.pathname)) {
     const {response, auth}=await requireAuth(request,env);
     if(response)return response;
     const action=url.pathname.split('/')[4]||'get';

@@ -16,7 +16,7 @@ const REACTIONS=Object.freeze({
     Object.freeze({name:'track',duration:180,sound:'snakeHiss'}),
     Object.freeze({name:'strike',duration:170,sound:'snakeBite',haptic:[70,25,100]}),
     Object.freeze({name:'swallow',duration:340,sound:'snakeSwallow'}),
-    Object.freeze({name:'grow',duration:100,sound:'snakeGrow',haptic:38}),
+    Object.freeze({name:'grow',duration:320,sound:'snakeGrow',haptic:38}),
     Object.freeze({name:'release',duration:190,sound:'snakeRelease'}),
   ]),
 });

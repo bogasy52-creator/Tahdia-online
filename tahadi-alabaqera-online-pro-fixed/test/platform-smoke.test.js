@@ -51,15 +51,15 @@ test('service worker pre-caches the complete game hub shell', async () => {
 
 test('package exposes repeatable test and verification commands', async () => {
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
-  assert.equal(pkg.scripts.test, 'node --test test/*.test.js');
+  assert.equal(pkg.scripts.test, 'node --test --test-concurrency=4 test/*.test.js');
   assert.equal(pkg.scripts.verify, 'npm run sync:quiz && npm test && npm run verify:static && npm run verify:worker');
   assert.equal(pkg.scripts['verify:worker'], 'node scripts/verify-worker-offline.mjs');
   assert.equal(pkg.scripts['verify:cloudflare'], 'npm run verify && npm run check:cloudflare');
 });
 
-test('health endpoint reports the 6.0.0 professional games release', async () => {
+test('health endpoint reports the 7.0.0 professional games release', async () => {
   const worker = await readFile(join(root, 'src/index.js'), 'utf8');
-  assert.match(worker, /version:\s*["']6\.0\.0["']/);
+  assert.match(worker, /version:\s*["']7\.0\.0["']/);
 });
 
 test('wrangler deploys to the existing tahdia-online worker', async () => {

@@ -21,7 +21,7 @@
   function updateButton() {
     const isActive = active();
     for (const button of buttons()) {
-      button.textContent = isActive ? '↙' : '⛶';
+      if(window.BS_ICONS)button.innerHTML=window.BS_ICONS.icon('fullscreen');else button.textContent = isActive ? '↙' : '⛶';
       button.classList.toggle('is-fullscreen', isActive);
       button.setAttribute('aria-pressed', String(isActive));
       button.setAttribute('aria-label', isActive ? 'الخروج من ملء الشاشة' : 'ملء الشاشة');

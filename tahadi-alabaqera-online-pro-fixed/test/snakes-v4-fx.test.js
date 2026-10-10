@@ -80,6 +80,6 @@ test('the 3D die exposes a stable orientation for every legal result', () => {
 test('snake heads render in a dedicated top layer so crossings cannot cut them off', async() => {
   const html=await readFile(new URL('../public/snakes.html',import.meta.url),'utf8');
   assert.match(html,/class="snake-head-layer"/);
-  assert.match(html,/class="snake-head-creature"/);
+  assert.match(html,/class="snake-head-creature(?: idle)?"/);
   assert.match(html,/snakeVisualParts\(/);
 });

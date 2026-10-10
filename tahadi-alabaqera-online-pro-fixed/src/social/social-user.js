@@ -77,13 +77,14 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);
     if (url.pathname.startsWith('/career/')) {
       const action=url.pathname.split('/')[2];
-      if (!['get','practice','purchase','equip','rename','verified'].includes(action)) return json({ok:false,error:'not_found'},404);
+      if (!['get','practice','purchase','equip','rename','verified','daily'].includes(action)) return json({ok:false,error:'not_found'},404);
       if(action!=='verified' && !(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
       if(!this.profile)return json({ok:false,error:'account_not_found'},404);
       return this.ctx.blockConcurrencyWhile(async()=>{
         let career=Career.normalize(await this.ctx.storage.get('career')||{name:this.profile.displayName});
         try{
           if(action==='practice'||action==='verified')career=Career.reward(career,{id:body.id,game:body.game,win:body.win===true,verified:action==='verified'});
+          if(action==='daily')career=Career.claimDaily(career);
           if(action==='purchase')career=Career.purchase(career,body.id);
           if(action==='equip')career=Career.equip(career,body.id);
           if(action==='rename'){career=Career.normalize({...career,name:body.name});this.profile.displayName=career.name;await this.ctx.storage.put('profile',this.profile);}

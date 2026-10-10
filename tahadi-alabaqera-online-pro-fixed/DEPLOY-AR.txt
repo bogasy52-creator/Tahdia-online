@@ -1,7 +1,7 @@
 بوسراج للألعاب — 6.0.0
 دليل نشر المشروع الكامل
 
-1) فك ZIP وافتح الطرفية داخل snake_final حيث package.json وwrangler.jsonc.
+1) فك ZIP وافتح الطرفية داخل snake_pro_v7 حيث package.json وwrangler.jsonc.
 2) استخدم Node.js 24، ثم نفذ بالترتيب:
 
 npm ci --include=dev
@@ -33,7 +33,7 @@ quizOnline: true
 boardOnline: true
 quickOnline: true
 socialOnline: true
-version: "6.0.0"
+version: "7.0.0"
 
 فحوص قبول على الموقع المنشور:
 - حسابان منفصلان: تسجيل، صداقة، قبول، خصوصية ودعوة إلى غرفة.

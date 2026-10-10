@@ -1,9 +1,14 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous cache: busraj-games-v23-v5-online-fix
-const CACHE_NAME = 'busraj-games-v24-pro-v6';
+const CACHE_NAME = 'busraj-games-v25-pro-v7';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = ['/',
+  '/assets/css/pro-v7.css',
+  '/assets/js/pro-experience.js',
+  '/assets/js/ui-icons.js',
+  '/assets/js/engines/snakes-adventure.js',
+  '/assets/js/engines/bot-strategy.js',
   '/accuracy.html',
   '/apple-touch-icon.png',
   '/assets/css/arcade.css',
