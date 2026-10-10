@@ -1,1 +1,46 @@
+name: Auto Update Game
 
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "*.zip"
+      - ".github/workflows/unpack.yml"
+      - ".github/scripts/find-uploaded-zip.sh"
+      - ".github/scripts/verify-project-update.sh"
+      - ".github/scripts/apply-zip-update.sh"
+      - ".github/scripts/merge-worker-config.mjs"
+      - ".github/tests/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: automatic-zip-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      # A single edit to this workflow installs the four tested repair files.
+      # The publish step commits them together with the verified game release.
+      - name: Install verified updater repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .github
