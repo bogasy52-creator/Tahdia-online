@@ -5,14 +5,6 @@ const home = await readFile(new URL('../public/index.html', import.meta.url), 'u
 const snakes = await readFile(new URL('../public/snakes.html', import.meta.url), 'utf8');
 const elite = await readFile(new URL('../public/assets/css/snakes-premium.css', import.meta.url), 'utf8');
 
-test('home hero separates copy from a contained game-console showcase',()=>{
-  for(const marker of ['hero-showcase','showcase-console','showcase-games','كل ألعاب جمعتكم','quick-strip']) assert.ok(home.includes(marker),`missing ${marker}`);
-  assert.ok(!home.includes('class="orbit a"'),'legacy overlapping orbit art should be gone');
-});
+test('home presents the table collection, real career values and working games',()=>{for(const marker of ['home-hero','table-feature','home-game-grid','data-career-coins','/shop'])assert.ok(home.includes(marker));assert.doesNotMatch(home,/id="level">15|id="xpText">3500|100 لاعب/)});
 
-test('snakes uses the immersive mobile-first live board art layer',()=>{
-  assert.match(snakes,/assets\/css\/snakes-premium\.css/);
-  for(const marker of ['snakeCurve(','ladder-shadow','ladder-rail-hi','snake-belly-line','snake-mouth','snake-tail-tip','snake-creature','snake-head-group']) assert.ok(snakes.includes(marker),`missing ${marker}`);
-  for(const marker of ['THE SNAKE: immersive mobile-first board','.snake-creature.attacking','.snake-creature.digesting','.snake-travel-pawn','BUSRAJ • THE SNAKE']) assert.ok(elite.includes(marker),`missing live-board CSS ${marker}`);
-  assert.ok(!elite.includes('BUSRAJ • RACE 100'),'old race branding must not return');
-});
+test('snakes uses an engine-backed board with no baked-in pawns or results',async()=>{assert.match(snakes,/assets\/css\/pro-games\.css/);assert.doesNotMatch(snakes,/reference-skin|snake-reference-skin\.png/);for(const marker of ['snakeCurve(','ladder-shadow','snake-head-creature','snakeVisualParts(','route-highlight'])assert.ok(snakes.includes(marker));const css=await readFile(new URL('../public/assets/css/pro-games.css',import.meta.url),'utf8');assert.match(css,/\.snake-board[\s\S]*repeat\(10,1fr\)/)});

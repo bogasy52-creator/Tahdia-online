@@ -1,0 +1,33 @@
+(function(){
+  'use strict';
+  const Core=window.BS_CAREER_CORE,KEY='busraj-career-v6',CACHE='busraj-account-career-v6:',OUTBOX='busraj-practice-outbox-v6:';
+  let account=null,synced=false,chain=Promise.resolve(),profile=loadGuest();
+  function read(key){try{return JSON.parse(localStorage.getItem(key)||'null')}catch{return null}}
+  function token(){try{return localStorage.getItem('bs_social_session')||''}catch{return ''}}
+  function owner(session=token()){const name=session.split('.')[0];return /^[a-z0-9_]{3,20}$/.test(name)?name:null}
+  function loadGuest(){const current=read(KEY);if(current)return Core.normalize(current);const old=['snake-pro-commercial-profile','snake-pro-v5-career','snake-pro-v5-ultimate-profile','busraj_snake_profile_v2'].map(read).filter(Boolean);const best=old.sort((a,b)=>(Number(b.xp)||0)-(Number(a.xp)||0))[0]||{};return Core.normalize({...best,rankedXP:0,name:read('tahadi-player')?.name||best.name})}
+  function pending(name){const rows=read(OUTBOX+name);return Array.isArray(rows)?rows.filter(x=>x&&typeof x.id==='string'&&typeof x.game==='string').slice(0,100):[]}
+  function locked(key,work){return navigator.locks?.request?navigator.locks.request(key,work):work()}
+  function serialize(work){const next=chain.then(work,work);chain=next.catch(()=>{});return next}
+  async function queue(name,result){return locked(OUTBOX+name,()=>{const rows=pending(name);if(!rows.some(x=>x.id===result.id)){if(rows.length>=100)throw new Error('قائمة الجولات المنتظرة ممتلئة — اتصل لحفظها');rows.push(result);localStorage.setItem(OUTBOX+name,JSON.stringify(rows))}})}
+  async function unqueue(name,id){return locked(OUTBOX+name,()=>{const rows=pending(name).filter(x=>x.id!==id);if(rows.length)localStorage.setItem(OUTBOX+name,JSON.stringify(rows));else localStorage.removeItem(OUTBOX+name)})}
+  function notify(){apply();window.dispatchEvent(new CustomEvent('bs-career-change',{detail:{profile:structuredClone(profile),account}}))}
+  function adopt(session){account=owner(session);synced=false;const cached=account&&read(CACHE+account);profile=cached?Core.normalize(cached):account?Core.normalize({name:read('bs_social_profile')?.displayName||account}):loadGuest();notify()}
+  async function api(action,body,session=token()){const response=await fetch('/api/social/career'+(action?'/'+action:''),{method:body?'POST':'GET',headers:{'content-type':'application/json','authorization':'Bearer '+session},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(9000)});const data=await response.json();if(!response.ok){const error=new Error(data.error||'تعذر حفظ التقدم');error.status=response.status;throw error}return data}
+  function accept(data,session){if(session!==token()||data.username!==owner(session))return false;account=data.username;profile=Core.normalize(data.career);synced=true;try{localStorage.setItem(CACHE+account,JSON.stringify(profile))}catch{}notify();return true}
+  function refresh(){return serialize(async()=>{const session=token();if(!session){account=null;synced=false;profile=loadGuest();notify();return profile}if(account!==owner(session))adopt(session);try{const data=await api('',null,session);if(!accept(data,session))return profile;for(const result of pending(data.username)){if(session!==token())break;const next=await api('practice',result,session);await unqueue(data.username,result.id);if(!accept(next,session))break}return profile}catch(error){if(session===token()){synced=false;notify()}throw error}})}
+  function mutate(action,body,local){const session=token(),name=owner(session);return serialize(async()=>{
+    if(action==='practice'&&session&&name)await queue(name,body);
+    if(session!==token())throw new Error('تغير الحساب — أعد المحاولة');
+    if(session){try{const data=await api(action,body,session);if(action==='practice'&&name)await unqueue(name,body.id);accept(data,session);return profile}catch(error){if(action==='practice'&&name&&error.status>=400&&error.status<500&&error.status!==401&&error.status!==429)await unqueue(name,body.id);if(session===token()){synced=false;notify()}throw error}}
+    return locked(KEY,()=>{profile=local(loadGuest());localStorage.setItem(KEY,JSON.stringify(profile));account=null;notify();return profile});
+  })}
+  function record({id,game,win=false}={}){const result={id:String(id||'').slice(0,160),game,win:Boolean(win)},name=owner();try{Core.reward(Core.normalize(),result)}catch(error){window.BS_PLATFORM?.toast?.('نتيجة الجولة غير صالحة');return Promise.resolve(profile)}return mutate('practice',result,p=>Core.reward(p,result)).catch(error=>{const queued=name&&pending(name).some(x=>x.id===result.id);window.BS_PLATFORM?.toast?.(queued?'جولتك محفوظة على هذا الجهاز وتنتظر الاتصال لمزامنتها':'لم يُحفظ تقدم الجولة: '+error.message);return profile})}
+  function apply(){const e=profile.equipped;document.documentElement.dataset.board=e.board;document.documentElement.dataset.dice=e.dice;document.documentElement.dataset.pawn=e.pawn;document.documentElement.dataset.table=e.table;document.querySelectorAll('[data-career-coins]').forEach(el=>el.textContent=profile.coins);document.querySelectorAll('[data-career-level],#level').forEach(el=>el.textContent=profile.level);document.querySelectorAll('[data-career-xp],#xpText').forEach(el=>el.textContent=profile.xp);document.querySelectorAll('[data-career-name],#playerName').forEach(el=>el.textContent=profile.name);document.querySelectorAll('[data-career-rank]').forEach(el=>el.textContent=profile.rank);document.querySelectorAll('[data-career-progress]').forEach(el=>el.style.width=(profile.xp%1000)/10+'%');document.querySelectorAll('[data-career-scope]').forEach(el=>el.textContent=account?(pending(account).length?'جولات محفوظة تنتظر المزامنة':synced?'محفوظ في حسابك':'آخر تقدم محفوظ — المزامنة عند الاتصال'):'تقدم هذا الجهاز — سجّل الدخول للمزامنة')}
+  window.BS_CAREER={get:()=>structuredClone(profile),catalog:Core.CATALOG,refresh,record,purchase:id=>mutate('purchase',{id},p=>Core.purchase(p,id)),equip:id=>mutate('equip',{id},p=>Core.equip(p,id)),rename:name=>mutate('rename',{name},p=>Core.normalize({...p,name})),account:()=>account};
+  const retry=()=>refresh().catch(()=>{});
+  window.addEventListener('storage',e=>{if(e.key===KEY||e.key==='bs_social_session'||e.key?.startsWith(OUTBOX))retry()});
+  window.addEventListener('bs-social-session',()=>{adopt(token());retry()});
+  window.addEventListener('online',retry);
+  if(token())adopt(token());retry();
+})();

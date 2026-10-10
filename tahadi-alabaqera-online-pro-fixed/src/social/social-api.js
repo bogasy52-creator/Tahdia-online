@@ -4,7 +4,6 @@ import {
   normalizeRoomCode,
   normalizeUsername,
   parseSessionToken,
-  sha256,
   validUsername,
 } from "./social-core.js";
 
@@ -40,25 +39,12 @@ async function readJson(response) {
   return response.json().catch(() => ({}));
 }
 
-async function ownerSignupAllowed(env, provided) {
-  const expected = String(env?.BOSRAG_OWNER_SECRET || "");
-  const candidate = String(provided || "");
-  if (expected.length < 24 || candidate.length < 24) return false;
-  const [expectedHash, candidateHash] = await Promise.all([sha256(expected), sha256(candidate)]);
-  if (expectedHash.length !== candidateHash.length) return false;
-  let difference = 0;
-  for (let index = 0; index < expectedHash.length; index += 1) {
-    difference |= expectedHash.charCodeAt(index) ^ candidateHash.charCodeAt(index);
-  }
-  return difference === 0;
-}
-
 function bearer(request) {
   const value = String(request.headers.get("authorization") || "");
   return value.toLowerCase().startsWith("bearer ") ? value.slice(7).trim() : "";
 }
 
-async function authenticate(request, env) {
+export async function authenticate(request, env) {
   const parsed = parseSessionToken(bearer(request));
   if (!parsed) return null;
   const stub = stubFor(env, parsed.username);
@@ -72,6 +58,8 @@ async function authenticate(request, env) {
   const data = await readJson(response);
   return { ...parsed, stub, profile: data.profile };
 }
+
+export const getSocialStub = stubFor;
 
 async function requireAuth(request, env) {
   const auth = await authenticate(request, env);
@@ -88,9 +76,9 @@ async function publicProfile(env, username) {
   return data.profile || null;
 }
 
-async function call(stub, path, body = {}, method = "POST") {
+async function call(stub, path, body = {}) {
   const response = await stub.fetch(`https://social.internal${path}`, {
-    method,
+    method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -129,14 +117,10 @@ export async function handleSocialRequest(request, env, options = {}) {
     const username = normalizeUsername(body.username);
     const stub = stubFor(env, username);
     if (!stub) return json({ ok: false, error: "اسم المستخدم غير صالح" }, 400);
-    const ownerAuthorized = username === "bosrag" ? await ownerSignupAllowed(env, body.ownerSecret) : false;
-    if (username === "bosrag" && !ownerAuthorized) {
-      return json({ ok: false, error: "حساب bosrag محجوز للمدير ويتطلب رمز التهيئة الخاص" }, 403);
-    }
     return stub.fetch("https://social.internal/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username, displayName: body.displayName, password: body.password, ownerAuthorized }),
+      body: JSON.stringify({ username, displayName: body.displayName, password: body.password }),
     });
   }
 
@@ -167,21 +151,14 @@ export async function handleSocialRequest(request, env, options = {}) {
     return json(result.data, result.response.status);
   }
 
-  if (request.method === "GET" && url.pathname === "/api/social/progress") {
-    const { response, auth } = await requireAuth(request, env);
-    if (response) return response;
-    const result = await call(auth.stub, "/progress/read", { secret: auth.secret });
-    return json(result.data, result.response.status);
-  }
-
-  if (request.method === "PUT" && url.pathname === "/api/social/progress") {
-    const { response, auth } = await requireAuth(request, env);
-    if (response) return response;
-    const body = await request.json().catch(() => ({}));
-    const progress = body.progress && typeof body.progress === "object" ? body.progress : body;
-    const expectedRevision = Number(body.expectedRevision ?? progress.serverRevision ?? 0);
-    const result = await call(auth.stub, "/progress/save", { secret: auth.secret, progress, expectedRevision }, "PUT");
-    return json(result.data, result.response.status);
+  if (/^\/api\/social\/career(?:\/(practice|purchase|equip|rename))?$/.test(url.pathname)) {
+    const {response, auth}=await requireAuth(request,env);
+    if(response)return response;
+    const action=url.pathname.split('/')[4]||'get';
+    if ((action==='get'&&request.method!=='GET')||(action!=='get'&&request.method!=='POST'))return json({ok:false,error:'method_not_allowed'},405);
+    const body=action==='get'?{}:await request.json().catch(()=>({}));
+    const result=await call(auth.stub,'/career/'+action,{...body,secret:auth.secret});
+    return json({...result.data,username:auth.username},result.response.status);
   }
 
   const profileMatch = url.pathname.match(/^\/api\/social\/users\/([a-zA-Z0-9_]{3,20})$/);

@@ -28,14 +28,7 @@ test('mobile snake stage is edge-to-edge and keeps the cockpit directly under th
   assert.match(css,/body\.game-snakes\.game-running \.snake-side,[\s\S]*height:auto!important;[\s\S]*margin:0!important/);
 });
 
-test('zahra and jackaroo ship dedicated 3.2 art-direction layers', async()=>{
-  const zahra=await read('public/zahra.html'), jack=await read('public/jackaroo.html');
-  const zcss=await read('public/assets/css/zahra-premium.css'), jcss=await read('public/assets/css/jackaroo-next.css');
-  assert.match(zahra,/assets\/css\/zahra-premium\.css/);
-  assert.match(jack,/assets\/css\/jackaroo-next\.css/);
-  assert.match(zcss,/Busraj 3\.2/); assert.match(jcss,/Busraj 3\.2/);
-  assert.match(zcss,/game-zahra/); assert.match(jcss,/game-jackaroo/);
-});
+test('jackaroo ships a visible wooden board, home pockets and legal move selection',async()=>{const jack=await read('public/jackaroo.html'),css=await read('public/assets/css/pro-games.css');for(const marker of ['pro-games.css','home-pocket','chooseMarble','highlightMoves','legalActions'])assert.ok(jack.includes(marker));assert.match(css,/\.jack-board/);assert.match(css,/\.track-hole/);assert.match(css,/\.safe-hole/)});
 
 test('genius question-selection board is a compact category-card grid with no score or point overlap', async()=>{
   const local=await read('public/local.html'), online=await read('public/online.html'), css=await read('public/assets/css/quiz-board-v2.css');

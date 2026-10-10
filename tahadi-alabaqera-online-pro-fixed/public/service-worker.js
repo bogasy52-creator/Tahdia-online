@@ -1,122 +1,228 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
-// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v23-v5-online-fix'
-// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v38-secure-bots-store-progression'
-// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v39-mythic-store-gameplay-fixes'
-// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v40-noir-navigation-recovery'
-// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v41-post-match-route-fix'
-// Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v42-canonical-match-navigation'
-const CACHE_NAME = 'busraj-games-v43-document-visibility-fix';
+// Previous cache: busraj-games-v23-v5-online-fix
+const CACHE_NAME = 'busraj-games-v24-pro-v6';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
-const BROWSER_MANAGED_MATCH_DOCUMENTS = new Set([
-  '/matchmaking.html', '/online.html', '/snakes.html',
-  '/zahra.html', '/jackaroo.html', '/spotdiff.html',
-]);
-// Kept as compatibility markers for older install checks. Runtime navigation
-// resolves these aliases to their concrete HTML documents below.
-const LEGACY_ROUTE_MARKERS = Object.freeze([
-  '/v5', '/local', '/online', '/league', '/matchmaking', '/social', '/store',
-  '/snakes', '/dice', '/zahra', '/jackaroo', '/memory', '/reaction', '/logic',
-  '/puzzle', '/draw', '/secret', '/order', '/auction', '/cipher', '/spotdiff',
-  '/letters', '/accuracy',
-]);
-const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/v5.html',
-  '/local.html',
-  '/online.html',
-  '/league.html',
-  '/matchmaking.html',
-  '/social.html',
-  '/store.html',
-  '/navigation-error.html',
-  '/snakes.html',
-  '/dice.html',
-  '/zahra.html',
-  '/jackaroo.html',
-  '/memory.html',
-  '/reaction.html',
-  '/logic.html',
-  '/puzzle.html',
-  '/draw.html',
-  '/secret.html',
-  '/order.html',
-  '/auction.html',
-  '/cipher.html',
-  '/spotdiff.html',
-  '/letters.html',
+const APP_SHELL = ['/',
   '/accuracy.html',
-  '/manifest.webmanifest',
-  '/icon-192.png',
-  '/icon-512.png',
   '/apple-touch-icon.png',
-  '/assets/css/platform.css',
-  '/assets/css/home-shell.css',
-  '/assets/css/quiz-polish.css',
-  '/assets/css/quiz-pro-overrides.css',
-  '/assets/css/spotdiff-pro.css',
-  '/assets/css/store.css',
-  '/assets/css/match-presentation.css',
-  '/assets/css/snake-arena-pro.css',
-  '/assets/css/snakes-motion-pro.css',
-  '/assets/css/board-fullscreen-pro.css',
   '/assets/css/arcade.css',
-  '/assets/css/new-games.css',
-  '/assets/css/social.css',
-  '/assets/css/game-kit.css',
-  '/assets/css/pro-theme-v6.css',
   '/assets/css/board-premium.css',
+  '/assets/css/fullscreen-board.css',
+  '/assets/css/game-kit.css',
+  '/assets/css/home-pro.css',
+  '/assets/css/jackaroo-next.css',
+  '/assets/css/jackaroo-premium.css',
   '/assets/css/luxury-game-ui.css',
   '/assets/css/mobile-game.css',
-  '/assets/css/fullscreen-board.css',
+  '/assets/css/platform.css',
+  '/assets/css/pro-games.css',
+  '/assets/css/quiz-board-v2.css',
+  '/assets/css/quiz-luxury.css',
+  '/assets/css/quiz-pro.css',
   '/assets/css/snakes-premium.css',
   '/assets/css/snakes-v4-board.css',
   '/assets/css/snakes-v4-interactions.css',
-  '/assets/css/snake-classic.css',
+  '/assets/css/social.css',
   '/assets/css/zahra-premium.css',
-  '/assets/css/jackaroo-next.css',
-  '/assets/css/quiz-luxury.css',
-  '/assets/css/quiz-board-v2.css',
-  '/assets/js/audio-manager.js',
-  '/firebase-config.js',
-  '/assets/js/firebase-online.js',
-  '/assets/js/matchmaking.js',
-  '/assets/js/match-game-selector.js',
-  '/assets/js/quick-match-game.js',
-  '/assets/js/questions-data.js',
-  '/assets/js/luxury-game-ui.js',
-  '/assets/js/platform.js',
-  '/assets/js/progression.js',
-  '/assets/js/store-catalog.js',
-  '/assets/js/store.js',
-  '/assets/js/bot-engine.js',
-  '/assets/js/board-matchmaking.js',
-  '/assets/js/match-presentation.js',
-  '/assets/js/arcade-games.js',
-  '/assets/js/memory-pro.js',
-  '/assets/js/new-games.js',
-  '/assets/js/engines/spotdiff-scenes.js',
-  '/assets/js/social-client.js',
   '/assets/js/adaptive-board-layout.js',
-  '/assets/js/snakes-v4-fx.js',
-  '/assets/js/snakes-motion-engine.js',
-  '/assets/js/snake-classic.js',
-  '/assets/js/fullscreen-game.js',
+  '/assets/js/arcade-games.js',
+  '/assets/js/audio-manager.js',
   '/assets/js/board-online.js',
-  '/assets/js/engines/snakes-engine.js',
+  '/assets/js/career-client.js',
+  '/assets/js/commercial-upgrade-engine.js',
+  '/assets/js/engines/arcade-engine.js',
   '/assets/js/engines/dice-engine.js',
-  '/assets/js/engines/ludo-engine.js',
   '/assets/js/engines/jackaroo-engine.js',
+  '/assets/js/engines/ludo-engine.js',
+  '/assets/js/engines/snakes-engine.js',
+  '/assets/js/fullscreen-game.js',
+  '/assets/js/games/jackaroo-ui.js',
+  '/assets/js/games/snakes-ui.js',
+  '/assets/js/luxury-game-ui.js',
+  '/assets/js/matchmaking.js',
+  '/assets/js/online/room-client.js',
+  '/assets/js/online/room-lobby.js',
+  '/assets/js/platform.js',
+  '/assets/js/pro-dice.js',
+  '/assets/js/profile-core.js',
+  '/assets/js/questions-data.js',
+  '/assets/js/quick-match-game.js',
+  '/assets/js/quiz-media.js',
+  '/assets/js/shop.js',
+  '/assets/js/snake-pro-career-engine.js',
   '/assets/js/snake-pro-upgrade.js',
-  '/assets/snake-reference-skin.png',
-  '/assets/sounds/round.wav',
-  '/assets/sounds/reveal.wav',
-  '/assets/sounds/launch.wav',
+  '/assets/js/snakes-v4-fx.js',
+  '/assets/js/social-client.js',
+  '/assets/js/v5-ultimate-expansion.js',
+  '/assets/quiz_photos/astronaut.webp',
+  '/assets/quiz_photos/astronaut_glove.webp',
+  '/assets/quiz_photos/astronaut_helmet.webp',
+  '/assets/quiz_photos/astronaut_suit.webp',
+  '/assets/quiz_photos/brick.webp',
+  '/assets/quiz_photos/brick_close.webp',
+  '/assets/quiz_photos/camera.webp',
+  '/assets/quiz_photos/camera_lens.webp',
+  '/assets/quiz_photos/camera_tripod.webp',
+  '/assets/quiz_photos/cat.webp',
+  '/assets/quiz_photos/cat_ear.webp',
+  '/assets/quiz_photos/cat_eye.webp',
+  '/assets/quiz_photos/cat_nose.webp',
+  '/assets/quiz_photos/cell.webp',
+  '/assets/quiz_photos/cell_detail.webp',
+  '/assets/quiz_photos/cheetah.webp',
+  '/assets/quiz_photos/cheetah_eye.webp',
+  '/assets/quiz_photos/cheetah_spots.webp',
+  '/assets/quiz_photos/china_detail.webp',
+  '/assets/quiz_photos/china_roof.webp',
+  '/assets/quiz_photos/china_temple.webp',
+  '/assets/quiz_photos/clock.webp',
+  '/assets/quiz_photos/coffee.webp',
+  '/assets/quiz_photos/coffee_rim.webp',
+  '/assets/quiz_photos/coffee_spoon.webp',
+  '/assets/quiz_photos/coins.webp',
+  '/assets/quiz_photos/coins_close.webp',
+  '/assets/quiz_photos/coins_edge.webp',
+  '/assets/quiz_photos/eiffel.webp',
+  '/assets/quiz_photos/eiffel_close.webp',
+  '/assets/quiz_photos/eiffel_lattice.webp',
+  '/assets/quiz_photos/flower.webp',
+  '/assets/quiz_photos/flower_center.webp',
+  '/assets/quiz_photos/flower_petals.webp',
+  '/assets/quiz_photos/grace_hopper.webp',
+  '/assets/quiz_photos/grace_medals.webp',
+  '/assets/quiz_photos/grass.webp',
+  '/assets/quiz_photos/grass_blades.webp',
+  '/assets/quiz_photos/gravel.webp',
+  '/assets/quiz_photos/gravel_detail.webp',
+  '/assets/quiz_photos/hubble.webp',
+  '/assets/quiz_photos/hubble_field.webp',
+  '/assets/quiz_photos/ihc.webp',
+  '/assets/quiz_photos/ihc_cells.webp',
+  '/assets/quiz_photos/lion.webp',
+  '/assets/quiz_photos/lion_eye.webp',
+  '/assets/quiz_photos/lion_mane.webp',
+  '/assets/quiz_photos/moon.webp',
+  '/assets/quiz_photos/moon_craters.webp',
+  '/assets/quiz_photos/moon_surface.webp',
+  '/assets/quiz_photos/motorcycle.webp',
+  '/assets/quiz_photos/motorcycle_engine.webp',
+  '/assets/quiz_photos/motorcycle_headlight.webp',
+  '/assets/quiz_photos/motorcycle_wheel.webp',
+  '/assets/quiz_photos/retina.webp',
+  '/assets/quiz_photos/retina_optic.webp',
+  '/assets/quiz_photos/retina_vessels.webp',
+  '/assets/quiz_photos/rocket.webp',
+  '/assets/quiz_photos/rocket_body.webp',
+  '/assets/quiz_photos/rocket_launchpad.webp',
   '/assets/sounds/correct.wav',
-  '/assets/sounds/wrong.wav',
   '/assets/sounds/duel.wav',
-];
+  '/assets/sounds/launch.wav',
+  '/assets/sounds/reveal.wav',
+  '/assets/sounds/round.wav',
+  '/assets/sounds/wrong.wav',
+  '/assets/sounds_guess/applause.wav',
+  '/assets/sounds_guess/camera.wav',
+  '/assets/sounds_guess/clock.wav',
+  '/assets/sounds_guess/engine.wav',
+  '/assets/sounds_guess/heartbeat.wav',
+  '/assets/sounds_guess/keyboard.wav',
+  '/assets/sounds_guess/knock.wav',
+  '/assets/sounds_guess/rain.wav',
+  '/assets/sounds_guess/water.wav',
+  '/assets/sounds_pro/airplane.wav',
+  '/assets/sounds_pro/alarm.wav',
+  '/assets/sounds_pro/applause.wav',
+  '/assets/sounds_pro/basketball.wav',
+  '/assets/sounds_pro/bell.wav',
+  '/assets/sounds_pro/bikebell.wav',
+  '/assets/sounds_pro/blender.wav',
+  '/assets/sounds_pro/boiling.wav',
+  '/assets/sounds_pro/bottle_pop.wav',
+  '/assets/sounds_pro/bowling.wav',
+  '/assets/sounds_pro/brakes.wav',
+  '/assets/sounds_pro/camera.wav',
+  '/assets/sounds_pro/clock.wav',
+  '/assets/sounds_pro/coin.wav',
+  '/assets/sounds_pro/copier.wav',
+  '/assets/sounds_pro/doorbell.wav',
+  '/assets/sounds_pro/drill.wav',
+  '/assets/sounds_pro/drops.wav',
+  '/assets/sounds_pro/electric_hum.wav',
+  '/assets/sounds_pro/elevator.wav',
+  '/assets/sounds_pro/engine.wav',
+  '/assets/sounds_pro/fire.wav',
+  '/assets/sounds_pro/footsteps.wav',
+  '/assets/sounds_pro/gate.wav',
+  '/assets/sounds_pro/glass.wav',
+  '/assets/sounds_pro/hairdryer.wav',
+  '/assets/sounds_pro/heartbeat.wav',
+  '/assets/sounds_pro/helicopter.wav',
+  '/assets/sounds_pro/keyboard.wav',
+  '/assets/sounds_pro/keys.wav',
+  '/assets/sounds_pro/kitchen_timer.wav',
+  '/assets/sounds_pro/knock.wav',
+  '/assets/sounds_pro/manifest.json',
+  '/assets/sounds_pro/microwave.wav',
+  '/assets/sounds_pro/motorcycle.wav',
+  '/assets/sounds_pro/mouse.wav',
+  '/assets/sounds_pro/notification.wav',
+  '/assets/sounds_pro/pages.wav',
+  '/assets/sounds_pro/paper_tear.wav',
+  '/assets/sounds_pro/pen_click.wav',
+  '/assets/sounds_pro/phone.wav',
+  '/assets/sounds_pro/printer.wav',
+  '/assets/sounds_pro/radio.wav',
+  '/assets/sounds_pro/rain.wav',
+  '/assets/sounds_pro/revving.wav',
+  '/assets/sounds_pro/robotvac.wav',
+  '/assets/sounds_pro/saw.wav',
+  '/assets/sounds_pro/scanner.wav',
+  '/assets/sounds_pro/siren.wav',
+  '/assets/sounds_pro/snap.wav',
+  '/assets/sounds_pro/spray.wav',
+  '/assets/sounds_pro/stapler.wav',
+  '/assets/sounds_pro/tennis.wav',
+  '/assets/sounds_pro/thunder.wav',
+  '/assets/sounds_pro/train.wav',
+  '/assets/sounds_pro/vacuum.wav',
+  '/assets/sounds_pro/water.wav',
+  '/assets/sounds_pro/waves.wav',
+  '/assets/sounds_pro/whistle.wav',
+  '/assets/sounds_pro/wind.wav',
+  '/assets/sounds_pro/zipper.wav',
+  '/dice.html',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/index.html',
+  '/jackaroo.html',
+  '/local.html',
+  '/logic.html',
+  '/manifest.webmanifest',
+  '/memory.html',
+  '/online.html',
+  '/puzzle.html',
+  '/reaction.html',
+  '/shop.html',
+  '/snake-preview.svg',
+  '/snakes.html',
+  '/social.html',
+  '/v5.html',
+  '/zahra.html',
+  '/logic',
+  '/zahra',
+  '/memory',
+  '/social',
+  '/dice',
+  '/reaction',
+  '/shop',
+  '/online',
+  '/puzzle',
+  '/v5',
+  '/jackaroo',
+  '/local',
+  '/snakes',
+  '/accuracy'];
 
 
 self.addEventListener('install', (event) => {
@@ -126,37 +232,9 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => ![CACHE_NAME,MEDIA_CACHE].includes(key)).map((key) => caches.delete(key))))
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => ![CACHE_NAME,MEDIA_CACHE].includes(key)).map((key) => caches.delete(key)))).then(()=>self.clients.claim())
   );
-  self.clients.claim();
 });
-
-async function remember(request, response) {
-  if (!response?.ok || response.type === 'opaque') return response;
-  const copy = response.clone();
-  caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
-  return response;
-}
-
-async function recoverNavigation(request, failedResponse = null) {
-  const url = new URL(request.url);
-  const cleanPath = url.pathname.replace(/\/+$/, '') || '/';
-  const hasDocumentExtension = /\/[^/]+\.[a-z0-9]+$/i.test(cleanPath);
-
-  if (cleanPath !== '/' && !hasDocumentExtension) {
-    const candidate = new URL(url.href);
-    candidate.pathname = `${cleanPath}.html`;
-    try {
-      const recovered = await fetch(candidate.href);
-      if (recovered?.ok) return remember(request, recovered);
-    } catch {}
-  }
-
-  return (await caches.match('/navigation-error.html'))
-    || (await caches.match('/index.html'))
-    || failedResponse
-    || Response.error();
-}
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
@@ -167,30 +245,21 @@ self.addEventListener('fetch', (event) => {
   }
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
-  // Cloudflare canonicalizes these documents to extensionless URLs. Let the
-  // browser follow that redirect directly; intercepting it can surface as
-  // ERR_FAILED on Chromium-based mobile browsers after a match is found.
-  if (event.request.mode === 'navigate' && BROWSER_MANAGED_MATCH_DOCUMENTS.has(url.pathname)) return;
-
   if (event.request.mode === 'navigate') {
-    event.respondWith(
-      caches.match(event.request).then(async (cached) => {
-        if (cached) return cached;
-        try {
-          const response = await fetch(event.request);
-          return response?.ok ? remember(event.request, response) : recoverNavigation(event.request, response);
-        } catch {
-          return recoverNavigation(event.request);
-        }
-      })
-    );
+    event.respondWith(fetch(event.request).then(async response => {
+      if(response.ok){const cache=await caches.open(CACHE_NAME);await cache.put(event.request,response.clone())}
+      return response;
+    }).catch(async()=>await caches.match(event.request)||await caches.match(url.pathname.replace(/\/$/,'')+'.html')||await caches.match('/index.html')));
     return;
   }
-
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-      return remember(event.request, response);
+      if (!response || response.status !== 200 || response.type === 'opaque') return response;
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+      return response;
     }).catch(() => {
+      if (event.request.mode === 'navigate') return caches.match('/');
       return Response.error();
     }))
   );

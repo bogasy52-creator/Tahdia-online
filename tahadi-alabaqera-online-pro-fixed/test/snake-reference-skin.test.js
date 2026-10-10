@@ -5,15 +5,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 
-test('reference arena uses the supplied portrait frame as the final skin', async () => {
-  const html = await readFile(join(root, 'public', 'snakes.html'), 'utf8');
-  const css = await readFile(join(root, 'public', 'assets', 'css', 'snake-reference-skin.css'), 'utf8');
-  assert.match(html, /assets\/css\/snake-reference-skin\.css/);
-  assert.match(css, /background-image:\s*url\('\.\.\/snake-reference-skin\.png'\)/);
-  assert.match(css, /grid-template-rows:\s*8\.98%\s+9\.31%/);
-  assert.match(css, /#game\.reference-skin\.has-rolled \.die/);
-  assert.match(html, /function launchConfetti\(\)/);
-});
+test('snake gameplay does not load the retired portrait skin or overlapping effect layers',async()=>{const html=await readFile(join(root,'public/snakes.html'),'utf8');assert.match(html,/pro-games\.css/);assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/snake-reference-skin\.png|snake-pro-upgrade\.js|v5-ultimate-expansion\.js/);assert.match(html,/await runSoloAi\(\)/)});
 
 test('reference frame is a valid 709 x 1536 PNG for Cloudflare assets', async () => {
   const bytes = await readFile(join(root, 'public', 'assets', 'snake-reference-skin.png'));

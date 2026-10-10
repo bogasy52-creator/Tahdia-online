@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // V6 quick matches use the authoritative Worker. Reject legacy writes.
+    match /match_queue/{document=**} { allow read, write: if false; }
+    match /matches/{document=**} { allow read, write: if false; }
+    // Merge these rules with any other Firebase collections you intentionally use.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

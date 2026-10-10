@@ -1,57 +1,59 @@
-بوسراج للألعاب 5.3.3 — طريقة النشر الآمن
+بوسراج للألعاب — 6.0.0
+دليل نشر المشروع الكامل
 
-1) فك ملف ZIP.
-2) افتح Terminal داخل المجلد الذي يحتوي package.json وwrangler.jsonc.
-3) نفذ: npm install --include=dev
-4) نفذ: npx wrangler login
-5) أنشئ رمزًا سريًا عشوائيًا لا يقل عن 24 حرفًا، ثم خزّنه في Cloudflare فقط:
-   npx wrangler secret put BOSRAG_OWNER_SECRET
-6) نفذ: npm run verify
-7) نفذ: npm run check:cloudflare
-8) إذا انتهى التحقق دون أخطاء نفذ: npm run deploy
+1) فك ZIP وافتح الطرفية داخل snake_final حيث package.json وwrangler.jsonc.
+2) استخدم Node.js 24، ثم نفذ بالترتيب:
 
-تهيئة حساب المدير bosrag لأول مرة:
-- افتح صفحة «حسابي» واختر «حساب جديد».
-- اكتب اسم المستخدم: bosrag
-- سيظهر حقل «رمز تهيئة المدير»؛ أدخل نفس السر المحفوظ في Cloudflare.
-- بعد إنشاء الحساب لا تحتاج الرمز مرة أخرى؛ تسجيل الدخول المعتاد يكفي.
-- حساب bosrag الموجود مسبقًا لا يتأثر ويستمر تسجيل دخوله كالمعتاد.
-- لا تضع BOSRAG_OWNER_SECRET داخل wrangler.jsonc أو أي ملف يُرفع مع المشروع.
+npm ci --include=dev
+npm run verify:release
+node scripts/verify-worker-config.mjs
+npm run check:cloudflare
+npx wrangler login
+npm run deploy
 
-بعد النشر افتح:
-/api/health
+الأمر deploy ينشر العامل والأصول كاملة. نشر public فقط لا يشغل الحسابات أو الغرف أو المواجهات السريعة.
 
-المفترض يتضمن:
-ok:true
-online:true
-quizOnline:true
-boardOnline:true
-matchmakingOnline:true
-socialOnline:true
-version:"5.3.3"
+اسم العامل المحفوظ في الحزمة: tahdia-online
+ROOMS -> GameRoom
+BOARD_ROOMS -> BoardRoom
+QUICK_ARENA -> QuickArena
 
-Cloudflare:
-- ROOMS -> GameRoom
-- BOARD_ROOMS -> BoardRoom
-- MATCHMAKING -> MatchmakingRoom
-- الحسابات تستخدم BOARD_ROOMS في الإعداد الحالي؛ SOCIAL_USERS اختياري عند فصلها مستقبلًا.
-- حافظ على جميع migrations الموجودة في wrangler.jsonc ولا تعدّل ترتيبها.
+الحسابات تستخدم التفويض الداخلي في BOARD_ROOMS. لا يوجد احتياج إلى SOCIAL_USERS في هذه النسخة.
+حافظ على migrations المنشورة v1 وv2 وv3-board-room-rename كما هي. أُضيفت في آخر القائمة:
+v6-authoritative-quick-arena -> new_sqlite_classes: QuickArena
+لا تحذف تاريخ migrations ولا تغيّر اسم العامل إذا كان هذا تحديثًا لنفس الخدمة. إن كان إعداد حسابك المنشور مختلفًا، حافظ على إعداداته السابقة وأضف binding والترحيل الجديد بعد آخر migration معتمد فيه.
 
-فحوص موصى بها بعد النشر:
-- سجل حسابين عاديين وتأكد أن اسم bosrag محجوز دون رمز المدير.
-- طلب صداقة -> قبول -> دعوة -> دخول الغرفة.
-- جرّب المطابقة السريعة: لاعب حقيقي أولًا، ثم BOT بعد 12 ثانية عند عدم وجود منافس.
-- جرّب المستوى المتوسط والمحترف في كل الألعاب.
-- أكمل مباراة أونلاين ثم حدّث الصفحة وتأكد أن المكافأة لا تتكرر.
-- اختبر المتجر والحفظ على جهازين بالحساب نفسه، وجهّز شخصية وحزمة صوت وتأكد من ظهور زر العبارات داخل اللعبة.
-- من صفحة الأونلاين اختر كل لعبة مرة وتأكد أن المطابقة تفتح اللعبة المختارة نفسها.
-- في جاكارو استخدم 4 جلسات وتأكد أن كل لاعب يرى أوراقه فقط.
+ملاحظة تحديث حي:
+يفضل إنهاء الغرف النشطة قبل تحديث الواجهة. العملاء القدامى لا يرسلون expectedVersion الجديد، لذلك اطلب إعادة تحميل الصفحة بعد نشر V6؛ ستُرفض حركاتهم القديمة بدل تكرارها. صفحة PWA تحتاج زيارة متصلة ليكتمل الكاش الجديد.
 
-PWA:
-App shell cache = busraj-games-v43-document-visibility-fix
-Quiz media cache = busraj-quiz-media-v3
+بعد النشر افتح /api/health. يجب أن تتضمن الاستجابة:
+ok: true
+online: true
+quizOnline: true
+boardOnline: true
+quickOnline: true
+socialOnline: true
+version: "6.0.0"
 
-مهم:
-- انشر المشروع كاملًا وليس public فقط.
-- تقدم الألعاب الفردية محلي أولًا، ثم يزامن مع الحساب عند توفر الاتصال.
-- امتيازات المدير تُصدر من الخادم فقط للحساب المحجوز bosrag.
+فحوص قبول على الموقع المنشور:
+- حسابان منفصلان: تسجيل، صداقة، قبول، خصوصية ودعوة إلى غرفة.
+- مباراة سريعة بين الجهازين حتى النهاية: نقاط متطابقة، رفض الإجابة بعد انتهاء الوقت، مكافأة واحدة بعد إعادة التحميل.
+- الثعبان: 2-4 لاعبين، رمية متكررة، فصل الشبكة ثم إعادة الاتصال، وإعادة المباراة إلى الانتظار.
+- الجاكارو: أربعة متصفحات/جلسات، يد كل لاعب خاصة، اختيار ورقة وحجر، فوز الفريق بعد دخول ثمانية أحجار.
+- الزهرة: انتظار اختيار الحجر ومنع إعادة الرمية، ثم فوز وإعادة جولة.
+- المتجر: رصيد غير كافٍ، شراء واحد بالنقر المتكرر، ظهور التجهيز في اللعبة ومزامنته على الجهاز الثاني.
+- النتائج المحلية: أكمل جولة مع قطع الشبكة، أغلق وافتح الصفحة، ثم اتصل بالحساب نفسه؛ تأكد أن النتيجة تُضاف مرة واحدة.
+- PWA: زيارة الصفحات متصلًا أولًا، ثم وضع الطيران؛ اختبر اللعب المحلي والأصوات والكاش.
+- جرب Android وiOS واتجاهي الشاشة مع خيار تقليل الحركة.
+
+Firebase القديم:
+المواجهة السريعة الجديدة لا تستدعي Firestore. الملف firebase/firestore.rules يرفض وصول المتصفح إلى match_queue وmatches ويحتوي سياسة رفض افتراضية. راجع مجموعات مشروعك الأخرى وادمج قواعدها المقصودة قبل تطبيق الملف؛ ثم انشر قواعد Firestore من Console أو من مشروع Firebase المهيأ باستخدام:
+firebase deploy --only firestore:rules --project YOUR_PROJECT_ID
+هذه القواعد ليست منشورة ضمن أمر wrangler deploy.
+
+تم التحقق من الكود بمحاكاة السيرفر وDOM. لم يُنفَّذ نشر فعلي أو فحص Wrangler السحابي أو اختبار متصفحات/أجهزة حقيقية في بيئة التسليم.
+
+المراجع:
+https://developers.cloudflare.com/workers/wrangler/commands/workers/
+https://developers.cloudflare.com/durable-objects/reference/durable-object-class-migrations-legacy/
+https://firebase.google.com/docs/rules/manage-deploy

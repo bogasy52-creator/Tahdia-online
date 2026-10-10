@@ -26,6 +26,7 @@ if (!(config.assets?.run_worker_first || []).includes('/api/*')) fail('API route
 const bindings = new Map((config.durable_objects?.bindings || []).map((item) => [item.name, item.class_name]));
 if (bindings.get('ROOMS') !== 'GameRoom') fail('ROOMS / GameRoom binding is missing');
 if (bindings.get('BOARD_ROOMS') !== 'BoardRoom') fail('BOARD_ROOMS / BoardRoom binding is missing');
+if (bindings.get('QUICK_ARENA') !== 'QuickArena') fail('QUICK_ARENA / QuickArena binding is missing');
 
 const migrations = config.migrations || [];
 const hasGameRoomMigration = migrations.some((m) => (m.new_sqlite_classes || []).includes('GameRoom'));
@@ -33,6 +34,7 @@ const hasBoardRoomMigration = migrations.some((m) => (m.new_sqlite_classes || []
 const hasLegacyBoardRoomMigration = migrations.some((m) => (m.new_sqlite_classes || []).includes('BoardGameRoom'));
 const hasBoardRoomRename = migrations.some((m) => (m.renamed_classes || []).some((entry) => entry.from === 'BoardGameRoom' && entry.to === 'BoardRoom'));
 if (!hasGameRoomMigration) fail('GameRoom migration is missing');
+if (!migrations.some(m => (m.new_sqlite_classes || []).includes('QuickArena'))) fail('QuickArena migration is missing');
 if (!hasBoardRoomMigration && !(hasLegacyBoardRoomMigration && hasBoardRoomRename)) {
   fail('BoardRoom migration/rename is missing');
 }
@@ -40,6 +42,7 @@ if (!hasBoardRoomMigration && !(hasLegacyBoardRoomMigration && hasBoardRoomRenam
 for (const className of ['GameRoom', 'BoardRoom']) {
   if (!new RegExp(`export\\s+class\\s+${className}\\b`).test(worker)) fail(`${className} is not exported from src/index.js`);
 }
+if (!/export const QuickArena = createQuickArenaClass\(DurableObject\)/.test(worker)) fail('QuickArena is not exported from src/index.js');
 
 await access(join(root, 'public'));
 await access(join(root, 'src/rooms/board-game-room.js'));

@@ -1,7 +1,7 @@
 export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
-    this.ws=null;this.code='';this.name='';this.hostKey='';this.token='';this.closedByUser=false;this.retry=0;this.reconnectTimer=null;
+    this.ws=null;this.code='';this.name='';this.hostKey='';this.token='';this.closedByUser=false;this.retry=0;this.reconnectTimer=null;this.version=null;
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
   async create(name,playerLimit){
@@ -16,10 +16,7 @@ export class BoardOnlineClient {
   }
   async connect(code,name){
     if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    let remembered='';try{remembered=localStorage.getItem('online_name')||''}catch{}
-    const requested=String(name||'').trim();
-    this.closedByUser=false;this.code=code;this.name=String((requested&&requested!=='لاعب')?requested:(remembered||requested||'لاعب')).trim().slice(0,20)||'لاعب';
-    try{const matchedHost=new URLSearchParams(location.search).get('matchHost');if(matchedHost)this.hostKey=matchedHost.slice(0,160)}catch{}
+    this.closedByUser=false;this.code=code;this.name=String(name||'لاعب').trim().slice(0,20)||'لاعب';
     try{this.token=localStorage.getItem(this.tokenKey(code))||''}catch{}
     await this.openSocket();return code;
   }
@@ -27,17 +24,17 @@ export class BoardOnlineClient {
     return new Promise((resolve,reject)=>{
       clearTimeout(this.reconnectTimer);const proto=location.protocol==='https:'?'wss:':'ws:';
       const q=new URLSearchParams({name:this.name,game:this.game});
-      const protocols=['busraj-v1'];if(this.token)protocols.push(`rt.${this.token}`);if(this.hostKey)protocols.push(`hk.${this.hostKey}`);
+      const protocols=['busraj-v1'];if(this.token)protocols.push(`rt.${this.token}`);if(this.hostKey)protocols.push(`hk.${this.hostKey}`);try{const account=localStorage.getItem('bs_social_session');if(account)protocols.push('st.'+account)}catch{}
       const ws=new WebSocket(`${proto}//${location.host}/api/board/rooms/${this.code}/ws?${q}`,protocols);this.ws=ws;let settled=false;
       const timer=setTimeout(()=>{if(!settled){settled=true;try{ws.close()}catch{};reject(new Error('انتهت مهلة الاتصال بالغرفة'))}},9000);
       ws.onopen=()=>{if(this.ws!==ws)return;this.onStatus({online:true,reconnecting:false,text:'متصل'});};
-      ws.onmessage=(ev)=>{if(this.ws!==ws)return;let msg;try{msg=JSON.parse(ev.data)}catch{return}const stamp=(state)=>{if(state)state.clientReceivedAt=Date.now();return state};if(msg.type==='welcome'){this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{};const state=stamp(msg.state);this.onState(state);if(!settled){settled=true;clearTimeout(timer);resolve(state)}}else if(msg.type==='state')this.onState(stamp(msg.state));else if(msg.type==='error'){this.onError(msg.message||'حدث خطأ');}};
+      ws.onmessage=(ev)=>{if(this.ws!==ws)return;let msg;try{msg=JSON.parse(ev.data)}catch{return}const stamp=(state)=>{if(state){state.clientReceivedAt=Date.now();this.version=state.version;}return state};if(msg.type==='welcome'){this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{};const state=stamp(msg.state);this.onState(state);if(!settled){settled=true;clearTimeout(timer);resolve(state)}}else if(msg.type==='state')this.onState(stamp(msg.state));else if(msg.type==='error'){this.onError(msg.message||'حدث خطأ');}};
       ws.onerror=()=>{if(this.ws!==ws)return;this.onStatus({online:false,reconnecting:true,text:'مشكلة اتصال'});};
       ws.onclose=(ev)=>{clearTimeout(timer);if(this.ws!==ws)return;this.onStatus({online:false,reconnecting:!this.closedByUser,text:this.closedByUser?'غير متصل':'إعادة اتصال…'});if(!settled){settled=true;reject(new Error(ev.reason||'تعذر الاتصال بالغرفة'))}if(!this.closedByUser&&ev.code!==4001)this.scheduleReconnect();};
     })
   }
   scheduleReconnect(){clearTimeout(this.reconnectTimer);const delay=Math.min(7000,700*Math.pow(1.65,this.retry++));this.reconnectTimer=setTimeout(()=>this.openSocket().catch(()=>{}),delay)}
-  send(type,payload={}){if(!this.ws||this.ws.readyState!==WebSocket.OPEN){this.onError('الاتصال غير جاهز — جاري إعادة الاتصال');return false}this.ws.send(JSON.stringify({type,...payload}));return true}
+  send(type,payload={}){if(!this.ws||this.ws.readyState!==WebSocket.OPEN){this.onError('الاتصال غير جاهز — جاري إعادة الاتصال');return false}this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}
   close(){this.closedByUser=true;clearTimeout(this.reconnectTimer);try{if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify({type:'leave'}));this.ws?.close(1000,'leave')}catch{};this.ws=null}
 }
 

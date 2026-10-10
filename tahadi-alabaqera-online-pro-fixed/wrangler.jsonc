@@ -20,6 +20,10 @@
       {
         "name": "BOARD_ROOMS",
         "class_name": "BoardRoom"
+      },
+      {
+        "name": "QUICK_ARENA",
+        "class_name": "QuickArena"
       }
     ]
   },
@@ -43,6 +47,12 @@
           "from": "BoardGameRoom",
           "to": "BoardRoom"
         }
+      ]
+    },
+    {
+      "tag": "v6-authoritative-quick-arena",
+      "new_sqlite_classes": [
+        "QuickArena"
       ]
     }
   ],

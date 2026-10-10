@@ -35,7 +35,7 @@ test('board rooms have disconnect grace, turn deadlines, and safe rematch lobby 
   assert.match(worker, /serverNow: Date\.now\(\)/);
   assert.match(worker, /handleTurnTimeout\(\)/);
   assert.match(worker, /cleanupStaleLobbyGuests\(\)/);
-  assert.match(worker, /msg\.type === "rematch"[\s\S]{0,220}resetForRematch\(\)/);
+  assert.match(worker, /msg\.type === "rematch"[\s\S]*?if \(!this\.room\.rewardsComplete\)[\s\S]*?resetForRematch\(\)/);
   assert.match(worker, /resetForRematch\(\)[\s\S]{0,320}ready = false/);
 });
 

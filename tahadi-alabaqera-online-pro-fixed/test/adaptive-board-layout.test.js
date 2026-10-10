@@ -131,15 +131,4 @@ test('fullscreen controller applies adaptive landscape metrics to the live stage
   assert.equal(result.layoutEvent?.detail?.mode,'landscape');
 });
 
-test('snake page loads the V4 cascade and adaptive controller in dependency order',async()=>{
-  const html=await readFile(new URL('../public/snakes.html',import.meta.url),'utf8');
-  const premium=html.indexOf('assets/css/snakes-premium.css');
-  const v4=html.indexOf('assets/css/snakes-v4-board.css');
-  const layout=html.indexOf('assets/js/adaptive-board-layout.js');
-  const fullscreen=html.indexOf('assets/js/fullscreen-game.js');
-  const interactions=html.indexOf("./assets/js/snakes-v4-fx.js");
-
-  assert.ok(premium>=0&&v4>premium,'V4 board styling must win the CSS cascade');
-  assert.ok(layout>=0&&fullscreen>layout,'layout engine must load before the fullscreen controller');
-  assert.ok(interactions>fullscreen,'the live V4 interaction engine must load in the game module');
-});
+test('snake board has one responsive CSS owner and bounded resizing',async()=>{const html=await readFile(new URL('../public/snakes.html',import.meta.url),'utf8');assert.match(html,/pro-games\.css/);assert.doesNotMatch(html,/snake-reference-skin\.css|adaptive-board-layout\.js/);assert.match(html,/cancelAnimationFrame\(resizeFrame\)/);assert.match(html,/requestAnimationFrame\(\(\)=>state&&drawPaths\(\)\)/)});
