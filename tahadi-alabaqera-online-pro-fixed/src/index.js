@@ -372,7 +372,8 @@ export default {
         return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
       } catch (err) {
         console.error("create board room failed", err);
-        return json({ ok: false, error: "تعذر تشغيل غرفة اللعبة" }, 503);
+        const detail = String(err?.message || err || "").slice(0, 160);
+        return json({ ok: false, error: "تعذر تشغيل غرفة اللعبة" + (detail ? " — " + detail : "") }, 503);
       }
     }
 
