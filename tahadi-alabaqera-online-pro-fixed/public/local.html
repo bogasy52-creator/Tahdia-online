@@ -104,7 +104,7 @@
 (() => {
 const root=document.getElementById('app');if(!root||root.dataset.ready==='1')return;root.dataset.ready='1';
 const DATA=window.BS_QUIZ_CATEGORIES||[], $=s=>root.querySelector(s);
-const SFX={round:new Audio('assets/sounds/round.wav'),correct:new Audio('assets/sounds/correct.wav'),wrong:new Audio('assets/sounds/wrong.wav'),reveal:new Audio('assets/sounds/reveal.wav')};Object.values(SFX).forEach(a=>{a.preload='auto';a.volume=.65});
+const SFX={round:new Audio('assets/sounds/arena-v9/reward.wav'),correct:new Audio('assets/sounds/arena-v9/reward.wav'),wrong:new Audio('assets/sounds/arena-v9/error.wav'),reveal:new Audio('assets/sounds/arena-v9/card.wav')};Object.values(SFX).forEach(a=>{a.preload='auto';a.volume=.65});
 let sound=true,selected=[],teams=[{name:'',score:0,double:true,extra:true,pass:true},{name:'',score:0,double:true,extra:true,pass:true}],turn=0,current=null,timerId=null,left=45,total=45,paused=false,doubleArmed=false,formed={},shapeCode='',questionAudio=null,questionAudioRAF=0;
 let recentQuestionIds=[];try{recentQuestionIds=JSON.parse(localStorage.getItem('bs_quiz_recent_v1')||'[]')}catch{}
 function sfx(k){if(window.BS_AUDIO){BS_AUDIO.play(k);return}if(!sound)return;try{const a=SFX[k];a.currentTime=0;a.play().catch(()=>{})}catch(e){}}

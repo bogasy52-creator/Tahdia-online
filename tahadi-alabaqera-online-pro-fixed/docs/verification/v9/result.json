@@ -1,0 +1,46 @@
+{
+  "version": "9.0.0",
+  "node_tests": {
+    "total": 206,
+    "passed": 200,
+    "failed": 0,
+    "skipped": 6
+  },
+  "release": {
+    "js_modules": 107,
+    "inline_scripts": 9,
+    "static_references": 497,
+    "offline_cache_paths": 234,
+    "worker_offline_runtime": "passed",
+    "css_asset_references": 2
+  },
+  "canvas_render": {
+    "engine": "native Canvas 2D, no browser",
+    "size": [
+      390,
+      843
+    ],
+    "snake_count": 8,
+    "ladder_count": 8,
+    "assets": "ready",
+    "inspection": "painted scales, larger heads/bodies, route endpoints and cell label layering checked"
+  },
+  "browser_checks_completed_before_limit": [
+    "reward cell 12 opens symbol die",
+    "symbol 2 grants two extra turns",
+    "six enters cell 1 and keeps turn",
+    "settled face 6 is the only visible die face"
+  ],
+  "browser_final_check": "blocked by automatic approval review usage limit; final graphics enlargement and final CSS pips not rechecked in browser",
+  "not_claimed": [
+    "final browser screenshot",
+    "deployed server matches",
+    "physical Android device playtest",
+    "listening review of every audio file"
+  ],
+  "cleanup": {
+    "removed_files": 54,
+    "lossless_images": 4,
+    "http_smoke": "passed"
+  }
+}

@@ -1,0 +1,25 @@
+/* A tumbling cube settles with one complete readable result face. */
+.die.pro-die,.game-snakes #game.neon-arena .die.pro-die{transform:none!important;perspective:900px!important;overflow:visible!important;isolation:auto}
+.pro-die-cube{filter:none!important;transform-style:preserve-3d!important;overflow:visible!important}
+.pro-face{box-sizing:border-box;backface-visibility:hidden!important;background:linear-gradient(140deg,#fff 5%,var(--die-color,#eaeef5) 55%,#cad1dd 100%)!important;box-shadow:inset 2px 3px 3px #fff,inset -3px -4px 6px #7882915e!important;border-radius:13%!important;border:1px solid #bac2ce!important;padding:14%!important;gap:3%!important}
+.pro-pip{width:82%!important;height:82%!important;max-width:none;max-height:none;background:radial-gradient(circle at 55% 60%,#263343,#030b16 70%)!important;box-shadow:inset 1px 2px 2px #000,0 1px 0 #fff9!important}
+.pro-die:not(.is-rolling) .pro-face{visibility:hidden}
+.pro-die[data-value='1']:not(.is-rolling) .face-1,.pro-die[data-value='2']:not(.is-rolling) .face-2,.pro-die[data-value='3']:not(.is-rolling) .face-3,.pro-die[data-value='4']:not(.is-rolling) .face-4,.pro-die[data-value='5']:not(.is-rolling) .face-5,.pro-die[data-value='6']:not(.is-rolling) .face-6{visibility:visible}
+.pro-die.is-rolling .pro-face{visibility:visible}
+.die.pro-die::after{content:'';position:absolute;inset:auto -12% -17%;height:14%;background:radial-gradient(ellipse,#0008,transparent 72%);pointer-events:none;z-index:-1}
+#game.neon-arena .dice-stage{top:80.7%!important;left:35%!important;width:30%!important;height:8.4%!important}
+#game.neon-arena .die.pro-die{--die-size:clamp(50px,8.4dvh,100px)}
+#game.neon-arena .pro-face{padding:14%!important}
+#game.neon-arena .pro-pip{width:82%!important;height:82%!important;background:radial-gradient(circle at 55% 60%,#263343,#030b16 70%)!important}
+#game.neon-arena .dice-second{transform:scale(.66)!important;left:76%!important}
+#game.neon-arena .dice-stage.has-double .die:first-child{transform:scale(.82)!important}
+.bonus-overlay{position:fixed;inset:0;background:#020710d9;backdrop-filter:blur(5px);display:grid;place-items:center;z-index:1100;padding:20px}
+.bonus-overlay.hidden{display:none}
+.bonus-card{width:min(340px,100%);text-align:center;background:radial-gradient(ellipse at 50% 38%,#253556,#0b1425 70%);border:1px solid #789ab8;border-radius:24px;padding:24px 22px 22px;box-shadow:0 20px 80px #0008;color:#eff6ff}
+.bonus-card small{color:#f1c67c;letter-spacing:.08em}.bonus-card h2{font-size:22px;margin:8px 0 32px}.bonus-card h3{font-size:21px;margin:28px 0 8px}.bonus-card p{min-height:42px;font-size:13px;line-height:1.7;color:#b9ccde;margin:0 0 12px}
+.bonus-card .bonus-die{--die-size:100px;margin:0 auto!important}
+.bonus-card .pro-face{background:linear-gradient(145deg,#173550,#091629)!important;border-color:#78d3f7!important;box-shadow:inset 2px 2px 4px #88c5df55,inset -3px -3px 6px #0008!important;padding:12%!important}
+.bonus-card .pro-face svg{width:100%;height:100%;grid-area:1/1/4/4;fill:none;stroke:#f1ce8d;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.bonus-card .pro-face svg text{stroke:none;fill:#f1ce8d;font:700 21px Arial;text-anchor:middle}
+.bonus-card .bs-btn{width:100%;min-height:48px}
+@media(prefers-reduced-motion:reduce){.bonus-overlay{backdrop-filter:none}}

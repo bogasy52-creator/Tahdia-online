@@ -1,3 +1,14 @@
 export const DEFAULT_SNAKES_JUMPS=Object.freeze({4:14,9:31,20:38,28:84,40:59,51:67,63:81,71:91,17:7,54:34,62:19,64:60,87:24,93:73,95:75,99:78});
-export function createSnakesGame(names=['لاعب 1','لاعب 2'],options={}){const clean=names.slice(0,4).map((n,i)=>String(n||`لاعب ${i+1}`).slice(0,20));if(clean.length<2)throw new Error('snakes_requires_2_players');return{players:clean.map((name,i)=>({id:i,name,position:0})),turn:0,winner:null,lastRoll:null,lastEvent:null,jumps:{...DEFAULT_SNAKES_JUMPS,...(options.jumps??{})},moveCount:0}}
-export function playSnakesRoll(state,roll){if(state.winner!==null)return state;if(!Number.isInteger(roll)||roll<1||roll>6)throw new Error('invalid_roll');const next=structuredClone(state),p=next.players[next.turn],from=p.position;let landed=from,position=from,jumpType=null;if(from+roll<=100){landed=from+roll;position=Number(next.jumps[landed]??landed);if(position>landed)jumpType='ladder';if(position<landed)jumpType='snake';p.position=position}if(position===100)next.winner=next.turn;const extra=roll===6&&next.winner===null;next.lastRoll=roll;next.lastEvent={player:next.turn,from,landed,to:position,jumpType,extraTurn:extra,blocked:from+roll>100};next.moveCount++;if(!extra&&next.winner===null)next.turn=(next.turn+1)%next.players.length;return next}
+export function createSnakesGame(names=['لاعب 1','لاعب 2'],options={}){const clean=names.slice(0,4).map((n,i)=>String(n||`لاعب ${i+1}`).slice(0,20));if(clean.length<2)throw new Error('snakes_requires_2_players');return{players:clean.map((name,i)=>({id:i,name,position:0})),entrySix:options.entrySix!==false,turn:0,winner:null,lastRoll:null,lastEvent:null,jumps:{...DEFAULT_SNAKES_JUMPS,...(options.jumps??{})},moveCount:0}}
+export function playSnakesRoll(state,roll){
+ if(state.winner!==null)return state;
+ if(!Number.isInteger(roll)||roll<1||roll>6)throw new Error('invalid_roll');
+ const next=structuredClone(state),p=next.players[next.turn],from=p.position;
+ const gate=from===0&&next.entrySix!==false,waitingEntry=gate&&roll!==6,entered=gate&&roll===6,blocked=!gate&&from+roll>100;
+ let landed=from,position=from,jumpType=null;
+ if(!waitingEntry&&!blocked){landed=entered?1:from+roll;position=Number(next.jumps[landed]??landed);if(position>landed)jumpType='ladder';if(position<landed)jumpType='snake';p.position=position}
+ if(position===100)next.winner=next.turn;
+ const extra=roll===6&&next.winner===null;
+ next.lastRoll=roll;next.lastEvent={player:next.turn,from,landed,to:position,jumpType,extraTurn:extra,blocked,waitingEntry,entered};next.moveCount++;
+ if(!extra&&next.winner===null)next.turn=(next.turn+1)%next.players.length;return next;
+}

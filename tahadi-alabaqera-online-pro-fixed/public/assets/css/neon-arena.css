@@ -2,7 +2,7 @@
 body.game-snakes.game-running{background:#030610;--die-color:#eff3fa;--pip:#090d18}
 .game-snakes.game-running .bs-shell{padding:0!important;max-width:none!important;display:block!important}
 .game-snakes.game-running .bs-topbar{display:none!important}
-#game.neon-arena{position:relative!important;width:min(100vw,709px,calc(100dvh / 2.1618))!important;height:auto!important;aspect-ratio:853/1844;min-height:0!important;margin:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:#060a13 url('../arena/arena-plate.png') center/100% 100% no-repeat!important;overflow:hidden!important;isolation:isolate}
+#game.neon-arena{position:relative!important;width:min(100vw,709px,calc(100dvh / 2.1618))!important;height:auto!important;aspect-ratio:853/1844;min-height:0!important;margin:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:#060a13 url('../arena/arena-plate.webp') center/100% 100% no-repeat!important;overflow:hidden!important;isolation:isolate}
 #game.neon-arena .arena-frame{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;filter:var(--arena-board-filter,none)}
 html[data-board='board-ocean']{--arena-board-filter:hue-rotate(-18deg) saturate(1.4)}
 html[data-board='board-sand']{--arena-board-filter:hue-rotate(145deg) saturate(.7) sepia(.22)}
@@ -24,7 +24,14 @@ html[data-pawn='pawn-onyx'] #game.neon-arena .snake-token .crystal-sprite{filter
 #game.neon-arena #boardWrap::before,#game.neon-arena #boardWrap::after,#game.neon-arena #board::before,#game.neon-arena #board::after{display:none!important}
 #game.neon-arena #board{width:100%!important;height:100%!important;aspect-ratio:auto!important;grid-template-columns:repeat(10,minmax(0,1fr))!important;grid-template-rows:8.6% 9.06% 10.55% 9.89% 9.99% 10.18% 10.27% 10.27% 10.64% 10.55%!important;border:0!important;background:transparent!important;direction:ltr!important;border-radius:0!important;overflow:visible!important}
 #game.neon-arena .snake-cell{position:relative;padding:0!important;border:0!important;background:transparent!important;color:#eef4ff!important;box-shadow:none;overflow:visible!important;align-items:flex-start!important;justify-content:flex-start!important;font:600 clamp(9px,2.7vw,19px) Arial,sans-serif!important}
-#game.neon-arena .snake-cell b{position:absolute;top:7%;left:12%;padding:0!important;background:transparent!important;font:inherit!important;color:#e8edf5;z-index:2;text-shadow:0 1px 4px #000}
+#game.neon-arena #board{z-index:auto!important;isolation:auto!important}
+#game.neon-arena .snake-cell{z-index:auto!important}
+#game.neon-arena .snake-cell b{position:absolute;top:4%;left:5%;padding:1px 2px!important;background:#070e19b8!important;border-radius:3px;font:inherit!important;color:#f4f7fb;z-index:25;text-shadow:0 1px 3px #000}
+#game.neon-arena .snake-route-tag{position:absolute;bottom:3%;right:4%;color:#c7d8e9;background:#08121dd9;font:600 clamp(6px,1.9vw,11px) Arial;z-index:24;padding:1px 2px;border-radius:3px;pointer-events:none}
+#game.neon-arena .bonus-cell{box-shadow:inset 0 0 0 1px #c49b4c,inset 0 0 12px #d5a64138!important}
+#game.neon-arena .bonus-marker{position:absolute;bottom:6%;right:8%;color:#f0ca7d;text-shadow:0 0 8px #e4bd59;font-size:16px;z-index:24;pointer-events:none}
+#game.neon-arena .arena-inventory{position:absolute;left:30%;right:10%;bottom:4%;font:600 9px Arial;color:#d9e8f6;background:#081222aa;border-radius:3px;text-align:center}
+#game.neon-arena .player-row:nth-child(2) .arena-inventory{left:8%;right:30%}
 #game.neon-arena .snake-cell .jump-mark,#game.neon-arena .snake-cell::after{display:none!important}
 #game.neon-arena #paths{inset:0!important;width:100%!important;height:100%!important;opacity:0!important;pointer-events:none!important}
 .arena-live-creatures{position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none}
@@ -76,3 +83,13 @@ html[data-pawn='pawn-onyx'] #game.neon-arena .snake-token .crystal-sprite{filter
 #game.neon-arena .game-livebar{position:absolute;top:69.1%;left:12%;right:12%;min-height:0!important;font-size:8px;padding:0;background:none!important;z-index:60}
 @media(min-width:760px){#game.neon-arena{width:min(709px,calc(100dvh / 2.1618))!important}#game.neon-arena .snake-cell{font-size:clamp(10px,1.8dvh,19px)!important}#game.neon-arena .die.pro-die{--die-size:clamp(50px,8.2dvh,100px)}#game.neon-arena #roll{font-size:clamp(28px,5dvh,55px)!important}}
 @media(prefers-reduced-motion:reduce){.crystal-sprite{animation:none!important}}
+
+/* Typography follows the arena width, including desktop phone previews. */
+#game.neon-arena{container-type:inline-size}
+#game.neon-arena .snake-cell{font-size:clamp(9px,2.65cqw,15px)!important}
+#game.neon-arena .snake-route-tag{font-size:clamp(6px,1.9cqw,10px)!important}
+#game.neon-arena #status{font-size:clamp(11px,3cqw,18px)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#game.neon-arena .player-row b{font-size:clamp(10px,2.75cqw,17px)!important}
+#game.neon-arena .player-row .score{font-size:clamp(25px,7cqw,40px)!important}
+#game.neon-arena #roll{font-size:clamp(25px,7.2cqw,46px)!important}
+#game.neon-arena #eventLog{font-size:clamp(8px,2cqw,11px)!important}

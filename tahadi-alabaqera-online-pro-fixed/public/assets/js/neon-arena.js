@@ -1,15 +1,20 @@
-/* Raster creatures are drawn independently of the empty arena texture.
-   Strip deformation bends the actual scales and carries a swallowed-pawn
-   bulge down the body. The rules and unbiased die remain in the game engine. */
+import {snakeGeometry} from './arena-geometry.js';
+/* Creature heads keep their proportions. Real painted scales follow a
+   tapered body mesh between the rule engine's head and tail cells. */
 (function(){
  'use strict';
  const cobra=new Image(),objects=new Image();
- cobra.src='assets/arena/neon-cobra.png';objects.src='assets/arena/objects.png';
- const plate=new Image();plate.src='assets/arena/arena-plate.png';
- const snakes=new Map(),ladders=new Map();let canvas,ctx,routes=[],width=0,height=0,clock=0,last=0,frame=0,paintedAt=0;
+ cobra.src='assets/arena/neon-cobra.webp';objects.src='assets/arena/objects.webp';
+ const plate=new Image();plate.src='assets/arena/arena-plate.webp';
+ const snakes=new Map(),ladders=new Map(),skins=new Map();let canvas,ctx,routes=[],width=0,height=0,clock=0,last=0,frame=0,paintedAt=0;
  const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
- const palettes=[145,65,0,-165,75,-95,100,-20];
  const ease=t=>Math.sin(Math.max(0,Math.min(1,t))*Math.PI);
+ function skin(hue){
+  if(skins.has(hue))return skins.get(hue);
+  const tile=document.createElement('canvas');tile.width=100;tile.height=100;
+  const paint=tile.getContext('2d');paint.filter=`hue-rotate(${hue-215}deg) saturate(1.12) brightness(1.12)`;
+  paint.drawImage(cobra,270,820,100,100,0,0,100,100);skins.set(hue,tile);return tile;
+ }
  function layout(entries){
   const board=document.getElementById('board');if(!board)return;
   const game=document.getElementById('game');if(game&&!game.querySelector?.('.arena-frame')){const background=document.createElement('img');background.className='arena-frame';background.src=plate.src;background.alt='';background.setAttribute('aria-hidden','true');game.prepend?.(background);}
@@ -33,38 +38,61 @@
  function drawSnake(r){
   if(!cobra.complete||!cobra.naturalWidth)return;
   const state=snakes.get(r.from)||{phase:'idle',at:0},elapsed=clock-state.at,phase=state.phase;
-  const dx=r.b.x-r.a.x,dy=r.b.y-r.a.y,rawLength=Math.hypot(dx,dy),bias=Math.min(height*.02,rawLength*.08),length=rawLength-bias,bodyWidth=Math.min(width*.21,Math.max(width*.16,length*.32)),headHeight=bodyWidth*.65;
-  let growth=1,shake=0,headLunge=0,swallow=-1;
-  if(phase==='tracking'){headLunge=ease(elapsed/400)*bodyWidth*.06;}
-  if(phase==='attacking'){headLunge=ease(elapsed/360)*bodyWidth*.28;growth=1+ease(elapsed/360)*.15;}
-  if(phase==='swallowing'){swallow=Math.min(.99,elapsed/900);growth=1.04;}
-  if(phase==='digesting'){growth=1+.46*ease(elapsed/900);shake=Math.sin(elapsed*.04)*.065;}
-  if(phase==='releasing'){growth=1+.12*(1-Math.min(1,elapsed/550));shake=Math.sin(elapsed*.03)*.025*(1-Math.min(1,elapsed/550));}
-  if(phase==='inspect'){growth=1+.12*ease(elapsed/650);headLunge=ease(elapsed/650)*bodyWidth*.12;if(elapsed>650)phaseReset(r.from);}
-  ctx.save();ctx.translate(r.a.x,r.a.y);ctx.rotate(Math.atan2(dy,dx)-Math.PI/2+shake);ctx.translate(0,bias);
-  const cosmetic=document.documentElement.dataset.snake,hue=cosmetic==='snake-gold'?-170:cosmetic==='snake-aurora'?65:cosmetic==='snake-ice'?0:({17:145,54:-25,62:0,64:-170,87:65,93:-95,95:75,99:-10}[r.from]??palettes[r.index%palettes.length]);
-  ctx.filter=`hue-rotate(${hue}deg)`;
-  // Head is a separate deformable region: its jaw stretches during strike.
-  // Body retains the winding S silhouette of the high-resolution source.
-  const sourceH=cobra.naturalHeight,sourceW=cobra.naturalWidth,strips=64,step=sourceH/strips;
-  for(let i=0;i<strips;i++){
-   const sy=i*step,t=sy/sourceH,tailT=Math.max(0,(sy-500)/(sourceH-500));
-   const ypos=v=>{let y=v<=500?(v-300)/500*headHeight:headHeight*.4+(v-500)/(sourceH-500)*(length-headHeight*.4);if(v<500){y-=headLunge;if(phase==='attacking'&&v>220)y+=(v-220)/280*headHeight*.12*ease(elapsed/360);}return y;};
-   const y=ypos(sy),ny=ypos(sy+step);
-   const head=sy<500,center=sy<500?750:750-200*tailT;
-   const idleWave=reduce()?0:Math.sin(clock/680+t*11+r.index)*bodyWidth*.023*Math.sin(Math.PI*t);
-   const belly=swallow<0?0:Math.exp(-Math.pow((tailT-swallow)/.13,2))*.65;
-   let scale=(growth+belly)*(head?1+.45*(sy<=300?1:(500-sy)/200):1);
-   const w=bodyWidth*scale,x=-center/sourceW*w+idleWave;
-   ctx.drawImage(cobra,0,sy,sourceW,Math.min(step+1,sourceH-sy),x,y,w,Math.max(1,ny-y+1));
+  const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!reduce()});
+  const cosmetic=document.documentElement.dataset.snake;
+  const hue=cosmetic==='snake-gold'?38:cosmetic==='snake-aurora'?272:cosmetic==='snake-ice'?197:({17:350,54:172,62:208,64:38,87:278,93:116,95:321,99:188}[r.from]??208);
+  const growth=phase==='digesting'?1+.24*ease(elapsed/900):phase==='releasing'?1+.10*(1-Math.min(1,elapsed/550)):1;
+  const swallow=phase==='swallowing'?Math.min(1,elapsed/900):-1;
+  const points=shape.points;
+  // Tapered mesh with metallic lighting and the creature artwork's real scales.
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  const segments=[];
+  for(let i=points.length-2;i>=0;i--){
+   const a=points[i],b=points[i+1],t=i/(points.length-1),dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+   const bulge=swallow<0?0:.48*Math.exp(-Math.pow((t-swallow)/.10,2));
+   const taper=t<.74?1-.15*(t/.74):.08+.77*Math.pow((1-t)/.26,.72);
+   const rad=shape.radius*taper*(growth+bulge);
+   segments.push({a,b,t,rad,nx,ny,dx,dy,len,i});
+   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=rad*2+1.7;ctx.strokeStyle='#071019';ctx.stroke();
   }
+  for(const {a,b,rad,nx,ny} of segments){
+   const shade=ctx.createLinearGradient(a.x-nx*rad,a.y-ny*rad,a.x+nx*rad,a.y+ny*rad);
+   shade.addColorStop(0,`hsl(${hue} 55% 16%)`);shade.addColorStop(.22,`hsl(${hue} 74% 36%)`);shade.addColorStop(.45,`hsl(${hue} 77% 61%)`);shade.addColorStop(.59,`hsl(${hue} 56% 80%)`);shade.addColorStop(.74,`hsl(${hue} 64% 43%)`);shade.addColorStop(1,`hsl(${hue} 54% 17%)`);
+   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=rad*2;ctx.strokeStyle=shade;ctx.stroke();
+  }
+  const ordered=[...segments].reverse(),texture=skin(hue);
+  ctx.save();ctx.beginPath();
+  ordered.forEach(({a,rad,nx,ny},i)=>{const x=a.x+nx*rad,y=a.y+ny*rad;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  const tip=ordered.at(-1);ctx.lineTo(tip.b.x,tip.b.y);
+  for(const {a,rad,nx,ny} of segments)ctx.lineTo(a.x-nx*rad,a.y-ny*rad);
+  ctx.closePath();ctx.clip();ctx.globalAlpha=.72;
+  let distance=0;
+  for(const {a,rad,dx,dy,len} of ordered){
+   const scale=100/(shape.radius*2),sample=len*scale,u=(distance*scale)%100;
+   ctx.save();ctx.translate(a.x,a.y);ctx.rotate(Math.atan2(dy,dx));
+   const first=Math.min(sample,100-u),firstWidth=len*first/sample;
+   ctx.drawImage(texture,u,0,first,100,0,-rad,firstWidth+.65,rad*2);
+   if(first<sample)ctx.drawImage(texture,0,0,sample-first,100,firstWidth,-rad,len-firstWidth+.65,rad*2);
+   ctx.restore();distance+=len;
+  }
+  ctx.restore();
+  ctx.strokeStyle=`hsla(${hue} 85% 86% / .48)`;ctx.lineWidth=.75;
+  ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+  // The source head keeps its original proportions, regardless of fall length.
+  const strike=phase==='attacking'?ease(elapsed/360):0,track=phase==='tracking'?ease(elapsed/380):0;
+  const shake=phase==='digesting'?Math.sin(elapsed/45)*width*.0025:0;
+  const hw=shape.headWidth*(1+(growth-1)*.35),hh=hw*480/610;
+  ctx.translate(shape.head.x+shape.side*strike*hw*.14+shake,shape.head.y-track*hh*.025);
+  ctx.rotate((shape.side===1?-.025:.025)+strike*shape.side*.085);ctx.scale(shape.side,1);
+  ctx.filter=`hue-rotate(${hue-215}deg) saturate(1.06) brightness(1.12)`;
+  ctx.drawImage(cobra,285,10,610,480,-hw*.68,-hh*.52,hw,hh);
   ctx.restore();
   const proxy=document.querySelector(`.snake-creature[data-from="${r.from}"]`);if(proxy){proxy.dataset.visualScale=growth.toFixed(3);proxy.dataset.visualPhase=phase;}
   if(canvas&&Number(canvas.dataset.activeSnake)===r.from)canvas.dataset.maxScale=String(Math.max(growth,Number(canvas.dataset.maxScale)||1));
  }
  function phaseReset(from){phase(from,null)}
  function tick(now){
-  const delta=Math.min(50,now-last);last=now;
+  const delta=Math.min(100,now-last);last=now;
   if(document.hidden||window.BS_PRO?.paused||document.getElementById('game')?.classList.contains('hidden')){frame=requestAnimationFrame(tick);return;}
   clock+=delta;
   if(clock-paintedAt<30){frame=requestAnimationFrame(tick);return;}paintedAt=clock;

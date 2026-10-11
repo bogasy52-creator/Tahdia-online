@@ -79,7 +79,7 @@ test('approved premium dice uses large black pips and physical lift/impact motio
   const audio=await readFile(join(pub,'assets/js/audio-manager.js'),'utf8');
   assert.match(css,/Porcelain Pro Dice/);assert.match(css,/width:clamp\(12px,28%,25px\)/);
   assert.match(css,/luxuryDiceBody/);assert.match(css,/luxuryDiceShadow/);assert.match(css,/calc\(var\(--die-rx\) \+ 90deg\)/);
-  assert.match(audio,/porcelain roll/);
+  assert.match(audio,/assets\/sounds\/arena-v9\//);
 });
 
 

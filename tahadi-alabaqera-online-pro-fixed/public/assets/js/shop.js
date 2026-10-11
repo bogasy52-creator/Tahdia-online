@@ -7,7 +7,7 @@
   const asset=document.createElement('div');asset.className='preview-'+item.type;
   const rotations={'snake-aurora':65,'snake-gold':-170,'snake-ice':0,'snake-wild':0,'board-ocean':-18,'board-sand':145,'board-twilight':35,'board-royal':150,'table-emerald':70,'table-midnight':170,'table-royal':260};
   if(item.type==='snake'||item.type==='board'||item.type==='table'){
-   const img=document.createElement('img');img.alt='';img.src='assets/arena/'+(item.type==='snake'?'neon-cobra.png':item.type==='board'?'arena-plate.png':'jackaroo-table.png');
+   const img=document.createElement('img');img.alt='';img.src='assets/arena/'+(item.type==='snake'?'neon-cobra.webp':item.type==='board'?'arena-plate.webp':'jackaroo-table.webp');
    img.style.filter='hue-rotate('+(rotations[item.id]??0)+'deg)';asset.appendChild(img);
   }else if(item.type==='pawn'){window.BS_ARENA?.crystal(asset,{'pawn-amethyst':1,'pawn-gold':2,'pawn-jade':3}[item.id]||0);}
   else if(item.type==='dice'){const die=document.createElement('div');die.className='die';die.dataset.value='5';die.style.setProperty('--die-color',item.color);asset.appendChild(die);window.BS_DICE?.mount?.(die);}
