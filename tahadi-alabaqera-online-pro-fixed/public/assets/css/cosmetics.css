@@ -1,0 +1,17 @@
+/* Shared cosmetics are driven by the same catalogue as store previews. */
+.bs-page .die.pro-die:not([data-bonus='true']) .pro-face,#game.neon-arena .die.pro-die:not([data-bonus='true']) .pro-face{background:linear-gradient(140deg,var(--die-highlight,#fff) 5%,var(--die-color,#f3eee3) 55%,var(--die-shade,#c7bda8) 100%)!important;border-color:var(--die-highlight,#fff)!important;box-shadow:inset 2px 3px 3px #ffffff55,inset -3px -4px 6px #0004!important}
+.bs-page .die.pro-die:not([data-bonus='true']) .pro-pip,#game.neon-arena .die.pro-die:not([data-bonus='true']) .pro-pip{background:radial-gradient(circle at 55% 60%,var(--die-pip-light,#344257),var(--die-pip,#08101f) 70%)!important;box-shadow:inset 1px 2px 2px #0004,0 1px 0 #fff5!important}
+html :is(.snake-token,.snake-travel-pawn,.jack-piece) .crystal-sprite{filter:var(--pawn-look,none)!important}
+html[data-pawn='pawn-prism'] :is(.snake-token,.jack-piece,.snake-travel-pawn) .crystal-sprite{animation:prismBreathe 2.8s ease-in-out infinite}
+html[data-pawn='pawn-prism'] .ludo-piece{box-shadow:0 0 8px #b7f8ff;border:2px solid #b7f8ff}
+html[data-trail='trail-comet'] :is(.snake-travel-pawn,.moving-piece),html[data-trail='trail-plasma'] :is(.snake-travel-pawn,.moving-piece){filter:drop-shadow(0 0 6px var(--trail-color))!important}
+html[data-trail='trail-comet'] :is(.snake-travel-pawn,.moving-piece)::after,html[data-trail='trail-plasma'] :is(.snake-travel-pawn,.moving-piece)::after{content:'';position:absolute;inset:50% 12% -18%;border-radius:50%;background:radial-gradient(ellipse,var(--trail-color),transparent 70%);opacity:.6;pointer-events:none;z-index:-1}
+html[data-trail='trail-comet'] #game.neon-arena .snake-cell.trail-lit,html[data-trail='trail-plasma'] #game.neon-arena .snake-cell.trail-lit{background:color-mix(in srgb,var(--trail-color) 16%,transparent)!important;box-shadow:inset 0 0 14px var(--trail-color)!important}
+.confetti-piece.victory-star{width:15px;height:15px;clip-path:polygon(50% 0,62% 35%,100% 38%,70% 60%,80% 100%,50% 76%,20% 100%,30% 60%,0 38%,38% 35%);box-shadow:0 0 6px #ffe1a9}
+.confetti-piece.victory-ribbon{width:6px;height:23px;border-radius:2px}
+.career-title{display:inline-flex;align-items:center;gap:5px;max-width:100%;font-size:11px;line-height:1.5;padding:4px 9px;border-radius:7px;color:var(--title-color,#a8c6df);border:1px solid color-mix(in srgb,var(--title-color,#a8c6df) 35%,transparent);background:color-mix(in srgb,var(--title-color,#a8c6df) 7%,#0a1322);vertical-align:middle}
+.career-title:empty{display:none}.winner-card>.career-title{margin-top:12px}.winner-missions{display:block;color:#88e4cc;margin-top:14px;font-size:13px;text-decoration:none}.store-news{padding:12px 16px;border:1px solid #3d5f69;border-radius:12px;background:#112836;color:#c8f4ed;font-size:13px}
+@keyframes prismBreathe{50%{opacity:.87}}
+@media(prefers-reduced-motion:reduce){html[data-pawn='pawn-prism'] .crystal-sprite{animation:none}}
+
+.home-missions-link{display:block;margin:14px 0;color:#b7eadc;font-size:13px;text-decoration:none;line-height:1.8;padding:14px 16px;background:#15342e44;border:1px solid #3a6c59;border-radius:13px}.home-missions-link b{color:#f1d49b}

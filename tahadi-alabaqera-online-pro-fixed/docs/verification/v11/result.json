@@ -1,0 +1,19 @@
+{
+  "release": "11.0.0",
+  "verification_command": "npm run verify:release",
+  "exit_code": 0,
+  "tests": 247,
+  "passed": 241,
+  "failed": 0,
+  "skipped": 6,
+  "local_references": 537,
+  "javascript_modules": 118,
+  "inline_scripts": 9,
+  "offline_cache_paths": 240,
+  "browser_playtest": "not_run_usage_limit",
+  "cloudflare_deployment": "not_run",
+  "owner_username": "bosrag",
+  "catalog_items": 42,
+  "bundles": 3,
+  "objectives": 12
+}

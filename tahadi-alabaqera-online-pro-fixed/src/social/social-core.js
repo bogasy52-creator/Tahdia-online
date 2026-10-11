@@ -1,3 +1,4 @@
+import {isOwner} from './account-policy.js';
 export const SOCIAL_SESSION_DAYS = 30;
 export const SOCIAL_MAX_FRIENDS = 100;
 export const SOCIAL_MAX_REQUESTS = 100;
@@ -76,6 +77,7 @@ export function publicProfile(profile, presence = {}) {
     username: profile.username,
     displayName: profile.displayName,
     createdAt: profile.createdAt,
+    role: isOwner(profile) ? 'owner' : 'player',
     online: Boolean(presence.online),
     lastSeen: Number(presence.lastSeen) || null,
   };

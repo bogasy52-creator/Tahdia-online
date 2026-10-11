@@ -1,5 +1,5 @@
 import {snakeGeometry} from './arena-geometry.js';
-import {recolorBluePixels,ARENA_HUES} from './arena-palette.js';
+import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js';
 /* Creature heads keep their proportions. Real painted scales follow a
    tapered body mesh between the rule engine's head and tail cells. */
 (function(){
@@ -45,7 +45,7 @@ import {recolorBluePixels,ARENA_HUES} from './arena-palette.js';
   const state=snakes.get(r.from)||{phase:'idle',at:0},elapsed=clock-state.at,phase=state.phase;
   const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!reduce(),route:r.from});
   const cosmetic=document.documentElement.dataset.snake;
-  const hue=cosmetic==='snake-gold'?40:cosmetic==='snake-aurora'?274:cosmetic==='snake-ice'?193:(ARENA_HUES[r.from]??211),art=skin(hue);
+  const hue=cosmeticSnakeHue(cosmetic,r.from),art=skin(hue);
   const growth=phase==='digesting'?1+.24*ease(elapsed/900):phase==='releasing'?1+.10*(1-Math.min(1,elapsed/550)):1;
   const swallow=phase==='swallowing'?Math.min(1,elapsed/900):-1;
   const points=shape.points;
@@ -136,5 +136,11 @@ import {recolorBluePixels,ARENA_HUES} from './arena-palette.js';
   const sync=()=>{clear();if(window.BS_PRO?.paused)return;started=performance.now();timer=setTimeout(finish,remaining)};
   window.addEventListener('bs-match-pause',sync);sync();
  })}
- window.BS_ARENA={layout,phase,ladder,crystal,wait};
+ function portrait(el,id,from=id==='snake-plasma'?95:99){
+  const c=document.createElement('canvas');c.width=360;c.height=283;c.setAttribute('aria-hidden','true');
+  const paint=()=>c.getContext('2d').drawImage(skin(cosmeticSnakeHue(id,from)).head,0,0,360,283);
+  cobra.complete&&cobra.naturalWidth?paint():cobra.addEventListener('load',paint,{once:true});el.appendChild(c);return c;
+ }
+ window.BS_ARENA={layout,phase,ladder,crystal,portrait,wait};
+ if(typeof CustomEvent==='function')window.dispatchEvent?.(new CustomEvent('bs-arena-ready'));
 })();

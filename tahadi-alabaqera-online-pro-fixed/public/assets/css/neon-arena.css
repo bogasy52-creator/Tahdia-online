@@ -1,5 +1,5 @@
 /* Empty artwork + live canvas creatures + live DOM scores and cube. */
-body.game-snakes.game-running{background:#030610;--die-color:#eff3fa;--pip:#090d18}
+body.game-snakes.game-running{background:#030610}
 .game-snakes.game-running .bs-shell{padding:0!important;max-width:none!important;display:block!important}
 .game-snakes.game-running .bs-topbar{display:none!important}
 #game.neon-arena{position:relative!important;width:min(100vw,709px,calc(100dvh / 2.1618))!important;height:auto!important;aspect-ratio:853/1844;min-height:0!important;margin:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:#060a13 url('../arena/arena-plate.webp') center/100% 100% no-repeat!important;overflow:hidden!important;isolation:isolate}

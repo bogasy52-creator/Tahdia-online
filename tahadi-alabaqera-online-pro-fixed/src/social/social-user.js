@@ -1,4 +1,5 @@
 import {Career} from '../career/core.js';
+import {OWNER_USERNAME,isOwner,accountAccess,accountCareer} from './account-policy.js';
 import {
   SOCIAL_INVITE_TTL_MS,
   SOCIAL_MAX_FRIENDS,
@@ -75,22 +76,37 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/public" && request.method === "GET") return this.publicData();
     if (url.pathname === "/dashboard" && request.method === "POST") return this.dashboard(body.secret);
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);
+    if (url.pathname === '/announcement')return json({ok:true,announcement:await this.ctx.storage.get('admin:announcement')||null});
+    if (url.pathname.startsWith('/admin/')) {
+      if(!(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
+      if(!isOwner(this.profile))return json({ok:false,error:'forbidden'},403);
+      const action=url.pathname.split('/')[2];
+      return this.ctx.blockConcurrencyWhile(()=>this.adminRequest(action,body));
+    }
+    if (url.pathname.startsWith('/management/')) {
+      if(body.actor!==OWNER_USERNAME)return json({ok:false,error:'forbidden'},403);
+      if(!this.profile)return json({ok:false,error:'account_not_found'},404);
+      return this.ctx.blockConcurrencyWhile(()=>url.pathname==='/management/get'?this.managedAccount():this.managementApply(body));
+    }
     if (url.pathname.startsWith('/career/')) {
       const action=url.pathname.split('/')[2];
-      if (!['get','practice','purchase','equip','rename','verified','daily'].includes(action)) return json({ok:false,error:'not_found'},404);
+      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle'].includes(action)) return json({ok:false,error:'not_found'},404);
       if(action!=='verified' && !(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
       if(!this.profile)return json({ok:false,error:'account_not_found'},404);
       return this.ctx.blockConcurrencyWhile(async()=>{
-        let career=Career.normalize(await this.ctx.storage.get('career')||{name:this.profile.displayName});
+        let career=accountCareer(await this.ctx.storage.get('career')||{name:this.profile.displayName},this.profile);
         try{
+          if(this.profile.suspended&&!isOwner(this.profile))throw new Error('account_suspended');
           if(action==='practice'||action==='verified')career=Career.reward(career,{id:body.id,game:body.game,win:body.win===true,verified:action==='verified'});
           if(action==='daily')career=Career.claimDaily(career);
-          if(action==='purchase')career=Career.purchase(career,body.id);
+          if(action==='purchase')career=Career.purchase(career,body.id,{expectedPrice:body.expectedPrice});
           if(action==='equip')career=Career.equip(career,body.id);
+          if(action==='claim')career=Career.claimObjective(career,body.id);
+          if(action==='bundle')career=Career.purchaseBundle(career,body.id,{expectedPrice:body.expectedPrice});
           if(action==='rename'){career=Career.normalize({...career,name:body.name});this.profile.displayName=career.name;await this.ctx.storage.put('profile',this.profile);}
         }catch(e){return json({ok:false,error:e.message},400)}
         await this.ctx.storage.put('career',career);
-        return json({ok:true,career});
+        return json({ok:true,career,access:accountAccess(this.profile),serverNow:Date.now()});
       });
     }
 
@@ -136,6 +152,7 @@ export function createSocialUserClass(DurableObject) {
 
   async login(body) {
     if (!this.profile) return json({ ok: false, error: "الحساب غير موجود" }, 404);
+    if(this.profile.suspended&&!isOwner(this.profile))return json({ok:false,error:'account_suspended'},403);
     const ok = await verifyPassword(String(body.password || ""), this.profile.password);
     if (!ok) return json({ ok: false, error: "بيانات الدخول غير صحيحة" }, 401);
     const session = await this.createSession();
@@ -157,7 +174,7 @@ export function createSocialUserClass(DurableObject) {
   }
 
   async sessionValid(secret) {
-    if (!this.profile || !secret) return false;
+    if (!this.profile || !secret || this.profile.suspended&&!isOwner(this.profile)) return false;
     const hash = await sha256(String(secret));
     const record = await this.ctx.storage.get(`session:${hash}`);
     if (!record) return false;
@@ -166,6 +183,93 @@ export function createSocialUserClass(DurableObject) {
       return false;
     }
     return true;
+  }
+
+  userStub(username) {
+    const name=normalizeUsername(username),ns=this.env.SOCIAL_USERS||this.env.BOARD_ROOMS;
+    return ns&&validUsername(name)?ns.get(ns.idFromName(this.env.SOCIAL_USERS?'user:'+name:'social:user:'+name)):null;
+  }
+
+  async managedAccount() {
+    const career=accountCareer(await this.ctx.storage.get('career')||{name:this.profile.displayName},this.profile);
+    return json({ok:true,account:{profile:publicProfile(this.profile,this.presence),career,suspended:Boolean(this.profile.suspended),access:accountAccess(this.profile)}});
+  }
+
+  async managementApply(body) {
+    const key='admin:applied:'+body.requestId,previous=await this.ctx.storage.get(key);
+    if(previous){if(previous.fingerprint!==body.fingerprint)return json({ok:false,error:'request_conflict'},409);return this.managedAccount()}
+    let p=accountCareer(await this.ctx.storage.get('career')||{name:this.profile.displayName},this.profile),nextProfile=clone(this.profile),nextPresence=clone(this.presence);
+    const action=body.action;
+    if(['suspend','revoke'].includes(action)&&isOwner(this.profile))return json({ok:false,error:'owner_protected'},403);
+    if(action==='coins'||action==='xp'){
+      const amount=body.amount;
+      if(!Number.isSafeInteger(amount)||Math.abs(amount)>100000||amount===0||action==='xp'&&amount<0||p[action]+amount<0||p[action]+amount>100000000)return json({ok:false,error:'invalid_amount'},400);
+      p=Career.normalize({...p,[action]:p[action]+amount});
+    }else if(action==='unlock-all'){
+      p=Career.normalize({...p,owned:[...p.owned,...Career.CATALOG.filter(i=>i.source!=='owner'||isOwner(this.profile)).map(i=>i.id)]});
+    }else if(action==='unlock-item'){
+      const item=Career.CATALOG.find(i=>i.id===body.item);
+      if(!item||item.source==='owner'&&!isOwner(this.profile))return json({ok:false,error:'invalid_item'},400);
+      p=Career.normalize({...p,owned:[...p.owned,item.id]});
+    }else if(['suspend','restore','revoke'].includes(action)){
+      if(action!=='revoke'){nextProfile.suspended=action==='suspend';nextProfile.updatedAt=Date.now()}
+      if(action!=='restore'){nextPresence.online=false;nextPresence.lastSeen=Date.now()}
+    }else return json({ok:false,error:'invalid_action'},400);
+    await this.ctx.storage.transaction(async tx=>{
+      await tx.put('career',p);await tx.put(key,{fingerprint:body.fingerprint,at:Date.now()});
+      if(['suspend','restore','revoke'].includes(action)){
+        await tx.put('profile',nextProfile);await tx.put('presence',nextPresence);
+        if(action!=='restore'){const sessions=await tx.list({prefix:'session:'});if(sessions.size)await tx.delete([...sessions.keys()])}
+      }
+    });
+    this.profile=nextProfile;this.presence=nextPresence;
+    if(['suspend','revoke'].includes(action))for(const ws of this.ctx.getWebSockets())try{if(ws.deserializeAttachment()?.username)ws.close(1008,'session_revoked')}catch{}
+    return this.managedAccount();
+  }
+
+  async adminRequest(action,body) {
+    if(action==='get'){
+      const records=await this.ctx.storage.list({prefix:'admin:audit:',reverse:true,limit:100});
+      return json({ok:true,access:accountAccess(this.profile),audit:[...records.values()],announcement:await this.ctx.storage.get('admin:announcement')||null});
+    }
+    const username=normalizeUsername(body.username),stub=this.userStub(username);
+    if(action==='account'){
+      if(!stub)return json({ok:false,error:'invalid_username'},400);
+      if(username===this.profile.username)return this.managedAccount();
+      return stub.fetch('https://social.internal/management/get',{method:'POST',body:JSON.stringify({actor:OWNER_USERNAME})});
+    }
+    if(action!=='action')return json({ok:false,error:'not_found'},404);
+    const requestId=String(body.requestId||'');if(!/^[a-zA-Z0-9:_-]{8,80}$/.test(requestId))return json({ok:false,error:'invalid_request_id'},400);
+    const reason=String(body.reason||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,140);
+    const text=String(body.text||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,240);
+    const command={actor:OWNER_USERNAME,username,action:body.action,amount:body.amount,item:body.item,requestId,reason,text};
+    const fingerprint=await sha256(JSON.stringify(command)),key='admin:receipt:'+requestId,previous=await this.ctx.storage.get(key);
+    if(previous){
+      if(previous.fingerprint!==fingerprint)return json({ok:false,error:'request_conflict'},409);
+      if(['announcement','clear-announcement'].includes(body.action))return json({ok:true,announcement:await this.ctx.storage.get('admin:announcement')||null,replayed:true});
+      const response=username===this.profile.username?await this.managedAccount():await stub.fetch('https://social.internal/management/get',{method:'POST',body:JSON.stringify({actor:OWNER_USERNAME})});
+      return json({...await response.json(),replayed:true},response.status);
+    }
+    let result;
+    if(body.action==='clear-announcement')result={ok:true,announcement:null};
+    else if(body.action==='announcement'){
+      if(!text)return json({ok:false,error:'invalid_announcement'},400);
+      const announcement={text,at:Date.now(),by:OWNER_USERNAME};result={ok:true,announcement};
+    }else{
+      if(!stub)return json({ok:false,error:'invalid_username'},400);
+      let response;
+      if(username===this.profile.username)response=await this.managementApply({...command,fingerprint});
+      else response=await stub.fetch('https://social.internal/management/apply',{method:'POST',body:JSON.stringify({...command,fingerprint})});
+      result=await response.json();if(!response.ok)return json(result,response.status);
+    }
+    const at=Date.now(),entry={requestId,action:body.action,username:['announcement','clear-announcement'].includes(body.action)?null:username,amount:body.amount||null,item:body.item||null,reason,at,actor:OWNER_USERNAME};
+    await this.ctx.storage.transaction(async tx=>{
+      if(result.announcement)await tx.put('admin:announcement',result.announcement);
+      if(body.action==='clear-announcement')await tx.delete('admin:announcement');
+      await tx.put('admin:audit:'+String(at).padStart(14,'0')+':'+requestId,entry);
+      await tx.put(key,{fingerprint,at,action:body.action,username});
+    });
+    return json(result);
   }
 
   async validateSession(secret) {

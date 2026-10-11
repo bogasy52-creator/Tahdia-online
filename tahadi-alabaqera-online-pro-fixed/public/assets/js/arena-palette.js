@@ -1,4 +1,8 @@
 export const ARENA_HUES=Object.freeze({17:350,54:173,62:211,64:40,68:40,87:274,93:155,95:321,99:193});
+export function cosmeticSnakeHue(id,from){
+ if(id==='snake-plasma')return [193,274,310][Math.abs(Number(from)||0)%3];
+ return {'snake-gold':40,'snake-aurora':274,'snake-ice':193,'snake-toxic':103}[id]??ARENA_HUES[from]??211;
+}
 
 // Recolor blue armor only. Keep the artist's purple mouth, ivory teeth,
 // shadows and alpha edges instead of rotating every color in the picture.

@@ -1,3 +1,4 @@
+import {OWNER_USERNAME,isOwner} from './account-policy.js';
 import {
   cleanDisplayName,
   normalizeGame,
@@ -151,7 +152,20 @@ export async function handleSocialRequest(request, env, options = {}) {
     return json(result.data, result.response.status);
   }
 
-  if (/^\/api\/social\/career(?:\/(practice|purchase|equip|rename|daily))?$/.test(url.pathname)) {
+  if (request.method==='GET'&&url.pathname==='/api/social/announcement') {
+    const result=await call(stubFor(env,OWNER_USERNAME),'/announcement');
+    return json(result.data,result.response.status);
+  }
+  if (/^\/api\/social\/admin(?:\/(account|action))?$/.test(url.pathname)) {
+    const {response,auth}=await requireAuth(request,env);if(response)return response;
+    if(!isOwner(auth.profile))return json({ok:false,error:'forbidden'},403);
+    const action=url.pathname.split('/')[4]||'get';
+    if((action==='action'&&request.method!=='POST')||(action!=='action'&&request.method!=='GET'))return json({ok:false,error:'method_not_allowed'},405);
+    const body=action==='action'?await request.json().catch(()=>({})):action==='account'?{username:url.searchParams.get('username')}:{};
+    const result=await call(auth.stub,'/admin/'+action,{...body,secret:auth.secret});
+    return json(result.data,result.response.status);
+  }
+  if (/^\/api\/social\/career(?:\/(practice|purchase|equip|rename|daily|claim|bundle))?$/.test(url.pathname)) {
     const {response, auth}=await requireAuth(request,env);
     if(response)return response;
     const action=url.pathname.split('/')[4]||'get';
