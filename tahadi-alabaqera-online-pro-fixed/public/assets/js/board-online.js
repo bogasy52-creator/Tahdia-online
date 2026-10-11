@@ -1,3 +1,12 @@
+async function fetchWithTimeout(url,opts={},ms=8000){
+  try{
+    return await fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
+  }catch(e){
+    if(e?.name==='TimeoutError'||e?.name==='AbortError')throw new Error('انتهت مهلة الاتصال بالسيرفر — تأكد من اتصال الإنترنت وحاول مجددًا');
+    throw new Error('تعذر الوصول للسيرفر — تأكد من اتصال الإنترنت وحاول مجددًا');
+  }
+}
+
 export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
@@ -5,14 +14,14 @@ export class BoardOnlineClient {
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
   async create(name,playerLimit,{variant='classic'}={}){
-    const res=await fetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
+    const res=await fetchWithTimeout('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})},8000);
     const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'تعذر إنشاء الغرفة');
     if(this.game==='snakes'&&variant==='adventure'&&data.variant!=='adventure')throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
     this.hostKey=data.hostKey;return this.connect(data.code,name);
   }
   async join(code,name){
     code=String(code||'').replace(/\D/g,'').slice(0,6);if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    const res=await fetch(`/api/board/rooms/${code}/status`);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
+    const res=await fetchWithTimeout(`/api/board/rooms/${code}/status`,{},8000);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
     return this.connect(code,name)
   }
   async connect(code,name){
