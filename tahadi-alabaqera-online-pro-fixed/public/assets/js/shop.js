@@ -5,11 +5,15 @@
  function preview(item){
   const box=document.createElement('div');box.className='cosmetic-preview';box.style.setProperty('--item-color',item.color);box.setAttribute('aria-hidden','true');
   const asset=document.createElement('div');asset.className='preview-'+item.type;
-  if(item.type==='board')for(let i=0;i<16;i++)asset.appendChild(document.createElement('i'));
-  if(item.type==='dice'){if(item.id==='dice-midnight')asset.style.setProperty('--preview-pip','#f7ecda');for(let i=0;i<5;i++)asset.appendChild(document.createElement('i'))}
-  if(item.type==='snake')asset.innerHTML=`<svg viewBox="0 0 150 100" width="100%" height="100%"><path d="M120 26C87 6 48 16 54 44S130 59 102 76S31 80 28 51" fill="none" stroke="#182838" stroke-width="21" stroke-linecap="round"/><path d="M120 26C87 6 48 16 54 44S130 59 102 76S31 80 28 51" fill="none" stroke="${item.color}" stroke-width="17" stroke-linecap="round"/><path d="M115 25C87 10 48 18 58 43S127 60 100 72" fill="none" stroke="#ffffff66" stroke-width="3"/><ellipse cx="121" cy="28" rx="17" ry="13" fill="${item.color}"/><circle cx="129" cy="22" r="4" fill="#fff3b9"/><circle cx="129" cy="22" r="1.8" fill="#14243c"/><path d="M133 32l12 3m-3 0l4 4m-4-4l4-3" fill="none" stroke="#ed93a2" stroke-width="2"/></svg>`;
+  const rotations={'snake-aurora':65,'snake-gold':-170,'snake-ice':0,'snake-wild':0,'board-ocean':-18,'board-sand':145,'board-twilight':35,'board-royal':150,'table-emerald':70,'table-midnight':170,'table-royal':260};
+  if(item.type==='snake'||item.type==='board'||item.type==='table'){
+   const img=document.createElement('img');img.alt='';img.src='assets/arena/'+(item.type==='snake'?'neon-cobra.png':item.type==='board'?'arena-plate.png':'jackaroo-table.png');
+   img.style.filter='hue-rotate('+(rotations[item.id]??0)+'deg)';asset.appendChild(img);
+  }else if(item.type==='pawn'){window.BS_ARENA?.crystal(asset,{'pawn-amethyst':1,'pawn-gold':2,'pawn-jade':3}[item.id]||0);}
+  else if(item.type==='dice'){const die=document.createElement('div');die.className='die';die.dataset.value='5';die.style.setProperty('--die-color',item.color);asset.appendChild(die);window.BS_DICE?.mount?.(die);}
   box.appendChild(asset);return box;
  }
+
  function render(){
   const profile=api.get(),offer=core?.dailyOffer?.();$('storeGrid').replaceChildren();
   if($('offerName')&&offer)$('offerName').textContent=api.catalog.find(i=>i.id===offer.id)?.name||'';

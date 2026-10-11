@@ -28,13 +28,13 @@ for(const file of files){
  }
 }
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8')),lock=JSON.parse(await readFile(join(root,'package-lock.json'),'utf8'));
-assert.equal(pkg.version,'7.0.0');assert.equal(lock.version,'7.0.0');assert.equal(lock.packages[''].version,'7.0.0');
+assert.equal(pkg.version,'8.0.0');assert.equal(lock.version,'8.0.0');assert.equal(lock.packages[''].version,'8.0.0');
 const config=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
 assert.ok(config.durable_objects.bindings.some(b=>b.name==='QUICK_ARENA'&&b.class_name==='QuickArena'));
 assert.equal(config.migrations.at(-1).tag,'v6-authoritative-quick-arena');
 const sw=await readFile(join(publicDir,'service-worker.js'),'utf8'),shell=sw.match(/const\s+APP_SHELL\s*=\s*\[([\s\S]*?)\];/)[1],paths=[...shell.matchAll(/['"]([^'"]+)['"]/g)].map(m=>m[1]);
-assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.match(sw,/const CACHE_NAME = 'busraj-games-v25-pro-v7'/);
+assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.match(sw,/const CACHE_NAME = 'busraj-games-v26-neon-v8'/);
 for(const asset of ['profile-core.js','career-client.js','pro-dice.js','shop.js','arcade-games.js','pro-experience.js','engines/snakes-adventure.js','engines/bot-strategy.js'])assert.ok(paths.includes('/assets/js/'+asset),'offline dependency absent: '+asset);
 for(const page of ['snakes','jackaroo','zahra','dice','shop','puzzle','memory','reaction','accuracy','logic','online','social','local'])assert.ok(paths.includes('/'+page+'.html'),'offline page absent: '+page);
 assert.doesNotMatch(await readFile(join(publicDir,'snakes.html'),'utf8'),/snakes-reference-portrait|MutationObserver|assets\/js\/(?:adaptive-board-layout|fullscreen-game|luxury-game-ui)\.js/);
-console.log(`V7 release verification passed: ${js} JS modules, ${inline} inline scripts, ${cssAssets} CSS asset references, ${paths.length} offline cache paths.`);
+console.log(`V8 release verification passed: ${js} JS modules, ${inline} inline scripts, ${cssAssets} CSS asset references, ${paths.length} offline cache paths.`);

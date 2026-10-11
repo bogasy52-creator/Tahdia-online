@@ -1,6 +1,6 @@
-Snake PRO V7 — 7.0.0
+Snake PRO V8 — 8.0.0
 
-1. فك الملف وافتح مجلد snake_pro_v7.
+1. فك الملف وافتح مجلد snake_pro_v8.
 2. تأكد أن Node.js 24 مثبت.
 3. افتح الطرفية في المجلد ونفذ:
    npm run start:local
@@ -21,4 +21,4 @@ Snake PRO V7 — 7.0.0
 
 README-AR.md يشرح الميزات والقواعد.
 DEPLOY-AR.txt يشرح النشر على Cloudflare.
-VERIFIED_V7_AR.md يعرض الاختبارات المنفذة.
+VERIFIED_V8_AR.md يعرض الاختبارات المنفذة.

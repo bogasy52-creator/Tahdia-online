@@ -2,19 +2,19 @@
 (function(root){
   'use strict';
   const CATALOG=Object.freeze([
-    {id:'pawn-classic',type:'pawn',name:'الحجر الكلاسيكي',description:'حجر عاجي بحافة ملونة.',price:0,color:'#e8e5db'},
+    {id:'pawn-classic',type:'pawn',name:'الحجر الكلاسيكي',description:'كريستال مضيء على قاعدة معدنية.',price:0,color:'#e8e5db'},
     {id:'pawn-jade',type:'pawn',name:'حجر اليشم',description:'أخضر هادئ بلمسة حجرية.',price:120,color:'#55ba98'},
     {id:'pawn-onyx',type:'pawn',name:'حجر الأونيكس',description:'أسود مصقول بحافة ذهبية.',price:180,color:'#28313e'},
     {id:'dice-ivory',type:'dice',name:'نرد العاج',description:'نقاط واضحة وحركة قصيرة.',price:0,color:'#f6f0e4'},
     {id:'dice-midnight',type:'dice',name:'نرد منتصف الليل',description:'لون داكن ونقاط عاجية.',price:140,color:'#202c40'},
     {id:'dice-copper',type:'dice',name:'نرد النحاس',description:'نحاس مطفي ونقاط داكنة.',price:220,color:'#ce9564'},
-    {id:'board-forest',type:'board',name:'لوحة الغابة',description:'ألوان خضراء وخانات واضحة.',price:0,color:'#184c3b'},
+    {id:'board-forest',type:'board',name:'حلبة النيون',description:'معدن داكن وشقوق صخرية وخانات حيّة.',price:0,color:'#184c3b'},
     {id:'board-ocean',type:'board',name:'لوحة المحيط',description:'درجات زرقاء هادئة.',price:160,color:'#173f61'},
     {id:'board-sand',type:'board',name:'لوحة الرمال',description:'ألوان رملية دافئة.',price:160,color:'#62492c'},
     {id:'table-walnut',type:'table',name:'طاولة الجوز',description:'خشب دافئ ومسارات عاجية.',price:0,color:'#5b3928'},
     {id:'table-slate',type:'table',name:'طاولة الأردواز',description:'سطح داكن وحواف معدنية.',price:240,color:'#344454'},
     {id:'table-emerald',type:'table',name:'طاولة الزمرد',description:'سطح أخضر بإطار جوزي.',price:260,color:'#184c3b'},
-    {id:'snake-wild',type:'snake',name:'ثعابين الغابة',description:'الثعابين الأصلية بألوانها المتنوعة.',price:0,color:'#77b38a'},
+    {id:'snake-wild',type:'snake',name:'وحوش النيون',description:'ثعابين معدنية متنوعة تتحرك وتتفاعل مع الأحجار.',price:0,color:'#77b38a'},
     {id:'snake-aurora',type:'snake',name:'الأفعى الشفقية',description:'جسم بنفسجي وأصداف مضيئة على لوحة الثعبان.',price:300,color:'#b9a2f2'},
     {id:'snake-gold',type:'snake',name:'أفعى الشمس',description:'ثعابين ذهبية بلمعة دافئة.',price:480,color:'#eec56d'},
     {id:'snake-ice',type:'snake',name:'الأفعى الجليدية',description:'جسم أزرق وعيون بلون الثلج.',price:350,color:'#8ed5ed'},

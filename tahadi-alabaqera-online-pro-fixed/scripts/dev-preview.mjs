@@ -11,6 +11,10 @@ child.on('exit',(code,signal)=>{
   else process.exit(code??0);
 });
 child.on('error',(error)=>{
-  console.error(error.message);
-  process.exit(1);
+  if(error.code!=='ENOENT'){console.error(error.message);process.exit(1);return;}
+  const index=args.indexOf('--port'),port=index>=0?args[index+1]:process.env.PORT||'4173';
+  console.log('Wrangler is not installed: opening the complete local games. Online rooms require npm ci.');
+  const local=spawn(process.execPath,['scripts/play-local.mjs'],{stdio:'inherit',env:{...process.env,PORT:port}});
+  for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>local.kill(signal));
+  local.on('exit',code=>process.exit(code??0));
 });

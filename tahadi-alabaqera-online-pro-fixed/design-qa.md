@@ -1,58 +1,13 @@
-**Comparison Target**
+# V8 design QA
 
-- Source visual truth: `/workspace/scratch/2afcdc093dda/upload/01-1000797052.jpg`.
-- Source pixels: `787 × 1536`; device density and exact CSS viewport are not available from the supplied browser screenshot.
-- Source state: portrait mobile game in progress, two players at cells 7 and 3, die showing 3.
-- Implementation route: `/snakes` from the local V4 Worker preview.
-- Implementation screenshot: unavailable because the Cloud Browser URL policy rejected the local preview URL.
-- Intended implementation viewport: the same portrait mobile width and live-game state as the source.
+Source: uploaded 709×1536 neon creature reference. Actual implementation: /snakes at CSS viewport 390×844, captured in the Cloud Browser. Source and rendered screenshot normalized to 390×844 and inspected side by side in qa/neon-comparison.jpg (internal evidence outside release).
 
-**Findings**
+Frame, board position, 10×10 grid, cyan/purple player panels, lower die area, turn strip, and Arabic roll button follow the reference composition. Live numbers and scores are DOM content; animated snakes and ladders are separate raster canvas objects; crystal pawns are live sprites. The die is a true six-face CSS cube.
 
-- [Blocked] Browser-rendered comparison evidence is unavailable.
-  Location: full mobile game view.
-  Evidence: the source screenshot opened successfully, while the implementation preview could not be opened by the required Cloud Browser because its local URL was blocked by browser policy.
-  Impact: fonts, final spacing, colors, rendered SVG head layering, image sharpness, and interaction frames cannot receive a valid visual pass.
-  Fix: capture the implementation in an allowed Cloud Browser preview at the same viewport and state, then compare both images together.
+Resolved: die/button overlap; canvas clear during skipped frames; timer hanging when drawing is throttled; oversized Jackaroo pieces caused by intrinsic canvas sizing in grid slots. Corrected crystal hues match the Jackaroo table corners. Browser views confirmed the Jackaroo table and Zahra crystal pieces at mobile width.
 
-**Automated Evidence Available**
+Accepted differences: generated creature art and empty frame are inspired by the reference, not pixel-identical. Snake and ladder endpoints match real engine routes, so individual poses differ. Reference scores 33/7 versus captured initial 0/0 reflect different match state. Animations and supplementary pause/fullscreen controls are live additions.
 
-- Layout math covers normal, short, tall portrait, and landscape viewports and proves that board + gap + cockpit consume the complete available height.
-- The snake head has a dedicated top render layer; the behavior plan covers tracking, strike, swallow, growth, and release.
-- Board movement, ladder activation, 3D-die impact, piece profiles, reduced motion, audio cues, and haptic timing have passing behavioral tests.
-- Module syntax, static references, Worker runtime, and Cloudflare dry-run are checked separately.
+Interaction evidence: snake roll and inspection; resumed pending roll 86→87→24 completes tracking, attacking, swallowing, digesting, releasing, idle; roll re-enabled. Jackaroo card selection, legal no-move discard and next-player privacy screen; Zahra die roll and next turn. New renderer and path unit tests also pass. Historical extension errors are unrelated to application rendering; no new application failure observed after fixes.
 
-**Required Fidelity Surfaces**
-
-- Fonts and typography: blocked pending browser-rendered evidence.
-- Spacing and layout rhythm: arithmetic coverage passes; visual comparison is blocked.
-- Colors and visual tokens: blocked pending browser-rendered evidence.
-- Image and procedural game-art quality: source opened; implementation rendering is blocked.
-- Copy and content: source/code review complete; rendered wrapping is blocked.
-- Focused region comparison: not possible without an implementation capture; snake heads, cockpit height, and die/roll controls remain the required focused regions.
-
-**Primary Interactions and Console**
-
-- Browser interaction test: not run; local preview navigation was blocked.
-- Browser console errors: not checked for the same reason.
-- Non-browser game-engine and choreography tests: passed.
-
-**Comparison History**
-
-- Initial user evidence identified three P1 issues: unused lower viewport, snake heads visually covered/cut, and overly fast/quiet piece movement.
-- Implemented fixes: uncapped full-height layout with a taller portrait board; dedicated head layer; slower curved motion with per-cell light/audio; full snake, ladder, and die reactions.
-- Post-fix visual evidence: blocked by Cloud Browser local-URL policy.
-
-**Implementation Checklist**
-
-- Open the allowed browser preview at the source viewport.
-- Start a two-player match and reproduce the source state.
-- Capture the full view plus focused snake-head and cockpit regions.
-- Check console errors and roll, ladder, and snake interactions.
-- Repeat the comparison and resolve any remaining P0/P1/P2 differences.
-
-**Follow-up Polish**
-
-- Tune only minor animation easing or glow intensity after a valid rendered comparison.
-
-final result: blocked
+Result: passed for reference-inspired layout and tested local interactions. Pixel-perfect art replication, all phone sizes and a deployed online match are not claimed.
