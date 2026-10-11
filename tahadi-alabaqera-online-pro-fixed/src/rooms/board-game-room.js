@@ -99,6 +99,7 @@ export class BoardGameRoom extends DurableObject {
         code: body.code,
         hostKey: body.hostKey,
         gameType: body.gameType,
+        variant: body.variant,
         now,
       });
       addBoardPlayer(this.room, {
@@ -119,6 +120,7 @@ export class BoardGameRoom extends DurableObject {
         ok: true,
         code: this.room.code,
         gameType: this.room.gameType,
+        variant: this.room.variant || 'classic',
         status: this.room.status,
         players: this.room.order.length,
         capacity: 4,

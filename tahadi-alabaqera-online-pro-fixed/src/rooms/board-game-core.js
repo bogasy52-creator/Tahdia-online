@@ -1,4 +1,4 @@
-import { createSnakesServerGame, rollSnakesServer } from '../games/snakes-server.js';
+import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from '../games/snakes-server.js';
 import { createJackarooServerGame, playJackarooServer, publicJackarooGame } from '../games/jackaroo-server.js';
 
 const TYPES = new Set(['snakes', 'jackaroo']);
@@ -13,13 +13,14 @@ export function boardRoomCapacity(gameType) {
   return 4;
 }
 
-export function createBoardRoom({ code, hostKey, gameType, now = Date.now() }) {
+export function createBoardRoom({ code, hostKey, gameType, variant = 'classic', now = Date.now() }) {
   if (!/^\d{6}$/.test(String(code || ''))) throw new Error('invalid_room_code');
   if (!TYPES.has(gameType)) throw new Error('invalid_game_type');
   return {
     code: String(code),
     hostKey: String(hostKey || ''),
     gameType,
+    variant: gameType === 'snakes' ? normalizeSnakesVariant(variant) : 'classic',
     createdAt: now,
     updatedAt: now,
     expiresAt: now + DAY,
@@ -78,7 +79,7 @@ export function startBoardMatch(room, rng = Math.random, now = Date.now()) {
   if (!room.order.every((id) => room.players[id]?.ready)) throw new Error('players_not_ready');
   const names = room.order.map((id) => room.players[id].name);
   room.game = room.gameType === 'snakes'
-    ? createSnakesServerGame(names)
+    ? createSnakesServerGame(names, { variant: room.variant || 'classic' })
     : createJackarooServerGame(names, rng);
   room.status = 'playing';
   room.lastEvent = { type: 'match_started', at: now };
@@ -95,7 +96,7 @@ export function applyBoardCommand(room, playerId, message, rng = Math.random, no
   let result;
   if (room.gameType === 'snakes') {
     if (type !== 'roll') throw new Error('invalid_action');
-    result = rollSnakesServer(room.game, player.seat, rng);
+    result = rollSnakesServer(room.game, player.seat, rng, { power: message.power ?? null });
   } else {
     if (type !== 'play_card' && type !== 'select_move') throw new Error('invalid_action');
     result = playJackarooServer(room.game, player.seat, Number(message.cardIndex), message.action);
@@ -143,6 +144,7 @@ export function boardPublicState(room, viewerId) {
   const base = {
     code: room.code,
     gameType: room.gameType,
+    variant: room.variant || 'classic',
     status: room.status,
     capacity: boardRoomCapacity(room.gameType),
     players: publicPlayers(room),

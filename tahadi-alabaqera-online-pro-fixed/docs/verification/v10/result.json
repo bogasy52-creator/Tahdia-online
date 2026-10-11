@@ -1,0 +1,60 @@
+{
+  "version": "10.0.0",
+  "node_tests": {
+    "total": 219,
+    "passed": 213,
+    "failed": 0,
+    "skipped": 6
+  },
+  "release": {
+    "js_modules": 113,
+    "inline_scripts": 9,
+    "static_references": 499,
+    "offline_cache_paths": 235,
+    "worker_offline_runtime": "passed",
+    "css_asset_references": 2
+  },
+  "online_enhanced": {
+    "tested_in": "actual Worker routes and Durable Object methods with local storage/socket harness",
+    "creation_variant": "passed",
+    "server_owned_dice": "passed",
+    "double_and_replay": "passed",
+    "shield_and_timeout_rewards": "passed",
+    "rehydrated_room": "passed",
+    "rematch_variant": "passed",
+    "online_ui_bonus_and_two_dice": "passed",
+    "stale_server_detection": "passed"
+  },
+  "layout": {
+    "gold_snake": {
+      "from": 68,
+      "to": 50
+    },
+    "head_clearance_widths": [
+      310,
+      390,
+      709
+    ],
+    "body_clearance": "passed; all bodies outside other head rectangles with margin",
+    "cell_numbers": "transparent backing, muted silver, no drop badges"
+  },
+  "canvas_render": {
+    "engine": "native Canvas 2D, no browser",
+    "size": [
+      390,
+      843
+    ],
+    "snake_count": 8,
+    "ladder_count": 8,
+    "assets": "ready",
+    "inspection": "dark painted armor, emissive edges, preserved mouth/teeth, separated gold/blue routes"
+  },
+  "http_smoke": "passed; 11 routes incl. new palette module, four WebP images and arena sound",
+  "browser_final_check": "not run; prior automatic approval review browser usage limit remains active",
+  "not_claimed": [
+    "published Cloudflare deployment",
+    "two real browser/device online playtest",
+    "final browser screenshot",
+    "audio listening review"
+  ]
+}

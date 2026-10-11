@@ -1,7 +1,7 @@
 
 import { DurableObject } from "cloudflare:workers";
 import { CATEGORIES } from "./questions.js";
-import { createSnakesGame, playSnakesRoll } from "../public/assets/js/engines/snakes-engine.js";
+import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from "./games/snakes-server.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
 import { handleSocialRequest, authenticate, getSocialStub } from "./social/social-api.js";
@@ -351,6 +351,11 @@ export default {
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
         if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        let variant = 'classic';
+        if (game === 'snakes') {
+          try { variant = normalizeSnakesVariant(body.variant); }
+          catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
+        }
         const playerLimit = game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
@@ -360,9 +365,9 @@ export default {
           const hostKey = token();
           const res = await stub.fetch("https://board.internal/init", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, hostKey, game, playerLimit, name }),
+            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant }),
           });
-          if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit });
+          if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit, variant });
         }
         return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
       } catch (err) {
@@ -1218,6 +1223,7 @@ export class BoardRoom extends DurableObject {
     return {
       code: this.room.code,
       game: this.room.game,
+      variant: this.room.variant || 'classic',
       serverNow: Date.now(),
       playerLimit: this.room.playerLimit,
       status: this.room.status,
@@ -1309,9 +1315,14 @@ export class BoardRoom extends DurableObject {
       const body = await request.json();
       const game = String(body.game || "");
       if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
+      let variant = 'classic';
+      if (game === 'snakes') {
+        try { variant = normalizeSnakesVariant(body.variant); }
+        catch { return json({ ok: false, error: 'invalid_variant' }, 400); }
+      }
       const now = Date.now();
       this.room = {
-        code: body.code, hostKey: body.hostKey, game,
+        code: body.code, hostKey: body.hostKey, game, variant,
         playerLimit: game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2)),
         createdAt: now, updatedAt: now, expiresAt: now + 24 * 60 * 60 * 1000,
         status: "lobby", players: {}, order: [], state: null, pendingRoll: null, turnDeadline: null, version: 0,
@@ -1323,7 +1334,7 @@ export class BoardRoom extends DurableObject {
 
     if (url.pathname === "/status") {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
-      return json({ ok: true, game: this.room.game, status: this.room.status, players: this.room.order.length, playerLimit: this.room.playerLimit });
+      return json({ ok: true, game: this.room.game, variant: this.room.variant || 'classic', status: this.room.status, players: this.room.order.length, playerLimit: this.room.playerLimit });
     }
 
     if (url.pathname.endsWith("/ws")) {
@@ -1407,8 +1418,11 @@ export class BoardRoom extends DurableObject {
       if (actor !== this.room.state.turn && this.room.game !== "jackaroo") return this.sendError(ws, "مو دورك الآن");
       if (this.room.game === "snakes" && msg.type === "roll") {
         if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
-        const roll = this.randomDie();
-        this.room.state = playSnakesRoll(this.room.state, roll);
+        const power = msg.power ?? null;
+        const p = this.room.state.players[actor];
+        if (power !== null && (power !== 'double' || this.room.state.rulesVersion !== 2 || !(p.double > 0) || p.position === 0))
+          return this.sendError(ws, 'قدرة النردين غير متاحة الآن');
+        this.room.state = rollSnakesServer(this.room.state, actor, () => (this.randomDie() - 1) / 6, { power }).state;
         this.room.version++;
         if (this.room.state.winner !== null) this.finishGame();
         else this.setTurnDeadline();
@@ -1461,7 +1475,7 @@ export class BoardRoom extends DurableObject {
   async startGame() {
     this.room.startedAt=Date.now();this.room.rewardsComplete=false;
     const names = this.room.order.map((id) => this.room.players[id].name);
-    if (this.room.game === "snakes") this.room.state = createSnakesGame(names);
+    if (this.room.game === "snakes") this.room.state = createSnakesServerGame(names, { variant: this.room.variant || 'classic' });
     else if (this.room.game === "zahra") this.room.state = createLudoGame(names);
     else this.room.state = createJackarooGame(names);
     this.room.status = "playing";
@@ -1486,7 +1500,7 @@ export class BoardRoom extends DurableObject {
     if (!this.room || this.room.status !== "playing" || !this.room.state) return;
     const actor = this.room.state.turn;
     if (this.room.game === "snakes") {
-      this.room.state = playSnakesRoll(this.room.state, this.randomDie());
+      this.room.state = rollSnakesServer(this.room.state, actor, () => (this.randomDie() - 1) / 6).state;
       this.room.version++;
       if (this.room.state.winner !== null) this.finishGame();
       else this.setTurnDeadline();

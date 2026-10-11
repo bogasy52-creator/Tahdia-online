@@ -1,9 +1,10 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous cache: busraj-games-v23-v5-online-fix
-const CACHE_NAME = 'busraj-games-v28-clean-v9';
+const CACHE_NAME = 'busraj-games-v29-neon-v10';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
+  "/assets/js/arena-palette.js",
   "/assets/js/arena-geometry.js",
   "/assets/css/dice-refined.css",
   "/assets/sounds/arena-v9/bite.wav",
