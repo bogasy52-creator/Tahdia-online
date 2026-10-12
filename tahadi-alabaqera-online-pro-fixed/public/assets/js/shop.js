@@ -3,7 +3,7 @@
  const api=window.BS_CAREER,core=window.BS_CAREER_CORE,$=id=>document.getElementById(id);
  const rarityNames={common:'أصلي',rare:'نادر',legendary:'أسطوري',exclusive:'حصري'};
  const typeNames={snake:'ثعبان',dice:'نرد',pawn:'حجر',board:'حلبة',table:'طاولة',trail:'أثر الحركة',victory:'احتفال',title:'لقب'};
- let filter='all',view=new URLSearchParams(location.search).get('view')==='missions'?'missions':'shop',pending=false,query='',sort='featured';
+ let filter='all',view=new URLSearchParams(location.search).get('view')==='missions'?'missions':'shop',pending=false,query='',sort='featured',inspected=null,returnFocus=null;
  const now=()=>api.now?.()||Date.now(),catalog=()=>api.catalog||[],profile=()=>api.get();
  function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
  function message(text){$('storeMessage').textContent=text}
@@ -14,6 +14,7 @@
  function style(e,id){for(const [key,value]of Object.entries(core?.COSMETIC_STYLES?.[id]||{}))e.style.setProperty(key,value)}
  function preview(item){
   const box=node('div','cosmetic-preview');box.style.setProperty('--item-color',item.color);box.setAttribute('aria-hidden','true');box.dataset.previewItem=item.id;style(box,item.id);
+  if(window.BS_COSMETIC_ART){window.BS_COSMETIC_ART.mount(box,item);return box;}
   const asset=node('div','preview-'+item.type);
   if(item.type==='snake'&&window.BS_ARENA?.portrait)window.BS_ARENA.portrait(asset,item.id);
   else if(['snake','board','table'].includes(item.type)){
@@ -33,6 +34,16 @@
   try{await work();message(success);window.BS_AUDIO?.play?.('reward')}
   catch(error){if(error.message==='price_changed')try{await api.refresh?.()}catch{}const labels={price_changed:'تغيّر سعر العرض. تم تحديثه؛ راجع السعر الجديد قبل الشراء.',insufficient_coins:'رصيدك غير كافٍ. اجمع مكافآت المهمات أولًا.',item_not_owned:'هذه الإضافة غير مملوكة.',objective_incomplete:'المهمة لم تكتمل بعد.',item_locked:'هذه الإضافة تُفتح بالإنجاز.',unauthorized:'سجّل الدخول مجددًا لحفظ العملية.'};message(labels[error.message]||'لم تكتمل العملية: '+error.message)}
   finally{pending=false;render()}
+ }
+ function closeInspector(){const dialog=$('itemDialog');dialog?.close?.();dialog?.classList.add('hidden');inspected=null;returnFocus?.focus?.();}
+ function inspect(item,source){inspected=item.id;returnFocus=source||document.activeElement;renderInspector();const dialog=$('itemDialog');dialog.classList.remove('hidden');if(dialog.showModal&&!dialog.open)dialog.showModal();$('itemClose')?.focus();window.BS_AUDIO?.play?.('click');}
+ function renderInspector(){
+  if(!inspected)return;const item=catalog().find(i=>i.id===inspected);if(!item)return;const p=profile(),owned=p.owned.includes(item.id),equipped=p.equipped[item.type]===item.id,cost=price(item),locked=Boolean(item.source&&!owned);
+  $('itemName').textContent=item.name;$('itemDescription').textContent=item.description;$('itemType').textContent=typeNames[item.type];$('itemRarity').textContent=rarityNames[item.rarity]||'أصلي';$('itemPrice').textContent=cost+' ◈';$('itemOwnership').textContent=equipped?'✓ مجهّز في ألعابك':owned?'✓ تملك هذه الإضافة':locked?'تُفتح بإنجاز':'جاهز للانضمام إلى مجموعتك';
+  const art=$('itemArt');art.replaceChildren();art.style.setProperty('--item-color',item.color);if(window.BS_COSMETIC_ART)window.BS_COSMETIC_ART.mount(art,item,{live:true});else art.appendChild(preview(item));
+  const action=$('itemAction');action.textContent=equipped?'مجهّز الآن':owned?'جهّز الإضافة':locked?'مكافأة إنجاز':p.coins<cost?'تحتاج '+(cost-p.coins)+' عملة':'شراء وتجهيز · '+cost;action.disabled=pending||equipped||locked||!owned&&p.coins<cost;
+  action.onclick=()=>operate(()=>owned?api.equip(item.id):api.purchase(item.id),'تم تجهيز '+item.name+' — يظهر في اللعبة تلقائيًا');
+  $('itemEarn').classList.toggle('hidden',owned||!locked&&p.coins>=cost);$('itemEarn').onclick=()=>{closeInspector();setView('missions');};
  }
  function setView(next){view=['shop','missions','inventory'].includes(next)?next:'shop';filter='all';render();window.BS_AUDIO?.play?.('click')}
  function renderGoal(p){
@@ -83,6 +94,7 @@
    const label=node('span','owned-label store-price'+(owned?' is-owned':''),equipped?'✓ مُجهّز الآن':owned?'ضمن مقتنياتك':locked?'مكافأة إنجاز':cost+' ◈');if(sale&&!owned)label.appendChild(node('del',null,item.price));card.appendChild(label);
    const button=node('button','bs-btn'+(equipped?'':' primary'),equipped?'مُجهّز':owned?'تجهيز':locked?'تُفتح بإنجاز 50 جولة':p.coins<cost?'تحتاج '+(cost-p.coins)+' عملة إضافية':'شراء وتجهيز · '+cost);button.disabled=pending||equipped||locked||!owned&&p.coins<cost;
    button.onclick=()=>operate(()=>owned?api.equip(item.id):api.purchase(item.id),'تم تجهيز '+item.name+' — يظهر في اللعبة تلقائيًا');card.appendChild(button);
+   const inspectButton=node('button','bs-btn item-inspect','استعرض الإضافة ↗');inspectButton.onclick=()=>inspect(item,inspectButton);card.appendChild(inspectButton);card.querySelector('.cosmetic-preview').onclick=()=>inspect(item,inspectButton);
    if(!owned){const aim=node('button','bs-btn goal-button'+(goal()===item.id?' selected':''),locked?'شاهد الإنجاز ←':goal()===item.id?'✓ هدفك الحالي':'اجعله هدفي');aim.disabled=pending;aim.onclick=()=>locked?setView('missions'):(saveGoal(item.id),render());card.appendChild(aim)}
    grid.appendChild(card);
   }
@@ -99,13 +111,18 @@
   if($('catalogueTitle'))$('catalogueTitle').textContent=view==='inventory'?'مقتنياتك — جهّز أسلوبك':'إضافات الحلبة';
   $('storeViews')?.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-pressed',b.dataset.view===view?'true':'false')});
   $('storeTabs').querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.filter===filter);b.setAttribute('aria-pressed',b.dataset.filter===filter?'true':'false')});
-  renderGoal(p);renderBundles(p);renderMissions(p);renderItems(p);
+  renderGoal(p);renderBundles(p);renderMissions(p);renderItems(p);renderInspector();
  }
  $('storeTabs').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;filter=b.dataset.filter;render()});
  $('storeViews')?.addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view)});
  if($('earnCoins'))$('earnCoins').onclick=()=>setView('missions');
  $('storeSearch')?.addEventListener('input',e=>{query=e.target.value.trim();renderItems(profile())});
  $('storeSort')?.addEventListener('change',e=>{sort=e.target.value;renderItems(profile())});
+ if($('itemClose'))$('itemClose').onclick=closeInspector;
+ $('itemDialog')?.addEventListener('cancel',e=>{e.preventDefault();closeInspector();});
+ $('itemDialog')?.addEventListener('click',e=>{if(e.target===$('itemDialog'))closeInspector();});
+ const featured=catalog().find(i=>i.id==='snake-plasma');if(featured&&$('vaultFeatureArt')&&window.BS_COSMETIC_ART)window.BS_COSMETIC_ART.mount($('vaultFeatureArt'),featured,{live:true});
+ if($('featureInspect')&&featured)$('featureInspect').onclick=()=>inspect(featured,$('featureInspect'));
  window.addEventListener('bs-career-change',render);window.addEventListener('bs-arena-ready',render);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});setInterval(()=>render(),60000);render();
 })();

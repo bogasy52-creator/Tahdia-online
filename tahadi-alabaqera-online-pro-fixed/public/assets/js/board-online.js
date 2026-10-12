@@ -1,12 +1,3 @@
-async function fetchWithTimeout(url,opts={},ms=8000){
-  try{
-    return await fetch(url,{...opts,signal:AbortSignal.timeout(ms)});
-  }catch(e){
-    if(e?.name==='TimeoutError'||e?.name==='AbortError')throw new Error('انتهت مهلة الاتصال بالسيرفر — تأكد من اتصال الإنترنت وحاول مجددًا');
-    throw new Error('تعذر الوصول للسيرفر — تأكد من اتصال الإنترنت وحاول مجددًا');
-  }
-}
-
 export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
@@ -14,14 +5,22 @@ export class BoardOnlineClient {
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
   async create(name,playerLimit,{variant='classic'}={}){
-    const res=await fetchWithTimeout('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})},8000);
-    const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'تعذر إنشاء الغرفة');
+    const res=await fetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
+    const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok){
+      if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
+        const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة ٣:٠٠ صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
+      }
+      let failure=data;
+      if(res.status>=500)try{const check=await fetch('/api/board/health',{cache:'no-store',signal:AbortSignal.timeout(9000)}),health=await check.json().catch(()=>({}));if(health.code)failure={...data,...health,requestId:data.requestId||health.requestId}}catch{}
+      const messages={BOARD_BINDING_MISSING:'محرك الغرف غير مفعّل على السيرفر. يحتاج ربط BOARD_ROOMS مع BoardRoom.',BOARD_ENGINE_OUTDATED:'محرك الغرف على السيرفر قديم. حدّث الحزمة كاملة، الواجهة والسيرفر.',BOARD_ENGINE_UNAVAILABLE:'تعذر تشغيل محرك الغرف على السيرفر. يحتاج فحص النشر والترحيلات.',ROOM_INITIALIZATION_FAILED:'تعذر حفظ الغرفة على السيرفر. أعد المحاولة؛ إذا تكرر الخطأ افحص السيرفر.'};
+      const error=new Error((messages[failure.code]||([404,405].includes(res.status)?'هذا السيرفر لا يحتوي خدمة الغرف. انشر المشروع كاملًا.':data.error||'تعذر إنشاء الغرفة'))+(failure.requestId?' · رقم الفحص '+failure.requestId:''));error.code=failure.code;error.requestId=failure.requestId;throw error;
+    }
     if(this.game==='snakes'&&variant==='adventure'&&data.variant!=='adventure')throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
     this.hostKey=data.hostKey;return this.connect(data.code,name);
   }
   async join(code,name){
     code=String(code||'').replace(/\D/g,'').slice(0,6);if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    const res=await fetchWithTimeout(`/api/board/rooms/${code}/status`,{},8000);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
+    const res=await fetch(`/api/board/rooms/${code}/status`);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
     return this.connect(code,name)
   }
   async connect(code,name){

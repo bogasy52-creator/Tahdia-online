@@ -8,10 +8,10 @@
  function outstanding(){try{return JSON.parse(localStorage.getItem(PENDING)||'null')}catch{return null}}
  function syncRetry(){$('adminRetry').classList.toggle('hidden',!outstanding());$('adminRetry').disabled=busy}
  function setBusy(value){busy=value;$('adminWorkspace').querySelectorAll('button').forEach(b=>b.disabled=value);syncRetry()}
- function errorLabel(error){const messages={unauthorized:'سجّل الدخول بحساب bosrag لفتح لوحة المدير.',forbidden:'هذه اللوحة مخصّصة لحساب المدير bosrag.',account_not_found:'الحساب غير موجود.',invalid_username:'اسم الحساب غير صالح.',invalid_amount:'العدد غير صالح أو يتجاوز الرصيد والحد المسموح.',owner_protected:'حساب المدير محمي من الإيقاف وإنهاء جلساته.',request_conflict:'رقم الطلب استُخدم لعملية أخرى.',invalid_item:'الإضافة غير صالحة لهذا الحساب.',invalid_announcement:'اكتب نص الإعلان أولًا.'};return messages[error.message]||'تعذر إكمال الطلب: '+error.message}
+ function errorLabel(error){const messages={server_update_required:'واجهة الإدارة محدثة، لكن السيرفر يحتاج تحديث الحزمة كاملة. نشر الواجهة وحدها لا يفعّل مدير BoSraG أو غرف الأونلاين.',unauthorized:'سجّل الدخول بحساب BoSraG لفتح لوحة المدير.',forbidden:'هذه اللوحة مخصّصة لحساب المدير BoSraG. إذا كان هذا حسابك، حدّث السيرفر وأعد تسجيل الدخول.',account_not_found:'الحساب غير موجود.',invalid_username:'اسم الحساب غير صالح.',invalid_amount:'العدد غير صالح أو يتجاوز الرصيد والحد المسموح.',owner_protected:'حساب المدير محمي من الإيقاف وإنهاء جلساته.',request_conflict:'رقم الطلب استُخدم لعملية أخرى.',invalid_item:'الإضافة غير صالحة لهذا الحساب.',invalid_announcement:'اكتب نص الإعلان أولًا.'};return messages[error.message]||'تعذر إكمال الطلب: '+error.message}
  async function request(path,body,session=token()){
   const response=await fetch('/api/social/admin'+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',authorization:'Bearer '+session},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(9000)});
-  const data=await response.json();if(session!==token())throw new Error('تغيّر الحساب — أعد تسجيل الدخول');if(!response.ok){const e=new Error(data.error||'تعذر الاتصال');e.status=response.status;throw e}return data;
+  const data=await response.json().catch(()=>({}));if(session!==token())throw new Error('تغيّر الحساب — أعد تسجيل الدخول');if(!response.ok){const e=new Error([404,405].includes(response.status)&&!path?'server_update_required':data.error||'تعذر الاتصال');e.status=response.status;throw e}if(!path&&!data.access)throw new Error('server_update_required');return data;
  }
  function paintAccount(account){
   selected=account;$('adminUsername').value=account.profile.username;const box=$('adminAccount');box.replaceChildren();box.append(node('h3',null,account.profile.displayName),node('span','account-handle','@'+account.profile.username),node('span','account-status'+(account.suspended?' suspended':''),account.suspended?'موقوف':'نشط'));
@@ -42,6 +42,7 @@
  $('adminActionForm').onsubmit=e=>{e.preventDefault();if(!selected||!allowed)return;tell('');const action=$('adminAction').value;return run({username:selected.profile.username,action,amount:['coins','xp'].includes(action)?Number($('adminAmount').value):undefined,item:action==='unlock-item'?$('adminItem').value:undefined,reason:$('adminReason').value.trim()})};
  $('adminAnnouncementForm').onsubmit=e=>{e.preventDefault();return run({action:'announcement',text:$('adminAnnouncement').value.trim()})};$('adminRetry').onclick=()=>{const command=outstanding();if(command)return run(command)};
  $('adminClearAnnouncement').onclick=()=>run({action:'clear-announcement'});
+ $('adminAccessRetry').onclick=()=>load();
  $('adminRefresh').onclick=async()=>{if(!allowed||busy)return;setBusy(true);try{paintAudit(await request(''));tell('السجل محدث')}catch(error){tell(errorLabel(error))}finally{setBusy(false)}};
  window.addEventListener('bs-social-session',()=>{selected=null;load()});window.addEventListener('storage',e=>{if(e.key==='bs_social_session'){selected=null;load()}});
  window.BS_ADMIN={ready:load(),search,refresh:load};

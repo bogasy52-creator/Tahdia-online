@@ -39,7 +39,8 @@ export function createQuickArenaClass(DurableObject){return class QuickArena ext
       if(other){const matchId=crypto.randomUUID();mine.matchId=matchId;other.matchId=matchId;mine.expiresAt=other.expiresAt=now+30*60000;await tx.put('ticket:'+other.id,other);await tx.put('pending:'+matchId,{players:[other,mine],expiresAt:mine.expiresAt})}else await tx.put('waiting:'+String(now).padStart(14,'0')+':'+id,id);
       await tx.put('ticket:'+id,mine);return other;
     });
-    await this.ctx.storage.setAlarm(now+30000);
+    const cleanupAt=await this.ctx.storage.getAlarm();
+    if(cleanupAt===null||cleanupAt>mine.expiresAt)await this.ctx.storage.setAlarm(mine.expiresAt);
     const ready=!pair||await this.ensureMatch(mine.matchId);
     return json({ok:true,id,secret,status:pair&&ready?'matched':'waiting',preparing:!!pair&&!ready,matchId:mine.matchId});
   }
@@ -68,6 +69,11 @@ export function createQuickArenaClass(DurableObject){return class QuickArena ext
   }
   async alarm(){
     if(this.match){if(this.match.phase==='finished'&&Date.now()-(this.match.finishedAt||0)>=3600000){await this.ctx.storage.deleteAll();await this.ctx.storage.deleteAlarm();this.match=null;return}advanceMatch(this.match);await this.saveMatch();try{await this.rewardPlayers()}catch{await this.ctx.storage.setAlarm(Date.now()+10000)}return}
-    const tickets=await this.ctx.storage.list({prefix:'ticket:',limit:1000});for(const [key,t] of tickets)if(t.expiresAt<=Date.now()){await this.ctx.storage.delete(key);if(!t.matchId)await this.ctx.storage.delete('waiting:'+String(t.createdAt).padStart(14,'0')+':'+t.id);else await this.ctx.storage.delete('pending:'+t.matchId)}if(tickets.size)await this.ctx.storage.setAlarm(Date.now()+30000);
+    const now=Date.now();let next=Infinity,startAfter;
+    for(;;){const tickets=await this.ctx.storage.list({prefix:'ticket:',limit:1000,...(startAfter?{startAfter}:{})});
+      for(const [key,t] of tickets){if(t.expiresAt<=now){await this.ctx.storage.delete(key);if(!t.matchId)await this.ctx.storage.delete('waiting:'+String(t.createdAt).padStart(14,'0')+':'+t.id);else await this.ctx.storage.delete('pending:'+t.matchId)}else next=Math.min(next,t.expiresAt);startAfter=key}
+      if(tickets.size<1000)break;
+    }
+    if(Number.isFinite(next))await this.ctx.storage.setAlarm(next);else await this.ctx.storage.deleteAlarm();
   }
 }}

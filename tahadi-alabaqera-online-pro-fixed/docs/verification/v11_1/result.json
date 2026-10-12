@@ -1,0 +1,16 @@
+{
+  "release": "11.0.1",
+  "command": "npm run verify:release",
+  "exit_code": 0,
+  "tests": 260,
+  "passed": 254,
+  "failed": 0,
+  "skipped": 6,
+  "local_references": 537,
+  "javascript_modules": 120,
+  "inline_scripts": 9,
+  "offline_cache_paths": 240,
+  "browser_playtest": "not_run_usage_limit",
+  "cloudflare_deployment": "not_run",
+  "live_server_diagnosis": "requires_user_site_url"
+}

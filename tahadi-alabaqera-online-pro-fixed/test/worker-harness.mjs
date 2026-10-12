@@ -7,7 +7,7 @@ class Storage{
  async put(k,v){this.values.set(k,structuredClone(v))}
  async delete(k){if(Array.isArray(k))return k.map(x=>this.values.delete(x));return this.values.delete(k)}
  async deleteAll(){this.values.clear()}
- async list({prefix='',limit=1000,reverse=false}={}){let rows=[...this.values].filter(([k])=>k.startsWith(prefix)).sort(([a],[b])=>a.localeCompare(b));if(reverse)rows.reverse();return new Map(rows.slice(0,limit).map(([k,v])=>[k,structuredClone(v)]))}
+ async list({prefix='',limit=1000,reverse=false,startAfter}={}){let rows=[...this.values].filter(([k])=>k.startsWith(prefix)&&(startAfter===undefined||k>startAfter)).sort(([a],[b])=>a.localeCompare(b));if(reverse)rows.reverse();return new Map(rows.slice(0,limit).map(([k,v])=>[k,structuredClone(v)]))}
  async setAlarm(t){this.alarm=t}async getAlarm(){return this.alarm}async deleteAlarm(){this.alarm=null}
  transaction(fn){const work=this.queue.then(async()=>{const before=structuredClone(this.values),alarm=this.alarm;try{return await fn(this)}catch(error){this.values=before;this.alarm=alarm;throw error}});this.queue=work.catch(()=>{});return work}
 }

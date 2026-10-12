@@ -1,0 +1,13 @@
+{
+  "release": "11.0.2",
+  "tests": 271,
+  "passed": 265,
+  "failed": 0,
+  "skipped": 6,
+  "native_runtime": "workerd + SQLite + WebSocket",
+  "native_checks": 8,
+  "native_regression_before": "50 ms abandoned host alarm loop reproduced in V11.1",
+  "native_regression_after": "same room alarm parked at 24-hour expiry",
+  "cloudflare_dry_run": "passed",
+  "deployed_to_user_account": false
+}

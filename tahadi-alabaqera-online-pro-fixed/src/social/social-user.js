@@ -47,8 +47,12 @@ export function createSocialUserClass(DurableObject) {
     this.env = env;
     this.profile = null;
     this.presence = { online: false, lastSeen: null };
-    this.ctx.blockConcurrencyWhile(async () => {
+    this.ready=this.ctx.blockConcurrencyWhile(async () => {
       this.profile = (await this.ctx.storage.get("profile")) || null;
+      if(this.profile){
+        const canonical=normalizeUsername(this.profile.username);
+        if(validUsername(canonical)&&canonical!==this.profile.username){this.profile.username=canonical;await this.ctx.storage.put('profile',this.profile)}
+      }
       this.presence = (await this.ctx.storage.get("presence")) || { online: false, lastSeen: null };
       if (this.profile) {
         const hasSocialSockets = this.ctx.getWebSockets().some((ws) => {

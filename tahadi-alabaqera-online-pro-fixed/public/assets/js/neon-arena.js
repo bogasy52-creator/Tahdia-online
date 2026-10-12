@@ -10,15 +10,20 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
  const snakes=new Map(),ladders=new Map(),skins=new Map();let canvas,ctx,routes=[],width=0,height=0,clock=0,last=0,frame=0,paintedAt=0;
  const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  const ease=t=>Math.sin(Math.max(0,Math.min(1,t))*Math.PI);
- function skin(hue){
-  if(skins.has(hue))return skins.get(hue);
+ function skin(hue,id){
+  const key=hue+':'+(id||'snake-wild');if(skins.has(key))return skins.get(key);
   function sprite(x,y,w,h,dw,dh){
    const c=document.createElement('canvas');c.width=dw;c.height=dh;const paint=c.getContext('2d');
    paint.drawImage(cobra,x,y,w,h,0,0,dw,dh);
    const pixels=paint.getImageData(0,0,dw,dh);recolorBluePixels(pixels.data,hue);paint.putImageData(pixels,0,0);return c;
   }
   const result={texture:sprite(375,770,100,100,128,128),head:sprite(285,10,610,480,610,480)};
-  skins.set(hue,result);return result;
+  if(id&&id!=='snake-wild'&&window.BS_COSMETIC_ART){
+   const c=document.createElement('canvas');c.width=610;c.height=480;const paint=c.getContext('2d');paint.translate(285,240);window.BS_COSMETIC_ART.head(paint,id,150);result.head=c;
+   const tex=result.texture.getContext('2d');tex.strokeStyle='hsla('+hue+' 90% 80% / .35)';tex.lineWidth=3;
+   for(let y=10;y<128;y+=22){tex.beginPath();tex.moveTo(0,y);tex.lineTo(64,y+12);tex.lineTo(128,y);tex.stroke();}
+  }
+  skins.set(key,result);return result;
  }
  function layout(entries){
   const board=document.getElementById('board');if(!board)return;
@@ -45,7 +50,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
   const state=snakes.get(r.from)||{phase:'idle',at:0},elapsed=clock-state.at,phase=state.phase;
   const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!reduce(),route:r.from});
   const cosmetic=document.documentElement.dataset.snake;
-  const hue=cosmeticSnakeHue(cosmetic,r.from),art=skin(hue);
+  const hue=cosmeticSnakeHue(cosmetic,r.from),art=skin(hue,cosmetic);
   const growth=phase==='digesting'?1+.24*ease(elapsed/900):phase==='releasing'?1+.10*(1-Math.min(1,elapsed/550)):1;
   const swallow=phase==='swallowing'?Math.min(1,elapsed/900):-1;
   const points=shape.points;
@@ -124,7 +129,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
  }
  function crystal(el,player){
   const c=document.createElement('canvas');c.className='crystal-sprite';c.width=144;c.height=180;c.setAttribute('aria-hidden','true');
-  const paint=()=>{const context=c.getContext('2d');context.clearRect(0,0,144,180);context.filter=player===2||player===3?'hue-rotate(-150deg)':'none';context.drawImage(objects,player%2?1400:785,60,480,690,0,0,144,180)};
+  const paint=()=>{const pawn=document.documentElement.dataset.pawn;if(pawn&&pawn!=='pawn-classic'&&window.BS_COSMETIC_ART){const item=window.BS_CAREER?.catalog?.find(i=>i.id===pawn);if(item){window.BS_COSMETIC_ART.paint(c,item);return;}}const context=c.getContext('2d');context.clearRect(0,0,144,180);context.filter=player===2||player===3?'hue-rotate(-150deg)':'none';context.drawImage(objects,player%2?1400:785,60,480,690,0,0,144,180)};
   objects.complete&&objects.naturalWidth?paint():objects.addEventListener('load',paint,{once:true});el.appendChild(c);return c;
  }
  // A rendering frame can be throttled by a browser. Game completion uses a
@@ -138,7 +143,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
  })}
  function portrait(el,id,from=id==='snake-plasma'?95:99){
   const c=document.createElement('canvas');c.width=360;c.height=283;c.setAttribute('aria-hidden','true');
-  const paint=()=>c.getContext('2d').drawImage(skin(cosmeticSnakeHue(id,from)).head,0,0,360,283);
+  const paint=()=>c.getContext('2d').drawImage(skin(cosmeticSnakeHue(id,from),id).head,0,0,360,283);
   cobra.complete&&cobra.naturalWidth?paint():cobra.addEventListener('load',paint,{once:true});el.appendChild(c);return c;
  }
  window.BS_ARENA={layout,phase,ladder,crystal,portrait,wait};

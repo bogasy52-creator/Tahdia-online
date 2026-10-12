@@ -1,9 +1,17 @@
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v20'
 // Previous release marker retained for upgrade diagnostics: CACHE_NAME = 'busraj-games-v21-reference-skin'
 // Previous cache: busraj-games-v23-v5-online-fix
-const CACHE_NAME = 'busraj-games-v30-store-v11';
+const CACHE_NAME = 'busraj-games-v33-serpent-vault';
 const MEDIA_CACHE = 'busraj-quiz-media-v3';
 const APP_SHELL = [
+  "/serpent.html",
+  "/assets/js/serpent-ui.js",
+  "/assets/js/serpent-renderer.js",
+  "/assets/js/engines/serpent-engine.js",
+  "/assets/js/cosmetic-art.js",
+  "/assets/css/serpent.css",
+  "/assets/css/store-v12.css",
+
   "/admin.html",
   "/assets/js/admin.js",
   "/assets/css/admin.css",

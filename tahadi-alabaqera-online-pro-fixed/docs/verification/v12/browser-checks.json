@@ -1,0 +1,19 @@
+{
+  "checks": [
+    "six distinct rendered snake species",
+    "preview does not purchase or equip",
+    "daily gift, real purchase and equipment persist",
+    "split screen, local pause and resume",
+    "mobile fills viewport, touch steering and store layout",
+    "real two-client native WebSocket room synchronizes",
+    "reload restores the existing player and room",
+    "finished-room reload, resume and actual rematch",
+    "no JavaScript page errors"
+  ],
+  "errors": [],
+  "viewports": [
+    "1366x900",
+    "1100x800",
+    "390x844"
+  ]
+}

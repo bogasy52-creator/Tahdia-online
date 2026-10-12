@@ -1,13 +1,14 @@
-بوسراج للألعاب — 11.0.0
+بوسراج للألعاب — 11.0.2
 دليل نشر المشروع الكامل
 
-1) فك ZIP وافتح الطرفية داخل snake_pro_v11 حيث package.json وwrangler.jsonc.
+1) فك ZIP وافتح الطرفية داخل snake_pro_v11_2 حيث package.json وwrangler.jsonc.
 2) استخدم Node.js 24، ثم نفذ بالترتيب:
 
 npm ci --include=dev
 npm run verify:release
 node scripts/verify-worker-config.mjs
 npm run check:cloudflare
+npm run test:cloudflare
 npx wrangler login
 npm run deploy
 
@@ -34,6 +35,15 @@ boardOnline: true
 quickOnline: true
 socialOnline: true
 version: "7.0.0"
+release: "11.0.2"
+
+فحص محرك الغرف بعد النشر:
+افتح /api/board/health. يجب أن يعرض ok: true وengine: BoardRoom وrelease: 11.0.2.
+BOARD_BINDING_MISSING يعني أن ربط BOARD_ROOMS مع BoardRoom غير موجود.
+BOARD_ENGINE_OUTDATED يعني أن العامل أو محرك الغرف ما زال قديمًا.
+BOARD_ENGINE_UNAVAILABLE يعني أن تشغيل المحرك فشل؛ راجع النشر والترحيلات وسجل العامل.
+ROOM_INITIALIZATION_FAILED يعني فشل حفظ غرفة؛ يتراجع المحرك عن التهيئة ويمكن المحاولة مجددًا.
+رقم الفحص في الرسالة يطابق السجل في السيرفر، ولا يتضمن مفاتيح الغرفة أو جلسات الحساب.
 
 فحوص قبول على الموقع المنشور:
 - حسابان منفصلان: تسجيل، صداقة، قبول، خصوصية ودعوة إلى غرفة.
@@ -54,7 +64,13 @@ Firebase القديم:
 firebase deploy --only firestore:rules --project YOUR_PROJECT_ID
 هذه القواعد ليست منشورة ضمن أمر wrangler deploy.
 
-تم التحقق من الكود بمحاكاة السيرفر وDOM. لم يُنفَّذ نشر فعلي أو فحص Wrangler السحابي أو اختبار متصفحات/أجهزة حقيقية في بيئة التسليم.
+تم التحقق من محاكاة السيرفر وDOM، ومن تشغيل workerd محليًا مع SQLite وWebSocket ومن تجهيز النشر عبر Wrangler dry-run. لم يُنفَّذ نشر إلى حساب Cloudflare أو اختبار متصفحات/أجهزة حقيقية في جلسة التسليم.
+
+الخطأ المؤكد في الصورة: Exceeded allowed volume of requests in Durable Objects free tier.
+الخطة المجانية تسمح بـ100,000 طلب يوميًا، وتحتسب استدعاءات HTTP وWebSocket والمؤقتات. تعود الحصة عند 00:00 UTC / 03:00 في السعودية. إذا بلغ الحساب حده، يلزم انتظار إعادة الضبط أو تغيير خطة Workers عبر حسابك في Cloudflare. التصحيح يقلل الهدر، ولا يرفع حدود الحساب.
+تأكد من نشر src/index.js مع الواجهة؛ إصلاح المؤقتات على السيرفر هو الجزء الضروري، وليس مجرد تحديث الرسالة.
+لا تحذف الغرف أو الحسابات ولا سجل migrations لمعالجة هذه الرسالة.
+المصدر الرسمي: https://developers.cloudflare.com/durable-objects/platform/pricing/
 
 المراجع:
 https://developers.cloudflare.com/workers/wrangler/commands/workers/

@@ -1,0 +1,26 @@
+V11.1 -> V11.2: quota diagnosis and abandoned-room alarm correction
+
+M DEPLOY-AR.txt
+M README-AR.md
+M START-HERE-AR.txt
+M VERIFIED_V11_AR.md
+A docs/verification/v11_2/native-after.log
+A docs/verification/v11_2/native-before.log
+A docs/verification/v11_2/release.log
+A docs/verification/v11_2/result.json
+A docs/verification/v11_2/wrangler-dry-run.log
+M package-lock.json
+M package.json
+M public/assets/js/board-online.js
+M public/assets/js/matchmaking.js
+M public/assets/js/quick-match-game.js
+M public/service-worker.js
+A scripts/verify-cloudflare-runtime.mjs
+M scripts/verify-v7.mjs
+M src/index.js
+M src/quick/arena.js
+M test/board-startup.test.js
+A test/durable-quota.test.js
+M test/quick-match-firestore.test.js
+A test/quick-quota-ui.test.js
+M test/worker-harness.mjs

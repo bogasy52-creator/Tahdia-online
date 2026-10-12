@@ -8,6 +8,7 @@ import { handleSocialRequest, authenticate, getSocialStub } from "./social/socia
 import { createQuickArenaClass } from "./quick/arena.js";
 import { createSocialUserClass } from "./social/social-user.js";
 import { generateSafeQuestions } from "./ai-questions.js";
+import { SerpentRoom } from './serpent/serpent-room.js';
 
 class SocialDelegateBase {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; }
@@ -15,12 +16,26 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
+const RELEASE='12.0.0';
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
 const TURN_TIMEOUT_MS = 60_000;
 const MOVE_TIMEOUT_MS = 25_000;
 const RATE_BUCKETS = new Map();
+const DURABLE_QUOTA_RESETS = new WeakMap();
+
+function isDurableRequestQuotaError(error) {
+  return /exceeded allowed volume of requests in durable objects free tier/i.test(String(error?.message || error || '').replace(/\s+/g, ' '));
+}
+
+function durableQuotaResponse(env) {
+  const now = Date.now(), resetAt = DURABLE_QUOTA_RESETS.get(env) || (Math.floor(now / 86400000) + 1) * 86400000;
+  DURABLE_QUOTA_RESETS.set(env, resetAt);
+  return new Response(JSON.stringify({ok:false,online:false,code:'DURABLE_REQUEST_LIMIT',error:'وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة ٣:٠٠ صباحًا بتوقيت السعودية.',resetAt,release:RELEASE}), {
+    status:503,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','retry-after':String(Math.max(1,Math.ceil((resetAt-now)/1000))),'x-content-type-options':'nosniff'}
+  });
+}
 
 function memoryRateLimit(request, bucket, limit, windowMs) {
   const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() || "local";
@@ -73,7 +88,8 @@ async function rateLimit(request, env, bucket, limit, windowMs) {
         "x-content-type-options": "nosniff",
       },
     });
-  } catch {
+  } catch (error) {
+    if (isDurableRequestQuotaError(error)) throw error;
     return memoryRateLimit(request, bucket, limit, windowMs);
   }
 }
@@ -227,10 +243,15 @@ function speedBonus(deadline, answeredAt) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    try {
 
     if (url.pathname.startsWith("/api/") && !sameOrigin(request)) {
       return json({ ok: false, error: "cross_origin_forbidden" }, 403);
     }
+
+    const quotaReset = DURABLE_QUOTA_RESETS.get(env);
+    if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if (request.method === "GET" && url.pathname === "/api/health") {
       const quizOnline = Boolean(env.ROOMS);
@@ -240,7 +261,17 @@ export default {
       if (!quizOnline || !boardOnline || !quickOnline) {
         return json({ ok: false, online: false, quizOnline, boardOnline, quickOnline, socialOnline, error: "Durable Object binding missing", version: "7.0.0" }, 503);
       }
-      return json({ ok: true, online: true, quizOnline, boardOnline, quickOnline, socialOnline, service: "tahadi-alabaqera-online", version: "7.0.0" });
+      return json({ ok: true, online: true, quizOnline, boardOnline, quickOnline, socialOnline, service: "tahadi-alabaqera-online", version: "7.0.0",release:RELEASE });
+    }
+
+    if(request.method==='GET'&&url.pathname==='/api/board/health'){
+      const limited=await rateLimit(request,env,'board-health',30,60000);if(limited)return limited;
+      if(!env.BOARD_ROOMS||typeof env.BOARD_ROOMS.idFromName!=='function'||typeof env.BOARD_ROOMS.get!=='function')return json({ok:false,code:'BOARD_BINDING_MISSING',error:'محرك الغرف غير مربوط بالسيرفر. فعّل BOARD_ROOMS مع BoardRoom.',release:RELEASE},503);
+      try{
+        const stub=env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName('__board_health__')),response=await stub.fetch('https://board.internal/health'),data=await response.json().catch(()=>({}));
+        if(!response.ok||data.engine!=='BoardRoom'||!data.release)return json({ok:false,code:'BOARD_ENGINE_OUTDATED',error:'محرك الغرف على السيرفر قديم أو غير متوافق. انشر الحزمة كاملة مع السيرفر.',release:RELEASE},503);
+        return json({...data,ok:true});
+      }catch(error){if(isDurableRequestQuotaError(error))throw error;const requestId=crypto.randomUUID();console.error('board health failed',{requestId,error:error.message});return json({ok:false,code:'BOARD_ENGINE_UNAVAILABLE',error:'تعذر تشغيل محرك الغرف على السيرفر. راجع نشر BoardRoom وترحيلاته.',requestId,release:RELEASE},503)}
     }
 
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
@@ -276,7 +307,7 @@ export default {
         target='match:'+match[1];path='/'+match[2];
       }
       const stub=env.QUICK_ARENA.get(env.QUICK_ARENA.idFromName(target));
-      try{return await stub.fetch('https://quick.internal'+path,{method:'POST',body:JSON.stringify(body)})}catch{return json({ok:false,error:'تعذر الاتصال بالمواجهة، أعد المحاولة'},503)}
+      try{return await stub.fetch('https://quick.internal'+path,{method:'POST',body:JSON.stringify(body)})}catch(error){if(isDurableRequestQuotaError(error))throw error;return json({ok:false,error:'تعذر الاتصال بالمواجهة، أعد المحاولة'},503)}
     }
 
     if (request.method === "POST" && url.pathname === "/api/ai/questions") {
@@ -314,6 +345,7 @@ export default {
         }
         return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
       } catch (err) {
+        if (isDurableRequestQuotaError(err)) throw err;
         console.error("create room failed", err);
         return json({ ok: false, error: "تعذر تشغيل محرك الغرف. تأكد من نشر Durable Object مع المشروع." }, 503);
       }
@@ -333,19 +365,50 @@ export default {
           const headers=new Headers(request.headers);headers.delete('x-bs-account');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
           if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth)headers.set('x-bs-account',auth.username)}
-          return stub.fetch(new Request(request,{headers}));
+          return await stub.fetch(new Request(request,{headers}));
         }
-        return stub.fetch("https://room.internal/status");
+        return await stub.fetch("https://room.internal/status");
       } catch (err) {
+        if (isDurableRequestQuotaError(err)) throw err;
         console.error("room route failed", err);
         return json({ ok: false, error: "تعذر الوصول لمحرك الغرفة" }, 503);
       }
     }
 
+    if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
+      const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
+      if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
+      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120;
+      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>8||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية ومدة صالحة'},400);
+      for(let attempt=0;attempt<5;attempt++){
+        const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
+        const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration})});
+        if(response.status===201)return json({ok:true,code,hostKey,playerLimit,duration});
+        if(response.status!==409)return json({ok:false,error:'تعذر تشغيل الحلبة؛ تأكد من نشر السيرفر الجديد'},503);
+      }
+      return json({ok:false,error:'تعذر إنشاء الحلبة الآن'},503);
+    }
+    const serpentMatch=url.pathname.match(/^\/api\/serpent\/rooms\/(\d{6})(\/ws|\/status)?$/);
+    if(serpentMatch){
+      if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
+      const limited=await rateLimit(request,env,'serpent-connect',100,60_000);if(limited)return limited;
+      if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مفعّل'},503);
+      const stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+serpentMatch[1]));
+      if(serpentMatch[2]!=='/ws')return stub.fetch('https://serpent.internal/status');
+      const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-skin');
+      const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(s=>s.trim()).find(s=>s.startsWith('st.'))?.slice(3);
+      if(st){const auth=await authenticate(new Request(request.url,{headers:{authorization:'Bearer '+st}}),env);if(auth){
+        headers.set('x-bs-account',auth.username);
+        const profile=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});
+        if(profile.ok){const data=await profile.json();headers.set('x-bs-skin',data.career?.equipped?.snake||'snake-wild');}
+      }}
+      const internal=new URL(request.url);internal.hostname='serpent.internal';internal.pathname='/ws';return stub.fetch(new Request(internal,{headers}));
+    }
+
     if (request.method === "POST" && url.pathname === "/api/board/rooms") {
       const limited = await rateLimit(request, env, "board-create", 12, 60_000);
       if (limited) return limited;
-      if (!env.BOARD_ROOMS) return json({ ok: false, error: "محرك ألعاب الجلسات غير مفعّل" }, 503);
+      if (!env.BOARD_ROOMS||typeof env.BOARD_ROOMS.idFromName!=='function'||typeof env.BOARD_ROOMS.get!=='function') return json({ ok: false,code:'BOARD_BINDING_MISSING', error: "محرك الغرف غير مربوط بالسيرفر. فعّل BOARD_ROOMS مع BoardRoom." }, 503);
       try {
         let body = {};
         try { body = await request.json(); } catch {}
@@ -368,12 +431,13 @@ export default {
             body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant }),
           });
           if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit, variant });
+          if(res.status!==409){const failure=await res.json().catch(()=>({})),requestId=failure.requestId||crypto.randomUUID();return json({ok:false,code:failure.code==='ROOM_INITIALIZATION_FAILED'?'ROOM_INITIALIZATION_FAILED':'BOARD_ENGINE_UNAVAILABLE',error:'فشل تشغيل غرفة اللعبة على السيرفر. أعد المحاولة؛ إذا تكرر الخطأ افحص نشر محرك الغرف.',requestId,release:RELEASE},503)}
         }
         return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
       } catch (err) {
-        console.error("create board room failed", err);
-        const detail = String(err?.message || err || "").slice(0, 160);
-        return json({ ok: false, error: "تعذر تشغيل غرفة اللعبة" + (detail ? " — " + detail : "") }, 503);
+        if (isDurableRequestQuotaError(err)) throw err;
+        const requestId=crypto.randomUUID();console.error("create board room failed",{requestId,error:err.message});
+        return json({ ok: false,code:'BOARD_ENGINE_UNAVAILABLE',error: "تعذر تشغيل محرك الغرف على السيرفر. افحص نشر BoardRoom وترحيلاته.",requestId,release:RELEASE }, 503);
       }
     }
 
@@ -391,10 +455,11 @@ export default {
           const headers=new Headers(request.headers);headers.delete('x-bs-account');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
           if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth)headers.set('x-bs-account',auth.username)}
-          return stub.fetch(new Request(request,{headers}));
+          return await stub.fetch(new Request(request,{headers}));
         }
-        return stub.fetch("https://board.internal/status");
+        return await stub.fetch("https://board.internal/status");
       } catch (err) {
+        if (isDurableRequestQuotaError(err)) throw err;
         console.error("board room route failed", err);
         return json({ ok: false, error: "تعذر الوصول لغرفة اللعبة" }, 503);
       }
@@ -407,6 +472,10 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
+    } catch (error) {
+      if (isDurableRequestQuotaError(error)) return durableQuotaResponse(env);
+      throw error;
+    }
   },
 };
 
@@ -438,8 +507,11 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async serpentDelegate(){if(!this.serpentRoom)this.serpentRoom=new SerpentRoom(this.ctx,this.env);await this.serpentRoom.ready;return this.serpentRoom;}
+
   async fetch(request) {
     const url = new URL(request.url);
+    if(url.hostname==='serpent.internal')return (await this.serpentDelegate()).fetch(request);
 
     if (url.pathname === "/rate" && request.method === "POST") {
       const body = await request.json().catch(() => ({}));
@@ -581,6 +653,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketMessage(ws,raw);
     if (!this.room) return;
     const player = this.playerForSocket(ws);
     if (!player) return;
@@ -665,6 +738,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketClose(ws);
     const p = this.playerForSocket(ws);
     if (p) {
       p.connected = false;
@@ -679,6 +753,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketError(ws);
     await this.webSocketClose(ws);
   }
 
@@ -1052,6 +1127,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.serpentRoom||await this.ctx.storage.get('serpent'))return (await this.serpentDelegate()).alarm();
     if (!this.room) {
       const now = Date.now();
       const rateEntries = await this.ctx.storage.list({ prefix: "rate:" });
@@ -1128,11 +1204,25 @@ export class BoardRoom extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.room = null;
-    this.social = new BoardSocialUser(ctx, env);
+    this.social = null;
     this.ctx.blockConcurrencyWhile(async () => {
       this.room = (await this.ctx.storage.get("room")) || null;
       this.syncConnected();
     });
+  }
+
+  async socialDelegate(){
+    if(!this.social)this.social=new BoardSocialUser(this.ctx,this.env);
+    await this.social.ready;return this.social;
+  }
+
+  async initializeRoom(body){
+    if(this.room)return json({ok:false,error:'room_exists'},409);
+    const game=String(body.game||'');if(!['snakes','zahra','jackaroo'].includes(game))return json({ok:false,error:'invalid_game'},400);
+    let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
+    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='jackaroo'?4:Math.min(4,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
+    try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.expiresAt);this.room=room;return json({ok:true},201)}
+    catch(error){const requestId=crypto.randomUUID();this.room=null;try{await this.ctx.storage.delete('room');await this.ctx.storage.deleteAlarm()}catch(rollback){console.error('board initialization rollback failed',{requestId,error:rollback.message})}console.error('board initialization failed',{requestId,error:error.message});return json({ok:false,code:'ROOM_INITIALIZATION_FAILED',error:'تعذر حفظ الغرفة على السيرفر. حاول مرة أخرى.',requestId},503)}
   }
 
   syncConnected() {
@@ -1295,7 +1385,10 @@ export class BoardRoom extends DurableObject {
     if (["lobby", "finished"].includes(this.room.status)) {
       for (const id of this.room.order) {
         const p = this.room.players[id];
-        if (!p?.connected && p?.disconnectedAt) candidates.push(p.disconnectedAt + DISCONNECT_GRACE_MS);
+        // An expired host grace period has already been handled by cleanup.
+        // Keep reconnection available until room expiry without a rapid loop.
+        const graceAt = p?.disconnectedAt + DISCONNECT_GRACE_MS;
+        if (!p?.connected && p?.disconnectedAt && graceAt > now) candidates.push(graceAt);
       }
     }
     const next = Math.min(...candidates.filter((x) => Number.isFinite(x)));
@@ -1310,27 +1403,11 @@ export class BoardRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
-    if (url.hostname === "social.internal") return this.social.fetch(request);
+    if (url.hostname === "social.internal") return (await this.socialDelegate()).fetch(request);
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo'],snakesVariants:['classic','adventure']});
     if (url.pathname === "/init" && request.method === "POST") {
-      if (this.room) return json({ ok: false, error: "room_exists" }, 409);
-      const body = await request.json();
-      const game = String(body.game || "");
-      if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "invalid_game" }, 400);
-      let variant = 'classic';
-      if (game === 'snakes') {
-        try { variant = normalizeSnakesVariant(body.variant); }
-        catch { return json({ ok: false, error: 'invalid_variant' }, 400); }
-      }
-      const now = Date.now();
-      this.room = {
-        code: body.code, hostKey: body.hostKey, game, variant,
-        playerLimit: game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2)),
-        createdAt: now, updatedAt: now, expiresAt: now + 24 * 60 * 60 * 1000,
-        status: "lobby", players: {}, order: [], state: null, pendingRoll: null, turnDeadline: null, version: 0,
-      };
-      await this.persist();
-      await this.scheduleNextAlarm();
-      return json({ ok: true }, 201);
+      const body=await request.json().catch(()=>({}));
+      return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
     }
 
     if (url.pathname === "/status") {
@@ -1381,7 +1458,7 @@ export class BoardRoom extends DurableObject {
 
   async webSocketMessage(ws, raw) {
     try {
-      if (ws.deserializeAttachment()?.username) return this.social.webSocketMessage(ws, raw);
+      if (ws.deserializeAttachment()?.username) return (await this.socialDelegate()).webSocketMessage(ws, raw);
     } catch {}
     if (!this.room) return;
     const player = this.playerForSocket(ws);
@@ -1552,7 +1629,7 @@ export class BoardRoom extends DurableObject {
 
   async webSocketClose(ws, code = 1000, reason = "closed") {
     try {
-      if (ws.deserializeAttachment()?.username) return this.social.webSocketClose(ws, code, reason);
+      if (ws.deserializeAttachment()?.username) return (await this.socialDelegate()).webSocketClose(ws, code, reason);
     } catch {}
     const p = this.playerForSocket(ws);
     if (!p || !this.room) return;
@@ -1564,7 +1641,7 @@ export class BoardRoom extends DurableObject {
   }
   async webSocketError(ws) {
     try {
-      if (ws.deserializeAttachment()?.username) return this.social.webSocketError(ws);
+      if (ws.deserializeAttachment()?.username) return (await this.socialDelegate()).webSocketError(ws);
     } catch {}
     await this.webSocketClose(ws);
   }
