@@ -1,0 +1,82 @@
+/* A real square board, jewel materials and a calm metal frame. */
+body.game-snakes.game-running{background:radial-gradient(ellipse at 50% 0,#243b48,#09131e 70%)}
+#game.neon-arena{--royal-line:#637d91;--tile-light:#283e52;--tile-dark:#1b3044;display:grid!important;grid-template-columns:minmax(0,1fr) 250px!important;grid-template-rows:48px repeat(6,auto)!important;gap:12px 20px!important;width:min(1050px,100vw)!important;aspect-ratio:auto!important;min-height:100dvh!important;height:auto!important;padding:20px!important;align-content:center!important;background:linear-gradient(145deg,#13283b,#0a1929)!important;border:1px solid #63819755!important;border-radius:22px!important;box-shadow:inset 0 1px #ffffff18,0 18px 60px #0007!important}
+#game.neon-arena .arena-frame{display:none!important}
+#game.neon-arena .game-toolbar{grid-area:1/1/2/-1;position:relative!important;inset:auto!important;display:flex!important;justify-content:space-between!important;align-items:center!important;min-height:42px!important;pointer-events:auto!important}
+#game.neon-arena .toolbar-title{display:block!important}
+#game.neon-arena .toolbar-title h1{font-size:21px;margin:0;color:#f2ddb2;letter-spacing:.02em}
+#game.neon-arena .toolbar-title p{font-size:10px;color:#afc6d7;margin:4px 0 0}
+#game.neon-arena .toolbar-actions{position:static!important;gap:7px;justify-content:flex-end}
+#game.neon-arena .toolbar-actions button{min-width:36px;min-height:36px;border-radius:10px;border-color:#58768a;background:#162b3d;color:#e0edfa}
+#game.neon-arena #boardWrap{grid-column:1;grid-row:2/8;position:relative!important;left:auto!important;top:auto!important;width:100%!important;height:auto!important;aspect-ratio:1!important;border:3px solid #9f956e!important;border-radius:13px!important;box-shadow:0 12px 28px #0006,inset 0 0 0 1px #dec793!important;overflow:visible!important;background:#13263b!important;align-self:start}
+#game.neon-arena #board{grid-template-rows:repeat(10,minmax(0,1fr))!important;border-radius:9px!important;overflow:hidden!important;background:#122438!important}
+#game.neon-arena .snake-cell{background:linear-gradient(145deg,var(--tile-light),#203449)!important;border:1px solid #637d9136!important;box-shadow:inset 0 1px #c9dfef0b!important;font-size:clamp(9px,2.5vw,14px)!important}
+#game.neon-arena .snake-cell.tile-alt{background:linear-gradient(145deg,var(--tile-dark),#10263a)!important}
+#game.neon-arena .snake-cell b{top:5%!important;left:7%!important;color:#d8e7f2!important;font-weight:700!important;z-index:25}
+#game.neon-arena .snake-cell[data-n='100']{background:linear-gradient(145deg,#625b38,#343b32)!important}
+#game.neon-arena .snake-cell.active-cell{box-shadow:inset 0 0 0 2px var(--active-color),inset 0 0 16px color-mix(in srgb,var(--active-color) 30%,transparent)!important}
+#game.neon-arena .snake-cell.trail-lit{background:color-mix(in srgb,var(--active-color,#72deec) 18%,var(--tile-light))!important;box-shadow:inset 0 0 0 1px #fff4!important}
+#game.neon-arena .snake-token{width:72%!important;height:85%!important;filter:none!important;animation:none!important}
+#game.neon-arena .snake-token.active{filter:drop-shadow(0 0 3px var(--pc))!important}
+#game.neon-arena .snake-travel-pawn{width:7.2%!important;height:8.5%!important;z-index:45!important}
+html[data-piece-art='royal'] :is(.snake-token,.snake-travel-pawn,.start-token,.jack-piece) .crystal-sprite{filter:drop-shadow(0 3px 2px #02091377)!important;animation:none!important}
+#game.neon-arena .round-roster{grid-column:2;grid-row:2;position:relative!important;top:auto!important;left:auto!important;right:auto!important;height:auto!important;width:100%!important;min-height:80px}
+#game.neon-arena #players{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;height:auto!important}
+#game.neon-arena .player-row,#game.neon-arena #players:has(.player-row:nth-child(3)) .player-row{min-height:82px!important;padding:8px!important;background:linear-gradient(145deg,#20384c,#102436)!important;border:1px solid #58748799!important;border-radius:12px!important;overflow:hidden!important;filter:none!important}
+#game.neon-arena .player-row.turn{border-color:var(--pc)!important;box-shadow:inset 0 -3px var(--pc)!important}
+#game.neon-arena .player-row>div,#game.neon-arena .player-row:nth-child(2)>div{top:10px!important;left:42%!important;right:6px!important}
+#game.neon-arena .player-row b{font-size:11px!important;color:#e1edf5!important}
+#game.neon-arena .player-row .score,#game.neon-arena .player-row:nth-child(2) .score,#game.neon-arena #players:has(.player-row:nth-child(3)) .score{top:36px!important;left:48%!important;font-size:27px!important;text-shadow:none!important}
+#game.neon-arena .player-row .roster-crystal,#game.neon-arena .player-row:nth-child(2) .roster-crystal{left:5%!important;right:auto!important;top:4px!important;width:36%!important;height:72px!important;display:block!important}
+#game.neon-arena .arena-inventory{font-size:8px;bottom:1px;left:40%!important;right:3%!important;background:none!important}
+#game.neon-arena #status{grid-column:2;grid-row:3;position:relative!important;top:auto!important;left:auto!important;right:auto!important;height:auto!important;min-height:30px!important;font-size:15px!important;color:#f3dca9!important;text-shadow:none!important}
+#game.neon-arena .dice-stage{grid-column:2;grid-row:4;position:relative!important;left:auto!important;top:auto!important;width:100%!important;height:125px!important;min-height:100px!important;background:radial-gradient(ellipse at 50% 80%,#688ea51c,transparent 67%)!important}
+#game.neon-arena .die.pro-die{--die-size:68px!important}
+#game.neon-arena #roll{grid-column:2;grid-row:5;position:relative!important;top:auto!important;left:auto!important;width:100%!important;height:auto!important;min-height:50px!important;display:block!important;color:#162436!important;font-size:17px!important;font-weight:800!important;border:1px solid #ffe8b299!important;border-radius:13px!important;background:linear-gradient(145deg,#f3dfaa,#c5a365)!important;box-shadow:inset 0 1px #fff8,0 5px 12px #0003!important;text-shadow:none!important;opacity:1!important}
+#game.neon-arena #roll:disabled{opacity:.45!important;filter:none!important}
+#game.neon-arena .mobile-start-lane{grid-column:2;grid-row:6;position:relative!important;top:auto!important;left:auto!important;width:100%!important;height:36px!important;gap:6px;align-items:center;justify-content:center}
+#game.neon-arena .start-token{width:24px!important;height:34px!important}
+#game.neon-arena #eventLog{grid-column:2;grid-row:7;position:relative!important;inset:auto!important;width:auto!important;min-height:24px!important;max-height:none!important;height:auto!important;font-size:10px!important;line-height:1.7!important;color:#b6ccdc!important;background:transparent!important;padding:0!important;text-align:center}
+#game.neon-arena #powerStrip,#game.neon-arena #powerHelp{position:relative!important;grid-column:2;inset:auto!important;height:auto!important;font-size:10px}
+#game.neon-arena #livebar{position:relative!important;grid-column:1/-1;inset:auto!important;min-height:24px!important;width:100%!important;font-size:10px!important;background:none!important}
+#game.neon-arena .board-hud{z-index:55!important;bottom:12px!important}
+#game.neon-arena .action-banner{font-size:12px!important;border:1px solid #82989977;background:#122639ef!important;color:#f0e4c4!important;border-radius:9px!important;text-shadow:none!important}
+html[data-board='board-ocean'] #game.neon-arena{--tile-light:#20475b;--tile-dark:#123546}
+html[data-board='board-sand'] #game.neon-arena{--tile-light:#5b5140;--tile-dark:#363f39}
+html[data-board='board-twilight'] #game.neon-arena{--tile-light:#433953;--tile-dark:#272b43}
+html[data-board='board-royal'] #game.neon-arena{--tile-light:#36494b;--tile-dark:#1b3039}
+.stone-step-fx{position:absolute;z-index:34;pointer-events:none;width:1px;height:1px;animation:stoneFade .7s linear both}
+.stone-ripple{position:absolute;left:-15px;top:-6px;width:30px;height:12px;border:1.5px solid var(--step-color);border-radius:50%;background:color-mix(in srgb,var(--step-color) 16%,transparent);animation:stoneRipple .65s ease-out both}
+.stone-step-fx b{position:absolute;left:-2px;top:-6px;width:4px;height:6px;background:var(--step-color);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 5px var(--step-color);animation:stoneShard .65s cubic-bezier(.12,.55,.3,1) both}
+.stone-land-fx .stone-ripple{border-width:2px;animation-duration:.8s}
+@keyframes stoneFade{to{opacity:0}}
+@keyframes stoneRipple{from{transform:scale(.5);opacity:1}to{transform:scale(2.2);opacity:0}}
+@keyframes stoneShard{from{transform:translate(0,0) scale(1.2);opacity:1}to{transform:translate(var(--spark-x),var(--spark-y)) scale(.2) rotate(90deg);opacity:0}}
+.pro-die-flight{position:relative;width:100%;height:100%;transform-style:preserve-3d;transform:rotateX(-14deg) rotateY(-18deg)}
+.pro-die-shadow{position:absolute;left:-5%;right:-5%;bottom:-27%;height:19%;border-radius:50%;background:radial-gradient(ellipse,#020713aa,transparent 72%);pointer-events:none}
+.die.pro-die::after{display:none!important}
+.die.pro-die .pro-face{visibility:visible!important;border-color:var(--die-border,#c2b28e)!important;box-shadow:inset 2px 3px 2px #fff9,inset -4px -5px 7px #503e3444!important}
+.die.pro-die .pro-pip{width:75%!important;height:75%!important;background:radial-gradient(circle at 50% 65%,#2c394b,#071421 72%)!important;box-shadow:inset 0 2px 3px #000,0 1px 1px #fff9!important}
+.arena-play .arena-joystick{width:44px!important;height:44px!important;border-color:#a7dfcb66;opacity:.6!important;background:#a9e9d509!important}
+.arena-play .arena-joystick i{top:15px!important;left:15px!important;width:12px!important;height:12px!important;background:#d7f9e5aa!important;border:1px solid #d7f9e5}
+@media(max-width:700px){
+ #game.neon-arena{grid-template-columns:100px minmax(0,1fr)!important;grid-template-rows:40px auto 74px 26px 94px 30px auto!important;gap:8px 12px!important;padding:12px!important;border-radius:0!important;border:0!important;align-content:center!important;width:100vw!important}
+ #game.neon-arena .toolbar-title h1{font-size:17px}.toolbar-title p{font-size:9px!important}
+ #game.neon-arena #boardWrap{grid-column:1/-1;grid-row:2;border-width:2px!important;border-radius:10px!important}
+ #game.neon-arena .round-roster{grid-column:1/-1;grid-row:3;min-height:0}
+ #game.neon-arena #players{height:74px!important}
+ #game.neon-arena .player-row{min-height:74px!important}
+ #game.neon-arena .player-row .roster-crystal{height:62px!important}
+ #game.neon-arena #status{grid-column:1/-1;grid-row:4;font-size:13px!important;min-height:24px!important}
+ #game.neon-arena .dice-stage{grid-column:1;grid-row:5;height:94px!important;min-height:0!important}
+ #game.neon-arena .die.pro-die{--die-size:53px!important}
+ #game.neon-arena #roll{grid-column:2;grid-row:5;align-self:center;min-height:52px!important;font-size:18px!important}
+ #game.neon-arena .mobile-start-lane{grid-column:1/-1;grid-row:6;height:30px!important;justify-content:flex-start}
+ #game.neon-arena #eventLog{grid-column:1/-1;grid-row:7}
+ #game.neon-arena #powerStrip,#game.neon-arena #powerHelp{grid-column:1/-1}
+ #game.neon-arena #players:has(.player-row:nth-child(3)){grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}
+ #game.neon-arena #players:has(.player-row:nth-child(3)) .player-row>div{left:4px!important;right:4px!important;top:6px!important}
+ #game.neon-arena #players:has(.player-row:nth-child(3)) .roster-crystal{display:none!important}
+ #game.neon-arena #players:has(.player-row:nth-child(3)) .score{left:34%!important;top:30px!important;font-size:25px!important}
+}
+@media(prefers-reduced-motion:reduce){.stone-step-fx{display:none}.pro-die-flight{animation:none!important}}

@@ -18,7 +18,7 @@ export class SerpentRenderer {
   this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});
   this.game=null;this.previous=null;this.received=0;this.ids=[];this.online=false;
   this.cameras=new Map();this.inputs=new Map();this.poses=new Map();this.samples=new Map();
-  this.effects=[];this.lastDraw=0;
+  this.effects=[];this.trails=[];this.lastDraw=0;
   this.reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
   this.resize();
  }
@@ -27,12 +27,25 @@ export class SerpentRenderer {
   this.dpr=Math.min(window.devicePixelRatio||1,2);
   this.canvas.width=Math.ceil(this.width*this.dpr);this.canvas.height=Math.ceil(this.height*this.dpr);
  }
- reset(){this.cameras.clear();this.poses.clear();this.samples.clear();this.effects=[];this.lastDraw=0;this.previous=null;this.game=null;this.online=false;}
+ reset(){this.cameras.clear();this.poses.clear();this.samples.clear();this.effects=[];this.trails=[];this.lastDraw=0;this.previous=null;this.game=null;this.online=false;}
  setGame(game,ids=[],online=false){
   if(this.game&&game.tick<this.game.tick)this.reset();
   this.previous=this.online?this.game:null;this.game=game;this.ids=ids;this.online=online;this.received=performance.now();
  }
  setInput(id,angle,boost){this.inputs.set(id,{angle,boost});}
+ viewRects(){
+  if(this.ids.length!==2)return [{x:0,y:0,w:this.width,h:this.height}];
+  return this.width>this.height?
+   [{x:0,y:0,w:this.width/2,h:this.height},{x:this.width/2,y:0,w:this.width/2,h:this.height}]:
+   [{x:0,y:0,w:this.width,h:this.height/2},{x:0,y:this.height/2,w:this.width,h:this.height/2}];
+ }
+ aimAt(index,x,y){
+  const id=this.ids[index],own=this.poses.get(id)||this.game?.snakes.find(s=>s.id===id),v=this.viewRects()[index];
+  if(!own||!v)return null;
+  const camera=this.cameras.get(id)||{x:own.x,y:own.y,zoom:arenaZoom(v.w,v.h,own.mass)};
+  const dx=x-(v.x+v.w/2+(own.x-camera.x)*camera.zoom),dy=y-(v.y+v.h/2+(own.y-camera.y)*camera.zoom);
+  return Math.hypot(dx,dy)>4?Math.atan2(dy,dx):null;
+ }
  interpolate(s,now){
   if(this.online&&s.alive&&this.game.status==='playing'&&this.ids.includes(s.id)){
    const age=Math.min(.1,Math.max(0,(now-this.received)/1000)),input=this.inputs.get(s.id);
@@ -66,10 +79,14 @@ export class SerpentRenderer {
     const gained=raw.score-sample.score,kill=raw.kills>sample.kills;
     if(gained>0||kill)this.effects.push({id:raw.id,x:pose.x,y:pose.y,born:now,text:kill?'افتراس +'+(raw.kills-sample.kills):'+'+gained,color:kill?'#f2d58c':'#a1f4d0'});
    }
-   this.samples.set(raw.id,{score:raw.score,kills:raw.kills});
+   let trailAt=sample?.trailAt||0;
+   if(raw.alive&&raw.boost&&this.ids.includes(raw.id)&&!this.reducedMotion&&now-trailAt>65){
+    const tail=pose.segments.at(-1)||pose;this.trails.push({x:tail.x,y:tail.y,born:now,color:raw.color});trailAt=now;
+   }
+   this.samples.set(raw.id,{score:raw.score,kills:raw.kills,trailAt});
   }
   for(const id of this.poses.keys())if(!present.has(id)){this.poses.delete(id);this.samples.delete(id);}
-  this.effects=this.effects.filter(e=>now-e.born<850).slice(-16);
+  this.effects=this.effects.filter(e=>now-e.born<850).slice(-16);this.trails=this.trails.filter(e=>now-e.born<450).slice(-24);
  }
  draw(now){
   if(!this.game||!this.game.snakes.length)return;
@@ -77,10 +94,7 @@ export class SerpentRenderer {
   this.lastDraw=now;this.frameBlend=1-Math.exp(-dt/95);this.updatePresentation(now,dt);
   ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.fillStyle='#071720';ctx.fillRect(0,0,this.width,this.height);
   const split=this.ids.length===2,sideways=this.width>this.height;
-  const views=split?(sideways?
-   [{x:0,y:0,w:this.width/2,h:this.height},{x:this.width/2,y:0,w:this.width/2,h:this.height}]:
-   [{x:0,y:0,w:this.width,h:this.height/2},{x:0,y:this.height/2,w:this.width,h:this.height/2}]):
-   [{x:0,y:0,w:this.width,h:this.height}];
+  const views=this.viewRects();
   views.forEach((v,i)=>this.drawView(v,this.ids[i],now,split));
   if(split){
    ctx.strokeStyle='#83bba880';ctx.lineWidth=2;ctx.beginPath();
@@ -124,6 +138,7 @@ export class SerpentRenderer {
    ctx.fill();
   }
   ctx.shadowBlur=0;
+  for(const trail of this.trails){const t=(now-trail.born)/450;if(trail.x<minX||trail.x>maxX||trail.y<minY||trail.y>maxY)continue;ctx.save();ctx.globalAlpha=(1-t)*.65;ctx.fillStyle=trail.color||'#e8d9ad';ctx.beginPath();ctx.arc(trail.x,trail.y,2.5*(1-t),0,Math.PI*2);ctx.fill();ctx.restore();}
   for(const raw of [...g.snakes].sort((a,b)=>Number(a.id===id)-Number(b.id===id))){
    if(!raw.alive)continue;
    const s=this.poses.get(raw.id)||this.interpolate(raw,now),radius=7+Math.sqrt(s.mass)*.55;
@@ -133,10 +148,11 @@ export class SerpentRenderer {
    ctx.save();
    window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant);
    ctx.translate(s.x,s.y);ctx.rotate(s.angle);
-   window.BS_COSMETIC_ART.head(ctx,s.skin,radius*1.25,variant);
+   window.BS_COSMETIC_ART.head(ctx,s.skin,radius*1.55,variant);
+   if(!this.reducedMotion&&Math.sin(now/125+index)>.7){ctx.strokeStyle='#f0a4af';ctx.lineWidth=1.15;ctx.beginPath();ctx.moveTo(radius*2.45,0);ctx.lineTo(radius*3.2,0);ctx.lineTo(radius*3.4,-radius*.15);ctx.moveTo(radius*3.2,0);ctx.lineTo(radius*3.4,radius*.15);ctx.stroke();}
    if(s.id===id){
     ctx.strokeStyle=s.boost?'#f6df96':'#b9f3db';ctx.lineWidth=1.25/zoom;ctx.beginPath();
-    ctx.moveTo(radius*3.1,-radius*.45);ctx.lineTo(radius*3.55,0);ctx.lineTo(radius*3.1,radius*.45);ctx.stroke();
+    ctx.moveTo(radius*3.9,-radius*.45);ctx.lineTo(radius*4.3,0);ctx.lineTo(radius*3.9,radius*.45);ctx.stroke();
    }
    ctx.restore();
    ctx.fillStyle=s.id===id?'#f0f4d5':'#b7d0c9';ctx.textAlign='center';ctx.font='600 11px Tahoma,Arial';

@@ -1,10 +1,10 @@
-import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent} from './engines/serpent-engine.js?v=13.1.0';
-import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=13.1.0';
-import {ArenaGestures} from './arena-gestures.js?v=13.1.0';
-import {applySerpentFrame} from './serpent-network.js?v=13.1.0';
+import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent} from './engines/serpent-engine.js?v=13.2.0';
+import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=13.2.0';
+import {ArenaGestures} from './arena-gestures.js?v=13.2.0';
+import {applySerpentFrame} from './serpent-network.js?v=13.2.0';
 
 const $=id=>document.getElementById(id),SESSION='busraj-serpent-room-v12';
-const renderer=new SerpentRenderer($('arenaCanvas')),keys=new Set(),controls=[{angle:null,boost:false},{angle:null,boost:false}];
+const renderer=new SerpentRenderer($('arenaCanvas')),keys=new Set(),mousePointers=new Map(),controls=[{angle:null,boost:false},{angle:null,boost:false}];
 const trial=resolveTrialSkin(window.BS_CAREER?.catalog||[],location.search);
 const gestures=new ArenaGestures({steer:(index,angle)=>{controls[index].angle=angle;},end:index=>{controls[index].angle=null;$('joystick'+(index+1)).classList.remove('steering');}});
 let mode='solo',game=null,room=null,socket=null,selfId=null,paused=false,online=false,networkActive=false,reconnects=0,reconnectTimer=null,lastFrame=performance.now(),accumulator=0,lastInput=0,lastHud=0,receipt='',resultShown='',mouseAngle=null;
@@ -12,7 +12,7 @@ const show=(id,yes=true)=>$(id).classList.toggle('hidden',!yes);
 const say=text=>{const target=online&&room?.status==='lobby'?$('lobbyMessage'):$('arenaMessage');target.textContent=text;};
 function saved(){try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}}
 function remember(value){try{value?localStorage.setItem(SESSION,JSON.stringify(value)):localStorage.removeItem(SESSION)}catch{}show('arenaResume',!!value);}
-function release(){gestures.clear();renderer.inputs?.clear();keys.clear();mouseAngle=null;for(const c of controls){c.angle=null;c.boost=false;}for(const id of ['boost1','boost2'])$(id).classList.remove('active');document.querySelectorAll('.arena-joystick i').forEach(el=>el.style.transform='');if(online&&socket?.readyState===WebSocket.OPEN&&game){const mine=game.snakes.find(s=>s.id===selfId);if(mine)socket.send(JSON.stringify({type:'input',angle:mine.angle,boost:false}));}}
+function release(){gestures.clear();mousePointers.clear();renderer.inputs?.clear();keys.clear();mouseAngle=null;for(const c of controls){c.angle=null;c.boost=false;}for(const id of ['boost1','boost2'])$(id).classList.remove('active');document.querySelectorAll('.arena-joystick i').forEach(el=>el.style.transform='');if(online&&socket?.readyState===WebSocket.OPEN&&game){const mine=game.snakes.find(s=>s.id===selfId);if(mine)socket.send(JSON.stringify({type:'input',angle:mine.angle,boost:false}));}}
 function selectMode(next){
  mode=next;$('arenaModes').querySelectorAll('button').forEach(b=>{b.classList.toggle('selected',b.dataset.mode===mode);b.setAttribute('aria-pressed',String(b.dataset.mode===mode));});
  const net=mode==='online';show('secondNameField',mode==='duo');show('botsField');show('difficultyField');show('onlineCountField',net);show('onlineJoin',net);show('localControlHint',!net);if(net)$('arenaBots').value='0';limitBots();
@@ -129,15 +129,24 @@ window.addEventListener('keydown',e=>{if(!game||$('arenaPlay').classList.contain
 const arenaCanvas=$('arenaCanvas');
 arenaCanvas.addEventListener('pointerdown',e=>{
  if(paused||!game||game.status!=='playing')return;e.preventDefault();
+ if(e.pointerType==='mouse'){
+  const r=arenaCanvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,index=!online&&mode==='duo'?Number(r.width>r.height?x>=r.width/2:y>=r.height/2):0;
+  mousePointers.set(e.pointerId,index);controls[index].angle=renderer.aimAt(index,x,y);arenaCanvas.setPointerCapture(e.pointerId);return;
+ }
  const r=arenaCanvas.getBoundingClientRect(),index=gestures.start(e,r,!online&&mode==='duo');if(index===null)return;
- mouseAngle=null;arenaCanvas.setPointerCapture(e.pointerId);const pad=$('joystick'+(index+1));pad.style.left=(e.clientX-r.left-38)+'px';pad.style.top=(e.clientY-r.top-38)+'px';pad.classList.add('steering');
+ mouseAngle=null;arenaCanvas.setPointerCapture(e.pointerId);const pad=$('joystick'+(index+1));pad.style.left=(e.clientX-r.left-22)+'px';pad.style.top=(e.clientY-r.top-22)+'px';pad.classList.add('steering');
 });
 arenaCanvas.addEventListener('pointermove',e=>{
  if(paused||!game||game.status!=='playing')return;
- const index=gestures.move(e);if(index!==null){const p=gestures.pointers.get(e.pointerId),r=arenaCanvas.getBoundingClientRect(),pad=$('joystick'+(index+1));pad.style.left=(p.x-r.left-38)+'px';pad.style.top=(p.y-r.top-38)+'px';pad.querySelector('i').style.transform='translate('+(e.clientX-p.x)*.5+'px,'+(e.clientY-p.y)*.5+'px)';return;}
- if(e.pointerType==='mouse'&&(!(!online&&mode==='duo'))){const r=arenaCanvas.getBoundingClientRect();mouseAngle=Math.atan2(e.clientY-r.top-r.height/2,e.clientX-r.left-r.width/2);}
+ if(e.pointerType==='mouse'){
+  const r=arenaCanvas.getBoundingClientRect(),index=mousePointers.get(e.pointerId);
+  if(index!==undefined)controls[index].angle=renderer.aimAt(index,e.clientX-r.left,e.clientY-r.top);
+  else if(online||mode!=='duo')mouseAngle=renderer.aimAt(0,e.clientX-r.left,e.clientY-r.top);
+  return;
+ }
+ const index=gestures.move(e);if(index!==null){const p=gestures.pointers.get(e.pointerId),r=arenaCanvas.getBoundingClientRect(),pad=$('joystick'+(index+1));pad.style.left=(p.x-r.left-22)+'px';pad.style.top=(p.y-r.top-22)+'px';pad.querySelector('i').style.transform='translate('+(Math.cos(p.angle||0)*8)+'px,'+(Math.sin(p.angle||0)*8)+'px)';}
 });
-for(const event of ['pointerup','pointercancel','lostpointercapture'])arenaCanvas.addEventListener(event,e=>gestures.stop(e.pointerId));
+for(const event of ['pointerup','pointercancel','lostpointercapture'])arenaCanvas.addEventListener(event,e=>{gestures.stop(e.pointerId);const index=mousePointers.get(e.pointerId);if(index!==undefined){controls[index].angle=null;mousePointers.delete(e.pointerId);}});
 window.addEventListener('resize',()=>renderer.resize());window.addEventListener('beforeunload',release);
 $('arenaModes').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)selectMode(b.dataset.mode);});$('arenaStart').onclick=()=>mode==='online'?createRoom():localStart();$('arenaJoin').onclick=async()=>{const button=$('arenaJoin');button.disabled=true;try{say('جاري الانضمام…');await connectRoom($('arenaCode').value.trim());}catch(e){say(e.message);}finally{button.disabled=false;}};$('arenaResume').onclick=async()=>{const old=saved();if(!old)return;selectMode('online');try{await connectRoom(old.code,old);}catch(e){say(e.message);}};
 $('arenaReady').onclick=()=>send({type:'ready',ready:!room?.players.find(p=>p.id===selfId)?.ready});$('arenaHostStart').onclick=()=>send({type:'start'});$('copyRoom').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);$('copyRoom').textContent='تم النسخ ✓';}catch{$('lobbyMessage').textContent='رمز الغرفة: '+room.code;}};

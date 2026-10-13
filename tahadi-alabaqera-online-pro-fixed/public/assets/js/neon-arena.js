@@ -1,5 +1,5 @@
-import {snakeGeometry} from './arena-geometry.js?v=13.1.0';
-import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=13.1.0';
+import {snakeGeometry} from './arena-geometry.js?v=13.2.0';
+import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=13.2.0';
 /* Creature heads keep their proportions. Real painted scales follow a
    tapered body mesh between the rule engine's head and tail cells. */
 (function(){
@@ -146,6 +146,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?
  }
  function crystal(el,player){
   const c=document.createElement('canvas');c.className='crystal-sprite';c.width=144;c.height=180;c.setAttribute('aria-hidden','true');
+  if(window.BS_STONES?.draw(c,document.documentElement.dataset.pawn,player)){el.appendChild(c);return c;}
   const paint=()=>{const pawn=document.documentElement.dataset.pawn;if(['pawn-orb','pawn-crown'].includes(pawn)&&window.BS_COSMETIC_ART){window.BS_COSMETIC_ART.ready.then(()=>window.BS_COSMETIC_ART.paintPawn(c,pawn,player));return;}const context=c.getContext('2d');context.clearRect(0,0,144,180);context.filter=player===2||player===3?'hue-rotate(-150deg)':'none';context.drawImage(objects,player%2?1400:785,60,480,690,0,0,144,180)};
   objects.complete&&objects.naturalWidth?paint():objects.addEventListener('load',paint,{once:true});el.appendChild(c);return c;
  }

@@ -1,5 +1,5 @@
-import {getJackarooActions,playJackarooAction} from './jackaroo-engine.js?v=13.1.0';
-import {getLegalLudoMoves,applyLudoMove,globalLudoPosition,LUDO_SAFE} from './ludo-engine.js?v=13.1.0';
+import {getJackarooActions,playJackarooAction} from './jackaroo-engine.js?v=13.2.0';
+import {getLegalLudoMoves,applyLudoMove,globalLudoPosition,LUDO_SAFE} from './ludo-engine.js?v=13.2.0';
 
 function pick(scored,difficulty,rng){
  if(!scored.length)return null;
