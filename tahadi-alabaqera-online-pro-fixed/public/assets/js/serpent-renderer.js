@@ -1,38 +1,177 @@
 const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+
+export function arenaZoom(width,height,mass=28){
+ return clamp(clamp(Math.min(width,height)/580,.44,1.1)/Math.sqrt(1+Math.max(0,mass-28)/240),.34,1.1);
+}
+export function arenaTelemetry(game,id){
+ const snakes=game?.snakes||[],mine=snakes.find(s=>s.id===id),sorted=[...snakes].sort((a,b)=>b.score-a.score);
+ return {rank:mine?sorted.findIndex(s=>s.id===id)+1:0,alive:snakes.filter(s=>s.alive).length,total:snakes.length,kills:mine?.kills||0,boost:mine?.alive?clamp((mine.mass-24)/40,0,1):0,danger:!!mine?.alive&&Math.min(mine.x,mine.y,game.width-mine.x,game.height-mine.y)<115};
+}
+export function resolveTrialSkin(catalog,search){
+ const id=new URLSearchParams(search).get('preview');
+ return catalog.find(item=>item.id===id&&item.type==='snake'&&item.source!=='owner')||null;
+}
+
 export class SerpentRenderer {
- constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.game=null;this.previous=null;this.received=0;this.cameras=new Map();this.ids=[];this.online=false;this.resize();}
- resize(){const r=this.canvas.getBoundingClientRect();this.width=Math.max(1,r.width);this.height=Math.max(1,r.height);this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=Math.ceil(this.width*this.dpr);this.canvas.height=Math.ceil(this.height*this.dpr);}
- setGame(game,ids=[],online=false){this.previous=this.online?this.game:null;this.game=game;this.ids=ids;this.online=online;this.received=performance.now();}
+ constructor(canvas){
+  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});
+  this.game=null;this.previous=null;this.received=0;this.ids=[];this.online=false;
+  this.cameras=new Map();this.inputs=new Map();this.poses=new Map();this.samples=new Map();
+  this.effects=[];this.lastDraw=0;
+  this.reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
+  this.resize();
+ }
+ resize(){
+  const r=this.canvas.getBoundingClientRect();this.width=Math.max(1,r.width);this.height=Math.max(1,r.height);
+  this.dpr=Math.min(window.devicePixelRatio||1,2);
+  this.canvas.width=Math.ceil(this.width*this.dpr);this.canvas.height=Math.ceil(this.height*this.dpr);
+ }
+ reset(){this.cameras.clear();this.poses.clear();this.samples.clear();this.effects=[];this.lastDraw=0;this.previous=null;this.game=null;this.online=false;}
+ setGame(game,ids=[],online=false){
+  if(this.game&&game.tick<this.game.tick)this.reset();
+  this.previous=this.online?this.game:null;this.game=game;this.ids=ids;this.online=online;this.received=performance.now();
+ }
+ setInput(id,angle,boost){this.inputs.set(id,{angle,boost});}
+ interpolate(s,now){
+  if(this.online&&s.alive&&this.game.status==='playing'&&this.ids.includes(s.id)){
+   const age=Math.min(.1,Math.max(0,(now-this.received)/1000)),input=this.inputs.get(s.id);
+   const delta=input?Math.atan2(Math.sin(input.angle-s.angle),Math.cos(input.angle-s.angle)):0;
+   const angle=s.angle+Math.max(-4.6*age,Math.min(4.6*age,delta));
+   const speed=input?.boost&&s.mass>24?205:118,travel=(s.angle+angle)/2;
+   const x=s.x+Math.cos(travel)*speed*age,y=s.y+Math.sin(travel)*speed*age;
+   // Presentation only. Collisions, rewards and death remain server-owned.
+   return {...s,x,y,angle,segments:[{x,y},...s.segments.slice(0,-1)]};
+  }
+  const old=this.previous?.snakes.find(p=>p.id===s.id);
+  const t=this.online?Math.min(1,Math.max(0,(now-this.received)/100)):1;
+  if(!old||!s.alive||!old.alive)return s;
+  return {...s,x:lerp(old.x,s.x,t),y:lerp(old.y,s.y,t),
+   angle:old.angle+Math.atan2(Math.sin(s.angle-old.angle),Math.cos(s.angle-old.angle))*t,
+   segments:s.segments.map((p,i)=>({x:lerp(old.segments[i]?.x??p.x,p.x,t),y:lerp(old.segments[i]?.y??p.y,p.y,t)}))};
+ }
+ updatePresentation(now,dt){
+  const present=new Set();
+  for(const raw of this.game.snakes){
+   present.add(raw.id);
+   const target=this.interpolate(raw,now),old=this.poses.get(raw.id),t=1-Math.exp(-dt/48);
+   const snap=this.online||!old||!raw.alive||Math.hypot(old.x-target.x,old.y-target.y)>120;
+   const pose=snap?{...target,segments:target.segments.map(p=>({...p}))}:
+    {...target,x:lerp(old.x,target.x,t),y:lerp(old.y,target.y,t),
+     angle:old.angle+Math.atan2(Math.sin(target.angle-old.angle),Math.cos(target.angle-old.angle))*t,
+     segments:target.segments.map((p,i)=>({x:lerp(old.segments[i]?.x??p.x,p.x,t),y:lerp(old.segments[i]?.y??p.y,p.y,t)}))};
+   this.poses.set(raw.id,pose);
+   const sample=this.samples.get(raw.id);
+   if(sample&&this.ids.includes(raw.id)&&!this.reducedMotion){
+    const gained=raw.score-sample.score,kill=raw.kills>sample.kills;
+    if(gained>0||kill)this.effects.push({id:raw.id,x:pose.x,y:pose.y,born:now,text:kill?'افتراس +'+(raw.kills-sample.kills):'+'+gained,color:kill?'#f2d58c':'#a1f4d0'});
+   }
+   this.samples.set(raw.id,{score:raw.score,kills:raw.kills});
+  }
+  for(const id of this.poses.keys())if(!present.has(id)){this.poses.delete(id);this.samples.delete(id);}
+  this.effects=this.effects.filter(e=>now-e.born<850).slice(-16);
+ }
  draw(now){
-  if(!this.game)return;const ctx=this.ctx;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.fillStyle='#0a1b23';ctx.fillRect(0,0,this.width,this.height);
-  const split=this.ids.length===2,sideways=this.width>this.height,views=split?(sideways?[{x:0,y:0,w:this.width/2,h:this.height},{x:this.width/2,y:0,w:this.width/2,h:this.height}]:[{x:0,y:0,w:this.width,h:this.height/2},{x:0,y:this.height/2,w:this.width,h:this.height/2}]):[{x:0,y:0,w:this.width,h:this.height}];
+  if(!this.game||!this.game.snakes.length)return;
+  const ctx=this.ctx,dt=this.lastDraw?clamp(now-this.lastDraw,0,80):16;
+  this.lastDraw=now;this.frameBlend=1-Math.exp(-dt/95);this.updatePresentation(now,dt);
+  ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.fillStyle='#071720';ctx.fillRect(0,0,this.width,this.height);
+  const split=this.ids.length===2,sideways=this.width>this.height;
+  const views=split?(sideways?
+   [{x:0,y:0,w:this.width/2,h:this.height},{x:this.width/2,y:0,w:this.width/2,h:this.height}]:
+   [{x:0,y:0,w:this.width,h:this.height/2},{x:0,y:this.height/2,w:this.width,h:this.height/2}]):
+   [{x:0,y:0,w:this.width,h:this.height}];
   views.forEach((v,i)=>this.drawView(v,this.ids[i],now,split));
-  if(split){ctx.strokeStyle='#5d796580';ctx.lineWidth=2;ctx.beginPath();if(sideways){ctx.moveTo(this.width/2,0);ctx.lineTo(this.width/2,this.height);}else{ctx.moveTo(0,this.height/2);ctx.lineTo(this.width,this.height/2);}ctx.stroke();}
+  if(split){
+   ctx.strokeStyle='#83bba880';ctx.lineWidth=2;ctx.beginPath();
+   if(sideways){ctx.moveTo(this.width/2,0);ctx.lineTo(this.width/2,this.height);}
+   else{ctx.moveTo(0,this.height/2);ctx.lineTo(this.width,this.height/2);}
+   ctx.stroke();
+  }
   this.canvas.dataset.tick=String(this.game.tick);this.canvas.dataset.rendered='true';
  }
- interpolate(s,now){const old=this.previous?.snakes.find(p=>p.id===s.id),t=this.online?Math.min(1,Math.max(0,(now-this.received)/100)):1;if(!old||!s.alive||!old.alive)return s;return {...s,x:lerp(old.x,s.x,t),y:lerp(old.y,s.y,t),angle:old.angle+Math.atan2(Math.sin(s.angle-old.angle),Math.cos(s.angle-old.angle))*t,segments:s.segments.map((p,i)=>({x:lerp(old.segments[i]?.x??p.x,p.x,t),y:lerp(old.segments[i]?.y??p.y,p.y,t)}))};}
  drawView(v,id,now,split){
-  const ctx=this.ctx,g=this.game,own=g.snakes.find(s=>s.id===id)||g.snakes.find(s=>s.alive)||g.snakes[0],focus=this.interpolate(own,now);
-  let camera=this.cameras.get(id);if(!camera){camera={x:focus.x,y:focus.y};this.cameras.set(id,camera);}camera.x=lerp(camera.x,focus.x,.12);camera.y=lerp(camera.y,focus.y,.12);
-  const zoom=Math.max(.44,Math.min(1.03,Math.min(v.w,v.h)/650)),halfW=v.w/zoom/2,halfH=v.h/zoom/2;
-  ctx.save();ctx.beginPath();ctx.rect(v.x,v.y,v.w,v.h);ctx.clip();
-  const light=ctx.createRadialGradient(v.x+v.w*.45,v.y+v.h*.4,0,v.x+v.w*.5,v.y+v.h*.5,v.w*.7);light.addColorStop(0,'#163831');light.addColorStop(1,'#0a1b23');ctx.fillStyle=light;ctx.fillRect(v.x,v.y,v.w,v.h);
-  ctx.translate(v.x+v.w/2,v.y+v.h/2);ctx.scale(zoom,zoom);ctx.translate(-camera.x,-camera.y);
+  const ctx=this.ctx,g=this.game;
+  const own=g.snakes.find(s=>s.id===id)||g.snakes.find(s=>s.alive)||g.snakes[0];
+  const focus=this.poses.get(own.id)||this.interpolate(own,now),info=arenaTelemetry(g,id);
+  let camera=this.cameras.get(id);
+  if(!camera){camera={x:focus.x,y:focus.y,zoom:arenaZoom(v.w,v.h,own.mass)};this.cameras.set(id,camera);}
+  camera.x=lerp(camera.x,focus.x,this.frameBlend);camera.y=lerp(camera.y,focus.y,this.frameBlend);
+  camera.zoom=lerp(camera.zoom,arenaZoom(v.w,v.h,own.mass),this.frameBlend*.6);
+  const zoom=camera.zoom,halfW=v.w/zoom/2,halfH=v.h/zoom/2;
   const minX=camera.x-halfW,minY=camera.y-halfH,maxX=camera.x+halfW,maxY=camera.y+halfH;
-  ctx.strokeStyle='#5e948118';ctx.lineWidth=1/zoom;ctx.beginPath();for(let x=Math.max(0,Math.floor(minX/60)*60);x<=Math.min(g.width,maxX);x+=60){ctx.moveTo(x,Math.max(0,minY));ctx.lineTo(x,Math.min(g.height,maxY));}for(let y=Math.max(0,Math.floor(minY/60)*60);y<=Math.min(g.height,maxY);y+=60){ctx.moveTo(Math.max(0,minX),y);ctx.lineTo(Math.min(g.width,maxX),y);}ctx.stroke();
-  ctx.lineWidth=16;ctx.strokeStyle='#daba5955';ctx.strokeRect(5,5,g.width-10,g.height-10);ctx.lineWidth=2;ctx.strokeStyle='#dccfa2';ctx.strokeRect(10,10,g.width-20,g.height-20);
-  const colors=['#98d794','#ecd99a','#b99ae6','#8ccad6','#e8a6b8'];
-  for(let hue=0;hue<colors.length;hue++){ctx.fillStyle=colors[hue];ctx.beginPath();for(const f of g.food){if(f.hue!==hue||f.x<minX-20||f.x>maxX+20||f.y<minY-20||f.y>maxY+20)continue;ctx.moveTo(f.x+f.radius,f.y);ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);}ctx.fill();}
-  for(const raw of [...g.snakes].sort((a,b)=>Number(a.id===id)-Number(b.id===id))){if(!raw.alive)continue;const s=this.interpolate(raw,now),radius=7+Math.sqrt(s.mass)*.55;
-   const points=[{x:s.x,y:s.y},...s.segments];if(!points.some(p=>p.x>=minX-radius*3&&p.x<=maxX+radius*3&&p.y>=minY-radius*3&&p.y<=maxY+radius*3))continue;
-   const index=g.snakes.findIndex(x=>x.id===s.id);ctx.save();
-   if(s.skin==='snake-wild')ctx.filter='hue-rotate('+index*53+'deg)';window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost);
-   ctx.translate(s.x,s.y);ctx.rotate(s.angle);window.BS_COSMETIC_ART.head(ctx,s.skin,radius*1.25);ctx.restore();
-   ctx.fillStyle=s.id===id?'#ecedc6':'#becdba';ctx.textAlign='center';ctx.font='11px Tahoma,Arial';ctx.fillText(s.name+(s.bot?' · BOT':''),s.x,s.y-radius*2.9);if(s.id===id){ctx.strokeStyle='#e3e8b45c';ctx.lineWidth=1;ctx.beginPath();ctx.arc(s.x,s.y,radius*2.2,0,Math.PI*2);ctx.stroke();}
+  ctx.save();ctx.beginPath();ctx.rect(v.x,v.y,v.w,v.h);ctx.clip();
+  const light=ctx.createRadialGradient(v.x+v.w*.45,v.y+v.h*.4,0,v.x+v.w*.5,v.y+v.h*.5,v.w*.7);
+  light.addColorStop(0,'#15383b');light.addColorStop(1,'#071720');ctx.fillStyle=light;ctx.fillRect(v.x,v.y,v.w,v.h);
+  ctx.translate(v.x+v.w/2,v.y+v.h/2);ctx.scale(zoom,zoom);ctx.translate(-camera.x,-camera.y);
+  ctx.strokeStyle='#75bbb31b';ctx.lineWidth=1/zoom;ctx.beginPath();
+  for(let x=Math.max(0,Math.floor(minX/80)*80);x<=Math.min(g.width,maxX);x+=80){ctx.moveTo(x,Math.max(0,minY));ctx.lineTo(x,Math.min(g.height,maxY));}
+  for(let y=Math.max(0,Math.floor(minY/80)*80);y<=Math.min(g.height,maxY);y+=80){ctx.moveTo(Math.max(0,minX),y);ctx.lineTo(Math.min(g.width,maxX),y);}
+  ctx.stroke();ctx.fillStyle='#7ab8ac32';ctx.beginPath();
+  for(let x=Math.max(0,Math.floor(minX/240)*240);x<=Math.min(g.width,maxX);x+=240)
+   for(let y=Math.max(0,Math.floor(minY/240)*240);y<=Math.min(g.height,maxY);y+=240){ctx.moveTo(x+2,y);ctx.arc(x,y,2,0,Math.PI*2);}
+  ctx.fill();
+  ctx.lineWidth=18;ctx.strokeStyle=info.danger?'#df87684d':'#83c9b936';ctx.strokeRect(5,5,g.width-10,g.height-10);
+  ctx.lineWidth=2;ctx.strokeStyle=info.danger?'#ffb197':'#9cdfce';ctx.strokeRect(10,10,g.width-20,g.height-20);
+  const colors=['#94edbc','#f4d98b','#c8a1f7','#88e2f2','#f3a3bf'];
+  // One draw per hue, with bounded glow. The collectibles remain in their true collision positions.
+  for(let hue=0;hue<colors.length;hue++){
+   ctx.fillStyle=colors[hue];ctx.shadowColor=colors[hue];ctx.shadowBlur=this.width<650?4:7;ctx.beginPath();
+   for(const f of g.food){
+    if(f.hue!==hue||f.x<minX-20||f.x>maxX+20||f.y<minY-20||f.y>maxY+20)continue;
+    const r=f.radius*1.17;ctx.moveTo(f.x,f.y-r);ctx.lineTo(f.x+r*.85,f.y);ctx.lineTo(f.x,f.y+r);ctx.lineTo(f.x-r*.85,f.y);ctx.closePath();
+   }
+   ctx.fill();
+  }
+  ctx.shadowBlur=0;
+  for(const raw of [...g.snakes].sort((a,b)=>Number(a.id===id)-Number(b.id===id))){
+   if(!raw.alive)continue;
+   const s=this.poses.get(raw.id)||this.interpolate(raw,now),radius=7+Math.sqrt(s.mass)*.55;
+   const points=[{x:s.x,y:s.y},...s.segments];
+   if(!points.some(p=>p.x>=minX-radius*3&&p.x<=maxX+radius*3&&p.y>=minY-radius*3&&p.y<=maxY+radius*3))continue;
+   const index=g.snakes.findIndex(x=>x.id===s.id),variant=s.skin==='snake-wild'?index:0;
+   ctx.save();
+   window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant);
+   ctx.translate(s.x,s.y);ctx.rotate(s.angle);
+   window.BS_COSMETIC_ART.head(ctx,s.skin,radius*1.25,variant);
+   if(s.id===id){
+    ctx.strokeStyle=s.boost?'#f6df96':'#b9f3db';ctx.lineWidth=1.25/zoom;ctx.beginPath();
+    ctx.moveTo(radius*3.1,-radius*.45);ctx.lineTo(radius*3.55,0);ctx.lineTo(radius*3.1,radius*.45);ctx.stroke();
+   }
+   ctx.restore();
+   ctx.fillStyle=s.id===id?'#f0f4d5':'#b7d0c9';ctx.textAlign='center';ctx.font='600 11px Tahoma,Arial';
+   ctx.fillText(s.name+(s.bot?' · BOT':''),s.x,s.y-radius*2.9);
+  }
+  for(const effect of this.effects){
+   if(split&&effect.id!==id)continue;
+   const t=clamp((now-effect.born)/850,0,1);
+   ctx.save();ctx.globalAlpha=1-t;ctx.fillStyle=effect.color;ctx.textAlign='center';
+   ctx.font='700 18px Tahoma,Arial';ctx.fillText(effect.text,effect.x,effect.y-50-t*50);
+   if(t<.7)for(let i=0;i<4;i++){
+    const angle=i*Math.PI/2+t*1.2,r=12+t*32;
+    ctx.beginPath();ctx.arc(effect.x+Math.cos(angle)*r,effect.y+Math.sin(angle)*r,2*(1-t),0,Math.PI*2);ctx.fill();
+   }
+   ctx.restore();
   }
   ctx.restore();
-  if(split){ctx.fillStyle='#13302abf';ctx.fillRect(v.x+v.w/2-93,v.y+v.h-32,186,26);ctx.fillStyle=own.alive?'#d7e4bd':'#d6afa3';ctx.font='10px Tahoma,Arial';ctx.textAlign='center';ctx.fillText(own.name+' · '+own.score+(own.alive?'':' · خارج الجولة'),v.x+v.w/2,v.y+v.h-14);}
-  else this.minimap(v,id);
+  if(split){
+   ctx.fillStyle='#0a242aca';ctx.fillRect(v.x+v.w/2-106,v.y+v.h-31,212,25);
+   ctx.fillStyle=own.alive?'#e0ebd2':'#e6ae9e';ctx.font='11px Tahoma,Arial';ctx.textAlign='center';
+   ctx.fillText(own.name+' · '+own.score+(own.alive?'':' · خارج الجولة'),v.x+v.w/2,v.y+v.h-14);
+  }else this.minimap(v,id);
  }
- minimap(v,id){const ctx=this.ctx,g=this.game,size=this.width<650?72:98,x=v.x+19,y=v.y+v.h-size-(this.width<650?147:24);ctx.save();ctx.fillStyle='#0b2427bd';ctx.fillRect(x,y,size,size);ctx.strokeStyle='#62835c88';ctx.lineWidth=1;ctx.strokeRect(x,y,size,size);for(const s of g.snakes){if(!s.alive)continue;ctx.fillStyle=s.id===id?'#f3e8ad':s.bot?'#7eac9a':'#a2c8d7';ctx.beginPath();ctx.arc(x+s.x/g.width*size,y+s.y/g.height*size,s.id===id?3:2,0,Math.PI*2);ctx.fill();}ctx.restore();}
+ minimap(v,id){
+  const ctx=this.ctx,g=this.game,size=this.width<650?80:104;
+  const x=v.x+v.w-size-20,y=v.y+v.h-size-(this.width<650?36:24);
+  ctx.save();ctx.fillStyle='#081d25da';ctx.fillRect(x,y,size,size);
+  ctx.strokeStyle='#82b6a783';ctx.lineWidth=1;ctx.strokeRect(x,y,size,size);
+  for(const s of g.snakes){
+   if(!s.alive)continue;
+   const sx=x+s.x/g.width*size,sy=y+s.y/g.height*size;
+   ctx.fillStyle=s.id===id?'#f3e8ad':s.bot?'#76b4a5':'#aeddec';
+   ctx.beginPath();ctx.arc(sx,sy,s.id===id?3.3:2,0,Math.PI*2);ctx.fill();
+   if(s.id===id){ctx.strokeStyle='#f3e8ad';ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+Math.cos(s.angle)*7,sy+Math.sin(s.angle)*7);ctx.stroke();}
+  }
+  ctx.fillStyle='#98b5ab';ctx.font='9px Tahoma,Arial';ctx.textAlign='center';ctx.fillText('الحلبة',x+size/2,y-8);ctx.restore();
+ }
 }

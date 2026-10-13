@@ -13,7 +13,7 @@ async function renderer(){
  canvas.getContext=()=>ctx;
  const board={getBoundingClientRect:()=>({width:390,height:490})},game={classList:{contains:()=>false}},wrap={appendChild(){}};
  let made=0;
- const document={hidden:false,documentElement:{dataset:{}},getElementById:id=>({board,game,boardWrap:wrap}[id]),createElement:tag=>tag!=='canvas'?{setAttribute(){}}:++made===1?canvas:{width:0,height:0,getContext:()=>ctx},querySelector:()=>proxy,addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
+ const document={hidden:false,documentElement:{dataset:{}},getElementById:id=>({board,game,boardWrap:wrap}[id]),createElement:tag=>tag!=='canvas'?{setAttribute(){}}:++made===1?canvas:{width:0,height:0,setAttribute(){},getContext:()=>ctx},querySelector:()=>proxy,addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
  class Image{constructor(){this.complete=true;this.naturalWidth=1024;this.naturalHeight=1536;}addEventListener(){}set src(value){this.url=value;if(value.includes('objects')){this.naturalWidth=2048;this.naturalHeight=768}}}
  const context=vm.createContext({snakeGeometry,recolorBluePixels,ARENA_HUES,cosmeticSnakeHue,document,Image,devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:(fn,ms)=>{timers.set(++nextTimer,{fn,ms});return nextTimer},clearTimeout:id=>timers.delete(id)});
  context.window=context;context.BS_PRO={paused:false};context.addEventListener=(name,fn)=>events.set(name,fn);context.removeEventListener=name=>events.delete(name);
@@ -35,4 +35,9 @@ test('growth completion is independent of render frames and excludes paused time
  h.time(200);h.context.BS_PRO.paused=true;h.events.get('bs-match-pause')();assert.equal(h.timers.size,0);
  h.time(10000);h.context.BS_PRO.paused=false;h.events.get('bs-match-pause')();assert.equal([...h.timers.values()][0].ms,700);
  [...h.timers.values()][0].fn();await waiting;assert.ok(done);assert.equal(h.events.size,0);
+});
+test('every existing stone keeps the original raster art rather than the V12 polygon replacement',async()=>{
+ const h=await renderer();h.context.BS_COSMETIC_ART={paint(){throw new Error('old stones must not be replaced')}};
+ for(const pawn of ['pawn-classic','pawn-jade','pawn-onyx','pawn-amethyst','pawn-gold','pawn-prism']){h.context.document.documentElement.dataset.pawn=pawn;const c=h.context.BS_ARENA.crystal({appendChild(){}},1);assert.equal(c.width,144);assert.equal(c.height,180);}
+ assert.equal(h.calls.filter(c=>c==='raster').length,6);
 });

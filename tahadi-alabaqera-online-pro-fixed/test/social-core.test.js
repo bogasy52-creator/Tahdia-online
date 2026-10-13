@@ -46,4 +46,5 @@ test('game invites only accept currently online room games', () => {
   assert.equal(normalizeRoomCode('12-34 56'), '123456');
   assert.equal(gameJoinPath('quiz', '123456'), '/online?room=123456');
   assert.equal(gameJoinPath('snakes', '654321'), '/snakes?room=654321');
+  assert.equal(gameJoinPath('serpent', '654321'), '/serpent?room=654321');
 });

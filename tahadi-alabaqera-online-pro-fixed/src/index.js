@@ -16,7 +16,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='12.0.0';
+const RELEASE='13.1.0';
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
@@ -378,12 +378,12 @@ export default {
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
-      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120;
-      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>8||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية ومدة صالحة'},400);
+      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium';
+      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-playerLimit)||!['easy','medium','hard'].includes(difficulty)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
       for(let attempt=0;attempt<5;attempt++){
         const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
-        const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration})});
-        if(response.status===201)return json({ok:true,code,hostKey,playerLimit,duration});
+        const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration,botCount,difficulty})});
+        if(response.status===201)return json({ok:true,code,hostKey,playerLimit,duration,botCount,difficulty});
         if(response.status!==409)return json({ok:false,error:'تعذر تشغيل الحلبة؛ تأكد من نشر السيرفر الجديد'},503);
       }
       return json({ok:false,error:'تعذر إنشاء الحلبة الآن'},503);

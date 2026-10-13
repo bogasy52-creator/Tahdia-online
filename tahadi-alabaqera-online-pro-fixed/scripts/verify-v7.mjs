@@ -28,13 +28,13 @@ for(const file of files){
  }
 }
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8')),lock=JSON.parse(await readFile(join(root,'package-lock.json'),'utf8'));
-assert.equal(pkg.version,'12.0.0');assert.equal(lock.version,'12.0.0');assert.equal(lock.packages[''].version,'12.0.0');
+assert.equal(pkg.version,'13.1.0');assert.equal(lock.version,'13.1.0');assert.equal(lock.packages[''].version,'13.1.0');
 const config=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
 assert.ok(config.durable_objects.bindings.some(b=>b.name==='QUICK_ARENA'&&b.class_name==='QuickArena'));
 assert.equal(config.migrations.at(-1).tag,'v6-authoritative-quick-arena');
 const sw=await readFile(join(publicDir,'service-worker.js'),'utf8'),shell=sw.match(/const\s+APP_SHELL\s*=\s*\[([\s\S]*?)\];/)[1],paths=[...shell.matchAll(/['"]([^'"]+)['"]/g)].map(m=>m[1]);
-assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.match(sw,/const CACHE_NAME = 'busraj-games-v33-serpent-vault'/);
-for(const asset of ['serpent-ui.js','serpent-renderer.js','engines/serpent-engine.js','cosmetic-art.js','profile-core.js','career-client.js','pro-dice.js','shop.js','arcade-games.js','pro-experience.js','engines/snakes-adventure.js','engines/bot-strategy.js'])assert.ok(paths.includes('/assets/js/'+asset),'offline dependency absent: '+asset);
+assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.match(sw,/const CACHE_NAME = 'busraj-games-v36-release-13-1-0'/);
+for(const asset of ['serpent-ui.js','serpent-renderer.js','engines/serpent-engine.js','cosmetic-art.js','profile-core.js','career-client.js','pro-dice.js','shop.js','arcade-games.js','pro-experience.js','engines/snakes-adventure.js','engines/bot-strategy.js'])assert.ok(paths.includes('/assets/js/'+asset+'?v='+pkg.version),'offline dependency absent: '+asset);
 for(const page of ['serpent','snakes','jackaroo','zahra','dice','shop','puzzle','memory','reaction','accuracy','logic','online','social','local'])assert.ok(paths.includes('/'+page+'.html'),'offline page absent: '+page);
 assert.doesNotMatch(await readFile(join(publicDir,'snakes.html'),'utf8'),/snakes-reference-portrait|MutationObserver|assets\/js\/(?:adaptive-board-layout|fullscreen-game|luxury-game-ui)\.js/);
-console.log(`V12 release verification passed: ${js} JS modules, ${inline} inline scripts, ${cssAssets} CSS asset references, ${paths.length} offline cache paths.`);
+console.log(`V${pkg.version} release verification passed: ${js} JS modules, ${inline} inline scripts, ${cssAssets} CSS asset references, ${paths.length} offline cache paths.`);

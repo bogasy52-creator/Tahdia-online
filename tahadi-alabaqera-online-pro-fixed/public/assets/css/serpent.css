@@ -10,3 +10,8 @@
 @media(max-width:800px) and (orientation:landscape){.arena-play[data-duo=true] #joystick1{right:calc(50% + 24px);bottom:26px}.arena-play[data-duo=true] #boost1{left:24px;bottom:32px}}
 
 .arena-end-card{max-height:calc(100dvh - 40px);overflow:auto}.serpent-page{background:radial-gradient(ellipse at 15% 6%,#233f3a,transparent 40%),#0a171d!important}
+
+/* The control indicator follows each gesture; the entire canvas accepts steering. */
+.arena-play .arena-joystick{display:none!important;pointer-events:none;width:76px;height:76px;right:auto!important;bottom:auto!important;opacity:.65;z-index:3}.arena-play .arena-joystick.steering{display:block!important}.arena-play .arena-joystick i{width:28px;height:28px;top:23px;left:23px}.arena-play .arena-joystick span{display:none}.arena-play .arena-boost{z-index:4}.arena-play .arena-live-hint{max-width:calc(100% - 105px);bottom:24px}.arena-portrait img{width:100%;height:100%;object-fit:contain;position:absolute;inset:0}
+
+.arena-invite-actions{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 18px}.arena-lobby-bots{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;background:#1d352e;border:1px solid #496b51;border-radius:12px;margin-bottom:18px}.arena-lobby-bots label{font-size:11px;color:#c3d1b9}.arena-lobby-bots select{display:block;width:100%;margin-top:8px;padding:10px;background:#11272a;color:#e6edda;border:1px solid #567255;border-radius:8px}.arena-lobby-bots small{grid-column:1/-1;color:#a6bba2;font-size:10px}.arena-lobby-bots select:disabled{opacity:.75}

@@ -12,3 +12,9 @@ test('the inspection purchase uses the real store API once and updates ownership
  const h=await store(),inspect=h.doc.querySelector('[data-item="pawn-jade"] .item-inspect');assert.ok(inspect);inspect.onclick();const btn=h.doc.getElementById('itemAction');await Promise.all([btn.onclick(),btn.onclick()]);
  assert.equal(h.calls(),1);assert.equal(h.profile().coins,2880);assert.equal(h.profile().equipped.pawn,'pawn-jade');assert.ok(h.doc.getElementById('itemOwnership').textContent.includes('مجهّز'));
 });
+test('store cards and inspection use a static image without a canvas or native-dialog dependency',async()=>{
+ const h=await store();h.doc.querySelector('[data-item="pawn-jade"] .item-inspect').onclick();
+ const image=h.doc.getElementById('itemArt').querySelector('img');assert.ok(image);assert.equal(image.src,'assets/previews/pawn-jade.webp');
+ assert.equal(h.doc.getElementById('itemArt').querySelector('canvas'),null);assert.equal(h.doc.getElementById('itemDialog').tagName,'DIV');
+ assert.equal(h.doc.querySelector('[data-item="snake-gold"] img').src,'assets/previews/snake-gold.webp');
+});

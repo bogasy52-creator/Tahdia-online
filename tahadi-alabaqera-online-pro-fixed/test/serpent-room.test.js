@@ -50,3 +50,17 @@ test('a throttled steering packet still releases boost immediately',async()=>{
  const s=h.room.room.game.snakes[0],angle=s.targetAngle;s.boost=true;a.player.lastInputAt=Date.now();
  await h.room.webSocketMessage(a.ws,JSON.stringify({type:'input',angle:0,boost:false}));assert.equal(s.boost,false);assert.equal(s.targetAngle,angle);
 });
+test('the host can configure server bots alongside human friends before a round',async()=>{
+ const h=setup();await init(h.room);const a=peer(h,'a','host'),b=peer(h,'b');
+ await h.room.webSocketMessage(b.ws,JSON.stringify({type:'configure',botCount:4,difficulty:'hard'}));assert.equal(h.room.room.botCount||0,0);
+ await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:4,difficulty:'hard'}));assert.equal(h.room.publicState().botCount,4);assert.equal(h.room.publicState().difficulty,'hard');
+ a.player.ready=b.player.ready=true;await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));h.room.stop();
+ assert.equal(h.room.room.game.snakes.filter(s=>s.bot).length,4);assert.equal(h.room.room.players.length,2);assert.equal(h.room.room.game.difficulty,'hard');
+ await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:0,difficulty:'easy'}));assert.equal(h.room.room.botCount,4);
+});
+test('invalid bot counts cannot overfill the arena or bypass ready checks',async()=>{
+ const h=setup();await init(h.room);const a=peer(h,'a','host');
+ for(const botCount of [-1,9,2.5,'4'])await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount,difficulty:'medium'}));
+ assert.equal(h.room.room.botCount||0,0);await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:4,difficulty:'medium'}));a.player.ready=true;
+ await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby');h.room.stop();
+});

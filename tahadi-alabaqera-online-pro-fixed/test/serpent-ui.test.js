@@ -4,10 +4,16 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 import {createDOM} from './dom-harness.mjs';
 import {createSerpentGame,serpentSnapshot} from '../public/assets/js/engines/serpent-engine.js';
+import {ArenaGestures} from '../public/assets/js/arena-gestures.js';
+import {applySerpentFrame} from '../public/assets/js/serpent-network.js';
+import {arenaTelemetry,resolveTrialSkin} from '../public/assets/js/serpent-renderer.js';
 async function ui(){
  const peers=[],h=await createDOM('serpent.html');h.context.requestAnimationFrame=()=>0;
  h.context.AbortSignal=AbortSignal;
- h.context.SerpentRenderer=class{constructor(){this.cameras=new Map()}resize(){}setGame(){}draw(){}};
+ h.context.ArenaGestures=ArenaGestures;
+ h.context.applySerpentFrame=applySerpentFrame;
+ h.context.arenaTelemetry=arenaTelemetry;h.context.resolveTrialSkin=resolveTrialSkin;
+ h.context.SerpentRenderer=class{constructor(){this.cameras=new Map()}reset(){this.cameras.clear();}resize(){}setGame(){}draw(){}};
  h.context.WebSocket=class{static OPEN=1;constructor(){this.readyState=0;peers.push(this)}close(){}send(){}};
  h.context.fetch=async()=>Response.json({ok:true,status:'playing'});h.context.BS_CAREER={get:()=>({name:'A'}),account:()=>null};
  const source=(await readFile(new URL('../public/assets/js/serpent-ui.js',import.meta.url),'utf8')).replace(/^import .*?;\n/gm,'');

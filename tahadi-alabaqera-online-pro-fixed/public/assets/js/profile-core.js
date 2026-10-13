@@ -33,6 +33,8 @@
     {id:'board-cyber',type:'board',name:'حلبة المفاعل',description:'إطار أزرق كهربائي وخانات محفورة واضحة.',price:440,color:'#32ceef'},
     {id:'table-cyber',type:'table',name:'طاولة المفاعل',description:'جاكارو بسطح أزرق معدني وأحجار واضحة.',price:460,color:'#4c91db'},
     {id:'pawn-prism',type:'pawn',name:'كريستال الطيف',description:'لمعة طيفية تتحرك بهدوء حول الحجر.',price:600,color:'#b7f8ff'},
+    {id:'pawn-orb',type:'pawn',name:'كرة المفاعل',description:'كرة كريستال سماوية معلّقة في مخالب معدنية على قاعدة مضيئة.',price:360,color:'#56e5ec'},
+    {id:'pawn-crown',type:'pawn',name:'تاج الجمشت',description:'تاج من بلورات الجمشت في إطار ذهبي وقاعدة معدنية.',price:540,color:'#cf89f5'},
     {id:'trail-none',type:'trail',name:'أثر الحركة الأصلي',description:'ومضة اللوحة الأصلية أثناء انتقال الحجر.',price:0,color:'#33baff'},
     {id:'trail-comet',type:'trail',name:'ذيل المذنب',description:'أثر سماوي مضيء تحت الحجر أثناء الحركة.',price:180,color:'#4ce6ff'},
     {id:'trail-plasma',type:'trail',name:'أثر البلازما',description:'وهج بنفسجي ووردي يرافق الحركة على اللوحة.',price:350,color:'#eb79ff'},
@@ -81,6 +83,7 @@
     'pawn-classic':{'--pawn-look':'none'},'pawn-jade':{'--pawn-look':'drop-shadow(0 0 7px #55ffbc) brightness(1.15)'},
     'pawn-amethyst':{'--pawn-look':'drop-shadow(0 0 7px #d17cff) brightness(1.22)'},'pawn-gold':{'--pawn-look':'drop-shadow(0 0 7px #ffd15a) brightness(1.3)'},
     'pawn-onyx':{'--pawn-look':'drop-shadow(0 0 5px #e7b363) brightness(.7)'},'pawn-prism':{'--pawn-look':'drop-shadow(0 0 7px #b7f8ff) hue-rotate(32deg) brightness(1.25)'},
+    'pawn-orb':{'--pawn-look':'none'},'pawn-crown':{'--pawn-look':'none'},
     'trail-none':{'--trail-color':'#20ccff'},'trail-comet':{'--trail-color':'#4ce6ff'},'trail-plasma':{'--trail-color':'#e777ff'}
   });
   const finite=n=>Math.max(0,Math.min(100000000,Math.floor(Number(n)||0)));

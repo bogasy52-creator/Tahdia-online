@@ -166,6 +166,13 @@ test('friend acceptance requires a real incoming request', async () => {
   const aliceDashboard = await social(env, '/api/social/me', { token: alice });
   assert.equal(aliceDashboard.data.friends.length, 0);
 });
+test('arena friend invites validate the serpent namespace and reject rooms that already started',async()=>{
+ const {env}=createEnvironment(),alice=await signup(env,'alice_1','أليس'),bob=await signup(env,'bob_2','بوب');
+ await social(env,'/api/social/friends/request',{method:'POST',token:alice,body:{username:'bob_2'}});await social(env,'/api/social/friends/respond',{method:'POST',token:bob,body:{username:'alice_1',accept:true}});
+ let status='lobby';env.ROOMS={idFromName:id=>id,get:id=>{assert.equal(id,'__serpent__:123456');return {fetch:async url=>{assert.equal(url,'https://serpent.internal/status');return Response.json({ok:true,game:'serpent',status,players:1});}};}};
+ const body={username:'bob_2',game:'serpent',roomCode:'123456'};let result=await social(env,'/api/social/invites',{method:'POST',token:alice,body});assert.equal(result.response.status,200);assert.equal(result.data.invite.joinPath,'/serpent?room=123456');
+ status='playing';result=await social(env,'/api/social/invites',{method:'POST',token:alice,body});assert.equal(result.response.status,409);
+});
 
 test('friends-only privacy rejects game invites after friendship is removed', async () => {
   const { env } = createEnvironment();

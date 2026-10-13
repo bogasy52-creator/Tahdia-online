@@ -1,5 +1,5 @@
-import {snakeGeometry} from './arena-geometry.js';
-import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js';
+import {snakeGeometry} from './arena-geometry.js?v=13.1.0';
+import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=13.1.0';
 /* Creature heads keep their proportions. Real painted scales follow a
    tapered body mesh between the rule engine's head and tail cells. */
 (function(){
@@ -18,11 +18,6 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
    const pixels=paint.getImageData(0,0,dw,dh);recolorBluePixels(pixels.data,hue);paint.putImageData(pixels,0,0);return c;
   }
   const result={texture:sprite(375,770,100,100,128,128),head:sprite(285,10,610,480,610,480)};
-  if(id&&id!=='snake-wild'&&window.BS_COSMETIC_ART){
-   const c=document.createElement('canvas');c.width=610;c.height=480;const paint=c.getContext('2d');paint.translate(285,240);window.BS_COSMETIC_ART.head(paint,id,150);result.head=c;
-   const tex=result.texture.getContext('2d');tex.strokeStyle='hsla('+hue+' 90% 80% / .35)';tex.lineWidth=3;
-   for(let y=10;y<128;y+=22){tex.beginPath();tex.moveTo(0,y);tex.lineTo(64,y+12);tex.lineTo(128,y);tex.stroke();}
-  }
   skins.set(key,result);return result;
  }
  function layout(entries){
@@ -38,12 +33,33 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
  }
  function phase(from,value){const entry=snakes.get(Number(from))||{};entry.phase=value||'idle';entry.at=clock;snakes.set(Number(from),entry);if(canvas){if(value==='tracking'){canvas.dataset.history='';canvas.dataset.maxScale='1';}canvas.dataset.phase=entry.phase;canvas.dataset.activeSnake=from;canvas.dataset.history=(canvas.dataset.history?canvas.dataset.history+',':'')+entry.phase;} }
  function ladder(from,value){ladders.set(Number(from),{phase:value||'idle',at:clock})}
+ function drawTravelCue(points,origin,target,active,progress=0){
+  if(!active)return;
+  ctx.save();ctx.strokeStyle='#f5dfa0';ctx.lineWidth=width*.004;ctx.shadowColor='#d9bd6b';ctx.shadowBlur=width*.014;ctx.globalAlpha=.75;
+  ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+  for(const p of [origin,target]){const size=width*.024;ctx.beginPath();ctx.moveTo(p.x,p.y-size);ctx.lineTo(p.x+size,p.y);ctx.lineTo(p.x,p.y+size);ctx.lineTo(p.x-size,p.y);ctx.closePath();ctx.stroke();}
+  const dot=points[Math.min(points.length-1,Math.floor(Math.max(0,Math.min(1,progress))*(points.length-1)))],size=width*.012;
+  ctx.fillStyle='#fff5cf';ctx.beginPath();ctx.moveTo(dot.x,dot.y-size);ctx.lineTo(dot.x+size,dot.y);ctx.lineTo(dot.x,dot.y+size);ctx.lineTo(dot.x-size,dot.y);ctx.closePath();ctx.fill();ctx.restore();
+ }
  function drawLadder(r){
   if(!objects.complete||!objects.naturalWidth)return;
-  const dx=r.b.x-r.a.x,dy=r.b.y-r.a.y,len=Math.hypot(dx,dy),w=width*.058,s=ladders.get(r.from),active=s&&s.phase!=='idle';
+  const dx=r.b.x-r.a.x,dy=r.b.y-r.a.y,len=Math.hypot(dx,dy),w=width*.052,s=ladders.get(r.from),active=s&&s.phase!=='idle';
   ctx.save();ctx.translate(r.a.x,r.a.y);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);
-  if(active){ctx.shadowColor='#4be9ff';ctx.shadowBlur=8;ctx.globalAlpha=.86+.14*Math.sin(clock/85);}
-  ctx.drawImage(objects,294,0,292,768,-w/2,-len,w,len);ctx.restore();
+  // Rails, rungs and anchors are drawn independently: short and long routes
+  // keep the same rung thickness instead of stretching a complete ladder.
+  ctx.shadowColor='#02080de0';ctx.shadowBlur=width*.012;ctx.shadowOffsetX=width*.003;ctx.shadowOffsetY=width*.006;
+  const rail=w*.21;
+  ctx.drawImage(objects,318,20,40,728,-w/2,-len,rail,len);
+  ctx.drawImage(objects,518,20,40,728,w/2-rail,-len,rail,len);
+  ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+  const count=Math.max(3,Math.round(len/(width*.026))),gap=len/(count+1),travel=active?((clock-s.at)/1200)%1:-1;
+  for(let i=1;i<=count;i++){
+   const y=-i*gap,lit=active&&Math.abs(i/(count+1)-travel)<.13;
+   ctx.save();if(lit){ctx.shadowColor='#91faff';ctx.shadowBlur=width*.018;}
+   ctx.drawImage(objects,354,67,162,36,-w/2+rail*.55,y-width*.003,w-rail*1.1,width*.0085);ctx.restore();
+  }
+  for(const y of [-len,0]){ctx.drawImage(objects,305,5,264,48,-w*.56,y-width*.004,w*1.12,width*.0095);}
+  ctx.restore();
  }
  function drawSnake(r){
   if(!cobra.complete||!cobra.naturalWidth)return;
@@ -54,6 +70,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
   const growth=phase==='digesting'?1+.24*ease(elapsed/900):phase==='releasing'?1+.10*(1-Math.min(1,elapsed/550)):1;
   const swallow=phase==='swallowing'?Math.min(1,elapsed/900):-1;
   const points=shape.points;
+  drawTravelCue(points,shape.head,r.b,phase!=='idle',reduce()?0:Math.min(1,elapsed/(phase==='swallowing'?900:1600)));
   // Tapered mesh with metallic lighting and the creature artwork's real scales.
   ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
   const segments=[];
@@ -129,7 +146,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js'
  }
  function crystal(el,player){
   const c=document.createElement('canvas');c.className='crystal-sprite';c.width=144;c.height=180;c.setAttribute('aria-hidden','true');
-  const paint=()=>{const pawn=document.documentElement.dataset.pawn;if(pawn&&pawn!=='pawn-classic'&&window.BS_COSMETIC_ART){const item=window.BS_CAREER?.catalog?.find(i=>i.id===pawn);if(item){window.BS_COSMETIC_ART.paint(c,item);return;}}const context=c.getContext('2d');context.clearRect(0,0,144,180);context.filter=player===2||player===3?'hue-rotate(-150deg)':'none';context.drawImage(objects,player%2?1400:785,60,480,690,0,0,144,180)};
+  const paint=()=>{const pawn=document.documentElement.dataset.pawn;if(['pawn-orb','pawn-crown'].includes(pawn)&&window.BS_COSMETIC_ART){window.BS_COSMETIC_ART.ready.then(()=>window.BS_COSMETIC_ART.paintPawn(c,pawn,player));return;}const context=c.getContext('2d');context.clearRect(0,0,144,180);context.filter=player===2||player===3?'hue-rotate(-150deg)':'none';context.drawImage(objects,player%2?1400:785,60,480,690,0,0,144,180)};
   objects.complete&&objects.naturalWidth?paint():objects.addEventListener('load',paint,{once:true});el.appendChild(c);return c;
  }
  // A rendering frame can be throttled by a browser. Game completion uses a

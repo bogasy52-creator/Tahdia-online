@@ -37,7 +37,16 @@ export class BoardOnlineClient {
       const ws=new WebSocket(`${proto}//${location.host}/api/board/rooms/${this.code}/ws?${q}`,protocols);this.ws=ws;let settled=false;
       const timer=setTimeout(()=>{if(!settled){settled=true;try{ws.close()}catch{};reject(new Error('انتهت مهلة الاتصال بالغرفة'))}},9000);
       ws.onopen=()=>{if(this.ws!==ws)return;this.onStatus({online:true,reconnecting:false,text:'متصل'});};
-      ws.onmessage=(ev)=>{if(this.ws!==ws)return;let msg;try{msg=JSON.parse(ev.data)}catch{return}const stamp=(state)=>{if(state){state.clientReceivedAt=Date.now();this.version=state.version;}return state};if(msg.type==='welcome'){this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{};const state=stamp(msg.state);this.onState(state);if(!settled){settled=true;clearTimeout(timer);resolve(state)}}else if(msg.type==='state')this.onState(stamp(msg.state));else if(msg.type==='error'){this.onError(msg.message||'حدث خطأ');}};
+      ws.onmessage=(ev)=>{
+        if(this.ws!==ws)return;let msg;try{msg=JSON.parse(ev.data)}catch{return}
+        const identity=state=>{const {serverNow,clientReceivedAt,...stable}=state;return JSON.stringify(stable)};
+        const stamp=state=>{if(state){this.stateKey=identity(state);state.clientReceivedAt=Date.now();this.version=state.version;}return state};
+        if(msg.type==='welcome'){this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{};const state=stamp(msg.state);this.onState(state);if(!settled){settled=true;clearTimeout(timer);resolve(state)}}
+        else if(msg.type==='state'){
+          if(!msg.state||this.version!=null&&(msg.state.version<this.version||msg.state.version===this.version&&identity(msg.state)===this.stateKey))return;
+          this.onState(stamp(msg.state));
+        }else if(msg.type==='error')this.onError(msg.message||'حدث خطأ');
+      };
       ws.onerror=()=>{if(this.ws!==ws)return;this.onStatus({online:false,reconnecting:true,text:'مشكلة اتصال'});};
       ws.onclose=(ev)=>{clearTimeout(timer);if(this.ws!==ws)return;this.onStatus({online:false,reconnecting:!this.closedByUser,text:this.closedByUser?'غير متصل':'إعادة اتصال…'});if(!settled){settled=true;reject(new Error(ev.reason||'تعذر الاتصال بالغرفة'))}if(!this.closedByUser&&ev.code!==4001)this.scheduleReconnect();};
     })
