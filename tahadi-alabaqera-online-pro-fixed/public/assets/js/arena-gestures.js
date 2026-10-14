@@ -1,14 +1,21 @@
 /* Direct swipe steering: a change of finger direction takes effect immediately. */
 export class ArenaGestures {
- constructor({steer=()=>{},end=()=>{}}={}){this.steer=steer;this.end=end;this.pointers=new Map();}
+ constructor({mode='swipe',steer=()=>{},end=()=>{}}={}){this.mode=mode;this.steer=steer;this.end=end;this.pointers=new Map();}
  start(e,rect,duo=false){
   const x=e.clientX-rect.left,y=e.clientY-rect.top;
   const index=duo?Number(rect.width>rect.height?x>=rect.width/2:y>=rect.height/2):0;
   if([...this.pointers.values()].some(p=>p.index===index))return null;
-  this.pointers.set(e.pointerId,{index,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,angle:null});return index;
+  this.pointers.set(e.pointerId,{index,x:e.clientX,y:e.clientY,originX:e.clientX,originY:e.clientY,lastX:e.clientX,lastY:e.clientY,angle:null,knobX:0,knobY:0});return index;
  }
  move(e){
   const p=this.pointers.get(e.pointerId);if(!p)return null;
+  if(this.mode==='joystick'){
+   const dx=e.clientX-p.originX,dy=e.clientY-p.originY,d=Math.hypot(dx,dy),scale=Math.min(1,38/Math.max(1,d));
+   p.knobX=dx*scale;p.knobY=dy*scale;
+   if(d<9)return p.index;
+   const angle=Math.atan2(dy,dx),difference=p.angle===null?Infinity:Math.abs(Math.atan2(Math.sin(angle-p.angle),Math.cos(angle-p.angle)));
+   if(difference>.045){p.angle=angle;this.steer(p.index,angle);}return p.index;
+  }
   const dx=e.clientX-p.lastX,dy=e.clientY-p.lastY,d=Math.hypot(dx,dy);if(d<3)return p.index;
   p.angle=Math.atan2(dy,dx);p.lastX=e.clientX;p.lastY=e.clientY;
   this.steer(p.index,p.angle);

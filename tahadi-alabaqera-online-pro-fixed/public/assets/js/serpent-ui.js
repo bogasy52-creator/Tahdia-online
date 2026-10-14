@@ -1,12 +1,12 @@
-import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent} from './engines/serpent-engine.js?v=13.2.0';
-import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=13.2.0';
-import {ArenaGestures} from './arena-gestures.js?v=13.2.0';
-import {applySerpentFrame} from './serpent-network.js?v=13.2.0';
+import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent} from './engines/serpent-engine.js?v=13.3.0';
+import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=13.3.0';
+import {ArenaGestures} from './arena-gestures.js?v=13.3.0';
+import {applySerpentFrame} from './serpent-network.js?v=13.3.0';
 
 const $=id=>document.getElementById(id),SESSION='busraj-serpent-room-v12';
 const renderer=new SerpentRenderer($('arenaCanvas')),keys=new Set(),mousePointers=new Map(),controls=[{angle:null,boost:false},{angle:null,boost:false}];
 const trial=resolveTrialSkin(window.BS_CAREER?.catalog||[],location.search);
-const gestures=new ArenaGestures({steer:(index,angle)=>{controls[index].angle=angle;},end:index=>{controls[index].angle=null;$('joystick'+(index+1)).classList.remove('steering');}});
+const gestures=new ArenaGestures({mode:'joystick',steer:(index,angle)=>{controls[index].angle=angle;},end:index=>{controls[index].angle=null;$('joystick'+(index+1)).classList.remove('steering');}});
 let mode='solo',game=null,room=null,socket=null,selfId=null,paused=false,online=false,networkActive=false,reconnects=0,reconnectTimer=null,lastFrame=performance.now(),accumulator=0,lastInput=0,lastHud=0,receipt='',resultShown='',mouseAngle=null;
 const show=(id,yes=true)=>$(id).classList.toggle('hidden',!yes);
 const say=text=>{const target=online&&room?.status==='lobby'?$('lobbyMessage'):$('arenaMessage');target.textContent=text;};
@@ -17,19 +17,19 @@ function selectMode(next){
  mode=next;$('arenaModes').querySelectorAll('button').forEach(b=>{b.classList.toggle('selected',b.dataset.mode===mode);b.setAttribute('aria-pressed',String(b.dataset.mode===mode));});
  const net=mode==='online';show('secondNameField',mode==='duo');show('botsField');show('difficultyField');show('onlineCountField',net);show('onlineJoin',net);show('localControlHint',!net);if(net)$('arenaBots').value='0';limitBots();
  $('arenaStart').textContent=net?'أنشئ غرفة خاصة ↗':'ادخل الحلبة ↗';$('modeDescription').textContent=net?'من لاعبين إلى ثمانية أصدقاء، مع بوتات اختيارية':mode==='duo'?'شاشتان مستقلتان داخل الجهاز نفسه':'تدريب حقيقي بثلاثة مستويات صعوبة';
- $('localControlHint').querySelector('span').textContent=mode==='duo'?'الجوال: اسحب من أي مكان في نصفك من الشاشة. الكمبيوتر: الأول بالأسهم وSpace؛ الثاني بـWASD وShift.':'الجوال: اسحب من أي مكان في الحلبة للتوجيه، واضغط ⚡ للتسريع. الكمبيوتر: الماوس أو الأسهم، وSpace للتسريع.';
+ $('localControlHint').querySelector('span').textContent=mode==='duo'?'الجوال: المس واسحب داخل نصفك للتوجيه بعصا ثابتة. الكمبيوتر: الأول بالأسهم وSpace؛ الثاني بـWASD وShift.':'الجوال: المس واسحب للتوجيه، واضغط ⚡ للتسريع. ارفع إصبعك ليكمل الثعبان اتجاهه. الكمبيوتر: الماوس أو الأسهم، وSpace للتسريع.';
  if(mode==='duo'&&!$('arenaBots').querySelector('[value="0"]')){const o=document.createElement('option');o.value='0';o.textContent='بدون بوت';$('arenaBots').prepend(o);$('arenaBots').value='0';}
  if(mode==='solo'&&$('arenaBots').value==='0')$('arenaBots').value='6';$('arenaMessage').textContent='';
 }
 function setPlay(){
  document.body.classList.add('serpent-active');show('arenaPlay');show('arenaMenu',false);show('arenaLobby',false);show('arenaPauseCover',false);show('arenaResults',false);show('arenaPause',!online);
- $('arenaPlay').dataset.duo=String(!online&&mode==='duo');show('joystick2',!online&&mode==='duo');show('boost2',!online&&mode==='duo');
+ gestures.mode=$('arenaControl').value;$('arenaPlay').dataset.control=gestures.mode;$('arenaPlay').dataset.duo=String(!online&&mode==='duo');show('joystick2',!online&&mode==='duo');show('boost2',!online&&mode==='duo');
  paused=false;lastFrame=performance.now();accumulator=0;resultShown='';release();renderer.reset();renderer.resize();$('arenaHint').textContent='اجمع الطاقة. احمِ رأسك.';
 }
 function localStart(){
  quit(false);online=false;room=null;selfId='local-1';const profile=window.BS_CAREER?.get?.(),players=[{id:selfId,name:$('arenaName').value||'لاعب الحلبة',skin:trial?.id||profile?.equipped?.snake||'snake-wild'}];
  if(mode==='duo')players.push({id:'local-2',name:$('arenaName2').value||'اللاعب الثاني',skin:'snake-wild'});
- game=createSerpentGame(players,{duration:Number($('arenaDuration').value),difficulty:$('arenaDifficulty').value,seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(game,Number($('arenaBots').value));
+ game=createSerpentGame(players,{matchMode:$('arenaMatchMode').value,duration:Number($('arenaDuration').value),difficulty:$('arenaDifficulty').value,seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(game,Number($('arenaBots').value));
  receipt='serpent-local:'+crypto.randomUUID();setPlay();renderer.setGame(game,players.map(p=>p.id));updateHud();window.BS_AUDIO?.play?.('connect');
 }
 async function api(path,body){
@@ -37,7 +37,7 @@ async function api(path,body){
  const data=await response.json().catch(()=>({}));if(!response.ok||data.ok===false){const error=new Error(data.error||'تعذر الاتصال بالغرفة');error.code=data.code;throw error;}return data;
 }
 async function createRoom(){
- $('arenaStart').disabled=true;say('جاري إنشاء الحلبة…');try{const data=await api('/api/serpent/rooms',{playerLimit:Number($('arenaPlayers').value),duration:Number($('arenaDuration').value),botCount:Number($('arenaBots').value),difficulty:$('arenaDifficulty').value});remember({code:data.code,hostKey:data.hostKey});await connectRoom(data.code,{hostKey:data.hostKey});}catch(e){say(e.message);}finally{$('arenaStart').disabled=false;}
+ $('arenaStart').disabled=true;say('جاري إنشاء الحلبة…');try{const data=await api('/api/serpent/rooms',{playerLimit:Number($('arenaPlayers').value),matchMode:$('arenaMatchMode').value,duration:Number($('arenaDuration').value),botCount:Number($('arenaBots').value),difficulty:$('arenaDifficulty').value});remember({code:data.code,hostKey:data.hostKey});await connectRoom(data.code,{hostKey:data.hostKey});}catch(e){say(e.message);}finally{$('arenaStart').disabled=false;}
 }
 function limitBots(){const max=mode==='online'?Math.min(6,10-Number($('arenaPlayers').value)):mode==='duo'?6:6;for(const o of $('arenaBots').querySelectorAll('option'))o.disabled=Number(o.value)>max;if(Number($('arenaBots').value)>max)$('arenaBots').value=String(max);}
 async function connectRoom(code,credentials={}){
@@ -77,14 +77,14 @@ function acceptRoom(state){
   game=null;paused=false;document.body.classList.remove('serpent-active');show('arenaPlay',false);show('arenaMenu',false);show('arenaLobby');$('roomCode').textContent=state.code;
   const list=$('arenaRoomPlayers');list.replaceChildren();for(const p of state.players){const card=document.createElement('div');card.className='arena-room-player';card.dataset.ready=String(p.ready);const name=document.createElement('b'),status=document.createElement('span');name.textContent=p.name+(p.role==='host'?' · المضيف':'');status.textContent=!p.connected?'منقطع مؤقتًا':p.ready?'✓ جاهز':'بانتظار الجاهزية';card.append(name,status);list.appendChild(card);}
   const own=state.players.find(p=>p.id===selfId),full=state.players.length===state.playerLimit,ready=full&&state.players.every(p=>p.ready&&p.connected);$('arenaReady').textContent=own?.ready?'إلغاء الجاهزية':'أنا جاهز';show('arenaHostStart',own?.role==='host');$('arenaHostStart').disabled=!ready;$('lobbyMessage').textContent=ready?'الجميع جاهز. المضيف يقدر يبدأ الآن.':'وصل '+state.players.length+' من '+state.playerLimit+' — انتظر اكتمال الفريق والجاهزية.';
-  $('lobbyBots').value=String(state.botCount||0);$('lobbyDifficulty').value=state.difficulty||'medium';$('lobbyBots').disabled=$('lobbyDifficulty').disabled=own?.role!=='host';for(const o of $('lobbyBots').querySelectorAll('option'))o.disabled=Number(o.value)>Math.min(6,10-state.playerLimit);$('lobbyBotsSummary').textContent=(state.botCount||0)+' بوتات + '+state.playerLimit+' أصدقاء · إعدادات المضيف';
+  $('lobbyBots').value=String(state.botCount||0);$('lobbyDifficulty').value=state.difficulty||'medium';$('lobbyMatchMode').value=state.matchMode||'timed';$('lobbyDuration').value=String(state.duration);show('lobbyDurationField',state.matchMode!=='survival');for(const field of ['lobbyBots','lobbyDifficulty','lobbyMatchMode','lobbyDuration'])$(field).disabled=own?.role!=='host';for(const o of $('lobbyBots').querySelectorAll('option'))o.disabled=Number(o.value)>Math.min(6,10-state.playerLimit);$('lobbyBotsSummary').textContent=(state.botCount||0)+' بوتات + '+state.playerLimit+' أصدقاء · '+(state.matchMode==='survival'?'آخر ثعبان يبقى':'جولة بوقت');
  }else{
   game=state.game;if($('arenaPlay').classList.contains('hidden')||newRound&&state.status==='playing')setPlay();renderer.setGame(game,[selfId],true);updateHud();if(state.status==='finished'||game?.status==='finished')showResults();
  }
 }
 function updateHud(){
  if(!game)return;const mine=game.snakes.find(s=>s.id===selfId)||game.snakes[0],second=!online&&mode==='duo'?game.snakes.find(s=>s.id==='local-2'):null;
- $('hudName').textContent=second?mine.name+' / '+second.name:mine.name;$('hudScore').textContent=second?mine.score+' : '+second.score:mine.score;const remaining=Math.max(0,Math.ceil(game.duration-game.elapsed));$('hudTime').textContent=Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0');
+ $('hudName').textContent=second?mine.name+' / '+second.name:mine.name;$('hudScore').textContent=second?mine.score+' : '+second.score:mine.score;const remaining=Math.max(0,Math.ceil(game.duration-game.elapsed)),survival=game.matchMode==='survival';$('hudClockLabel').textContent=survival?'آخر ثعبان يبقى':'الوقت المتبقي';$('hudTime').textContent=survival?game.snakes.filter(s=>s.alive).length+' / '+game.snakes.length:Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0');
  const info=arenaTelemetry(game,selfId);$('arenaPlay').dataset.danger=String(info.danger);$('hudRank').textContent='المركز '+info.rank+' · '+info.alive+' في الحلبة';
  $('boostFill').style.width=Math.round(info.boost*100)+'%';$('boostMeter').setAttribute('aria-valuenow',String(Math.round(info.boost*100)));$('boostStatus').textContent=!mine.alive?'خارج الجولة':mine.boost?'تسريع نشط':info.boost>0?'التسريع جاهز':'اجمع طاقة للتسريع';$('hudKills').textContent=info.kills+' افتراس';
  $('arenaHint').textContent=!mine.alive?'خرجت من الجولة. تابع المطاردة.':info.danger?'انتبه للحدود — التفّ إلى الداخل':mine.boost?'التسريع يستهلك من حجمك':mine.mass<=24?'اجمع طاقة أكثر للتسريع':'اجمع الطاقة. احمِ رأسك.';
@@ -119,7 +119,7 @@ function applyInputs(now){
 function frame(now){
  const dt=Math.min(.1,Math.max(0,(now-lastFrame)/1000));lastFrame=now;
  if(game&&!document.hidden&&!$('arenaPlay').classList.contains('hidden')){
-  if(!paused&&game.status==='playing'){applyInputs(now);if(!online){accumulator+=dt;while(accumulator>=.05&&game.status==='playing'){stepSerpent(game,.05);accumulator-=.05;}renderer.setGame(game,!online&&mode==='duo'?[selfId,'local-2']:[selfId]);}}
+  if(!paused&&game.status==='playing'){applyInputs(now);if(!online){accumulator+=dt;while(accumulator>=1/60&&game.status==='playing'){stepSerpent(game,1/60);accumulator-=1/60;}renderer.setGame(game,!online&&mode==='duo'?[selfId,'local-2']:[selfId]);}}
   renderer.draw(now);if(now-lastHud>160){updateHud();lastHud=now;}if(game.status==='finished'&&!online&&resultShown!==receipt)showResults();
  }
  requestAnimationFrame(frame);
@@ -134,7 +134,7 @@ arenaCanvas.addEventListener('pointerdown',e=>{
   mousePointers.set(e.pointerId,index);controls[index].angle=renderer.aimAt(index,x,y);arenaCanvas.setPointerCapture(e.pointerId);return;
  }
  const r=arenaCanvas.getBoundingClientRect(),index=gestures.start(e,r,!online&&mode==='duo');if(index===null)return;
- mouseAngle=null;arenaCanvas.setPointerCapture(e.pointerId);const pad=$('joystick'+(index+1));pad.style.left=(e.clientX-r.left-22)+'px';pad.style.top=(e.clientY-r.top-22)+'px';pad.classList.add('steering');
+ mouseAngle=null;arenaCanvas.setPointerCapture(e.pointerId);const pad=$('joystick'+(index+1));pad.style.left=(e.clientX-r.left-56)+'px';pad.style.top=(e.clientY-r.top-56)+'px';pad.classList.add('steering');
 });
 arenaCanvas.addEventListener('pointermove',e=>{
  if(paused||!game||game.status!=='playing')return;
@@ -144,13 +144,13 @@ arenaCanvas.addEventListener('pointermove',e=>{
   else if(online||mode!=='duo')mouseAngle=renderer.aimAt(0,e.clientX-r.left,e.clientY-r.top);
   return;
  }
- const index=gestures.move(e);if(index!==null){const p=gestures.pointers.get(e.pointerId),r=arenaCanvas.getBoundingClientRect(),pad=$('joystick'+(index+1));pad.style.left=(p.x-r.left-22)+'px';pad.style.top=(p.y-r.top-22)+'px';pad.querySelector('i').style.transform='translate('+(Math.cos(p.angle||0)*8)+'px,'+(Math.sin(p.angle||0)*8)+'px)';}
+ const index=gestures.move(e);if(index!==null){const p=gestures.pointers.get(e.pointerId),r=arenaCanvas.getBoundingClientRect(),pad=$('joystick'+(index+1));pad.style.left=(p.x-r.left-56)+'px';pad.style.top=(p.y-r.top-56)+'px';pad.querySelector('i').style.transform='translate('+(gestures.mode==='joystick'?p.knobX:Math.cos(p.angle||0)*12)+'px,'+(gestures.mode==='joystick'?p.knobY:Math.sin(p.angle||0)*12)+'px)';}
 });
 for(const event of ['pointerup','pointercancel','lostpointercapture'])arenaCanvas.addEventListener(event,e=>{gestures.stop(e.pointerId);const index=mousePointers.get(e.pointerId);if(index!==undefined){controls[index].angle=null;mousePointers.delete(e.pointerId);}});
 window.addEventListener('resize',()=>renderer.resize());window.addEventListener('beforeunload',release);
 $('arenaModes').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)selectMode(b.dataset.mode);});$('arenaStart').onclick=()=>mode==='online'?createRoom():localStart();$('arenaJoin').onclick=async()=>{const button=$('arenaJoin');button.disabled=true;try{say('جاري الانضمام…');await connectRoom($('arenaCode').value.trim());}catch(e){say(e.message);}finally{button.disabled=false;}};$('arenaResume').onclick=async()=>{const old=saved();if(!old)return;selectMode('online');try{await connectRoom(old.code,old);}catch(e){say(e.message);}};
 $('arenaReady').onclick=()=>send({type:'ready',ready:!room?.players.find(p=>p.id===selfId)?.ready});$('arenaHostStart').onclick=()=>send({type:'start'});$('copyRoom').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);$('copyRoom').textContent='تم النسخ ✓';}catch{$('lobbyMessage').textContent='رمز الغرفة: '+room.code;}};
-$('arenaPlayers').addEventListener('change',limitBots);for(const id of ['lobbyBots','lobbyDifficulty'])$(id).addEventListener('change',()=>send({type:'configure',botCount:Number($('lobbyBots').value),difficulty:$('lobbyDifficulty').value}));
+$('arenaMatchMode').addEventListener('change',()=>show('durationField',$('arenaMatchMode').value==='timed'));$('arenaControl').addEventListener('change',()=>{gestures.mode=$('arenaControl').value;release();try{localStorage.setItem('bs-arena-control',gestures.mode)}catch{}});try{$('arenaControl').value=localStorage.getItem('bs-arena-control')==='swipe'?'swipe':'joystick'}catch{}$('arenaPlayers').addEventListener('change',limitBots);for(const id of ['lobbyBots','lobbyDifficulty','lobbyMatchMode','lobbyDuration'])$(id).addEventListener('change',()=>send({type:'configure',botCount:Number($('lobbyBots').value),difficulty:$('lobbyDifficulty').value,matchMode:$('lobbyMatchMode').value,duration:Number($('lobbyDuration').value)}));
 $('arenaInviteFriends').onclick=()=>{if(room?.status==='lobby')window.BS_SOCIAL?.openInvitePicker?.({game:'serpent',roomCode:room.code});};
 $('arenaShareRoom').onclick=async()=>{if(!room)return;const url=location.origin+'/serpent?room='+room.code;try{if(navigator.share)await navigator.share({title:'حلبة الثعبان',text:'تعال إلى غرفة المطاردة '+room.code,url});else{await navigator.clipboard.writeText(url);$('lobbyMessage').textContent='تم نسخ رابط الغرفة — أرسله لصديقك';}}catch(e){if(e.name!=='AbortError')$('lobbyMessage').textContent=url;}};
 $('arenaPause').onclick=()=>pause();$('arenaContinue').onclick=()=>pause(false);for(const id of ['arenaExit','arenaPauseExit','arenaResultExit','arenaLeaveLobby'])$(id).onclick=()=>quit();$('arenaAgain').onclick=()=>online?send({type:'rematch'}):localStart();$('arenaFullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('arenaPlay').requestFullscreen();renderer.resize();}catch{window.BS_PLATFORM?.toast?.('ملء الشاشة غير مدعوم في هذا المتصفح');}};

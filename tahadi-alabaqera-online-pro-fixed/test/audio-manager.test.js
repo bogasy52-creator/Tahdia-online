@@ -57,11 +57,17 @@ test('regular effects stay disabled when effects setting is off', async () => {
   assert.equal(started.length, 0);
 });
 
+test('consecutive dice rolls use different short samples without repeating the same clatter',async()=>{
+ const {api,played}=await loadAudio({muted:false,effects:true,timer:true,volume:1});
+ for(let i=0;i<8;i++)api.play('dice');
+ assert.ok(new Set(played).size>=4);assert.ok(played.every((src,i)=>!i||src!==played[i-1]));
+});
+
 test('board reactions use rendered foley instead of oscillator beeps', async () => {
   const names=['boardStep','boardLand','diceImpact','ladderIgnite','ladderStep','ladderLand','snakeHiss','snakeBite','snakeSwallow','snakeGrow','snakeRelease'];
   for(const name of names){
     const {api,started,played}=await loadAudio({muted:false,effects:true,timer:true,volume:1});
     api.play(name);
-    assert.ok(played.some(src=>src.includes('/arena-v9/')),`${name} uses a rendered foley sample`);assert.equal(started.length,0,'board effects must not fall back to electronic oscillator beeps');
+    assert.ok(played.some(src=>src.includes('/arena-v9/')||src.includes('/dice-v133/')),`${name} uses a rendered foley sample`);assert.equal(started.length,0,'board effects must not fall back to electronic oscillator beeps');
   }
 });

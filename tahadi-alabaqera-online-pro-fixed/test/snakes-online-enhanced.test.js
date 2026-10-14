@@ -16,6 +16,17 @@ async function makeBoard(variant='adventure'){
  return {env,board,entry,a,b,errors,socket,res};
 }
 
+test('a free board character is shared with peers and changing it resets readiness',async()=>{
+ const h=await makeBoard('classic');h.board.room.status='lobby';h.a.ready=true;
+ await h.board.webSocketMessage(h.socket(h.a),JSON.stringify({type:'character',character:'astronaut'}));
+ assert.equal(h.board.publicState(h.b.id).players[0].character,'astronaut');assert.equal(h.a.ready,false);
+ const version=h.board.room.version;
+ await h.board.webSocketMessage(h.socket(h.a),JSON.stringify({type:'character',character:'../../forged'}));
+ assert.equal(h.board.publicState(h.b.id).players[0].character,'astronaut');assert.equal(h.board.room.version,version);
+ h.board.room.status='playing';await h.board.webSocketMessage(h.socket(h.a),JSON.stringify({type:'character',character:'cat'}));
+ assert.equal(h.board.publicState(h.b.id).players[0].character,'astronaut');
+});
+
 test('creating an enhanced room keeps its rules in the API, lobby and initialized game',async()=>{
  const h=await makeBoard();
  assert.equal(h.res.data.variant,'adventure');

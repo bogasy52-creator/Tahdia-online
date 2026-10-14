@@ -16,7 +16,8 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='13.2.0';
+const RELEASE='13.3.0';
+const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['princess','fox','fairy','robot'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
@@ -378,12 +379,12 @@ export default {
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
-      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium';
-      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-playerLimit)||!['easy','medium','hard'].includes(difficulty)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
+      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed';
+      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-playerLimit)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
       for(let attempt=0;attempt<5;attempt++){
         const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
-        const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration,botCount,difficulty})});
-        if(response.status===201)return json({ok:true,code,hostKey,playerLimit,duration,botCount,difficulty});
+        const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration,botCount,difficulty,matchMode})});
+        if(response.status===201)return json({ok:true,code,hostKey,playerLimit,duration,botCount,difficulty,matchMode});
         if(response.status!==409)return json({ok:false,error:'تعذر تشغيل الحلبة؛ تأكد من نشر السيرفر الجديد'},503);
       }
       return json({ok:false,error:'تعذر إنشاء الحلبة الآن'},503);
@@ -1322,7 +1323,7 @@ export class BoardRoom extends DurableObject {
       startedAt: this.room.startedAt || null,
       players: this.room.order.map((id, index) => {
         const p = this.room.players[id];
-        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected) };
+        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected),...(this.room.game==='snakes'?{character:p.character||DEFAULT_BOARD_CHARACTERS[index]}:{}) };
       }),
       me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
       pendingRoll: this.room.pendingRoll,
@@ -1439,6 +1440,7 @@ export class BoardRoom extends DurableObject {
         player = this.addPlayer(name, "guest");
       } else if (name) player.name = name;
 
+      if(this.room.game==='snakes'&&this.room.status==='lobby'&&BOARD_CHARACTERS.includes(url.searchParams.get('character')))player.character=url.searchParams.get('character');
       if(request.headers.get('x-bs-account'))player.username=request.headers.get('x-bs-account');
       for (const old of this.ctx.getWebSockets()) {
         try { if (old.deserializeAttachment()?.playerId === player.id) old.close(4001, "reconnected"); } catch {}
@@ -1470,6 +1472,12 @@ export class BoardRoom extends DurableObject {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);
         return;
+      }
+      if(msg.type==='character'){
+        if(this.room.game!=='snakes'||this.room.status!=='lobby')return;
+        if(!BOARD_CHARACTERS.includes(msg.character))return this.sendError(ws,'اختر شخصية موجودة');
+        if(player.character===msg.character)return;
+        player.character=msg.character;player.ready=false;this.room.version++;return await this.saveAndBroadcast();
       }
       if (msg.type === "ready") {
         if (this.room.status !== "lobby") return;

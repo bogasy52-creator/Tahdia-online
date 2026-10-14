@@ -1,0 +1,20 @@
+/* Stable touch controls and illustrated pieces for the survival release. */
+.arena-play .arena-joystick{width:112px!important;height:112px!important;background:radial-gradient(circle,#214e4cc4,#0c282ca6)!important;border:1px solid #b4e9da75;box-shadow:inset 0 0 20px #050f1d66;opacity:.9!important}
+.arena-play .arena-joystick i{width:38px!important;height:38px!important;left:36px!important;top:36px!important;border-color:#e1e8b6;background:linear-gradient(135deg,#d5efbc,#6db6a8)!important;box-shadow:0 4px 12px #07182666}
+.arena-play[data-control=joystick] .arena-joystick:not(.steering):not(.hidden){display:block!important;right:22px!important;bottom:32px!important;left:auto!important;top:auto!important;opacity:.48}
+.arena-play[data-control=joystick][data-duo=true] #joystick1:not(.steering){bottom:calc(50% + 24px)!important}
+.arena-play[data-control=joystick] .arena-joystick.steering{right:auto!important;bottom:auto!important}
+.arena-play .hud-clock b{font-variant-numeric:tabular-nums}
+.character-pickers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.character-picker{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #64849b55;border-radius:14px;background:#12263e}
+.character-picker img{width:52px;height:63px;object-fit:contain;filter:drop-shadow(0 5px 4px #010a1666)}
+.character-picker label{min-width:0;flex:1;display:grid;gap:6px}
+.character-picker label>span{font-size:11px;color:#d2dfed}
+.character-picker select{width:100%;min-height:40px;background:#0c1c31;color:#e7efff;border:1px solid #6b84ab55;border-radius:8px;padding:7px;font:inherit;font-size:12px}
+.snake-token canvas[data-art=character],.start-token canvas[data-art=character],.snake-travel-pawn canvas[data-art=character]{filter:drop-shadow(0 3px 2px #04081270)!important}
+.snake-token canvas[data-art=character]{width:calc(var(--board-size,400px)*.102);height:calc(var(--board-size,400px)*.132);max-width:52px;max-height:68px}
+[data-piece-art=characters] .pawn-label,[data-piece-art=characters] .pawn-emblem{display:none!important}
+.dice-audio-field{grid-column:auto}
+@media(max-width:600px){.character-pickers{gap:8px}.character-picker{padding:8px;gap:7px}.character-picker img{width:42px;height:54px}.character-picker select{font-size:10px}.character-picker label>span{font-size:10px}}
+@media(orientation:landscape){.arena-play[data-control=joystick][data-duo=true] #joystick1:not(.steering){right:calc(50% + 22px)!important;bottom:26px!important}}
+@media(pointer:fine) and (min-width:801px){.arena-play[data-control=joystick] .arena-joystick:not(.steering){display:none!important}}

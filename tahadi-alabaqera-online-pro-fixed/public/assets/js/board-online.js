@@ -4,7 +4,8 @@ export class BoardOnlineClient {
     this.ws=null;this.code='';this.name='';this.hostKey='';this.token='';this.closedByUser=false;this.retry=0;this.reconnectTimer=null;this.version=null;
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
-  async create(name,playerLimit,{variant='classic'}={}){
+  async create(name,playerLimit,{variant='classic',character=''}={}){
+    this.character=character;
     const res=await fetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
     const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
@@ -18,7 +19,8 @@ export class BoardOnlineClient {
     if(this.game==='snakes'&&variant==='adventure'&&data.variant!=='adventure')throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
     this.hostKey=data.hostKey;return this.connect(data.code,name);
   }
-  async join(code,name){
+  async join(code,name,{character=''}={}){
+    this.character=character;
     code=String(code||'').replace(/\D/g,'').slice(0,6);if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
     const res=await fetch(`/api/board/rooms/${code}/status`);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
     return this.connect(code,name)
@@ -33,6 +35,7 @@ export class BoardOnlineClient {
     return new Promise((resolve,reject)=>{
       clearTimeout(this.reconnectTimer);const proto=location.protocol==='https:'?'wss:':'ws:';
       const q=new URLSearchParams({name:this.name,game:this.game});
+      if(this.game==='snakes'&&this.character)q.set('character',this.character);
       const protocols=['busraj-v1'];if(this.token)protocols.push(`rt.${this.token}`);if(this.hostKey)protocols.push(`hk.${this.hostKey}`);try{const account=localStorage.getItem('bs_social_session');if(account)protocols.push('st.'+account)}catch{}
       const ws=new WebSocket(`${proto}//${location.host}/api/board/rooms/${this.code}/ws?${q}`,protocols);this.ws=ws;let settled=false;
       const timer=setTimeout(()=>{if(!settled){settled=true;try{ws.close()}catch{};reject(new Error('انتهت مهلة الاتصال بالغرفة'))}},9000);

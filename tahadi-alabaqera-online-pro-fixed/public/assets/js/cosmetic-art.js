@@ -57,13 +57,13 @@
   for(const [x,y]of [[-18,-57],[15,-69],[40,-47]])ellipse(ctx,x,y,7,4,'#172331');ctx.restore();
  }
  function paintPawn(canvas,id,player=0){
-  if(root.BS_STONES?.draw(canvas,id,player))return;
+  if(root.BS_STONES?.draw(canvas,id,player,{style:document.documentElement.dataset.pieceArt==='original'?'original':'royal'}))return;
   const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
   if(['pawn-orb','pawn-crown'].includes(id)){ctx.filter=player===1?'hue-rotate(62deg)':player===2?'hue-rotate(155deg)':player===3?'hue-rotate(-105deg)':'none';const img=images[id==='pawn-orb'?'orb':'crown'];if(img.naturalWidth){const size=Math.min(canvas.width,canvas.height);ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,(canvas.width-size)/2,(canvas.height-size)/2,size,size);}return;}
   ctx.filter=player===2||player===3?'hue-rotate(-150deg)':'none';if(images.objects.naturalWidth)ctx.drawImage(images.objects,player%2?1400:785,60,480,690,0,0,canvas.width,canvas.height);
  }
  function pawn(ctx,item){
-  if(root.BS_STONES){const c=document.createElement('canvas');if(root.BS_STONES.draw(c,item.id,({'pawn-amethyst':1,'pawn-gold':2,'pawn-jade':3}[item.id]||0))){ctx.drawImage(c,192,20,216,300);return;}}
+  if(root.BS_STONES){const c=document.createElement('canvas');if(root.BS_STONES.draw(c,item.id,({'pawn-amethyst':1,'pawn-gold':2,'pawn-jade':3}[item.id]||0),{style:'royal'})){ctx.drawImage(c,192,20,216,300);return;}}
   if(['pawn-orb','pawn-crown'].includes(item.id)){const img=images[item.id==='pawn-orb'?'orb':'crown'];if(img.naturalWidth)ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,158,32,284,284);return;}
   const player={'pawn-amethyst':1,'pawn-gold':2,'pawn-jade':3}[item.id]||0;ctx.save();ctx.filter=(player===2||player===3?'hue-rotate(-150deg) ':'')+(root.BS_CAREER_CORE?.COSMETIC_STYLES?.[item.id]?.['--pawn-look']||'none');
   if(images.objects.naturalWidth)ctx.drawImage(images.objects,player%2?1400:785,60,480,690,200,28,200,288);ctx.restore();
