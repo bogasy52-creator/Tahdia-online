@@ -16,7 +16,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='13.4.0';
+const RELEASE='13.5.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -381,7 +381,7 @@ export default {
       const limited=await rateLimit(request,env,'serpent-quick',30,60000);if(limited)return limited;
       const body=await request.json().catch(()=>({})),auth=await authenticate(request,env);
       if(request.headers.has('authorization')&&!auth)return json({ok:false,error:'انتهت جلسة حسابك، سجل الدخول مجددًا'},401);
-      const stub=env.QUICK_ARENA.get(env.QUICK_ARENA.idFromName('queue:serpent:v134'));
+      const stub=env.QUICK_ARENA.get(env.QUICK_ARENA.idFromName('queue:serpent:v135'));
       return stub.fetch('https://quick.internal/serpent/join',{method:'POST',body:JSON.stringify({name:auth?.profile?.displayName||cleanName(body.name),username:auth?.username||null})});
     }
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){

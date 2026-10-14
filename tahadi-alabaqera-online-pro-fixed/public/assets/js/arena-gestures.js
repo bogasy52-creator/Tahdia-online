@@ -16,7 +16,7 @@ export class ArenaGestures {
    const angle=Math.atan2(dy,dx),difference=p.angle===null?Infinity:Math.abs(Math.atan2(Math.sin(angle-p.angle),Math.cos(angle-p.angle)));
    if(difference>.045){p.angle=angle;this.steer(p.index,angle);}return p.index;
   }
-  const dx=e.clientX-p.lastX,dy=e.clientY-p.lastY,d=Math.hypot(dx,dy);if(d<3)return p.index;
+  const dx=e.clientX-p.lastX,dy=e.clientY-p.lastY,d=Math.hypot(dx,dy);if(d<(this.mode==='free'?10:3))return p.index;
   p.angle=Math.atan2(dy,dx);p.lastX=e.clientX;p.lastY=e.clientY;
   this.steer(p.index,p.angle);
   p.x=e.clientX;p.y=e.clientY;return p.index;
