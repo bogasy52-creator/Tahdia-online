@@ -2,8 +2,8 @@
  'use strict';
  const api=window.BS_CAREER,core=window.BS_CAREER_CORE,$=id=>document.getElementById(id);
  const rarityNames={common:'أصلي',rare:'نادر',legendary:'أسطوري',exclusive:'حصري'};
- const typeNames={snake:'ثعبان',dice:'نرد',pawn:'حجر',board:'حلبة',table:'طاولة',trail:'أثر الحركة',victory:'احتفال',title:'لقب'};
- let filter='all',view=new URLSearchParams(location.search).get('view')==='missions'?'missions':'shop',pending=false,query='',sort='featured',rarity='all',inspected=null,returnFocus=null;
+ const typeNames={character:'شخصية',snake:'ثعبان',dice:'نرد',pawn:'حجر',board:'حلبة',table:'طاولة',trail:'أثر الحركة',victory:'احتفال',title:'لقب'};
+ let filter=new URLSearchParams(location.search).get('filter')==='character'?'character':'all',view=new URLSearchParams(location.search).get('view')==='missions'?'missions':'shop',pending=false,query='',sort='featured',rarity='all',inspected=null,returnFocus=null;
  const now=()=>api.now?.()||Date.now(),catalog=()=>api.catalog||[],profile=()=>api.get();
  function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
  function message(text){$('storeMessage').textContent=text}
@@ -20,10 +20,10 @@
   const box=node('div','cosmetic-preview');box.style.setProperty('--item-color',item.color);box.dataset.previewItem=item.id;style(box,item.id);
   box.appendChild(previewImage(item));return box;
  }
- function previewImage(item){const image=node('img','item-static-image');image.src='assets/previews/'+item.id+'.webp';image.alt=item.name;image.loading='lazy';image.decoding='async';image.width=840;image.height=504;return image;}
+ function previewImage(item){const image=node('img','item-static-image'+(item.type==='character'?' character-art':''));image.src=item.type==='character'?'assets/characters/'+item.asset+'.webp':'assets/previews/'+item.id+'.webp';image.alt=item.name;image.loading='lazy';image.decoding='async';image.width=item.type==='character'?300:840;image.height=item.type==='character'?380:504;return image;}
  async function operate(work,success){
-  if(pending)return;pending=true;message('جاري الحفظ…');render();
-  try{await work();message(success);window.BS_AUDIO?.play?.('reward')}
+  if(pending)return;const previousCharacter=profile().equipped.character;pending=true;message('جاري الحفظ…');render();
+  try{await work();if(profile().equipped.character!==previousCharacter){try{localStorage.setItem('bs-piece-art','characters')}catch{}document.documentElement.dataset.pieceArt='characters';window.dispatchEvent(new CustomEvent('bs-piece-art-change'));}message(success);window.BS_AUDIO?.play?.('reward')}
   catch(error){if(error.message==='price_changed')try{await api.refresh?.()}catch{}const labels={price_changed:'تغيّر سعر العرض. تم تحديثه؛ راجع السعر الجديد قبل الشراء.',insufficient_coins:'رصيدك غير كافٍ. اجمع مكافآت المهمات أولًا.',item_not_owned:'هذه الإضافة غير مملوكة.',objective_incomplete:'المهمة لم تكتمل بعد.',item_locked:'هذه الإضافة تُفتح بالإنجاز.',unauthorized:'سجّل الدخول مجددًا لحفظ العملية.'};message(labels[error.message]||'لم تكتمل العملية: '+error.message)}
   finally{pending=false;render()}
  }
@@ -95,7 +95,7 @@
   $('storeEmpty')?.classList.toggle('hidden',list.length>0);
   if($('storeResults'))$('storeResults').textContent=list.length+' إضافة'+(filter==='favorites'?' في مفضلتك':'');
  }
- function renderLoadout(p){const target=$('storeLoadout');if(!target)return;target.replaceChildren();for(const type of ['snake','pawn','board']){const item=catalog().find(i=>i.id===p.equipped[type]);if(!item)continue;const button=node('button','loadout-item');button.type='button';const image=previewImage(item),copy=node('span');image.loading='eager';copy.append(node('small',null,({snake:'ثعبانك الحالي',pawn:'حجرك الحالي',board:'حلبتك الحالية'})[type]),node('b',null,item.name));button.append(image,copy,node('span','loadout-arrow','←'));button.onclick=()=>{query='';rarity='all';if($('storeSearch'))$('storeSearch').value='';if($('storeRarity'))$('storeRarity').value='all';setView('inventory');filter=type;render();$('storeTabs')?.scrollIntoView?.({behavior:'smooth',block:'start'});};target.appendChild(button);}}
+ function renderLoadout(p){const target=$('storeLoadout');if(!target)return;target.replaceChildren();for(const type of ['snake','character','board']){const item=catalog().find(i=>i.id===p.equipped[type]);if(!item)continue;const button=node('button','loadout-item');button.type='button';const image=previewImage(item),copy=node('span');image.loading='eager';copy.append(node('small',null,({snake:'ثعبانك الحالي',pawn:'حجرك الحالي',character:'شخصيتك الحالية',board:'حلبتك الحالية'})[type]),node('b',null,item.name));button.append(image,copy,node('span','loadout-arrow','←'));button.onclick=()=>{query='';rarity='all';if($('storeSearch'))$('storeSearch').value='';if($('storeRarity'))$('storeRarity').value='all';setView('inventory');filter=type;render();$('storeTabs')?.scrollIntoView?.({behavior:'smooth',block:'start'});};target.appendChild(button);}}
  function render(){
   const p=profile();if(!Array.isArray(p.owned))return;const offer=core?.dailyOffer?.(now());
   if($('offerName')&&offer)$('offerName').textContent=catalog().find(i=>i.id===offer.id)?.name||'';

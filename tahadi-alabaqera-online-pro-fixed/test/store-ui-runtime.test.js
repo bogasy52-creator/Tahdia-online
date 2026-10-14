@@ -6,8 +6,12 @@ const now=Date.parse('2026-10-12T12:00:00Z');
 async function store(profile=Career.normalize({coins:1000})){const h=await createDOM('shop.html');await h.runFile('assets/js/profile-core.js');let p=profile,calls=0;h.context.BS_CAREER={get:()=>p,catalog:Career.CATALOG,now:()=>now,account:()=>null,access:()=>({role:'player'}),purchase:async id=>{calls++;await Promise.resolve();p=Career.purchase(p,id,{now})},equip:async id=>{p=Career.equip(p,id)},bundle:async id=>{calls++;await Promise.resolve();p=Career.purchaseBundle(p,id,{now})},claim:async id=>{calls++;await Promise.resolve();p=Career.claimObjective(p,id,{now})}};await h.runFile('assets/js/shop.js');return {...h,get:()=>p,calls:()=>calls}}
 test('store shows actual bundles, earning progress and only accessible catalogue entries',async()=>{
  const h=await store();assert.equal(h.doc.querySelectorAll('.bundle-card').length,3);assert.equal(h.doc.querySelectorAll('.mission-card').length,12);
- assert.equal(h.doc.querySelector('[data-item="title-manager"]'),null);assert.ok(h.doc.getElementById('collectionCount').textContent.includes('8'));
+ assert.equal(h.doc.querySelector('[data-item="title-manager"]'),null);assert.ok(h.doc.getElementById('collectionCount').textContent.startsWith('9 / '));assert.ok(h.doc.querySelector('[data-item="character-fox"]'));assert.ok(h.doc.querySelector('[data-item="character-princess"]'));
  h.doc.getElementById('storeViews').dispatchEvent({type:'click',target:h.doc.querySelector('[data-view="missions"]')});assert.equal(h.doc.getElementById('missionsView').classList.contains('hidden'),false);
+});
+test('equipping a purchased character switches an old original-stone preference to characters',async()=>{
+ const h=await store();h.storage.set('bs-piece-art','original');h.doc.querySelector('[data-item="character-princess"] .item-inspect').onclick();await h.doc.getElementById('itemAction').onclick();
+ assert.equal(h.get().equipped.character,'character-princess');assert.equal(h.storage.get('bs-piece-art'),'characters');
 });
 test('mission claim click credits once and updates the visible reward status',async()=>{
  let p=Career.normalize();for(let i=0;i<3;i++)p=Career.reward(p,{id:'ui:'+i,game:'snakes',win:true,now});const h=await store(p),button=h.doc.querySelector('[data-objective="daily-play"] button');

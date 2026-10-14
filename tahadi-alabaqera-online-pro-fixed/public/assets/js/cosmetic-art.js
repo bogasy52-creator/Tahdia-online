@@ -74,7 +74,8 @@
  }
  function paint(canvas,item,time=0){
   const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(canvas.width/600,0,0,canvas.height/360,0,0);ctx.clearRect(0,0,600,360);
-  if(item.type==='snake')serpent(ctx,item.id,time);
+  if(item.type==='character'&&root.BS_STONES){const sprite=document.createElement('canvas');root.BS_STONES.draw(sprite,item.id,0,{style:'characters',character:item.asset,preview:true});ctx.drawImage(sprite,192,20,216,300);}
+  else if(item.type==='snake')serpent(ctx,item.id,time);
   else if(item.type==='dice')die(ctx,item);
   else if(item.type==='pawn')pawn(ctx,item);
   else if(item.type==='board'||item.type==='table')board(ctx,item,item.type==='table');

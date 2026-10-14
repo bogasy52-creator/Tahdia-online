@@ -16,8 +16,8 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='13.3.0';
-const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['princess','fox','fairy','robot'];
+const RELEASE='13.4.0';
+const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
@@ -376,6 +376,14 @@ export default {
       }
     }
 
+    if(request.method==='POST'&&url.pathname==='/api/serpent/quick'){
+      if(!env.QUICK_ARENA||!env.ROOMS)return json({ok:false,error:'محرك المواجهات غير مفعّل'},503);
+      const limited=await rateLimit(request,env,'serpent-quick',30,60000);if(limited)return limited;
+      const body=await request.json().catch(()=>({})),auth=await authenticate(request,env);
+      if(request.headers.has('authorization')&&!auth)return json({ok:false,error:'انتهت جلسة حسابك، سجل الدخول مجددًا'},401);
+      const stub=env.QUICK_ARENA.get(env.QUICK_ARENA.idFromName('queue:serpent:v134'));
+      return stub.fetch('https://quick.internal/serpent/join',{method:'POST',body:JSON.stringify({name:auth?.profile?.displayName||cleanName(body.name),username:auth?.username||null})});
+    }
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
@@ -453,9 +461,9 @@ export default {
         const id = env.BOARD_ROOMS.idFromName(code);
         const stub = env.BOARD_ROOMS.get(id);
         if (suffix === "/ws") {
-          const headers=new Headers(request.headers);headers.delete('x-bs-account');
+          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
-          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth)headers.set('x-bs-account',auth.username)}
+          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));}}}
           return await stub.fetch(new Request(request,{headers}));
         }
         return await stub.fetch("https://board.internal/status");
@@ -1440,7 +1448,12 @@ export class BoardRoom extends DurableObject {
         player = this.addPlayer(name, "guest");
       } else if (name) player.name = name;
 
-      if(this.room.game==='snakes'&&this.room.status==='lobby'&&BOARD_CHARACTERS.includes(url.searchParams.get('character')))player.character=url.searchParams.get('character');
+      if(this.room.game==='snakes'){
+        let owned=[];try{owned=JSON.parse(request.headers.get('x-bs-characters')||'[]')}catch{}
+        player.allowedCharacters=['fox',...(Array.isArray(owned)?owned:[])].filter((id,index,list)=>BOARD_CHARACTERS.includes(id)&&list.indexOf(id)===index);
+        const requested=url.searchParams.get('character'),equipped=request.headers.get('x-bs-character');
+        if(this.room.status==='lobby')player.character=player.allowedCharacters.includes(equipped)?equipped:player.allowedCharacters.includes(requested)?requested:'fox';
+      }
       if(request.headers.get('x-bs-account'))player.username=request.headers.get('x-bs-account');
       for (const old of this.ctx.getWebSockets()) {
         try { if (old.deserializeAttachment()?.playerId === player.id) old.close(4001, "reconnected"); } catch {}
@@ -1475,7 +1488,7 @@ export class BoardRoom extends DurableObject {
       }
       if(msg.type==='character'){
         if(this.room.game!=='snakes'||this.room.status!=='lobby')return;
-        if(!BOARD_CHARACTERS.includes(msg.character))return this.sendError(ws,'اختر شخصية موجودة');
+        if(!BOARD_CHARACTERS.includes(msg.character)||!(player.allowedCharacters||['fox']).includes(msg.character))return this.sendError(ws,'اشترِ الشخصية وجهّزها من المتجر');
         if(player.character===msg.character)return;
         player.character=msg.character;player.ready=false;this.room.version++;return await this.saveAndBroadcast();
       }

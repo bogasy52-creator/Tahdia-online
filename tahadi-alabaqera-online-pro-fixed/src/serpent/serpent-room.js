@@ -18,10 +18,10 @@ export class SerpentRoom {
   for(const p of this.room.players)p.connected=ids.has(p.id);
  }
  async save(){if(this.room)await this.ctx.storage.put('serpent',this.room);}
- async schedule(){if(!this.room)return;const at=this.room.status==='finished'&&!this.room.rewardsComplete?Math.min(this.room.expiresAt,Date.now()+10_000):this.room.expiresAt;await this.ctx.storage.setAlarm(at);}
+ async schedule(){if(!this.room)return;const at=this.room.publicMatch&&this.room.status==='lobby'&&this.room.lobbyDeadline?Math.min(this.room.expiresAt,this.room.lobbyDeadline):this.room.status==='finished'&&!this.room.rewardsComplete?Math.min(this.room.expiresAt,Date.now()+10_000):this.room.expiresAt;await this.ctx.storage.setAlarm(at);}
  publicState(){
   if(!this.room)return null;const r=this.room;
-  return {code:r.code,status:r.status,round:r.round,playerLimit:r.playerLimit,botCount:r.botCount||0,difficulty:r.difficulty||'medium',duration:r.duration,matchMode:r.matchMode||'timed',rewardsComplete:r.rewardsComplete,players:r.players.map(({id,name,role,ready,connected,skin})=>({id,name,role,ready,connected,skin})),game:r.game?serpentSnapshot(r.game):null};
+  return {code:r.code,status:r.status,round:r.round,playerLimit:r.playerLimit,publicMatch:r.publicMatch===true,lobbyDeadline:r.lobbyDeadline||null,serverNow:Date.now(),botCount:r.botCount||0,difficulty:r.difficulty||'medium',duration:r.duration,matchMode:r.matchMode||'timed',rewardsComplete:r.rewardsComplete,players:r.players.map(({id,name,role,ready,connected,skin})=>({id,name,role,ready,connected,skin})),game:r.game?serpentSnapshot(r.game):null};
  }
  broadcast(full=false){const state=this.publicState();const packet=!full&&state?.status==='playing'&&this.lastFrame?.round===state.round&&this.lastFrame?.game?compactSerpentFrame(state,this.lastFrame):{type:'state',state};const payload=JSON.stringify(packet);this.lastFrame=state;for(const ws of this.ctx.getWebSockets())if(isOpen(ws))try{ws.send(payload)}catch{}}
  error(ws,message){try{ws.send(JSON.stringify({type:'error',message}))}catch{}}
@@ -33,7 +33,7 @@ export class SerpentRoom {
  tick(){
   if(this.room?.status!=='playing')return this.stop();this.syncConnections();
   if(!this.room.players.some(p=>p.connected))return this.stop();
-  const g=this.room.game;stepSerpent(g,.05);if(g.tick%2===0||g.status==='finished')this.broadcast();
+  const g=this.room.game;stepSerpent(g,.05);this.pendingEvents=[...(this.pendingEvents||[]),...g.events.map((e,i)=>({...e,eventId:g.tick+':'+i}))].slice(-64);if(g.tick%2===0||g.status==='finished'){g.events=this.pendingEvents;this.broadcast();this.pendingEvents=[];}
   if(g.status==='finished'){this.room.status='finished';this.stop();this.finishedWork=this.finish().catch(()=>this.schedule());this.ctx.waitUntil?.(this.finishedWork);return;}
   if(Date.now()-this.lastSave>=5000&&!this.saving){this.lastSave=Date.now();this.saving=this.save().finally(()=>{this.saving=null});this.ctx.waitUntil?.(this.saving);}
  }
@@ -56,10 +56,16 @@ export class SerpentRoom {
    if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);
    const count=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed';
    if(!Number.isInteger(count)||count<2||count>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-count)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration)||!/^\d{6}$/.test(body.code||'')||typeof body.hostKey!=='string'||body.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
-   this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',playerLimit:count,botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
+   this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'tail-guard',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
    await this.save();await this.schedule();return json({ok:true},201);
   }
   if(!this.room||this.room.expiresAt<=Date.now())return json({ok:false,error:'الغرفة غير موجودة أو انتهت'},404);
+  if(url.pathname==='/reserve'&&request.method==='POST'&&this.room.publicMatch){
+   if(this.room.status!=='lobby'||this.room.lobbyDeadline&&this.room.lobbyDeadline<=Date.now()||this.room.players.length>=this.room.playerLimit)return json({ok:false,error:'lobby_closed'},409);
+   const body=await request.json().catch(()=>({}));if(body.username&&this.room.players.some(p=>p.username===body.username))return json({ok:false,error:'أنت داخل هذا اللوبي بالفعل'},400);
+   const p=this.addPlayer(body.name,'guest',body.username||null);p.connected=false;p.ready=true;
+   this.room.lobbyDeadline??=Date.now()+15000;await this.save();await this.schedule();return json({ok:true,token:p.token,playerId:p.id,lobbyDeadline:this.room.lobbyDeadline},201);
+  }
   if(url.pathname==='/status')return json({ok:true,game:'serpent',code:this.room.code,status:this.room.status,players:this.room.players.length,playerLimit:this.room.playerLimit,botCount:this.room.botCount||0});
   if(url.pathname==='/ws')return this.connect(request,url);
   return json({ok:false,error:'not_found'},404);
@@ -69,6 +75,7 @@ export class SerpentRoom {
   const protocols=String(request.headers.get('sec-websocket-protocol')||'').split(',').map(s=>s.trim());if(!protocols.includes(PROTOCOL))return json({ok:false,error:'protocol_required'},426);
   const reconnect=protocols.find(s=>s.startsWith('rt.'))?.slice(3),hostKey=protocols.find(s=>s.startsWith('hk.'))?.slice(3),username=request.headers.get('x-bs-account')||null;
   let p=reconnect?this.room.players.find(p=>p.token===reconnect):null;
+  if(this.room.publicMatch&&!p)return json({ok:false,error:'ادخل من زر المواجهة السريعة'},403);
   if(!p&&hostKey===this.room.hostKey){p=this.room.players.find(p=>p.id===this.room.originalHost);if(!p&&this.room.players.length===0){p=this.addPlayer(url.searchParams.get('name'),'host',username);this.room.originalHost=p.id;}}
   if(!p){
    if(this.room.status!=='lobby')return json({ok:false,error:'المباراة بدأت؛ ارجع من جهازك السابق أو انتظر جولة جديدة'},409);
@@ -78,7 +85,7 @@ export class SerpentRoom {
    p=this.addPlayer(url.searchParams.get('name'),'guest',username);
   }
   if(username&&p.username&&username!==p.username)return json({ok:false,error:'account_mismatch'},403);
-  if(username)p.skin=request.headers.get('x-bs-skin')||'snake-wild';
+  if(username){p.username=username;p.skin=request.headers.get('x-bs-skin')||'snake-wild';}
   for(const old of this.ctx.getWebSockets())try{if(old.deserializeAttachment()?.playerId===p.id)old.close(4001,'reconnected')}catch{}
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];this.ctx.acceptWebSocket(server);server.serializeAttachment({serpent:true,playerId:p.id});
   p.connected=true;p.disconnectedAt=null;this.room.expiresAt=Date.now()+TTL;await this.save();await this.schedule();
@@ -103,10 +110,11 @@ export class SerpentRoom {
    steerSerpent(this.room.game,p.id,{angle:msg.angle,boost:msg.boost===true});this.run();return;
   }
   if(msg.type==='ready'&&this.room.status==='lobby'){p.ready=msg.ready===true;await this.save();this.broadcast();return;}
+  if(this.room.publicMatch&&['configure','start','rematch'].includes(msg.type))return this.error(ws,'المواجهة السريعة تبدأ تلقائيًا؛ اختر مواجهة جديدة بعد انتهائها');
   if(msg.type==='start'){
    if(p.role!=='host')return this.error(ws,'بدء الجولة للمضيف فقط');if(this.room.status!=='lobby')return;
    this.syncConnections();if(this.room.players.length!==this.room.playerLimit||!this.room.players.every(p=>p.ready&&p.connected))return this.error(ws,'انتظر اكتمال الغرفة وجاهزية الجميع');
-   this.room.round++;this.room.game=createSerpentGame(this.room.players,{matchMode:this.room.matchMode||'timed',duration:this.room.duration,difficulty:this.room.difficulty||'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount||0);this.room.status='playing';this.room.rewardsComplete=false;
+   this.room.round++;this.room.game=createSerpentGame(this.room.players,{collisionMode:this.room.collisionMode,matchMode:this.room.matchMode||'timed',duration:this.room.duration,difficulty:this.room.difficulty||'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount||0);this.room.status='playing';this.room.rewardsComplete=false;
    await this.save();await this.schedule();this.broadcast();this.run();return;
   }
   if(msg.type==='rematch'){
@@ -127,6 +135,11 @@ export class SerpentRoom {
  async webSocketError(ws){return this.webSocketClose(ws);}
  async alarm(){
   await this.ready;if(!this.room)return;
+  if(this.room.publicMatch&&this.room.status==='lobby'&&this.room.lobbyDeadline&&this.room.lobbyDeadline<=Date.now()){
+   this.syncConnections();this.room.players=this.room.players.filter(p=>p.connected);
+   if(!this.room.players.length){this.room.lobbyDeadline=null;this.room.expiresAt=Date.now()+60000;await this.save();await this.schedule();return;}
+   this.room.botCount=Math.max(0,this.room.playerLimit-this.room.players.length);this.room.round++;this.room.game=createSerpentGame(this.room.players,{collisionMode:'tail-guard',matchMode:'survival',difficulty:'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount);this.room.status='playing';this.room.rewardsComplete=false;await this.save();await this.schedule();this.broadcast(true);this.run();return;
+  }
   this.syncConnections();if(this.room.expiresAt<=Date.now()&&this.room.status==='playing'&&this.room.players.some(p=>p.connected)){this.room.expiresAt=Date.now()+TTL;await this.save();await this.schedule();return;}
   if(this.room.expiresAt<=Date.now()){this.stop();for(const ws of this.ctx.getWebSockets())try{ws.close(1000,'room_expired')}catch{}await this.ctx.storage.delete('serpent');await this.ctx.storage.deleteAlarm();this.room=null;return;}
   if(this.room.status==='finished'&&!this.room.rewardsComplete){try{await this.finish()}catch{await this.schedule()}}else await this.schedule();

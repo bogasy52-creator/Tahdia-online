@@ -1,4 +1,4 @@
-import {generatePuzzle,movePuzzle,memoryPair,shuffled,accuracyHit,logicQuestion} from './engines/arcade-engine.js?v=13.3.0';
+import {generatePuzzle,movePuzzle,memoryPair,shuffled,accuracyHit,logicQuestion} from './engines/arcade-engine.js?v=13.4.0';
 const game=document.body.dataset.arcade,$=id=>document.getElementById(id),now=()=>performance.now();
 let active=false,generation=0,receipt='',clock=null,delay=null,round=null;
 const readBest=()=>{try{return Number(localStorage.getItem('busraj-best-v6:'+game))||0}catch{return 0}};

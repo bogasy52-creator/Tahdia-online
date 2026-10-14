@@ -1,0 +1,20 @@
+.arena-modes{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.arena-modes [data-mode=quick]{border-color:#d7c18b;background:linear-gradient(145deg,#364e3e,#182d2d)}
+.arena-control-note{font-size:12px;color:#b8dfca;padding:12px;border:1px solid #668b7555;border-radius:12px}
+.arena-play[data-control=joystick] .arena-joystick:not(.hidden){pointer-events:auto!important;touch-action:none;display:block!important;right:22px!important;bottom:32px!important;left:auto!important;top:auto!important;opacity:.82!important;border:2px solid #d5e8bd88!important}
+.arena-play[data-control=joystick][data-duo=true] #joystick1{bottom:calc(50% + 24px)!important}
+.arena-play .arena-joystick.steering{box-shadow:0 0 24px #a0eacb35!important}
+.quick-lobby-banner{display:grid;justify-items:center;gap:8px;padding:25px;background:linear-gradient(145deg,#194e48,#182c3d);border:1px solid #c7d9a46b;border-radius:22px;margin-bottom:24px;color:#dbedc9}
+.quick-lobby-banner strong{font-size:74px;font-variant-numeric:tabular-nums;line-height:1}
+.quick-lobby-banner small{font-size:12px;color:#bbd4c8}
+.equipped-character-card{display:flex;align-items:center;gap:18px;margin:18px 0;padding:16px;background:#132a3d;border:1px solid #7895ac66;border-radius:16px}
+.equipped-character-card img{width:78px;height:100px;object-fit:contain}
+.equipped-character-card p{font-size:12px;line-height:1.8;color:#bbccdc;margin:6px 0}
+.equipped-character-card a{color:#e8cf8f;font-size:13px}
+.character-art{object-fit:contain!important;padding:10px!important;background:radial-gradient(ellipse,#263f5670,#091725)!important}
+.item-dialog-art .character-art{max-height:380px!important;width:100%!important}
+.arena-moment{position:absolute;top:112px;left:50%;transform:translateX(-50%);max-width:90%;padding:12px 22px;border:1px solid #ffe3a0;border-radius:14px;color:#fff3be;background:#183a35e8;box-shadow:0 0 35px #d7e77744;font-size:18px;font-weight:800;text-align:center;pointer-events:none;opacity:0;transition:opacity .16s;z-index:8}
+.arena-play #arenaMoment.show{opacity:1!important;color:#fff3be!important;background:#143c35f5!important}
+@media(orientation:landscape){.arena-play[data-control=joystick][data-duo=true] #joystick1{right:calc(50% + 22px)!important;bottom:26px!important}}
+@media(pointer:fine) and (min-width:801px){.arena-play[data-control=joystick] .arena-joystick:not(.hidden){display:none!important}}
+@media(prefers-reduced-motion:reduce){.arena-moment{transition:none}}

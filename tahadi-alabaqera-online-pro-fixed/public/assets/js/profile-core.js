@@ -2,6 +2,12 @@
 (function(root){
   'use strict';
   const CATALOG=Object.freeze([
+    {id:'character-fox',type:'character',name:'الثعلب',description:'شخصية البداية المجانية للثعابين والسلالم.',price:0,color:'#efa866',asset:'fox'},
+    {id:'character-cat',type:'character',name:'القطة الوردية',description:'قطة وردية مرسومة على قاعدة ذهبية.',price:150,color:'#ed9ec5',asset:'cat'},
+    {id:'character-robot',type:'character',name:'الروبوت',description:'روبوت صغير بتفاصيل معدنية مضيئة.',price:220,color:'#8bcbd6',asset:'robot'},
+    {id:'character-princess',type:'character',name:'الأميرة البنفسجية',description:'أميرة بفستان بنفسجي وتاج ذهبي.',price:300,color:'#c3a1ef',asset:'princess'},
+    {id:'character-fairy',type:'character',name:'جنيّة النعناع',description:'جنيّة بأجنحة وتفاصيل خضراء ناعمة.',price:380,color:'#9ee3c0',asset:'fairy'},
+    {id:'character-astronaut',type:'character',name:'رائدة الفضاء',description:'رائدة فضاء بخوذة لامعة على قاعدة ذهبية.',price:450,color:'#95c4ec',asset:'astronaut'},
     {id:'pawn-classic',type:'pawn',name:'الحجر الكلاسيكي',description:'كريستال مضيء على قاعدة معدنية.',price:0,color:'#e8e5db'},
     {id:'pawn-jade',type:'pawn',name:'حجر اليشم',description:'أخضر هادئ بلمسة حجرية.',price:120,color:'#55ba98'},
     {id:'pawn-onyx',type:'pawn',name:'حجر الأونيكس',description:'أسود مصقول بحافة ذهبية.',price:180,color:'#28313e'},
@@ -92,7 +98,7 @@
     raw=raw&&typeof raw==='object'?raw:{};
     const free=CATALOG.filter(i=>i.price===0&&!i.source).map(i=>i.id);
     const owned=[...new Set([...free,...(Array.isArray(raw.owned)?raw.owned:[])])].filter(id=>CATALOG.some(i=>i.id===id));
-    const equipped={pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player'};
+    const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player'};
     for(const [type,id] of Object.entries(raw.equipped||{}))if(owned.includes(id)&&CATALOG.some(i=>i.id===id&&i.type===type))equipped[type]=id;
     const xp=finite(raw.xp),rankedXP=finite(raw.rankedXP);
     return {version:11,dailyDay:String(raw.dailyDay||''),dailyStreak:Math.min(7,finite(raw.dailyStreak)),name:String(raw.name||'لاعب العباقرة').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,24)||'لاعب العباقرة',xp,rankedXP,coins:raw.coins==null?100:finite(raw.coins),wins:finite(raw.wins),losses:finite(raw.losses),games:finite(raw.games),rankedWins:finite(raw.rankedWins),rankedLosses:finite(raw.rankedLosses),level:Math.floor(xp/1000)+1,rank:rankedXP>=20000?'Diamond':rankedXP>=8000?'Gold':rankedXP>=2500?'Silver':'Bronze',owned,equipped,receipts:Array.isArray(raw.receipts)?raw.receipts.filter(x=>typeof x==='string').slice(-300):[],practiceDay:String(raw.practiceDay||''),practiceCount:finite(raw.practiceCount),missions:{daily:period(raw.missions?.daily),weekly:period(raw.missions?.weekly)},achievements:[...new Set(Array.isArray(raw.achievements)?raw.achievements:[])].filter(x=>OBJECTIVES.some(o=>o.id===x&&o.kind==='achievement'))};

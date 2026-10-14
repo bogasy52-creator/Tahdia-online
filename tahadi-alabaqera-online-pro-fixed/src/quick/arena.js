@@ -1,6 +1,7 @@
 import {CATEGORIES} from '../questions.js';
 import {createMatch,submitAnswer,advanceMatch,publicMatch} from './core.js';
 import {getSocialStub} from '../social/social-api.js';
+import {SerpentMatchmaker} from '../serpent/serpent-matchmaker.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -11,6 +12,7 @@ export function createQuickArenaClass(DurableObject){return class QuickArena ext
   constructor(ctx,env){super(ctx,env);this.ctx=ctx;this.env=env;this.match=null;ctx.blockConcurrencyWhile(async()=>{this.match=await ctx.storage.get('match')||null})}
   async fetch(request){
     const url=new URL(request.url),body=request.method==='POST'?await request.json().catch(()=>({})):{};
+    if(url.pathname==='/serpent/join'){this.serpentQueue??=new SerpentMatchmaker(this.ctx,this.env);return this.serpentQueue.join(body);}
     if(url.pathname==='/init')return this.ctx.blockConcurrencyWhile(async()=>{if(this.match)return json({ok:true});this.match=createMatch(body.players,shuffle(questionPool()).slice(0,10));try{await this.saveMatch()}catch(error){this.match=await this.ctx.storage.get('match')||null;throw error}return json({ok:true})});
     if(url.pathname==='/join')return this.join(body);
     if(url.pathname==='/ticket'||url.pathname==='/leave')return this.ticket(body,url.pathname==='/leave');
