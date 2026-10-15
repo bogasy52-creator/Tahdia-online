@@ -94,7 +94,7 @@ export function createSocialUserClass(DurableObject) {
     }
     if (url.pathname.startsWith('/career/')) {
       const action=url.pathname.split('/')[2];
-      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle'].includes(action)) return json({ok:false,error:'not_found'},404);
+      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle','cart'].includes(action)) return json({ok:false,error:'not_found'},404);
       if(action!=='verified' && !(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
       if(!this.profile)return json({ok:false,error:'account_not_found'},404);
       return this.ctx.blockConcurrencyWhile(async()=>{
@@ -107,6 +107,7 @@ export function createSocialUserClass(DurableObject) {
           if(action==='equip')career=Career.equip(career,body.id);
           if(action==='claim')career=Career.claimObjective(career,body.id);
           if(action==='bundle')career=Career.purchaseBundle(career,body.id,{expectedPrice:body.expectedPrice});
+          if(action==='cart')career=Career.purchaseCart(career,body.ids,{expectedPrice:body.expectedPrice,requestId:body.requestId});
           if(action==='rename'){career=Career.normalize({...career,name:body.name});this.profile.displayName=career.name;await this.ctx.storage.put('profile',this.profile);}
         }catch(e){return json({ok:false,error:e.message},400)}
         await this.ctx.storage.put('career',career);

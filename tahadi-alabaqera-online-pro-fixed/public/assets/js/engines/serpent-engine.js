@@ -33,7 +33,7 @@ export function createSerpentGame(players,options={}){
 }
 export function addSerpentBots(g,count){
  const add=clamp(Math.floor(Number(count)||0),0,10-g.snakes.length),total=g.snakes.length+add;
- for(let i=0;i<add;i++){const index=g.snakes.length;g.snakes.push(makeSnake(g,{id:'bot-'+index,name:['فهد','وميض','كوبرا','برق','طيف','شهاب','مرجان','صقر'][i%8],bot:true},index,total));}
+ for(let i=0;i<add;i++){const index=g.snakes.length;g.snakes.push(makeSnake(g,{id:'bot-'+index,skin:['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma'][i%6],name:['فهد','وميض','كوبرا','برق','طيف','شهاب','مرجان','صقر'][i%8],bot:true},index,total));}
  if(g.tick===0)g.snakes=g.snakes.map((s,i)=>makeSnake(g,s,i,total));
  return g;
 }

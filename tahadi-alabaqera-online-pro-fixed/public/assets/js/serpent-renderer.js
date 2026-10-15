@@ -1,4 +1,4 @@
-import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=13.5.0';
+import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=16.0.1';
 const lerp=(a,b,t)=>a+(b-a)*t;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const foodSprites=new Map();
@@ -29,6 +29,11 @@ export function resolveTrialSkin(catalog,search){
  return catalog.find(item=>item.id===id&&item.type==='snake'&&item.source!=='owner')||null;
 }
 
+export function arenaMapLayout(view,split=false,width=390){
+ const margin=width<480?12:16,top=split?108:width<480?120:130;
+ const room=view.h-top-46;if(room<44||view.w<150)return null;
+ const size=Math.min(width<650?80:104,view.w*.24,room);return {x:view.x+margin,y:view.y+top,size};
+}
 export class SerpentRenderer {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});
@@ -36,14 +41,17 @@ export class SerpentRenderer {
   this.cameras=new Map();this.inputs=new Map();this.poses=new Map();this.samples=new Map();
   this.effects=[];this.trails=[];this.lastDraw=0;
   this.seenEvents=new Set();this.momentTimer=null;
+  this.quality='auto';this.detailTier=0;this.frameMean=16;this.slowFor=0;this.stableFor=0;
   this.reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
   this.resize();
  }
  resize(){
   const r=this.canvas.getBoundingClientRect();this.width=Math.max(1,r.width);this.height=Math.max(1,r.height);
-  this.dpr=Math.min(window.devicePixelRatio||1,2);
+  this.dpr=Math.min(window.devicePixelRatio||1,this.quality==='fast'||this.quality==='auto'&&this.detailTier>=2?1:this.quality==='balanced'||this.quality==='auto'&&this.detailTier===1?1.5:2);
   this.canvas.width=Math.ceil(this.width*this.dpr);this.canvas.height=Math.ceil(this.height*this.dpr);
  }
+ setQuality(value){this.quality=['auto','high','balanced','fast'].includes(value)?value:'auto';this.detailTier=0;this.slowFor=0;this.stableFor=0;this.resize();}
+ sampleFrame(ms){if(this.quality!=='auto'||!Number.isFinite(ms)||ms<1||ms>120)return;this.frameMean=this.frameMean*.94+ms*.06;if(this.frameMean>25){this.slowFor+=ms;this.stableFor=0;}else{this.stableFor+=ms;this.slowFor=0;}if(this.slowFor>2400&&this.detailTier<2){this.detailTier++;this.slowFor=0;this.resize();}else if(this.stableFor>10000&&this.frameMean<19&&this.detailTier>0){this.detailTier--;this.stableFor=0;this.resize();}}
  reset(){this.cameras.clear();this.poses.clear();this.samples.clear();this.effects=[];this.trails=[];this.seenEvents.clear();clearTimeout(this.momentTimer);globalThis.document?.getElementById('arenaMoment')?.classList.remove('show');this.lastDraw=0;this.previous=null;this.game=null;this.online=false;}
  announce(text){const el=globalThis.document?.getElementById('arenaMoment');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(this.momentTimer);this.momentTimer=setTimeout(()=>el.classList.remove('show'),1700);}
  setGame(game,ids=[],online=false){
@@ -132,6 +140,7 @@ export class SerpentRenderer {
  }
  draw(now){
   if(!this.game||!this.game.snakes.length)return;
+  if(this.lastDraw)this.sampleFrame(now-this.lastDraw);
   const ctx=this.ctx,dt=this.lastDraw?clamp(now-this.lastDraw,0,80):16;
   this.lastDraw=now;this.frameBlend=1-Math.exp(-dt/95);this.updatePresentation(now,dt);
   ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.fillStyle='#071720';ctx.fillRect(0,0,this.width,this.height);
@@ -158,7 +167,7 @@ export class SerpentRenderer {
   const minX=camera.x-halfW,minY=camera.y-halfH,maxX=camera.x+halfW,maxY=camera.y+halfH;
   ctx.save();ctx.beginPath();ctx.rect(v.x,v.y,v.w,v.h);ctx.clip();
   const light=ctx.createRadialGradient(v.x+v.w*.45,v.y+v.h*.4,0,v.x+v.w*.5,v.y+v.h*.5,v.w*.7);
-  light.addColorStop(0,'#15383b');light.addColorStop(1,'#071720');ctx.fillStyle=light;ctx.fillRect(v.x,v.y,v.w,v.h);
+  light.addColorStop(0,'#1c374b');light.addColorStop(1,'#091424');ctx.fillStyle=light;ctx.fillRect(v.x,v.y,v.w,v.h);
   ctx.translate(v.x+v.w/2,v.y+v.h/2);ctx.scale(zoom,zoom);ctx.translate(-camera.x,-camera.y);
   ctx.strokeStyle='#75bbb31b';ctx.lineWidth=1/zoom;ctx.beginPath();
   for(let x=Math.max(0,Math.floor(minX/80)*80);x<=Math.min(g.width,maxX);x+=80){ctx.moveTo(x,Math.max(0,minY));ctx.lineTo(x,Math.min(g.height,maxY));}
@@ -179,11 +188,16 @@ export class SerpentRenderer {
   for(const raw of [...g.snakes].sort((a,b)=>Number(a.id===id)-Number(b.id===id))){
    if(!raw.alive)continue;
    const s=this.poses.get(raw.id)||this.interpolate(raw,now),radius=7+Math.sqrt(s.mass)*.55;
-   const stride=Math.max(1,Math.ceil(s.segments.length/(this.width<650?32:48))),points=[{x:s.x,y:s.y},...s.segments.filter((_p,i)=>i%stride===0)];if(points.at(-1)!==s.segments.at(-1))points.push(s.segments.at(-1));
+   const budget=this.quality==='fast'||this.quality==='auto'&&this.detailTier>=2?24:this.quality==='balanced'||this.quality==='auto'&&this.detailTier===1?48:96;
+   const stride=Math.max(1,Math.ceil(s.segments.length/budget)),points=[{x:s.x,y:s.y},...s.segments.filter((_p,i)=>i%stride===0)];if(points.at(-1)!==s.segments.at(-1))points.push(s.segments.at(-1));
    if(!points.some(p=>p.x>=minX-radius*3&&p.x<=maxX+radius*3&&p.y>=minY-radius*3&&p.y<=maxY+radius*3))continue;
    const index=g.snakes.findIndex(x=>x.id===s.id),variant=s.skin==='snake-wild'?index:0;
    ctx.save();
-   window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant);
+   window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant,budget);
+   if(g.collisionMode==='tail-guard'){
+    const tail=s.segments.slice(-8);ctx.save();ctx.strokeStyle='#ffdf88';ctx.lineWidth=6/zoom;ctx.shadowColor='#ffdf88';ctx.shadowBlur=this.reducedMotion?0:12;ctx.lineCap='round';ctx.beginPath();tail.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;
+    const end=tail.at(-1);if(end){ctx.strokeStyle=s.id===id?'#f4f5cf':'#f6c972';ctx.lineWidth=2/zoom;ctx.beginPath();ctx.arc(end.x,end.y,11/zoom,0,Math.PI*2);ctx.stroke();}ctx.restore();
+   }
    ctx.translate(s.x,s.y);ctx.rotate(s.angle);
    window.BS_COSMETIC_ART.head(ctx,s.skin,radius*1.55,variant);
    if(!this.reducedMotion&&Math.sin(now/125+index)>.7){ctx.strokeStyle='#f0a4af';ctx.lineWidth=1.15;ctx.beginPath();ctx.moveTo(radius*2.45,0);ctx.lineTo(radius*3.2,0);ctx.lineTo(radius*3.4,-radius*.15);ctx.moveTo(radius*3.2,0);ctx.lineTo(radius*3.4,radius*.15);ctx.stroke();}
@@ -192,7 +206,7 @@ export class SerpentRenderer {
     ctx.moveTo(radius*3.9,-radius*.45);ctx.lineTo(radius*4.3,0);ctx.lineTo(radius*3.9,radius*.45);ctx.stroke();
    }
    ctx.restore();
-   ctx.fillStyle=s.id===id?'#f0f4d5':'#b7d0c9';ctx.textAlign='center';ctx.font='600 11px Tahoma,Arial';
+   ctx.fillStyle=s.id===id?'#f0f4d5':'#b7d0c9';ctx.textAlign='center';ctx.font='600 '+11/zoom+'px Tahoma,Arial';
    ctx.fillText(s.name+(s.bot?' · BOT':''),s.x,s.y-radius*2.9);
   }
   for(const effect of this.effects){
@@ -212,20 +226,18 @@ export class SerpentRenderer {
    ctx.fillStyle='#0a242aca';ctx.fillRect(v.x+v.w/2-106,v.y+v.h-31,212,25);
    ctx.fillStyle=own.alive?'#e0ebd2':'#e6ae9e';ctx.font='11px Tahoma,Arial';ctx.textAlign='center';
    ctx.fillText(own.name+' · '+own.score+(own.alive?'':' · خارج الجولة'),v.x+v.w/2,v.y+v.h-14);
-  }else this.minimap(v,id);
+  }this.minimap(v,id);
  }
  minimap(v,id){
-  const ctx=this.ctx,g=this.game,size=this.width<650?80:104;
-  const x=v.x+v.w-size-20,y=v.y+v.h-size-(this.width<650?36:24);
-  ctx.save();ctx.fillStyle='#081d25da';ctx.fillRect(x,y,size,size);
-  ctx.strokeStyle='#82b6a783';ctx.lineWidth=1;ctx.strokeRect(x,y,size,size);
-  for(const s of g.snakes){
-   if(!s.alive)continue;
-   const sx=x+s.x/g.width*size,sy=y+s.y/g.height*size;
-   ctx.fillStyle=s.id===id?'#f3e8ad':s.bot?'#76b4a5':'#aeddec';
-   ctx.beginPath();ctx.arc(sx,sy,s.id===id?3.3:2,0,Math.PI*2);ctx.fill();
-   if(s.id===id){ctx.strokeStyle='#f3e8ad';ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+Math.cos(s.angle)*7,sy+Math.sin(s.angle)*7);ctx.stroke();}
+  if(this.mapVisible===false)return;const ctx=this.ctx,g=this.game;if(!g?.width||!g?.height)return;
+  const layout=arenaMapLayout(v,this.ids.length===2,this.width);if(!layout)return;const {size,x,y}=layout;
+  ctx.save();ctx.fillStyle='#101c36df';ctx.fillRect(x,y,size,size);ctx.strokeStyle='#7694c67a';ctx.lineWidth=1;ctx.strokeRect(x,y,size,size);
+  ctx.strokeStyle='#7090b525';for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(x+i*size/4,y);ctx.lineTo(x+i*size/4,y+size);ctx.moveTo(x,y+i*size/4);ctx.lineTo(x+size,y+i*size/4);ctx.stroke();}
+  for(const f of g.food){if(f.value<3||!Number.isFinite(f.x)||!Number.isFinite(f.y))continue;ctx.fillStyle=f.kind==='gem'?'#86f5fb':'#ffd27c';ctx.beginPath();ctx.arc(x+clamp(f.x/g.width,0,1)*size,y+clamp(f.y/g.height,0,1)*size,1.5,0,Math.PI*2);ctx.fill();}
+  for(const snake of g.snakes){if(!snake.alive)continue;const sx=x+clamp(snake.x/g.width,0,1)*size,sy=y+clamp(snake.y/g.height,0,1)*size;
+   ctx.fillStyle=snake.id===id?'#e2fbff':snake.bot?'#e8ae86':'#b6a4f7';ctx.beginPath();ctx.arc(sx,sy,snake.id===id?3.5:2.2,0,Math.PI*2);ctx.fill();
+   if(snake.id===id){ctx.strokeStyle='#69e3f4';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+Math.cos(snake.angle)*10,sy+Math.sin(snake.angle)*10);ctx.stroke();}
   }
-  ctx.fillStyle='#98b5ab';ctx.font='9px Tahoma,Arial';ctx.textAlign='center';ctx.fillText('الحلبة',x+size/2,y-8);ctx.restore();
+  ctx.fillStyle='#c3d9ee';ctx.font='11px Tahoma,Arial';ctx.textAlign='center';ctx.fillText('أنت والكنوز',x+size/2,y-9);ctx.restore();
  }
 }

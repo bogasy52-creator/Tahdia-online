@@ -101,7 +101,7 @@
     const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player'};
     for(const [type,id] of Object.entries(raw.equipped||{}))if(owned.includes(id)&&CATALOG.some(i=>i.id===id&&i.type===type))equipped[type]=id;
     const xp=finite(raw.xp),rankedXP=finite(raw.rankedXP);
-    return {version:11,dailyDay:String(raw.dailyDay||''),dailyStreak:Math.min(7,finite(raw.dailyStreak)),name:String(raw.name||'لاعب العباقرة').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,24)||'لاعب العباقرة',xp,rankedXP,coins:raw.coins==null?100:finite(raw.coins),wins:finite(raw.wins),losses:finite(raw.losses),games:finite(raw.games),rankedWins:finite(raw.rankedWins),rankedLosses:finite(raw.rankedLosses),level:Math.floor(xp/1000)+1,rank:rankedXP>=20000?'Diamond':rankedXP>=8000?'Gold':rankedXP>=2500?'Silver':'Bronze',owned,equipped,receipts:Array.isArray(raw.receipts)?raw.receipts.filter(x=>typeof x==='string').slice(-300):[],practiceDay:String(raw.practiceDay||''),practiceCount:finite(raw.practiceCount),missions:{daily:period(raw.missions?.daily),weekly:period(raw.missions?.weekly)},achievements:[...new Set(Array.isArray(raw.achievements)?raw.achievements:[])].filter(x=>OBJECTIVES.some(o=>o.id===x&&o.kind==='achievement'))};
+    return {version:12,dailyDay:String(raw.dailyDay||''),dailyStreak:Math.min(7,finite(raw.dailyStreak)),name:String(raw.name||'لاعب العباقرة').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,24)||'لاعب العباقرة',xp,rankedXP,coins:raw.coins==null?100:finite(raw.coins),wins:finite(raw.wins),losses:finite(raw.losses),games:finite(raw.games),rankedWins:finite(raw.rankedWins),rankedLosses:finite(raw.rankedLosses),level:Math.floor(xp/1000)+1,rank:rankedXP>=20000?'Diamond':rankedXP>=8000?'Gold':rankedXP>=2500?'Silver':'Bronze',owned,equipped,receipts:Array.isArray(raw.receipts)?raw.receipts.filter(x=>typeof x==='string').slice(-300):[],checkouts:Array.isArray(raw.checkouts)?raw.checkouts.slice(-60).filter(row=>row&&typeof row.id==='string'&&/^[a-zA-Z0-9_-]{16,80}$/.test(row.id)&&Array.isArray(row.ids)&&row.ids.length>0&&row.ids.length<=12&&row.ids.every(id=>CATALOG.some(item=>item.id===id))&&Number.isSafeInteger(row.price)&&row.price>=0).map(row=>({id:row.id,ids:[...row.ids],price:row.price})):[],practiceDay:String(raw.practiceDay||''),practiceCount:finite(raw.practiceCount),missions:{daily:period(raw.missions?.daily),weekly:period(raw.missions?.weekly)},achievements:[...new Set(Array.isArray(raw.achievements)?raw.achievements:[])].filter(x=>OBJECTIVES.some(o=>o.id===x&&o.kind==='achievement'))};
   }
   function reward(raw,{id,game,win=false,verified=false,now=Date.now()}={}){
     const p=normalize(raw),receipt=String(id||'').slice(0,160);
@@ -151,5 +151,24 @@
   function purchaseBundle(raw,id,{now=Date.now(),expectedPrice}={}){
     const p=normalize(raw),quote=bundleQuote(p,id,{now}),bundle=BUNDLES.find(b=>b.id===id);if(expectedPrice!=null&&expectedPrice!==quote.price)throw new Error('price_changed');if(p.coins<quote.price)throw new Error('insufficient_coins');p.coins-=quote.price;p.owned.push(...quote.missing);for(const id of bundle.items){const item=CATALOG.find(i=>i.id===id);p.equipped[item.type]=id}return normalize(p);
   }
-  root.BS_CAREER_CORE=Object.freeze({CATALOG,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle});
+  function cartQuote(raw,ids,{now=Date.now()}={}){
+    const p=normalize(raw);
+    if(!Array.isArray(ids)||ids.length<1||ids.length>12||new Set(ids).size!==ids.length)throw new Error('invalid_cart');
+    const items=ids.map(id=>{const item=CATALOG.find(item=>item.id===id);if(!item)throw new Error('item_not_found');const owned=p.owned.includes(id);if(item.source&&!owned)throw new Error('item_locked');return {id,type:item.type,price:owned?0:itemPrice(id,now),owned};});
+    return {items,price:items.reduce((sum,item)=>sum+item.price,0),missing:items.filter(item=>!item.owned).map(item=>item.id)};
+  }
+  function purchaseCart(raw,ids,{now=Date.now(),expectedPrice,requestId}={}){
+    const p=normalize(raw);
+    if(typeof requestId!=='string'||!/^[a-zA-Z0-9_-]{16,80}$/.test(requestId))throw new Error('invalid_checkout_id');
+    const previous=p.checkouts.find(row=>row.id===requestId);
+    if(previous){if(JSON.stringify(previous.ids)!==JSON.stringify(ids)||previous.price!==expectedPrice)throw new Error('checkout_conflict');return p;}
+    const quote=cartQuote(p,ids,{now});
+    if(!Number.isSafeInteger(expectedPrice)||expectedPrice<0||expectedPrice!==quote.price)throw new Error('price_changed');
+    if(p.coins<quote.price)throw new Error('insufficient_coins');
+    p.coins-=quote.price;p.owned.push(...quote.missing);
+    for(const item of quote.items)p.equipped[item.type]=item.id;
+    p.checkouts.push({id:requestId,ids:[...ids],price:quote.price});
+    return normalize(p);
+  }
+  root.BS_CAREER_CORE=Object.freeze({CATALOG,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
 })(globalThis);

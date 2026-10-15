@@ -15,11 +15,11 @@
  document.getElementById('proContinue').onclick=()=>setPaused(false);
  document.getElementById('proToSetup').onclick=()=>{setPaused(false);location.reload()};
  const game=document.getElementById('game');
- function syncFullscreenOverlays(){const target=document.fullscreenElement||document.webkitFullscreenElement;for(const el of [overlay,document.getElementById('winnerOverlay'),document.getElementById('privacy')]){if(!el)continue;if(target&&!target.contains(el))target.appendChild(el);else if(!target&&el.parentElement!==document.body)document.body.appendChild(el)}}
- document.addEventListener('fullscreenchange',syncFullscreenOverlays);document.addEventListener('webkitfullscreenchange',syncFullscreenOverlays);
+ function syncFullscreenOverlays(){const target=document.fullscreenElement||document.webkitFullscreenElement;for(const el of [overlay,document.getElementById('bonusOverlay'),document.getElementById('boardHelpDialog'),document.getElementById('boardHistoryDialog'),document.getElementById('bsSettings'),document.getElementById('winnerOverlay'),document.getElementById('privacy')]){if(!el)continue;if(target&&!target.contains(el))target.appendChild(el);else if(!target&&el.parentElement!==document.body)document.body.appendChild(el)}}
+ document.addEventListener('bs-ui-overlay',syncFullscreenOverlays);document.addEventListener('fullscreenchange',syncFullscreenOverlays);document.addEventListener('webkitfullscreenchange',syncFullscreenOverlays);
  if(game){
   const toolbar=game.querySelector('.game-toolbar'),pause=document.createElement('button');pause.className='bs-btn';pause.id='pauseMatch';pause.textContent='Ⅱ';pause.setAttribute('aria-label','إيقاف اللعب');pause.onclick=()=>{if(game.querySelector('#livebar:not(.hidden)'))return window.BS_PLATFORM.toast('المباراة أونلاين مستمرة — يمكنك فتح إعدادات الصوت');setPaused(true)};
-  (toolbar.querySelector('.toolbar-actions')||toolbar).appendChild(pause);
+  (toolbar?.querySelector('.toolbar-actions')||toolbar||game).appendChild(pause);
   const players=document.getElementById('players');
   if(players){const roster=document.createElement('div');roster.className='round-roster';roster.appendChild(players);const live=game.querySelector('#livebar');if(live)live.after(roster);else toolbar.after(roster)}
  }
@@ -61,8 +61,9 @@
  window.BS_PRO={get paused(){return paused},setPaused,waitForPlay:()=>paused?new Promise(resolve=>listeners.add(resolve)):Promise.resolve(),record,onlineResult,confetti,mountDaily,reduced:reduce};
  for(const target of document.querySelectorAll('[data-daily-gift]'))mountDaily(target);
  document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&game&&!game.classList.contains('hidden')){e.preventDefault();paused?setPaused(false):document.getElementById('pauseMatch').click()}
-  if(paused&&e.key==='Tab'){const buttons=overlay.querySelectorAll('button');if(e.shiftKey&&document.activeElement===buttons[0]){e.preventDefault();buttons[1].focus()}else if(!e.shiftKey&&document.activeElement===buttons[1]){e.preventDefault();buttons[0].focus()}}
+  const extraOverlay=['boardHelpDialog','boardHistoryDialog'].some(id=>{const element=document.getElementById(id);return element&&!element.classList.contains('hidden')});
+  if(e.key==='Escape'&&!e.repeat&&!extraOverlay&&game&&!game.classList.contains('hidden')){e.preventDefault();paused?setPaused(false):document.getElementById('pauseMatch').click()}
+  if(paused&&e.key==='Tab'){const buttons=[...overlay.querySelectorAll('button')];if(!buttons.includes(document.activeElement)){e.preventDefault();buttons[0].focus()}else if(e.shiftKey&&document.activeElement===buttons[0]){e.preventDefault();buttons[1].focus()}else if(!e.shiftKey&&document.activeElement===buttons[1]){e.preventDefault();buttons[0].focus()}}
  });
  for(const el of document.querySelectorAll('.snake-head-creature'))el.classList.add('idle');
 })();

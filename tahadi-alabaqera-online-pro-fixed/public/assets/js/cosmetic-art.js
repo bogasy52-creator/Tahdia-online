@@ -11,7 +11,7 @@
  });
  const images={},cache=new Map();
  const sources={cobra:'assets/arena/neon-cobra.webp',head:'assets/arena/serpent-head.png',objects:'assets/arena/objects.webp',orb:'assets/arena/pawn-orb.png',crown:'assets/arena/pawn-crown.png',board:'assets/arena/arena-plate.webp',table:'assets/arena/jackaroo-table.webp'};
- const ready=Promise.all(Object.entries(sources).map(([key,src])=>new Promise(resolve=>{const img=new Image();images[key]=img;img.onload=resolve;img.onerror=resolve;img.src=src;})));
+ const ready=Promise.all(Object.entries(sources).map(([key,src])=>new Promise(resolve=>{const img=new Image();images[key]=img;img.onload=resolve;img.onerror=resolve;if(root.BS_SERPENT_ART&&['head','cobra'].includes(key)){resolve();return;}img.src=src;}))).then(()=>root.BS_SERPENT_ART?.ready);
  const hues={'snake-wild':-92,'snake-aurora':55,'snake-gold':185,'snake-ice':-15,'snake-toxic':-125,'snake-plasma':28};
  function raster(id,variant=0){
   const key=id+':'+variant;if(cache.has(key))return cache.get(key);if(!images.head.naturalWidth||!images.cobra.naturalWidth)return null;
@@ -22,11 +22,13 @@
  const ellipse=(ctx,x,y,rx,ry,color)=>{ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();};
  function gradient(ctx,a,b,colors){const g=ctx.createLinearGradient(a[0],a[1],b[0],b[1]);colors.forEach((c,i)=>g.addColorStop(i/(colors.length-1),c));return g;}
  function head(ctx,id,size=34,variant=0){
+  if(root.BS_SERPENT_ART)return root.BS_SERPENT_ART.head(ctx,id,size,variant);
   const art=raster(id,variant);if(!art)return;
   ctx.save();ctx.shadowColor='#020e17';ctx.shadowBlur=size*.22;
   ctx.drawImage(art.face,-size*.85,-size*.91,size*2.55,size*1.821);ctx.restore();
  }
- function body(ctx,points,id,r=13,boost=false,variant=0){
+ function body(ctx,points,id,r=13,boost=false,variant=0,budget=80){
+  if(root.BS_SERPENT_ART)return root.BS_SERPENT_ART.body(ctx,points,id,r,boost,variant,budget);
   if(points.length<2)return;const p=SPECIES[id]||SPECIES['snake-wild'],art=raster(id,variant),n=points.length;
   const edges=points.map((a,i)=>{const prev=points[Math.max(0,i-1)],next=points[Math.min(n-1,i+1)],dx=prev.x-next.x,dy=prev.y-next.y,d=Math.hypot(dx,dy)||1,w=r*(.08+.92*Math.sqrt(1-i/(n-1)));return {x:a.x,y:a.y,nx:-dy/d,ny:dx/d,w};});
   const outline=()=>{ctx.beginPath();edges.forEach((e,i)=>{const x=e.x+e.nx*e.w,y=e.y+e.ny*e.w;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});for(const e of [...edges].reverse())ctx.lineTo(e.x-e.nx*e.w,e.y-e.ny*e.w);ctx.closePath();};
@@ -74,6 +76,7 @@
  }
  function paint(canvas,item,time=0){
   const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(canvas.width/600,0,0,canvas.height/360,0,0);ctx.clearRect(0,0,600,360);
+  if(item.type==='snake'&&root.BS_SERPENT_ART){root.BS_SERPENT_ART.preview(canvas,item.id,time);return;}
   if(item.type==='character'&&root.BS_STONES){const sprite=document.createElement('canvas');root.BS_STONES.draw(sprite,item.id,0,{style:'characters',character:item.asset,preview:true});ctx.drawImage(sprite,192,20,216,300);}
   else if(item.type==='snake')serpent(ctx,item.id,time);
   else if(item.type==='dice')die(ctx,item);
@@ -83,8 +86,8 @@
   else if(item.type==='victory'){ctx.fillStyle=item.color;ctx.textAlign='center';ctx.font='92px serif';ctx.fillText(item.id==='victory-royal'?'♛':item.id==='victory-aurora'?'✧':'✦',300,228);for(let i=0;i<12;i++){const a=i*Math.PI/6,r=82+i%3*12;ellipse(ctx,300+Math.cos(a)*r,170+Math.sin(a)*r,3,3,item.color);}}
   else{ctx.strokeStyle=item.color;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(130,128,340,95,15);ctx.stroke();ctx.fillStyle=item.color;ctx.font='700 31px sans-serif';ctx.textAlign='center';ctx.fillText(item.name,300,185,315);}
  }
- function mount(el,item,{live=false}={}){
-  const canvas=document.createElement('canvas');canvas.width=840;canvas.height=504;canvas.dataset.species=SPECIES[item.id]?.kind||item.type;canvas.setAttribute('aria-hidden','true');el.appendChild(canvas);paint(canvas,item);
+ function mount(el,item,{live=false,width=420}={}){
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=Math.round(width*.6);canvas.dataset.species=SPECIES[item.id]?.kind||item.type;canvas.setAttribute('aria-hidden','true');el.appendChild(canvas);paint(canvas,item);
   ready.then(()=>paint(canvas,item));
   if(live&&!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){let previous=0;const tick=now=>{if(!canvas.isConnected)return;if(!document.hidden&&canvas.getClientRects().length&&now-previous>60){paint(canvas,item,now/1000);previous=now;}root.requestAnimationFrame(tick);};root.requestAnimationFrame(tick);}
   return canvas;
