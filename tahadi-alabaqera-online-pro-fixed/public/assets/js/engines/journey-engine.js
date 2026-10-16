@@ -1,9 +1,14 @@
+import {createStrictPaths,moveStrictPaths,hintStrictPaths,restartStrictPaths,restoreStrictPaths,strictPathsStars}from './paths-v20.js';
+import {createSudoku,restoreSudoku,sudokuStars}from './sudoku-engine.js';
 /* Deterministic stages. The browser and the server replay the same moves. */
-import {restoreMatch3,match3Stars} from './match3-engine.js?v=18.0.0';
-export const GAMES = Object.freeze(['jewels', 'paths']);
+import {restoreMatch3,match3Stars} from './match3-engine.js?v=20.0.0';
+export const GAMES = Object.freeze(['jewels', 'paths', 'sudoku']);
 export const STAGE_COUNT = 60;
+export const STAGE_LIMITS=Object.freeze({jewels:60,paths:120,sudoku:120});
+export const stageCount=game=>STAGE_LIMITS[game]||0;
+export const totalStageCount=()=>Object.values(STAGE_LIMITS).reduce((a,b)=>a+b,0);
 export const CHAPTERS = Object.freeze(['بداية المغامرة', 'حديقة البلّور', 'بحيرة الضوء', 'قمم الشفق', 'قصر النجوم']);
-export const COLORS = Object.freeze(['#66e2c0', '#ffb96b', '#a99aff', '#ff799c', '#68bdff', '#f2df79', '#ffffff']);
+export const COLORS = Object.freeze(['#66e2c0', '#ffb96b', '#a99aff', '#ff799c', '#68bdff', '#f2df79', '#ffffff','#f28d65','#98ce5b']);
 export function dayKey(now = Date.now()) { return new Date(now + 10800000).toISOString().slice(0, 10); }
 function hash(value) { let n = 2166136261; for (const c of String(value)) n = Math.imul(n ^ c.charCodeAt(0), 16777619); return n >>> 0 || 1; }
 function next(state) { let n = state.seed; n ^= n << 13; n ^= n >>> 17; n ^= n << 5; state.seed = n >>> 0 || 1; return state.seed / 4294967296; }
@@ -12,8 +17,9 @@ export function adjacent(a, b, size, diagonal = false) {
   const dx = Math.abs(a % size - b % size), dy = Math.abs(Math.floor(a / size) - Math.floor(b / size));
   return diagonal ? dx <= 1 && dy <= 1 : dx + dy === 1;
 }
+export const chaptersFor=game=>game==='jewels'?CHAPTERS:[...CHAPTERS,'متاهة الضوء','الممرات الدقيقة','الحلقات العميقة','متاهة الخبير','قمة التحدي'];
 export function stageSpec(game, level = 1, daily = '') {
-  if (!GAMES.includes(game) || !Number.isInteger(level) || level < 1 || level > STAGE_COUNT || daily && !/^\d{4}-\d{2}-\d{2}$/.test(daily)) throw new Error('invalid_stage');
+  if (!GAMES.includes(game) || !Number.isInteger(level) || level < 1 || level > stageCount(game) || daily && !/^\d{4}-\d{2}-\d{2}$/.test(daily)) throw new Error('invalid_stage');
   const number = daily ? 19 + hash(daily + game) % 30 : level;
   return { game, level, daily, number, seed: hash('tahdia-17:' + game + ':' + (daily || level)), chapter: Math.floor((level - 1) / 12) };
 }
@@ -60,8 +66,8 @@ export function moveJewels(raw, path) {
   state.over = state.won || state.moves >= state.limit; ensureMove(state);
   return { state, accepted: true, cleared: [...cleared], bonus };
 }
-export function createPaths(level = 1, daily = '') {
-  const spec = stageSpec('paths', level, daily), size = spec.number < 13 ? 5 : spec.number < 37 ? 6 : 7;
+export function createLegacyPaths(level = 1, daily = '') {
+  if(level>60)throw Error('invalid_stage');const spec = stageSpec('paths', level, daily), size = spec.number < 13 ? 5 : spec.number < 37 ? 6 : 7;
   const state = { ...spec, size, pairs: [], paths: {}, solution: [], moves: 0, hints: 0, won: false, log: [] };
   let walk = Array.from({ length: size * size }, (_, i) => Math.floor(i / size) * size + (Math.floor(i / size) % 2 ? size - 1 - i % size : i % size));
   // Backbite mixing preserves a Hamiltonian walk: every puzzle has a full-cover solution.
@@ -80,7 +86,7 @@ export function createPaths(level = 1, daily = '') {
   }
   return state;
 }
-export function movePaths(raw, color, path) {
+function moveLegacyPaths(raw, color, path) {
   if (!raw || raw.won || !Number.isInteger(color) || !raw.pairs[color] || !Array.isArray(path) || path.length < 2 || path.length > raw.size * raw.size || new Set(path).size !== path.length) return { state: raw, accepted: false };
   const pair = raw.pairs[color], blocked = new Set(Object.entries(raw.paths).filter(([key]) => Number(key) !== color).flatMap(([, value]) => value));
   const endpoints = new Set(raw.pairs.filter((_, i) => i !== color).flat());
@@ -93,7 +99,7 @@ export function clearPath(raw, color) {
   if (raw.won || !Number.isInteger(color) || !raw.pairs[color]) return raw;
   const state = structuredClone(raw); delete state.paths[color]; state.log.push({ clear: color }); return state;
 }
-export function hintPaths(raw) {
+function hintLegacyPaths(raw) {
   if (raw.won || raw.hints >= 3) return { state: raw, accepted: false };
   const state = structuredClone(raw), color = state.pairs.findIndex((_, i) => JSON.stringify(state.paths[i]) !== JSON.stringify(state.solution[i]));
   if (color < 0) return { state: raw, accepted: false };
@@ -103,17 +109,26 @@ export function hintPaths(raw) {
   state.won = Object.keys(state.paths).length === state.pairs.length && new Set(Object.values(state.paths).flat()).size === state.size * state.size;
   return { state, accepted: true };
 }
+export const createPaths=createStrictPaths;
+export const restartPaths=restartStrictPaths;
+export const restorePaths=restoreStrictPaths;
+export function movePaths(raw,color,path){return raw?.engineVersion===3?moveStrictPaths(raw,color,path):moveLegacyPaths(raw,color,path);}
+export function hintPaths(raw){return raw?.engineVersion===3?hintStrictPaths(raw):hintLegacyPaths(raw);}
 export function starsFor(state) {
   if (!state?.won) return 0;
+  if(state.engineVersion===4)return sudokuStars(state);
+  if(state.engineVersion===3)return strictPathsStars(state);
   if (state.engineVersion === 2) return match3Stars(state);
   if (state.game === 'jewels') return state.moves <= 10 ? 3 : state.moves <= 15 ? 2 : 1;
   return state.hints === 0 && state.moves <= state.pairs.length + 2 ? 3 : state.hints <= 1 ? 2 : 1;
 }
 export function replayProof(proof) {
+  if(proof?.engineVersion===4){const state=restoreSudoku(proof,{requireWin:true});return {state,stars:sudokuStars(state)};}
+  if(proof?.engineVersion===3){const state=restoreStrictPaths(proof,{requireWin:true});return {state,stars:strictPathsStars(state)};}
   if (proof?.engineVersion === 2) { const state=restoreMatch3(proof,{requireWin:true}); return {state,stars:match3Stars(state)}; }
   if (proof?.engineVersion != null) throw new Error('invalid_proof');
-  if (!proof || !GAMES.includes(proof.game) || !Number.isInteger(proof.level) || proof.level < 1 || proof.level > STAGE_COUNT || !Array.isArray(proof.log) || proof.log.length > (proof.game === 'jewels' ? 20 : 180)) throw new Error('invalid_proof');
-  let state = proof.game === 'jewels' ? createJewels(proof.level, proof.daily || '') : createPaths(proof.level, proof.daily || '');
+  if (!proof || !['jewels','paths'].includes(proof.game) || !Number.isInteger(proof.level) || proof.level < 1 || proof.level > STAGE_COUNT || !Array.isArray(proof.log) || proof.log.length > (proof.game === 'jewels' ? 20 : 180)) throw new Error('invalid_proof');
+  let state = proof.game === 'jewels' ? createJewels(proof.level, proof.daily || '') : createLegacyPaths(proof.level, proof.daily || '');
   for (const row of proof.log) {
     if (state.won) throw new Error('moves_after_finish');
     if (proof.game === 'paths' && Number.isInteger(row?.clear)) { state = clearPath(state, row.clear); continue; }
@@ -125,11 +140,11 @@ export function replayProof(proof) {
 }
 const cleanStars = value => Number.isInteger(value) && value >= 1 && value <= 3 ? value : 0;
 export function normalizeJourney(raw = {}) {
-  const stages = Object.fromEntries(GAMES.map(game => [game, Object.fromEntries(Object.entries(raw?.stages?.[game] || {}).filter(([key, value]) => /^\d+$/.test(key) && +key >= 1 && +key <= STAGE_COUNT && cleanStars(value)).map(([key, value]) => [key, cleanStars(value)]))]));
+  const stages = Object.fromEntries(GAMES.map(game => [game, Object.fromEntries(Object.entries(raw?.stages?.[game] || {}).filter(([key, value]) => /^\d+$/.test(key) && +key >= 1 && +key <= stageCount(game) && cleanStars(value)).map(([key, value]) => [key, cleanStars(value)]))]));
   const daily = Object.fromEntries(Object.entries(raw?.daily || {}).filter(([key, value]) => /^\d{4}-\d{2}-\d{2}$/.test(key) && value && typeof value === 'object').sort(([a], [b]) => a.localeCompare(b)).slice(-35).map(([key, value]) => [key, Object.fromEntries(GAMES.filter(game => cleanStars(value[game])).map(game => [game, cleanStars(value[game])]))]));
   return { version: 1, stages, daily };
 }
-export function nextStage(progress, game) { const p = normalizeJourney(progress); for (let i = 1; i <= STAGE_COUNT; i++) if (!p.stages[game]?.[i]) return i; return STAGE_COUNT; }
+export function nextStage(progress, game) { const p = normalizeJourney(progress); for (let i = 1; i <= stageCount(game); i++) if (!p.stages[game]?.[i]) return i; return stageCount(game); }
 export function commitJourney(raw, proof, { now = Date.now() } = {}) {
   const progress = normalizeJourney(raw);
   if (proof?.daily && proof.daily !== dayKey(now) && proof.daily !== dayKey(now - 86400000)) throw new Error('daily_expired');

@@ -1,10 +1,10 @@
-import {STAGE_COUNT,CHAPTERS,COLORS,dayKey,createPaths,movePaths,clearPath,hintPaths,adjacent,starsFor,nextStage} from './engines/journey-engine.js?v=18.0.0';
-import {createMatch3,moveMatch3,restoreMatch3,legalSwaps,BOOST_COST,MATCH3_VERSION} from './engines/match3-engine.js?v=18.0.0';
-import * as progress from './journey-client.js?v=18.0.0';
-import {BoardRenderer} from './match3-renderer.js?v=18.0.0';
+import {STAGE_COUNT,CHAPTERS,stageCount,totalStageCount,chaptersFor,restorePaths,restartPaths,COLORS,dayKey,createPaths,movePaths,clearPath,hintPaths,adjacent,starsFor,nextStage} from './engines/journey-engine.js?v=20.0.0';
+import {createMatch3,moveMatch3,restoreMatch3,legalSwaps,BOOST_COST,MATCH3_VERSION} from './engines/match3-engine.js?v=20.0.0';
+import * as progress from './journey-client.js?v=20.0.0';
+import {BoardRenderer} from './match3-renderer.js?v=20.0.0';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),names={jewels:'ماستر الجواهر',paths:'مسارات الألوان'};
 const play=$('journeyPlay'),canvas=$('stageCanvas'),workspace=document.querySelector('.stage-workspace'),topbar=document.querySelector('.stage-topbar');
-let game=params.get('game')==='paths'?'paths':'jewels',chapter=Math.floor((nextStage(progress.get(),game)-1)/12),state=null,selected=[],pointer=null,cursor=0,saving=false,busy=false,boosting=false,lastDaily=progress.today(),initialAccount='',roundVersion=0,resumeTimer=0,hubDirty=false,dragStart=-1,lastCell=-1,dragMoved=false,blocked=new Set(),endpoints=new Set();
+let game=params.get('game')==='paths'?'paths':'jewels',chapter=Math.floor((nextStage(progress.get(),game)-1)/12),state=null,selected=[],pointer=null,cursor=0,saving=false,busy=false,boosting=false,lastDaily=progress.today(),initialAccount='',roundVersion=0,resumeTimer=0,hubDirty=false,dragStart=-1,lastCell=-1,dragMoved=false,pathGestureMoved=false,blocked=new Set(),endpoints=new Set();
 const now=()=>window.BS_CAREER?.now?.()||Date.now(),account=()=>window.BS_CAREER?.account?.()||'guest';
 const renderer=new BoardRenderer(canvas,{reduced:()=>!!$('stageFast').checked||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches});
 try{$('stageFast').checked=localStorage.getItem('tahdia-quick-motion')==='1';}catch{}
@@ -22,29 +22,31 @@ function render() {
   if(play.open){hubDirty=true;return;}hubDirty=false;
   const p=progress.get(),stats=progress.stats(),day=progress.today();
   $('journeyMilestoneCopy').textContent=stats.stars<30?'باقي '+(30-stats.stars)+' نجمة وتفتح لقب صائد النجوم':stats.stars<120?'فتحت صائد النجوم · باقي '+(120-stats.stars)+' نجمة للقب سيّد المسارات':'✓ فتحت لقبي صائد النجوم وسيّد المسارات · جهّز لقبك في المتجر';
-  $('journeyStars').textContent=stats.stars;$('journeyCompleted').textContent=stats.completed+' / 120';$('journeyStreak').textContent=stats.streak;
+  $('journeyStars').textContent=stats.stars;$('journeyCompleted').textContent=stats.completed+' / '+totalStageCount();$('journeyStreak').textContent=stats.streak;
   $('dailyDate').textContent=new Intl.DateTimeFormat('ar-SA',{weekday:'long',day:'numeric',month:'long',calendar:'gregory',timeZone:'Asia/Riyadh'}).format(new Date(now()));
   $('dailyJewelsStatus').textContent=p.daily[day]?.jewels?'✓ اكتمل · '+p.daily[day].jewels+' نجوم · تقدر تحسّنها':'بدّل وطابق واجمع الهدف · لوحة اليوم للجميع';
+  $('sudokuCampaignProgress').textContent=Object.keys(p.stages.sudoku).length+' / 120 مرحلة';
+  $('dailySudokuStatus').textContent=p.daily[day]?.sudoku?'✓ اكتمل · '+p.daily[day].sudoku+' نجوم':'لغز يتجدد يوميًا · حل واحد';
   $('dailyPathsStatus').textContent=p.daily[day]?.paths?'✓ اكتمل · '+p.daily[day].paths+' نجوم · تقدر تحسّنها':'وصّل كل الأزواج وغطّ اللوحة';
-  const week=$('journeyWeek');week.replaceChildren();for(let i=6;i>=0;i--){const date=dayKey(now()-i*86400000),done=Object.keys(p.daily[date]||{}).length,el=document.createElement('span');el.className=done?'done':'';el.textContent=done?'✦':i===0?'اليوم':new Intl.DateTimeFormat('ar-SA',{weekday:'short',timeZone:'Asia/Riyadh'}).format(new Date(now()-i*86400000));el.title=date+' · '+done+' / 2';if(i===0)el.setAttribute('aria-current','date');week.appendChild(el);}
-  for(const id of Object.keys(names))$(id+'Progress').textContent=Object.keys(p.stages[id]).length+' / 60 مرحلة';
+  const week=$('journeyWeek');week.replaceChildren();for(let i=6;i>=0;i--){const date=dayKey(now()-i*86400000),done=Object.keys(p.daily[date]||{}).length,el=document.createElement('span');el.className=done?'done':'';el.textContent=done?'✦':i===0?'اليوم':new Intl.DateTimeFormat('ar-SA',{weekday:'short',timeZone:'Asia/Riyadh'}).format(new Date(now()-i*86400000));el.title=date+' · '+done+' / 3';if(i===0)el.setAttribute('aria-current','date');week.appendChild(el);}
+  for(const id of Object.keys(names))$(id+'Progress').textContent=Object.keys(p.stages[id]).length+' / '+stageCount(id)+' مرحلة';
   document.querySelectorAll('[data-game]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.game===game)));
-  $('chapterNumber').textContent='العالم '+(chapter+1)+' / 5';$('chapterTitle').textContent=CHAPTERS[chapter];
-  const chapters=$('journeyChapters');chapters.replaceChildren();CHAPTERS.forEach((name,i)=>{const button=document.createElement('button');button.textContent=(i+1)+' · '+name;button.disabled=i>Math.floor((nextStage(p,game)-1)/12);button.setAttribute('aria-pressed',String(i===chapter));button.onclick=()=>{chapter=i;render();};chapters.appendChild(button);});
+  const chapterNames=chaptersFor(game);chapter=Math.min(chapter,chapterNames.length-1);$('chapterNumber').textContent='العالم '+(chapter+1)+' / '+chapterNames.length;$('chapterTitle').textContent=chapterNames[chapter];
+  const chapters=$('journeyChapters');chapters.replaceChildren();chapterNames.forEach((name,i)=>{const button=document.createElement('button');button.textContent=(i+1)+' · '+name;button.disabled=i>Math.floor((nextStage(p,game)-1)/12);button.setAttribute('aria-pressed',String(i===chapter));button.onclick=()=>{chapter=i;render();};chapters.appendChild(button);});
   const map=$('journeyMap');map.replaceChildren();for(let level=chapter*12+1;level<=chapter*12+12;level++){const button=document.createElement('button'),stars=p.stages[game][level]||0,locked=level>nextStage(p,game);button.className='journey-stage'+(stars?' complete':'')+(level===nextStage(p,game)?' current':'');button.disabled=locked;button.innerHTML='<span class="stage-number"></span><span class="stage-node-stars" aria-hidden="true"></span>';button.firstChild.textContent=locked?'⌑':level;button.lastChild.textContent=stars?'★'.repeat(stars)+'☆'.repeat(3-stars):'☆☆☆';button.setAttribute('aria-label','المرحلة '+level+(locked?' مغلقة':stars?'، '+stars+' نجوم':'، متاحة'));button.onclick=()=>openStage(level);map.appendChild(button);}
   $('journeyContinue').textContent='كمّل المرحلة '+nextStage(p,game)+' ←';
-  $('journeyGuide').textContent=game==='jewels'?'بدّل جوهرتين متجاورتين. طابق 3 أو أكثر؛ أربع تصنع سهمًا وخمس تصنع برقًا، وT أو L تصنع قنبلة.':'وصّل الدوائر ذات الرقم نفسه، بدون تقاطع. لازم المسارات تغطي كل مربعات اللوحة.';
+  $('journeyGuide').textContent=game==='jewels'?'بدّل جوهرتين متجاورتين. طابق 3 أو أكثر؛ أربع تصنع سهمًا وخمس تصنع برقًا، وT أو L تصنع قنبلة.':'خطأ واحد يعيد المرحلة. وصّل الأرقام المتماثلة، وغطّ كل المربعات المتاحة. المراحل المتقدمة فيها حواجز ونقاط عبور.';
   $('journeySaveStatus').textContent=window.BS_CAREER?.account?.()?(progress.pendingCount()?'محفوظ على الجهاز · '+progress.pendingCount()+' نتائج تنتظر المزامنة':'محفوظ في حسابك وعلى هذا الجهاز'):'محفوظ على هذا الجهاز · سجّل دخولك للمزامنة';
 }
 function meters(){
   if(!state)return;
   const jewel=game==='jewels';
   text('meterOneLabel',jewel?'الحركات المتبقية':'مسارات مكتملة');text('stageMoves',jewel?state.limit-state.moves:Object.keys(state.paths).length+' / '+state.pairs.length);
-  text('meterTwoLabel',jewel?'الجواهر المطلوبة':'تغطية اللوحة');text('stageGoal',jewel?Math.min(state.collected,state.goal)+' / '+state.goal:Math.round(new Set(Object.values(state.paths).flat()).size/(state.size*state.size)*100)+'%');
-  text('meterThreeLabel',jewel?(state.iceGoal?'كسر الجليد':'النجوم الزرقاء'):'التلميحات');text('stageColor',jewel?(state.iceGoal?state.iceCleared+' / '+state.iceGoal:Math.min(state.colorCount,state.colorGoal)+' / '+state.colorGoal):state.hints+' / 3');
+  text('meterTwoLabel',jewel?'الجواهر المطلوبة':'تغطية اللوحة');text('stageGoal',jewel?Math.min(state.collected,state.goal)+' / '+state.goal:Math.round(new Set(Object.values(state.paths).flat()).size/((state.size*state.size-(state.walls?.length||0)))*100)+'%');
+  text('meterThreeLabel',jewel?(state.iceGoal?'كسر الجليد':'النجوم الزرقاء'):'الإعادات');text('stageColor',jewel?(state.iceGoal?state.iceCleared+' / '+state.iceGoal:Math.min(state.colorCount,state.colorGoal)+' / '+state.colorGoal):state.restarts||0);
   text('stageScore',jewel?state.score:state.moves);text('stageScoreLabel',jewel?'نقطة':'حركة');
   $('stageBoosterWrap').classList.toggle('hidden',!jewel);$('stageCommit').classList.toggle('hidden',jewel);
-  text('stageCommit','ثبّت المسار');$('stageCommit').disabled=busy||selected.length<2;
+  text('stageCommit','ثبّت المسار');text('stageHint',game==='paths'?'تلميح '+state.hints+' / 3':'تلميح');$('stageCommit').disabled=busy||selected.length<2;
   $('stageHint').disabled=busy||saving||state.over||state.won||(!jewel&&state.hints>=3);
   $('stageBoost').disabled=busy||saving||state.over||state.won||state.charge<BOOST_COST||state.boosterUses>=10;
   text('stageBoost',boosting?'اختر خانة للإطلاق':state.charge>=BOOST_COST?'✦ المعزّز جاهز':'✦ '+(state.charge||0)+' / '+BOOST_COST);
@@ -55,22 +57,20 @@ function meters(){
 }
 function restore(saved){
   if(saved.game==='jewels')return restoreMatch3(saved);
-  let value=createPaths(saved.level,saved.daily||'');
-  if(!Array.isArray(saved.log)||saved.log.length>180)throw Error('invalid_proof');
-  for(const row of saved.log){if(value.won)throw Error('moves_after_finish');const result=Number.isInteger(row?.clear)?{state:clearPath(value,row.clear),accepted:true}:row?.hint?hintPaths(value):movePaths(value,row?.color,row?.path);if(!result.accepted)throw Error('invalid_move');value=result.state;}return value;
+  return restorePaths(saved);
 }
 function openStage(level,daily='',resume=true){
   roundVersion++;renderer.cancel();selected=[];pointer=null;cursor=-1;saving=false;busy=false;boosting=false;initialAccount=account();
   state=game==='jewels'?createMatch3(level,daily):createPaths(level,daily);
   let resumed=false,upgraded=false;
-  if(resume)try{const saved=JSON.parse(localStorage.getItem(key())||'null');if(saved?.level===level&&saved?.daily===daily&&saved.game===game){if(game==='jewels'&&saved.engineVersion!==MATCH3_VERSION)upgraded=true;else {state=restore(saved);resumed=true;}}}catch{}
+  if(resume)try{const saved=JSON.parse(localStorage.getItem(key())||'null');if(saved?.level===level&&saved?.daily===daily&&saved.game===game){if(game==='jewels'&&saved.engineVersion!==MATCH3_VERSION||game==='paths'&&saved.engineVersion!==3)upgraded=true;else {state=restore(saved);resumed=true;}}}catch{}
   const jewel=game==='jewels';play.dataset.game=game;
-  text('stageGameName',names[game]);text('stageTitle',daily?'تحدّي اليوم':'المرحلة '+level+' · '+CHAPTERS[Math.floor((level-1)/12)]);
-  text('stageTipTitle',jewel?'كل تبديلة تصنع فرصة.':'ارسم بسلاسة. وفكّر بالخطوة الجاية.');
-  text('stageInstructions',jewel?'بدّل جوهرتين متجاورتين بالسحب أو بنقرتين. طابق 3 أو أكثر أفقيًا أو رأسيًا. أربع تصنع سهمًا، وخمس في خط تصنع برقًا؛ شكل T أو L يصنع قنبلة. بدّل القطعة الخاصة لتفعيلها، أو ادمج قطعتين خاصتين. حقق أهداف المرحلة قبل انتهاء الحركات.':'ابدأ من دائرة واسحب إلى الرقم نفسه، أفقيًا أو رأسيًا. المسارات لا تتقاطع، وتحتاج تغطية اللوحة كاملة. ارسم اللون من جديد لتغييره؛ السحب السريع يمر بالخانات الواقعة في طريقك.');
-  text('stageStarGuide',jewel?'3 نجوم خلال 12 حركة، نجمتان خلال 17، ونجمة عند إكمال الأهداف. مطابقة أربع أو أكثر بحركتك تمنح حركة إضافية، حتى 10 في الجولة. النجوم الزرقاء تشحن المعزّز. الجليد يظهر من العالم الثاني.':'3 نجوم دون تلميح وبحركتين إضافيتين كحد أقصى. نجمتان بتلميح واحد كحد أقصى. التلميح يرسم مسارًا وقد يزيل مسارات تتقاطع معه.');
+  text('stageGameName',names[game]);text('stageTitle',daily?'تحدّي اليوم':'المرحلة '+level+' · '+chaptersFor(game)[Math.floor((level-1)/12)]);
+  text('stageTipTitle',jewel?'كل تبديلة تصنع فرصة.':'خطأ واحد… وترجع للبداية.');
+  text('stageInstructions',jewel?'بدّل جوهرتين متجاورتين بالسحب أو بنقرتين. طابق 3 أو أكثر أفقيًا أو رأسيًا. أربع تصنع سهمًا، وخمس في خط تصنع برقًا؛ شكل T أو L يصنع قنبلة. بدّل القطعة الخاصة لتفعيلها، أو ادمج قطعتين خاصتين. حقق أهداف المرحلة قبل انتهاء الحركات.':'ابدأ من دائرة واسحب إلى الرقم نفسه أفقيًا أو رأسيًا. التقاطع أو الرقم الخطأ أو رفع الإصبع في منتصف سحب ناقص يعيد كل لوحة المرحلة. غطّ المربعات المتاحة كلها وتجنب الحواجز؛ مرّ بنقاط العبور الصغيرة بلون مسارك. لمس خلية دون سحب لا يحتسب خطأ.');
+  text('stageStarGuide',jewel?'3 نجوم خلال 12 حركة، نجمتان خلال 17، ونجمة عند إكمال الأهداف. مطابقة أربع أو أكثر بحركتك تمنح حركة إضافية، حتى 10 في الجولة. النجوم الزرقاء تشحن المعزّز. الجليد يظهر من العالم الثاني.':'3 نجوم بلا إعادة أو تلميح. نجمتان حتى إعادتين وتلميح واحد، ونجمة عند الإكمال. التلميحات ثلاثة للمرحلة وقد تزيل مسارات متقاطعة. النجوم السابقة محفوظة.');
   $('stageResult').classList.add('hidden');$('stageHelpPanel').classList.add('hidden');workspace.inert=false;topbar.inert=false;$('stageClose').disabled=false;$('stageHelp').disabled=false;
-  message(resumed?'رجعنا لنفس اللوحة. كمّل من آخر حركة.':upgraded?'المحرك تغيّر: بدأنا لوحة التبديل الجديدة، ونجوم المراحل السابقة محفوظة.':jewel?'بدّل قطعتين وراقب التساقط. التبديلة غير المطابقة ترجع بدون خصم حركة.':'ابدأ بدائرة وارسم الطريق إلى الرقم نفسه.');
+  message(resumed?'رجعنا لنفس اللوحة. كمّل من آخر حركة.':upgraded?'المحرك تغيّر: بدأنا لوحة التبديل الجديدة، ونجوم المراحل السابقة محفوظة.':jewel?'بدّل قطعتين وراقب التساقط. التبديلة غير المطابقة ترجع بدون خصم حركة.':'خطأ واحد يعيد اللوحة. ابدأ بدائرة ووصل الرقم نفسه.');
   canvas.setAttribute('aria-label',jewel?'لوحة مطابقة الجواهر. بدّل قطعتين متجاورتين بالسحب أو بنقرتين. الأسهم للتنقل والمسافة للاختيار.':'لوحة المسارات. اسحب بين الرقمين المتماثلين. الأسهم مع Shift لمد المسار.');
   if(!play.open)play.showModal();meters();draw();storeResume();canvas.focus();if(state.over||state.won)finish();
 }
@@ -82,13 +82,13 @@ function help(textValue,action){
 }
 async function finish(){
   if(saving||!state)return;const version=roundVersion,won=state.won;saving=true;busy=false;selected=[];renderer.snap();draw();meters();workspace.inert=true;topbar.inert=true;
-  $('stageHelpPanel').classList.add('hidden');$('stageResult').classList.remove('hidden');text('resultEyebrow',state.daily?'تحدّي اليوم':CHAPTERS[state.chapter]);text('resultStars',won?'★'.repeat(starsFor(state))+'☆'.repeat(3-starsFor(state)):'✧');
-  text('resultTitle',won?'مطابقة تستاهل النجوم!':'باقي لك خطوة!');text('resultCopy',won?(game==='jewels'?state.score+' نقطة · '+state.moves+' حركات · '+state.extraMoves+' إضافية':state.moves+' مسارات مرسومة · تغطية كاملة'):'جرّب صناعة قطعة خاصة وشحن المعزّز. تقدر تعيد المرحلة فورًا.');
-  text('resultSave',won?'جارٍ حفظ نجومك…':'إعادة المحاولة متاحة بدون انتظار.');$('resultNext').classList.toggle('hidden',!won||!!state.daily||state.level>=STAGE_COUNT);text('resultRetry',won?'أعدها وحسّن نجومك':'حاول مرة ثانية');
+  $('stageHelpPanel').classList.add('hidden');$('stageResult').classList.remove('hidden');text('resultEyebrow',state.daily?'تحدّي اليوم':chaptersFor(game)[state.chapter]);text('resultStars',won?'★'.repeat(starsFor(state))+'☆'.repeat(3-starsFor(state)):'✧');
+  text('resultTitle',won?(game==='paths'?'حل يستاهل النجوم!':'مطابقة تستاهل النجوم!'):'باقي لك خطوة!');text('resultCopy',won?(game==='jewels'?state.score+' نقطة · '+state.moves+' حركات · '+state.extraMoves+' إضافية':state.moves+' مسارات مرسومة · تغطية كاملة'):'جرّب صناعة قطعة خاصة وشحن المعزّز. تقدر تعيد المرحلة فورًا.');
+  text('resultSave',won?'جارٍ حفظ نجومك…':'إعادة المحاولة متاحة بدون انتظار.');$('resultNext').classList.toggle('hidden',!won||!!state.daily||state.level>=stageCount(game));text('resultRetry',won?'أعدها وحسّن نجومك':'حاول مرة ثانية');
   for(const id of ['resultRetry','resultNext','resultMap'])$(id).disabled=true;
   if(won){sound('win');try{storeResume();const result=await progress.complete(proof());if(version!==roundVersion)return;removeResume();text('resultSave',result.pending?'نجومك محفوظة على الجهاز. تُزامن مع حسابك عند الاتصال.':result.first?'انحفظت نجومك. المكافأة حسب حد التدريب اليومي.':'انحفظت نجومك. مكافأة هذه المرحلة محسوبة سابقًا.');}catch(error){if(version!==roundVersion)return;text('resultSave','لم يُحفظ التقدم: '+error.message);text('resultRetry','أعد محاولة حفظ النتيجة');saving=false;$('resultRetry').disabled=false;$('resultRetry').onclick=()=>finish();$('resultRetry').focus();return;}}
   else removeResume();
-  if(version!==roundVersion)return;saving=false;for(const id of ['resultRetry','resultNext','resultMap'])$(id).disabled=false;$('resultRetry').onclick=()=>openStage(state.level,state.daily,false);(won&&!state.daily&&state.level<60?$('resultNext'):$('resultRetry')).focus();render();
+  if(version!==roundVersion)return;saving=false;for(const id of ['resultRetry','resultNext','resultMap'])$(id).disabled=false;$('resultRetry').onclick=()=>openStage(state.level,state.daily,false);(won&&!state.daily&&state.level<stageCount(game)?$('resultNext'):$('resultRetry')).focus();render();
 }
 async function swapAction(action){
   if(!state||busy||saving||state.over||state.won)return;const version=roundVersion,initial=state,result=moveMatch3(state,action);selected=[];boosting=false;
@@ -101,35 +101,38 @@ async function swapAction(action){
 }
 function commitPath(){
   if(!state||busy||saving||state.won||game!=='paths')return;const color=state.pairs.findIndex(pair=>pair.includes(selected[0])),result=movePaths(state,color,selected);
-  if(!result.accepted){message('كمّل المسار إلى الدائرة الثانية من الرقم نفسه.');return;}state=result.state;selected=[];scheduleResume();sound('move');meters();draw();message(state.won?'تغطية كاملة!':Object.keys(state.paths).length===state.pairs.length?'الأزواج متصلة؛ عدّل مساراتك لتغطية بقية الخانات.':'مسار اكتمل. كمّل بقية الألوان.');if(state.won)finish();
+  if(!result.accepted){mistake(result.fault||'incomplete');return;}state=result.state;selected=[];scheduleResume();sound('move');meters();draw();message(state.won?'تغطية كاملة!':Object.keys(state.paths).length===state.pairs.length?'الأزواج متصلة؛ عدّل مساراتك لتغطية بقية الخانات.':'مسار اكتمل. كمّل بقية الألوان.');if(state.won)finish();
 }
-function setupPath(){const color=state.pairs.findIndex(pair=>pair.includes(selected[0]));blocked=new Set(Object.entries(state.paths).filter(([key])=>+key!==color).flatMap(([,value])=>value));endpoints=new Set(state.pairs.filter((_,i)=>i!==color).flat());}
+function mistake(reason){if(game!=='paths'||!state||state.won||saving)return;const reasons={cross:'تقاطع مساران',wall:'دخلت في حاجز',endpoint:'وصلت رقمًا مختلفًا',gate:'تجاوزت نقطة عبور',coverage:'بقيت مربعات فارغة',incomplete:'التوصيلة ناقصة',jump:'الحركة خارج المسار'};state=restartPaths(state);selected=[];pointer=null;roundVersion++;renderer.cancel();storeResume();meters();draw();sound('wrong');canvas.classList.add('path-mistake');clearTimeout(mistake.timer);mistake.timer=setTimeout(()=>canvas.classList.remove('path-mistake'),700);message('غلط: '+(reasons[reason]||'مسار غير صحيح')+' — رجعناك لبداية المرحلة. الإعادة '+state.restarts+'.');}
+function setupPath(){const color=state.pairs.findIndex(pair=>pair.includes(selected[0]));blocked=new Set(Object.entries(state.paths).filter(([key])=>+key!==color).flatMap(([,value])=>value));for(const cell of state.walls||[])blocked.add(cell);endpoints=new Set(state.pairs.filter((_,i)=>i!==color).flat());}
 function selectPath(cell,start=false){
   if(cell<0||!state||state.won||saving||busy)return;cursor=cell;
   if(start){const color=state.pairs.findIndex(pair=>pair.includes(cell)),closing=color>=0&&selected.length>1&&state.pairs[color].includes(selected[0])&&cell!==selected[0]&&adjacent(selected.at(-1),cell,state.size);if(color>=0&&!closing){selected=[cell];setupPath();}else if(!selected.length)return;}
   if(!selected.length)return;const color=state.pairs.findIndex(pair=>pair.includes(selected[0])),index=selected.indexOf(cell);
   if(index>=0){if(index<selected.length-1)selected=selected.slice(0,index+1);else if(!start)return;}
+  else if(adjacent(selected.at(-1),cell,state.size)&&(blocked.has(cell)||endpoints.has(cell))){mistake(endpoints.has(cell)?'endpoint':state.walls.includes(cell)?'wall':'cross');return;}
   else if(adjacent(selected.at(-1),cell,state.size)&&!blocked.has(cell)&&!endpoints.has(cell)&&(selected.length===1||!state.pairs[color].includes(selected.at(-1))))selected.push(cell);else return;
   $('stageCommit').disabled=selected.length<2;draw();
 }
 function extendPath(cell){
+  const version=roundVersion;
   if(cell<0||cell===selected.at(-1))return;
   // Fill sampled gaps only along a straight run: no guessed corners through blockers.
   const from=selected.at(-1);if(from==null)return;const sameRow=(from/state.size|0)===(cell/state.size|0),sameColumn=from%state.size===cell%state.size;
   if(!sameRow&&!sameColumn){selectPath(cell);return;}const step=sameRow?Math.sign(cell-from):Math.sign(cell-from)*state.size;
-  for(let i=from+step,count=0;count<state.size;count++,i+=step){const previous=selected.at(-1);selectPath(i);if(selected.at(-1)!==i||previous===i||i===cell)break;}
+  for(let i=from+step,count=0;count<state.size;count++,i+=step){const previous=selected.at(-1);selectPath(i);if(version!==roundVersion)return;if(selected.at(-1)!==i||previous===i||i===cell)break;}
 }
 function cellAt(event){if(!state)return -1;const r=canvas.getBoundingClientRect(),x=event.clientX-r.left,y=event.clientY-r.top;if(x<0||y<0||x>=r.width||y>=r.height)return -1;return Math.floor(y/r.height*state.size)*state.size+Math.floor(x/r.width*state.size);}
 function canInput(){return state&&!busy&&!saving&&!state.over&&!state.won&&$('stageHelpPanel').classList.contains('hidden');}
 canvas.addEventListener('pointerdown',event=>{
-  if(pointer!==null||!canInput()||event.button>0)return;const cell=cellAt(event);if(cell<0)return;event.preventDefault();canvas.focus();cursor=cell;pointer=event.pointerId;canvas.setPointerCapture(pointer);dragStart=lastCell=cell;dragMoved=false;
+  if(pointer!==null||!canInput()||event.button>0)return;const cell=cellAt(event);if(cell<0)return;event.preventDefault();canvas.focus();cursor=cell;pointer=event.pointerId;pathGestureMoved=false;canvas.setPointerCapture(pointer);dragStart=lastCell=cell;dragMoved=false;
   if(game==='paths')selectPath(cell,true);else if(boosting){pointer=null;swapAction({boost:cell});}else if(selected.length===1&&adjacent(selected[0],cell,state.size)){pointer=null;swapAction({swap:[selected[0],cell]});}else{selected=[cell];draw();}
 });
 canvas.addEventListener('pointermove',event=>{
   if(event.pointerId!==pointer||!canInput())return;
   const samples=event.getCoalescedEvents?.(),rows=samples?.length?samples:[event];
   for(const sample of rows){const cell=cellAt(sample);if(cell<0||cell===lastCell)continue;lastCell=cell;
-    if(game==='paths'){extendPath(cell);continue;}
+    if(game==='paths'){pathGestureMoved=true;extendPath(cell);if(pointer===null)return;continue;}
     if(cell===dragStart)continue;const dx=cell%state.size-dragStart%state.size,dy=(cell/state.size|0)-(dragStart/state.size|0),next=dragStart+(Math.abs(dx)>=Math.abs(dy)?Math.sign(dx):Math.sign(dy)*state.size);
     if(adjacent(dragStart,next,state.size)){selected=[dragStart,next];dragMoved=true;cursor=next;draw();}
   }
@@ -139,7 +142,7 @@ function endPointer(event,cancel=false){
   if(cancel){selected=[];draw();return;}
   if(!canInput())return;
   const cell=cellAt(event);
-  if(game==='paths'){if(cell>=0)extendPath(cell);if(selected.length>1&&state.pairs.some(pair=>pair.includes(selected[0])&&pair.includes(selected.at(-1))))commitPath();}
+  if(game==='paths'){if(cell!==dragStart)pathGestureMoved=true;if(cell>=0)extendPath(cell);if(selected.length>1&&state.pairs.some(pair=>pair.includes(selected[0])&&pair.includes(selected.at(-1))))commitPath();else if(pathGestureMoved&&selected.length>1)mistake('incomplete');}
   else if(dragMoved&&selected.length===2)swapAction({swap:selected.slice()});
   else if(cell>=0&&cell!==dragStart&&adjacent(dragStart,cell,state.size))swapAction({swap:[dragStart,cell]});
 }
@@ -155,7 +158,7 @@ $('stageRestart').onclick=()=>help('تبدأ لوحة المرحلة من جدي
 $('stageHelp').onclick=()=>help($('stageInstructions').textContent+' الكمبيوتر: الأسهم للتنقل، المسافة للاختيار. للمسارات: Shift مع الأسهم لمد الخط، وEnter لتثبيته.');
 $('stageBoost').onclick=()=>{if(!canInput()||state.charge<BOOST_COST)return;boosting=!boosting;selected=[];meters();draw();message(boosting?'اختر خانة للانفجار المتقاطع.':'تم إلغاء اختيار المعزّز.');};
 $('stageHint').onclick=()=>{if(!canInput())return;if(game==='jewels'){selected=legalSwaps(state)[0]||[];cursor=-1;draw();message('القطعتان المحددتان تبديلة ممكنة. اسحب إحداهما إلى الثانية أو انقرهما.');}else{const result=hintPaths(state);if(!result.accepted)return;state=result.state;selected=[];scheduleResume();meters();draw();message('رسمنا مسارًا؛ قد تتغيّر المسارات المتقاطعة معه.');if(state.won)finish();}};
-$('resultNext').onclick=()=>openStage(Math.min(60,state.level+1),'',false);$('resultRetry').onclick=()=>openStage(state.level,state.daily,false);
+$('resultNext').onclick=()=>openStage(Math.min(stageCount(game),state.level+1),'',false);$('resultRetry').onclick=()=>openStage(state.level,state.daily,false);
 $('journeyContinue').onclick=()=>openStage(nextStage(progress.get(),game));
 document.querySelectorAll('[data-game]').forEach(button=>button.onclick=()=>{game=button.dataset.game;chapter=Math.floor((nextStage(progress.get(),game)-1)/12);history.replaceState(null,'','/journey?game='+game);render();});
 document.querySelectorAll('[data-daily]').forEach(button=>button.onclick=()=>{game=button.dataset.daily;openStage(1,progress.today());});

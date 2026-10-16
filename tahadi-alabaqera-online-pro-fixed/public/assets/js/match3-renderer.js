@@ -1,6 +1,6 @@
-import {GEM_COLORS} from './engines/match3-engine.js?v=18.0.0';
+import {GEM_COLORS} from './engines/match3-engine.js?v=20.0.0';
 const clamp=n=>Math.max(0,Math.min(1,n)),ease=n=>1-Math.pow(1-n,3);
-const pathColors=['#62e7ba','#ffd35d','#b79aff','#ff83ad','#79d1ff','#ffac66'];
+const pathColors=['#62e7ba','#ffd35d','#b79aff','#ff83ad','#79d1ff','#ffac66','#e4eee8','#ee7691','#a6d16f'];
 function gemPath(c,kind,r) {
   c.beginPath();
   if(kind===0){c.moveTo(0,-r);c.lineTo(r,0);c.lineTo(0,r);c.lineTo(-r,0);}
@@ -100,9 +100,11 @@ export class BoardRenderer {
   }
   paintPaths(s) {
     const c=this.c,cell=this.canvas.width/s.size,selection=this.selection,color=s.pairs.findIndex(pair=>pair.includes(selection[0]));
+    for(const i of s.walls||[]){const p=this.point(i,s);c.fillStyle='#08131d';c.fillRect(p.x-cell*.45,p.y-cell*.45,cell*.9,cell*.9);c.strokeStyle='#78928f';c.lineWidth=cell*.035;c.beginPath();c.moveTo(p.x-cell*.16,p.y-cell*.16);c.lineTo(p.x+cell*.16,p.y+cell*.16);c.moveTo(p.x+cell*.16,p.y-cell*.16);c.lineTo(p.x-cell*.16,p.y+cell*.16);c.stroke();}
     const line=(path,tint,active=false)=>{if(path.length<2)return;c.beginPath();path.forEach((i,j)=>{const p=this.point(i,s);j?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);});c.lineWidth=cell*(active?.25:.23);c.lineJoin=c.lineCap='round';c.strokeStyle=tint;c.stroke();c.lineWidth=cell*.055;c.strokeStyle='#ffffff33';c.stroke();};
     for(const [key,path] of Object.entries(s.paths))if(!selection.length||+key!==color)line(path,pathColors[key]);
     if(selection.length)line(selection,pathColors[color]||'#fff',true);
+    (s.gates||[]).forEach((points,i)=>points.forEach(index=>{const p=this.point(index,s);c.beginPath();c.arc(p.x,p.y,cell*.12,0,Math.PI*2);c.strokeStyle=pathColors[i];c.lineWidth=cell*.05;c.stroke();}));
     s.pairs.forEach((pair,i)=>pair.forEach(index=>{const p=this.point(index,s);c.beginPath();c.arc(p.x,p.y,cell*.29,0,Math.PI*2);c.fillStyle=pathColors[i];c.fill();c.lineWidth=cell*.035;c.strokeStyle='#ffffff9c';c.stroke();c.fillStyle='#12303a';c.font='800 '+cell*.26+'px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText(String(i+1),p.x,p.y+cell*.015);}));
     if(this.hover>=0){const p=this.point(this.hover,s);c.strokeStyle='#fff';c.lineWidth=3;c.strokeRect(p.x-cell*.43,p.y-cell*.43,cell*.86,cell*.86);}
   }

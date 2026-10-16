@@ -1,4 +1,4 @@
-import {COLORS} from './engines/journey-engine.js?v=18.0.0';
+import {COLORS} from './engines/journey-engine.js?v=20.0.0';
 export function boardMetrics(state, width) { return {cell: width / state.size, size: state.size}; }
 function shape(c, x, y, r, kind) {
   c.beginPath();
@@ -25,12 +25,14 @@ export function drawBoard(canvas, state, selected = [], {hover = -1, flash = []}
     }
     if (selected.length > 1) { c.beginPath(); selected.forEach((p, i) => { const {x, y} = point(p); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.strokeStyle = '#fff5'; c.lineWidth = cell * .11; c.lineJoin = c.lineCap = 'round'; c.stroke(); }
   } else {
+    for(const i of state.walls||[]){const {x,y}=point(i);c.fillStyle='#07101a';c.fillRect(x-cell*.45,y-cell*.45,cell*.9,cell*.9);c.strokeStyle='#627084';c.lineWidth=cell*.04;c.beginPath();c.moveTo(x-cell*.15,y-cell*.15);c.lineTo(x+cell*.15,y+cell*.15);c.moveTo(x+cell*.15,y-cell*.15);c.lineTo(x-cell*.15,y+cell*.15);c.stroke();}
     const paths = {...state.paths}; if (selected.length) paths.selected = selected;
     for (const [key, path] of Object.entries(paths)) {
       if (!path.length) continue; const color = key === 'selected' ? state.pairs.findIndex(pair => pair.includes(path[0])) : Number(key);
       c.beginPath(); path.forEach((p, i) => { const {x, y} = point(p); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.strokeStyle = COLORS[color] || COLORS[0]; c.lineWidth = cell * .24; c.lineCap = c.lineJoin = 'round'; c.stroke();
       c.strokeStyle = '#fff3'; c.lineWidth = cell * .055; c.stroke();
     }
+    (state.gates||[]).forEach((cells,color)=>cells.forEach(p=>{const {x,y}=point(p);c.beginPath();c.arc(x,y,cell*.13,0,Math.PI*2);c.strokeStyle=COLORS[color];c.lineWidth=cell*.05;c.stroke();}));
     state.pairs.forEach((pair, color) => pair.forEach(p => { const {x, y} = point(p); c.beginPath(); c.arc(x, y, cell * .31, 0, Math.PI * 2); c.fillStyle = '#091422'; c.fill(); c.strokeStyle = COLORS[color]; c.lineWidth = cell * .055; c.stroke(); c.fillStyle = COLORS[color]; c.font = 'bold ' + Math.round(cell * .3) + 'px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(color + 1), x, y + cell * .01); }));
   }
   for (const i of flash) { const {x, y} = point(i); c.beginPath(); c.arc(x, y, cell * .39, 0, Math.PI * 2); c.strokeStyle = '#fff'; c.lineWidth = cell * .035; c.stroke(); }

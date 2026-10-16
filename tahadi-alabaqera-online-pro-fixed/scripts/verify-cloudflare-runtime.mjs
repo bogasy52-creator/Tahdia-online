@@ -1,3 +1,5 @@
+import {createSudoku,moveSudoku}from '../public/assets/js/engines/sudoku-engine.js';
+import {solveSudoku}from '../public/assets/js/engines/sudoku-core.js';
 import {createPaths,movePaths} from '../public/assets/js/engines/journey-engine.js';
 import {solveMatch3} from '../test/match3-helpers.mjs';
 import '../public/assets/js/profile-core.js';
@@ -76,7 +78,7 @@ try{
  const career=await api('/api/social/career',undefined,owner.data.token),admin=await api('/api/social/admin',undefined,owner.data.token);assert.equal(career.data.access.role,'owner');assert.equal(career.data.career.owned.length,globalThis.BS_CAREER_CORE.CATALOG.length);assert.equal(admin.status,200);assert.equal(admin.data.access.capabilities.length,6);checks.push({check:'mixed-case-owner-and-all-unlocks',result:'passed'});
  const explorer=await api('/api/social/signup',{username:'journeyruntime',displayName:'Explorer',password:'RuntimeTestPass123!'});assert.equal(explorer.status,201);
  let stage=createPaths();for(let color=0;color<stage.pairs.length;color++)stage=movePaths(stage,color,stage.solution[color]).state;
- const proof={game:'paths',level:1,log:stage.log},completed=await api('/api/social/career/journey',{proof},explorer.data.token),replayed=await api('/api/social/career/journey',{proof},explorer.data.token);
+ const proof={game:'paths',engineVersion:3,level:1,log:stage.log},completed=await api('/api/social/career/journey',{proof},explorer.data.token),replayed=await api('/api/social/career/journey',{proof},explorer.data.token);
  assert.equal(completed.status,200);assert.equal(completed.data.journey.stages.paths[1],3);assert.equal(completed.data.career.coins,120);assert.equal(replayed.data.career.coins,120);assert.equal(replayed.data.first,false);
  checks.push({check:'verified-journey-result-and-idempotent-SQLite-storage',result:'passed'});
  const match=solveMatch3(),matchProof={game:'jewels',engineVersion:2,level:1,log:match.log};
@@ -84,6 +86,13 @@ try{
  for(const reply of matchReplies){assert.equal(reply.status,200);assert.ok(reply.data.journey.stages.jewels[1]);assert.equal(reply.data.career.games,2);assert.equal(reply.data.career.coins,140);}
  const forged=await api('/api/social/career/journey',{proof:{...matchProof,log:[],won:true,score:999999}},explorer.data.token);assert.equal(forged.status,400);
  checks.push({check:'V18-match3-replay-concurrent-retries-and-forged-result-rejection',result:'passed'});
+ let sudoku=createSudoku(1);const answer=solveSudoku(sudoku.initial).solution;for(let i=0;i<81;i++)if(!sudoku.board[i])sudoku=moveSudoku(sudoku,{cell:i,value:answer[i]}).state;
+ const sudokuProof={game:'sudoku',engineVersion:4,level:1,log:sudoku.log},beforeSudoku=(await api('/api/social/career',undefined,explorer.data.token)).data.career.games;
+ const sudokuReplies=await Promise.all(Array.from({length:3},()=>api('/api/social/career/journey',{proof:sudokuProof},explorer.data.token)));for(const r of sudokuReplies){assert.equal(r.status,200);assert.equal(r.data.journey.stages.sudoku[1],3);}
+ assert.equal((await api('/api/social/career',undefined,explorer.data.token)).data.career.games,beforeSudoku+1);
+ assert.equal((await api('/api/social/career/journey',{proof:{...sudokuProof,log:[],won:true}},explorer.data.token)).status,400);
+ assert.equal((await api('/api/social/career/journey',{proof:{...sudokuProof,level:undefined}},explorer.data.token)).status,400);
+ checks.push({check:'V20-Sudoku-real-workerd-concurrent-receipts-and-invalid-proof-rejection',result:'passed'});
  for(const socket of sockets)try{socket.close(1000,'test_complete')}catch{}await mf.dispose();mf=new Miniflare(options(bundle,true));await mf.ready;
  const first=await api('/api/board/rooms',{game:'snakes',name:'A'}),second=await api('/api/board/rooms',{game:'snakes',name:'A'});assert.equal(first.data.code,'DURABLE_REQUEST_LIMIT');assert.equal(second.data.code,'DURABLE_REQUEST_LIMIT');
  const faultEnv=await mf.getBindings(),count=await(await faultEnv.BOARD_ROOMS.get(faultEnv.BOARD_ROOMS.idFromName('__test_counter__')).fetch('https://board.internal/__test/fault-count')).json();assert.equal(count.count,1);checks.push({check:'injected-quota-error-and-circuit',result:'passed',failedInitCalls:count.count});

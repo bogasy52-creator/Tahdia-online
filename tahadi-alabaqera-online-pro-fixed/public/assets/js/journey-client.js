@@ -1,4 +1,4 @@
-import {normalizeJourney, commitJourney, dayKey, journeyStats} from './engines/journey-engine.js?v=18.0.0';
+import {GAMES,normalizeJourney, commitJourney, dayKey, journeyStats} from './engines/journey-engine.js?v=20.0.0';
 const PREFIX = 'tahdia-journey-v17:', QUEUE = 'tahdia-journey-outbox-v17:';
 let chain = Promise.resolve(), revision = 0;
 const session = () => { try { return localStorage.getItem('bs_social_session') || ''; } catch { return ''; } };
@@ -19,7 +19,7 @@ async function call(proof, token) {
 }
 function merge(a, b) {
   const left = normalizeJourney(a), right = normalizeJourney(b);
-  for (const game of ['jewels', 'paths']) for (const [level, stars] of Object.entries(right.stages[game])) left.stages[game][level] = Math.max(left.stages[game][level] || 0, stars);
+  for (const game of GAMES) for (const [level, stars] of Object.entries(right.stages[game])) left.stages[game][level] = Math.max(left.stages[game][level] || 0, stars);
   for (const [day, row] of Object.entries(right.daily)) for (const [game, stars] of Object.entries(row)) { left.daily[day] ||= {}; left.daily[day][game] = Math.max(left.daily[day][game] || 0, stars); }
   return normalizeJourney(left);
 }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createJewels,moveJewels,jewelPaths,createPaths,movePaths,hintPaths,clearPath,replayProof,commitJourney,normalizeJourney,nextStage,dayKey,journeyStats,starsFor,adjacent} from '../public/assets/js/engines/journey-engine.js';
 import {environment,api,signup} from './worker-harness.mjs';
 import {solveJewels} from './journey-helpers.mjs';
-function pathsProof(level=1,daily=''){let state=createPaths(level,daily);for(let color=0;color<state.pairs.length;color++)state=movePaths(state,color,state.solution[color]).state;return {game:'paths',level,daily,log:state.log};}
+function pathsProof(level=1,daily=''){let state=createPaths(level,daily);for(let color=0;color<state.pairs.length;color++)state=movePaths(state,color,state.solution[color]).state;return {game:'paths',engineVersion:3,level,daily,log:state.log};}
 test('all 60 path stages have continuous, non-overlapping, full-cover solutions',()=>{
   const boards=new Set();for(let level=1;level<=60;level++){let state=createPaths(level);assert.equal(new Set(state.solution.flat()).size,state.size*state.size);for(const path of state.solution)for(let i=1;i<path.length;i++)assert.ok(adjacent(path[i-1],path[i],state.size));for(let color=0;color<state.pairs.length;color++){const next=movePaths(state,color,state.solution[color]);assert.ok(next.accepted);state=next.state;}assert.ok(state.won);assert.equal(starsFor(state),3);boards.add(JSON.stringify(state.pairs));}assert.equal(boards.size,60);
 });
@@ -17,7 +17,7 @@ test('path moves reject crossed paths, diagonal shortcuts and wrong endpoints',(
   const state=createPaths(1),path=state.solution[0],first=movePaths(state,0,path);assert.ok(first.accepted);assert.equal(movePaths(first.state,1,path).accepted,false);assert.equal(movePaths(state,0,[path[0],path.at(-1)]).accepted,false);assert.equal(movePaths(state,0,[path[0],path[0],path.at(-1)]).accepted,false);assert.ok(movePaths(clearPath(first.state,0),0,path).accepted);
 });
 test('bounded hints solve a path, remove intersections, and are reproduced by the server',()=>{
-  let state=createPaths(1);for(let i=0;i<3;i++)state=hintPaths(state).state;assert.ok(state.won);assert.equal(starsFor(state),1);assert.equal(hintPaths(state).accepted,false);assert.equal(replayProof({game:'paths',level:1,log:state.log}).stars,1);
+  let state=createPaths(1);for(let i=0;i<3;i++)state=hintPaths(state).state;assert.ok(state.won);assert.equal(starsFor(state),1);assert.equal(hintPaths(state).accepted,false);assert.equal(replayProof({game:'paths',engineVersion:3,level:1,log:state.log}).stars,1);
 });
 test('stage advancement, best stars and completion receipts are idempotent',()=>{
   assert.throws(()=>commitJourney({},pathsProof(2)),/stage_locked/);const one=commitJourney({},pathsProof());assert.ok(one.first);assert.equal(nextStage(one.journey,'paths'),2);const twice=commitJourney(one.journey,pathsProof());assert.equal(twice.first,false);assert.equal(twice.stars,3);assert.equal(journeyStats(twice.journey).stars,3);assert.deepEqual(twice.journey,one.journey);assert.throws(()=>replayProof({...pathsProof(),level:undefined}),/invalid_proof/);

@@ -53,7 +53,8 @@
   ],
   "journey.html": [
     "assets/css/platform.css",
-    "assets/css/journey.css"
+    "assets/css/journey.css",
+    "assets/css/brain-v20.css"
   ],
   "local.html": [
     "assets/css/platform.css",
@@ -182,5 +183,10 @@
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/quiz-v19.css"
+  ],
+  "sudoku.html": [
+    "assets/css/platform.css",
+    "assets/css/picture.css",
+    "assets/css/sudoku.css"
   ]
 }
