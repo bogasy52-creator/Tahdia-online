@@ -1,4 +1,5 @@
 /* Deterministic stages. The browser and the server replay the same moves. */
+import {restoreMatch3,match3Stars} from './match3-engine.js?v=18.0.0';
 export const GAMES = Object.freeze(['jewels', 'paths']);
 export const STAGE_COUNT = 60;
 export const CHAPTERS = Object.freeze(['بداية المغامرة', 'حديقة البلّور', 'بحيرة الضوء', 'قمم الشفق', 'قصر النجوم']);
@@ -104,10 +105,13 @@ export function hintPaths(raw) {
 }
 export function starsFor(state) {
   if (!state?.won) return 0;
+  if (state.engineVersion === 2) return match3Stars(state);
   if (state.game === 'jewels') return state.moves <= 10 ? 3 : state.moves <= 15 ? 2 : 1;
   return state.hints === 0 && state.moves <= state.pairs.length + 2 ? 3 : state.hints <= 1 ? 2 : 1;
 }
 export function replayProof(proof) {
+  if (proof?.engineVersion === 2) { const state=restoreMatch3(proof,{requireWin:true}); return {state,stars:match3Stars(state)}; }
+  if (proof?.engineVersion != null) throw new Error('invalid_proof');
   if (!proof || !GAMES.includes(proof.game) || !Number.isInteger(proof.level) || proof.level < 1 || proof.level > STAGE_COUNT || !Array.isArray(proof.log) || proof.log.length > (proof.game === 'jewels' ? 20 : 180)) throw new Error('invalid_proof');
   let state = proof.game === 'jewels' ? createJewels(proof.level, proof.daily || '') : createPaths(proof.level, proof.daily || '');
   for (const row of proof.log) {

@@ -35,7 +35,7 @@
 
 </style>
 
-<link rel="stylesheet" href="assets/css/app-online.css?v=17.0.0"></head>
+<link rel="stylesheet" href="assets/css/app-online.css?v=18.0.0"></head>
 <body>
 <div class="app" id="app">
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">1 ضد 1 • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
@@ -112,12 +112,12 @@
 <div class="footer">© 2026 بوسراج — تحدي العباقرة Online. اللعب السريع متزامن مباشرة، والغرف الخاصة تعمل بمحرك السيرفر.</div>
 <div id="toast" class="toast hidden"></div>
 </div>
-<script src="assets/js/audio-manager.js?v=17.0.0"></script>
-<script src="assets/js/platform.js?v=17.0.0"></script>
+<script src="assets/js/audio-manager.js?v=18.0.0"></script>
+<script src="assets/js/platform.js?v=18.0.0"></script>
 
 
-<script src="assets/js/matchmaking.js?v=17.0.0"></script>
-<script src="assets/js/social-client.js?v=17.0.0"></script>
+<script src="assets/js/matchmaking.js?v=18.0.0"></script>
+<script src="assets/js/social-client.js?v=18.0.0"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -390,5 +390,5 @@ const quickMatchParam=qs.get('quickMatch')||qs.get('match');
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
-<script type="module" src="assets/js/quick-match-game.js?v=17.0.0"></script>
-<script src="assets/js/profile-core.js?v=17.0.0"></script><script src="assets/js/career-client.js?v=17.0.0"></script><script defer src="assets/js/client-health.js?v=17.0.0"></script></body></html>
+<script type="module" src="assets/js/quick-match-game.js?v=18.0.0"></script>
+<script src="assets/js/profile-core.js?v=18.0.0"></script><script src="assets/js/career-client.js?v=18.0.0"></script><script defer src="assets/js/client-health.js?v=18.0.0"></script></body></html>

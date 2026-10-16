@@ -5,9 +5,9 @@ import { readFile } from 'node:fs/promises';
 
 async function loadAudio(settings) {
   const code = await readFile(new URL('../public/assets/js/audio-manager.js', import.meta.url), 'utf8');
-  const started = [],played=[];
+  const started = [],played=[],created=[];
   class FakeAudio {
-    constructor(src){this.src=src}
+    constructor(src){this.src=src;created.push(src)}
     pause() {}
     play() { played.push(this.src);return Promise.resolve(); }
     set currentTime(_) {}
@@ -42,7 +42,7 @@ async function loadAudio(settings) {
     console,
   };
   vm.runInNewContext(code, context);
-  return { api: window.BS_AUDIO, started,played };
+  return { api: window.BS_AUDIO, started,played,created };
 }
 
 test('timer sounds remain independent when regular effects are disabled', async () => {
@@ -71,3 +71,5 @@ test('board reactions use rendered foley instead of oscillator beeps', async () 
     assert.ok(played.some(src=>src.includes('/arena-v9/')||src.includes('/dice-v133/')),`${name} uses a rendered foley sample`);assert.equal(started.length,0,'board effects must not fall back to electronic oscillator beeps');
   }
 });
+
+test('opening a game creates no audio players and aliases share one lazy sample',async()=>{const {api,created}=await loadAudio({muted:false,effects:true,volume:1});assert.equal(created.length,0);api.play('move');api.play('boardStep');api.play('step');assert.equal(created.length,1);api.play('win');assert.equal(created.length,2);});
