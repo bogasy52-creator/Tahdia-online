@@ -35,8 +35,8 @@
 
 </style>
 
-<link rel="stylesheet" href="assets/css/app-online.css?v=18.0.0"></head>
-<body>
+<link rel="stylesheet" href="assets/css/app-online.css?v=19.0.0"></head>
+<body class="quiz-v19">
 <div class="app" id="app">
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">1 ضد 1 • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
 
@@ -112,12 +112,12 @@
 <div class="footer">© 2026 بوسراج — تحدي العباقرة Online. اللعب السريع متزامن مباشرة، والغرف الخاصة تعمل بمحرك السيرفر.</div>
 <div id="toast" class="toast hidden"></div>
 </div>
-<script src="assets/js/audio-manager.js?v=18.0.0"></script>
-<script src="assets/js/platform.js?v=18.0.0"></script>
+<script src="assets/js/audio-manager.js?v=19.0.0"></script>
+<script src="assets/js/platform.js?v=19.0.0"></script>
 
 
-<script src="assets/js/matchmaking.js?v=18.0.0"></script>
-<script src="assets/js/social-client.js?v=18.0.0"></script>
+<script src="assets/js/matchmaking.js?v=19.0.0"></script>
+<script src="assets/js/social-client.js?v=19.0.0"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -246,7 +246,7 @@ async function connect(){
  if(!activeApiOrigin){try{await probeBackend()}catch(e){setNet('bad','محرك الغرف غير متاح');toast(e.message);scheduleReconnect();return}}
  const url=websocketUrl('/api/rooms/'+roomCode+'/ws');
  url.searchParams.set('name',name);
- const protocols=['busraj-v1'];if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
+ const protocols=['busraj-v1'];const accountSession=read('bs_social_session');if(accountSession)protocols.push('st.'+accountSession);if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
  setNet('','جار الاتصال');
  try{ws=new WebSocket(url,protocols)}catch{scheduleReconnect();return}
  ws.onopen=()=>{setNet('ok','متصل');reconnectDelay=800};
@@ -257,8 +257,9 @@ async function connect(){
 function scheduleReconnect(){clearTimeout(reconnectTimer);reconnectTimer=setTimeout(connect,reconnectDelay);reconnectDelay=Math.min(6000,reconnectDelay*1.6)}
 window.addEventListener('online',connect);window.addEventListener('offline',()=>setNet('bad','بدون إنترنت'));
 
+let serverOffset=0,lastMatchId='',mediaKey='',mediaVersion=0,lastCareerRefresh='';const serverNow=()=>Date.now()+serverOffset;
 function render(){
- if(!state)return;if(state.status!=='finished')finishedAudioPlayed=false;
+ if(!state)return;if(Number.isFinite(state.serverNow))serverOffset=state.serverNow-Date.now();if(lastMatchId!==state.matchId){lastMatchId=state.matchId;mediaKey='';mediaVersion++;soundPlayCounts.clear();zoomLevels.clear();lastRevealAudio=-1;lastAudioPhase='';}if(state.status!=='finished')finishedAudioPlayed=false;
  $('#entry').classList.add('hidden');$('#room').classList.remove('hidden');$('#roomCode').textContent=state.code;
  renderPlayers();
  if(state.status==='lobby')renderLobby();
@@ -268,7 +269,7 @@ function render(){
 
 function renderPlayers(){
  const box=$('#players');box.innerHTML='';
- state.players.forEach(p=>{const d=document.createElement('div');d.className='player '+(p.id===myId?'me':'');d.innerHTML='<div class="name">'+safeName(p.name)+(p.id===myId?' • أنت':'')+'</div><div class="presence '+(p.connected?'on':'')+'">'+(p.connected?'● متصل':'○ غير متصل')+' • '+(p.role==='host'?'المضيف':'الخصم')+'</div><div class="score">'+p.score+'</div>';box.appendChild(d)})
+ state.players.forEach(p=>{const d=document.createElement('div');d.className='player '+(p.id===myId?'me':'');d.innerHTML='<div class="name">'+safeName(p.name)+(p.id===myId?' • أنت':'')+'</div><div class="presence '+(p.connected?'on':'')+'">'+(p.connected?'● متصل':'○ غير متصل')+' • '+(p.team?'الفريق '+p.team:(p.role==='host'?'المضيف':'المنافس'))+'</div><div class="score">'+p.score+'</div>';box.appendChild(d)})
 }
 
 function renderLobby(){
@@ -285,14 +286,15 @@ function renderLobby(){
  $('#saveCats').onclick=()=>{if(hostSel.size!==6)return toast('اختر 6 فئات');send('set_categories',{categories:[...hostSel]})};
  $('#randomCats').onclick=()=>{hostSel.clear();send('random_categories')};
  document.querySelectorAll('.roundOpt').forEach(b=>{const n=Number(b.dataset.round);b.classList.toggle('active',n===state.roundCount);b.disabled=!host;b.onclick=()=>send('set_round_count',{roundCount:n})});
- const allReady=state.players.length>=2&&state.players.every(p=>p.ready);
- $('#startBtn').disabled=!allReady;$('#startBtn').textContent=state.players.length<2?'بانتظار لاعبين…':allReady?'⚔️ بدء المنافسة':'بانتظار جاهزية الجميع';
+ const allReady=state.players.length>=2&&state.players.every(p=>p.ready&&p.connected)&&(state.mode==='free'||state.players.length===state.playerLimit);
+ $('#startBtn').disabled=!allReady;$('#startBtn').textContent=state.mode!=='free'&&state.players.length<state.playerLimit?'بانتظار اكتمال الفريقين':state.players.length<2?'بانتظار لاعبين…':allReady?'⚔️ بدء المنافسة':'بانتظار جاهزية الجميع';
  $('#startBtn').onclick=()=>send('start');
 }
 
 function renderScores(){
+ const teamSummary=state.mode?.startsWith('teams-')?(state.teamScores||[]).map(t=>'<div class="scoreCard"><b>الفريق '+t.team+'</b><div class="score">'+t.score+'</div></div>').join(''):'';
  const cards=state.players.map(p=>'<div class="scoreCard '+(p.id===myId?'me':'')+'"><b>'+safeName(p.name)+'</b><div class="score">'+p.score+'</div></div>').join('');
- const top=document.querySelector('.matchTop'); top.innerHTML=cards+'<div id="roundBadge" class="roundBadge">'+Math.min(state.roundIndex+1,state.roundCount)+' / '+state.roundCount+'</div>';
+ const top=document.querySelector('.matchTop'); top.innerHTML=(teamSummary||cards)+'<div id="roundBadge" class="roundBadge">'+Math.min(state.roundIndex+1,state.roundCount)+' / '+state.roundCount+'</div>';
  $('#roundBadge').textContent=Math.min(state.roundIndex+1,state.roundCount)+' / '+state.roundCount;
 }
 
@@ -303,12 +305,12 @@ function renderMatch(){
  const c=state.current;if(!c){stopQuestionAudio();$('#question').textContent='تجهيز الجولة التالية…';$('#action').innerHTML='';$('#powers').innerHTML='';$('#media').innerHTML='';return}
  const audioPhase=state.roundIndex+':'+c.phase;if(audioPhase!==lastAudioPhase){lastAudioPhase=audioPhase;lastAudioSecond=null;BS_AUDIO?.play?.(c.mode==='buzzer'?'duel':'round')}
  $('#qmeta').innerHTML='<span class="pill">'+c.category.name+'</span><span class="pill gold">'+c.value+' نقطة</span><span class="pill">'+(c.mode==='secret'?'إجابة سرية':'مواجهة بازر')+'</span>';
- const memorizing=Boolean(c.answerOpensAt&&Date.now()<c.answerOpensAt);$('#question').textContent=memorizing?'👀 احفظ ما يظهر أمامك…':c.question;renderMedia(c.media,false);renderCurrentAction(c);renderPowers(c);if(memorizing){const wait=Math.max(20,c.answerOpensAt-Date.now()+35);setTimeout(()=>{if(state?.current&&state.roundIndex>=0&&Date.now()>=state.current.answerOpensAt)renderMatch()},wait)}tickId=setInterval(updateTimer,120);updateTimer();
+ const memorizing=Boolean(c.answerOpensAt&&serverNow()<c.answerOpensAt);$('#question').textContent=memorizing?'👀 احفظ ما يظهر أمامك…':c.question;renderMedia(c.media,false);renderCurrentAction(c);renderPowers(c);if(memorizing){const wait=Math.max(20,c.answerOpensAt-serverNow()+35);const round=state.roundIndex,match=state.matchId;setTimeout(()=>{if(state?.current&&state.roundIndex===round&&state.matchId===match&&serverNow()>=state.current.answerOpensAt)renderMatch()},wait)}tickId=setInterval(updateTimer,120);updateTimer();
 }
 function updateTimer(){
- const c=state?.current;if(!c)return;const now=Date.now(),memorizing=Boolean(c.answerOpensAt&&now<c.answerOpensAt),ms=memorizing?Math.max(0,c.answerOpensAt-now):Math.max(0,c.deadline-now),sec=(ms/1000).toFixed(ms<10000?1:0),whole=Math.ceil(ms/1000);$('#timer').textContent=memorizing?('👀 '+sec):sec;const span=memorizing?Math.max(1,(c.answerOpensAt-(c.startedAt||now))):(c.mode==='secret'?30000:(c.phase==='buzzer'?15000:c.phase==='buzzer_answer'?10000:8000));$('#bar').style.width=Math.min(100,Math.max(0,ms/span*100))+'%';if(c.media?.type==='zoom'&&activeZoomImg&&!state.lastReveal){const key=state.roundIndex;if(!zoomLevels.has(key))zoomLevels.set(key,Number(c.media.zoom)||5);if(ms<span*.58&&zoomLevels.get(key)!==Number(c.media.hintZoom)){const z=Math.max(1,Number(c.media.hintZoom)||3);zoomLevels.set(key,z);activeZoomImg.style.transform='scale('+z+')'}}if(whole!==lastAudioSecond){lastAudioSecond=whole;if(whole>0)BS_AUDIO?.timerTick?.(whole);else BS_AUDIO?.timerEnd?.()}
+ const c=state?.current;if(!c)return;const now=serverNow(),memorizing=Boolean(c.answerOpensAt&&now<c.answerOpensAt),ms=memorizing?Math.max(0,c.answerOpensAt-now):Math.max(0,c.deadline-now),sec=(ms/1000).toFixed(ms<10000?1:0),whole=Math.ceil(ms/1000);$('#timer').textContent=memorizing?('👀 '+sec):sec;const span=memorizing?Math.max(1,(c.answerOpensAt-(c.startedAt||now))):(c.mode==='secret'?30000:(c.phase==='buzzer'?15000:c.phase==='buzzer_answer'?10000:8000));$('#bar').style.width=Math.min(100,Math.max(0,ms/span*100))+'%';if(c.media?.type==='zoom'&&activeZoomImg&&!state.lastReveal){const key=state.roundIndex;if(!zoomLevels.has(key))zoomLevels.set(key,Number(c.media.zoom)||5);if(ms<span*.58&&zoomLevels.get(key)!==Number(c.media.hintZoom)){const z=Math.max(1,Number(c.media.hintZoom)||3);zoomLevels.set(key,z);activeZoomImg.style.transform='scale('+z+')'}}if(whole!==lastAudioSecond){lastAudioSecond=whole;if(whole>0)BS_AUDIO?.timerTick?.(whole);else BS_AUDIO?.timerEnd?.()}
 }
-function updateRevealCountdown(){const r=state?.lastReveal;if(!r)return;const s=Math.max(0,Math.ceil((r.nextAt-Date.now())/1000));$('#timer').textContent=s;$('#bar').style.width=Math.min(100,s/5*100)+'%'}
+function updateRevealCountdown(){const r=state?.lastReveal;if(!r)return;const s=Math.max(0,Math.ceil((r.nextAt-serverNow())/1000));$('#timer').textContent=s;$('#bar').style.width=Math.min(100,s/5*100)+'%'}
 
 function stopQuestionAudio(){if(questionAudio){try{questionAudio.pause();questionAudio.currentTime=0}catch{}questionAudio=null}if(questionAudioRAF){cancelAnimationFrame(questionAudioRAF);questionAudioRAF=0}}
 async function drawSoundWave(src,canvas){const ctx=canvas.getContext('2d');if(!ctx)return;const W=900,H=140;canvas.width=W;canvas.height=H;const paint=bars=>{ctx.clearRect(0,0,W,H);ctx.fillStyle='#070a13';ctx.fillRect(0,0,W,H);const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,'#22d3ee');g.addColorStop(.5,'#9b7cff');g.addColorStop(1,'#d946ef');ctx.fillStyle=g;const bw=W/bars.length;bars.forEach((v,i)=>{const h=Math.max(3,v*H*.78);ctx.globalAlpha=.42+.58*v;ctx.fillRect(i*bw+bw*.19,(H-h)/2,Math.max(1,bw*.62),h)});ctx.globalAlpha=1};if(waveCache.has(src))return paint(waveCache.get(src));try{const buf=await (await fetch(src)).arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw 0;const ac=new AC(),dec=await ac.decodeAudioData(buf.slice(0)),ch=dec.getChannelData(0),N=76,step=Math.max(1,Math.floor(ch.length/N)),bars=[];for(let i=0;i<N;i++){let peak=0;const a=i*step,b=Math.min(ch.length,a+step);for(let j=a;j<b;j+=Math.max(1,Math.floor(step/80)))peak=Math.max(peak,Math.abs(ch[j]));bars.push(Math.min(1,peak*1.7))}waveCache.set(src,bars);paint(bars);ac.close?.()}catch{paint(Array.from({length:76},(_,i)=>.2+.16*Math.sin(i*.73)**2))}}
@@ -327,12 +329,12 @@ function mountMemoryChallenge(memory,area,opts={}){
   else seq(mem.items,'');
   const note=document.createElement('div');note.className='memoryReadyNote';note.textContent='بعد اختفاء المحتوى يبدأ وقت الإجابة';panel.append(head,stage,note);area.appendChild(panel);
   if(opts.revealed){panel.classList.add('revealed');count.remove();note.textContent='المحتوى الذي ظهر في تحدي الذاكرة';return 0}
-  const started=Date.now(),end=opts.endAt||started+preview;
-  const tick=()=>{const ms=Math.max(0,end-Date.now());count.textContent='احفظ • '+Math.ceil(ms/1000)+'ث';if(ms<=0){stage.classList.add('memoryHidden');const after=document.createElement('div');after.className='memoryAfter';after.innerHTML='<div><strong>اختفى المحتوى 👀</strong><span>جاوب الآن من ذاكرتك</span></div>';stage.replaceWith(after);count.textContent='وقت الإجابة';note.textContent='لا يمكن إعادة عرض التحدي';opts.onEnd?.();return}requestAnimationFrame(tick)};tick();return Math.max(0,end-Date.now())
+  const guard=mediaVersion,started=serverNow(),end=opts.endAt||started+preview;
+  const tick=()=>{if(guard!==mediaVersion)return;const ms=Math.max(0,end-serverNow());count.textContent='احفظ • '+Math.ceil(ms/1000)+'ث';if(ms<=0){stage.classList.add('memoryHidden');const after=document.createElement('div');after.className='memoryAfter';after.innerHTML='<div><strong>اختفى المحتوى 👀</strong><span>جاوب الآن من ذاكرتك</span></div>';stage.replaceWith(after);count.textContent='وقت الإجابة';note.textContent='لا يمكن إعادة عرض التحدي';opts.onEnd?.();return}requestAnimationFrame(tick)};tick();return Math.max(0,end-serverNow())
 }
 
 function renderMedia(media,full){
- const box=$('#media');box.innerHTML='';activeZoomImg=null;if(!media){stopQuestionAudio();return}
+ const key=[state?.matchId,state?.roundIndex,Boolean(full),media?.src,media?.type].join(':');if(mediaKey===key)return;mediaKey=key;mediaVersion++;stopQuestionAudio();const box=$('#media');box.innerHTML='';activeZoomImg=null;if(!media){stopQuestionAudio();return}
  if(media.type==='sound'){
   const panel=document.createElement('div');panel.className='soundStudio';const b=document.createElement('button');b.className='soundBtn';const canvas=document.createElement('canvas');canvas.className='soundCanvas';const info=document.createElement('div');info.className='soundInfo';const count=document.createElement('span'),note=document.createElement('span');note.textContent='مقطع متوازن • استمع بتركيز';const prog=document.createElement('div');prog.className='soundProgress';const fill=document.createElement('i');prog.appendChild(fill);const key=state?.roundIndex??0,max=Math.max(1,Number(media.replays)||2);const refresh=()=>{const n=soundPlayCounts.get(key)||0;count.textContent=`مرات الاستماع ${n} / ${max}`;b.textContent=full?'🔊 تم كشف التحدي':n===0?'🔊 تشغيل المقطع':n<max?'🔊 إعادة الاستماع':'✓ انتهت مرات الاستماع';b.disabled=full||n>=max};refresh();b.onclick=()=>{const n=soundPlayCounts.get(key)||0;if(n>=max)return;stopQuestionAudio();soundPlayCounts.set(key,n+1);refresh();const a=new Audio(media.src);questionAudio=a;a.preload='auto';a.volume=.92;a.onplay=()=>{const loop=()=>{if(questionAudio!==a)return;fill.style.width=(a.duration?Math.min(100,a.currentTime/a.duration*100):0)+'%';if(!a.paused&&!a.ended)questionAudioRAF=requestAnimationFrame(loop)};loop()};a.onended=()=>{fill.style.width='100%';questionAudio=null;questionAudioRAF=0;refresh()};a.play().catch(()=>toast('تعذر تشغيل الصوت'))};info.append(count,note);panel.append(b,canvas,info,prog);box.appendChild(panel);drawSoundWave(media.src,canvas)
  }
@@ -342,7 +344,7 @@ function renderMedia(media,full){
  if(media.type==='memory')mountMemoryChallenge(media.memory,box,{revealed:full,endAt:full?0:(state?.current?.answerOpensAt||0)});
 }
 function renderCurrentAction(c){
- const box=$('#action');box.innerHTML='';const me=myPlayer();if(!me)return;if(c.answerOpensAt&&Date.now()<c.answerOpensAt){box.innerHTML='<div class="statusText">🧠 مرحلة الحفظ — الإجابة تفتح بعد اختفاء المحتوى</div>';return;}
+ const box=$('#action');box.innerHTML='';const me=myPlayer();if(!me)return;if(c.answerOpensAt&&serverNow()<c.answerOpensAt){box.innerHTML='<div class="statusText">🧠 مرحلة الحفظ — الإجابة تفتح بعد اختفاء المحتوى</div>';return;}
  if(c.blocked){const s=document.createElement('div');s.className='statusText';s.textContent='🔒 الخصم عطّل مساعداتك لهذه الجولة';box.appendChild(s)}
  if(c.mode==='secret'&&c.phase==='secret'){
   const submitted=c.answeredPlayers.includes(myId);if(submitted){box.innerHTML='<div class="statusText">تم إرسال إجابتك 🔐 — بانتظار الخصم</div>';return}
@@ -366,7 +368,7 @@ function renderChoices(options,parent){
  const grid=document.createElement('div');grid.className='choices';(options||[]).forEach((o,i)=>{const b=document.createElement('button');b.className='choice';b.textContent=o;b.onclick=()=>{[...grid.children].forEach(x=>x.disabled=true);send('answer',{choice:i})};grid.appendChild(b)});parent.appendChild(grid)
 }
 function renderPowers(c){
- const me=myPlayer(),box=$('#powers');box.innerHTML='';if(!me)return;if(c.answerOpensAt&&Date.now()<c.answerOpensAt)return;
+ const me=myPlayer(),box=$('#powers');box.innerHTML='';if(!me)return;if(c.answerOpensAt&&serverNow()<c.answerOpensAt)return;
  const blocked=c.blocked;
  [['double','✦','دبل','ضاعف نقاطك'],['time','+7','وقت','7 ثوانٍ'],['block','🔒','تعطيل','امنع مساعدة الخصم']].forEach(([key,ico,title,sub])=>{const b=document.createElement('button');const avail=me.powers[key];b.className='power '+(!avail?'used':'')+(blocked?' blocked':'');b.disabled=!avail||blocked;b.innerHTML='<b>'+ico+' '+title+'</b><small>'+sub+'</small>';b.onclick=()=>send('power',{power:key});box.appendChild(b)})
 }
@@ -378,17 +380,18 @@ function renderReveal(r){
 }
 function renderFinished(){
  clearInterval(tickId);stopQuestionAudio();if(!finishedAudioPlayed){finishedAudioPlayed=true;BS_AUDIO?.play?.('win');BS_AUDIO?.vibrate?.([80,50,150])}$('#lobby').classList.add('hidden');$('#match').classList.add('hidden');$('#finished').classList.remove('hidden');renderScores();
- const winner=state.winnerId?state.players.find(p=>p.id===state.winnerId):null;$('#winner').textContent=winner?'🏆 '+safeName(winner.name):'🤝 تعادل';
+ const winner=state.winnerId?state.players.find(p=>p.id===state.winnerId):null;$('#winner').textContent=state.winnerId?.startsWith('team:')?'🏆 فاز الفريق '+state.winnerId.slice(5):winner?'🏆 '+safeName(winner.name):'🤝 تعادل';
  $('#finalScores').innerHTML=state.players.map(p=>'<div class="result"><span>'+safeName(p.name)+'</span><span class="gain">'+p.score+'</span></div>').join('');
- const me=myPlayer();$('#rematch').classList.toggle('hidden',me?.role!=='host');$('#rematch').onclick=()=>send('rematch');
+ const me=myPlayer();$('#rematch').classList.toggle('hidden',me?.role!=='host');$('#rematch').disabled=state.rewardsComplete===false;$('#rematch').textContent=state.rewardsComplete===false?'جاري حفظ النتيجة…':'مباراة جديدة';$('#rematch').onclick=()=>send('rematch');if(state.rewardsComplete&&lastCareerRefresh!==state.matchId){lastCareerRefresh=state.matchId;window.BS_CAREER?.refresh?.()?.catch?.(()=>{});}
 }
 
 $('#shareBtn').onclick=async()=>{const invite=new URL('/online.html',location.origin);invite.searchParams.set('room',state.code);if(activeApiOrigin&&activeApiOrigin!==location.origin)invite.searchParams.set('api',activeApiOrigin);const url=invite.href;const text='ادخل تحدي العباقرة — رقم الغرفة '+state.code;if(navigator.share){try{await navigator.share({title:'تحدي العباقرة',text,url});return}catch{}}try{await navigator.clipboard.writeText(url);toast('تم نسخ رابط الغرفة')}catch{toast('رقم الغرفة: '+state.code)}};
 $('#inviteFriendBtn').onclick=()=>{if(!state?.code)return toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'quiz',roomCode:state.code})};
 
+let trackedSession=read('bs_social_session');function accountChanged(){if(trackedSession===read('bs_social_session'))return;trackedSession=read('bs_social_session');manualClose=true;clearTimeout(reconnectTimer);clearInterval(tickId);ws?.close();state=null;mediaVersion++;stopQuestionAudio();$('#room').classList.add('hidden');$('#entry').classList.remove('hidden');toast('تغير الحساب؛ ادخل الغرفة مجددًا.');}window.addEventListener('bs-social-session',accountChanged);window.addEventListener('storage',e=>{if(e.key==='bs_social_session')accountChanged();});
 const quickMatchParam=qs.get('quickMatch')||qs.get('match');
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
-<script type="module" src="assets/js/quick-match-game.js?v=18.0.0"></script>
-<script src="assets/js/profile-core.js?v=18.0.0"></script><script src="assets/js/career-client.js?v=18.0.0"></script><script defer src="assets/js/client-health.js?v=18.0.0"></script></body></html>
+<script type="module" src="assets/js/quick-match-game.js?v=19.0.0"></script>
+<script src="assets/js/profile-core.js?v=19.0.0"></script><script src="assets/js/career-client.js?v=19.0.0"></script><script defer src="assets/js/client-health.js?v=19.0.0"></script></body></html>

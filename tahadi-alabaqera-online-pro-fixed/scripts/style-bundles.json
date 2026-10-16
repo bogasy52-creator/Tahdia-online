@@ -36,7 +36,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/experience-v15.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/home-v19.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -61,7 +62,8 @@
     "assets/css/pro-games.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/quiz-v19.css"
   ],
   "logic.html": [
     "assets/css/platform.css",
@@ -86,7 +88,8 @@
     "assets/css/pro-games.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/quiz-v19.css"
   ],
   "puzzle.html": [
     "assets/css/platform.css",
@@ -170,5 +173,14 @@
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css"
+  ],
+  "picture.html": [
+    "assets/css/platform.css",
+    "assets/css/picture.css"
+  ],
+  "quiz.html": [
+    "assets/css/platform.css",
+    "assets/css/picture.css",
+    "assets/css/quiz-v19.css"
   ]
 }

@@ -1,3 +1,5 @@
+import {ImageRoom} from './images/image-room.js';
+import {imageGenerationConfig} from './images/generate.js';
 import {clientErrorReport} from './diagnostics/client-errors.js';
 
 import { DurableObject } from "cloudflare:workers";
@@ -17,7 +19,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='18.0.0';
+const RELEASE='19.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -253,7 +255,7 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
     if (request.method === "GET" && url.pathname === "/api/health") {
@@ -291,6 +293,24 @@ export default {
 
     const socialResponse = await handleSocialRequest(request, env, { rateLimit });
     if (socialResponse) return socialResponse;
+
+    if(url.pathname.startsWith('/api/picture/')){
+      if(url.pathname==='/api/picture/config'&&request.method==='GET')return json({ok:true,...imageGenerationConfig(env)});
+      if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
+      const limited=await rateLimit(request,env,'picture:'+ (url.pathname.endsWith('/generate')?'generate':'api'),url.pathname.endsWith('/generate')?12:120,60000);if(limited)return limited;
+      if(url.pathname==='/api/picture/rooms'&&request.method==='POST'){
+        for(let attempt=0;attempt<8;attempt++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+code));const res=await stub.fetch('https://picture.internal/init',{method:'POST',body:JSON.stringify({code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
+      }
+      const m=url.pathname.match(/^\/api\/picture\/rooms\/(\d{6})\/(ws|status|generate|art\/[a-f0-9-]{36})$/);if(!m)return json({ok:false,error:'not_found'},404);
+      if(request.method!==(m[2]==='generate'?'POST':'GET'))return json({ok:false,error:'method_not_allowed'},405);
+      const headers=new Headers(request.headers);headers.delete('x-bs-account');
+      if(m[2]==='ws'||m[2]==='generate'){
+        const st=m[2]==='ws'?String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3):null;
+        const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(auth)headers.set('x-bs-account',auth.username);else if(m[2]==='generate')return json({ok:false,error:'سجّل الدخول لتوليد صورة'},401);
+      }
+      if(Number(headers.get('content-length'))>4096)return json({ok:false,error:'طلب كبير'},413);
+      let payload;if(request.method==='POST'){payload=await request.text();if(payload.length>4096)return json({ok:false,error:'طلب كبير'},413);}const stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+m[1]));return stub.fetch(new Request('https://picture.internal/'+m[2]+url.search,{method:request.method,headers,body:payload}));
+    }
 
     if (url.pathname.startsWith('/api/quick/')) {
       if(!env.QUICK_ARENA)return json({ok:false,error:'المواجهة السريعة تحتاج نشر محرك الإصدار السادس'},503);
@@ -518,10 +538,13 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async pictureDelegate(){if(!this.pictureRoom)this.pictureRoom=new ImageRoom(this.ctx,this.env);await this.pictureRoom.ready;return this.pictureRoom;}
+
   async serpentDelegate(){if(!this.serpentRoom)this.serpentRoom=new SerpentRoom(this.ctx,this.env);await this.serpentRoom.ready;return this.serpentRoom;}
 
   async fetch(request) {
     const url = new URL(request.url);
+    if(url.hostname==='picture.internal')return (await this.pictureDelegate()).fetch(request);
     if(url.hostname==='serpent.internal')return (await this.serpentDelegate()).fetch(request);
 
     if (url.pathname === "/rate" && request.method === "POST") {
@@ -561,7 +584,7 @@ export class GameRoom extends DurableObject {
         recentQids: [],
         winnerId: null,
         mode: [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
-        playerLimit: [4,6].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
+        playerLimit: [2,4,5,6,7,8].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
       await this.persist();
@@ -584,6 +607,10 @@ export class GameRoom extends DurableObject {
       const { reconnectToken, hostKey, protocol } = webSocketAuth(request);
       if (!protocol) return json({ ok: false, error: "WebSocket protocol required" }, 426);
       let player = null;
+      const account=request.headers.get('x-bs-account')||null;
+      const claimed=reconnectToken?Object.values(this.room.players).find(p=>p.token===reconnectToken):null;
+      if(claimed?.username&&claimed.username!==account)return json({ok:false,error:'ارجع بالحساب نفسه'},403);
+      if(!claimed&&account&&Object.values(this.room.players).some(p=>p.username===account))return json({ok:false,error:'حسابك موجود في الغرفة'},409);
 
       if (reconnectToken) {
         player = Object.values(this.room.players).find((p) => p.token === reconnectToken) || null;
@@ -664,6 +691,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketMessage(ws,raw);
     if (!this.room) return;
     const player = this.playerForSocket(ws);
@@ -691,6 +719,7 @@ export class GameRoom extends DurableObject {
               .slice(0, 6);
             if (ids.length !== 6) return this.sendError(ws, "اختر 6 فئات");
             this.room.selectedCategories = ids;
+            for(const p of Object.values(this.room.players))p.ready=false;
             await this.persistAndBroadcast();
           }
           break;
@@ -709,6 +738,7 @@ export class GameRoom extends DurableObject {
         case "random_categories":
           if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
           this.room.selectedCategories = shuffle(CATEGORIES.map((c) => c.id)).slice(0, 6);
+          for(const p of Object.values(this.room.players))p.ready=false;
           await this.persistAndBroadcast();
           break;
 
@@ -716,6 +746,7 @@ export class GameRoom extends DurableObject {
           if (player.role !== "host") return this.sendError(ws, "للمضيف فقط");
           if (this.room.status !== "lobby") return;
           if (this.room.order.length < 2) return this.sendError(ws, "يلزم لاعبان على الأقل");
+          if(this.room.mode!=='free'&&this.room.order.length!==this.room.playerLimit)return this.sendError(ws,"انتظر اكتمال الفريقين");
           if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال اللاعبين");
           if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "يجب أن يكون جميع اللاعبين جاهزين");
           if (this.room.selectedCategories.length !== 6) return this.sendError(ws, "اختر 6 فئات");
@@ -736,6 +767,7 @@ export class GameRoom extends DurableObject {
 
         case "rematch":
           if (player.role !== "host" || this.room.status !== "finished") return this.sendError(ws, "للمضيف فقط");
+          if(this.room.rewardsComplete===false)return this.sendError(ws,"جاري حفظ النتيجة");
           await this.resetForRematch();
           break;
 
@@ -749,6 +781,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketClose(ws);
     const p = this.playerForSocket(ws);
     if (p) {
@@ -757,13 +790,15 @@ export class GameRoom extends DurableObject {
       this.room.updatedAt = Date.now();
       await this.persist();
       this.broadcastState();
-      if (["lobby", "finished"].includes(this.room.status)) {
+      if (this.room.status==='finished'&&this.room.rewardsComplete===false){await this.saveQuizRewards();this.broadcastState();}
+    if (["lobby", "finished"].includes(this.room.status)) {
         await this.ctx.storage.setAlarm(Math.min(this.room.expiresAt, p.disconnectedAt + DISCONNECT_GRACE_MS));
       }
     }
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketError(ws);
     await this.webSocketClose(ws);
   }
@@ -809,6 +844,7 @@ export class GameRoom extends DurableObject {
     if (!this.room || !["lobby", "finished"].includes(this.room.status)) return;
     const now = Date.now();
     const candidates = [this.room.expiresAt];
+    if(this.room.status==='finished'&&this.room.rewardsComplete===false)candidates.push(this.room.rewardRetryAt||now+10000);
     for (const id of this.room.order) {
       const p = this.room.players[id];
       if (!p?.connected && p?.disconnectedAt) candidates.push(p.disconnectedAt + DISCONNECT_GRACE_MS);
@@ -838,7 +874,7 @@ export class GameRoom extends DurableObject {
     const players = this.room.order.map((id) => {
       const p = this.room.players[id];
       return {
-        id: p.id, name: p.name, role: p.role, score: p.score,
+        id: p.id, name: p.name, role: p.role, team:p.team, score: p.score,
         ready: p.ready, connected: Boolean(p.connected),
         powers: p.id === playerId ? p.powers : {
           double: p.powers.double, time: p.powers.time, block: p.powers.block
@@ -848,6 +884,7 @@ export class GameRoom extends DurableObject {
 
     const out = {
       code: this.room.code,
+      serverNow:Date.now(),matchId:this.room.matchId||'',mode:this.room.mode,playerLimit:this.room.playerLimit,rewardsComplete:this.room.rewardsComplete!==false,teamScores:['A','B'].map(team=>({team,score:this.room.order.reduce((n,id)=>n+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})),
       status: this.room.status,
       selectedCategories: this.room.selectedCategories,
       categories: CATEGORIES.map((c) => ({ id: c.id, name: c.name, icon: c.icon, desc: c.desc })),
@@ -888,6 +925,7 @@ export class GameRoom extends DurableObject {
 
   async startMatch() {
     this.room.status = "playing";
+    this.room.matchId=crypto.randomUUID();this.room.startedAt=Date.now();this.room.rewardsComplete=false;
     this.room.winnerId = null;
     this.room.lastReveal = null;
     this.room.roundIndex = -1;
@@ -1103,21 +1141,17 @@ export class GameRoom extends DurableObject {
   }
 
   async finishMatch() {
-    this.room.status = "finished";
-    this.room.current = null;
-    this.room.lastReveal = null;
-    if (this.room.mode === 'teams-4' || this.room.mode === 'teams-6') {
-      const totals = ['A','B'].map(team => ({team, score:this.room.order.reduce((s,id)=>s+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})).sort((a,b)=>b.score-a.score);
-      this.room.winnerId = totals[0].score === totals[1].score ? null : `team:${totals[0].team}`;
-      this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      await this.persistAndBroadcast(); await this.scheduleLobbyAlarm(); return;
-    }
-    const ranked = this.room.order.map((id) => this.room.players[id]).filter(Boolean).sort((x,y)=>(y.score||0)-(x.score||0));
-    const top = ranked[0], tied = ranked.filter(p => (p.score||0) === (top?.score||0));
-    this.room.winnerId = tied.length === 1 ? top.id : null;
-    this.room.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-    await this.persistAndBroadcast();
-    await this.scheduleLobbyAlarm();
+    this.room.status='finished';this.room.current=null;this.room.lastReveal=null;this.room.finishedAt=Date.now();
+    if(this.room.mode==='teams-4'||this.room.mode==='teams-6'){
+      const scores=['A','B'].map(team=>({team,score:this.room.order.reduce((n,id)=>n+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})).sort((a,b)=>b.score-a.score);
+      this.room.winnerId=scores[0].score===scores[1].score?null:'team:'+scores[0].team;
+    }else{const list=this.room.order.map(id=>this.room.players[id]).sort((a,b)=>b.score-a.score);this.room.winnerId=list.length>1&&list[0].score===list[1].score?null:list[0]?.id||null;}
+    this.room.expiresAt=Date.now()+86400000;
+    await this.persistAndBroadcast();await this.saveQuizRewards();this.broadcastState();await this.scheduleLobbyAlarm();
+  }
+  async saveQuizRewards(){
+    const r=this.room;if(!r||r.status!=='finished'||r.rewardsComplete!==false)return;
+    try{if(r.matchId&&r.roundIndex>=12&&r.roundPlan.length>=12&&r.finishedAt-r.startedAt>=30000)for(const id of r.order){const p=r.players[id];if(!p.username)continue;const stub=getSocialStub(this.env,p.username);if(!stub)throw new Error('binding_missing');const res=await stub.fetch('https://social.internal/career/verified',{method:'POST',body:JSON.stringify({id:`quiz:${r.matchId}:${p.id}`,game:'quiz',win:r.winnerId===p.id||r.winnerId==='team:'+p.team})});if(!res.ok)throw new Error('reward_failed');}r.rewardsComplete=true;r.rewardRetryAt=null;}catch{r.rewardRetryAt=Date.now()+10000;}await this.persist();
   }
 
   async resetForRematch() {
@@ -1138,6 +1172,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.pictureRoom||await this.ctx.storage.get('imageRoom')||await this.ctx.storage.get('imageQuota'))return (await this.pictureDelegate()).alarm();
     if(this.serpentRoom||await this.ctx.storage.get('serpent'))return (await this.serpentDelegate()).alarm();
     if (!this.room) {
       const now = Date.now();

@@ -87,11 +87,11 @@ async function call(stub, path, body = {}) {
 }
 
 async function validateInviteRoom(env, game, roomCode) {
-  const namespace = game === "quiz" || game === "serpent" ? env?.ROOMS : env?.BOARD_ROOMS;
+  const namespace = game === "quiz" || game === "serpent" || game === "picture" ? env?.ROOMS : env?.BOARD_ROOMS;
   if (!namespace) return { ok: false, status: 503, error: "محرك الغرفة غير متاح" };
   try {
-    const stub = namespace.get(namespace.idFromName(game === "serpent" ? '__serpent__:'+roomCode : roomCode));
-    const response = await stub.fetch(game === "serpent" ? "https://serpent.internal/status" : game === "quiz" ? "https://room.internal/status" : "https://board.internal/status");
+    const stub = namespace.get(namespace.idFromName(game === "picture" ? 'picture:'+roomCode : game === "serpent" ? '__serpent__:'+roomCode : roomCode));
+    const response = await stub.fetch(game === "picture" ? "https://picture.internal/status" : game === "serpent" ? "https://serpent.internal/status" : game === "quiz" ? "https://room.internal/status" : "https://board.internal/status");
     const data = await readJson(response);
     if (!response.ok || !data.ok) return { ok: false, status: 404, error: "الغرفة غير موجودة" };
     if (game !== "quiz" && data.game !== game) return { ok: false, status: 409, error: "رمز الغرفة يخص لعبة أخرى" };
