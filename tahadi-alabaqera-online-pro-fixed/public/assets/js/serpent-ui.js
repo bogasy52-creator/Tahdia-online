@@ -1,7 +1,7 @@
-import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=16.0.1';
-import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=16.0.1';
-import {ArenaGestures} from './arena-gestures.js?v=16.0.1';
-import {applySerpentFrame} from './serpent-network.js?v=16.0.1';
+import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=17.0.0';
+import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=17.0.0';
+import {ArenaGestures} from './arena-gestures.js?v=17.0.0';
+import {applySerpentFrame} from './serpent-network.js?v=17.0.0';
 
 const $=id=>document.getElementById(id),SESSION='busraj-serpent-room-v12';
 const renderer=new SerpentRenderer($('arenaCanvas')),keys=new Set(),mousePointers=new Map(),headings=[null,null],controls=[{angle:null,boost:false},{angle:null,boost:false}];

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 
-test('snake gameplay does not load the retired portrait skin or overlapping effect layers',async()=>{const html=await readFile(join(root,'public/snakes.html'),'utf8');assert.match(html,/pro-games\.css/);assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/snake-reference-skin\.png|snake-pro-upgrade\.js|v5-ultimate-expansion\.js/);assert.match(html,/await runSoloAi\(\)/)});
+test('snake gameplay does not load the retired portrait skin or overlapping effect layers',async()=>{const html=await readFile(join(root,'public/snakes.html'),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/snake-reference-skin\.png|snake-pro-upgrade\.js|v5-ultimate-expansion\.js/);assert.match(html,/await runSoloAi\(\)/)});
 
 test('current arena images are valid lossless WebP with their original dimensions', async () => {
   for(const [name,width,height] of [['neon-cobra',1024,1536],['objects',2048,768],['arena-plate',853,1844],['jackaroo-table',1254,1254]]){

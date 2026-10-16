@@ -7,11 +7,11 @@ const root=process.cwd(),pub=join(root,'public');
 test('mobile board stylesheet is shipped and cached', async()=>{
   await access(join(pub,'assets/css/mobile-game.css'));
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v21-reference-skin/);
+  assert.match(sw,/busraj-games-v44-release-17-0-0/);
   assert.ok(sw.includes('/assets/css/mobile-game.css'));
 });
 
-test('all board games keep a responsive stylesheet and an active-game state',async()=>{for(const [file,cls] of [['snakes.html','game-snakes'],['zahra.html','game-zahra'],['jackaroo.html','game-jackaroo'],['dice.html','game-dice']]){const html=await readFile(join(pub,file),'utf8');assert.match(html,/pro-games\.css|mobile-game\.css/);assert.ok(html.includes(cls));assert.ok(html.includes("document.body.classList.add('game-running')"))}});
+test('all board games keep a responsive stylesheet and an active-game state',async()=>{for(const [file,cls] of [['snakes.html','game-snakes'],['zahra.html','game-zahra'],['jackaroo.html','game-jackaroo'],['dice.html','game-dice']]){const html=await readFile(join(pub,file),'utf8');assert.match(html,/app-(?:snakes|zahra|jackaroo|dice)\.css/);assert.ok(html.includes(cls));assert.ok(html.includes("document.body.classList.add('game-running')"))}});
 
 test('snakes pieces cannot be clipped during movement', async()=>{
   const html=await readFile(join(pub,'snakes.html'),'utf8');

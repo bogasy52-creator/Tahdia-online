@@ -7,7 +7,7 @@ const pub = join(root,'public');
 
 test('every dice game uses one shared professional die provider',async()=>{const snakes=await readFile(join(pub,'snakes.html'),'utf8');assert.match(snakes,/pro-dice\.js/);assert.doesNotMatch(snakes,/luxury-game-ui\.js/);for(const file of ['zahra.html','dice.html']){const html=await readFile(join(pub,file),'utf8');assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/luxury-game-ui\.js/)}const die=await readFile(join(pub,'assets/js/pro-dice.js'),'utf8');assert.match(die,/running\.has\(el\)/);assert.match(die,/duration:1180/);assert.doesNotMatch(die,/setInterval|MutationObserver/)});
 
-test('the redesigned board games share professional pieces and readable labels',async()=>{for(const file of ['snakes.html','jackaroo.html']){const html=await readFile(join(pub,file),'utf8');assert.match(html,/pro-games\.css/);assert.match(html,/pawn-label/)}const css=await readFile(join(pub,'assets/css/pro-games.css'),'utf8');assert.match(css,/\.snake-token/);assert.match(css,/\.jack-piece/)});
+test('the redesigned board games share professional pieces and readable labels',async()=>{for(const file of ['snakes.html','jackaroo.html']){const html=await readFile(join(pub,file),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.match(html,/pawn-label/)}const css=await readFile(join(pub,'assets/css/pro-games.css'),'utf8');assert.match(css,/\.snake-token/);assert.match(css,/\.jack-piece/)});
 
 test('snake renderer includes layered body, scale and tongue detail', async()=>{
   const html=await readFile(join(pub,'snakes.html'),'utf8');
@@ -18,7 +18,7 @@ test('service worker caches luxury presentation assets', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
   assert.ok(sw.includes('/assets/css/luxury-game-ui.css'));
   assert.ok(sw.includes('/assets/js/luxury-game-ui.js'));
-  assert.match(sw,/busraj-games-v20/);
+  assert.match(sw,/busraj-games-v44-release-17-0-0/);
 });
 
 

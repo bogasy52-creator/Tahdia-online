@@ -1,0 +1,31 @@
+const allowed = new Set(ON_DEMAND);
+let writes = 0;
+async function remember(name, request, response, max) {
+  const cache = await caches.open(name); await cache.put(request, response);
+  if (++writes % 12 === 0) { const keys = await cache.keys(); await Promise.all(keys.slice(0, Math.max(0, keys.length - max)).map(key => cache.delete(key))); }
+}
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  self.skipWaiting();
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => /^(?:busraj-|tahdia-)/.test(key) && ![CACHE_NAME,RUNTIME_CACHE,MEDIA_CACHE].includes(key)).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+  if (event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try { const response = await fetch(event.request); if (response.ok) event.waitUntil(remember(RUNTIME_CACHE,event.request,response.clone(),144).catch(() => {})); return response; }
+      catch { return await caches.match(event.request) || await caches.match(url.pathname) || await caches.match(url.pathname.replace(/\/$/,'') + '.html') || await caches.match('/offline.html'); }
+    })()); return;
+  }
+  if (!allowed.has(url.pathname)) return;
+  const media = url.pathname.startsWith('/assets/quiz_photos/') || url.pathname.startsWith('/assets/sounds_pro/') || /\.(?:webp|png|wav)$/.test(url.pathname);
+  event.respondWith((async () => {
+    const found = await caches.match(event.request); if (found) return found;
+    try { const response = await fetch(event.request); if (response.ok && response.type !== 'opaque') event.waitUntil(remember(media?MEDIA_CACHE:RUNTIME_CACHE,event.request,response.clone(),media?64:144).catch(() => {})); return response; }
+    catch { return Response.error(); }
+  })());
+});

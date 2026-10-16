@@ -8,7 +8,7 @@
  const equipped=()=>{const id=(root.BS_CAREER?.get?.().equipped?.character||'character-fox').replace('character-','');return owned(id)?id:'fox';};
  const characterId=player=>onlineChoices?onlineChoices[Math.abs(Number(player)||0)%4]:equipped();
  const characterImages=new Map(),characterReady=Promise.all(characters.map(item=>new Promise(resolve=>{const image=new Image();characterImages.set(item.id,image);image.onload=()=>{for(const canvas of document.querySelectorAll('.crystal-sprite[data-art="character"]'))drawCharacter(canvas,Number(canvas.dataset.player));resolve()};image.onerror=resolve;image.src='assets/characters/'+item.id+'.webp';})));
- const source=new Image();source.src='assets/arena/objects.webp';
+ const source=new Image();source.src='assets/arena/objects-v17.webp';
  const gemReady=new Promise(resolve=>{source.onload=()=>{for(const c of document.querySelectorAll('.crystal-sprite[data-art="royal"]'))draw(c,c.dataset.pawn,Number(c.dataset.player),{style:'royal'});resolve()};source.onerror=resolve;if(source.complete&&source.naturalWidth)resolve()}),ready=Promise.all([gemReady,characterReady]);
  const reduce=()=>root.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
  const characterBoard=document.body.classList.contains('game-snakes');

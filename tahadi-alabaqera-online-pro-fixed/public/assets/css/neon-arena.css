@@ -2,7 +2,7 @@
 body.game-snakes.game-running{background:#030610}
 .game-snakes.game-running .bs-shell{padding:0!important;max-width:none!important;display:block!important}
 .game-snakes.game-running .bs-topbar{display:none!important}
-#game.neon-arena{position:relative!important;width:min(100vw,709px,calc(100dvh / 2.1618))!important;height:auto!important;aspect-ratio:853/1844;min-height:0!important;margin:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:#060a13 url('../arena/arena-plate.webp') center/100% 100% no-repeat!important;overflow:hidden!important;isolation:isolate}
+#game.neon-arena{position:relative!important;width:min(100vw,709px,calc(100dvh / 2.1618))!important;height:auto!important;aspect-ratio:853/1844;min-height:0!important;margin:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:#060a13 url('../arena/arena-plate-v17.webp') center/100% 100% no-repeat!important;overflow:hidden!important;isolation:isolate}
 #game.neon-arena .arena-frame{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;filter:var(--arena-board-filter,none)}
 html[data-board='board-ocean']{--arena-board-filter:hue-rotate(-18deg) saturate(1.4)}
 html[data-board='board-sand']{--arena-board-filter:hue-rotate(145deg) saturate(.7) sepia(.22)}

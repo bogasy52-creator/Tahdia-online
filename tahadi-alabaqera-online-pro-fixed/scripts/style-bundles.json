@@ -1,0 +1,174 @@
+{
+  "accuracy.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arcade.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "admin.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arena-suite.css",
+    "assets/css/cosmetics.css",
+    "assets/css/admin.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "dice.html": [
+    "assets/css/platform.css",
+    "assets/css/game-kit.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/arena-suite.css",
+    "assets/css/dice-refined.css",
+    "assets/css/cosmetics.css",
+    "assets/css/royal-play.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "index.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/arena-suite.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/experience-v15.css",
+    "assets/css/studio-v16.css"
+  ],
+  "jackaroo.html": [
+    "assets/css/platform.css",
+    "assets/css/game-kit.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/arena-suite.css",
+    "assets/css/dice-refined.css",
+    "assets/css/cosmetics.css",
+    "assets/css/royal-play.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "journey.html": [
+    "assets/css/platform.css",
+    "assets/css/journey.css"
+  ],
+  "local.html": [
+    "assets/css/platform.css",
+    "assets/css/quiz-luxury.css",
+    "assets/css/quiz-board-v2.css",
+    "assets/css/pro-games.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "logic.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arcade.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "memory.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arcade.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "online.html": [
+    "assets/css/platform.css",
+    "assets/css/quiz-luxury.css",
+    "assets/css/quiz-board-v2.css",
+    "assets/css/pro-games.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "puzzle.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arcade.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "reaction.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arcade.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "serpent.html": [
+    "assets/css/platform.css",
+    "assets/css/serpent.css",
+    "assets/css/professional-v13.css",
+    "assets/css/royal-play.css",
+    "assets/css/gameplay-v133.css",
+    "assets/css/gameplay-v134.css",
+    "assets/css/gameplay-v135.css",
+    "assets/css/professional-v14.css",
+    "assets/css/experience-v15.css",
+    "assets/css/studio-v16.css"
+  ],
+  "shop.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/arena-suite.css",
+    "assets/css/dice-refined.css",
+    "assets/css/cosmetics.css",
+    "assets/css/gameplay-v134.css",
+    "assets/css/professional-v14.css",
+    "assets/css/experience-v15.css",
+    "assets/css/studio-v16.css"
+  ],
+  "snakes.html": [
+    "assets/css/platform.css",
+    "assets/css/game-kit.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/neon-arena.css",
+    "assets/css/dice-refined.css",
+    "assets/css/cosmetics.css",
+    "assets/css/royal-play.css",
+    "assets/css/gameplay-v133.css",
+    "assets/css/gameplay-v134.css",
+    "assets/css/professional-v14.css",
+    "assets/css/experience-v15.css",
+    "assets/css/studio-v16.css"
+  ],
+  "social.html": [
+    "assets/css/platform.css",
+    "assets/css/social.css",
+    "assets/css/pro-games.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "v5.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/home-pro.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ],
+  "zahra.html": [
+    "assets/css/platform.css",
+    "assets/css/game-kit.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/arena-suite.css",
+    "assets/css/dice-refined.css",
+    "assets/css/cosmetics.css",
+    "assets/css/royal-play.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css"
+  ]
+}

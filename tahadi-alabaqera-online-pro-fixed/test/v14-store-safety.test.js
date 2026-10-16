@@ -34,7 +34,7 @@ test('a displayed daily offer cannot silently charge the full price after Riyadh
  const h=await createDOM('shop.html');let time=Date.parse('2026-10-12T20:59:59Z');const RealDate=Date;
  h.context.Date=class extends RealDate{constructor(...args){super(...(args.length?args:[time]))}static now(){return time}};
  h.storage.set(KEY,JSON.stringify(Career.normalize({coins:5000})));await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await h.runFile('assets/js/shop.js');
- const offer=Career.dailyOffer(time),before=h.context.BS_CAREER.get(),button=h.doc.querySelector('[data-item="'+offer.id+'"] [data-control="buy"]');assert.ok(button&&!button.disabled);
+ const offer=Career.dailyOffer(time),before=h.context.BS_CAREER.get(),opener=h.doc.querySelector('[data-item="'+offer.id+'"] .item-inspect');opener.onclick();const button=h.doc.getElementById('itemAction');assert.ok(button&&!button.disabled);
  time+=2000;assert.notEqual(Career.itemPrice(offer.id,time),Career.itemPrice(offer.id,time-2000));await button.onclick();
  assert.deepEqual(h.context.BS_CAREER.get(),before);assert.ok(h.doc.getElementById('storeMessage').textContent.includes('تغيّر سعر العرض'));
 });

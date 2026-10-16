@@ -1,3 +1,5 @@
+import {createPaths,movePaths} from '../public/assets/js/engines/journey-engine.js';
+import '../public/assets/js/profile-core.js';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {resolve,dirname,join} from 'node:path';
@@ -70,7 +72,12 @@ try{
  await playRoom('classic',4);await playRoom('adventure',2);
  for(const game of ['jackaroo','zahra']){const room=await api('/api/board/rooms',{game,name:'Host',playerLimit:game==='jackaroo'?4:2});assert.equal(room.status,200);const status=await api('/api/board/rooms/'+room.data.code+'/status');assert.equal(status.data.game,game);checks.push({check:'create-and-status',game,result:'passed'})}
  const owner=await api('/api/social/signup',{username:'BoSraG',displayName:'BoSraG',password:'RuntimeTestPass123!'});assert.equal(owner.status,201);
- const career=await api('/api/social/career',undefined,owner.data.token),admin=await api('/api/social/admin',undefined,owner.data.token);assert.equal(career.data.access.role,'owner');assert.equal(career.data.career.owned.length,44);assert.equal(admin.status,200);assert.equal(admin.data.access.capabilities.length,6);checks.push({check:'mixed-case-owner-and-all-unlocks',result:'passed'});
+ const career=await api('/api/social/career',undefined,owner.data.token),admin=await api('/api/social/admin',undefined,owner.data.token);assert.equal(career.data.access.role,'owner');assert.equal(career.data.career.owned.length,globalThis.BS_CAREER_CORE.CATALOG.length);assert.equal(admin.status,200);assert.equal(admin.data.access.capabilities.length,6);checks.push({check:'mixed-case-owner-and-all-unlocks',result:'passed'});
+ const explorer=await api('/api/social/signup',{username:'journeyruntime',displayName:'Explorer',password:'RuntimeTestPass123!'});assert.equal(explorer.status,201);
+ let stage=createPaths();for(let color=0;color<stage.pairs.length;color++)stage=movePaths(stage,color,stage.solution[color]).state;
+ const proof={game:'paths',level:1,log:stage.log},completed=await api('/api/social/career/journey',{proof},explorer.data.token),replayed=await api('/api/social/career/journey',{proof},explorer.data.token);
+ assert.equal(completed.status,200);assert.equal(completed.data.journey.stages.paths[1],3);assert.equal(completed.data.career.coins,120);assert.equal(replayed.data.career.coins,120);assert.equal(replayed.data.first,false);
+ checks.push({check:'verified-journey-result-and-idempotent-SQLite-storage',result:'passed'});
  for(const socket of sockets)try{socket.close(1000,'test_complete')}catch{}await mf.dispose();mf=new Miniflare(options(bundle,true));await mf.ready;
  const first=await api('/api/board/rooms',{game:'snakes',name:'A'}),second=await api('/api/board/rooms',{game:'snakes',name:'A'});assert.equal(first.data.code,'DURABLE_REQUEST_LIMIT');assert.equal(second.data.code,'DURABLE_REQUEST_LIMIT');
  const faultEnv=await mf.getBindings(),count=await(await faultEnv.BOARD_ROOMS.get(faultEnv.BOARD_ROOMS.idFromName('__test_counter__')).fetch('https://board.internal/__test/fault-count')).json();assert.equal(count.count,1);checks.push({check:'injected-quota-error-and-circuit',result:'passed',failedInitCalls:count.count});

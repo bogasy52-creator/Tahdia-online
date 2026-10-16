@@ -1,0 +1,11 @@
+import {readFile,writeFile,readdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('../public/',import.meta.url));
+async function walk(dir){const rows=[];for(const entry of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())rows.push(...await walk(file));else rows.push('/'+path.relative(root,file).split(path.sep).join('/'));}return rows;}
+const shell=['/','/index.html','/journey.html','/offline.html','/manifest.webmanifest','/apple-touch-icon.png','/assets/css/app-index.css?v=17.0.0','/assets/css/app-journey.css?v=17.0.0',...['client-health','audio-manager','platform','social-client','profile-core','career-client','matchmaking','ui-icons','pro-experience','home-v14','home-return-v17','journey-client','journey-renderer','journey-ui'].map(name=>'/assets/js/'+name+'.js?v=17.0.0'),'/assets/js/engines/journey-engine.js?v=17.0.0',...['journey-world','jewels-cover','paths-cover','memory-cover','reaction-cover','logic-cover','puzzle-cover','accuracy-cover'].map(name=>'/assets/brand/'+name+'.svg'),'/assets/characters/fox.webp'];
+const demand=(await walk(root)).filter(file=>/\.(?:css|js|html|webp|png|svg|wav|woff2)$/.test(file)).sort();
+const runtime=await readFile(new URL('./service-worker-runtime.txt',import.meta.url),'utf8');
+const value="// V17: small offline core. Other games and media are cached after the first visit.\nconst CACHE_NAME = 'busraj-games-v44-release-17-0-0';\nconst RUNTIME_CACHE = CACHE_NAME + '-visited';\nconst MEDIA_CACHE = 'busraj-quiz-media-v4';\nconst APP_SHELL = "+JSON.stringify(shell,null,2)+";\nconst ON_DEMAND = "+JSON.stringify(demand,null,2)+";\n"+runtime;
+const out=path.join(root,'service-worker.js');if(process.argv.includes('--check')){if(await readFile(out,'utf8')!==value)throw Error('Rebuild offline manifest');}else await writeFile(out,value);
+console.log('Offline core: '+shell.length+' resources; other assets stay on demand.');

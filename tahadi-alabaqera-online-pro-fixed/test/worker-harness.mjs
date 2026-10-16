@@ -4,7 +4,7 @@ const Worker=await import('../src/index.js');
 class Storage{
  constructor(){this.values=new Map();this.alarm=null;this.queue=Promise.resolve()}
  async get(k){return structuredClone(this.values.get(k))}
- async put(k,v){this.values.set(k,structuredClone(v))}
+ async put(k,v){if(k&&typeof k==='object'){for(const [key,value]of Object.entries(k))this.values.set(key,structuredClone(value));}else this.values.set(k,structuredClone(v))}
  async delete(k){if(Array.isArray(k))return k.map(x=>this.values.delete(x));return this.values.delete(k)}
  async deleteAll(){this.values.clear()}
  async list({prefix='',limit=1000,reverse=false,startAfter}={}){let rows=[...this.values].filter(([k])=>k.startsWith(prefix)&&(startAfter===undefined||k>startAfter)).sort(([a],[b])=>a.localeCompare(b));if(reverse)rows.reverse();return new Map(rows.slice(0,limit).map(([k,v])=>[k,structuredClone(v)]))}

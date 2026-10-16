@@ -51,6 +51,8 @@
     {id:'title-collector',type:'title',name:'جامع الكنوز',description:'لقب بلون الزمرد لمقتنياتك المميزة.',price:240,color:'#78dbb7'},
     {id:'title-champion',type:'title',name:'بطل الحلبة',description:'لقب ذهبي يظهر بجانب ملفك وفي شاشة الفوز.',price:480,color:'#f4cd7a'},
     {id:'title-legend',type:'title',name:'أسطورة النيون',description:'لقب حصري يُفتح بإنجاز 50 جولة.',price:0,color:'#c79aff',source:'achievement',objective:'fifty-games'},
+    {id:'title-starfinder',type:'title',name:'صائد النجوم',description:'لقب حصري لرحلة النجوم. اجمع 30 نجمة من المراحل لفتحه.',price:0,color:'#efd29b',source:'journey',unlockStars:30},
+    {id:'title-pathmaster',type:'title',name:'سيّد المسارات',description:'لقب إنجاز حصري. اجمع 120 نجمة من مراحل المغامرة.',price:0,color:'#a5dfca',source:'journey',unlockStars:120},
     {id:'title-manager',type:'title',name:'مدير الحلبة',description:'هوية المدير الموثّقة لحساب bosrag.',price:0,color:'#f2ce87',source:'owner'}
   ].map(i=>Object.freeze({...i,rarity:i.source?'exclusive':i.price>=450?'legendary':i.price>=140?'rare':'common'})));
   const BUNDLES=Object.freeze([
@@ -72,7 +74,7 @@
     {id:'collector',kind:'achievement',name:'خزانة الكنوز',description:'امتلك 10 إضافات مدفوعة مختلفة.',metric:'collection',goal:10,coins:150},
     {id:'online-winner',kind:'achievement',name:'بطل المنافسة',description:'اربح 5 مباريات أونلاين موثّقة.',metric:'rankedWins',goal:5,coins:150}
   ].map(Object.freeze));
-  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent'];
+  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths'];
   const COSMETIC_STYLES=Object.freeze({
     'dice-ivory':{'--die-color':'#f3eee3','--die-highlight':'#ffffff','--die-shade':'#c7bda8','--die-pip':'#08101f','--die-pip-light':'#344257'},
     'dice-midnight':{'--die-color':'#202c40','--die-highlight':'#526982','--die-shade':'#101a2a','--die-pip':'#f6ecd9','--die-pip-light':'#ffffff'},
@@ -170,5 +172,6 @@
     p.checkouts.push({id:requestId,ids:[...ids],price:quote.price});
     return normalize(p);
   }
-  root.BS_CAREER_CORE=Object.freeze({CATALOG,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
+  function unlockJourney(raw,stars){const p=normalize(raw);for(const item of CATALOG)if(item.source==='journey'&&Number.isSafeInteger(stars)&&stars>=item.unlockStars&&!p.owned.includes(item.id))p.owned.push(item.id);return normalize(p);}
+  root.BS_CAREER_CORE=Object.freeze({unlockJourney,CATALOG,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
 })(globalThis);

@@ -1,12 +1,12 @@
-import {snakeGeometry} from './arena-geometry.js?v=16.0.1';
-import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=16.0.1';
+import {snakeGeometry} from './arena-geometry.js?v=17.0.0';
+import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=17.0.0';
 /* Creature heads keep their proportions. Real painted scales follow a
    tapered body mesh between the rule engine's head and tail cells. */
 (function(){
  'use strict';
  const cobra=new Image(),objects=new Image();
- cobra.src='assets/arena/neon-cobra.webp';objects.src='assets/arena/objects.webp';
- const plate=new Image();plate.src='assets/arena/arena-plate.webp';
+ cobra.src='assets/arena/neon-cobra.webp';objects.src='assets/arena/objects-v17.webp';
+ const plate=new Image();plate.src='assets/arena/arena-plate-v17.webp';
  const snakes=new Map(),ladders=new Map(),skins=new Map();let canvas,ctx,routes=[],width=0,height=0,clock=0,last=0,frame=0,paintedAt=0;
  const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  const ease=t=>Math.sin(Math.max(0,Math.min(1,t))*Math.PI);

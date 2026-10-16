@@ -1,4 +1,5 @@
 import {Career} from '../career/core.js';
+import {normalizeJourney,commitJourney,journeyStats} from '../../public/assets/js/engines/journey-engine.js';
 import {OWNER_USERNAME,isOwner,accountAccess,accountCareer} from './account-policy.js';
 import {
   SOCIAL_INVITE_TTL_MS,
@@ -94,13 +95,24 @@ export function createSocialUserClass(DurableObject) {
     }
     if (url.pathname.startsWith('/career/')) {
       const action=url.pathname.split('/')[2];
-      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle','cart'].includes(action)) return json({ok:false,error:'not_found'},404);
+      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle','cart','journey'].includes(action)) return json({ok:false,error:'not_found'},404);
       if(action!=='verified' && !(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
       if(!this.profile)return json({ok:false,error:'account_not_found'},404);
       return this.ctx.blockConcurrencyWhile(async()=>{
         let career=accountCareer(await this.ctx.storage.get('career')||{name:this.profile.displayName},this.profile);
         try{
           if(this.profile.suspended&&!isOwner(this.profile))throw new Error('account_suspended');
+          if(action==='journey'){
+            let journey=normalizeJourney(await this.ctx.storage.get('journey'));
+            let result=null;
+            if(body.proof){
+              result=commitJourney(journey,body.proof);journey=result.journey;
+              if(result.first)career=Career.reward(career,{id:result.receipt,game:body.proof.game,win:true});
+              career=Career.unlockJourney(career,journeyStats(journey).stars);
+              await this.ctx.storage.put({career,journey});
+            }
+            return json({ok:true,journey,career,stars:result?.stars,first:result?.first,access:accountAccess(this.profile),serverNow:Date.now()});
+          }
           if(action==='practice'||action==='verified')career=Career.reward(career,{id:body.id,game:body.game,win:body.win===true,verified:action==='verified'});
           if(action==='daily')career=Career.claimDaily(career);
           if(action==='purchase')career=Career.purchase(career,body.id,{expectedPrice:body.expectedPrice});

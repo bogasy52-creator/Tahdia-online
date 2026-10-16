@@ -10,8 +10,11 @@
   'snake-plasma':{kind:'plasma',light:'#c6f5ff',mid:'#56bad3',dark:'#574487',accent:'#d3a9ff'}
  });
  const images={},cache=new Map();
- const sources={cobra:'assets/arena/neon-cobra.webp',head:'assets/arena/serpent-head.png',objects:'assets/arena/objects.webp',orb:'assets/arena/pawn-orb.png',crown:'assets/arena/pawn-crown.png',board:'assets/arena/arena-plate.webp',table:'assets/arena/jackaroo-table.webp'};
- const ready=Promise.all(Object.entries(sources).map(([key,src])=>new Promise(resolve=>{const img=new Image();images[key]=img;img.onload=resolve;img.onerror=resolve;if(root.BS_SERPENT_ART&&['head','cobra'].includes(key)){resolve();return;}img.src=src;}))).then(()=>root.BS_SERPENT_ART?.ready);
+ const sources={cobra:'assets/arena/neon-cobra.webp',head:'assets/arena/serpent-head.png',objects:'assets/arena/objects-v17.webp',orb:'assets/arena/pawn-orb.webp',crown:'assets/arena/pawn-crown.webp',board:'assets/arena/arena-plate-v17.webp',table:'assets/arena/jackaroo-table-v17.webp'};
+ const pending=new Map();for(const key of Object.keys(sources))images[key]=new Image();
+ function load(key){if(pending.has(key))return pending.get(key);const value=new Promise(resolve=>{const img=images[key];img.onload=()=>resolve(true);img.onerror=()=>resolve(false);img.src=sources[key];});pending.set(key,value);return value;}
+ function ensure(item){const keys=item.type==='snake'?(root.BS_SERPENT_ART?[]:['head','cobra']):item.type==='board'?['board']:item.type==='table'?['table']:item.type==='pawn'&&!root.BS_STONES?[item.id==='pawn-orb'?'orb':item.id==='pawn-crown'?'crown':'objects']:[];return Promise.all(keys.map(load)).then(()=>root.BS_SERPENT_ART?.ready);}
+ const ready=Promise.resolve(root.BS_SERPENT_ART?.ready);
  const hues={'snake-wild':-92,'snake-aurora':55,'snake-gold':185,'snake-ice':-15,'snake-toxic':-125,'snake-plasma':28};
  function raster(id,variant=0){
   const key=id+':'+variant;if(cache.has(key))return cache.get(key);if(!images.head.naturalWidth||!images.cobra.naturalWidth)return null;
@@ -60,6 +63,7 @@
  }
  function paintPawn(canvas,id,player=0){
   if(root.BS_STONES?.draw(canvas,id,player,{style:document.documentElement.dataset.pieceArt==='original'?'original':'royal'}))return;
+  const key=id==='pawn-orb'?'orb':id==='pawn-crown'?'crown':'objects';if(!images[key].naturalWidth){load(key).then(ok=>{if(ok&&canvas.isConnected)paintPawn(canvas,id,player);});return;}
   const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
   if(['pawn-orb','pawn-crown'].includes(id)){ctx.filter=player===1?'hue-rotate(62deg)':player===2?'hue-rotate(155deg)':player===3?'hue-rotate(-105deg)':'none';const img=images[id==='pawn-orb'?'orb':'crown'];if(img.naturalWidth){const size=Math.min(canvas.width,canvas.height);ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,(canvas.width-size)/2,(canvas.height-size)/2,size,size);}return;}
   ctx.filter=player===2||player===3?'hue-rotate(-150deg)':'none';if(images.objects.naturalWidth)ctx.drawImage(images.objects,player%2?1400:785,60,480,690,0,0,canvas.width,canvas.height);
@@ -88,9 +92,9 @@
  }
  function mount(el,item,{live=false,width=420}={}){
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=Math.round(width*.6);canvas.dataset.species=SPECIES[item.id]?.kind||item.type;canvas.setAttribute('aria-hidden','true');el.appendChild(canvas);paint(canvas,item);
-  ready.then(()=>paint(canvas,item));
+  ensure(item).then(()=>{if(canvas.isConnected)paint(canvas,item);});
   if(live&&!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){let previous=0;const tick=now=>{if(!canvas.isConnected)return;if(!document.hidden&&canvas.getClientRects().length&&now-previous>60){paint(canvas,item,now/1000);previous=now;}root.requestAnimationFrame(tick);};root.requestAnimationFrame(tick);}
   return canvas;
  }
- root.BS_COSMETIC_ART={SPECIES,head,body,mount,paint,paintPawn,ready};
+ root.BS_COSMETIC_ART={SPECIES,head,body,mount,paint,paintPawn,ready,ensure};
 })(window);

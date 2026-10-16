@@ -1,3 +1,4 @@
+import {clientErrorReport} from './diagnostics/client-errors.js';
 
 import { DurableObject } from "cloudflare:workers";
 import { CATEGORIES } from "./questions.js";
@@ -16,7 +17,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='16.0.1';
+const RELEASE='17.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -254,6 +255,7 @@ export default {
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
     else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
+    if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
     if (request.method === "GET" && url.pathname === "/api/health") {
       const quizOnline = Boolean(env.ROOMS);
       const boardOnline = Boolean(env.BOARD_ROOMS);

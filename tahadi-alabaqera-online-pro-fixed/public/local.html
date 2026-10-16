@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#0b0c18">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="assets/css/platform.css?v=16.0.1">
-<link rel="stylesheet" href="assets/css/quiz-luxury.css?v=16.0.1">
+
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="تحدي العباقرة">
 <title>تحدي العباقرة — لعب محلي</title>
@@ -26,8 +26,8 @@
 .resultRow{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:14px;background:#0b1020;margin:8px 0;font-weight:900}
 .resultRow.first{border:1px solid #f0b94a}
 </style>
-<link rel="stylesheet" href="assets/css/quiz-board-v2.css?v=16.0.1">
-<link rel="stylesheet" href="assets/css/pro-games.css?v=16.0.1"><link rel="stylesheet" href="assets/css/cosmetics.css?v=16.0.1"><link rel="stylesheet" href="assets/css/professional-v14.css?v=16.0.1"><link rel="stylesheet" href="assets/css/studio-v16.css?v=16.0.1"></head>
+
+<link rel="stylesheet" href="assets/css/app-local.css?v=17.0.0"></head>
 <body>
 <div class="app" id="app">
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>تحدي العباقرة</h1><div class="muted">إصدار بوسراج • لعبة فئات وأسئلة</div></div></div><div class="topActions"><a class="ibtn" href="./" aria-label="الرئيسية">⌂</a><button id="installTop" class="ibtn installBtnTop" type="button"><span>⬇</span><span class="installText">تثبيت</span></button><button class="ibtn" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button id="sound" class="ibtn" data-audio-toggle aria-label="كتم الصوت">🔊</button></div></div>
@@ -97,9 +97,9 @@
 <div id="toast" class="toast hidden"></div>
 </div>
 
-<script src="assets/js/audio-manager.js?v=16.0.1"></script>
-<script src="assets/js/questions-data.js?v=16.0.1"></script>
-<script src="assets/js/platform.js?v=16.0.1"></script>
+<script src="assets/js/audio-manager.js?v=17.0.0"></script>
+<script src="assets/js/questions-data.js?v=17.0.0"></script>
+<script src="assets/js/platform.js?v=17.0.0"></script>
 <script>
 (() => {
 const root=document.getElementById('app');if(!root||root.dataset.ready==='1')return;root.dataset.ready='1';
@@ -235,4 +235,4 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 
 })();
 </script>
-<script src="assets/js/profile-core.js?v=16.0.1"></script><script src="assets/js/career-client.js?v=16.0.1"></script></body></html>
+<script src="assets/js/profile-core.js?v=17.0.0"></script><script src="assets/js/career-client.js?v=17.0.0"></script><script defer src="assets/js/client-health.js?v=17.0.0"></script></body></html>
