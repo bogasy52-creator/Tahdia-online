@@ -2,7 +2,7 @@ import {paintPowerDrop,paintSnakePower} from './arena-powers-art-v24.js';
 import {ARENA_POWERS,powerActive,arenaSpeed} from './engines/arena-drops-v24.js';
 import {paintArenaFloor,paintArenaFood,paintCombatZones} from './arena-art-v23.js';
 import {arenaTurnRate} from './engines/serpent-combat-v23.js';
-import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=24.0.0';
+import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=24.0.1';
 const lerp=(a,b,t)=>a+(b-a)*t;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const foodSprites=new Map();
@@ -42,6 +42,7 @@ export class SerpentRenderer {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});
   this.game=null;this.previous=null;this.received=0;this.ids=[];this.online=false;
+  this.snapshotInterval=100;this.snapshotJitter=0;
   this.cameras=new Map();this.inputs=new Map();this.poses=new Map();this.samples=new Map();
   this.effects=[];this.trails=[];this.lastDraw=0;
   this.seenEvents=new Set();this.momentTimer=null;
@@ -56,12 +57,15 @@ export class SerpentRenderer {
  }
  setQuality(value){this.quality=['auto','high','balanced','fast'].includes(value)?value:'auto';this.detailTier=0;this.slowFor=0;this.stableFor=0;this.resize();}
  sampleFrame(ms){if(this.quality!=='auto'||!Number.isFinite(ms)||ms<1||ms>120)return;this.frameMean=this.frameMean*.94+ms*.06;if(this.frameMean>25){this.slowFor+=ms;this.stableFor=0;}else{this.stableFor+=ms;this.slowFor=0;}if(this.slowFor>2400&&this.detailTier<2){this.detailTier++;this.slowFor=0;this.resize();}else if(this.stableFor>10000&&this.frameMean<19&&this.detailTier>0){this.detailTier--;this.stableFor=0;this.resize();}}
- reset(){this.cameras.clear();this.poses.clear();this.samples.clear();this.effects=[];this.trails=[];this.seenEvents.clear();clearTimeout(this.momentTimer);globalThis.document?.getElementById('arenaMoment')?.classList.remove('show');this.lastDraw=0;this.previous=null;this.game=null;this.online=false;}
+ reset(){this.cameras.clear();this.poses.clear();this.samples.clear();this.effects=[];this.trails=[];this.seenEvents.clear();clearTimeout(this.momentTimer);globalThis.document?.getElementById('arenaMoment')?.classList.remove('show');this.lastDraw=0;this.previous=null;this.game=null;this.online=false;this.snapshotInterval=100;this.snapshotJitter=0;}
  announce(text){const el=globalThis.document?.getElementById('arenaMoment');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(this.momentTimer);this.momentTimer=setTimeout(()=>el.classList.remove('show'),1700);}
  setGame(game,ids=[],online=false){
   if(this.game&&game.tick<this.game.tick)this.reset();
-  this.previous=this.online?this.game:null;this.game=game;this.ids=ids;this.online=online;this.received=performance.now();
+  const now=performance.now(),gap=now-this.received;
+  if(online&&this.online&&game.tick>this.game?.tick&&gap>=20&&gap<=1500){this.snapshotJitter=this.snapshotJitter*.8+Math.abs(gap-this.snapshotInterval)*.2;this.snapshotInterval=this.snapshotInterval*.8+gap*.2;}
+  this.previous=this.online?this.game:null;this.game=game;this.ids=ids;this.online=online;this.received=now;
  }
+ predictionWindow(){return clamp(this.snapshotInterval+this.snapshotJitter*2+180,300,500);}
  setInput(id,angle,boost){this.inputs.set(id,{angle,boost});}
  viewRects(){
   if(this.ids.length!==2)return [{x:0,y:0,w:this.width,h:this.height}];
@@ -78,7 +82,7 @@ export class SerpentRenderer {
  }
  interpolate(s,now){
   if(this.online&&s.alive&&this.game.status==='playing'&&this.ids.includes(s.id)){
-   const age=Math.min(.1,Math.max(0,(now-this.received)/1000)),input=this.inputs.get(s.id);
+   const age=Math.min(this.predictionWindow()/1000,Math.max(0,(now-this.received)/1000)),input=this.inputs.get(s.id);
    const delta=input?Math.atan2(Math.sin(input.angle-s.angle),Math.cos(input.angle-s.angle)):0;
    const angle=s.angle+Math.max(-(this.game.collisionMode==='arena-v23'?arenaTurnRate({boost:input?.boost&&s.mass>24}):SERPENT_TURN_RATE)*age,Math.min((this.game.collisionMode==='arena-v23'?arenaTurnRate({boost:input?.boost&&s.mass>24}):SERPENT_TURN_RATE)*age,delta));
    const speed=this.game.collisionMode==='arena-v23'?arenaSpeed(s,input?.boost&&s.mass>24,this.game.elapsed):input?.boost&&s.mass>24?SERPENT_BOOST_SPEED:SERPENT_SPEED,travel=(s.angle+angle)/2;
@@ -87,7 +91,7 @@ export class SerpentRenderer {
    return {...s,x,y,angle,segments:['predator','arena-v23'].includes(this.game.collisionMode)?followSerpentBody(s.segments.map(p=>({...p})),x,y,s.segments.length):[{x,y},...s.segments.slice(0,-1)]};
   }
   const old=this.previous?.snakes.find(p=>p.id===s.id);
-  const t=this.online?Math.min(1,Math.max(0,(now-this.received)/100)):1;
+  const t=this.online?Math.min(1,Math.max(0,(now-this.received)/clamp(this.snapshotInterval+this.snapshotJitter,80,200))):1;
   if(!old||!s.alive||!old.alive)return s;
   return {...s,x:lerp(old.x,s.x,t),y:lerp(old.y,s.y,t),
    angle:old.angle+Math.atan2(Math.sin(s.angle-old.angle),Math.cos(s.angle-old.angle))*t,
@@ -106,12 +110,12 @@ export class SerpentRenderer {
    present.add(raw.id);
    const target=this.interpolate(raw,now),old=this.poses.get(raw.id),t=1-Math.exp(-dt/48);
    const snap=!old||!raw.alive||Math.hypot(old.x-target.x,old.y-target.y)>120;
-   let pose=snap?{...target,segments:target.segments.map(p=>({...p}))}:
+   let pose=!this.online?raw:snap?{...target,segments:target.segments.map(p=>({...p}))}:
     {...target,x:lerp(old.x,target.x,t),y:lerp(old.y,target.y,t),
      angle:old.angle+Math.atan2(Math.sin(target.angle-old.angle),Math.cos(target.angle-old.angle))*t,
      segments:target.segments.map((p,i)=>({x:lerp(old.segments[i]?.x??p.x,p.x,t),y:lerp(old.segments[i]?.y??p.y,p.y,t)}))};
    if(!snap&&this.online&&this.ids.includes(raw.id)&&this.game.status==='playing'){
-    if(now-this.received>180){pose={...target,x:old.x,y:old.y,angle:old.angle,segments:old.segments.map(p=>({...p}))};this.poses.set(raw.id,pose);continue;}
+    if(now-this.received>this.predictionWindow()){pose={...target,x:old.x,y:old.y,angle:old.angle,segments:old.segments.map(p=>({...p}))};this.poses.set(raw.id,pose);continue;}
     const input=this.inputs.get(raw.id),seconds=clamp(dt/1000,0,.08),desired=serpentSteeringAngle(this.game,old,input?.angle??raw.angle);
     const turn=Math.atan2(Math.sin(desired-old.angle),Math.cos(desired-old.angle)),angle=old.angle+clamp(turn,-(this.game.collisionMode==='arena-v23'?arenaTurnRate({boost:input?.boost&&raw.mass>24}):SERPENT_TURN_RATE)*seconds,(this.game.collisionMode==='arena-v23'?arenaTurnRate({boost:input?.boost&&raw.mass>24}):SERPENT_TURN_RATE)*seconds);
     const speed=this.game.collisionMode==='arena-v23'?arenaSpeed(raw,input?.boost&&raw.mass>24,this.game.elapsed):input?.boost&&raw.mass>24?SERPENT_BOOST_SPEED:SERPENT_SPEED,heading=(old.angle+angle)/2;
@@ -199,12 +203,13 @@ export class SerpentRenderer {
    if(!raw.alive||raw.id!==id&&powerActive(raw,'ghost',g.elapsed))continue;
    const s=this.poses.get(raw.id)||this.interpolate(raw,now),radius=7+Math.sqrt(s.mass)*.55;
    const budget=this.quality==='fast'||this.quality==='auto'&&this.detailTier>=2?24:this.quality==='balanced'||this.quality==='auto'&&this.detailTier===1?48:96;
-   const stride=Math.max(1,Math.ceil(s.segments.length/budget)),points=[{x:s.x,y:s.y},...s.segments.filter((_p,i)=>i%stride===0)];if(points.at(-1)!==s.segments.at(-1))points.push(s.segments.at(-1));
-   if(!points.some(p=>p.x>=minX-radius*3&&p.x<=maxX+radius*3&&p.y>=minY-radius*3&&p.y<=maxY+radius*3))continue;
+   const points=[{x:s.x,y:s.y},...s.segments];
+   let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;for(const p of points){left=Math.min(left,p.x);right=Math.max(right,p.x);top=Math.min(top,p.y);bottom=Math.max(bottom,p.y);}
+   if(right<minX-radius*3||left>maxX+radius*3||bottom<minY-radius*3||top>maxY+radius*3)continue;
    const index=g.snakes.findIndex(x=>x.id===s.id),variant=s.skin==='snake-wild'?index:0;
    ctx.save();if(powerActive(s,'ghost',g.elapsed))ctx.globalAlpha=.32;
    paintSnakePower(ctx,s,g.elapsed,now,this.reducedMotion);
-   window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant,budget);
+   window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant,Math.max(budget,Math.min(160,Math.ceil(s.segments.length/4))));
    if(g.collisionMode==='arena-v23')paintCombatZones(ctx,s,zoom,own.mass);
    if(g.collisionMode==='tail-guard'){
     const tail=s.segments.slice(-8);ctx.save();ctx.strokeStyle='#ffdf88';ctx.lineWidth=6/zoom;ctx.shadowColor='#ffdf88';ctx.shadowBlur=this.reducedMotion?0:12;ctx.lineCap='round';ctx.beginPath();tail.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;

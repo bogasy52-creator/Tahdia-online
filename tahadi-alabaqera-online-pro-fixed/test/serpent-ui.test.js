@@ -33,3 +33,12 @@ test('a failed reconnect preserves intent for the remaining bounded retries',asy
 });
 
 test('a brief online swipe retains its desired direction between network sends',async()=>{const h=await ui(),g=createSerpentGame([{id:'a'}],{collisionMode:'predator',foodCount:0});g.snakes[0].angle=g.snakes[0].targetAngle=0;g.snakes[0].x=g.snakes[0].y=500;h.context.shortSwipe(serpentSnapshot(g));assert.equal(h.context.sent.length,1);assert.ok(Math.abs(h.context.sent[0].angle-Math.PI/2)<1e-8);});
+test('a silent open connection is closed for reconnection instead of leaving a frozen arena forever',async()=>{
+ const h=await ui();vm.runInContext(`online=true;networkActive=true;connectionWelcomed=true;lastNetworkMessage=1;lastHeartbeat=1;globalThis.closed=[];socket={readyState:1,bufferedAmount:0,send(){},close:(...args)=>closed.push(args)};`,h.context);
+ h.setTime(3000);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed.length,0);h.setTime(6001);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed[0][0],4000);assert.equal(h.context.closed[0][1],'stale_connection');
+});
+test('a congested socket skips old steering while retaining the newest input after it drains',async()=>{
+ const h=await ui(),g=serpentSnapshot(createSerpentGame([{id:'a'}],{collisionMode:'arena-v23',foodCount:0}));h.context.testGame=g;
+ vm.runInContext(`online=true;selfId='a';game=testGame;globalThis.inputs=[];socket={readyState:1,bufferedAmount:20000,send:raw=>inputs.push(JSON.parse(raw))};controls[0].angle=.3;applyInputs(100);controls[0].angle=.7;applyInputs(200);socket.bufferedAmount=0;applyInputs(300);`,h.context);
+ assert.equal(h.context.inputs.length,1);assert.equal(h.context.inputs[0].angle,.7);
+});

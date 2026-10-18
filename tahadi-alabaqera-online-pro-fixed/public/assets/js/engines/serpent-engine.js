@@ -6,6 +6,7 @@ export const SERPENT_SPEED=108,SERPENT_BOOST_SPEED=190,SERPENT_TURN_RATE=6.4;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const angleDelta=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+const maximumMass=g=>g.collisionMode===ARENA_RULES?720:MAX_MASS;
 const forgiving=g=>g.collisionMode==='tail-guard'||['predator',ARENA_RULES].includes(g.collisionMode);
 export function serpentFrontParts(s){return s.mass>=60?6:4;}
 export function followSerpentBody(segments,x,y,count){
@@ -69,7 +70,7 @@ function botSteering(g,s){
 }
 function kill(g,s,by=null,reason='collision'){
  if(!s.alive)return;if(g.collisionMode===ARENA_RULES){s.deathReason=reason;s.killedBy=by?.id||null;}s.alive=false;s.boost=false;s.respawnAt=s.bot&&g.matchMode!=='survival'?g.elapsed+3:null;
- if(by?.alive){by.kills++;by.score+=10;if(reason==='front')by.mass=Math.min(MAX_MASS,by.mass+6);}
+ if(by?.alive){by.kills++;by.score+=10;if(reason==='front')by.mass=Math.min(maximumMass(g),by.mass+6);}
  for(let i=0;i<s.segments.length;i+=3){const p=s.segments[i];g.food.push(food(g,p.x,p.y,2));}
  g.food.push(food(g,s.x,s.y,5));g.events.push({type:'death',id:s.id,by:by?.id||null,x:s.x,y:s.y,reason});
 }
@@ -124,7 +125,7 @@ function advanceSerpent(g,delta){
  for(const s of g.snakes)if(doomed.has(s.id)&&powerActive(s,'shield',g.elapsed)){doomed.delete(s.id);if(g.elapsed>=(s.shieldHitAt||0)){g.events.push({type:'shield',id:s.id,x:s.x,y:s.y});s.shieldHitAt=g.elapsed+.6;}}
  for(const s of g.snakes)if(doomed.has(s.id)){const by=doomed.get(s.id);kill(g,s,['predator',ARENA_RULES].includes(g.collisionMode)&&doomed.has(by?.id)?null:by,reasons.get(s.id));}
  const eaten=new Set();for(const s of g.snakes){if(!s.alive)continue;
-  for(const f of g.food){if(!eaten.has(f.id)&&distance(s,f)<radius(s)+f.radius+(powerActive(s,'magnet',g.elapsed)?70:0)){eaten.add(f.id);s.mass=Math.min(MAX_MASS,s.mass+f.value);s.score+=f.value;g.events.push({type:'eat',id:s.id,x:f.x,y:f.y,value:f.value,kind:f.kind||'berry'});}}
+  for(const f of g.food){if(!eaten.has(f.id)&&distance(s,f)<radius(s)+f.radius+(powerActive(s,'magnet',g.elapsed)?70:0)){eaten.add(f.id);s.mass=Math.min(maximumMass(g),s.mass+f.value);s.score+=f.value;g.events.push({type:'eat',id:s.id,x:f.x,y:f.y,value:f.value,kind:f.kind||'berry'});}}
  }
  if(eaten.size)g.food=g.food.filter(f=>!eaten.has(f.id));if(g.food.length>700)g.food=g.food.slice(-700);replenish(g);
  if(forgiving(g)&&g.elapsed>=(g.nextTreasureAt||15)){

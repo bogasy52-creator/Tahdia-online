@@ -5,7 +5,7 @@
  const PALETTES=[['#a9ecc3','#378d6b','#102e2b','#e6cf90'],['#e9d3ff','#8961bb','#342440','#efb3eb'],['#ffe6a8','#be8c34','#52381d','#fff3c5'],['#e5fcff','#65b8d9','#23415f','#b4edff'],['#ddff91','#76a52c','#27361c','#e2ff75'],['#bcfaff','#448dc5','#392853','#dc93ff']];
  const KINDS=['viper','ribbon','cobra','crystal','dragon','plasma'];
  const SPECIES=Object.freeze(Object.fromEntries(IDS.map((id,i)=>[id,Object.freeze({kind:KINDS[i],light:PALETTES[i][0],mid:PALETTES[i][1],dark:PALETTES[i][2],accent:PALETTES[i][3],cell:i})])));
- const image=new Image(),materials=new Map();let loaded=false;
+ const image=new Image(),materials=new Map(),patterns=new WeakMap();let loaded=false;
  const ready=new Promise(resolve=>{image.onload=()=>{loaded=!!image.naturalWidth;resolve(loaded)};image.onerror=()=>resolve(false);image.src='assets/arena/v16/serpent-heads.webp';});
  const species=id=>SPECIES[id]||SPECIES['snake-wild'];
  function ellipse(c,x,y,rx,ry,color){c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fillStyle=color;c.fill();}
@@ -49,15 +49,16 @@
  function body(c,input,id,radius=13,boost=false,_variant=0,budget=80){
   const points=pathPoints(input,budget);if(points.length<2)return;const p=species(id),r=Math.max(1,Math.min(300,Number(radius)||13)),n=points.length,texture=material(id);
   const edges=points.map((a,i)=>{const prev=points[Math.max(0,i-1)],next=points[Math.min(n-1,i+1)],dx=prev.x-next.x,dy=prev.y-next.y,len=Math.hypot(dx,dy)||1;return {...a,nx:-dy/len,ny:dx/len,w:r*(.04+.96*Math.pow(1-i/(n-1),p.kind==='ribbon'?.65:p.kind==='crystal'?.35:.44))*(p.kind==='cobra'&&i/(n-1)<.19?1+Math.sin(i/(n-1)/.19*Math.PI)*.38:1)};});
-  const outline=()=>{c.beginPath();for(let i=0;i<n;i++){const a=edges[i],x=a.x+a.nx*a.w,y=a.y+a.ny*a.w;i?c.lineTo(x,y):c.moveTo(x,y);}for(let i=n-1;i>=0;i--){const a=edges[i];c.lineTo(a.x-a.nx*a.w,a.y-a.ny*a.w);}c.closePath();};
-  if(p.kind==='dragon'||p.kind==='crystal'){c.save();for(let i=3;i<n-4;i+=p.kind==='dragon'?4:6){const a=edges[i],b=edges[Math.min(n-1,i+2)];c.beginPath();c.moveTo(a.x+a.nx*a.w,a.y+a.ny*a.w);c.lineTo(a.x+a.nx*a.w*1.5,a.y+a.ny*a.w*1.5);c.lineTo(b.x+b.nx*b.w,b.y+b.ny*b.w);c.closePath();c.fillStyle=p.accent;c.fill();}c.restore();}
-  c.save();outline();c.fillStyle=p.dark;c.shadowColor='#010612';c.shadowBlur=r*.55;c.shadowOffsetY=r*.28;c.fill();c.shadowBlur=0;c.shadowOffsetY=0;c.clip();
-  let distance=0;
-  for(let i=n-1;i>=1;i--){const a=edges[i],b=edges[i-1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<.01)continue;const width=Math.max(a.w,b.w);c.save();c.translate(a.x,a.y);c.rotate(Math.atan2(dy,dx));
-   const unit=128/(r*2);let x=0,tiles=0;while(x<len&&tiles++<24){const source=(distance+x)*unit%128,take=Math.min(len-x,(128-source)/unit);if(take<=.001)break;c.drawImage(texture,source,0,take*unit,128,x,-width,take+.6,width*2);x+=take;}c.restore();distance+=len;
-  }
-  c.restore();c.save();c.lineJoin='round';
-  for(const side of [-1,1]){c.beginPath();for(let i=0;i<n;i++){const a=edges[i],x=a.x+a.nx*a.w*side,y=a.y+a.ny*a.w*side;i?c.lineTo(x,y):c.moveTo(x,y);}c.strokeStyle=side===1?p.light+'a0':p.dark;c.lineWidth=.8;c.stroke();}
+  // Continuous round strokes remain solid at loops and tight turns; a ribbon
+  // polygon can fold over itself and clip away visible body sections.
+  const trace=(from,to)=>{c.beginPath();c.moveTo(points[from].x,points[from].y);for(let i=from+1;i<=to;i++)c.lineTo(points[i].x,points[i].y);};
+  c.save();c.lineCap='round';c.lineJoin='round';
+  const tailStart=Math.max(1,Math.floor((n-1)*.75));
+  let cache=patterns.get(c);if(!cache){cache=new Map();patterns.set(c,cache);}let pattern=cache.get(p.kind);if(!cache.has(p.kind)){try{pattern=c.createPattern?.(texture,'repeat')||null;}catch{pattern=null;}cache.set(p.kind,pattern);}
+  for(let i=n-1;i>tailStart;i--){const a=edges[i],b=edges[i-1],width=r*Math.max(.06,(n-i)/(n-tailStart));c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.lineWidth=width*2+.8;c.strokeStyle=p.dark;c.stroke();c.lineWidth=width*2;c.strokeStyle=pattern||p.mid;c.stroke();}
+  trace(0,tailStart);c.lineWidth=r*2+1.2;c.strokeStyle=p.dark;c.stroke();c.lineWidth=r*2;c.strokeStyle=pattern||p.mid;c.stroke();
+  trace(0,tailStart);c.lineWidth=Math.max(1,r*.26);c.strokeStyle=p.light+'70';c.stroke();
+  if(p.kind==='dragon'||p.kind==='crystal'){for(let i=3;i<tailStart;i+=p.kind==='dragon'?4:6){const a=edges[i],b=edges[Math.min(n-1,i+2)];c.beginPath();c.moveTo(a.x+a.nx*r,a.y+a.ny*r);c.lineTo(a.x+a.nx*r*1.45,a.y+a.ny*r*1.45);c.lineTo(b.x+b.nx*r,b.y+b.ny*r);c.closePath();c.fillStyle=p.accent;c.fill();}}
   if(boost){c.strokeStyle=p.accent;c.globalAlpha=.18;c.lineWidth=r*2.3;c.shadowColor=p.accent;c.shadowBlur=r;c.beginPath();points.forEach((a,i)=>i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y));c.stroke();}c.restore();
  }
  function preview(canvas,id,time=0,{rotation=0,zoom=1,clear=true}={}){

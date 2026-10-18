@@ -50,3 +50,11 @@ test('adding bots spaces all initial snakes without overlapping a human spawn',(
 test('solo scores compete with bots instead of automatically awarding the human a win',()=>{
  const g=createSerpentGame([{id:'a',name:'A'}],{foodCount:0,duration:.1});addSerpentBots(g,2);g.snakes[0].score=3;g.snakes[1].score=30;stepSerpent(g,.1);assert.deepEqual(g.winners,['bot-1']);
 });
+
+test('arena eating grows beyond the old 180 limit with a continuous finite body; legacy caps stay unchanged',()=>{
+ const g=createSerpentGame([{id:'long'}],{collisionMode:'arena-v23',width:2400,height:2400,foodCount:0,duration:120});const s=g.snakes[0];Object.assign(s,{x:500,y:1200,angle:0,targetAngle:0,mass:179,segments:Array.from({length:179},(_,i)=>({x:500-i*5,y:1200}))});
+ for(let i=0;i<120;i++){g.food=[{id:'growth-'+i,x:s.x+5,y:s.y,value:5,radius:6}];stepSerpent(g,.05);}
+ assert.equal(s.mass,720);assert.ok(s.score>=600);stepSerpent(g,.05);assert.equal(s.segments.length,720);
+ for(let i=1;i<s.segments.length;i++){const p=s.segments[i];assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y));assert.ok(Math.hypot(p.x-s.segments[i-1].x,p.y-s.segments[i-1].y)<=5.00001);}
+ const old=createSerpentGame([{id:'old'}],{foodCount:0});old.snakes[0].mass=180;old.food=[{id:'old-food',x:old.snakes[0].x,y:old.snakes[0].y,value:5,radius:20}];stepSerpent(old,.05);assert.equal(old.snakes[0].mass,180);
+});

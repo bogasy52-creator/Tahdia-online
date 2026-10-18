@@ -64,3 +64,15 @@ test('invalid bot counts cannot overfill the arena or bypass ready checks',async
  assert.equal(h.room.room.botCount||0,0);await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:4,difficulty:'medium'}));a.player.ready=true;
  await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby');h.room.stop();
 });
+
+test('a delayed arena timer catches up fixed simulation steps with a bounded recovery budget',async()=>{
+ const h=setup();await init(h.room);const a=peer(h,'a','host'),b=peer(h,'b');a.player.ready=b.player.ready=true;await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));h.room.stop();
+ h.room.lastTickAt=1000;h.room.tickCarry=0;const g=h.room.room.game,initial=g.elapsed;
+ h.room.tick(1150);assert.ok(Math.abs(g.elapsed-initial-.15)<1e-9);assert.equal(g.tick,3);
+ h.room.tick(1175);assert.equal(g.tick,3);h.room.tick(1200);assert.equal(g.tick,4);
+ h.room.tick(31200);assert.equal(g.tick,8);assert.ok(Math.abs(g.elapsed-initial-.4)<1e-9);h.room.stop();
+});
+test('arena heartbeat replies only to its sender and does not write or broadcast room state',async()=>{
+ const h=setup();await init(h.room);const a=peer(h,'a','host'),b=peer(h,'b');const before=structuredClone(h.values.get('serpent'));
+ await h.room.webSocketMessage(a.ws,JSON.stringify({type:'ping',sentAt:1234}));assert.equal(a.messages.at(-1).type,'pong');assert.equal(a.messages.at(-1).sentAt,1234);assert.equal(b.messages.length,0);assert.deepEqual(h.values.get('serpent'),before);
+});

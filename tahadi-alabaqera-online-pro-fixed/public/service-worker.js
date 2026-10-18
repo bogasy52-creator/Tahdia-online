@@ -1,16 +1,17 @@
 // V20: small offline core. Other games and media are cached after the first visit.
-const CACHE_NAME = 'busraj-games-v51-release-24-0-0';
+const CACHE_NAME = 'busraj-games-v52-release-24-0-1';
 const RUNTIME_CACHE = CACHE_NAME + '-visited';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
+  "/assets/js/play-feedback-v24-1.js?v=24.0.1",
   "/",
   "/index.html",
   "/journey.html",
   "/offline.html",
   "/sudoku.html",
   "/assets/css/app-sudoku.css?v=23.0.1",
-  "/assets/js/sudoku-ui.js?v=23.0.1",
-  "/assets/js/sudoku-online.js?v=23.0.1",
+  "/assets/js/sudoku-ui.js?v=24.0.1",
+  "/assets/js/sudoku-online.js?v=24.0.1",
   "/assets/js/sudoku-grid.js",
   "/assets/js/engines/sudoku-engine.js",
   "/assets/js/engines/sudoku-core.js",
@@ -29,7 +30,7 @@ const APP_SHELL = [
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/assets/css/app-index.css?v=23.0.1",
-  "/assets/css/app-journey.css?v=24.0.0",
+  "/assets/css/app-journey.css?v=24.0.1",
   "/assets/js/client-health.js?v=23.0.1",
   "/assets/js/audio-manager.js?v=23.0.1",
   "/assets/js/platform.js?v=23.0.1",
@@ -43,7 +44,7 @@ const APP_SHELL = [
   "/assets/js/home-return-v17.js?v=23.0.1",
   "/assets/js/journey-client.js?v=23.0.1",
   "/assets/js/journey-renderer.js?v=23.0.1",
-  "/assets/js/journey-ui.js?v=23.0.1",
+  "/assets/js/journey-ui.js?v=24.0.1",
   "/assets/js/match3-renderer.js?v=23.0.1",
   "/assets/js/engines/journey-engine.js?v=23.0.1",
   "/assets/js/engines/match3-engine.js?v=23.0.1",
@@ -215,6 +216,7 @@ const ON_DEMAND = [
   "/assets/js/paths-online-v24.js",
   "/assets/js/picture-ui.js",
   "/assets/js/platform.js",
+  "/assets/js/play-feedback-v24-1.js",
   "/assets/js/play-insights-v15.js",
   "/assets/js/pro-dice.js",
   "/assets/js/pro-experience.js",

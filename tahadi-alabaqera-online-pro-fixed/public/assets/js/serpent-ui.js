@@ -1,8 +1,8 @@
 import {ARENA_POWERS,powerActive} from './engines/arena-drops-v24.js';
-import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=24.0.0';
-import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=24.0.0';
+import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=24.0.1';
+import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=24.0.1';
 import {ArenaGestures} from './arena-gestures.js?v=24.0.0-s1';
-import {applySerpentFrame} from './serpent-network.js?v=24.0.0-s1';
+import {applySerpentFrame} from './serpent-network.js?v=24.0.1';
 
 const $=id=>document.getElementById(id),SESSION='busraj-serpent-room-v12';
 const renderer=new SerpentRenderer($('arenaCanvas')),keys=new Set(),mousePointers=new Map(),headings=[null,null],controls=[{angle:null,boost:false},{angle:null,boost:false}];
@@ -10,6 +10,13 @@ const journal=window.BS_PLAY_INSIGHTS?.arena();renderer.mapVisible=true;
 const trial=resolveTrialSkin(window.BS_CAREER?.catalog||[],location.search);
 const gestures=new ArenaGestures({mode:'floating',steer:(index,angle)=>{controls[index].angle=angle;headings[index]=angle;},end:index=>{controls[index].angle=null;const ring=$('joystick'+(index+1));ring.classList.remove('steering');ring.classList.add('hidden');}});
 let mode='quick',game=null,room=null,socket=null,selfId=null,paused=false,online=false,networkActive=false,reconnects=0,reconnectTimer=null,lastFrame=performance.now(),accumulator=0,lastInput=0,lastHud=0,receipt='',resultShown='',mouseAngle=null;
+let lastNetworkMessage=0,lastHeartbeat=0,connectionWelcomed=false;
+function networkTick(){
+ if(!networkActive||!online||!connectionWelcomed||!socket||socket.readyState!==WebSocket.OPEN||document.hidden)return;
+ const now=performance.now();if(lastNetworkMessage&&now-lastNetworkMessage>5000){socket.close(4000,'stale_connection');return;}
+ if(now-lastHeartbeat>=2000&&(socket.bufferedAmount||0)<8192){lastHeartbeat=now;socket.send(JSON.stringify({type:'ping',sentAt:now}));}
+}
+setInterval(networkTick,1000);
 let connectionEpoch=0,requestController=null,cancelConnect=null;const rewardRefreshes=new Set();
 const show=(id,yes=true)=>{const el=$(id);if(!el)return;el.classList.toggle('hidden',!yes);if(el.classList.contains('arena-overlay')){el.hidden=!yes;el.inert=!yes;el.dataset.open=String(yes);el.setAttribute('aria-hidden',String(!yes));}};
 function cancelled(){const error=new Error('connection_cancelled');error.name='AbortError';return error;}
@@ -56,19 +63,20 @@ async function connectRoom(code,credentials={},attempt){
  if(!/^\d{6}$/.test(code))throw new Error('اكتب رمز الغرفة المكوّن من ستة أرقام');
  const epoch=attempt??beginConnection();if(!activeAttempt(epoch))throw cancelled();await api('/api/serpent/rooms/'+code+'/status',undefined,epoch);if(!activeAttempt(epoch))throw cancelled();
  if(socket){const old=socket;socket=null;old.close(1000,'switch_room');}
- const session=localStorage.getItem('bs_social_session'),protocols=['busraj-serpent-v1'];if(credentials.hostKey)protocols.push('hk.'+credentials.hostKey);if(credentials.token)protocols.push('rt.'+credentials.token);if(session)protocols.push('st.'+session);
- online=true;networkActive=true;const ws=new WebSocket(location.origin.replace(/^http/,'ws')+'/api/serpent/rooms/'+code+'/ws?name='+encodeURIComponent($('arenaName').value||'لاعب الحلبة'),protocols);socket=ws;
+ const session=localStorage.getItem('bs_social_session'),protocols=['busraj-serpent-v1','bs-serpent-body1'];if(credentials.hostKey)protocols.push('hk.'+credentials.hostKey);if(credentials.token)protocols.push('rt.'+credentials.token);if(session)protocols.push('st.'+session);
+ online=true;networkActive=true;connectionWelcomed=false;lastNetworkMessage=lastHeartbeat=performance.now();const ws=new WebSocket(location.origin.replace(/^http/,'ws')+'/api/serpent/rooms/'+code+'/ws?name='+encodeURIComponent($('arenaName').value||'لاعب الحلبة'),protocols);socket=ws;
  return new Promise((resolve,reject)=>{
   let welcomed=false;const cancel=()=>{clearTimeout(timeout);if(!welcomed)reject(cancelled());if(socket===ws)socket=null;ws.close(1000,'cancelled');};cancelConnect=cancel;const timeout=setTimeout(()=>{if(!welcomed){ws.close();reject(new Error('انتهت مهلة الاتصال. تأكد من الرمز ونشر السيرفر الجديد.'));}},9000);
-  ws.onmessage=event=>{if(socket!==ws||!activeAttempt(epoch))return;let message;try{message=JSON.parse(event.data)}catch{return}
-   if(message.type==='welcome'){welcomed=true;clearTimeout(timeout);if(cancelConnect===cancel)cancelConnect=null;selfId=message.playerId;reconnects=0;remember({code,token:message.token,playerId:selfId});show('arenaConnection',false);acceptRoom(message.state);resolve();}
+  ws.onmessage=event=>{if(socket!==ws||!activeAttempt(epoch))return;let message;try{message=JSON.parse(event.data)}catch{return}lastNetworkMessage=performance.now();
+   if(message.type==='welcome'){welcomed=true;connectionWelcomed=true;clearTimeout(timeout);if(cancelConnect===cancel)cancelConnect=null;selfId=message.playerId;reconnects=0;remember({code,token:message.token,playerId:selfId});show('arenaConnection',false);acceptRoom(message.state);resolve();}
    else if(message.type==='state')acceptRoom(message.state);
    else if(message.type==='frame'){if(message.state?.game?.tick<=game?.tick)return;const next=applySerpentFrame(room,message);if(next)acceptRoom(next);else ws.send(JSON.stringify({type:'resync'}));}
    else if(message.type==='error')say(message.message);
+   else if(message.type==='pong')return;
   };
   ws.onerror=()=>{if(!activeAttempt(epoch))return;if(!welcomed){if(cancelConnect===cancel)cancelConnect=null;clearTimeout(timeout);if(!credentials.token)networkActive=false;reject(new Error('تعذر الانضمام. الغرفة قد تكون ممتلئة أو بدأت، أو السيرفر يحتاج تحديثًا.'));}};
   ws.onclose=event=>{
-   clearTimeout(timeout);if(cancelConnect===cancel)cancelConnect=null;if(socket!==ws||!activeAttempt(epoch))return;socket=null;release();
+   clearTimeout(timeout);if(cancelConnect===cancel)cancelConnect=null;if(socket!==ws||!activeAttempt(epoch))return;connectionWelcomed=false;socket=null;release();
    if(!welcomed)reject(new Error('لم يكتمل الدخول إلى الغرفة'));
    if(!networkActive||!welcomed)return;
    if(event.code===4001){networkActive=false;$('arenaConnection').textContent='الغرفة مفتوحة من نافذة أخرى. أغلقها ثم ارجع من القائمة.';show('arenaConnection');return;}
@@ -84,14 +92,14 @@ function scheduleReconnect(){
 }
 function send(data){if(socket?.readyState===WebSocket.OPEN){socket.send(JSON.stringify(data));return true;}say('انتظر عودة الاتصال أولًا');return false;}
 function acceptRoom(state){
- if(!state)return;const newRound=!room||room.round!==state.round||room.status!==state.status;room=state;room.clientReceivedAt=Date.now();
+ if(!state)return;window.BS_INVITES?.set({game:'serpent',code:state.code,joinable:state.status==='lobby'&&!state.publicMatch});const newRound=!room||room.round!==state.round||room.status!==state.status;room=state;room.clientReceivedAt=Date.now();
  if(state.status==='lobby'){
   exitStageFullscreen();release();game=null;paused=false;show('arenaGuide',false);show('arenaCombatGuide',false);document.body.classList.remove('serpent-active');show('arenaPlay',false);show('arenaMenu',false);show('arenaLobby');$('roomCode').textContent=state.code;const publicMatch=state.publicMatch===true;$('arenaLobby').querySelector('.lobby-heading .arena-eyebrow').textContent=publicMatch?'PUBLIC ARENA':'PRIVATE ROOM';$('arenaLeaveLobby').textContent=publicMatch?'إلغاء البحث':'غادر الغرفة';$('lobbyNote').textContent=publicMatch?'حتى ٦ لاعبين · البداية تلقائية ويكمل البوت العدد.':'البوتات تظهر بعلامة BOT، ويتحكم بها السيرفر. تعديلها يلغي الجاهزية حتى يوافق الجميع.';show('quickLobbyBanner',publicMatch);document.querySelector('.room-code-block').classList.toggle('hidden',publicMatch);document.querySelector('.arena-invite-actions').classList.toggle('hidden',publicMatch);document.querySelector('.arena-lobby-bots').classList.toggle('hidden',publicMatch);document.querySelector('.lobby-heading h1').textContent=publicMatch?'المنافسون يتجمعون.':'اجمع فريق المطاردة.';document.querySelector('.lobby-heading p').textContent=publicMatch?'البداية تلقائية. واجه الأقصر بمقدمتك، وابتعد عن نهاية الذيل.':'أرسل رمز الغرفة لأصدقائك، ثم اضغطوا جاهز.';
   const list=$('arenaRoomPlayers');list.replaceChildren();for(const p of state.players){const card=document.createElement('div');card.className='arena-room-player';card.dataset.ready=String(p.ready);const name=document.createElement('b'),status=document.createElement('span');name.textContent=p.name+(p.role==='host'?' · المضيف':'');status.textContent=!p.connected?'منقطع مؤقتًا':p.ready?'✓ جاهز':'بانتظار الجاهزية';card.append(name,status);list.appendChild(card);}
   const own=state.players.find(p=>p.id===selfId),full=state.players.length===state.playerLimit,ready=full&&state.players.every(p=>p.ready&&p.connected);$('arenaReady').textContent=own?.ready?'إلغاء الجاهزية':'أنا جاهز';show('arenaReady',!publicMatch);show('arenaHostStart',!publicMatch&&own?.role==='host');$('arenaHostStart').disabled=!ready;$('lobbyMessage').textContent=publicMatch?'دخل '+state.players.filter(p=>p.connected).length+' من '+state.playerLimit+' · المقاعد الباقية تُملأ ببوتات':ready?'الجميع جاهز. المضيف يقدر يبدأ الآن.':'وصل '+state.players.length+' من '+state.playerLimit+' — انتظر اكتمال الفريق والجاهزية.';
   $('lobbyBots').value=String(state.botCount||0);$('lobbyDifficulty').value=state.difficulty||'medium';$('lobbyMatchMode').value=state.matchMode||'timed';$('lobbyDuration').value=String(state.duration);show('lobbyDurationField',state.matchMode!=='survival');for(const field of ['lobbyBots','lobbyDifficulty','lobbyMatchMode','lobbyDuration'])$(field).disabled=own?.role!=='host';for(const o of $('lobbyBots').querySelectorAll('option'))o.disabled=Number(o.value)>Math.min(6,10-state.playerLimit);$('lobbyBotsSummary').textContent=(state.botCount||0)+' بوتات + '+state.playerLimit+' أصدقاء · '+(state.matchMode==='survival'?'آخر ثعبان يبقى':'جولة بوقت');
  }else{
-  game=state.game;if($('arenaPlay').classList.contains('hidden')||newRound&&state.status==='playing')setPlay();renderer.setGame(game,[selfId],true);updateHud();if(state.status==='finished'||game?.status==='finished')showResults();
+  game=state.game;if($('arenaPlay').classList.contains('hidden')||newRound&&state.status==='playing')setPlay();renderer.setGame(game,[selfId],true);if(newRound||state.status==='finished')updateHud();if(state.status==='finished'||game?.status==='finished')showResults();
  }
 }
 function updateHud(){
@@ -134,7 +142,7 @@ function pause(next=!paused){if(online||!game||game.status!=='playing')return;pa
 function keyboardAngle(index){const p2=index===1,list=p2?['KeyA','KeyD','KeyW','KeyS']:['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'];let x=Number(keys.has(list[1]))-Number(keys.has(list[0])),y=Number(keys.has(list[3]))-Number(keys.has(list[2]));if(!p2&&mode!=='duo'){x+=Number(keys.has('KeyD'))-Number(keys.has('KeyA'));y+=Number(keys.has('KeyS'))-Number(keys.has('KeyW'));}return x||y?Math.atan2(y,x):null;}
 function applyInputs(now){
  const ids=!online&&mode==='duo'?[selfId,'local-2']:[selfId];ids.forEach((id,index)=>{const s=game.snakes.find(s=>s.id===id);if(!s?.alive)return;const manual=controls[index].angle??keyboardAngle(index)??(index===0?mouseAngle:null);if(manual!==null)headings[index]=manual;else if(headings[index]!==null)headings[index]=serpentSteeringAngle(game,s,headings[index]);const angle=manual??headings[index]??s.targetAngle??s.angle,boost=controls[index].boost||(index===0?keys.has('Space')||(mode!=='duo'&&(keys.has('ShiftLeft')||keys.has('ShiftRight'))):keys.has('ShiftLeft')||keys.has('ShiftRight'));
-  if(online){renderer.setInput?.(id,angle,boost);if(now-lastInput>=50&&socket?.readyState===WebSocket.OPEN){socket.send(JSON.stringify({type:'input',angle,boost}));lastInput=now;}}else steerSerpent(game,id,{angle,boost});
+  if(online){renderer.setInput?.(id,angle,boost);if(now-lastInput>=50&&socket?.readyState===WebSocket.OPEN&&(socket.bufferedAmount||0)<8192){socket.send(JSON.stringify({type:'input',angle,boost}));lastInput=now;}}else steerSerpent(game,id,{angle,boost});
  });
 }
 function frame(now){
@@ -146,7 +154,7 @@ function frame(now){
  requestAnimationFrame(frame);
 }
 for(let i=0;i<2;i++){const boost=$('boost'+(i+1));boost.addEventListener('pointerdown',e=>{e.preventDefault();if(paused||!game||game.status!=='playing')return;boost.setPointerCapture(e.pointerId);controls[i].boost=true;boost.classList.add('active');});for(const event of ['pointerup','pointercancel','lostpointercapture'])boost.addEventListener(event,()=>{controls[i].boost=false;boost.classList.remove('active');});}
-window.addEventListener('keydown',e=>{if(!game||$('arenaPlay').classList.contains('hidden'))return;if(paused||!$('arenaResults').classList.contains('hidden')){if(e.code==='Escape'&&!e.repeat){e.preventDefault();pause(false);}return;}if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='Escape'&&!e.repeat){e.preventDefault();pause();}});window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',release);document.addEventListener('visibilitychange',()=>{if(document.hidden){release();if(!online)pause(true);}});
+window.addEventListener('keydown',e=>{if(!game||$('arenaPlay').classList.contains('hidden'))return;if(paused||!$('arenaResults').classList.contains('hidden')){if(e.code==='Escape'&&!e.repeat){e.preventDefault();pause(false);}return;}if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='Escape'&&!e.repeat){e.preventDefault();pause();}});window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',release);document.addEventListener('bs-ui-overlay',release);document.addEventListener('visibilitychange',()=>{if(document.hidden){release();if(!online)pause(true);}else if(online&&socket?.readyState===WebSocket.OPEN){lastNetworkMessage=performance.now();socket.send(JSON.stringify({type:'resync'}));}});
 
 function touchCue(index,e){
  const ring=$('joystick'+(index+1)),rect=$('arenaCanvas').getBoundingClientRect();

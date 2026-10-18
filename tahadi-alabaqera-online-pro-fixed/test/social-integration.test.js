@@ -327,3 +327,8 @@ test('social API can store accounts in BOARD_ROOMS when no SOCIAL_USERS binding 
   assert.equal(dashboard.data.profile.username, 'mobile_1');
   assert.ok(instances.has('social:user:mobile_1'));
 });
+for(const game of ['sudoku','paths'])test(game+' invitations validate its real namespace and support the joining countdown',async()=>{
+ const {env}=createEnvironment(),alice=await signup(env,'alice_1','أليس'),bob=await signup(env,'bob_2','بوب');await social(env,'/api/social/friends/request',{method:'POST',token:alice,body:{username:'bob_2'}});await social(env,'/api/social/friends/respond',{method:'POST',token:bob,body:{username:'alice_1',accept:true}});
+ let status='countdown';env.ROOMS={idFromName:id=>id,get:id=>{assert.equal(id,game+':123456');return{fetch:async url=>{assert.equal(url,'https://'+game+'.internal/status');return Response.json({ok:true,game,status});}};}};
+ const body={username:'bob_2',game,roomCode:'123456'},result=await social(env,'/api/social/invites',{method:'POST',token:alice,body});assert.equal(result.response.status,200);assert.equal(result.data.invite.joinPath,(game==='paths'?'/paths-online':'/sudoku')+'?room=123456');status='playing';assert.equal((await social(env,'/api/social/invites',{method:'POST',token:alice,body})).response.status,409);
+});

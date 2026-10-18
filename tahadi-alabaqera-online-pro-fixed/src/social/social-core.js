@@ -4,7 +4,7 @@ export const SOCIAL_MAX_FRIENDS = 100;
 export const SOCIAL_MAX_REQUESTS = 100;
 export const SOCIAL_MAX_NOTIFICATIONS = 60;
 export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
-export const SOCIAL_ONLINE_GAMES = new Set(["quiz", "picture", "jackaroo", "snakes", "zahra", "serpent"]);
+export const SOCIAL_ONLINE_GAMES = new Set(["quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths"]);
 
 export function normalizeUsername(value) {
   return String(value || "").normalize("NFKC").trim().toLowerCase().replace(/\s+/g, "");
@@ -67,6 +67,7 @@ export function gameJoinPath(game, roomCode) {
   const normalizedGame = normalizeGame(game);
   const code = normalizeRoomCode(roomCode);
   if (!normalizedGame || !code) return "";
+  if (normalizedGame === "paths") return `/paths-online?room=${encodeURIComponent(code)}`;
   if (normalizedGame === "picture") return `/picture?room=${encodeURIComponent(code)}`;
   if (normalizedGame === "quiz") return `/online?room=${encodeURIComponent(code)}`;
   return `/${normalizedGame}?room=${encodeURIComponent(code)}`;

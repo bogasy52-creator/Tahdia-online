@@ -1,0 +1,16 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createDOM} from './dom-harness.mjs';
+async function setup(reduce=false){const h=await createDOM('sudoku.html',{matchMedia:()=>({matches:reduce})});await h.runFile('assets/js/play-feedback-v24-1.js');return h;}
+test('success particles are bounded and expire without modifying a Sudoku value',async()=>{
+ const h=await setup(),cell=h.doc.createElement('button');cell.textContent='7';cell.getBoundingClientRect=()=>({left:20,top:50,width:40,height:40});h.doc.body.appendChild(cell);
+ for(let i=0;i<20;i++)h.context.BS_GAME_FX.cell(cell,'right');const layer=h.doc.querySelector('.bs-fx-layer');assert.ok(layer.children.length<=28);assert.equal(cell.textContent,'7');for(const timer of [...h.timers.values()])timer.fn();assert.equal(layer.children.length,0);assert.equal(cell.classList.contains('bs-fx-right'),false);
+});
+test('reduced motion keeps a visible cell highlight without flying particles',async()=>{
+ const h=await setup(true),cell=h.doc.createElement('button');h.doc.body.appendChild(cell);h.context.BS_GAME_FX.cell(cell,'right');assert.equal(cell.classList.contains('bs-fx-right'),true);assert.equal(h.doc.querySelectorAll('.bs-fx-dot').length,0);
+});
+test('completed Sudoku units highlight and path effects use the top-layer game dialog',async()=>{
+ const h=await setup(),dialog=h.doc.createElement('dialog');dialog.setAttribute('open','');h.doc.body.appendChild(dialog);const cells=Array.from({length:81},()=>({el:h.doc.createElement('button')})),board=Array(81).fill(0);for(let i=0;i<9;i++)board[i]=i+1;h.context.BS_GAME_FX.sudoku(cells,board,8,'right');assert.equal(cells.filter(c=>c.el.classList.contains('bs-fx-unit')).length,9);
+ const canvas=h.doc.createElement('canvas');canvas.getBoundingClientRect=()=>({left:20,top:30,width:300,height:300});dialog.appendChild(canvas);h.context.BS_GAME_FX.path(canvas,{size:5},[0,1,6],0);assert.equal(h.doc.querySelector('.bs-fx-layer').parentNode,dialog);assert.equal(dialog.querySelectorAll('polyline').length,1);
+});
+test('room invitations preserve a direct path and discard secret query parameters',async()=>{
+ const h=await setup();h.context.location.href='https://game.test/paths-online?room=123456&token=private&hostKey=private';h.context.BS_INVITES.set({game:'paths',code:'123456',joinable:true});const data=h.context.BS_INVITES.data();assert.equal(data.url,'https://game.test/paths-online?room=123456');assert.equal(data.joinable,true);h.context.BS_INVITES.open();assert.ok(h.doc.getElementById('bsInvitePanel'));const labels=h.doc.getElementById('bsInvitePanel').querySelectorAll('button').map(b=>b.textContent);assert.ok(labels.includes('نسخ الرابط'));assert.ok(labels.includes('مشاركة عبر واتساب والتطبيقات'));
+});

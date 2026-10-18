@@ -111,7 +111,7 @@ export class PathsRoom{
       const text=typeof raw==='string'?raw:new TextDecoder().decode(raw);if(text.length>4096)return this.error(ws,'الرسالة كبيرة');
       let m;try{m=JSON.parse(text);}catch{return this.error(ws,'رسالة غير صالحة');}if(!m||typeof m!=='object')return this.error(ws,'رسالة غير صالحة');
       const second=Math.floor(Date.now()/1000);if(p.messageSecond!==second){p.messageSecond=second;p.messageCount=0;}if(++p.messageCount>30)return this.error(ws,'تمهّل قليلًا');
-      if(m.type==='ping'){this.broadcast();await this.schedule();return;}
+      if(m.type==='ping'){ws.send(JSON.stringify({type:'state',state:this.snapshot(p.id)}));return;}
       if(m.type==='leave'){
         if(['playing','countdown'].includes(r.status))return this.error(ws,'ارجع للمدخل لإغلاق اتصالك؛ مقعدك محفوظ حتى نهاية الجولة');
         delete r.players[p.id];r.order=r.order.filter(id=>id!==p.id);this.cleanup();try{ws.close(4002,'left');}catch{}
@@ -128,7 +128,7 @@ export class PathsRoom{
       }else if(['path','clear','reset'].includes(m.type)&&r.status==='playing'){
         if(m.round!==r.round)return this.error(ws,'هذه حركة من جولة قديمة');
         if(!Number.isInteger(m.seq)||m.seq<1)return this.error(ws,'تسلسل الحركة غير صالح');
-        if(m.seq<=p.seq){this.broadcast();return;}
+        if(m.seq<=p.seq){ws.send(JSON.stringify({type:'state',state:this.snapshot(p.id)}));return;}
         if(m.seq!==p.seq+1||p.seq>=2000)return this.error(ws,'انتظر وصول الحركة السابقة');
         p.lastFault='';
         if(m.type==='reset'){p.board=createStrictPaths(r.puzzle.level);}

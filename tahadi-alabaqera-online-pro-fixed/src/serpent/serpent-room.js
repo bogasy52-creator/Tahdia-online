@@ -23,17 +23,20 @@ export class SerpentRoom {
   if(!this.room)return null;const r=this.room;
   return {code:r.code,status:r.status,round:r.round,playerLimit:r.playerLimit,publicMatch:r.publicMatch===true,lobbyDeadline:r.lobbyDeadline||null,serverNow:Date.now(),botCount:r.botCount||0,difficulty:r.difficulty||'medium',duration:r.duration,matchMode:r.matchMode||'timed',rewardsComplete:r.rewardsComplete,players:r.players.map(({id,name,role,ready,connected,skin})=>({id,name,role,ready,connected,skin})),game:r.game?serpentSnapshot(r.game):null};
  }
- broadcast(full=false){const state=this.publicState();const packet=!full&&state?.status==='playing'&&this.lastFrame?.round===state.round&&this.lastFrame?.game?compactSerpentFrame(state,this.lastFrame):{type:'state',state};const payload=JSON.stringify(packet);this.lastFrame=state;for(const ws of this.ctx.getWebSockets())if(isOpen(ws))try{ws.send(payload)}catch{}}
+ broadcast(full=false){const state=this.publicState(),delta=!full&&state?.status==='playing'&&this.lastFrame?.round===state.round&&this.lastFrame?.game;const payload=JSON.stringify(delta?compactSerpentFrame(state,this.lastFrame):{type:'state',state});let packed=null;for(const ws of this.ctx.getWebSockets())if(isOpen(ws))try{if(delta&&ws.deserializeAttachment()?.packedBody){packed??=JSON.stringify(compactSerpentFrame(state,this.lastFrame,true));ws.send(packed);}else ws.send(payload)}catch{}this.lastFrame=state;}
  error(ws,message){try{ws.send(JSON.stringify({type:'error',message}))}catch{}}
  stop(){if(this.timer!==null)clearInterval(this.timer);this.timer=null;}
  run(){
   if(this.timer!==null||this.room?.status!=='playing'||!this.room.players.some(p=>p.connected))return;
-  this.lastSave=Date.now();this.timer=setInterval(()=>this.tick(),50);this.timer.unref?.();
+  this.lastSave=Date.now();this.lastTickAt=this.lastSave;this.tickCarry=0;this.timer=setInterval(()=>this.tick(Date.now()),50);this.timer.unref?.();
  }
- tick(){
+ tick(now){
   if(this.room?.status!=='playing')return this.stop();this.syncConnections();
   if(!this.room.players.some(p=>p.connected))return this.stop();
-  const g=this.room.game;stepSerpent(g,.05);this.pendingEvents=[...(this.pendingEvents||[]),...g.events.map((e,i)=>({...e,eventId:g.tick+':'+i}))].slice(-64);if(g.tick%2===0||g.status==='finished'){g.events=this.pendingEvents;this.broadcast();this.pendingEvents=[];}
+  let steps=1;
+  if(Number.isFinite(now)){const elapsed=Math.max(0,Math.min(200,now-(this.lastTickAt??now)));this.lastTickAt=now;this.tickCarry=Math.min(200,(this.tickCarry||0)+elapsed);steps=Math.floor(this.tickCarry/50);this.tickCarry-=steps*50;if(!steps)return;}
+  const g=this.room.game;for(let n=0;n<steps&&g.status==='playing';n++){stepSerpent(g,.05);this.pendingEvents=[...(this.pendingEvents||[]),...g.events.map((e,i)=>({...e,eventId:g.tick+':'+i}))].slice(-64);}
+  if(g.tick%2===0||steps>1||g.status==='finished'){g.events=this.pendingEvents;this.broadcast();this.pendingEvents=[];}
   if(g.status==='finished'){this.room.status='finished';this.stop();this.finishedWork=this.finish().catch(()=>this.schedule());this.ctx.waitUntil?.(this.finishedWork);return;}
   if(Date.now()-this.lastSave>=5000&&!this.saving){this.lastSave=Date.now();this.saving=this.save().finally(()=>{this.saving=null});this.ctx.waitUntil?.(this.saving);}
  }
@@ -87,7 +90,7 @@ export class SerpentRoom {
   if(p.username&&username!==p.username)return json({ok:false,error:'account_mismatch'},403);
   if(username){p.username=username;p.skin=request.headers.get('x-bs-skin')||'snake-wild';}
   p.connection=crypto.randomUUID();for(const old of this.ctx.getWebSockets())try{if(old.deserializeAttachment()?.playerId===p.id)old.close(4001,'reconnected')}catch{}
-  const pair=new WebSocketPair(),client=pair[0],server=pair[1];this.ctx.acceptWebSocket(server);server.serializeAttachment({serpent:true,playerId:p.id,connection:p.connection});
+  const pair=new WebSocketPair(),client=pair[0],server=pair[1];this.ctx.acceptWebSocket(server);server.serializeAttachment({serpent:true,playerId:p.id,connection:p.connection,packedBody:protocols.includes('bs-serpent-body1')});
   p.connected=true;p.disconnectedAt=null;this.room.expiresAt=Date.now()+TTL;await this.save();await this.schedule();
   server.send(JSON.stringify({type:'welcome',playerId:p.id,token:p.token,state:this.publicState()}));this.broadcast();this.run();
   return new Response(null,{status:101,webSocket:client,headers:{'sec-websocket-protocol':PROTOCOL}});
@@ -97,6 +100,7 @@ export class SerpentRoom {
   await this.ready;if(!this.room)return;let attachment;try{attachment=ws.deserializeAttachment()}catch{return}const p=this.room.players.find(p=>p.id===attachment?.playerId);if(!p||p.connection&&p.connection!==attachment.connection)return;
   const text=typeof raw==='string'?raw:new TextDecoder().decode(raw);if(text.length>1024)return this.error(ws,'الرسالة أكبر من المسموح');let msg;try{msg=JSON.parse(text)}catch{return this.error(ws,'رسالة غير صالحة')}
   if(!msg||typeof msg!=='object'||Array.isArray(msg))return this.error(ws,'رسالة غير صالحة');
+  if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',sentAt:Number.isFinite(msg.sentAt)?msg.sentAt:null,serverNow:Date.now()}))}catch{}return;}
   if(msg.type==='resync'){const now=Date.now();if(!p.resyncAt||now-p.resyncAt>=500){p.resyncAt=now;this.broadcast(true);}return;}
   if(msg.type==='configure'){
    if(p.role!=='host')return this.error(ws,'تعديل البوتات للمضيف فقط');if(this.room.status!=='lobby')return;
