@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "21.0.0",
+  "version": "22.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,7 +20,8 @@
     "test:motion": "node scripts/test-motion-v7.mjs",
     "test:offline": "node scripts/test-offline-v7.mjs",
     "test:cloudflare": "node scripts/verify-cloudflare-runtime.mjs",
-    "test:picture": "node scripts/verify-picture-runtime.mjs"
+    "test:picture": "node scripts/verify-picture-runtime.mjs",
+    "test:sudoku": "node scripts/verify-sudoku-runtime.mjs"
   },
   "devDependencies": {
     "wrangler": "4.127.1",

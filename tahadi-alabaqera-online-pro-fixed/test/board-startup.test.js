@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {environment,api} from './worker-harness.mjs';
 import {BoardOnlineClient} from '../public/assets/js/board-online.js';
 test('board engine health checks the actual Durable Object without creating a game room',async()=>{
- const env=environment(),res=await api(env,'/api/board/health');assert.equal(res.response.status,200);assert.equal(res.data.engine,'BoardRoom');assert.equal(res.data.release,'21.0.0');
+ const env=environment(),res=await api(env,'/api/board/health');assert.equal(res.response.status,200);assert.equal(res.data.engine,'BoardRoom');assert.equal(res.data.release,'22.0.0');
  const holder=env.BOARD_ROOMS.peek('__board_health__');assert.equal(holder.instance.room,null);assert.equal(await holder.ctx.storage.get('room'),undefined);assert.equal(holder.ctx.storage.alarm,null);
 });
 test('board health distinguishes an absent binding from an obsolete engine',async()=>{

@@ -28,5 +28,5 @@ test('online quiz protects memory preview before answers open',async()=>{
 });
 
 test('quiz luxury stylesheet is cached by the PWA',async()=>{
-  const sw=await read('public/service-worker.js');assert.match(sw,/busraj-games-v48-release-21-0-0/);assert.match(sw,/quiz-luxury\.css/);
+  const sw=await read('public/service-worker.js');assert.match(sw,/busraj-games-v49-release-22-0-0/);assert.match(sw,/quiz-luxury\.css/);
 });

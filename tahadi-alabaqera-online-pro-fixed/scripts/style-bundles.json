@@ -212,6 +212,7 @@
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/sudoku.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/sudoku-v22.css"
   ]
 }
