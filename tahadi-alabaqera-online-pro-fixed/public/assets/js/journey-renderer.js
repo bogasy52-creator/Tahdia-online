@@ -1,4 +1,4 @@
-import {COLORS} from './engines/journey-engine.js?v=22.0.0';
+import {COLORS} from './engines/journey-engine.js?v=23.0.0';
 export function boardMetrics(state, width) { return {cell: width / state.size, size: state.size}; }
 function shape(c, x, y, r, kind) {
   c.beginPath();

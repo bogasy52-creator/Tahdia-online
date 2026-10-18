@@ -1,8 +1,8 @@
 import {createSudokuGrid,paintSudokuGrid,sudokuEntryConflict,sudokuKey}from './sudoku-grid.js';
 import {createSudoku,moveSudoku,restoreSudoku,sudokuHint,sudokuWrongCells,sudokuConflicts,sudokuStars,validSudokuNotes,SUDOKU_TIERS}from'./engines/sudoku-engine.js';
 import {SUDOKU_PEERS}from'./engines/sudoku-core.js';
-import * as progress from'./journey-client.js?v=22.0.0';
-import {nextStage,dayKey}from'./engines/journey-engine.js?v=22.0.0';
+import * as progress from'./journey-client.js?v=23.0.0';
+import {nextStage,dayKey}from'./engines/journey-engine.js?v=23.0.0';
 const $=id=>document.getElementById(id),show=(id,yes)=>$(id).hidden=!yes,account=()=>window.BS_CAREER?.account?.()||'guest',key=()=> 'tahdia-sudoku-v20:'+account(),now=()=>Date.now();
 let state=null,notes=Array(81).fill(0),selected=0,pencil=false,tier=0,elapsed=0,activeSince=0,clock=null,paused=false,saving=false,completionSaved=false,version=0,initialAccount='',checked=[],hint=null,undoNotes=[],cells=[],pads=[];
 const tierCopy=['من 42 إلى 46 رقمًا ثابتًا. تعلّم قراءة الصف والمربع خطوة خطوة.','من 34 إلى 38 رقمًا ثابتًا. استخدم الملاحظات وابحث عن الموضع الوحيد.','من 30 إلى 32 رقمًا ثابتًا. تحتاج ربط الصفوف والمربعات معًا.','من 27 إلى 29 رقمًا ثابتًا. مساحات أوسع للتفكير واستبعاد الاحتمالات.','من 24 إلى 26 رقمًا ثابتًا. تحلَّ بالصبر؛ بعض المراحل تحتاج تحليلًا متقدمًا.'];

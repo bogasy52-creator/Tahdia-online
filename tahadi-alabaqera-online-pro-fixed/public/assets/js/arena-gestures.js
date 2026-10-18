@@ -9,10 +9,11 @@ export class ArenaGestures {
  }
  move(e){
   const p=this.pointers.get(e.pointerId);if(!p)return null;
-  if(this.mode==='joystick'){
+  if(this.mode==='joystick'||this.mode==='floating'){
+   if(this.mode==='floating'){const dx=e.clientX-p.originX,dy=e.clientY-p.originY,d=Math.hypot(dx,dy);if(d>44){p.originX=e.clientX-dx/d*44;p.originY=e.clientY-dy/d*44;}}
    const dx=e.clientX-p.originX,dy=e.clientY-p.originY,d=Math.hypot(dx,dy),scale=Math.min(1,38/Math.max(1,d));
    p.knobX=dx*scale;p.knobY=dy*scale;
-   if(d<9)return p.index;
+   if(d<(this.mode==='floating'?5:9))return p.index;
    const angle=Math.atan2(dy,dx),difference=p.angle===null?Infinity:Math.abs(Math.atan2(Math.sin(angle-p.angle),Math.cos(angle-p.angle)));
    if(difference>.045){p.angle=angle;this.steer(p.index,angle);}return p.index;
   }

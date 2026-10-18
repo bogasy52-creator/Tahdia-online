@@ -1,4 +1,4 @@
-import {createImageBoard,createImageAssembly,placeImageTile,validImageAssembly,imageCellAtPoint,ASSEMBLY_MODE,swapImageTiles,imageProgress,PICTURE_THEMES} from './engines/image-puzzle.js?v=22.0.0';
+import {createImageBoard,createImageAssembly,placeImageTile,validImageAssembly,imageCellAtPoint,ASSEMBLY_MODE,swapImageTiles,imageProgress,PICTURE_THEMES} from './engines/image-puzzle.js?v=23.0.0';
 const $=id=>document.getElementById(id),show=(id,yes)=>$(id).hidden=!yes;
 const read=key=>{try{return localStorage.getItem(key)||''}catch{return ''}},write=(key,value)=>{try{localStorage.setItem(key,value)}catch{}};
 const session=()=>read('bs_social_session'),owner=()=>session().split('.')[0]||'guest',practiceKey=()=>`bs-picture-practice-v19:${owner()}`;

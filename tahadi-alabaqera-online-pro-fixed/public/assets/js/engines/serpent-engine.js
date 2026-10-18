@@ -1,10 +1,11 @@
+import {ARENA_RULES,resolveArenaCombat,arenaTurnRate} from './serpent-combat-v23.js';
 /* Shared authoritative simulation. All distances are world units, time seconds. */
 const TAU=Math.PI*2,MIN_MASS=24,MAX_MASS=180,SPACING=5;
 export const SERPENT_SPEED=108,SERPENT_BOOST_SPEED=190,SERPENT_TURN_RATE=6.4;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const angleDelta=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
-const forgiving=g=>g.collisionMode==='tail-guard'||g.collisionMode==='predator';
+const forgiving=g=>g.collisionMode==='tail-guard'||['predator',ARENA_RULES].includes(g.collisionMode);
 export function serpentFrontParts(s){return s.mass>=60?6:4;}
 export function followSerpentBody(segments,x,y,count){
  const body=segments.length?segments:[{x,y}];body[0]={x,y};
@@ -13,7 +14,7 @@ export function followSerpentBody(segments,x,y,count){
  return body;
 }
 export function serpentSteeringAngle(g,s,desired){
- if(g.collisionMode!=='predator')return desired;
+ if(!['predator',ARENA_RULES].includes(g.collisionMode))return desired;
  const edge=radius(s)+30,dx=Math.cos(desired),dy=Math.sin(desired);
  if(s.x<edge&&dx<0||s.x>g.width-edge&&dx>0||s.y<edge&&dy<0||s.y>g.height-edge&&dy>0)return Math.atan2(g.height/2-s.y,g.width/2-s.x);
  return desired;
@@ -28,7 +29,7 @@ function makeSnake(g,player,index,count){
 }
 export function createSerpentGame(players,options={}){
  if(!Array.isArray(players)||players.length<1||players.length>10||new Set(players.map(p=>p.id)).size!==players.length)throw new Error('invalid_players');
- const g={version:1,width:clamp(Number(options.width)||1800,800,2400),height:clamp(Number(options.height)||1800,800,2400),collisionMode:['tail-guard','predator'].includes(options.collisionMode)?options.collisionMode:'classic',nextTreasureAt:15,matchMode:options.matchMode==='survival'?'survival':'timed',duration:clamp(Number(options.duration)||120,.1,300),difficulty:['easy','medium','hard'].includes(options.difficulty)?options.difficulty:'medium',foodCount:clamp(Math.floor(options.foodCount??220),0,350),randomState:(Number(options.seed)>>>0)||41,nextFood:0,elapsed:0,tick:0,status:'playing',winners:[],events:[],snakes:[],food:[]};
+ const g={version:1,width:clamp(Number(options.width)||1800,800,2400),height:clamp(Number(options.height)||1800,800,2400),collisionMode:['tail-guard','predator',ARENA_RULES].includes(options.collisionMode)?options.collisionMode:'classic',nextTreasureAt:15,matchMode:options.matchMode==='survival'?'survival':'timed',duration:clamp(Number(options.duration)||120,.1,300),difficulty:['easy','medium','hard'].includes(options.difficulty)?options.difficulty:'medium',foodCount:clamp(Math.floor(options.foodCount??220),0,350),randomState:(Number(options.seed)>>>0)||41,nextFood:0,elapsed:0,tick:0,status:'playing',winners:[],events:[],snakes:[],food:[]};
  g.snakes=players.map((p,i)=>makeSnake(g,p,i,players.length));replenish(g);return g;
 }
 export function addSerpentBots(g,count){
@@ -66,14 +67,14 @@ function botSteering(g,s){
  s.targetAngle=Math.atan2(ay,ax);s.boost=false;
 }
 function kill(g,s,by=null,reason='collision'){
- if(!s.alive)return;s.alive=false;s.boost=false;s.respawnAt=s.bot&&g.matchMode!=='survival'?g.elapsed+3:null;
+ if(!s.alive)return;if(g.collisionMode===ARENA_RULES){s.deathReason=reason;s.killedBy=by?.id||null;}s.alive=false;s.boost=false;s.respawnAt=s.bot&&g.matchMode!=='survival'?g.elapsed+3:null;
  if(by?.alive){by.kills++;by.score+=10;if(reason==='front')by.mass=Math.min(MAX_MASS,by.mass+6);}
  for(let i=0;i<s.segments.length;i+=3){const p=s.segments[i];g.food.push(food(g,p.x,p.y,2));}
  g.food.push(food(g,s.x,s.y,5));g.events.push({type:'death',id:s.id,by:by?.id||null,x:s.x,y:s.y,reason});
 }
 function move(g,s,dt){
  if(s.bot)botSteering(g,s);
- const turn=s.bot&&forgiving(g)?(g.difficulty==='hard'?4.6:3.2):SERPENT_TURN_RATE,desired=serpentSteeringAngle(g,s,s.targetAngle),delta=angleDelta(desired,s.angle);s.angle+=clamp(delta,-turn*dt,turn*dt);if(desired!==s.targetAngle)s.targetAngle=desired;
+ const turn=g.collisionMode===ARENA_RULES?arenaTurnRate(s):s.bot&&forgiving(g)?(g.difficulty==='hard'?4.6:3.2):SERPENT_TURN_RATE,desired=serpentSteeringAngle(g,s,s.targetAngle),delta=angleDelta(desired,s.angle);s.angle+=clamp(delta,-turn*dt,turn*dt);if(desired!==s.targetAngle)s.targetAngle=desired;
  if(s.mass<=MIN_MASS)s.boost=false;
  let speed=s.boost?SERPENT_BOOST_SPEED:SERPENT_SPEED;
  if(s.bot)speed*=forgiving(g)?(g.difficulty==='easy'?.62:g.difficulty==='hard'?.92:.72):(g.difficulty==='easy'?.8:g.difficulty==='hard'?1:.93);
@@ -82,9 +83,9 @@ function move(g,s,dt){
  if(s.x<radius(s)||s.x>g.width-radius(s)||s.y<radius(s)||s.y>g.height-radius(s)){
   if(!forgiving(g)){kill(g,s);return;}
   const margin=radius(s)+1;s.x=clamp(s.x,margin,g.width-margin);s.y=clamp(s.y,margin,g.height-margin);
-  s.targetAngle=Math.atan2(g.height/2-s.y,g.width/2-s.x);if(g.collisionMode!=='predator')s.angle=s.targetAngle;s.boost=false;
+  s.targetAngle=Math.atan2(g.height/2-s.y,g.width/2-s.x);if(!['predator',ARENA_RULES].includes(g.collisionMode))s.angle=s.targetAngle;s.boost=false;
  }
- if(g.collisionMode==='predator'){s.segments=followSerpentBody(s.segments,s.x,s.y,Math.round(s.mass));return;}
+ if(['predator',ARENA_RULES].includes(g.collisionMode)){s.segments=followSerpentBody(s.segments,s.x,s.y,Math.round(s.mass));return;}
  const old=s.segments[0]||s;if(distance(old,s)>=SPACING)s.segments.unshift({x:s.x,y:s.y});
  else if(!s.segments.length)s.segments.push({x:s.x,y:s.y});
  const count=Math.round(s.mass);while(s.segments.length<count)s.segments.push({...s.segments.at(-1)});s.segments.length=count;
@@ -95,7 +96,8 @@ function advanceSerpent(g,delta){
  for(let i=0;i<g.snakes.length;i++){const s=g.snakes[i];if(!s.alive&&s.bot&&g.matchMode!=='survival'&&s.respawnAt<=g.elapsed){const born=makeSnake(g,s,i,g.snakes.length);born.score=s.score;born.kills=s.kills;g.snakes[i]=born;}if(g.snakes[i].alive)move(g,g.snakes[i],dt);}
  const doomed=new Map();
  const reasons=new Map();
- if(g.collisionMode==='predator'){
+ if(g.collisionMode===ARENA_RULES){const result=resolveArenaCombat(g.snakes);for(const[id,by]of result.dead)doomed.set(id,by);for(const[id,reason]of result.reasons)reasons.set(id,reason);}
+ else if(g.collisionMode==='predator'){
   const attacks=[];
   for(const a of g.snakes){if(!a.alive)continue;for(const b of g.snakes){if(!b.alive||a.id===b.id)continue;
    const contact=radius(a)*.65+radius(b)*.55;
@@ -117,7 +119,7 @@ function advanceSerpent(g,delta){
   for(const b of g.snakes){if(!b.alive||a.id===b.id||doomed.has(a.id)||doomed.has(b.id))continue;for(let j=7;j<b.segments.length;j+=2){if(distance(a,b.segments[j])<radius(a)+radius(b)*.76){doomed.set(a.id,b);break;}}}
  }
  }
- for(const s of g.snakes)if(doomed.has(s.id)){const by=doomed.get(s.id);kill(g,s,g.collisionMode==='predator'&&doomed.has(by?.id)?null:by,reasons.get(s.id));}
+ for(const s of g.snakes)if(doomed.has(s.id)){const by=doomed.get(s.id);kill(g,s,['predator',ARENA_RULES].includes(g.collisionMode)&&doomed.has(by?.id)?null:by,reasons.get(s.id));}
  const eaten=new Set();for(const s of g.snakes){if(!s.alive)continue;
   for(const f of g.food){if(!eaten.has(f.id)&&distance(s,f)<radius(s)+f.radius){eaten.add(f.id);s.mass=Math.min(MAX_MASS,s.mass+f.value);s.score+=f.value;g.events.push({type:'eat',id:s.id,x:f.x,y:f.y,value:f.value,kind:f.kind||'berry'});}}
  }
@@ -135,11 +137,11 @@ function advanceSerpent(g,delta){
 }
 export function stepSerpent(g,delta){
  const dt=clamp(Number(delta)||0,0,.1);
- if(g.collisionMode!=='predator'||dt<=1/60+1e-9||g.status!=='playing')return advanceSerpent(g,dt);
+ if(!['predator',ARENA_RULES].includes(g.collisionMode)||dt<=1/60+1e-9||g.status!=='playing')return advanceSerpent(g,dt);
  const count=Math.ceil(dt/(1/60)),tick=g.tick+1,events=[];
  for(let i=0;i<count&&g.status==='playing';i++){advanceSerpent(g,dt/count);events.push(...g.events);}
  g.tick=tick;g.events=events.map(e=>e.type==='treasure'?{...e,tick}:e);return g;
 }
 export function serpentSnapshot(g){
- return {version:1,tick:g.tick,width:g.width,height:g.height,collisionMode:g.collisionMode||'classic',matchMode:g.matchMode||'timed',elapsed:g.elapsed,duration:g.duration,status:g.status,winners:[...g.winners],events:g.events.map(e=>({...e})),snakes:g.snakes.map(({id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments})=>({id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments:segments.map(p=>({...p}))})),food:g.food.map(f=>({...f}))};
+ return {version:1,tick:g.tick,width:g.width,height:g.height,collisionMode:g.collisionMode||'classic',matchMode:g.matchMode||'timed',elapsed:g.elapsed,duration:g.duration,status:g.status,winners:[...g.winners],events:g.events.map(e=>({...e})),snakes:g.snakes.map(({id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments,deathReason,killedBy})=>({...(g.collisionMode===ARENA_RULES?{deathReason:deathReason||null,killedBy:killedBy||null}:{}),id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments:segments.map(p=>({...p}))})),food:g.food.map(f=>({...f}))};
 }
