@@ -69,7 +69,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v50-release-23-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
+  assert.match(sw,/busraj-games-v50-release-23-0-1/);assert.match(sw,/busraj-quiz-media-v4/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });

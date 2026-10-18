@@ -153,3 +153,16 @@ body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-in
 .sudoku-board-top{font-size:10px;gap:6px}.sudoku-board-top b{font-size:10px}.sudoku-pad{gap:4px;margin-top:11px}.sudoku-page .sudoku-pad button{min-block-size:51px;font-size:22px;border-radius:8px}.sudoku-pad button small{font-size:8px}.sudoku-page .sudoku-tools button{font-size:18px;min-block-size:46px;padding:6px 2px}.sudoku-tools button span{font-size:10px}.sudoku-layout{gap:14px}.sudoku-message{font-size:11px;min-block-size:43px}.sudoku-side .picture-panel{padding:19px;gap:13px}.sudoku-roster-title h2{font-size:19px}.sudoku-player{padding:10px}}
 @media(max-width:360px){.sudoku-page .picture-app{padding-inline:10px}.sudoku-online-heading h1{font-size:20px}.sudoku-live-badge{display:none}.sudoku-page .sudoku-pad button{font-size:20px}.sudoku-pad button small{font-size:7px}.sudoku-entry-settings{gap:9px}.sudoku-entry-main{padding:19px}.sudoku-page .sudoku-field select{padding-inline:8px}.sudoku-play-heading{flex-wrap:wrap}.sudoku-play-heading>div:nth-child(2){flex:1}.sudoku-board-top{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.sudoku-page *{animation:none!important;transition:none!important}}
+
+/* v23.0.1: live wrong-answer marking, lives and answer effects */
+.sudoku-page .sudoku-lives{display:flex;justify-content:center;gap:6px;margin:10px 0 0;font-weight:800;letter-spacing:.12em;color:#e8c9a0}
+.sudoku-page .sudoku-lives.last{color:#ff8c8c;animation:sudokuPulse 1s ease-in-out infinite}
+.sudoku-page button.sudoku-cell.fx-wrong{animation:sudokuWrong .6s ease both;z-index:2}
+.sudoku-page button.sudoku-cell.fx-right{animation:sudokuRight .6s ease both;z-index:2}
+.sudoku-page button.sudoku-cell.fx-done{animation:sudokuDone .8s ease both}
+.sudoku-page .sudoku-board.fx-shake{animation:sudokuShake .45s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes sudokuWrong{0%{background:#ff6b6b;transform:scale(1.18)}60%{background:#f6d8d5}100%{background:#f6d8d5;transform:scale(1)}}
+@keyframes sudokuRight{0%{background:#5fd68a;transform:scale(1.22);box-shadow:0 0 0 0 rgba(95,214,138,.8)}100%{transform:scale(1);box-shadow:0 0 0 14px rgba(95,214,138,0)}}
+@keyframes sudokuDone{0%,100%{filter:none}40%{filter:brightness(1.12) saturate(1.6);background:#b9ecc9}}
+@keyframes sudokuShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+@keyframes sudokuPulse{50%{opacity:.55}}

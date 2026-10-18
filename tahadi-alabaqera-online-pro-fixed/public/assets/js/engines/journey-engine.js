@@ -1,7 +1,7 @@
 import {createStrictPaths,moveStrictPaths,hintStrictPaths,restartStrictPaths,restoreStrictPaths,strictPathsStars}from './paths-v20.js';
 import {createSudoku,restoreSudoku,sudokuStars}from './sudoku-engine.js';
 /* Deterministic stages. The browser and the server replay the same moves. */
-import {restoreMatch3,match3Stars} from './match3-engine.js?v=23.0.0';
+import {restoreMatch3,match3Stars} from './match3-engine.js?v=23.0.1';
 export const GAMES = Object.freeze(['jewels', 'paths', 'sudoku']);
 export const STAGE_COUNT = 60;
 export const STAGE_LIMITS=Object.freeze({jewels:60,paths:120,sudoku:120});

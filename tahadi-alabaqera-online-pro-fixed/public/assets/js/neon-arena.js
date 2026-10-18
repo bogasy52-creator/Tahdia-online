@@ -1,5 +1,5 @@
-import {snakeGeometry} from './arena-geometry.js?v=23.0.0';
-import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=23.0.0';
+import {snakeGeometry} from './arena-geometry.js?v=23.0.1';
+import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?v=23.0.1';
 /* Creature heads keep their proportions. Real painted scales follow a
    tapered body mesh between the rule engine's head and tail cells. */
 (function(){
