@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{readFile,readdir}from'node:fs/promises';
+const root=new URL('../public/',import.meta.url),read=async path=>readFile(new URL(path,root),'utf8');
+test('all updated pages include responsive premium navigation and visual system',async()=>{for(const name of (await readdir(root.pathname)).filter(x=>x.endsWith('.html'))){const html=await read(name);if(name==='offline.html'||name==='admin.html')continue;assert.match(html,/tahdia-premium-v25\.css/);assert.match(html,/tahdia-premium-v25\.js/);}});
+test('invite uses server-side social invitation route rather than link only',async()=>{const js=await read('assets/js/tahdia-premium-v25.js');assert.match(js,/api\/social\/me/);assert.match(js,/api\/social\/invites/);assert.match(js,/roomCode: data\.code|roomCode:data\.code/);});
+test('sudoku online blocks play after fifth confirmed wrong move',async()=>{const js=await read('assets/js/sudoku-online.js');assert.match(js,/ONLINE_MISTAKE_LIMIT=5/);assert.match(js,/recordMistake\(\)/);assert.match(js,/\|\|lost\(\)/);});

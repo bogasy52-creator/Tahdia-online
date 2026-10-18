@@ -1,8 +1,10 @@
 // V20: small offline core. Other games and media are cached after the first visit.
-const CACHE_NAME = 'busraj-games-v52-release-24-0-1';
+const CACHE_NAME = 'busraj-games-v53-release-25-0-0';
 const RUNTIME_CACHE = CACHE_NAME + '-visited';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
+  "/assets/js/tahdia-premium-v25.js?v=25.0.0",
+  "/assets/css/tahdia-premium-v25.css?v=25.0.0",
   "/assets/js/play-feedback-v24-1.js?v=24.0.1",
   "/",
   "/index.html",
@@ -164,6 +166,7 @@ const ON_DEMAND = [
   "/assets/css/studio-v16.css",
   "/assets/css/sudoku-v22.css",
   "/assets/css/sudoku.css",
+  "/assets/css/tahdia-premium-v25.css",
   "/assets/css/zahra-premium.css",
   "/assets/js/adaptive-board-layout.js",
   "/assets/js/admin.js",
@@ -238,6 +241,7 @@ const ON_DEMAND = [
   "/assets/js/sudoku-grid.js",
   "/assets/js/sudoku-online.js",
   "/assets/js/sudoku-ui.js",
+  "/assets/js/tahdia-premium-v25.js",
   "/assets/js/ui-icons.js",
   "/assets/js/v5-ultimate-expansion.js",
   "/assets/previews/board-cyber.webp",

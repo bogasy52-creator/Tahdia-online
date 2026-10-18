@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "24.0.1",
+  "version": "25.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,7 @@
     "verify:worker": "node scripts/verify-worker-offline.mjs",
     "check:cloudflare": "wrangler deploy --dry-run",
     "verify:cloudflare": "npm run verify && npm run check:cloudflare",
-    "preverify:release": "node scripts/build-styles.mjs --pages=serpent.html,journey.html,paths-online.html && node scripts/build-offline.mjs",
+    "preverify:release": "node scripts/build-styles.mjs --pages=serpent.html,journey.html,paths-online.html && node scripts/apply-premium.mjs && node scripts/build-offline.mjs",
     "verify:release": "npm run verify && node scripts/verify-v7.mjs",
     "start:local": "node scripts/play-local.mjs",
     "test:browser": "node scripts/test-browser-v7.mjs",

@@ -16,7 +16,16 @@ for(const page of pages.filter(page=>!selection||selection.includes(page))){
  const content=(await Promise.all(files.map(async file=>'/* '+file+' */\n'+await readFile(path.join(root,file),'utf8')))).join('\n');
  const bundle='assets/css/app-'+page.replace('.html','')+'.css';
  const revision=['serpent.html','journey.html','paths-online.html'].includes(page)?'24.0.1':html.match(/assets\/css\/app-[^"']+\?v=([^"']+)/)?.[1]||'23.0.1';
- const next=html.replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/g,'').replace('</head>','<link rel="stylesheet" href="'+bundle+'?v='+revision+'"></head>');
+ // Keep the standalone v25 theme stylesheet outside each generated route bundle.
+ // Rebuilding the route bundle must not remove the theme, and --check must
+ // compare against the SAME normalized output as the release builder.
+ const premiumLinks=[];
+ const normalHtml=html.replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/g,tag=>{
+  if(/href=["']\/?assets\/css\/tahdia-premium-v25\.css\?v=25\.0\.0["']/.test(tag)){premiumLinks.push(tag);return '';}
+  return tag;
+ });
+ if(premiumLinks.length>1)throw Error('Duplicate premium stylesheet: '+page);
+ const next=normalHtml.replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/g,'').replace('</head>','<link rel="stylesheet" href="'+bundle+'?v='+revision+'">'+premiumLinks.join('')+'</head>');
  if(check){if(html!==next||await readFile(path.join(root,bundle),'utf8')!==content)throw Error('Rebuild styles: '+page);}else{await writeFile(path.join(root,bundle),content);await writeFile(pagePath,next);}
  count++;
 }

@@ -61,15 +61,50 @@ test('npm release verification rebuilds stale artifacts before the verifier read
   await writeFile(join(f.root,'public',page+'.html'),`<html><head></head><body>${page}</body></html>`);
  }
  await writeFile(join(f.root,'scripts/style-bundles.json'),JSON.stringify(manifest));
- for(const name of ['build-offline.mjs','service-worker-runtime.txt'])await copyFile(fileURLToPath(new URL('../scripts/'+name,import.meta.url)),join(f.root,'scripts',name));
- await writeFile(join(f.root,'scripts/check-generated.mjs'),`import assert from 'node:assert/strict';import {readFile}from'node:fs/promises';for(const p of ['serpent','journey','paths-online'])assert.match(await readFile('public/assets/css/app-'+p+'.css','utf8'),/color:green/);assert.match(await readFile('public/service-worker.js','utf8'),/busraj-games-v52-release-24-0-1/);`);
+ for(const name of ['build-offline.mjs','apply-premium.mjs','service-worker-runtime.txt'])await copyFile(fileURLToPath(new URL('../scripts/'+name,import.meta.url)),join(f.root,'scripts',name));
+ await writeFile(join(f.root,'scripts/check-generated.mjs'),`import assert from 'node:assert/strict';import {readFile}from'node:fs/promises';for(const p of ['serpent','journey','paths-online'])assert.match(await readFile('public/assets/css/app-'+p+'.css','utf8'),/color:green/);assert.match(await readFile('public/service-worker.js','utf8'),/busraj-games-v53-release-25-0-0/);`);
  await writeFile(join(f.root,'package.json'),JSON.stringify({name:'generated-release-fixture',private:true,scripts:{'preverify:release':sourcePackage.scripts['preverify:release'],'verify:release':'node scripts/check-generated.mjs'}}));
  const sudoku=await readFile(join(f.root,'public/assets/css/app-sudoku.css'));
  const result=spawnSync('npm',['run','verify:release'],{cwd:f.root,encoding:'utf8'});
  assert.equal(result.status,0,result.stdout+result.stderr);
  assert.deepEqual(await readFile(join(f.root,'public/assets/css/app-sudoku.css')),sudoku);
+ assert.match(await readFile(join(f.root,'public/serpent.html'),'utf8'),/tahdia-premium-v25\.css\?v=25\.0\.0/,'premium CSS must be applied during release preparation');
+ assert.match(await readFile(join(f.root,'public/serpent.html'),'utf8'),/tahdia-premium-v25\.js\?v=25\.0\.0/,'premium JS must be applied during release preparation');
  const first=await readFile(join(f.root,'public/service-worker.js'));
  const again=spawnSync('npm',['run','preverify:release'],{cwd:f.root,encoding:'utf8'});
  assert.equal(again.status,0,again.stdout+again.stderr);
  assert.deepEqual(await readFile(join(f.root,'public/service-worker.js')),first,'first build without a service worker must match subsequent builds');
+});
+
+
+test('v25 premium CSS survives route CSS regeneration and is accepted by full release CSS verification',async t=>{
+ const f=await fixture(t),prem='tahdia-premium-v25.css?v=25.0.0';
+ const manifest=JSON.parse(await readFile(join(f.root,'scripts/style-bundles.json'),'utf8'));
+ manifest['accuracy.html']=['assets/css/accuracy.css'];
+ await writeFile(join(f.root,'scripts/style-bundles.json'),JSON.stringify(manifest,null,2)+'\n');
+ await writeFile(join(f.root,'public/accuracy.html'),'<html><head><link rel="stylesheet" href="assets/css/app-accuracy.css?v=23.0.1"></head><body>accuracy</body></html>');
+ await writeFile(join(f.root,'public/assets/css/accuracy.css'),'.accuracy{color:royalblue}\n');
+ await writeFile(join(f.root,'public/assets/css/app-accuracy.css'),'/* stale */\n');
+ await copyFile(fileURLToPath(new URL('../scripts/apply-premium.mjs',import.meta.url)),join(f.root,'scripts/apply-premium.mjs'));
+ assert.equal(f.run().status,0,'CSS builder should generate all route bundles');
+ const premiumRun=spawnSync(process.execPath,['scripts/apply-premium.mjs'],{cwd:f.root,encoding:'utf8'});
+ assert.equal(premiumRun.status,0,premiumRun.stderr);
+ const after=await readFile(join(f.root,'public/accuracy.html'),'utf8');
+ assert.match(after,/tahdia-premium-v25\.css\?v=25\.0\.0/);
+ assert.equal(f.run('--check').status,0,'--check across all routes must accept generated CSS with external premium theme');
+ assert.equal(f.run().status,0,'second build should be idempotent');
+ assert.deepEqual(await readFile(join(f.root,'public/accuracy.html'),'utf8'),after,'rebuild must preserve theme and original ordering');
+ assert.equal(f.run('--check').status,0);
+ await writeFile(join(f.root,'public/assets/css/accuracy.css'),'.accuracy{color:red}\n');
+ const stale=f.run('--check');
+ assert.notEqual(stale.status,0,'stale CSS bundle should still be rejected');
+ assert.match(stale.stderr,/Rebuild styles: accuracy\.html/);
+ assert.equal(f.run().status,0,'rebuild after modifying source');
+ assert.equal(f.run('--check').status,0);
+ // Duplicate premium injections must be rejected rather than silently hidden.
+ const h=await readFile(join(f.root,'public/accuracy.html'),'utf8');
+ await writeFile(join(f.root,'public/accuracy.html'),h.replace('</head>',`<link rel="stylesheet" href="/assets/css/${prem}"></head>`));
+ const doubled=f.run('--check');
+ assert.notEqual(doubled.status,0);
+ assert.match(doubled.stderr,/Duplicate premium stylesheet/);
 });
