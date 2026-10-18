@@ -1,7 +1,8 @@
-import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=23.0.1';
-import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=23.0.1';
-import {ArenaGestures} from './arena-gestures.js?v=23.0.1';
-import {applySerpentFrame} from './serpent-network.js?v=23.0.1';
+import {ARENA_POWERS,powerActive} from './engines/arena-drops-v24.js';
+import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=24.0.0';
+import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=24.0.0';
+import {ArenaGestures} from './arena-gestures.js?v=24.0.0-s1';
+import {applySerpentFrame} from './serpent-network.js?v=24.0.0-s1';
 
 const $=id=>document.getElementById(id),SESSION='busraj-serpent-room-v12';
 const renderer=new SerpentRenderer($('arenaCanvas')),keys=new Set(),mousePointers=new Map(),headings=[null,null],controls=[{angle:null,boost:false},{angle:null,boost:false}];
@@ -10,7 +11,7 @@ const trial=resolveTrialSkin(window.BS_CAREER?.catalog||[],location.search);
 const gestures=new ArenaGestures({mode:'floating',steer:(index,angle)=>{controls[index].angle=angle;headings[index]=angle;},end:index=>{controls[index].angle=null;const ring=$('joystick'+(index+1));ring.classList.remove('steering');ring.classList.add('hidden');}});
 let mode='quick',game=null,room=null,socket=null,selfId=null,paused=false,online=false,networkActive=false,reconnects=0,reconnectTimer=null,lastFrame=performance.now(),accumulator=0,lastInput=0,lastHud=0,receipt='',resultShown='',mouseAngle=null;
 let connectionEpoch=0,requestController=null,cancelConnect=null;const rewardRefreshes=new Set();
-const show=(id,yes=true)=>$(id)?.classList.toggle('hidden',!yes);
+const show=(id,yes=true)=>{const el=$(id);if(!el)return;el.classList.toggle('hidden',!yes);if(el.classList.contains('arena-overlay')){el.hidden=!yes;el.inert=!yes;el.dataset.open=String(yes);el.setAttribute('aria-hidden',String(!yes));}};
 function cancelled(){const error=new Error('connection_cancelled');error.name='AbortError';return error;}
 function invalidateConnection(){connectionEpoch++;cancelConnect?.();cancelConnect=null;requestController?.abort();requestController=null;clearTimeout(reconnectTimer);return connectionEpoch;}
 function beginConnection(){const epoch=invalidateConnection();if(socket){const old=socket;socket=null;old.close(1000,'switch_room');}requestController=new AbortController();return epoch;}
@@ -99,7 +100,8 @@ function updateHud(){
  const info=arenaTelemetry(game,selfId);$('arenaPlay').dataset.danger=String(info.danger);$('hudRank').textContent='المركز '+info.rank+' · '+info.alive+' في الحلبة';
  $('boostFill').style.width=Math.round(info.boost*100)+'%';$('boostMeter').setAttribute('aria-valuenow',String(Math.round(info.boost*100)));$('boostStatus').textContent=!mine.alive?'خارج الجولة':mine.boost?'تسريع نشط':info.boost>0?'التسريع جاهز':'اجمع طاقة للتسريع';$('hudKills').textContent=info.kills+' افتراس';
  $('arenaHint').textContent=!mine.alive?'خرجت من الجولة. تابع المطاردة.':info.danger?'انتبه للحدود — التفّ إلى الداخل':mine.boost?'التسريع يستهلك من حجمك':mine.mass<=24?'اجمع طاقة أكثر للتسريع':'الرأس + 4 قطع: الأطول يفوز · نهاية الذيل قاتلة';
- const coach=$('arenaCoachTask');if(coach){const guide=!online&&mode==='solo'&&$('arenaCoach')?.checked!==false,observed=journal?.summary(game).find(value=>value.id===selfId);coach.classList.toggle('hidden',!guide||game.status!=='playing');coach.textContent=!mine.alive?'جرّب مرة ثانية: تجنب نهاية ذيول الخصوم ووفّر التسريع للهرب.':mine.score<10?'التدريب · اجمع 10 طاقات لتكبر.':!observed?.boosted?'ممتاز! جرّب ضغط زر التسريع، ثم ارفعه.':game.elapsed<30?'التحكم صار لك · تجنب نهاية ذيول الخصوم حتى 30 ثانية.':'✓ أتقنت البداية · كمل المطاردة!';}
+ const powerBar=$('arenaPowers');if(powerBar){const powers=Object.entries(ARENA_POWERS).filter(([kind])=>powerActive(mine,kind,game.elapsed));powerBar.replaceChildren(...powers.map(([kind,power])=>{const row=document.createElement('span');row.style.setProperty('--power-color',power.color);row.textContent=power.icon+' '+power.name;const time=document.createElement('b');time.textContent=Math.ceil(mine.powers[kind]-game.elapsed)+'ث';row.append(time);return row;}));}
+ const coach=$('arenaCoachTask');if(coach){const guide=!online&&mode==='solo'&&$('arenaCoach')?.checked!==false,observed=journal?.summary(game).find(value=>value.id===selfId);coach.classList.toggle('hidden',!guide||game.status!=='playing'||game.elapsed>18);coach.textContent=!mine.alive?'جرّب مرة ثانية: تجنب نهاية ذيول الخصوم ووفّر التسريع للهرب.':mine.score<10?'التدريب · اجمع 10 طاقات لتكبر.':!observed?.boosted?'ممتاز! جرّب ضغط زر التسريع، ثم ارفعه.':game.elapsed<30?'التحكم صار لك · تجنب نهاية ذيول الخصوم حتى 30 ثانية.':'✓ أتقنت البداية · كمل المطاردة!';}
  const ranking=$('arenaRanking');ranking.replaceChildren();for(const s of [...game.snakes].sort((a,b)=>b.score-a.score).slice(0,4)){const row=document.createElement('li'),name=document.createElement('span'),score=document.createElement('b');row.dataset.self=String(s.id===selfId);name.textContent=s.name;if(s.bot){const mark=document.createElement('em');mark.textContent=' BOT';name.appendChild(mark);}score.textContent=s.score;row.append(name,score);ranking.appendChild(row);}
  for(let i=0;i<2;i++){const snake=i===0?mine:second;const button=$('boost'+(i+1));button.disabled=!snake?.alive||snake.mass<=24||paused;button.classList.toggle('active',!!snake?.boost);button.setAttribute('aria-label',snake?.mass<=24?'اجمع طاقة أكثر للتسريع':'تسريع'+(i?' اللاعب الثاني':''));}
 }
@@ -146,7 +148,19 @@ function frame(now){
 for(let i=0;i<2;i++){const boost=$('boost'+(i+1));boost.addEventListener('pointerdown',e=>{e.preventDefault();if(paused||!game||game.status!=='playing')return;boost.setPointerCapture(e.pointerId);controls[i].boost=true;boost.classList.add('active');});for(const event of ['pointerup','pointercancel','lostpointercapture'])boost.addEventListener(event,()=>{controls[i].boost=false;boost.classList.remove('active');});}
 window.addEventListener('keydown',e=>{if(!game||$('arenaPlay').classList.contains('hidden'))return;if(paused||!$('arenaResults').classList.contains('hidden')){if(e.code==='Escape'&&!e.repeat){e.preventDefault();pause(false);}return;}if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='Escape'&&!e.repeat){e.preventDefault();pause();}});window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',release);document.addEventListener('visibilitychange',()=>{if(document.hidden){release();if(!online)pause(true);}});
 
-function touchCue(index,e){const ring=$('joystick'+(index+1)),rect=$('arenaCanvas').getBoundingClientRect();const pointer=gestures.pointers.get(e.pointerId);ring.style.left=(pointer?.originX??e.clientX)-rect.left-34+'px';ring.style.top=(pointer?.originY??e.clientY)-rect.top-34+'px';ring.classList.remove('hidden');ring.classList.add('steering');const angle=controls[index].angle;ring.querySelector('i').style.transform=angle===null?'':'translate('+Math.cos(angle)*13+'px,'+Math.sin(angle)*13+'px)';}
+function touchCue(index,e){
+ const ring=$('joystick'+(index+1)),rect=$('arenaCanvas').getBoundingClientRect();
+ const pointer=gestures.pointers.get(e.pointerId);
+ ring.classList.remove('hidden');ring.classList.add('steering');
+ const diameter=ring.getBoundingClientRect().width||112,half=diameter/2;
+ const cx=(pointer?.originX??e.clientX)-rect.left,cy=(pointer?.originY??e.clientY)-rect.top;
+ // The old -34px value offset a 112px ring by 22px, making touch feel inaccurate.
+ ring.style.left=Math.max(0,Math.min(rect.width-diameter,cx-half))+'px';
+ ring.style.top=Math.max(0,Math.min(rect.height-diameter,cy-half))+'px';
+ const knob=ring.querySelector('i'),travel=Math.max(0,(diameter-(knob?.offsetWidth||38))/2-3);
+ const dx=pointer?.knobX||0,dy=pointer?.knobY||0,magnitude=Math.hypot(dx,dy),scale=magnitude?Math.min(1,travel/magnitude):0;
+ knob.style.transform=`translate(${(dx*scale).toFixed(1)}px,${(dy*scale).toFixed(1)}px)`;
+}
 setInterval(()=>{if(!room?.publicMatch||room.status!=='lobby')return;const remaining=Math.max(0,Math.ceil((room.lobbyDeadline-(room.serverNow+Date.now()-room.clientReceivedAt))/1000));$('quickCountdown').textContent=String(remaining);},250);
 const arenaCanvas=$('arenaCanvas');
 arenaCanvas.addEventListener('pointerdown',e=>{

@@ -1,5 +1,5 @@
 // V20: small offline core. Other games and media are cached after the first visit.
-const CACHE_NAME = 'busraj-games-v50-release-23-0-1';
+const CACHE_NAME = 'busraj-games-v51-release-24-0-0';
 const RUNTIME_CACHE = CACHE_NAME + '-visited';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
@@ -29,7 +29,7 @@ const APP_SHELL = [
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/assets/css/app-index.css?v=23.0.1",
-  "/assets/css/app-journey.css?v=23.0.1",
+  "/assets/css/app-journey.css?v=24.0.0",
   "/assets/js/client-health.js?v=23.0.1",
   "/assets/js/audio-manager.js?v=23.0.1",
   "/assets/js/platform.js?v=23.0.1",
@@ -106,6 +106,7 @@ const ON_DEMAND = [
   "/assets/css/app-logic.css",
   "/assets/css/app-memory.css",
   "/assets/css/app-online.css",
+  "/assets/css/app-paths-online.css",
   "/assets/css/app-picture.css",
   "/assets/css/app-puzzle.css",
   "/assets/css/app-quiz.css",
@@ -118,8 +119,10 @@ const ON_DEMAND = [
   "/assets/css/app-v5.css",
   "/assets/css/app-zahra.css",
   "/assets/css/arcade.css",
+  "/assets/css/arena-hotfix-v23-1.css",
   "/assets/css/arena-suite.css",
   "/assets/css/arena-v23.css",
+  "/assets/css/arena-v24.css",
   "/assets/css/board-premium.css",
   "/assets/css/brain-v20.css",
   "/assets/css/cosmetics.css",
@@ -139,6 +142,7 @@ const ON_DEMAND = [
   "/assets/css/mobile-game.css",
   "/assets/css/mobile-v21.css",
   "/assets/css/neon-arena.css",
+  "/assets/css/paths-online-v24.css",
   "/assets/css/picture-v21.css",
   "/assets/css/picture.css",
   "/assets/css/platform.css",
@@ -167,6 +171,7 @@ const ON_DEMAND = [
   "/assets/js/arena-geometry.js",
   "/assets/js/arena-gestures.js",
   "/assets/js/arena-palette.js",
+  "/assets/js/arena-powers-art-v24.js",
   "/assets/js/audio-manager.js",
   "/assets/js/board-online.js",
   "/assets/js/board-piece-motion.js",
@@ -175,6 +180,7 @@ const ON_DEMAND = [
   "/assets/js/commercial-upgrade-engine.js",
   "/assets/js/cosmetic-art.js",
   "/assets/js/engines/arcade-engine.js",
+  "/assets/js/engines/arena-drops-v24.js",
   "/assets/js/engines/bot-strategy.js",
   "/assets/js/engines/dice-engine.js",
   "/assets/js/engines/image-puzzle.js",
@@ -206,6 +212,7 @@ const ON_DEMAND = [
   "/assets/js/neon-arena.js",
   "/assets/js/online/room-client.js",
   "/assets/js/online/room-lobby.js",
+  "/assets/js/paths-online-v24.js",
   "/assets/js/picture-ui.js",
   "/assets/js/platform.js",
   "/assets/js/play-insights-v15.js",
@@ -436,6 +443,7 @@ const ON_DEMAND = [
   "/memory.html",
   "/offline.html",
   "/online.html",
+  "/paths-online.html",
   "/picture.html",
   "/puzzle.html",
   "/quiz.html",

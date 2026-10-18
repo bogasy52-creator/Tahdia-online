@@ -134,7 +134,9 @@
     "assets/css/experience-v15.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/arena-v23.css"
+    "assets/css/arena-v23.css",
+    "assets/css/arena-hotfix-v23-1.css",
+    "assets/css/arena-v24.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
@@ -215,5 +217,9 @@
     "assets/css/sudoku.css",
     "assets/css/mobile-v21.css",
     "assets/css/sudoku-v22.css"
+  ],
+  "paths-online.html": [
+    "assets/css/platform.css",
+    "assets/css/paths-online-v24.css"
   ]
 }

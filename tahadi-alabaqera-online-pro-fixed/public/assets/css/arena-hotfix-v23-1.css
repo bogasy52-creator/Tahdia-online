@@ -1,0 +1,32 @@
+/* Snake hotfix 23.0.1-s1: keep the arena visible above every page decoration.
+   Controls occupy opposite sides; overlays appear only when explicitly opened. */
+body.serpent-active{height:100dvh;overflow:hidden;overscroll-behavior:none}
+body.serpent-active .arena-combat-guide,body.serpent-active .serpent-main{display:none!important}
+.serpent-page #arenaPlay:not(.hidden){position:fixed;inset:0;z-index:70;isolation:isolate;width:100vw;height:100dvh;height:100svh;height:100dvh;margin:0;padding:0;overflow:hidden;background:#0b1c24}
+.serpent-page #arenaPlay #arenaCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;touch-action:none}
+.serpent-page #arenaPlay .arena-hud{z-index:8;pointer-events:none}
+.serpent-page #arenaPlay .arena-hud button{pointer-events:auto}
+.serpent-page #arenaPlay .arena-energy,.serpent-page #arenaPlay .arena-live-hint,.serpent-page #arenaPlay .arena-coach-task-v15,.serpent-page #arenaPlay .arena-moment{z-index:7;pointer-events:none}
+.serpent-page #arenaPlay .arena-joystick.steering{z-index:10;pointer-events:none!important}
+.serpent-page #arenaPlay .arena-overlay{z-index:30;background:rgba(3,15,23,.40);backdrop-filter:blur(2px)}
+.serpent-page #arenaPlay .arena-overlay.hidden{display:none!important;pointer-events:none!important}
+/* Previous rule pushed the boost on top of the steering stick (right side). */
+.serpent-page #arenaPlay[data-duo=false] #boost1{left:max(16px,env(safe-area-inset-left))!important;right:auto!important;bottom:calc(22px + env(safe-area-inset-bottom));z-index:11}
+.serpent-page #arenaPlay[data-duo=true] #boost1{left:max(16px,env(safe-area-inset-left))!important;right:auto!important;bottom:calc(50% + 20px + env(safe-area-inset-bottom));z-index:11}
+.serpent-page #arenaPlay[data-duo=true] #boost2{left:max(16px,env(safe-area-inset-left))!important;right:auto!important;bottom:calc(20px + env(safe-area-inset-bottom));z-index:11}
+@media(max-width:680px){
+ .serpent-page #arenaPlay .arena-hud{left:calc(8px + env(safe-area-inset-left));right:calc(8px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));gap:6px}
+ .serpent-page #arenaPlay .hud-score{max-width:128px;padding:7px 9px}
+ .serpent-page #arenaPlay .hud-score strong{font-size:20px}
+ .serpent-page #arenaPlay .hud-clock{padding:7px 8px;min-height:48px}
+ .serpent-page #arenaPlay .hud-clock b{font-size:18px}
+ .serpent-page #arenaPlay .arena-live-hint{max-width:60%;top:calc(103px + env(safe-area-inset-top));white-space:normal;text-align:center;font-size:10px}
+ .serpent-page #arenaPlay .arena-coach-task-v15{top:calc(143px + env(safe-area-inset-top));max-width:64%;padding:5px 9px;font-size:9px}
+ .serpent-page #arenaPlay .arena-boost{width:70px;height:70px}
+}
+@media(max-height:480px) and (orientation:landscape){
+ .serpent-page #arenaPlay .arena-live-hint{top:calc(58px + env(safe-area-inset-top));max-width:48%}
+ .serpent-page #arenaPlay .arena-coach-task-v15{top:calc(83px + env(safe-area-inset-top));max-width:45%}
+ .serpent-page #arenaPlay .arena-energy{bottom:calc(6px + env(safe-area-inset-bottom))}
+ .serpent-page #arenaPlay[data-duo=false] #boost1{bottom:calc(12px + env(safe-area-inset-bottom))}
+}

@@ -1,3 +1,4 @@
+import {ARENA_POWERS,powerActive} from '../public/assets/js/engines/arena-drops-v24.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -9,7 +10,7 @@ import {applySerpentFrame} from '../public/assets/js/serpent-network.js';
 import {arenaTelemetry,resolveTrialSkin} from '../public/assets/js/serpent-renderer.js';
 async function ui(){
  const peers=[],h=await createDOM('serpent.html');h.context.requestAnimationFrame=()=>0;
- h.context.AbortSignal=AbortSignal;
+ h.context.AbortSignal=AbortSignal;Object.assign(h.context,{ARENA_POWERS,powerActive});
  h.context.ArenaGestures=ArenaGestures;h.context.serpentSteeringAngle=serpentSteeringAngle;
  h.context.applySerpentFrame=applySerpentFrame;
  h.context.arenaTelemetry=arenaTelemetry;h.context.resolveTrialSkin=resolveTrialSkin;

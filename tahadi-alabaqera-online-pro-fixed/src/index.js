@@ -1,3 +1,4 @@
+import {PathsRoom,pathsSettings} from './paths/paths-room.js';
 import {SudokuRoom,sudokuSettings} from './sudoku/sudoku-room.js';
 import {ImageRoom} from './images/image-room.js';
 import {imageGenerationConfig} from './images/generate.js';
@@ -20,7 +21,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='23.0.1';
+const RELEASE='24.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -256,7 +257,7 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
     if (request.method === "GET" && url.pathname === "/api/health") {
@@ -294,6 +295,29 @@ export default {
 
     const socialResponse = await handleSocialRequest(request, env, { rateLimit });
     if (socialResponse) return socialResponse;
+
+    if(url.pathname.startsWith('/api/paths/')){
+      if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
+      const limited=await rateLimit(request,env,'paths-api',120,60000);if(limited)return limited;
+      if(url.pathname==='/api/paths/rooms'&&request.method==='POST'){
+        if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
+        const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
+        let settings;try{settings=JSON.parse(text);}catch{return json({ok:false,error:'إعدادات غير صالحة'},400);}
+        if(!pathsSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 10'},400);
+        for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('paths:'+code));const res=await stub.fetch('https://paths.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
+        return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
+      }
+      const m=url.pathname.match(/^\/api\/paths\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);
+      if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
+      const headers=new Headers(request.headers);headers.delete('x-bs-account');
+      if(m[2]==='ws'){
+        const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
+        const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
+        if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
+        if(auth)headers.set('x-bs-account',auth.username);
+      }
+      return env.ROOMS.get(env.ROOMS.idFromName('paths:'+m[1])).fetch(new Request('https://paths.internal/'+m[2]+url.search,{headers}));
+    }
 
     if(url.pathname.startsWith('/api/sudoku/')){
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
@@ -562,6 +586,8 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async pathsDelegate(){if(!this.pathsRoom)this.pathsRoom=new PathsRoom(this.ctx,this.env);await this.pathsRoom.ready;return this.pathsRoom;}
+
   async sudokuDelegate(){if(!this.sudokuRoom)this.sudokuRoom=new SudokuRoom(this.ctx,this.env);await this.sudokuRoom.ready;return this.sudokuRoom;}
 
   async pictureDelegate(){if(!this.pictureRoom)this.pictureRoom=new ImageRoom(this.ctx,this.env);await this.pictureRoom.ready;return this.pictureRoom;}
@@ -570,6 +596,7 @@ export class GameRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if(url.hostname==='paths.internal')return (await this.pathsDelegate()).fetch(request);
     if(url.hostname==='sudoku.internal')return (await this.sudokuDelegate()).fetch(request);
     if(url.hostname==='picture.internal')return (await this.pictureDelegate()).fetch(request);
     if(url.hostname==='serpent.internal')return (await this.serpentDelegate()).fetch(request);
@@ -720,6 +747,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketMessage(ws,raw);
@@ -813,6 +841,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketClose(ws);
@@ -831,6 +860,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.serpent)return (await this.serpentDelegate()).webSocketError(ws);
@@ -1209,6 +1239,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.pathsRoom||await this.ctx.storage.get('pathsRoom'))return (await this.pathsDelegate()).alarm();
     if(this.sudokuRoom||await this.ctx.storage.get('sudokuRoom'))return (await this.sudokuDelegate()).alarm();
     if(this.pictureRoom||await this.ctx.storage.get('imageRoom')||await this.ctx.storage.get('imageQuota'))return (await this.pictureDelegate()).alarm();
     if(this.serpentRoom||await this.ctx.storage.get('serpent'))return (await this.serpentDelegate()).alarm();

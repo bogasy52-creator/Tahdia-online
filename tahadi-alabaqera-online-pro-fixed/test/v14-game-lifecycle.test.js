@@ -1,3 +1,4 @@
+import {ARENA_POWERS,powerActive} from '../public/assets/js/engines/arena-drops-v24.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -14,7 +15,7 @@ import {arenaTelemetry,resolveTrialSkin} from '../public/assets/js/serpent-rende
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 async function ui(){
  const h=await createDOM('serpent.html'),peers=[],inputs=[];h.context.requestAnimationFrame=()=>0;
- Object.assign(h.context,serpent,{ArenaGestures,applySerpentFrame,arenaTelemetry,resolveTrialSkin,steerSerpent:(_game,id,input)=>inputs.push({id,...input})});
+ Object.assign(h.context,serpent,{ARENA_POWERS,powerActive,ArenaGestures,applySerpentFrame,arenaTelemetry,resolveTrialSkin,steerSerpent:(_game,id,input)=>inputs.push({id,...input})});
  h.context.SerpentRenderer=class{constructor(){this.cameras=new Map()}reset(){}resize(){}setQuality(){}setGame(){}draw(){}};
  h.context.WebSocket=class{static OPEN=1;constructor(){this.readyState=0;peers.push(this)}close(code,reason){this.readyState=3;queueMicrotask(()=>this.onclose?.({code,reason}))}send(){}};
  h.context.fetch=async()=>Response.json({ok:true,status:'playing'});h.context.BS_CAREER={get:()=>({name:'A'}),account:()=>null};

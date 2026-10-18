@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "23.0.1",
+  "version": "24.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,6 +14,7 @@
     "verify:worker": "node scripts/verify-worker-offline.mjs",
     "check:cloudflare": "wrangler deploy --dry-run",
     "verify:cloudflare": "npm run verify && npm run check:cloudflare",
+    "preverify:release": "node scripts/build-styles.mjs --pages=serpent.html,journey.html,paths-online.html && node scripts/build-offline.mjs",
     "verify:release": "npm run verify && node scripts/verify-v7.mjs",
     "start:local": "node scripts/play-local.mjs",
     "test:browser": "node scripts/test-browser-v7.mjs",
@@ -22,7 +23,8 @@
     "test:cloudflare": "node scripts/verify-cloudflare-runtime.mjs",
     "test:picture": "node scripts/verify-picture-runtime.mjs",
     "test:sudoku": "node scripts/verify-sudoku-runtime.mjs",
-    "test:arena": "node scripts/verify-serpent-v23-runtime.mjs"
+    "test:arena": "node scripts/verify-serpent-v23-runtime.mjs",
+    "test:paths": "node scripts/verify-paths-v24-runtime.mjs"
   },
   "devDependencies": {
     "wrangler": "4.127.1",

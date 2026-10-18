@@ -1,0 +1,10 @@
+/* A floating hint must never be stretched between a top and a bottom inset. */
+.serpent-page #arenaPlay .arena-live-hint{top:auto!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;height:auto!important;min-height:0!important;max-height:38px;max-width:calc(100% - 190px);width:max-content;box-sizing:border-box;overflow:hidden;padding:5px 9px;font-size:9px;line-height:1.5}
+.serpent-page #arenaPlay .arena-coach-task-v15{top:auto!important;bottom:calc(52px + env(safe-area-inset-bottom))!important;height:auto!important;min-height:0!important;max-height:40px;max-width:calc(100% - 180px);width:max-content;box-sizing:border-box;overflow:hidden;padding:5px 9px;font-size:9px;line-height:1.5}
+.serpent-page #arenaPlay .arena-overlay[hidden],.serpent-page #arenaPlay .arena-overlay:not([data-open=true]){display:none!important;pointer-events:none!important}
+.serpent-page #arenaPlay .arena-moment{max-height:40px;top:calc(100px + env(safe-area-inset-top));bottom:auto;overflow:hidden;font-size:12px;pointer-events:none}
+.arena-power-bar{position:absolute;right:max(12px,env(safe-area-inset-right));top:calc(104px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:5px;z-index:8;pointer-events:none;max-width:148px}
+.arena-power-bar:empty{display:none}.arena-power-bar span{display:flex;gap:6px;align-items:center;padding:5px 8px;border:1px solid var(--power-color);background:#102a30e8;border-radius:8px;font:10px Tahoma,Arial;color:var(--power-color)}.arena-power-bar b{font:700 12px monospace;direction:ltr;margin-inline-start:auto}
+.arena-drop-guide{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1;color:#cee8dc;font-size:11px;line-height:1.8}.arena-drop-guide span{padding:5px 8px;border:1px solid #7eb49c55;border-radius:7px}
+@media(max-height:480px) and (orientation:landscape){.serpent-page #arenaPlay .arena-live-hint,.serpent-page #arenaPlay .arena-coach-task-v15{display:none!important}.arena-power-bar{top:calc(70px + env(safe-area-inset-top));max-width:128px;gap:3px}.arena-power-bar span{font-size:9px;padding:3px 6px}}
+@media(prefers-reduced-motion:reduce){.arena-power-bar *{transition:none;animation:none}}
