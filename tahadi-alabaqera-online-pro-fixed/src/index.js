@@ -19,7 +19,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='20.0.0';
+const RELEASE='21.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -528,7 +528,7 @@ export class GameRoom extends DurableObject {
     for (const ws of this.ctx.getWebSockets()) {
       try {
         const a = ws.deserializeAttachment();
-        if (a?.playerId) online.add(a.playerId);
+        if (a?.playerId&&(!this.room.players[a.playerId]?.connection||this.room.players[a.playerId].connection===a.connection)) online.add(a.playerId);
       } catch {}
     }
     for (const p of Object.values(this.room.players)) p.connected = online.has(p.id);
@@ -642,7 +642,9 @@ export class GameRoom extends DurableObject {
       const client = pair[0];
       const server = pair[1];
       this.ctx.acceptWebSocket(server);
-      server.serializeAttachment({ playerId: player.id });
+      player.connection=crypto.randomUUID();
+      const roundContext=String(request.headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).includes('qc.round-v21');
+      server.serializeAttachment({ playerId: player.id,connection:player.connection,roundContext });
       player.connected = true;
       player.disconnectedAt = null;
       this.room.updatedAt = Date.now();
@@ -684,7 +686,7 @@ export class GameRoom extends DurableObject {
   playerForSocket(ws) {
     try {
       const a = ws.deserializeAttachment();
-      return a?.playerId ? this.room?.players?.[a.playerId] : null;
+      const player=a?.playerId ? this.room?.players?.[a.playerId] : null;return player?.connection&&player.connection!==a.connection?null:player;
     } catch {
       return null;
     }
@@ -702,6 +704,8 @@ export class GameRoom extends DurableObject {
     let msg;
     try { msg = JSON.parse(rawText); }
     catch { return this.sendError(ws, "رسالة غير صالحة"); }
+
+    if(['answer','buzz','power'].includes(msg.type)){const required=ws.deserializeAttachment()?.roundContext;if((required||Object.hasOwn(msg,'roundIndex')||Object.hasOwn(msg,'matchId'))&&(msg.matchId!==this.room.matchId||msg.roundIndex!==this.room.roundIndex))return this.sendError(ws,'تغير السؤال؛ انتظر تحديث الجولة');}
 
     try {
       switch (msg.type) {
@@ -995,6 +999,8 @@ export class GameRoom extends DurableObject {
     await this.ctx.storage.setAlarm(this.room.current.deadline);
   }
 
+  opponentId(playerId){const player=this.room.players[playerId];return this.room.order.find(id=>id!==playerId&&this.room.players[id]?.connected&&(!player?.team||this.room.players[id].team!==player.team))||null;}
+
   allowedToAnswer(playerId) {
     const c = this.room.current;
     if (!c) return false;
@@ -1024,8 +1030,8 @@ export class GameRoom extends DurableObject {
       if (choice === c.correctIndex) {
         await this.finalizeBuzzer(player.id, true, false);
       } else {
-        const opponentId = this.room.order.find((id) => id !== player.id);
-        if (c.blocked?.[opponentId]) {
+        const opponentId = this.opponentId(player.id);
+        if (!opponentId||c.blocked?.[opponentId]) {
           await this.finalizeBuzzer(player.id, false, false);
         } else {
           c.phase = "steal";
@@ -1047,7 +1053,7 @@ export class GameRoom extends DurableObject {
     const c = this.room.current;
     if (this.room.status !== "playing" || !c || c.mode !== "buzzer" || c.phase !== "buzzer") return;
     if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
-    if (Date.now() > c.deadline) return;
+    if (Date.now() >= c.deadline) return;
     c.buzzWinner = player.id;
     c.phase = "buzzer_answer";
     c.deadline = Date.now() + 10000;
@@ -1059,6 +1065,7 @@ export class GameRoom extends DurableObject {
     const c = this.room.current;
     if (this.room.status !== "playing" || !c) return;
     if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
+    if (Date.now() >= c.deadline) return;
     if (!["double", "time", "block"].includes(power)) return;
     if (!player.powers[power]) return;
     if (c.blocked?.[player.id]) return;
@@ -1076,7 +1083,7 @@ export class GameRoom extends DurableObject {
       c.deadline += 7000;
       await this.ctx.storage.setAlarm(c.deadline);
     } else if (power === "block") {
-      const opponentId = this.room.order.find((id) => id !== player.id);
+      const opponentId = this.opponentId(player.id);
       if (!opponentId) return;
       c.blocked[opponentId] = true;
     }

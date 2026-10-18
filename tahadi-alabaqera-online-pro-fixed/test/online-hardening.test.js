@@ -12,7 +12,7 @@ test('long-lived websocket credentials are carried as subprotocols, not URL quer
     read('src/index.js'),
   ]);
   assert.match(board, /protocols=\['busraj-v1'\]/);
-  assert.match(quiz, /protocols=\['busraj-v1'\]/);
+  assert.match(quiz, /protocols=\['busraj-v1','qc.round-v21'\]/);
   assert.doesNotMatch(board, /q\.set\(['"](?:token|hostKey)/);
   assert.doesNotMatch(quiz, /url\.searchParams\.set\(['"](?:token|hostKey)/);
   assert.match(worker, /Sec-WebSocket-Protocol/);

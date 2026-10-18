@@ -35,7 +35,7 @@
 
 </style>
 
-<link rel="stylesheet" href="assets/css/app-online.css?v=20.0.0"></head>
+<link rel="stylesheet" href="assets/css/app-online.css?v=21.0.0"></head>
 <body class="quiz-v19">
 <div class="app" id="app">
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">1 ضد 1 • السيرفر هو الحكم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
@@ -112,12 +112,12 @@
 <div class="footer">© 2026 بوسراج — تحدي العباقرة Online. اللعب السريع متزامن مباشرة، والغرف الخاصة تعمل بمحرك السيرفر.</div>
 <div id="toast" class="toast hidden"></div>
 </div>
-<script src="assets/js/audio-manager.js?v=20.0.0"></script>
-<script src="assets/js/platform.js?v=20.0.0"></script>
+<script src="assets/js/audio-manager.js?v=21.0.0"></script>
+<script src="assets/js/platform.js?v=21.0.0"></script>
 
 
-<script src="assets/js/matchmaking.js?v=20.0.0"></script>
-<script src="assets/js/social-client.js?v=20.0.0"></script>
+<script src="assets/js/matchmaking.js?v=21.0.0"></script>
+<script src="assets/js/social-client.js?v=21.0.0"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -171,9 +171,9 @@ function toast(t){$('#toast').textContent=t;$('#toast').classList.remove('hidden
 function setNet(mode,text){$('#net').className='net '+mode;$('#netText').textContent=text}
 function store(k,v){try{localStorage.setItem(k,v)}catch{}}
 function read(k){try{return localStorage.getItem(k)||''}catch{return''}}
-function send(type,data={}){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type,...data}));else toast('الاتصال غير جاهز')}
+function send(type,data={}){const context=['answer','buzz','power'].includes(type)&&state?{matchId:state.matchId,roundIndex:state.roundIndex}:{};if(ws&&ws.readyState===1)ws.send(JSON.stringify({type,...data,...context}));else toast('الاتصال غير جاهز')}
 function myPlayer(){return state?.players?.find(p=>p.id===myId)||null}
-function opponent(){return state?.players?.find(p=>p.id!==myId)||null}
+function opponent(){const me=myPlayer();return state?.players?.find(p=>p.id!==myId&&(!me?.team||p.team!==me.team))||null}
 function safeName(n){return String(n||'لاعب').replace(/[<>&]/g,'')}
 function originCandidateList(){
  const out=[];
@@ -246,7 +246,7 @@ async function connect(){
  if(!activeApiOrigin){try{await probeBackend()}catch(e){setNet('bad','محرك الغرف غير متاح');toast(e.message);scheduleReconnect();return}}
  const url=websocketUrl('/api/rooms/'+roomCode+'/ws');
  url.searchParams.set('name',name);
- const protocols=['busraj-v1'];const accountSession=read('bs_social_session');if(accountSession)protocols.push('st.'+accountSession);if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
+ const protocols=['busraj-v1','qc.round-v21'];const accountSession=read('bs_social_session');if(accountSession)protocols.push('st.'+accountSession);if(token)protocols.push('rt.'+token);if(hostKey)protocols.push('hk.'+hostKey);
  setNet('','جار الاتصال');
  try{ws=new WebSocket(url,protocols)}catch{scheduleReconnect();return}
  ws.onopen=()=>{setNet('ok','متصل');reconnectDelay=800};
@@ -393,5 +393,5 @@ const quickMatchParam=qs.get('quickMatch')||qs.get('match');
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
-<script type="module" src="assets/js/quick-match-game.js?v=20.0.0"></script>
-<script src="assets/js/profile-core.js?v=20.0.0"></script><script src="assets/js/career-client.js?v=20.0.0"></script><script defer src="assets/js/client-health.js?v=20.0.0"></script></body></html>
+<script type="module" src="assets/js/quick-match-game.js?v=21.0.0"></script>
+<script src="assets/js/profile-core.js?v=21.0.0"></script><script src="assets/js/career-client.js?v=21.0.0"></script><script defer src="assets/js/client-health.js?v=21.0.0"></script></body></html>

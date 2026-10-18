@@ -1,7 +1,7 @@
-import {STAGE_COUNT,CHAPTERS,stageCount,totalStageCount,chaptersFor,restorePaths,restartPaths,COLORS,dayKey,createPaths,movePaths,clearPath,hintPaths,adjacent,starsFor,nextStage} from './engines/journey-engine.js?v=20.0.0';
-import {createMatch3,moveMatch3,restoreMatch3,legalSwaps,BOOST_COST,MATCH3_VERSION} from './engines/match3-engine.js?v=20.0.0';
-import * as progress from './journey-client.js?v=20.0.0';
-import {BoardRenderer} from './match3-renderer.js?v=20.0.0';
+import {STAGE_COUNT,CHAPTERS,stageCount,totalStageCount,chaptersFor,restorePaths,restartPaths,COLORS,dayKey,createPaths,movePaths,clearPath,hintPaths,adjacent,starsFor,nextStage} from './engines/journey-engine.js?v=21.0.0';
+import {createMatch3,moveMatch3,restoreMatch3,legalSwaps,BOOST_COST,MATCH3_VERSION} from './engines/match3-engine.js?v=21.0.0';
+import * as progress from './journey-client.js?v=21.0.0';
+import {BoardRenderer} from './match3-renderer.js?v=21.0.0';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),names={jewels:'ماستر الجواهر',paths:'مسارات الألوان'};
 const play=$('journeyPlay'),canvas=$('stageCanvas'),workspace=document.querySelector('.stage-workspace'),topbar=document.querySelector('.stage-topbar');
 let game=params.get('game')==='paths'?'paths':'jewels',chapter=Math.floor((nextStage(progress.get(),game)-1)/12),state=null,selected=[],pointer=null,cursor=0,saving=false,busy=false,boosting=false,lastDaily=progress.today(),initialAccount='',roundVersion=0,resumeTimer=0,hubDirty=false,dragStart=-1,lastCell=-1,dragMoved=false,pathGestureMoved=false,blocked=new Set(),endpoints=new Set();

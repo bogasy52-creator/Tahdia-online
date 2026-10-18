@@ -5,7 +5,8 @@
     "assets/css/arcade.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "admin.html": [
     "assets/css/platform.css",
@@ -14,7 +15,8 @@
     "assets/css/cosmetics.css",
     "assets/css/admin.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "dice.html": [
     "assets/css/platform.css",
@@ -26,7 +28,8 @@
     "assets/css/cosmetics.css",
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -37,7 +40,8 @@
     "assets/css/professional-v14.css",
     "assets/css/experience-v15.css",
     "assets/css/studio-v16.css",
-    "assets/css/home-v19.css"
+    "assets/css/home-v19.css",
+    "assets/css/mobile-v21.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -49,12 +53,14 @@
     "assets/css/cosmetics.css",
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
     "assets/css/journey.css",
-    "assets/css/brain-v20.css"
+    "assets/css/brain-v20.css",
+    "assets/css/mobile-v21.css"
   ],
   "local.html": [
     "assets/css/platform.css",
@@ -64,7 +70,9 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/quiz-v19.css"
+    "assets/css/quiz-v19.css",
+    "assets/css/quiz-v21.css",
+    "assets/css/mobile-v21.css"
   ],
   "logic.html": [
     "assets/css/platform.css",
@@ -72,7 +80,8 @@
     "assets/css/arcade.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "memory.html": [
     "assets/css/platform.css",
@@ -80,7 +89,8 @@
     "assets/css/arcade.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "online.html": [
     "assets/css/platform.css",
@@ -90,7 +100,9 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/quiz-v19.css"
+    "assets/css/quiz-v19.css",
+    "assets/css/quiz-v21.css",
+    "assets/css/mobile-v21.css"
   ],
   "puzzle.html": [
     "assets/css/platform.css",
@@ -98,7 +110,8 @@
     "assets/css/arcade.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "reaction.html": [
     "assets/css/platform.css",
@@ -106,7 +119,8 @@
     "assets/css/arcade.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "serpent.html": [
     "assets/css/platform.css",
@@ -118,7 +132,8 @@
     "assets/css/gameplay-v135.css",
     "assets/css/professional-v14.css",
     "assets/css/experience-v15.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
@@ -130,7 +145,8 @@
     "assets/css/gameplay-v134.css",
     "assets/css/professional-v14.css",
     "assets/css/experience-v15.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -145,7 +161,8 @@
     "assets/css/gameplay-v134.css",
     "assets/css/professional-v14.css",
     "assets/css/experience-v15.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -153,7 +170,8 @@
     "assets/css/pro-games.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "v5.html": [
     "assets/css/platform.css",
@@ -161,7 +179,8 @@
     "assets/css/home-pro.css",
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "zahra.html": [
     "assets/css/platform.css",
@@ -173,20 +192,26 @@
     "assets/css/cosmetics.css",
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css"
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
-    "assets/css/picture.css"
+    "assets/css/picture.css",
+    "assets/css/picture-v21.css",
+    "assets/css/mobile-v21.css"
   ],
   "quiz.html": [
     "assets/css/platform.css",
     "assets/css/picture.css",
-    "assets/css/quiz-v19.css"
+    "assets/css/quiz-v19.css",
+    "assets/css/quiz-v21.css",
+    "assets/css/mobile-v21.css"
   ],
   "sudoku.html": [
     "assets/css/platform.css",
     "assets/css/picture.css",
-    "assets/css/sudoku.css"
+    "assets/css/sudoku.css",
+    "assets/css/mobile-v21.css"
   ]
 }

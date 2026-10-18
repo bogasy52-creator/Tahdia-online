@@ -1,5 +1,31 @@
-const $=id=>document.getElementById(id);let catalog=[],selected=[],selectedOnly=false;
+const $=id=>document.getElementById(id),selectionKey='bs-quiz-lineup-v21';
+let catalog=[],selected=[],selectedOnly=false;
 const symbols={palm:'❋',map:'⌖',scroll:'▤',globe:'◎',atom:'⚛',rocket:'↗',chip:'▦',car:'◈',tag:'◇',ball:'◉',trophy:'♜',letter:'أ',puzzle:'✚',chef:'♨',film:'▣',bulb:'✦',paw:'♧',quran:'▥',tafsir:'⌕',meanings:'ض',soundcat:'♫',zoom:'⊕',memory:'∞'};
-function render(){const q=$('quizSearch').value.trim(),box=$('quizCatalog');box.replaceChildren();for(const c of catalog.filter(c=>(!selectedOnly||selected.includes(c.id))&&(!q||c.name.includes(q)||c.desc.includes(q)))){const index=selected.indexOf(c.id),button=document.createElement('button');button.className='quiz-category'+(index>=0?' active':'');button.setAttribute('aria-pressed',String(index>=0));const icon=document.createElement('span');icon.className='quiz-category-icon';icon.textContent=symbols[c.icon]||'✦';const name=document.createElement('b');name.textContent=c.name;const desc=document.createElement('small');desc.textContent=c.desc;const team=document.createElement('em');team.textContent=index>=0?`الفريق ${index<3?'الأول':'الثاني'} · ${index%3+1}`:`${c.count} سؤالًا`;button.append(icon,name,desc,team);button.onclick=()=>{if(index>=0)selected.splice(index,1);else if(selected.length<6)selected.push(c.id);else{$('categoryStatus').textContent='اكتملت الفئات الست. أزل فئة لإضافة أخرى.';return;}render();};box.append(button);}$('categoryCount').textContent=selected.length+' / 6';$('quizLaunch').disabled=selected.length!==6;$('selectionSummary').textContent=selected.length?selected.map(id=>catalog.find(c=>c.id===id).name).join(' · '):'اختر ست فئات لتكوين المباراة';$('categoryStatus').textContent=selected.length===6?'تشكيلتكم جاهزة. يلا على اللوحة!':`باقي ${6-selected.length} فئات لتكتمل المباراة.`;}
-$('quizSearch').oninput=render;$('quizSelected').onclick=()=>{selectedOnly=!selectedOnly;$('quizSelected').setAttribute('aria-pressed',String(selectedOnly));render();};$('quizRandom').onclick=()=>{const all=[...catalog];for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}selected=all.slice(0,6).map(c=>c.id);render();};$('quizLaunch').onclick=()=>{if(selected.length===6)location.assign('/local?categories='+encodeURIComponent(selected.join(',')));};
-fetch('/assets/quiz-catalog.json').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{catalog=data;render();}).catch(()=>{$('categoryStatus').textContent='تعذر تحميل الفئات. تقدر تبدأ من اللعب المحلي مباشرة.';});
+const normalize=value=>String(value||'').normalize('NFKC').replace(/[\u064b-\u065f\u0670]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').trim();
+function persist(){try{localStorage.setItem(selectionKey,JSON.stringify(selected));}catch{}}
+function remove(id){selected=selected.filter(value=>value!==id);persist();render();}
+function lineup(){
+ const box=$('quizLineup');box.replaceChildren();
+ for(let team=0;team<2;team++){
+  const panel=document.createElement('div');panel.className='quiz-lineup-team';const heading=document.createElement('h3');heading.textContent=team?'الفريق الثاني · ثلاث فئات':'الفريق الأول · ثلاث فئات';const slots=document.createElement('div');slots.className='quiz-lineup-slots';
+  for(let offset=0;offset<3;offset++){const id=selected[team*3+offset],category=catalog.find(row=>row.id===id),slot=document.createElement('button');slot.type='button';slot.className='quiz-lineup-slot';slot.disabled=!category;const title=document.createElement('span');title.textContent=category?category.name:'اختر الفئة '+(offset+1);const action=document.createElement('i');action.textContent=category?'×':'＋';slot.append(title,action);slot.setAttribute('aria-label',category?'إزالة فئة '+category.name:'مكان لفئة جديدة');slot.onclick=()=>remove(id);slots.append(slot);}
+  panel.append(heading,slots);box.append(panel);
+ }
+}
+function render(){
+ const query=normalize($('quizSearch').value),box=$('quizCatalog');box.replaceChildren();
+ const visible=catalog.filter(category=>(!selectedOnly||selected.includes(category.id))&&(!query||normalize(category.name+' '+category.desc).includes(query)));
+ for(const category of visible){
+  const index=selected.indexOf(category.id),button=document.createElement('button');button.type='button';button.className='quiz-category'+(index>=0?' active':'');button.setAttribute('aria-pressed',String(index>=0));
+  const icon=document.createElement('span');icon.className='quiz-category-icon';icon.textContent=symbols[category.icon]||'✦';const name=document.createElement('b');name.textContent=category.name;const description=document.createElement('small');description.textContent=category.desc;const badge=document.createElement('em');badge.textContent=index>=0?`الفريق ${index<3?'الأول':'الثاني'} · ${index%3+1}`:`${category.count} سؤالًا`;button.append(icon,name,description,badge);
+  button.onclick=()=>{if(index>=0)return remove(category.id);if(selected.length===6){$('categoryStatus').textContent='اكتملت الفئات الست. أزل فئة من تشكيلة الفريق لإضافة أخرى.';return;}selected.push(category.id);persist();render();};box.append(button);
+ }
+ $('quizEmpty').hidden=visible.length!==0;$('quizEmpty').textContent=selectedOnly&&!selected.length?'ما اخترت فئات بعد. ألغِ عرض المختارة وابدأ التشكيلة.':'ما لقينا فئة بهذا الاسم. جرّب كلمة ثانية أو امسح البحث.';
+ $('categoryCount').textContent=selected.length+' / 6';$('quizLaunch').disabled=selected.length!==6;$('quizClear').disabled=selected.length===0;$('selectionSummary').textContent=selected.length?selected.map(id=>catalog.find(category=>category.id===id).name).join(' · '):'اختر ست فئات لتكوين المباراة';$('categoryStatus').textContent=selected.length===6?'تشكيلتكم جاهزة ومحفوظة. يلا على اللوحة!':`باقي ${6-selected.length} فئات لتكتمل المباراة.`;lineup();
+}
+$('quizSearch').oninput=render;$('quizSearch').onkeydown=event=>{if(event.key==='Escape'){$('quizSearch').value='';render();}};
+$('quizSelected').onclick=()=>{selectedOnly=!selectedOnly;$('quizSelected').setAttribute('aria-pressed',String(selectedOnly));render();};
+$('quizClear').onclick=()=>{selected=[];persist();render();};
+$('quizRandom').onclick=()=>{const all=[...catalog];for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}selected=all.slice(0,6).map(category=>category.id);persist();render();};
+$('quizLaunch').onclick=()=>{if(selected.length===6)location.assign('/local?categories='+encodeURIComponent(selected.join(',')));};
+fetch('/assets/quiz-catalog.json').then(response=>{if(!response.ok)throw Error();return response.json();}).then(data=>{if(!Array.isArray(data)||data.length<6)throw Error();catalog=data;try{const saved=JSON.parse(localStorage.getItem(selectionKey)||'[]');if(Array.isArray(saved))selected=[...new Set(saved)].filter(id=>catalog.some(category=>category.id===id)).slice(0,6);}catch{}render();}).catch(()=>{$('categoryStatus').textContent='تعذر تحميل الفئات. تقدر تبدأ من اللعب المحلي مباشرة.';$('quizRandom').disabled=true;});

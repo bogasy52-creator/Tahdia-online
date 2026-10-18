@@ -19,3 +19,16 @@ export function swapImageTiles(board,a,b){
   const next=[...board];[next[a],next[b]]=[next[b],next[a]];return next;
 }
 export function imageProgress(board){return board.reduce((n,tile,i)=>n+(tile===i?1:0),0);}
+export const ASSEMBLY_MODE='assembly-v21';
+export function createImageAssembly(size=4,seed=1){const tray=createImageBoard(size,seed);return {board:Array(size*size).fill(-1),tray};}
+export function validImageAssembly(board,tray){const count=board?.length;return [9,16,25].includes(count)&&Array.isArray(board)&&Array.from(board).every((value,index)=>value===-1||value===index)&&Array.isArray(tray)&&tray.length===count&&new Set(tray).size===count&&tray.every(value=>Number.isInteger(value)&&value>=0&&value<count);}
+export function placeImageTile(board,piece,cell){
+ if(!Array.isArray(board)||![9,16,25].includes(board.length)||!Array.from(board).every((value,index)=>value===-1||value===index)||!Number.isInteger(piece)||!Number.isInteger(cell)||piece<0||cell<0||piece>=board.length||cell>=board.length)throw new Error('invalid_placement');
+ if(board[piece]!==-1||board[cell]!==-1)throw new Error('already_placed');
+ if(piece!==cell)throw new Error('wrong_slot');
+ const next=[...board];next[cell]=piece;return next;
+}
+export function imageCellAtPoint(rect,x,y,size){
+ if(![3,4,5].includes(size)||![rect?.left,rect?.top,rect?.width,rect?.height,x,y].every(Number.isFinite)||rect.width<=0||rect.height<=0||x<rect.left||y<rect.top||x>=rect.left+rect.width||y>=rect.top+rect.height)return -1;
+ return Math.floor((y-rect.top)/rect.height*size)*size+Math.floor((x-rect.left)/rect.width*size);
+}
