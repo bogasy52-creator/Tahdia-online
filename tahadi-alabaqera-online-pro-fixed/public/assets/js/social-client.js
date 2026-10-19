@@ -1,8 +1,49 @@
 (() => {
   const STORAGE_KEY = 'bs_social_session';
   const PROFILE_KEY = 'bs_social_profile';
+  const SEEN_INVITES_KEY = 'bs_seen_invites_v25_2';
+  const INBOX_INTERVAL_MS = 20000;
   const state = { token: '', profile: null, dashboard: null, socket: null, reconnectTimer: null, reconnectAttempt: 0, manualClose: false };
   const events = new EventTarget();
+  let inboxTimer = null;
+  let inboxPending = null;
+  const seenInvites = new Set();
+  function seenKey() { return `${SEEN_INVITES_KEY}:${cachedProfile()?.username || token().split('.')[0] || 'guest'}`; }
+  function loadSeen() {
+    seenInvites.clear();
+    try { for (const id of JSON.parse(localStorage.getItem(seenKey()) || '[]')) seenInvites.add(String(id)); } catch {}
+  }
+  function rememberInvite(id) {
+    if (!id) return;
+    seenInvites.add(String(id));
+    const recent = [...seenInvites].slice(-80);
+    try { localStorage.setItem(seenKey(), JSON.stringify(recent)); } catch {}
+  }
+  function syncInbox(data) {
+    if (!data || !Array.isArray(data.notifications) || !token()) return;
+    const latest = [...data.notifications]
+      .filter(n => n?.type === 'game_invite' && !n.read && n.joinPath && Number(n.expiresAt || 0) > Date.now())
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+      .find(n => !seenInvites.has(String(n.id)));
+    if (latest) showIncomingInvite(latest);
+  }
+  function refreshInbox() {
+    if (!token() || document.hidden) return Promise.resolve(null);
+    if (!inboxPending) inboxPending = me(true).catch(() => null).finally(() => { inboxPending = null; });
+    return inboxPending;
+  }
+  function startInbox() {
+    clearInterval(inboxTimer);
+    if (!token()) return;
+    loadSeen();
+    inboxTimer = setInterval(refreshInbox, INBOX_INTERVAL_MS);
+    refreshInbox();
+  }
+  function stopInbox() { clearInterval(inboxTimer); inboxTimer = null; inboxPending = null; }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshInbox(); });
+  window.addEventListener('online', refreshInbox);
+  window.addEventListener('focus', refreshInbox);
+
 
   function readStorage(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
   function writeStorage(key, value) { try { if (value) localStorage.setItem(key, value); else localStorage.removeItem(key); } catch {} }
@@ -18,6 +59,7 @@
     state.profile = profile || null;
     writeStorage(STORAGE_KEY, state.token);
     writeStorage(PROFILE_KEY, state.profile ? JSON.stringify(state.profile) : '');
+    if (state.token) startInbox(); else stopInbox();
     decorate();
     window.dispatchEvent(new CustomEvent('bs-social-session'));
   }
@@ -67,6 +109,7 @@
     state.profile = data.profile;
     writeStorage(PROFILE_KEY, JSON.stringify(data.profile || null));
     decorate(data);
+    syncInbox(data);
     return data;
   }
   async function user(username) { return api(`/api/social/users/${encodeURIComponent(String(username || '').trim())}`); }
@@ -83,6 +126,8 @@
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
+    if (notification.id && seenInvites.has(String(notification.id))) return;
+    rememberInvite(notification.id);
     let wrap = document.querySelector('#bsSocialInvite');
     if (!wrap) {
       wrap = document.createElement('div');
@@ -101,7 +146,8 @@
     const join = document.createElement('a');
     join.className = 'bs-btn gold'; join.textContent = 'انضم الآن'; join.href = notification.joinPath;
     const close = document.createElement('button');
-    close.className = 'bs-btn'; close.textContent = 'لاحقًا'; close.type = 'button'; close.onclick = () => wrap.remove();
+    close.className = 'bs-btn'; close.textContent = 'لاحقًا'; close.type = 'button'; close.onclick = () => { wrap.remove(); if (notification.id) readNotifications([notification.id]).catch(() => {}); };
+    join.addEventListener('click', () => { if (notification.id) readNotifications([notification.id]).catch(() => {}); });
     actions.append(join, close); wrap.append(title, sub, actions);
   }
 
@@ -133,13 +179,14 @@
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${proto}//${location.host}/api/social/ws`, ['busraj-social-v1', `st.${token()}`]);
     state.socket = ws;
-    ws.onopen = () => { state.reconnectAttempt = 0; emit('connection', { online: true }); };
+    ws.onopen = () => { state.reconnectAttempt = 0; emit('connection', { online: true }); refreshInbox(); };
     ws.onmessage = (event) => handleMessage(event.data);
     ws.onerror = () => emit('connection', { online: false, error: true });
     ws.onclose = (event) => {
       if (state.socket === ws) state.socket = null;
       emit('connection', { online: false, code: event.code });
       if (!state.manualClose && token() && event.code !== 4001) {
+        refreshInbox();
         const delay = Math.min(8000, 800 * (2 ** Math.min(4, state.reconnectAttempt++)));
         state.reconnectTimer = setTimeout(connectRealtime, delay);
       }
@@ -193,7 +240,7 @@
       const row = document.createElement('div'); row.className = 'bs-social-picker-row';
       const who = document.createElement('div'); const name = document.createElement('b'); name.textContent = `${friend.online ? '🟢' : '⚫'} ${friend.displayName}`; const user = document.createElement('small'); user.textContent = `@${friend.username}`; who.append(name, user);
       const send = document.createElement('button'); send.type = 'button'; send.className = 'bs-btn cyan'; send.textContent = 'دعوة';
-      send.onclick = async () => { send.disabled = true; try { await invite(friend.username, game, roomCode); send.textContent = 'تم ✓'; toast(`تم إرسال الدعوة إلى ${friend.displayName}`); } catch (error) { send.disabled = false; toast(error.message); } };
+      send.onclick = async () => { send.disabled = true; try { await invite(friend.username, game, roomCode); send.textContent = 'حُفظت ✓'; toast(`حُفظت الدعوة لدى ${friend.displayName} وستظهر عند اتصاله`); } catch (error) { send.disabled = false; toast(error.message); } };
       row.append(who, send); list.appendChild(row);
     }
     panel.appendChild(list);
@@ -203,7 +250,7 @@
   }
 
   const apiPublic = {
-    version: '25.0.0',
+    version: '25.3.0',
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
     isLoggedIn: () => Boolean(token()), profile: () => cachedProfile(), events,
@@ -211,7 +258,7 @@
   window.BS_SOCIAL = apiPublic;
   decorate();
   if (token()) {
+    startInbox();
     connectRealtime();
-    window.addEventListener('load', () => me(true).catch(() => {}), { once: true });
   }
 })();

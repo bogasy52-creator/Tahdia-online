@@ -1,19 +1,19 @@
 // V20: small offline core. Other games and media are cached after the first visit.
-const CACHE_NAME = 'busraj-games-v54-release-25-1-0';
+const CACHE_NAME = 'busraj-games-v54-release-25-3-0';
 const RUNTIME_CACHE = CACHE_NAME + '-visited';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
-  "/assets/js/tahdia-premium-v25.js?v=25.1.0",
-  "/assets/css/tahdia-premium-v25.css?v=25.1.0",
-  "/assets/js/play-feedback-v24-1.js?v=25.1.0",
+  "/assets/js/tahdia-premium-v25.js?v=25.3.0",
+  "/assets/css/tahdia-premium-v25.css?v=25.3.0",
+  "/assets/js/play-feedback-v24-1.js?v=25.3.0",
   "/",
   "/index.html",
   "/journey.html",
   "/offline.html",
   "/sudoku.html",
   "/assets/css/app-sudoku.css?v=23.0.1",
-  "/assets/js/sudoku-ui.js?v=25.1.0",
-  "/assets/js/sudoku-online.js?v=25.1.0",
+  "/assets/js/sudoku-ui.js?v=25.3.0",
+  "/assets/js/sudoku-online.js?v=25.3.0",
   "/assets/js/sudoku-grid.js",
   "/assets/js/engines/sudoku-engine.js",
   "/assets/js/engines/sudoku-core.js",
@@ -25,9 +25,9 @@ const APP_SHELL = [
   "/assets/css/app-quiz.css?v=23.0.1",
   "/assets/css/app-picture.css?v=23.0.1",
   "/assets/js/quiz-hub.js?v=23.0.1",
-  "/assets/js/picture-ui.js?v=25.1.0",
+  "/assets/js/picture-ui.js?v=25.3.0",
   "/assets/js/engines/image-puzzle.js?v=23.0.1",
-  "/assets/js/home-v19.js?v=25.1.0",
+  "/assets/js/home-v19.js?v=25.3.0",
   "/assets/quiz-catalog.json",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
@@ -36,7 +36,7 @@ const APP_SHELL = [
   "/assets/js/client-health.js?v=23.0.1",
   "/assets/js/audio-manager.js?v=23.0.1",
   "/assets/js/platform.js?v=23.0.1",
-  "/assets/js/social-client.js?v=25.1.0",
+  "/assets/js/social-client.js?v=25.3.0",
   "/assets/js/profile-core.js?v=23.0.1",
   "/assets/js/career-client.js?v=23.0.1",
   "/assets/js/matchmaking.js?v=23.0.1",
@@ -46,7 +46,7 @@ const APP_SHELL = [
   "/assets/js/home-return-v17.js?v=23.0.1",
   "/assets/js/journey-client.js?v=23.0.1",
   "/assets/js/journey-renderer.js?v=23.0.1",
-  "/assets/js/journey-ui.js?v=25.1.0",
+  "/assets/js/journey-ui.js?v=25.3.0",
   "/assets/js/match3-renderer.js?v=23.0.1",
   "/assets/js/engines/journey-engine.js?v=23.0.1",
   "/assets/js/engines/match3-engine.js?v=23.0.1",
@@ -59,7 +59,7 @@ const APP_SHELL = [
   "/assets/brand/puzzle-cover.svg",
   "/assets/brand/accuracy-cover.svg",
   "/assets/characters/fox.webp",
-  "/assets/css/play-experience-v25.css?v=25.0.0"
+  "/assets/css/play-experience-v25.css?v=25.3.0"
 ];
 const ON_DEMAND = [
   "/accuracy.html",
@@ -235,6 +235,7 @@ const ON_DEMAND = [
   "/assets/js/serpent-network.js",
   "/assets/js/serpent-renderer.js",
   "/assets/js/serpent-ui.js",
+  "/assets/js/serpent-worlds-v25-2.js",
   "/assets/js/shop.js",
   "/assets/js/snake-pro-career-engine.js",
   "/assets/js/snake-pro-upgrade.js",

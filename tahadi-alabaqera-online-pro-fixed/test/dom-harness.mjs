@@ -5,6 +5,7 @@ export class MiniElement{
  get className(){return this._class}set className(v){this._class=String(v)}get id(){return this.attributes.id}set id(v){this.attributes.id=v}
  get textContent(){return this._text+this.children.map(c=>c.textContent).join('')}set textContent(v){for(const child of [...this.children])child.remove();this._text=String(v??'')}
  get innerHTML(){return this._html||''}set innerHTML(v){this._html=String(v);this.replaceChildren();parseInto(this,String(v))}
+ get options(){return this.tagName==='SELECT'?this.querySelectorAll('option'):undefined}
  get value(){if(this._value!=null)return this._value;if(this.tagName==='SELECT'){const o=this.children.find(x=>x.attributes.selected!=null)||this.children[0];return o?.value||o?.textContent||''}return this.attributes.value??this.textContent}set value(v){this._value=String(v)}
  get clientWidth(){return this.id==='board'?600:628}get clientHeight(){return this.id==='board'?600:628}get offsetWidth(){return this.classList.contains('snake-cell')?60:30}get offsetHeight(){return this.classList.contains('snake-cell')?60:30}get offsetLeft(){return this.classList.contains('snake-cell')?(this.parentElement.children.indexOf(this)%10)*60:0}get offsetTop(){return this.classList.contains('snake-cell')?Math.floor(this.parentElement.children.indexOf(this)/10)*60:0}
  get lastElementChild(){return this.children.at(-1)}

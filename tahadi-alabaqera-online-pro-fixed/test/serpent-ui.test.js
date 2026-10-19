@@ -8,11 +8,12 @@ import {createSerpentGame,serpentSnapshot,serpentSteeringAngle} from '../public/
 import {ArenaGestures} from '../public/assets/js/arena-gestures.js';
 import {applySerpentFrame} from '../public/assets/js/serpent-network.js';
 import {arenaTelemetry,resolveTrialSkin} from '../public/assets/js/serpent-renderer.js';
+import * as serpentWorlds from '../public/assets/js/serpent-worlds-v25-2.js';
 async function ui(){
  const peers=[],h=await createDOM('serpent.html');h.context.requestAnimationFrame=()=>0;
  h.context.AbortSignal=AbortSignal;Object.assign(h.context,{ARENA_POWERS,powerActive});
  h.context.ArenaGestures=ArenaGestures;h.context.serpentSteeringAngle=serpentSteeringAngle;
- h.context.applySerpentFrame=applySerpentFrame;
+ h.context.applySerpentFrame=applySerpentFrame;Object.assign(h.context,serpentWorlds);
  h.context.arenaTelemetry=arenaTelemetry;h.context.resolveTrialSkin=resolveTrialSkin;
  h.context.SerpentRenderer=class{constructor(){this.cameras=new Map()}reset(){this.cameras.clear();}resize(){}setQuality(){}setGame(){}draw(){}};
  h.context.WebSocket=class{static OPEN=1;constructor(){this.readyState=0;peers.push(this)}close(){}send(){}};
