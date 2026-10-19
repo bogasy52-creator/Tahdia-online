@@ -6,6 +6,7 @@ import {
   normalizeUsername,
   parseSessionToken,
   validUsername,
+  SOCIAL_ONLINE_GAMES,
 } from "./social-core.js";
 
 function json(data, status = 200) {
@@ -303,11 +304,14 @@ export async function handleSocialRequest(request, env, options = {}) {
     const targetUsername = normalizeUsername(body.username);
     const game = normalizeGame(body.game);
     const roomCode = normalizeRoomCode(body.roomCode);
-    if (!validUsername(targetUsername) || !game || !roomCode) return json({ ok: false, error: "بيانات الدعوة غير صالحة" }, 400);
+    if (!validUsername(targetUsername) || !game || (body.roomCode && !roomCode)) return json({ ok: false, error: "بيانات الدعوة غير صالحة" }, 400);
     const targetStub = stubFor(env, targetUsername);
     if (!targetStub || !(await publicProfile(env, targetUsername))) return json({ ok: false, error: "الحساب غير موجود" }, 404);
-    const room = await validateInviteRoom(env, game, roomCode);
-    if (!room.ok) return json({ ok: false, error: room.error }, room.status);
+    if (roomCode) {
+      if (!SOCIAL_ONLINE_GAMES.has(game)) return json({ ok: false, error: "هذه اللعبة لا تستخدم غرفًا خاصة" }, 400);
+      const room = await validateInviteRoom(env, game, roomCode);
+      if (!room.ok) return json({ ok: false, error: room.error }, room.status);
+    }
     const result = await call(targetStub, "/invite/incoming", {
       username: auth.username,
       displayName: cleanDisplayName(auth.profile.displayName),

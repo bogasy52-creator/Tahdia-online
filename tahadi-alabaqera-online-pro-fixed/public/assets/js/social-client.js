@@ -94,8 +94,8 @@
     const title = document.createElement('b');
     title.textContent = `🎮 دعوة من ${notification.from?.displayName || notification.from?.username || 'صديق'}`;
     const sub = document.createElement('span');
-    const labels = { quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان' };
-    sub.textContent = `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}`;
+    const labels = { quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان', sudoku: 'سودوكو', paths: 'توصيل الأرقام', accuracy: 'التصويب', dice: 'النرد', journey: 'رحلة النجوم', local: 'العباقرة المحلي', logic: 'المنطق', memory: 'الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'سرعة الاستجابة' };
+    sub.textContent = notification.roomCode ? `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}` : `تحدٍ جديد • ${labels[notification.game] || notification.game}`;
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';
     const join = document.createElement('a');
@@ -182,7 +182,7 @@
     modal.innerHTML = '';
     const panel = document.createElement('section'); panel.className = 'bs-panel bs-social-picker';
     const head = document.createElement('div'); head.className = 'bs-social-picker-head';
-    const copy = document.createElement('div'); const title = document.createElement('h2'); title.textContent = '👥 دعوة صديق'; const note = document.createElement('small'); note.textContent = `الغرفة ${roomCode}`; copy.append(title, note);
+    const copy = document.createElement('div'); const title = document.createElement('h2'); title.textContent = '👥 دعوة صديق'; const note = document.createElement('small'); note.textContent = roomCode ? `الغرفة ${roomCode}` : 'تحدٍ مباشر من داخل اللعبة'; copy.append(title, note);
     const close = document.createElement('button'); close.type = 'button'; close.className = 'bs-icon-btn'; close.textContent = '✕'; close.onclick = () => modal.classList.remove('open');
     head.append(copy, close); panel.appendChild(head);
     const list = document.createElement('div'); list.className = 'bs-social-picker-list';
@@ -203,6 +203,7 @@
   }
 
   const apiPublic = {
+    version: '25.0.0',
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
     isLoggedIn: () => Boolean(token()), profile: () => cachedProfile(), events,

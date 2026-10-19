@@ -43,7 +43,7 @@
  function session(){try{return localStorage.getItem('bs_social_session')||''}catch{return ''}}
  function bookmark(element){const card=element?.closest?.('[data-item]');return card?{item:card.dataset.item,control:element.dataset?.control||'inspect'}:null;}
  function restoreFocus(element,mark){const candidate=element?.isConnected?element:mark?$('storeGrid').querySelector('[data-item="'+mark.item+'"] [data-control="'+mark.control+'"]'):null;(candidate||$('storeSearch')||$('storeTabs').querySelector('.active'))?.focus?.();}
- function modalBackground(active){document.querySelectorAll('main.bs-shell,.mobile-dock').forEach(element=>{element.inert=active;});if($('cartDialog'))$('cartDialog').inert=active&&Boolean(inspected);}
+ function modalBackground(active){document.querySelectorAll('main.bs-shell,.mobile-dock,.hub-rail').forEach(element=>{element.inert=active;});if($('cartDialog'))$('cartDialog').inert=active&&Boolean(inspected);}
  async function operate(work,success){
   if(pending)return;const previousCharacter=profile().equipped.character,account=api.account?.(),currentSession=session();pending=true;message('جاري الحفظ…');$('storeViews')?.setAttribute('aria-busy','true');render();
   try{await work();if(account!==api.account?.()||currentSession!==session())throw new Error('account_changed');if(profile().equipped.character!==previousCharacter){try{localStorage.setItem('bs-piece-art','characters')}catch{}document.documentElement.dataset.pieceArt='characters';window.dispatchEvent(new CustomEvent('bs-piece-art-change'));}message(success,'success');window.BS_AUDIO?.play?.('reward')}

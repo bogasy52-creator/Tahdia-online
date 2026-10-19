@@ -1,34 +1,49 @@
-/* Tahdia Premium 25 — shared navigation, explicit room invites, visual feedback. */
-(()=>{'use strict';
- if(window.__TAHDIA_PREMIUM_25__)return;window.__TAHDIA_PREMIUM_25__=true;
- const d=document,w=window,make=(tag,cls,text)=>{const el=d.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
- const route=location.pathname.replace(/\/$/,'').replace(/\.html$/,'').split('/').at(-1)||'home';
- const canonical=url=>{try{const u=new URL(url,location.href);return ['http:','https:'].includes(u.protocol)&&u.origin===location.origin?u.href:location.href;}catch{return location.href;}};
- const pages={home:'الرئيسية',online:'المواجهات',local:'اللعب المحلي',sudoku:'سودوكو','paths-online':'توصيل الأرقام',serpent:'حلبة الثعابين',journey:'رحلة المراحل',shop:'المتجر',social:'الأصدقاء',snakes:'الثعبان والسلالم',jackaroo:'جاكارو',zahra:'الزهرة',dice:'النرد',logic:'المنطق',puzzle:'الألغاز',memory:'الذاكرة',reaction:'سرعة الاستجابة',accuracy:'الدقة',v5:'الألعاب',picture:'سباق الصور'};
- let toastTimer=0,shade=null;
- function toast(msg){let box=d.getElementById('bsPremiumToast');if(!box){box=make('div','bs-premium-toast');box.id='bsPremiumToast';box.setAttribute('role','status');d.body.append(box);}box.textContent=String(msg);box.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{box.hidden=true;},3300);}
- function room(){const data=w.BS_INVITES?.data?.()||{},p=new URLSearchParams(location.search);let code=(data.code||p.get('room')||'').trim();if(!/^\d{6}$/.test(code))for(const id of ['soCode','pathRoomCode','roomCode','code']){const e=d.getElementById(id),txt=e?.textContent?.trim();if(txt&&/^\d{6}$/.test(txt)&&!e.closest('[hidden]')){code=txt;break;}}let game=(data.game||({'paths-online':'paths',online:'quiz',journey:p.get('game')||'paths',serpent:'serpent',picture:'picture'}[route])||route);if(!['quiz','serpent','picture','sudoku','paths','snakes','zahra','jackaroo'].includes(game))game=route;const allowed=['quiz','serpent','picture','sudoku','paths','snakes','zahra','jackaroo'].includes(game);return{game,code,joinable:allowed&&/^\d{6}$/.test(code)&&data.joinable!==false,url:canonical(data.url||location.href)};}
- function isSignedIn(){try{return Boolean(localStorage.getItem('bs_social_session'));}catch{return false;}}
- function token(){try{return localStorage.getItem('bs_social_session')||'';}catch{return '';}}
- async function dashboard(){if(!isSignedIn())throw Error('سجل دخولك من صفحة الأصدقاء أولًا.');const res=await fetch('/api/social/me',{headers:{authorization:'Bearer '+token()},cache:'no-store'});const data=await res.json();if(!res.ok||!data?.ok&&(!Array.isArray(data?.friends)))throw Error(data.error||'تعذر جلب الأصدقاء');return data;}
- async function sendFriend(username,data){if(!data.joinable)throw Error('لإرسال دعوة داخل الموقع، افتح غرفة أونلاين أولًا.');const res=await fetch('/api/social/invites',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token()},body:JSON.stringify({username,game:data.game,roomCode:data.code})});const result=await res.json();if(!res.ok||result.ok===false)throw Error(result.error||'تعذر إرسال دعوة الغرفة');return result;}
- function modal(){const active=d.activeElement;shade=make('div','bs-premium-shade');shade.id='bsPremiumShade';const card=make('section','bs-premium-modal');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','دعوة الأصدقاء');const close=()=>{shade.remove();shade=null;active?.focus?.();};const x=make('button','bs-modal-close','×');x.type='button';x.setAttribute('aria-label','إغلاق');x.onclick=close;card.append(x);shade.append(card);d.body.append(shade);shade.addEventListener('click',e=>{if(e.target===shade)close();});shade.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const list=Array.from(card.querySelectorAll('button,a,input,select')).filter(el=>!el.disabled);if(!list.length)return;const start=list[0],end=list.at(-1);if(e.shiftKey&&d.activeElement===start){e.preventDefault();end.focus();}if(!e.shiftKey&&d.activeElement===end){e.preventDefault();start.focus();}}});x.focus();return{card,close};}
- async function openInvite(){if(shade)return;const data=room(),{card,close}=modal();card.append(make('div','bs-premium-eyebrow','INVITE YOUR CREW'),make('h2','','ادعُ أصحابك للتحدّي'));const desc=make('p','',data.joinable?'اختر صديقًا؛ توصله دعوة داخل اللعبة ليدخل غرفتك مباشرة.':'كل الألعاب فيها زر دعوة. للمنافسة المباشرة أنشئ غرفة أولًا؛ وللعب الفردي شارك رابط اللعبة.');card.append(desc);if(data.joinable){card.append(make('div','bs-invite-code','رمز الغرفة: '+data.code));}const status=make('p','bs-modal-status');status.setAttribute('role','status');const list=make('div','bs-friend-list');card.append(list);const footer=make('div','bs-invite-actions'),share=make('button','','مشاركة عبر التطبيقات'),copy=make('button','','نسخ رابط اللعب');share.type='button';copy.type='button';share.onclick=async()=>{try{if(navigator.share)await navigator.share({title:'تهدئة — تعال نلعب',url:data.url});else{await navigator.clipboard.writeText(data.url);toast('تم نسخ الرابط');}}catch(e){if(e?.name!=='AbortError')status.textContent='تعذرت المشاركة؛ جرّب نسخ الرابط.';}};copy.onclick=async()=>{try{await navigator.clipboard.writeText(data.url);toast('تم نسخ رابط اللعبة');}catch{status.textContent='الرابط: '+data.url;}};footer.append(share,copy);card.append(footer,status);
- if(!isSignedIn()){const a=make('a','bs-modal-action','تسجيل الدخول وإضافة أصدقاء');a.href='/social';list.append(make('p','','الدعوة داخل اللعبة تحتاج حسابًا وصداقة مسبقة.'),a);return;}
- list.append(make('p','','جاري تحميل الأصدقاء…'));
- try{const dataMe=await dashboard();if(!shade)return;list.replaceChildren();const friends=dataMe.friends||[];if(!friends.length){list.append(make('p','','ما عندك أصدقاء بعد. أضف صديقًا من صفحة الأصدقاء.'));const a=make('a','bs-modal-action','فتح قائمة الأصدقاء');a.href='/social';list.append(a);return;}
- for(const friend of friends){const item=make('div','bs-friend-row'),name=make('div','bs-friend-name'),label=make('b','',friend.displayName||friend.username),small=make('small','',`@${friend.username} · ${friend.online?'متصل الآن':'غير متصل'}`),btn=make('button','',data.joinable?'إرسال الدعوة':'مشاركة الرابط');name.append(label,small);item.append(name,btn);list.append(item);btn.onclick=async()=>{if(!data.joinable){status.textContent='هذه اللعبة ليست داخل غرفة أونلاين. استخدم مشاركة الرابط، أو افتح غرفة لإرسال دعوة مباشرة.';return;}btn.disabled=true;const original=btn.textContent;btn.textContent='جاري الإرسال…';try{await sendFriend(friend.username,data);btn.textContent='✓ تم الإرسال';toast(`أرسلت دعوة إلى ${friend.displayName||friend.username}`);}catch(err){status.textContent=String(err.message||err);btn.textContent=original;btn.disabled=false;}};}
- }catch(err){list.replaceChildren(make('p','',err.message||'تعذر تحميل قائمة الأصدقاء.'));const a=make('a','bs-modal-action','الذهاب للأصدقاء');a.href='/social';list.append(a);}}
- function addNavigation(){if(d.querySelector('.bs-premium-nav'))return;const n=make('nav','bs-premium-nav');n.setAttribute('aria-label','التنقل السريع داخل تهدئة');const first=make('div','bs-nav-group'),second=make('div','bs-nav-group'),logo=make('a','bs-nav-logo');logo.href='/';logo.setAttribute('aria-label','العودة لصفحة الألعاب');const emblem=make('span','bs-nav-emblem','✦'),label=make('span','', 'تهدئة');const sub=make('span','bs-nav-sub',' · '+(pages[route]||'الألعاب'));label.append(sub);logo.append(emblem,label);first.append(logo);const back=make('button','','↪ رجوع');back.type='button';back.onclick=()=>{if(w.history.length>1&&d.referrer){try{const prev=new URL(d.referrer);if(prev.origin===location.origin){w.history.back();return;}}catch{}}location.assign('/');};if(route!=='home'&&route!=='index')first.append(back);const all=make('a','bs-nav-btn bs-nav-hide-mobile','🎮 كل الألعاب');all.href='/#games';second.append(all);const friends=make('a','bs-nav-btn','👥 الأصدقاء');friends.href='/social';second.append(friends);const invite=make('button','bs-nav-invite','✉ دعوة صديق');invite.type='button';invite.onclick=openInvite;second.append(invite);n.append(first,second);d.body.insertBefore(n,d.body.firstChild);}
- function particles(total=65){if(w.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;const old=d.querySelector('.bs-particle-stage');old?.remove();const area=make('div','bs-particle-stage');area.setAttribute('aria-hidden','true');const colors=['#f4c57a','#63e8da','#ff819b','#a1bfff','#ffffff'];for(let i=0;i<Math.min(total,90);i++){const el=make('i','bs-particle');el.style.setProperty('--particle',colors[i%colors.length]);el.style.left=((i*73)%100)+'%';el.style.top='-12%';el.style.setProperty('--size',(5+i%6)+'px');el.style.setProperty('--duration',(2.2+i%6*.24)+'s');el.style.setProperty('--delay',(i%9*.08)+'s');el.style.setProperty('--drift',(i%2?-1:1)*(35+i%9*14)+'px');el.style.setProperty('--spin',(i%2?-1:1)*(320+i*9)+'deg');area.append(el);}d.body.append(area);setTimeout(()=>area.remove(),4400);}
- let winnerOpen=false;function victory(name){if(winnerOpen||d.getElementById('bsVictory'))return;winnerOpen=true;const old=d.activeElement;const overlay=make('div','bs-victory-shade');overlay.id='bsVictory';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','احتفال الفوز');const card=make('section','bs-victory-card');card.append(make('div','bs-victory-crown','👑'),make('div','bs-victory-eyebrow','CHAMPION • البطل'));const title=make('h2','',String(name||w.BS_CAREER?.get?.()?.name||'البطل').slice(0,35));const detail=make('p','','مبروك! انت فائز هذه الجولة، وتستاهل احتفال يليق بك ✨');const ok=make('button','','متابعة اللعب ←');ok.onclick=()=>{overlay.remove();winnerOpen=false;old?.focus?.();};card.append(title,detail,ok);overlay.append(card);d.body.append(overlay);particles(82);ok.focus();overlay.addEventListener('keydown',e=>{if(e.key==='Escape')ok.click();if(e.key==='Tab'){e.preventDefault();ok.focus();}});}
- function wrapFX(){const old=w.BS_GAME_FX;if(!old||old.__t25)return;w.BS_GAME_FX={...old,__t25:true,win:(...args)=>{const result=old.win?.(...args);const label=(d.querySelector('#soResultTitle')?.textContent||d.querySelector('#pathResultTitle')?.textContent||'').trim();if(!/فاز|فزت/.test(label)||/فزت/.test(label))victory(w.BS_CAREER?.get?.()?.name||d.querySelector('[data-career-name]')?.textContent||'البطل');return result;}};}
- const seen=new WeakMap();function watchFeedback(){for(const el of d.querySelectorAll('[role="status"],.sudoku-message,.paths-message')){if(seen.has(el))continue;seen.set(el,el.textContent||'');new MutationObserver(()=>{const t=(el.textContent||'').trim(),previous=seen.get(el);if(!t||t===previous)return;seen.set(el,t);if(/(?:صحيح|ممتاز|أحسنت|إجابة صحيحة|اكتمل|تم التوصيل)/.test(t)){el.classList.remove('bs-visual-pulse');void el.offsetWidth;el.classList.add('bs-visual-pulse');}else if(/(?:خطأ|غلط|غير صحيح|حاول مرة)/.test(t)){el.classList.remove('bs-visual-error');void el.offsetWidth;el.classList.add('bs-visual-error');}}).observe(el,{childList:true,subtree:true,characterData:true});}}
- function setup(){addNavigation();watchFeedback();wrapFX();}
- const oldInvite=w.BS_INVITES; // Existing game's set() remains authoritative for room state.
- if(oldInvite)w.BS_INVITES={...oldInvite,open:openInvite};
- const attach=()=>{const original=w.BS_INVITES;if(!original||original.__t25)return;w.BS_INVITES={...original,open:openInvite,__t25:true};};
- w.TAHDIA_PREMIUM=Object.freeze({openInvite,toast,victory,particles,room});
- if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
- d.addEventListener('DOMContentLoaded',()=>{attach();wrapFX();}, {once:true});setTimeout(()=>{attach();wrapFX();},1100);
+/* One navigation system and one feedback engine. No polling or duplicate FX. */
+(() => {
+  'use strict';
+  if (window.__TAHDIA_INTERFACE_25_1__) return;
+  window.__TAHDIA_INTERFACE_25_1__ = true;
+  const doc = document;
+  const route = new URL(location.href).pathname.replace(/\/$/,'').replace(/\.html$/,'').split('/').at(-1)||'index';
+  const shellRoutes = new Set(['index','shop','social']);
+  const icons = {
+    home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
+    games:'<path d="M7 6h10c3 0 4 10 4 12s-3 2-6-2H9c-3 4-6 4-6 2S4 6 7 6ZM8 9v6m-3-3h6m5-2h.01m3 4h.01"/>',
+    journey:'<path d="m12 3 3 6 6 1-4.5 4.5 1 6.5-5.5-3-5.5 3 1-6.5L3 10l6-1z"/>',
+    shop:'<path d="M4 8h16l-1 13H5zM8 8V6a4 4 0 0 1 8 0v2"/>',
+    friends:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-16a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/>'
+  };
+  const links = [
+    ['home','الرئيسية','/','index'],['games','كل الألعاب','/#games','games'],
+    ['journey','رحلة النجوم','/journey','journey'],['shop','المتجر','/shop','shop'],['friends','الأصدقاء','/social','social']
+  ];
+  function icon(name){return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+icons[name]+'</svg>';}
+  function mountShell(){
+    if(!shellRoutes.has(route))return;
+    doc.body.classList.add('hub-page','hub-'+route);
+    if(!doc.getElementById('hubRail')){
+      const rail=doc.createElement('aside');rail.id='hubRail';rail.className='hub-rail';rail.setAttribute('aria-label','أقسام تحدي العباقرة');
+      const brand=doc.createElement('a');brand.className='hub-rail-brand';brand.href='/';brand.innerHTML='<span class="hub-brand-mark">✦</span><span><b>تحدي العباقرة</b><small>مساحتك للتحدّي</small></span>';
+      const nav=doc.createElement('nav');nav.setAttribute('aria-label','التنقل الرئيسي');
+      for(const [key,label,url,id]of links){const a=doc.createElement('a');a.href=url;a.innerHTML=icon(key)+'<span>'+label+'</span>';if(route===id)a.setAttribute('aria-current','page');nav.append(a);}
+      const note=doc.createElement('a');note.href='/shop?view=missions';note.className='hub-rail-rewards';note.innerHTML='<span>✧</span><b>اللعب له مكافأة</b><small>راجع مهماتك وهدية اليوم</small><em>افتح المكافآت ←</em>';
+      rail.append(brand,nav,note);doc.body.prepend(rail);doc.body.classList.add('hub-rail-mounted');
+    }
+    const bar=doc.querySelector('.bs-topbar');
+    if(bar&&route!=='index'&&!bar.querySelector('[data-hub-back]')){
+      const back=doc.createElement('a');back.href='/';back.className='hub-back';back.dataset.hubBack='';back.setAttribute('aria-label','الرجوع للرئيسية');back.textContent='→';bar.prepend(back);
+    }
+    if(!doc.querySelector('.mobile-dock')){
+      const dock=doc.createElement('nav');dock.className='mobile-dock';dock.setAttribute('aria-label','التنقل السريع');
+      for(const [key,label,url,id]of links.filter(row=>row[0]!=='journey')){const a=doc.createElement('a');a.href=url;a.innerHTML=icon(key)+'<span>'+label+'</span>';if(route===id)a.setAttribute('aria-current','page');dock.append(a);}doc.body.append(dock);
+    }
+  }
+  function toast(message){window.BS_PLATFORM?.toast?.(String(message));}
+  window.TAHDIA_PREMIUM=Object.freeze({
+    openInvite:()=>window.BS_INVITES?.open?.(),toast,
+    room:()=>window.BS_INVITES?.data?.(),
+    victory:(name,options={})=>window.BS_GAME_FX?.celebrate?.(name,options)
+  });
+  function setup(){mountShell();for(const control of doc.querySelectorAll('[data-hub-invite]'))control.addEventListener('click',()=>window.BS_INVITES?.open?.());}
+  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();

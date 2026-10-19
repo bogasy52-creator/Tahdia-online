@@ -5,13 +5,7 @@ const read=key=>{try{return localStorage.getItem(key)||'';}catch{return '';}},wr
 const session=()=>read('bs_social_session'),owner=()=>window.BS_CAREER?.account?.()||session().split('.')[0]||'guest';
 const sessionKey=()=> 'tahdia-sudoku-room-v22:'+owner(),notesKey=()=>sessionKey()+':notes';
 const difficulty=['سهل','متوسط','صعب','خبير','ماستر'];
-const ONLINE_MISTAKE_LIMIT=5;
-const mistakeKey=()=>seat?.code&&seat?.id&&state?.round?'tahdia-sudoku-mistakes-v25:'+seat.code+':'+state.round+':'+seat.id:'';
-const mistakes=()=>Math.max(0,Math.min(ONLINE_MISTAKE_LIMIT,Number(read(mistakeKey()))||0));
-const lost=()=>mistakes()>=ONLINE_MISTAKE_LIMIT;
-function updateMistakes(){const el=$('soMistakes');if(!el)return;const n=mistakes();el.textContent='الأخطاء: '+n+' / '+ONLINE_MISTAKE_LIMIT+(n>=ONLINE_MISTAKE_LIMIT?' · خسرت الجولة':'');el.dataset.danger=String(n>=3);if(n>=ONLINE_MISTAKE_LIMIT&&state?.status==='playing'){$('soResultTitle').textContent='انتهت محاولاتك';$('soResultCopy').textContent='وصلت إلى 5 أخطاء، وخسرت هذه الجولة. تقدر تشاهد بقية المنافسة حتى تنتهي وتبدأ جولة جديدة.';show('soResult',true);$('soMessage').textContent='خسرت الجولة بعد 5 أخطاء. انتظر الجولة الجديدة.';$('soBoard')?.classList.add('bs-sudoku-locked');}else $('soBoard')?.classList.remove('bs-sudoku-locked');}
-function recordMistake(){if(!mistakeKey()||lost())return;write(mistakeKey(),String(Math.min(ONLINE_MISTAKE_LIMIT,mistakes()+1)));updateMistakes();if(lost()){window.BS_GAME_FX?.wrong($('soBoard'));window.TAHDIA_PREMIUM?.toast?.('انتهت فرصك الخمس في هذه الجولة');}}
-let socket=null,state=null,seat=null,version=0,clock=null,retry=null,retries=0,offset=0,pending=null,cells=[],pads=[],notes=Array(81).fill(0),selected=0,pencil=false,gridRound='',lastPing=0,initialOwner=owner();
+let socket=null,state=null,seat=null,version=0,clock=null,retry=null,retries=0,offset=0,pending=null,cells=[],pads=[],notes=Array(81).fill(0),selected=0,pencil=false,gridRound='',lastPing=0,initialOwner=owner(),celebratedRound='';
 function toast(message){$('pictureToast').textContent=message;show('pictureToast',true);clearTimeout(toast.id);toast.id=setTimeout(()=>show('pictureToast',false),3500);}
 function storedSeat(){try{const v=JSON.parse(read(sessionKey()));return /^\d{6}$/.test(v?.code)&&typeof v.name==='string'?v:null;}catch{return null;}}
 function remember(){if(seat)write(sessionKey(),JSON.stringify(seat));}
@@ -38,8 +32,8 @@ function connect(v){
   ws.onopen=()=>{if(v!==version||socket!==ws)return;$('soConnection').textContent='● متصل';};
   ws.onmessage=e=>{if(v!==version||socket!==ws)return;let message;try{message=JSON.parse(e.data);}catch{return;}
     if(message.type==='welcome'){seat.token=message.token;seat.id=message.playerId;remember();retries=0;}
-    if(message.type==='error'){if(pending?.cell!=null)window.BS_GAME_FX?.wrong(cells[pending.cell]?.el);if(pending?.beforeNotes)notes=pending.beforeNotes;clearTimeout(pending?.timer);pending=null;toast(message.message);$('soMessage').textContent=message.message;}
-    if(message.state){const incoming=message.state,previous=state,action=pending&&incoming.round===pending.round&&incoming.me?.seq>=pending.seq?pending:null;if(pending&&(incoming.me?.seq>=pending.seq||incoming.status!=='playing'||incoming.round!==pending.round||pending.resync)){if(incoming.me?.seq<pending.seq&&pending.beforeNotes)notes=pending.beforeNotes;else $('soMessage').textContent='إدخالك محفوظ في الغرفة.';clearTimeout(pending.timer);pending=null;}state=incoming;offset=state.serverNow-Date.now();render();if(action?.value&&Number.isInteger(action.cell)){const before=previous?.players.find(p=>p.id===seat.id)?.correct||0,after=state.players.find(p=>p.id===seat.id)?.correct||0,kind=after>before?'right':'wrong';window.BS_GAME_FX?.sudoku(cells,state.me.board,action.cell,kind);window.BS_AUDIO?.play?.(kind==='right'?'correct':'wrong');if(kind==='wrong')recordMistake();}if(previous?.status!=='finished'&&state.status==='finished'&&state.winnerId===seat.id)window.BS_GAME_FX?.win($('soResult'));}
+    if(message.type==='error'){if(pending?.cell!=null)window.BS_GAME_FX?.wrong?.(cells[pending.cell]?.el);if(pending?.beforeNotes)notes=pending.beforeNotes;clearTimeout(pending?.timer);pending=null;toast(message.message);$('soMessage').textContent=message.message;}
+    if(message.state){const incoming=message.state,previous=state,action=pending&&incoming.round===pending.round&&incoming.me?.seq>=pending.seq?pending:null;if(pending&&(incoming.me?.seq>=pending.seq||incoming.status!=='playing'||incoming.round!==pending.round||pending.resync)){if(incoming.me?.seq<pending.seq&&pending.beforeNotes)notes=pending.beforeNotes;else $('soMessage').textContent='إدخالك محفوظ في الغرفة.';clearTimeout(pending.timer);pending=null;}state=incoming;offset=state.serverNow-Date.now();render();if(action?.value&&Number.isInteger(action.cell)){const before=previous?.players.find(p=>p.id===seat.id)?.correct||0,after=state.players.find(p=>p.id===seat.id)?.correct||0,kind=after>before?'right':'wrong';window.BS_GAME_FX?.sudoku?.(cells,state.me.board,action.cell,kind);if(kind==='right')window.BS_GAME_FX?.progress?.($('soBoard'),after,state.total,'الخانات الصحيحة');window.BS_AUDIO?.play?.(kind==='right'?'correct':'wrong');}}
   };
   ws.onclose=e=>{if(v!==version||socket!==ws)return;if(pending?.beforeNotes)notes=pending.beforeNotes;clearTimeout(pending?.timer);pending=null;paint();$('soConnection').textContent=e.code===4001?'الغرفة مفتوحة في نافذة أخرى':e.code===4000?'انتهت صلاحية الغرفة':'انقطع الاتصال؛ نحاول العودة';if(e.code!==4001&&e.code!==4000&&e.code!==4002)schedule(v);else show('soRetry',false);};
   ws.onerror=()=>{if(v===version)$('soConnection').textContent='تعذر الاتصال؛ تحقق من الشبكة';};
@@ -47,7 +41,7 @@ function connect(v){
 function schedule(v){clearTimeout(retry);if(v!==version)return;if(++retries>6){$('soConnection').textContent='تعذر الرجوع. أعد المحاولة أو ارجع للمدخل.';show('soRetry',true);return;}retry=setTimeout(()=>connect(v),Math.min(8000,700*2**(retries-1)));}
 function renderRoster(target,ranking=false){
   target.replaceChildren();for(const p of state.players){const item=document.createElement('li'),badge=document.createElement('span'),main=document.createElement('div'),name=document.createElement('b'),detail=document.createElement('small'),score=document.createElement('strong');
-    item.className='sudoku-player'+(p.id===seat.id?' is-me':'');badge.className='sudoku-player-mark';badge.textContent=ranking?p.rank:String(p.name).slice(0,1);name.textContent=p.name+(p.id===seat.id?' (أنت)':'');detail.textContent=(p.role==='host'?'المضيف · ':'')+(p.connected?'متصل':'انقطع الاتصال');main.append(name,detail);score.textContent=ranking?Math.round(p.correct/Math.max(1,state.total)*100)+'%':p.connected?'●':'○';item.append(badge,main,score);target.append(item);
+    item.className='sudoku-player'+(p.id===seat.id?' is-me':'')+(p.eliminatedAt?' is-eliminated':'');badge.className='sudoku-player-mark';badge.textContent=ranking?p.rank:String(p.name).slice(0,1);name.textContent=p.name+(p.id===seat.id?' (أنت)':'');detail.textContent=(p.role==='host'?'المضيف · ':'')+(p.connected?'متصل':'انقطع الاتصال')+(p.eliminatedAt?' · خرج من الجولة':'');main.append(name,detail);if(ranking){const mistakes=document.createElement('small');mistakes.className='sudoku-mistakes';mistakes.textContent='أخطاء '+(p.mistakes||0)+' / '+(state.maxMistakes||5);main.append(mistakes);}score.textContent=ranking?Math.round(p.correct/Math.max(1,state.total)*100)+'%':p.connected?'●':'○';item.append(badge,main,score);target.append(item);
   }
 }
 function buildBoard(){
@@ -56,11 +50,11 @@ function buildBoard(){
 }
 function paint(){
   if(!state?.me?.board?.length||!cells.length)return;
-  const disabled=state.status!=='playing'||socket?.readyState!==1||Boolean(pending)||lost();
+  const disabled=state.status!=='playing'||Boolean(state.me.eliminatedAt)||socket?.readyState!==1||Boolean(pending);
   paintSudokuGrid(cells,{board:state.me.board,initial:state.initial,notes,selected,disabled:state.status!=='playing'});
   if(pending?.cell!=null)cells[pending.cell].el.classList.add('waiting');
   pads.forEach(({b,count},i)=>{count.textContent=Math.max(0,9-state.me.board.filter(n=>n===i+1).length)+' متبقي';b.disabled=disabled;});
-  $('soErase').disabled=disabled;$('soNotes').disabled=state.status!=='playing'||lost();$('soUndo').disabled=disabled||!state.me.canUndo;
+  $('soErase').disabled=disabled;$('soNotes').disabled=state.status!=='playing'||Boolean(state.me.eliminatedAt);$('soUndo').disabled=disabled||!state.me.canUndo;
   $('soFilled').textContent=state.me.board.filter(Boolean).length+' / 81';const me=state.players.find(p=>p.id===seat.id);$('soPlace').textContent='ترتيبك '+(me?.rank||'—');
 }
 function render(){
@@ -74,24 +68,24 @@ function render(){
   $('soLobbyStatus').textContent=host?'أنت المضيف. اختر الإعدادات ثم ابدأ العد.':'المضيف يحدد الإعدادات ويبدأ العد التنازلي.';
   if(lobby){$('soLobbyTitle').textContent=state.status==='countdown'?'قرّبنا… استعد للتحدّي.':'الكل جاهز للتحدّي؟';$('soLobbyCopy').textContent=state.status==='countdown'?'الدخول ما زال مفتوحًا حتى نهاية العد. نفس اللغز يظهر للجميع عند الصفر.':'شارك الرمز، اختر الصعوبة، ثم ابدأ العد التنازلي.';}
   else{
-    if(gridRound!==state.round){gridRound=state.round;notes=Array(81).fill(0);try{const stored=JSON.parse(read(notesKey()));if(stored.round===gridRound&&stored.notes.length===81&&stored.notes.every(n=>Number.isInteger(n)&&n>=0&&n<=511))notes=stored.notes;}catch{}selected=state.initial.findIndex(n=>!n);pencil=false;$('soNotes').setAttribute('aria-pressed','false');buildBoard();$('soMessage').textContent='اختر خانة ثم رقمًا. عندك 5 أخطاء قبل الخسارة.';}
-    notes=notes.map((n,i)=>state.me.board[i]?0:n);paint();renderRoster($('soRanking'),true);$('soMatchTier').textContent=difficulty[state.difficulty-1]+' · '+state.players.length+' لاعبين';
+    if(gridRound!==state.round){gridRound=state.round;notes=Array(81).fill(0);try{const stored=JSON.parse(read(notesKey()));if(stored.round===gridRound&&stored.notes.length===81&&stored.notes.every(n=>Number.isInteger(n)&&n>=0&&n<=511))notes=stored.notes;}catch{}selected=state.initial.findIndex(n=>!n);pencil=false;$('soNotes').setAttribute('aria-pressed','false');buildBoard();$('soMessage').textContent='اختر خانة ثم رقمًا. أول حل صحيح يكسب التحدّي.';}
+    notes=notes.map((n,i)=>state.me.board[i]?0:n);paint();renderRoster($('soRanking'),true);$('soMatchTier').textContent=difficulty[state.difficulty-1]+' · '+state.players.length+' لاعبين';const max=state.maxMistakes||5,mistakes=state.me.mistakes||0,left=Math.max(0,max-mistakes),lives=$('soLives');lives.querySelector('b').textContent=('♥ '.repeat(left)+'♡ '.repeat(mistakes)).trim();lives.querySelector('small').textContent=state.me.eliminatedAt?'خرجت من الجولة بعد الخطأ الخامس':`باقي ${left} من ${max} · بعد الخطأ الخامس تخرج من الجولة`;lives.classList.toggle('is-danger',left===1);lives.classList.toggle('is-out',Boolean(state.me.eliminatedAt));show('soEliminated',Boolean(state.me.eliminatedAt)&&state.status==='playing');if(state.me.eliminatedAt)$('soMessage').textContent='انتهت فرصك الخمس. تقدر تتابع ترتيب الجولة.';
     show('soResult',state.status==='finished');show('soRematch',host&&state.status==='finished');
-    if(state.status==='finished'){const winner=state.players.find(p=>p.id===state.winnerId);$('soResultTitle').textContent=winner?(winner.id===seat.id?'أنت صاحب الحل. أحسنت!':'فاز '+winner.name):'انتهى الوقت بالتعادل';$('soResultCopy').textContent=winner?.finishedAt?'اكتمل الحل الصحيح في '+format(winner.finishedAt-state.startsAt)+'.': 'انتهى الوقت. الترتيب بحسب الخانات الصحيحة، والتساوي تعادل.';}
-    updateMistakes();saveNotes();
+    if(state.status==='finished'){const winner=state.players.find(p=>p.id===state.winnerId);$('soResultTitle').textContent=winner?(winner.id===seat.id?'أنت صاحب الحل. أحسنت!':'فاز '+winner.name):state.me.eliminatedAt?'انتهت الجولة بعد نفاد المحاولات':'انتهى الوقت بالتعادل';$('soResultCopy').textContent=winner?.finishedAt?'اكتمل الحل الصحيح في '+format(winner.finishedAt-state.startsAt)+'.':winner?'تصدّر بعدد الخانات الصحيحة.':'لا يوجد فائز منفرد في هذه الجولة.';if(celebratedRound!==state.round){celebratedRound=state.round;window.BS_GAME_FX?.celebrate?.(winner?.name||'تعادل',{key:'sudoku:'+state.round,self:winner?.id===seat.id,tie:!winner,subtitle:winner?.finishedAt?'أكمل شبكة السودوكو كاملة.':'حسم الجولة بأفضل تقدم صحيح.'});}}
+    saveNotes();
   }
   clearInterval(clock);clock=setInterval(tick,250);tick();
 }
 function format(ms){const n=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
 function tick(){if(!state)return;if(state.status==='countdown'){const left=Math.max(0,Math.ceil((state.startsAt-now())/1000));$('soCountdown').textContent=left;$('soCountdownCopy').textContent=left?'ثانية ونبدأ':'نجهّز اللوحة…';if(!left&&Date.now()-lastPing>3000){lastPing=Date.now();send('ping');}}else if(state.status==='lobby'){$('soCountdown').textContent='20';$('soCountdownCopy').textContent='ثانية للاستعداد';}else{$('soTime').textContent=format(state.status==='finished'?state.deadline-state.finishedAt:state.deadline-now());if(state.status==='playing'&&now()>=state.deadline&&Date.now()-lastPing>3000){lastPing=Date.now();send('ping');}}}
 function move(type,data={}){
-  if(!state||state.status!=='playing'||lost()||pending||socket?.readyState!==1)return false;
+  if(!state||state.status!=='playing'||state.me?.eliminatedAt||pending||socket?.readyState!==1)return false;
   const round=state.round,seq=state.me.seq+1;pending={seq,round,beforeNotes:notes.slice(),...data};
   pending.timer=setTimeout(()=>{if(pending?.seq!==seq)return;pending.resync=true;send('ping');$('soMessage').textContent='نتحقق من وصول آخر إدخال…';},4500);
   send(type,{...data,round,seq});paint();return true;
 }
 function enter(value){
-  if(!state||state.status!=='playing'||lost()||pending||socket?.readyState!==1)return;
+  if(!state||state.status!=='playing'||state.me?.eliminatedAt||pending||socket?.readyState!==1)return;
   if(state.initial[selected])return toast('الرقم ثابت؛ اختر خانة قابلة للتعديل');
   if(pencil&&value){if(state.me.board[selected])return toast('امسح الرقم قبل تدوين الاحتمالات');notes[selected]^=1<<(value-1);saveNotes();paint();return;}
   if(!value&&!state.me.board[selected]&&notes[selected]){notes[selected]=0;saveNotes();paint();return;}
@@ -99,7 +93,7 @@ function enter(value){
   if(sudokuEntryConflict(state.me.board,state.initial,selected,value))return toast('الرقم موجود في الصف أو العمود أو المربع؛ لم نغيّر الخانة');
   if(move('move',{cell:selected,value})){$('soMessage').textContent='إدخالك يُحفظ في الغرفة…';if(value)for(const i of SUDOKU_PEERS[selected])notes[i]&=~(1<<(value-1));saveNotes();}
 }
-function toggleNotes(){if(lost())return;pencil=!pencil;$('soNotes').setAttribute('aria-pressed',String(pencil));$('soMessage').textContent=pencil?'وضع القلم: دوّن احتمالاتك.':'وضع إدخال الأرقام.';}
+function toggleNotes(){pencil=!pencil;$('soNotes').setAttribute('aria-pressed',String(pencil));$('soMessage').textContent=pencil?'وضع القلم: دوّن احتمالاتك.':'وضع إدخال الأرقام.';}
 function keyboard(e,cell){const key=sudokuKey(e.key);let next=cell;const r=Math.floor(cell/9),c=cell%9;if(key==='ArrowLeft')next=r*9+Math.max(0,c-1);else if(key==='ArrowRight')next=r*9+Math.min(8,c+1);else if(key==='ArrowUp')next=Math.max(0,r-1)*9+c;else if(key==='ArrowDown')next=Math.min(8,r+1)*9+c;else if(/^[1-9]$/.test(key)){e.preventDefault();enter(+key);return;}else if(['0','Delete','Backspace'].includes(key)){e.preventDefault();enter(0);return;}else if(key.toLowerCase()==='n'){e.preventDefault();toggleNotes();return;}else if((e.ctrlKey||e.metaKey)&&key.toLowerCase()==='z'){e.preventDefault();move('undo');return;}else return;e.preventDefault();selected=next;paint();cells[selected]?.el.focus();}
 function leave(){saveNotes();if(['lobby','finished'].includes(state?.status)){send('leave');remove(sessionKey());}resetTransport();openEntry();}
 $('sudokuOnlineLaunch').onclick=openEntry;$('soCreate').onclick=create;$('soJoin').onclick=()=>join($('soCodeInput').value);$('soCodeInput').onkeydown=e=>{if(e.key==='Enter')join($('soCodeInput').value);};$('soResume').onclick=()=>{const old=storedSeat();if(old)join(old.code,old);};$('soRetry').onclick=()=>{resetTransport();retries=0;connect(version);};$('soLeave').onclick=leave;

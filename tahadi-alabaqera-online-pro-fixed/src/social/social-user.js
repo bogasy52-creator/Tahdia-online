@@ -460,14 +460,15 @@ export function createSocialUserClass(DurableObject) {
     }
     const game = normalizeGame(body.game);
     const roomCode = normalizeRoomCode(body.roomCode);
-    if (!game || !roomCode) return json({ ok: false, error: "invalid_invite" }, 400);
+    const joinPath = gameJoinPath(game, roomCode);
+    if (!game || !joinPath) return json({ ok: false, error: "invalid_invite" }, 400);
     const invite = {
       id: crypto.randomUUID(),
       type: "game_invite",
       from: { username: fromUsername, displayName: cleanDisplayName(body.displayName || fromUsername) },
       game,
       roomCode,
-      joinPath: gameJoinPath(game, roomCode),
+      joinPath,
       createdAt: Date.now(),
       expiresAt: Date.now() + SOCIAL_INVITE_TTL_MS,
       read: false,

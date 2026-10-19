@@ -21,7 +21,7 @@ for(const page of pages.filter(page=>!selection||selection.includes(page))){
  // compare against the SAME normalized output as the release builder.
  const premiumLinks=[];
  const normalHtml=html.replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/g,tag=>{
-  if(/href=["']\/?assets\/css\/tahdia-premium-v25\.css\?v=25\.0\.0["']/.test(tag)){premiumLinks.push(tag);return '';}
+  if(/href=["']\/?assets\/css\/tahdia-premium-v25\.css\?v=[0-9.]+["']/.test(tag)){premiumLinks.push(tag);return '';}
   return tag;
  });
  if(premiumLinks.length>1)throw Error('Duplicate premium stylesheet: '+page);

@@ -15,6 +15,7 @@ function summary(values){const target=$('arcadeSummary');if(!target)return;targe
 function finish(win,text,values=[]){
  if(!active)return;const run=generation,record={id:receipt,game,win};active=false;paused=false;clearInterval(clock);cancelDelay();$('arena').inert=false;$('arcadePause').disabled=true;$('arcadeLevel').disabled=false;$('arcadePauseDialog').classList.add('hidden');status(text);$('start').textContent='جولة جديدة';
  if(!values.length)values=[[win?'اكتمل':'حاول ثانية','نتيجة الجولة'],[Math.max(1,Math.round((moment()-started)/1000))+' ث','الوقت الفعلي'],[names[level],'مستوى التحدي']];summary(values);
+ if(win){const player=window.BS_CAREER?.get?.()?.name||'بطل التحدي';window.BS_GAME_FX?.celebrate?.(player,{key:'arcade:'+game+':'+receipt,subtitle:text});}else window.BS_GAME_FX?.wrong?.($('arena'));
  Promise.resolve().then(()=>window.BS_CAREER?.record?.(record)).catch(()=>{if(generation===run&&!active)status(text+' · تعذّر حفظ المكافأة. نتيجتك ظاهرة هنا.');});
 }
 function timer(deadline,onEnd){clearInterval(clock);const tick=()=>{if(!active||paused)return;const remaining=Math.max(0,Math.ceil((deadline-moment())/1000));$('time').textContent=remaining+' ث';if(moment()>=deadline)onEnd();};tick();clock=setInterval(tick,100);}

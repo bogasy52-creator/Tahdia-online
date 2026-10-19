@@ -5,6 +5,10 @@ export const SOCIAL_MAX_REQUESTS = 100;
 export const SOCIAL_MAX_NOTIFICATIONS = 60;
 export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
 export const SOCIAL_ONLINE_GAMES = new Set(["quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths"]);
+export const SOCIAL_CHALLENGE_GAMES = new Set([
+  ...SOCIAL_ONLINE_GAMES,
+  "accuracy", "dice", "journey", "local", "logic", "memory", "puzzle", "reaction",
+]);
 
 export function normalizeUsername(value) {
   return String(value || "").normalize("NFKC").trim().toLowerCase().replace(/\s+/g, "");
@@ -60,17 +64,22 @@ export function normalizeRoomCode(value) {
 
 export function normalizeGame(value) {
   const game = String(value || "").trim().toLowerCase();
-  return SOCIAL_ONLINE_GAMES.has(game) ? game : "";
+  return SOCIAL_CHALLENGE_GAMES.has(game) ? game : "";
 }
 
 export function gameJoinPath(game, roomCode) {
   const normalizedGame = normalizeGame(game);
   const code = normalizeRoomCode(roomCode);
-  if (!normalizedGame || !code) return "";
-  if (normalizedGame === "paths") return `/paths-online?room=${encodeURIComponent(code)}`;
-  if (normalizedGame === "picture") return `/picture?room=${encodeURIComponent(code)}`;
-  if (normalizedGame === "quiz") return `/online?room=${encodeURIComponent(code)}`;
-  return `/${normalizedGame}?room=${encodeURIComponent(code)}`;
+  if (!normalizedGame) return "";
+  if (code) {
+    if (!SOCIAL_ONLINE_GAMES.has(normalizedGame)) return "";
+    if (normalizedGame === "paths") return `/paths-online?room=${encodeURIComponent(code)}`;
+    if (normalizedGame === "picture") return `/picture?room=${encodeURIComponent(code)}`;
+    if (normalizedGame === "quiz") return `/online?room=${encodeURIComponent(code)}`;
+    return `/${normalizedGame}?room=${encodeURIComponent(code)}`;
+  }
+  const direct = {paths:"/paths-online",quiz:"/online"};
+  return direct[normalizedGame] || `/${normalizedGame}`;
 }
 
 export function publicProfile(profile, presence = {}) {

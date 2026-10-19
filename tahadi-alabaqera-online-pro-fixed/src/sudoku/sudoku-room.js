@@ -1,7 +1,7 @@
 import {createSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
 
-const TTL=60*60000,GRACE=45000,LOBBY_MS=20000;
+const TTL=60*60000,GRACE=45000,LOBBY_MS=20000,MAX_MISTAKES=5;
 const DURATIONS=[10,15,20,25,30].map(n=>n*60000);
 const secret=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','');
 const json=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -23,11 +23,12 @@ export class SudokuRoom{
   async save(){if(this.room)await this.ctx.storage.put('sudokuRoom',this.room);}
   snapshot(id){
     const r=this.room,p=r.players[id],live=['playing','finished'].includes(r.status);
-    const players=r.order.map(id=>r.players[id]).sort((a,b)=>(b.finishedAt>0)-(a.finishedAt>0)||(a.finishedAt&&b.finishedAt?a.finishedAt-b.finishedAt:0)||(b.correct||0)-(a.correct||0)||a.joinedAt-b.joinedAt);
+    const players=r.order.map(id=>r.players[id]).sort((a,b)=>(b.finishedAt>0)-(a.finishedAt>0)||(a.finishedAt&&b.finishedAt?a.finishedAt-b.finishedAt:0)||(a.eliminatedAt>0)-(b.eliminatedAt>0)||(b.correct||0)-(a.correct||0)||a.joinedAt-b.joinedAt);
     return {code:r.code,status:r.status,difficulty:r.difficulty,capacity:r.capacity,round:r.round,startsAt:r.startsAt||0,deadline:r.deadline||0,serverNow:Date.now(),lobbyMs:LOBBY_MS,winnerId:r.winnerId||null,finishedAt:r.finishedAt||0,
       initial:live?r.initial:[],total:live?r.initial.filter(v=>!v).length:0,
-      players:players.map((x,i)=>({id:x.id,name:x.name,role:x.role,connected:x.connected,correct:x.correct||0,finishedAt:x.finishedAt||0,rank:i+1})),
-      me:p?{id:p.id,board:live?p.board:[],seq:p.seq||0,canUndo:live&&Boolean(p.history?.length)}:null};
+      maxMistakes:MAX_MISTAKES,
+      players:players.map((x,i)=>({id:x.id,name:x.name,role:x.role,connected:x.connected,correct:x.correct||0,mistakes:x.mistakes||0,eliminatedAt:x.eliminatedAt||0,finishedAt:x.finishedAt||0,rank:i+1})),
+      me:p?{id:p.id,board:live?p.board:[],seq:p.seq||0,mistakes:p.mistakes||0,eliminatedAt:p.eliminatedAt||0,canUndo:live&&!p.eliminatedAt&&Boolean(p.history?.length)}:null};
   }
   broadcast(){
     if(!this.room)return;this.sync();
@@ -61,7 +62,7 @@ export class SudokuRoom{
         if(result.count!==1||result.limited)throw Error('invalid_sudoku_stage');
         r.initial=puzzle.initial;r.solution=result.solution;r.status='playing';
         r.deadline=r.startsAt+DURATIONS[r.difficulty-1];
-        for(const p of Object.values(r.players)){p.board=[...r.initial];p.history=[];p.seq=0;p.correct=0;p.finishedAt=0;}
+        for(const p of Object.values(r.players)){p.board=[...r.initial];p.history=[];p.seq=0;p.correct=0;p.mistakes=0;p.eliminatedAt=0;p.finishedAt=0;}
       }
       await this.save();this.broadcast();
     }
@@ -128,8 +129,9 @@ export class SudokuRoom{
       }else if(m.type==='cancel'&&p.role==='host'&&r.status==='countdown'){
         r.status='lobby';r.startsAt=0;r.round='';
       }else if(m.type==='rematch'&&p.role==='host'&&r.status==='finished'){
-        r.status='lobby';r.startsAt=0;r.deadline=0;r.initial=[];r.solution=[];r.winnerId=null;for(const x of Object.values(r.players)){x.correct=0;x.finishedAt=0;}this.cleanup();
+        r.status='lobby';r.startsAt=0;r.deadline=0;r.initial=[];r.solution=[];r.winnerId=null;for(const x of Object.values(r.players)){x.correct=0;x.mistakes=0;x.eliminatedAt=0;x.finishedAt=0;}this.cleanup();
       }else if((m.type==='move'||m.type==='undo')&&r.status==='playing'){
+        if(p.eliminatedAt)return this.error(ws,'انتهت فرصك الخمس؛ تابع نتيجة الجولة من الترتيب');
         if(m.round!==r.round)return this.error(ws,'هذه حركة من جولة قديمة');
         if(!Number.isInteger(m.seq)||m.seq<1)return this.error(ws,'تسلسل الحركة غير صالح');
         if(m.seq<=p.seq){this.broadcast();return;}
@@ -141,9 +143,11 @@ export class SudokuRoom{
           if(!Number.isInteger(cell)||cell<0||cell>=81||!Number.isInteger(value)||value<0||value>9||r.initial[cell]||p.board[cell]===value)return this.error(ws,'اختر خانة قابلة للتعديل ورقمًا من 1 إلى 9');
           if(value&&SUDOKU_PEERS[cell].some(i=>p.board[i]===value))return this.error(ws,'الرقم مكرر في الصف أو العمود أو المربع');
           p.history.push({cell,value:p.board[cell]});p.board[cell]=value;
+          if(value&&value!==r.solution[cell]){p.mistakes=(p.mistakes||0)+1;if(p.mistakes>=MAX_MISTAKES)p.eliminatedAt=Date.now();}
         }
         p.seq=m.seq;p.correct=p.board.reduce((n,v,i)=>n+(!r.initial[i]&&v===r.solution[i]?1:0),0);
         if(p.correct===r.initial.filter(v=>!v).length){p.finishedAt=Date.now();r.winnerId=p.id;await this.finish();return;}
+        if(r.order.every(id=>r.players[id].eliminatedAt)){await this.finish();return;}
       }else return this.error(ws,'الأمر غير متاح الآن');
       await this.save();this.broadcast();await this.schedule();
     });
@@ -151,7 +155,7 @@ export class SudokuRoom{
   async finish(){
     const r=this.room;if(r.status!=='playing')return;r.status='finished';r.finishedAt=Date.now();
     // A timeout may end in a tie. Never fabricate a winner from join order.
-    if(!r.winnerId){const rows=r.order.map(id=>r.players[id]).sort((a,b)=>b.correct-a.correct);r.winnerId=rows[0]?.correct>0&&(!rows[1]||rows[0].correct>rows[1].correct)?rows[0].id:null;}
+    if(!r.winnerId){const rows=r.order.map(id=>r.players[id]).filter(p=>!p.eliminatedAt).sort((a,b)=>b.correct-a.correct);r.winnerId=rows[0]?.correct>0&&(!rows[1]||rows[0].correct>rows[1].correct)?rows[0].id:null;}
     await this.save();this.broadcast();await this.schedule();
   }
   async webSocketClose(ws){
