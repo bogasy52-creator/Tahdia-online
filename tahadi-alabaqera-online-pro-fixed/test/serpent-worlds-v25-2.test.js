@@ -5,13 +5,13 @@ import {SERPENT_WORLDS,setupSerpentWorld,advanceSerpentWorld,drawSerpentWorld,ow
 function game(preset='neon'){
  const w=SERPENT_WORLDS[preset];return {width:w.width,height:w.height,seed:123,elapsed:0,status:'playing',snakes:[{id:'human',x:150,y:150,angle:0,alive:true,bot:false,mass:28,segments:[{x:150,y:150},{x:145,y:150}]},{id:'bot-1',x:w.width-90,y:w.height-90,angle:0,mass:28,alive:true,bot:true,segments:[{x:w.width-90,y:w.height-90}]}],food:Array.from({length:70},(_,i)=>({id:'f'+i,x:25+i*4,y:50,value:1,kind:'apple',radius:6})),events:[],difficulty:'hard'};
 }
-test('four maps have no caves and compact non-overlapping obstacles',()=>{
- assert.deepEqual(Object.keys(SERPENT_WORLDS),['classic','neon','forest','crystals']);
+test('seven maps have bounded dimensions and compact non-overlapping obstacles',()=>{
+ assert.deepEqual(Object.keys(SERPENT_WORLDS),['classic','neon','forest','crystals','volcano','ruins','storm']);
  for(const p of Object.values(SERPENT_WORLDS)){
   assert.ok(p.width<=2400&&p.height<=2400&&p.foodCount<=350);
   const g=game(p.id),w=setupSerpentWorld(g,p.id);
   assert.equal(w.obstacles.length,p.obstacles);
-  for(const o of w.obstacles){assert.ok(o.radius>=19&&o.radius<=34);assert.ok(g.snakes.every(s=>Math.hypot(s.x-o.x,s.y-o.y)>100));}
+  for(const o of w.obstacles){assert.ok(o.radius>=19&&o.radius<=43);assert.ok(g.snakes.every(s=>Math.hypot(s.x-o.x,s.y-o.y)>100));}
   for(let i=0;i<w.obstacles.length;i++)for(let j=0;j<i;j++)assert.ok(Math.hypot(w.obstacles[i].x-w.obstacles[j].x,w.obstacles[i].y-w.obstacles[j].y)>w.obstacles[i].radius+w.obstacles[j].radius+120);
  }
 });
@@ -30,13 +30,13 @@ test('frenzy periodically gives rare food bonus, without uncollectible decoratio
  g.elapsed=27;advanceSerpentWorld(g);assert.equal(w.frenzy,false);
  assert.ok(g.food.every(f=>Number.isFinite(f.x)&&Number.isFinite(f.y)));
 });
-test("owner feature requires existing owner role and boosts only owner's local snake",()=>{
+test("owner visual identity requires existing owner role and never changes starting mass",()=>{
  assert.equal(ownerAllowed({role:'guest'},[]),false);
  assert.equal(ownerAllowed({role:'moderator'},[]),false);
  assert.equal(ownerAllowed({role:'owner'},[]),true);
  assert.equal(ownerAllowed({},[]),false);
  const g=game();setupSerpentWorld(g,'neon',{ownerAllowed:ownerAllowed({role:'owner'},[]),ownerSnakeId:'human'});
- assert.equal(g.world.ownerBadge,true);assert.ok(g.snakes[0].mass>=36);assert.equal(g.snakes[1].mass,28);
+ assert.equal(g.world.ownerBadge,true);assert.equal(g.snakes[0].mass,28);assert.equal(g.snakes[1].mass,28);
  const other=game();setupSerpentWorld(other,'neon',{ownerAllowed:ownerAllowed({role:'guest'},[]),ownerSnakeId:'human'});
  assert.equal(other.world.ownerBadge,false);assert.equal(other.snakes[0].mass,28);
 });

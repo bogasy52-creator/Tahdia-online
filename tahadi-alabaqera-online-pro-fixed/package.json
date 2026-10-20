@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "25.3.0",
+  "version": "26.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,7 @@
     "verify:worker": "node scripts/verify-worker-offline.mjs",
     "check:cloudflare": "wrangler deploy --dry-run",
     "verify:cloudflare": "npm run verify && npm run check:cloudflare",
-    "preverify:release": "node scripts/build-styles.mjs --pages=serpent.html,journey.html,paths-online.html && node scripts/apply-premium.mjs && node scripts/build-offline.mjs",
+    "preverify:release": "node scripts/build-styles.mjs && node scripts/apply-premium.mjs && node scripts/build-offline.mjs && node scripts/refresh-checksums.mjs",
     "verify:release": "npm run verify && node scripts/verify-v7.mjs",
     "start:local": "node scripts/play-local.mjs",
     "test:browser": "node scripts/test-browser-v7.mjs",
@@ -24,11 +24,15 @@
     "test:picture": "node scripts/verify-picture-runtime.mjs",
     "test:sudoku": "node scripts/verify-sudoku-runtime.mjs",
     "test:arena": "node scripts/verify-serpent-v23-runtime.mjs",
-    "test:paths": "node scripts/verify-paths-v24-runtime.mjs"
+    "test:paths": "node scripts/verify-paths-v24-runtime.mjs",
+    "prepare:release": "node scripts/build-styles.mjs && node scripts/apply-premium.mjs && node scripts/build-offline.mjs && node scripts/refresh-checksums.mjs",
+    "test:browser:v26": "node scripts/test-browser-v26.mjs",
+    "test:online:v26": "node scripts/verify-online-v26.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.127.1",
     "esbuild": "0.28.1",
-    "miniflare": "5.20260828.0-alpha"
+    "miniflare": "5.20260828.0-alpha",
+    "playwright": "^1.51.1",
+    "wrangler": "4.127.1"
   }
 }

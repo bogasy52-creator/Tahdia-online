@@ -7,7 +7,8 @@ export function accountAccess(profile){const owner=isOwner(profile);return {role
 export function accountCareer(raw,profile){
  const p=Career.normalize(raw);
  if(isOwner(profile)){
-  const first=!p.owned.includes('title-manager');p.owned=Career.CATALOG.map(i=>i.id);
+  const first=!p.owned.includes('title-manager'),newSerpent=!p.owned.includes('snake-sovereign');p.owned=Career.CATALOG.map(i=>i.id);
+  if(newSerpent)p.equipped.snake='snake-sovereign';
   if(first&&p.equipped.title==='title-player')p.equipped.title='title-manager';
  }else{
   p.owned=p.owned.filter(id=>Career.CATALOG.find(i=>i.id===id)?.source!=='owner');

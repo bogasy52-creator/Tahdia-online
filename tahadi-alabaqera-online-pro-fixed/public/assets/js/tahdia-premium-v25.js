@@ -22,12 +22,9 @@
     if(!shellRoutes.has(route))return;
     doc.body.classList.add('hub-page','hub-'+route);
     if(!doc.getElementById('hubRail')){
-      const rail=doc.createElement('aside');rail.id='hubRail';rail.className='hub-rail';rail.setAttribute('aria-label','أقسام تحدي العباقرة');
-      const brand=doc.createElement('a');brand.className='hub-rail-brand';brand.href='/';brand.innerHTML='<span class="hub-brand-mark">✦</span><span><b>تحدي العباقرة</b><small>مساحتك للتحدّي</small></span>';
-      const nav=doc.createElement('nav');nav.setAttribute('aria-label','التنقل الرئيسي');
+      const nav=doc.createElement('nav');nav.id='hubRail';nav.className='hub-rail';nav.setAttribute('aria-label','التنقل الرئيسي');
       for(const [key,label,url,id]of links){const a=doc.createElement('a');a.href=url;a.innerHTML=icon(key)+'<span>'+label+'</span>';if(route===id)a.setAttribute('aria-current','page');nav.append(a);}
-      const note=doc.createElement('a');note.href='/shop?view=missions';note.className='hub-rail-rewards';note.innerHTML='<span>✧</span><b>اللعب له مكافأة</b><small>راجع مهماتك وهدية اليوم</small><em>افتح المكافآت ←</em>';
-      rail.append(brand,nav,note);doc.body.prepend(rail);doc.body.classList.add('hub-rail-mounted');
+      const header=doc.querySelector('.bs-topbar');if(header){const actions=header.querySelector('.bs-actions');header.append(nav);if(actions)header.append(actions);}
     }
     const bar=doc.querySelector('.bs-topbar');
     if(bar&&route!=='index'&&!bar.querySelector('[data-hub-back]')){
@@ -44,6 +41,6 @@
     room:()=>window.BS_INVITES?.data?.(),
     victory:(name,options={})=>window.BS_GAME_FX?.celebrate?.(name,options)
   });
-  function setup(){mountShell();for(const control of doc.querySelectorAll('[data-hub-invite]'))control.addEventListener('click',()=>window.BS_INVITES?.open?.());}
+  function setup(){mountShell();if(route==='dice'){for(const el of doc.querySelectorAll('[data-die-catalog]')){const item=window.BS_CAREER_CORE?.CATALOG.find(i=>i.id===el.dataset.dieCatalog);if(item)window.BS_COSMETIC_ART?.mount(el,item,{width:420});}};for(const control of doc.querySelectorAll('[data-hub-invite]'))control.addEventListener('click',()=>window.BS_INVITES?.open?.());}
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();

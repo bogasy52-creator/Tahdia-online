@@ -12,7 +12,7 @@ test('home shell mounts once, marks the current destination and preserves workin
  assert.equal(h.doc.querySelectorAll('#hubRail').length,1);
  assert.equal(h.doc.querySelectorAll('.mobile-dock').length,1);
  assert.equal(h.doc.querySelectorAll('.bs-premium-nav').length,0);
- assert.equal(h.doc.getElementById('hubRail').querySelector('[aria-current="page"]').href,'/');
+ assert.equal(h.doc.getElementById('hubRail').querySelector('[aria-current="page"]').getAttribute('href'),'/');
  for(const id of ['gameSearch','gameFilters','editProfile','homeQuickPlay','homeRoomJoin'])assert.ok(h.doc.getElementById(id),id);
 });
 test('game pages retain only one game command bar and the compatibility API delegates to it',async()=>{
@@ -25,6 +25,13 @@ test('game pages retain only one game command bar and the compatibility API dele
  assert.equal(h.context.BS_GAME_FX,original);
  h.context.TAHDIA_PREMIUM.openInvite();
  assert.equal(h.doc.querySelectorAll('#bsInvitePanel').length,1);
+});
+test('replacing the header preserves the Sudoku rules and picture leave actions',async()=>{
+ for(const [page,id]of [['sudoku.html','sudokuHelp'],['picture.html','leave']]){
+  const h=await createDOM(page);await h.runFile('assets/js/play-feedback-v24-1.js');
+  assert.ok(h.doc.getElementById(id).closest('.v26-command-utilities'),id+' remains an available game control');
+  assert.equal(h.doc.querySelector('.v26-replaced-header').contains(h.doc.getElementById(id)),false);
+ }
 });
 test('friends page receives a mobile dock, an active destination and an explicit home/back control',async()=>{
  const h=await createDOM('social.html');await h.runFile('assets/js/tahdia-premium-v25.js');

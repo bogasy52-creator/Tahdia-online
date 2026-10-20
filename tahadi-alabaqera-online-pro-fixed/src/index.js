@@ -21,7 +21,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='25.3.0';
+const RELEASE='26.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -259,6 +259,7 @@ export default {
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
     else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
+    if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
     if (request.method === "GET" && url.pathname === "/api/health") {
       const quizOnline = Boolean(env.ROOMS);
@@ -1587,6 +1588,8 @@ export class BoardRoom extends DurableObject {
     const text = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
     if (text.length > 8192) return this.sendError(ws, "الرسالة أكبر من المسموح");
     let msg; try { msg = JSON.parse(text); } catch { return this.sendError(ws, "رسالة غير صالحة"); }
+    if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',serverNow:Date.now()}))}catch{}return;}
+    if(msg.type==='resync'){try{ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)}))}catch{}return;}
     try {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);

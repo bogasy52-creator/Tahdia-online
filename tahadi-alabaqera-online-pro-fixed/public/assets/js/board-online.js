@@ -1,13 +1,17 @@
+import {normalizeRoomCode,timedFetch} from './online/connection-utils.js';
 export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
-    this.ws=null;this.code='';this.name='';this.hostKey='';this.token='';this.closedByUser=false;this.retry=0;this.reconnectTimer=null;this.version=null;
+    this.ws=null;this.code='';this.name='';this.hostKey='';this.token='';this.closedByUser=false;this.retry=0;this.reconnectTimer=null;this.version=null;this.heartbeat=null;this.lastMessageAt=0;this.cancelOpening=null;this.bound=false;this.terminal=false;this.requestEpoch=0;
+    this.resume=()=>{if(!this.closedByUser&&!this.terminal&&this.code){if(this.ws?.readyState===1){if(Date.now()-this.lastMessageAt>45000)this.recoverSocket(this.ws);else this.send('ping');}else{clearTimeout(this.reconnectTimer);this.openSocket().catch(()=>{});}}};
+    this.visibility=()=>{if(!globalThis.document?.hidden)this.resume();};
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
   async create(name,playerLimit,{variant='classic',character=''}={}){
+    const epoch=++this.requestEpoch;this.closedByUser=false;
     this.character=character;
-    const res=await fetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
-    const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok){
+    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
+    const data=await res.json().catch(()=>({}));this.checkRequest(epoch);if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
         const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة ٣:٠٠ صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
       }
@@ -17,46 +21,102 @@ export class BoardOnlineClient {
       const error=new Error((messages[failure.code]||([404,405].includes(res.status)?'هذا السيرفر لا يحتوي خدمة الغرف. انشر المشروع كاملًا.':data.error||'تعذر إنشاء الغرفة'))+(failure.requestId?' · رقم الفحص '+failure.requestId:''));error.code=failure.code;error.requestId=failure.requestId;throw error;
     }
     if(this.game==='snakes'&&variant==='adventure'&&data.variant!=='adventure')throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
-    this.hostKey=data.hostKey;return this.connect(data.code,name);
+    this.hostKey=data.hostKey;this.hostCode=data.code;return this.connect(data.code,name);
   }
   async join(code,name,{character=''}={}){
+    const epoch=++this.requestEpoch;this.closedByUser=false;
     this.character=character;
-    code=String(code||'').replace(/\D/g,'').slice(0,6);if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    const res=await fetch(`/api/board/rooms/${code}/status`);const data=await res.json().catch(()=>({}));if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
+    code=normalizeRoomCode(code);if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
+    const res=await timedFetch(`/api/board/rooms/${code}/status`);const data=await res.json().catch(()=>({}));this.checkRequest(epoch);if(!res.ok||!data.ok)throw new Error(data.error||'الغرفة غير موجودة');if(data.game!==this.game)throw new Error('رمز الغرفة يخص لعبة أخرى');
     return this.connect(code,name)
   }
+  checkRequest(epoch){if(this.closedByUser||epoch!==this.requestEpoch)throw new Error('تم إلغاء طلب الغرفة السابق');}
   async connect(code,name){
     if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
-    this.closedByUser=false;this.code=code;this.name=String(name||'لاعب').trim().slice(0,20)||'لاعب';
+    this.closedByUser=false;this.terminal=false;this.code=code;if(this.hostCode!==code)this.hostKey='';
+    if(!this.bound&&globalThis.window?.addEventListener){window.addEventListener('online',this.resume);window.addEventListener('pageshow',this.resume);document.addEventListener('visibilitychange',this.visibility);this.bound=true;}
+    this.name=String(name||'لاعب').trim().slice(0,20)||'لاعب';
     try{this.token=localStorage.getItem(this.tokenKey(code))||''}catch{}
     await this.openSocket();return code;
   }
+  stopTransport(){
+    clearInterval(this.heartbeat);this.heartbeat=null;
+    const cancel=this.cancelOpening;this.cancelOpening=null;cancel?.();
+    const old=this.ws;this.ws=null;
+    if(old){old.onopen=old.onmessage=old.onerror=old.onclose=null;try{old.close(1000,'replaced')}catch{}}
+  }
+  recoverSocket(ws){
+    if(this.ws!==ws||this.closedByUser||this.terminal)return;
+    this.stopTransport();this.onStatus({online:false,reconnecting:true,text:'انقطع الاتصال؛ نحاول العودة…'});this.scheduleReconnect();
+  }
   openSocket(){
+    this.stopTransport();
     return new Promise((resolve,reject)=>{
-      clearTimeout(this.reconnectTimer);const proto=location.protocol==='https:'?'wss:':'ws:';
-      const q=new URLSearchParams({name:this.name,game:this.game});
+      clearTimeout(this.reconnectTimer);this.reconnectTimer=null;
+      const proto=location.protocol==='https:'?'wss:':'ws:',q=new URLSearchParams({name:this.name,game:this.game});
       if(this.game==='snakes'&&this.character)q.set('character',this.character);
       const protocols=['busraj-v1'];if(this.token)protocols.push(`rt.${this.token}`);if(this.hostKey)protocols.push(`hk.${this.hostKey}`);try{const account=localStorage.getItem('bs_social_session');if(account)protocols.push('st.'+account)}catch{}
-      const ws=new WebSocket(`${proto}//${location.host}/api/board/rooms/${this.code}/ws?${q}`,protocols);this.ws=ws;let settled=false;
-      const timer=setTimeout(()=>{if(!settled){settled=true;try{ws.close()}catch{};reject(new Error('انتهت مهلة الاتصال بالغرفة'))}},9000);
-      ws.onopen=()=>{if(this.ws!==ws)return;this.onStatus({online:true,reconnecting:false,text:'متصل'});};
+      let ws,settled=false;
+      const fail=message=>{if(settled)return;settled=true;clearTimeout(timer);this.cancelOpening=null;reject(new Error(message));};
+      const timer=setTimeout(()=>{if(this.ws!==ws)return;fail('انتهت مهلة الاتصال بالغرفة. أعد المحاولة.');this.recoverSocket(ws)},10000);
+      this.cancelOpening=()=>fail('تم إلغاء الاتصال السابق');
+      try{ws=new WebSocket(`${proto}//${location.host}/api/board/rooms/${this.code}/ws?${q}`,protocols);}catch(error){fail('تعذر بدء الاتصال بالغرفة');this.scheduleReconnect();return;}
+      this.ws=ws;this.lastMessageAt=Date.now();
+      ws.onopen=()=>{if(this.ws===ws)this.onStatus({online:false,reconnecting:true,text:'جاري دخول الغرفة…'});};
       ws.onmessage=(ev)=>{
         if(this.ws!==ws)return;let msg;try{msg=JSON.parse(ev.data)}catch{return}
+        this.lastMessageAt=Date.now();
         const identity=state=>{const {serverNow,clientReceivedAt,...stable}=state;return JSON.stringify(stable)};
         const stamp=state=>{if(state){this.stateKey=identity(state);state.clientReceivedAt=Date.now();this.version=state.version;}return state};
-        if(msg.type==='welcome'){this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{};const state=stamp(msg.state);this.onState(state);if(!settled){settled=true;clearTimeout(timer);resolve(state)}}
-        else if(msg.type==='state'){
+        if(msg.type==='welcome'){
+          if(!msg.state)return;
+          this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{}
+          const state=stamp(msg.state);this.onState(state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
+          if(!settled){settled=true;clearTimeout(timer);this.cancelOpening=null;resolve(state);}
+          clearInterval(this.heartbeat);this.heartbeat=setInterval(()=>{
+            if(this.ws!==ws||globalThis.document?.hidden)return;
+            if(Date.now()-this.lastMessageAt>55000){this.recoverSocket(ws);return;}
+            if(ws.readyState===WebSocket.OPEN)this.send('ping');
+          },20000);this.heartbeat?.unref?.();
+        }else if(msg.type==='state'){
           if(!msg.state||this.version!=null&&(msg.state.version<this.version||msg.state.version===this.version&&identity(msg.state)===this.stateKey))return;
           this.onState(stamp(msg.state));
-        }else if(msg.type==='error')this.onError(msg.message||'حدث خطأ');
+        }else if(msg.type==='error'){
+          const message=msg.message||'تعذر دخول الغرفة';this.onError(message);
+          if(!settled){this.terminal=true;fail(message);this.stopTransport();this.onStatus({online:false,reconnecting:false,text:message});}
+        }
       };
-      ws.onerror=()=>{if(this.ws!==ws)return;this.onStatus({online:false,reconnecting:true,text:'مشكلة اتصال'});};
-      ws.onclose=(ev)=>{clearTimeout(timer);if(this.ws!==ws)return;this.onStatus({online:false,reconnecting:!this.closedByUser,text:this.closedByUser?'غير متصل':'إعادة اتصال…'});if(!settled){settled=true;reject(new Error(ev.reason||'تعذر الاتصال بالغرفة'))}if(!this.closedByUser&&ev.code!==4001)this.scheduleReconnect();};
-    })
+      ws.onerror=()=>{if(this.ws===ws)this.onStatus({online:false,reconnecting:true,text:'نتحقق من الاتصال…'});};
+      ws.onclose=(ev)=>{
+        clearTimeout(timer);clearInterval(this.heartbeat);this.heartbeat=null;
+        if(this.ws!==ws)return;this.ws=null;
+        const terminal=[4001,4002,4003,1008].includes(ev.code)||ev.reason==='room_expired';
+        this.terminal=terminal;
+        const text=ev.code===4001?'الغرفة مفتوحة في نافذة أخرى':terminal?'انتهت جلسة الغرفة. ادخل مجددًا.':this.closedByUser?'غير متصل':'انقطع الاتصال؛ نحاول العودة…';
+        this.onStatus({online:false,reconnecting:!this.closedByUser&&!terminal,text});
+        fail(ev.reason||'تعذر الاتصال بالغرفة');
+        if(!this.closedByUser&&!terminal)this.scheduleReconnect();
+      };
+    });
   }
-  scheduleReconnect(){clearTimeout(this.reconnectTimer);const delay=Math.min(7000,700*Math.pow(1.65,this.retry++));this.reconnectTimer=setTimeout(()=>this.openSocket().catch(()=>{}),delay)}
-  send(type,payload={}){if(!this.ws||this.ws.readyState!==WebSocket.OPEN){this.onError('الاتصال غير جاهز — جاري إعادة الاتصال');return false}this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}
-  close(){this.closedByUser=true;clearTimeout(this.reconnectTimer);try{if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify({type:'leave'}));this.ws?.close(1000,'leave')}catch{};this.ws=null}
+  scheduleReconnect(){
+    if(this.closedByUser||this.terminal)return;
+    clearTimeout(this.reconnectTimer);
+    const delay=Math.min(12000,700*Math.pow(1.65,this.retry++))+Math.floor(Math.random()*250);
+    this.reconnectTimer=setTimeout(()=>{this.reconnectTimer=null;if(!this.closedByUser)this.openSocket().catch(()=>{});},delay);
+    this.reconnectTimer?.unref?.();
+  }
+  send(type,payload={}){
+    if(!this.ws||this.ws.readyState!==WebSocket.OPEN){this.onError('الاتصال غير جاهز — جاري إعادة الاتصال');return false}
+    if((this.ws.bufferedAmount||0)>65536){this.onError('الاتصال بطيء؛ انتظر وصول آخر حركة');return false}
+    try{this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}catch{this.onError('تعذر إرسال الحركة؛ نتصل مجددًا');this.recoverSocket(this.ws);return false}
+  }
+  close(){
+    this.closedByUser=true;this.requestEpoch++;clearTimeout(this.reconnectTimer);this.reconnectTimer=null;
+    try{if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify({type:'leave'}));}catch{}
+    this.stopTransport();
+    if(this.bound){window.removeEventListener('online',this.resume);window.removeEventListener('pageshow',this.resume);document.removeEventListener('visibilitychange',this.visibility);this.bound=false;}
+  }
 }
 
 export function renderRoomPlayers(container,roomState,colors=['#8b5cf6','#22d3ee','#f0b94a','#22c55e']){

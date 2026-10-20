@@ -2,11 +2,12 @@
   const STORAGE_KEY = 'bs_social_session';
   const PROFILE_KEY = 'bs_social_profile';
   const SEEN_INVITES_KEY = 'bs_seen_invites_v25_2';
-  const INBOX_INTERVAL_MS = 20000;
-  const state = { token: '', profile: null, dashboard: null, socket: null, reconnectTimer: null, reconnectAttempt: 0, manualClose: false };
+  const INBOX_INTERVAL_MS = 30000;
+  const state = { token: '', profile: null, dashboard: null, socket: null, reconnectTimer: null, reconnectAttempt: 0, manualClose: false, heartbeat:null, welcomeTimer:null, lastMessageAt:0 };
   const events = new EventTarget();
   let inboxTimer = null;
   let inboxPending = null;
+  let inviteExpiryTimer=null;
   const seenInvites = new Set();
   function seenKey() { return `${SEEN_INVITES_KEY}:${cachedProfile()?.username || token().split('.')[0] || 'guest'}`; }
   function loadSeen() {
@@ -29,14 +30,14 @@
   }
   function refreshInbox() {
     if (!token() || document.hidden) return Promise.resolve(null);
-    if (!inboxPending) inboxPending = me(true).catch(() => null).finally(() => { inboxPending = null; });
+    if (!inboxPending) { const request=me(true).catch(() => null).finally(() => { if(inboxPending===request)inboxPending=null; }); inboxPending=request; }
     return inboxPending;
   }
   function startInbox() {
     clearInterval(inboxTimer);
     if (!token()) return;
     loadSeen();
-    inboxTimer = setInterval(refreshInbox, INBOX_INTERVAL_MS);
+    inboxTimer = setInterval(()=>{if(state.socket?.readyState!==1)refreshInbox();}, INBOX_INTERVAL_MS);
     refreshInbox();
   }
   function stopInbox() { clearInterval(inboxTimer); inboxTimer = null; inboxPending = null; }
@@ -55,6 +56,8 @@
     return state.profile;
   }
   function setSession(nextToken, profile) {
+    const changed=state.token!==String(nextToken||'');
+    if(changed){closeRealtime();state.reconnectAttempt=0;state.dashboard=null;inboxPending=null;clearTimeout(inviteExpiryTimer);document.querySelector('#bsSocialInvite')?.remove();}
     state.token = String(nextToken || '');
     state.profile = profile || null;
     writeStorage(STORAGE_KEY, state.token);
@@ -69,9 +72,10 @@
     if (options.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
     const session = token();
     if (session) headers.set('authorization', `Bearer ${session}`);
-    const response = await fetch(path, { ...options, headers, cache: 'no-store' });
+    const deadline=typeof AbortSignal!=='undefined'&&AbortSignal.timeout?AbortSignal.timeout(10000):undefined;
+    let response;try{response=await fetch(path,{...options,headers,cache:'no-store',signal:options.signal||deadline});}catch(error){throw new Error(error.name==='TimeoutError'||error.name==='AbortError'?'انتهت مهلة الاتصال. أعد المحاولة.':'تعذر الوصول للخادم. تحقق من اتصالك.');}
     const data = await response.json().catch(() => ({}));
-    if (response.status === 401 && path !== '/api/social/login') {
+    if (response.status === 401 && session===token() && path !== '/api/social/login') {
       setSession('', null);
       closeRealtime();
     }
@@ -104,7 +108,9 @@
   async function me(force = false) {
     if (!token()) return null;
     if (state.dashboard && !force) return state.dashboard;
+    const session=token();
     const data = await api('/api/social/me');
+    if(session!==token()||data.profile?.username!==session.split('.')[0])return null;
     state.dashboard = data;
     state.profile = data.profile;
     writeStorage(PROFILE_KEY, JSON.stringify(data.profile || null));
@@ -120,14 +126,15 @@
   async function unblock(username) { const data = await api('/api/social/unblock', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function settings(values) { const data = await api('/api/social/settings', { method: 'POST', body: JSON.stringify(values) }); state.dashboard = null; return data; }
   async function invite(username, game, roomCode) { return api('/api/social/invites', { method: 'POST', body: JSON.stringify({ username, game, roomCode }) }); }
-  async function readNotifications(ids = []) { const data = await api('/api/social/notifications/read', { method: 'POST', body: JSON.stringify({ ids }) }); state.dashboard = null; return data; }
+  async function readNotifications(ids = []) { const data = await api('/api/social/notifications/read', { method: 'POST', body: JSON.stringify({ ids }),keepalive:true }); state.dashboard = null; return data; }
 
   function emit(type, detail) { events.dispatchEvent(new CustomEvent(type, { detail })); }
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
+    if(!/^\/(?:online|picture|jackaroo|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?$/.test(notification.joinPath))return;
     if (notification.id && seenInvites.has(String(notification.id))) return;
-    rememberInvite(notification.id);
+    rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);
     let wrap = document.querySelector('#bsSocialInvite');
     if (!wrap) {
       wrap = document.createElement('div');
@@ -139,7 +146,7 @@
     const title = document.createElement('b');
     title.textContent = `🎮 دعوة من ${notification.from?.displayName || notification.from?.username || 'صديق'}`;
     const sub = document.createElement('span');
-    const labels = { quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان', sudoku: 'سودوكو', paths: 'توصيل الأرقام', accuracy: 'التصويب', dice: 'النرد', journey: 'رحلة النجوم', local: 'العباقرة المحلي', logic: 'المنطق', memory: 'الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'سرعة الاستجابة' };
+    const labels = { quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'النرد', journey: 'رحلة النجوم', local: 'العباقرة المحلي', logic: 'المنطق', memory: 'الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'سرعة الاستجابة' };
     sub.textContent = notification.roomCode ? `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}` : `تحدٍ جديد • ${labels[notification.game] || notification.game}`;
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';
@@ -149,6 +156,8 @@
     close.className = 'bs-btn'; close.textContent = 'لاحقًا'; close.type = 'button'; close.onclick = () => { wrap.remove(); if (notification.id) readNotifications([notification.id]).catch(() => {}); };
     join.addEventListener('click', () => { if (notification.id) readNotifications([notification.id]).catch(() => {}); });
     actions.append(join, close); wrap.append(title, sub, actions);
+    wrap.setAttribute('role','status');
+    inviteExpiryTimer=setTimeout(()=>wrap.remove(),Math.max(1,Math.min(300000,Number(notification.expiresAt)-Date.now())));
   }
 
   function handleMessage(raw) {
@@ -171,33 +180,74 @@
     if (message.type === 'pong') emit('pong', message);
   }
 
+  function clearSocketTimers(){clearInterval(state.heartbeat);clearTimeout(state.welcomeTimer);state.heartbeat=null;state.welcomeTimer=null;}
+  function scheduleRealtime(){
+    clearTimeout(state.reconnectTimer);
+    if(state.manualClose||!token())return;
+    const delay=Math.min(15000,800*(2**Math.min(5,state.reconnectAttempt++)))+Math.floor(Math.random()*300);
+    state.reconnectTimer=setTimeout(connectRealtime,delay);
+  }
+  function recoverRealtime(ws){
+    if(state.socket!==ws||state.manualClose||!token())return;
+    state.socket=null;clearSocketTimers();ws.onopen=ws.onclose=ws.onerror=ws.onmessage=null;try{ws.close(4000,'resync');}catch{}
+    emit('connection',{online:false});refreshInbox();scheduleRealtime();
+  }
   function connectRealtime() {
     if (!token() || typeof WebSocket === 'undefined') return;
     state.manualClose = false;
     clearTimeout(state.reconnectTimer);
     if (state.socket && state.socket.readyState <= 1) return;
+    clearSocketTimers();
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${location.host}/api/social/ws`, ['busraj-social-v1', `st.${token()}`]);
-    state.socket = ws;
-    ws.onopen = () => { state.reconnectAttempt = 0; emit('connection', { online: true }); refreshInbox(); };
-    ws.onmessage = (event) => handleMessage(event.data);
-    ws.onerror = () => emit('connection', { online: false, error: true });
+    let ws;try{ws = new WebSocket(`${proto}//${location.host}/api/social/ws`, ['busraj-social-v1', `st.${token()}`]);}catch{scheduleRealtime();return;}
+    state.socket = ws;state.lastMessageAt=Date.now();
+    state.welcomeTimer=setTimeout(()=>{if(state.socket===ws)recoverRealtime(ws);},12000);
+    ws.onopen = () => {
+      if(state.socket!==ws)return;
+      state.lastMessageAt=Date.now();refreshInbox();
+      state.heartbeat=setInterval(()=>{
+        if(state.socket!==ws||document.hidden)return;
+        if(Date.now()-state.lastMessageAt>60000){recoverRealtime(ws);return;}
+        if(ws.readyState===1)try{ws.send(JSON.stringify({type:'ping'}));}catch{recoverRealtime(ws);}
+      },25000);
+    };
+    ws.onmessage = (event) => {
+      if(state.socket!==ws)return;
+      let data;try{data=JSON.parse(event.data);}catch{return;}
+      state.lastMessageAt=Date.now();
+      if(data.type==='social_welcome'){clearTimeout(state.welcomeTimer);state.reconnectAttempt=0;emit('connection',{online:true});}
+      handleMessage(event.data);
+    };
+    ws.onerror = () => {if(state.socket===ws)emit('connection', { online: false, error: true });};
     ws.onclose = (event) => {
-      if (state.socket === ws) state.socket = null;
+      if(state.socket!==ws)return;
+      state.socket=null;clearSocketTimers();
       emit('connection', { online: false, code: event.code });
-      if (!state.manualClose && token() && event.code !== 4001) {
-        refreshInbox();
-        const delay = Math.min(8000, 800 * (2 ** Math.min(4, state.reconnectAttempt++)));
-        state.reconnectTimer = setTimeout(connectRealtime, delay);
-      }
+      if (!state.manualClose && token() && ![4001,1008].includes(event.code)) {refreshInbox();scheduleRealtime();}
     };
   }
   function closeRealtime() {
-    state.manualClose = true;
+    state.manualClose = true;clearSocketTimers();
     clearTimeout(state.reconnectTimer);
-    try { state.socket?.close(1000, 'logout'); } catch {}
-    state.socket = null;
+    const ws=state.socket;state.socket=null;
+    if(ws){ws.onclose=ws.onmessage=ws.onerror=ws.onopen=null;try{ws.close(1000,'logout');}catch{}}
   }
+  function restoreRealtime(){
+    if(!token())return;
+    if(state.socket?.readyState===1){
+      if(Date.now()-state.lastMessageAt>45000){recoverRealtime(state.socket);}
+      else try{state.socket.send(JSON.stringify({type:'ping'}));}catch{state.socket.close();}
+    }else connectRealtime();
+    refreshInbox();
+  }
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)restoreRealtime();});
+  window.addEventListener('online',restoreRealtime);
+  window.addEventListener('pageshow',restoreRealtime);
+  window.addEventListener('storage',event=>{
+    if(event.key!==STORAGE_KEY)return;
+    setSession(readStorage(STORAGE_KEY),parseJson(readStorage(PROFILE_KEY)));
+    if(token())connectRealtime();
+  });
 
   function decorate(data = state.dashboard) {
     const profile = data?.profile || cachedProfile();
@@ -221,6 +271,7 @@
     }
     let data;
     try { data = await me(true); } catch (error) { toast(error.message); return; }
+    if(!data)return;
     const friends = [...(data.friends || [])].sort((a, b) => Number(b.online) - Number(a.online) || String(a.displayName).localeCompare(String(b.displayName), 'ar'));
     let modal = document.querySelector('#bsInviteFriendsModal');
     if (!modal) {

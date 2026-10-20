@@ -46,6 +46,22 @@ export function steerSerpent(g,id,input){
 }
 function radius(s){return 7+Math.sqrt(s.mass)*.55;}
 function botSteering(g,s){
+ // Legendary solo opponents lead moving targets, prioritize dangerous interceptions,
+ // and choose food only when no safe attack is available.
+ if(s.bot&&g.world?.difficulty==='legendary'&&g.world?.id){
+  if(g.elapsed<(s.nextThinkAt||0))return;
+  s.nextThinkAt=g.elapsed+.12;
+  const humans=g.snakes.filter(h=>!h.bot&&h.alive).map(h=>({h,d:distance(s,h)})).sort((a,b)=>a.d-b.d);
+  const target=humans.find(x=>x.d<560);
+  let tx=s.x+Math.cos(s.angle)*220,ty=s.y+Math.sin(s.angle)*220;
+  if(target){const h=target.h,lead=Math.min(1.1,target.d/260);tx=h.x+Math.cos(h.angle)*SERPENT_SPEED*lead;ty=h.y+Math.sin(h.angle)*SERPENT_SPEED*lead;}
+  else {let best=null,value=Infinity;for(const f of g.food){const d=distance(s,f)/Math.sqrt(f.value);if(d<value){best=f;value=d;}}if(best){tx=best.x;ty=best.y;}}
+  let ax=tx-s.x,ay=ty-s.y,len=Math.hypot(ax,ay)||1;ax/=len;ay/=len;
+  const look=target?190:130;
+  for(const other of g.snakes){if(!other.alive||other.id===s.id)continue;for(let i=0;i<other.segments.length;i+=3){const p=other.segments[i],dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy);if(d>1&&d<look){const k=(1-d/look)*3.2;ax+=dx/d*k;ay+=dy/d*k;}}}
+  const margin=145;if(s.x<margin)ax+=2.7*(1-s.x/margin);if(s.x>g.width-margin)ax-=2.7*(1-(g.width-s.x)/margin);if(s.y<margin)ay+=2.7*(1-s.y/margin);if(s.y>g.height-margin)ay-=2.7*(1-(g.height-s.y)/margin);
+  s.targetAngle=Math.atan2(ay,ax);s.boost=!!target&&target.d>100&&target.d<420&&s.mass>MIN_MASS+12;return;
+ }
  if(forgiving(g)){
   if(g.elapsed<(s.nextThinkAt||0))return;
   s.nextThinkAt=g.elapsed+(g.difficulty==='hard'?.16:g.difficulty==='easy'?.38:.28);s.botThinkCount=(s.botThinkCount||0)+1;

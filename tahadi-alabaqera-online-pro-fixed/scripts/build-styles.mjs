@@ -3,10 +3,11 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('../public/',import.meta.url)),manifestPath=fileURLToPath(new URL('./style-bundles.json',import.meta.url));
 let sources;try{sources=JSON.parse(await readFile(manifestPath,'utf8'));}catch{sources={};}
+let packageRevision=null;try{packageRevision=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;}catch{}
 const check=process.argv.includes('--check');let count=0;
 const requested=process.argv.find(arg=>arg.startsWith('--pages='));
 const selection=requested?requested.slice('--pages='.length).split(','):null;
-const pages=(await readdir(root)).filter(name=>name.endsWith('.html')&&name!=='offline.html');
+const pages=(await readdir(root)).filter(name=>name.endsWith('.html')&&!['offline.html','accuracy.html'].includes(name));
 if(selection&&(!selection.length||selection.some(page=>!pages.includes(page))||new Set(selection).size!==selection.length))throw Error('Invalid CSS page selection.');
 for(const page of pages.filter(page=>!selection||selection.includes(page))){
  const pagePath=path.join(root,page),html=await readFile(pagePath,'utf8');
@@ -15,7 +16,7 @@ for(const page of pages.filter(page=>!selection||selection.includes(page))){
  const files=[...new Set([...sources[page].filter(x=>!finalStyles.has(x)),'assets/css/design-system.css',...sources[page].filter(x=>finalStyles.has(x))])];
  const content=(await Promise.all(files.map(async file=>'/* '+file+' */\n'+await readFile(path.join(root,file),'utf8')))).join('\n');
  const bundle='assets/css/app-'+page.replace('.html','')+'.css';
- const revision=['serpent.html','journey.html','paths-online.html'].includes(page)?'24.0.1':html.match(/assets\/css\/app-[^"']+\?v=([^"']+)/)?.[1]||'23.0.1';
+ const revision=packageRevision||(['serpent.html','journey.html','paths-online.html'].includes(page)?'24.0.1':html.match(/assets\/css\/app-[^"']+\?v=([^"']+)/)?.[1]||'23.0.1');
  // Keep the standalone v25 theme stylesheet outside each generated route bundle.
  // Rebuilding the route bundle must not remove the theme, and --check must
  // compare against the SAME normalized output as the release builder.

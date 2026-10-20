@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Career} from '../src/career/core.js';
 import {createDOM} from './dom-harness.mjs';
 import {environment,api,signup} from './worker-harness.mjs';
-const now=Date.parse('2026-10-14T12:00:00Z'),ids=['pawn-jade','dice-copper'],requestId='checkout-regression-0001';
+const now=Date.parse('2026-10-14T12:00:00Z'),ids=['pawn-jade','dice-porcelain'],requestId='checkout-regression-0001';
 test('checkout buys the entire selection once, equips each type and preserves the input',()=>{
  const before=Career.normalize({coins:2000}),saved=structuredClone(before),quote=Career.cartQuote(before,ids,{now});
  const after=Career.purchaseCart(before,ids,{now,expectedPrice:quote.price,requestId});assert.deepEqual(before,saved);assert.equal(after.coins,2000-quote.price);

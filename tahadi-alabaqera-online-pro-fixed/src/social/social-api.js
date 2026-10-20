@@ -98,6 +98,8 @@ async function validateInviteRoom(env, game, roomCode) {
     if (!response.ok || !data.ok) return { ok: false, status: 404, error: "الغرفة غير موجودة" };
     if (game !== "quiz" && data.game !== game) return { ok: false, status: 409, error: "رمز الغرفة يخص لعبة أخرى" };
     if (data.status !== "lobby" && !(["sudoku","paths"].includes(game)&&data.status==="countdown")) return { ok: false, status: 409, error: "لا يمكن إرسال دعوة بعد بدء المباراة" };
+    const count=Array.isArray(data.players)?data.players.length:Number(data.players),limit=Number(data.playerLimit||data.capacity);
+    if(Number.isFinite(count)&&limit>0&&count>=limit)return {ok:false,status:409,error:'الغرفة ممتلئة؛ أنشئ غرفة جديدة لأصدقائك'};
     return { ok: true };
   } catch {
     return { ok: false, status: 503, error: "تعذر التحقق من الغرفة" };

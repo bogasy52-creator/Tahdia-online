@@ -1,4 +1,6 @@
 import {isOwner} from './account-policy.js';
+import {normalizeRoomCode} from '../../public/assets/js/online/connection-utils.js';
+export {normalizeRoomCode};
 export const SOCIAL_SESSION_DAYS = 30;
 export const SOCIAL_MAX_FRIENDS = 100;
 export const SOCIAL_MAX_REQUESTS = 100;
@@ -7,7 +9,7 @@ export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
 export const SOCIAL_ONLINE_GAMES = new Set(["quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths"]);
 export const SOCIAL_CHALLENGE_GAMES = new Set([
   ...SOCIAL_ONLINE_GAMES,
-  "accuracy", "dice", "journey", "local", "logic", "memory", "puzzle", "reaction",
+  "dice", "journey", "local", "logic", "memory", "puzzle", "reaction",
 ]);
 
 export function normalizeUsername(value) {
@@ -55,11 +57,6 @@ export function parseSessionToken(value) {
   const secret = token.slice(dot + 1);
   if (!validUsername(username) || !/^[A-Za-z0-9_-]{32,128}$/.test(secret)) return null;
   return { username, secret, token };
-}
-
-export function normalizeRoomCode(value) {
-  const code = String(value || "").replace(/\D/g, "").slice(0, 6);
-  return /^\d{6}$/.test(code) ? code : "";
 }
 
 export function normalizeGame(value) {

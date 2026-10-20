@@ -5,17 +5,23 @@ export const SERPENT_WORLDS = Object.freeze({
  classic:Object.freeze({id:'classic',name:'الحلبة الأصلية',width:1400,height:1400,foodCount:260,obstacles:0,description:'حلبة سريعة بدون حواجز، مناسبة للتدريب والمواجهات.'}),
  neon:Object.freeze({id:'neon',name:'مدينة النيون',width:2000,height:2000,foodCount:335,obstacles:22,description:'أبراج مضيئة صغيرة، وممرات واسعة للالتفاف والمطاردة.'}),
  forest:Object.freeze({id:'forest',name:'غابة البرق',width:2400,height:2400,foodCount:350,obstacles:30,description:'أكبر خريطة: صخور صغيرة ومناطق طاقة وأكل غني.'}),
- crystals:Object.freeze({id:'crystals',name:'ساحة البلورات',width:2200,height:2200,foodCount:345,obstacles:26,description:'بلورات ملونة صغيرة واندفاعات كنوز متكررة.'})
+ crystals:Object.freeze({id:'crystals',name:'ساحة البلورات',width:2200,height:2200,foodCount:345,obstacles:26,description:'بلورات ملونة صغيرة واندفاعات كنوز متكررة.'}),
+ volcano:Object.freeze({id:'volcano',name:'فوهة البركان',width:2100,height:2100,foodCount:315,obstacles:34,description:'حلبة حمم متوهجة؛ مناطق الخطر تتبدل ومطر الكنوز أقصر.'}),
+ ruins:Object.freeze({id:'ruins',name:'أطلال العمالقة',width:2300,height:1900,foodCount:330,obstacles:38,description:'أعمدة حجرية وممرات ضيقة تكافئ الالتفاف الذكي.'}),
+ storm:Object.freeze({id:'storm',name:'عين العاصفة',width:2000,height:2200,foodCount:320,obstacles:24,description:'عاصفة طاقة دورية، بلورات عالية القيمة وتبدّل في الإيقاع.'})
 });
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 function rnd(state){state.seed=(Math.imul(state.seed,1664525)+1013904223)>>>0;return state.seed/4294967296;}
 function compactObstacles(game,preset){
  const state={seed:((Number(game.seed)||1234567)^(preset.width*73)^(preset.height*113))>>>0},result=[];
- for(let i=0,tries=0;i<preset.obstacles&&tries<preset.obstacles*40;tries++){
+ if(preset.id==='ruins'){for(const [x,y,r] of [[.28,.30,43],[.72,.30,43],[.28,.70,43],[.72,.70,43],[.5,.5,31]]){const o={x:Math.round(game.width*x),y:Math.round(game.height*y),radius:r,style:1};if(!game.snakes?.some(s=>Math.hypot(s.x-o.x,s.y-o.y)<175))result.push(o);}}
+ if(preset.id==='volcano'){for(let i=0;i<8;i++){const a=i*Math.PI/4,o={x:Math.round(game.width/2+Math.cos(a)*game.width*.22),y:Math.round(game.height/2+Math.sin(a)*game.height*.22),radius:24+(i%3)*7,style:2};if(!game.snakes?.some(s=>Math.hypot(s.x-o.x,s.y-o.y)<175))result.push(o);}}
+ if(preset.id==='storm'){for(let i=0;i<6;i++){const a=i*Math.PI/3,o={x:Math.round(game.width/2+Math.cos(a)*game.width*.29),y:Math.round(game.height/2+Math.sin(a)*game.height*.29),radius:22,style:0};if(!game.snakes?.some(s=>Math.hypot(s.x-o.x,s.y-o.y)<175))result.push(o);}}
+ for(let tries=0;result.length<preset.obstacles&&tries<preset.obstacles*60;tries++){
   const x=80+rnd(state)*(game.width-160),y=80+rnd(state)*(game.height-160),radius=19+Math.floor(rnd(state)*16);
   if(game.snakes?.some(s=>Math.hypot(s.x-x,s.y-y)<175))continue;
   if(result.some(o=>Math.hypot(o.x-x,o.y-y)<o.radius+radius+130))continue;
-  result.push({x:Math.round(x),y:Math.round(y),radius,style:i%3});i++;
+  result.push({x:Math.round(x),y:Math.round(y),radius,style:tries%3});
  }
  return result;
 }
@@ -49,18 +55,20 @@ export function setupSerpentWorld(game,id,options={}){
  if(!game||!Array.isArray(game.snakes)||!Array.isArray(game.food))throw new TypeError('Invalid serpent game');
  const world={id:p.id,name:p.name,challenge:options.challenge||'survival',difficulty:options.difficulty||game.difficulty,obstacles:compactObstacles(game,p),nextFoodUpgrade:0,frenzy:false,lastFrenzyCycle:-1,ownerSnakeId:options.ownerAllowed===true?options.ownerSnakeId:null,ownerBadge:options.ownerAllowed===true&&!!options.ownerSnakeId,lastEvent:'',lastEventAt:-100};
  game.world=world;
- if(world.ownerBadge){const snake=game.snakes.find(s=>s.id===world.ownerSnakeId&&!s.bot);if(snake)snake.mass=Math.max(Number(snake.mass)||30,36);}
  if(world.difficulty==='legendary')for(const s of game.snakes)if(s.bot)s.mass=Math.max(44,Number(s.mass)||0);
  upgradeFood(game,world,true);return world;
 }
 export function advanceSerpentWorld(game){
  const w=game?.world;if(!w||game.status!=='playing')return [];
  const events=[],seconds=Number(game.elapsed)||0,cycle=Math.floor(seconds/35),within=seconds%35;
- const active=w.id!=='classic'&&within>=18&&within<27;
+ const active=w.id!=='classic'&&within>=(w.id==='storm'?12:18)&&within<(w.id==='storm'?25:27);
+ if(w.id==='volcano'&&Math.floor(seconds/14)!==Math.floor((seconds-.04)/14)){w.hotSector=(Math.floor(seconds/14)%4);w.lastEvent='🌋 تبدّلت منطقة الحمم — غيّر مسارك!';w.lastEventAt=seconds;}
+ if(w.id==='storm'&&Math.floor(seconds/20)!==Math.floor((seconds-.04)/20)){w.lastEvent='🌩️ موجة عاصفة — البلورات أثمن الآن';w.lastEventAt=seconds;}
  if(active&&!w.frenzy){w.lastFrenzyCycle=cycle;w.lastEvent='⚡ مطر الكنوز — أكل نادر وطاقة مضاعفة';w.lastEventAt=seconds;}
  w.frenzy=active;upgradeFood(game,w);
  for(const snake of game.snakes){
   if(!snake.alive)continue;
+  if(w.id==='volcano'&&w.hotSector!=null){const a=Math.atan2(snake.y-game.height/2,snake.x-game.width/2),sector=((Math.round(a/(Math.PI/2))+4)%4);if(sector===w.hotSector&&Math.hypot(snake.x-game.width/2,snake.y-game.height/2)>game.width*.18&&seconds>=(snake.lavaHitReady||0)){snake.lavaHitReady=seconds+1.8;snake.mass=Math.max(16,snake.mass-2);snake.targetAngle=Math.atan2(game.height/2-snake.y,game.width/2-snake.x);events.push({type:'lava',id:snake.id});if(!snake.bot){w.lastEvent='🔥 الحمم أحرقت طاقة — غيّر مسارك!';w.lastEventAt=seconds;}}}
   // A small obstacle blocks passage, but knocks the snake aside instead of instant death.
   const o=w.obstacles.find(o=>Math.hypot(snake.x-o.x,snake.y-o.y)<o.radius+14);
   if(o){const a=Math.atan2(snake.y-o.y,snake.x-o.x)||0,r=o.radius+15;
@@ -81,7 +89,7 @@ export function advanceSerpentWorld(game){
  }
  return events;
 }
-const THEMES={neon:['#0dd3e2','#15495a','#11b0e9'],forest:['#b1e66b','#215b43','#60c889'],crystals:['#d5a8ff','#534688','#a17bff']};
+const THEMES={neon:['#0dd3e2','#15495a','#11b0e9'],forest:['#b1e66b','#215b43','#60c889'],crystals:['#d5a8ff','#534688','#a17bff'],volcano:['#ff7043','#54221e','#ffb04a'],ruins:['#d5bd8a','#504331','#f0dda8'],storm:['#72d9ff','#193b67','#d4f6ff']};
 function paintObstacle(ctx,o,colors,now,animate){
  const [bright,dark,light]=colors,r=o.radius,pulse=animate?Math.sin(now/360+o.x/37)*.12:0;
  ctx.save();ctx.translate(o.x,o.y);ctx.shadowColor=bright;ctx.shadowBlur=7;
@@ -122,6 +130,8 @@ export function drawSerpentWorld(renderer,now=0){
   const v=views[i],camera=renderer.cameras?.get(renderer.ids[i]);if(!v||!camera)continue;
   ctx.save();ctx.beginPath();ctx.rect(v.x,v.y,v.w,v.h);ctx.clip();ctx.translate(v.x+v.w/2,v.y+v.h/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
   if(w.id!=='classic')paintGround(ctx,g,w,now,animate);
+  if(w.id==='volcano'){ctx.save();ctx.globalAlpha=.13;ctx.fillStyle='#ff522e';const a=(w.hotSector||0)*Math.PI/2;ctx.beginPath();ctx.moveTo(g.width/2,g.height/2);ctx.arc(g.width/2,g.height/2,g.width*.47,a-.46,a+.46);ctx.closePath();ctx.fill();ctx.restore();}
+  if(w.id==='storm'&&w.frenzy){ctx.save();ctx.strokeStyle='#a8eaff';ctx.globalAlpha=.35;ctx.lineWidth=8;ctx.beginPath();ctx.arc(g.width/2,g.height/2,Math.min(g.width,g.height)*.32+Math.sin(now/160)*18,0,Math.PI*2);ctx.stroke();ctx.restore();}
   if(w.ownerBadge){const snake=g.snakes.find(s=>s.id===w.ownerSnakeId&&s.alive);if(snake)paintRoyal(ctx,snake,now,animate);}
   ctx.restore();
  }

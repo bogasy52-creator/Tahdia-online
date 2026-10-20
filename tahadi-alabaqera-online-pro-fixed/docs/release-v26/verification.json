@@ -1,0 +1,73 @@
+{
+  "release": "26.0.0",
+  "productionDeployed": false,
+  "unitTests": {
+    "passed": 612,
+    "failed": 0,
+    "skipped": 0
+  },
+  "staticReferences": 522,
+  "releaseContract": {
+    "javascriptModules": 239,
+    "inlineScripts": 9,
+    "cssReferences": 60,
+    "offlineCoreFiles": 58,
+    "offlineCoreBytes": 976937
+  },
+  "browser": {
+    "browser": "Chromium via Playwright (Browser plugin unavailable)",
+    "production": false,
+    "viewports": [
+      1440,
+      390
+    ],
+    "checks": [
+      "20 launchers render without overflow or script errors at 1440px",
+      "20 launchers render without overflow or script errors at 390px",
+      "Arabic search, categories and the removed shooter route work",
+      "Dice roll resolves to one real face and the crystal material changes live pip geometry",
+      "Memory, reaction, logic and number puzzle start and respond to actual input",
+      "All three board games start with their real boards and pieces",
+      "Jewels, paths stages, Sudoku and picture puzzle start real playable rounds",
+      "Ten game rounds start at a touch phone viewport; boards, actions and immersive HUD stay accessible",
+      "Authenticated manager enters the arena with the exclusive serpent and visible identity",
+      "Two browser accounts receive an in-game invite, join, ready, start and return from a network interruption"
+    ],
+    "scriptErrors": []
+  },
+  "online": {
+    "runtime": "native workerd / SQLite / real WebSockets",
+    "published": false,
+    "checks": [
+      "Worker and frontend release agree",
+      "Offline invitation persists once despite rapid repeats",
+      "Board heartbeat replies without mutating game state",
+      "Two real WebSocket players ready and start an enhanced board",
+      "Reconnect preserves the player seat and authoritative match",
+      "Invites to a match that already started are rejected",
+      "Manager serpent is granted by authenticated server policy"
+    ]
+  },
+  "cloudflareDryRun": {
+    "passed": true,
+    "workerKiB": 840.25,
+    "gzipKiB": 137.78
+  },
+  "otherNativeSuites": [
+    "Cloudflare-runtime",
+    "serpent-arena",
+    "picture-and-quiz",
+    "Sudoku",
+    "paths-and-arena-powers"
+  ],
+  "pictureProvider": "mocked; no paid provider request",
+  "review": {
+    "initialMaterialFindings": 4,
+    "resolved": 4,
+    "followupMaterialFindings": 0
+  },
+  "limitations": [
+    "Production host and current hosting quota were not tested",
+    "No long-duration load test or physical iOS/Safari test"
+  ]
+}

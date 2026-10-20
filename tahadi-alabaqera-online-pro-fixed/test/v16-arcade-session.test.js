@@ -14,8 +14,8 @@ test('memory, reaction and logic difficulty change the actual playable round',as
   const logic=await ui('logic',level);logic.$('start').onclick();assert.match(logic.$('roundLabel').textContent,new RegExp('/ '+questions+'$'));
  }
 });
-test('pausing freezes the real game deadline and blocks actions until resume',async()=>{
- const h=await ui('accuracy');h.$('start').onclick();h.setTime(3000);for(const tick of h.intervals.values())tick();assert.equal(h.$('time').textContent,'27 ث');h.$('arcadePause').focus();h.$('arcadePause').onclick();h.setTime(100000);h.$('target').onclick();for(const tick of h.intervals.values())tick();assert.equal(h.$('time').textContent,'27 ث');assert.equal(h.context.probe().round.score,0);assert.equal(h.doc.querySelector('main').inert,true);h.$('arcadeContinue').onclick();h.setTime(103000);for(const tick of h.intervals.values())tick();assert.equal(h.$('time').textContent,'24 ث');assert.equal(h.doc.activeElement.id,'arcadePause');
+test('pausing freezes the real memory deadline and blocks actions until resume',async()=>{
+ const h=await ui('memory');h.$('start').onclick();h.setTime(3000);for(const tick of h.intervals.values())tick();const remaining=h.$('time').textContent;h.$('arcadePause').focus();h.$('arcadePause').onclick();h.setTime(100000);h.doc.querySelector('.memory-tile').onclick();for(const tick of h.intervals.values())tick();assert.equal(h.$('time').textContent,remaining);assert.equal(h.doc.querySelectorAll('.memory-tile.open').length,0);assert.equal(h.doc.querySelector('main').inert,true);h.$('arcadeContinue').onclick();h.setTime(103000);for(const tick of h.intervals.values())tick();assert.notEqual(h.$('time').textContent,remaining);assert.equal(h.doc.activeElement.id,'arcadePause');
 });
 test('reaction delay resumes its remaining time and cancelled callbacks cannot change it',async()=>{
  const h=await ui('reaction');h.$('start').onclick();const old=[...h.timers.values()][0],original=old.ms;h.setTime(1000);h.$('arcadePause').onclick();h.setTime(11000);old.fn();assert.equal(h.context.probe().round.phase,'waiting');h.$('arcadeContinue').onclick();assert.equal([...h.timers.values()].at(-1).ms,original-1000);h.setTime(11000+original-1000);fire(h);assert.equal(h.context.probe().round.phase,'ready');
@@ -29,9 +29,7 @@ test('backgrounding pauses a game and keyboard focus stays in the pause dialog',
 test('each puzzle difficulty generates nontrivial legal and solvable boards',()=>{
  for(const level of ['casual','standard','expert'])for(let seed=1;seed<=50;seed++){let state=seed;const rng=()=>((state=(state*1664525+1013904223)>>>0)/4294967296);const board=engine.generatePuzzle(rng,engine.arcadeRules('puzzle',level).shuffle);assert.equal(engine.puzzleSolvable(board),true);assert.equal(engine.puzzleSolved(board),false);assert.deepEqual([...board].sort(),[0,1,2,3,4,5,6,7,8]);}
 });
-test('accuracy target stays fully reachable after a narrow-screen resize',async()=>{
- const h=await ui('accuracy','expert');h.$('arena').getBoundingClientRect=()=>({width:290,height:220});h.$('start').onclick();for(let i=0;i<30;i++){h.context.dispatchEvent({type:'resize'});const x=parseFloat(h.$('target').style.left),y=parseFloat(h.$('target').style.top);assert.ok(x>=33&&x<=257);assert.ok(y>=33&&y<=187);}assert.equal(h.$('target').style.width,'46px');
-});
+
 test('reaction saves a single level record and an old reward failure cannot overwrite a new round',async()=>{
  const h=await ui('reaction','casual');let reject;h.context.BS_CAREER.record=()=>new Promise((_resolve,fail)=>{reject=fail;});h.$('start').onclick();let elapsed=0;
  for(let i=0;i<3;i++){const wait=[...h.timers.values()].at(-1).ms;elapsed+=wait;h.setTime(elapsed);fire(h);elapsed+=120;h.setTime(elapsed);h.$('reactionPad').onclick();if(i<2)h.$('reactionPad').onclick();}

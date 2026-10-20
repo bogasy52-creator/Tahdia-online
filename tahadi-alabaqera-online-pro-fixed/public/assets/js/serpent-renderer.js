@@ -2,7 +2,7 @@ import {paintPowerDrop,paintSnakePower} from './arena-powers-art-v24.js';
 import {ARENA_POWERS,powerActive,arenaSpeed} from './engines/arena-drops-v24.js';
 import {paintArenaFloor,paintArenaFood,paintCombatZones} from './arena-art-v23.js';
 import {arenaTurnRate} from './engines/serpent-combat-v23.js';
-import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=24.0.1';
+import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=26.0.0';
 const lerp=(a,b,t)=>a+(b-a)*t;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const foodSprites=new Map();
@@ -209,6 +209,7 @@ export class SerpentRenderer {
    const index=g.snakes.findIndex(x=>x.id===s.id),variant=s.skin==='snake-wild'?index:0;
    ctx.save();if(powerActive(s,'ghost',g.elapsed))ctx.globalAlpha=.32;
    paintSnakePower(ctx,s,g.elapsed,now,this.reducedMotion);
+   window.BS_SERPENT_ART?.aura?.(ctx,s,now,this.reducedMotion);
    window.BS_COSMETIC_ART.body(ctx,points,s.skin,radius,s.boost,variant,Math.max(budget,Math.min(160,Math.ceil(s.segments.length/4))));
    if(g.collisionMode==='arena-v23')paintCombatZones(ctx,s,zoom,own.mass);
    if(g.collisionMode==='tail-guard'){

@@ -1,10 +1,10 @@
 /* Shared, bounded reptile materials for the arena and the product studio. */
 (function(root){
  'use strict';
- const IDS=['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma'];
- const PALETTES=[['#a9ecc3','#378d6b','#102e2b','#e6cf90'],['#e9d3ff','#8961bb','#342440','#efb3eb'],['#ffe6a8','#be8c34','#52381d','#fff3c5'],['#e5fcff','#65b8d9','#23415f','#b4edff'],['#ddff91','#76a52c','#27361c','#e2ff75'],['#bcfaff','#448dc5','#392853','#dc93ff']];
- const KINDS=['viper','ribbon','cobra','crystal','dragon','plasma'];
- const SPECIES=Object.freeze(Object.fromEntries(IDS.map((id,i)=>[id,Object.freeze({kind:KINDS[i],light:PALETTES[i][0],mid:PALETTES[i][1],dark:PALETTES[i][2],accent:PALETTES[i][3],cell:i})])));
+ const IDS=['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma','snake-sovereign'];
+ const PALETTES=[['#a9ecc3','#378d6b','#102e2b','#e6cf90'],['#e9d3ff','#8961bb','#342440','#efb3eb'],['#ffe6a8','#be8c34','#52381d','#fff3c5'],['#e5fcff','#65b8d9','#23415f','#b4edff'],['#ddff91','#76a52c','#27361c','#e2ff75'],['#bcfaff','#448dc5','#392853','#dc93ff'],['#e3c680','#243e43','#09151f','#ffe4a3']];
+ const KINDS=['viper','ribbon','cobra','crystal','dragon','plasma','sovereign'];
+ const SPECIES=Object.freeze(Object.fromEntries(IDS.map((id,i)=>[id,Object.freeze({kind:KINDS[i],light:PALETTES[i][0],mid:PALETTES[i][1],dark:PALETTES[i][2],accent:PALETTES[i][3],cell:i===6?2:i})])));
  const image=new Image(),materials=new Map(),patterns=new WeakMap();let loaded=false;
  const ready=new Promise(resolve=>{image.onload=()=>{loaded=!!image.naturalWidth;resolve(loaded)};image.onerror=()=>resolve(false);image.src='assets/arena/v16/serpent-heads.webp';});
  const species=id=>SPECIES[id]||SPECIES['snake-wild'];
@@ -30,6 +30,7 @@
     c.fillStyle=(row+col)%3===0?p.dark:p.mid;c.fill();c.lineWidth=p.kind==='cobra'?1.8:1;c.strokeStyle=p.light+'a0';c.stroke();
     if(p.kind==='dragon'){c.beginPath();c.moveTo(x,y-4);c.lineTo(x+5,y+6);c.lineTo(x-5,y+6);c.closePath();c.fillStyle=p.accent+'88';c.fill();}
    }
+   if(p.kind==='sovereign'){c.strokeStyle=p.accent+'d0';c.lineWidth=3;for(let x=-20;x<148;x+=32){c.beginPath();c.moveTo(x,64);c.lineTo(x+16,47);c.lineTo(x+32,64);c.lineTo(x+16,81);c.closePath();c.stroke();}}
    if(p.kind==='cobra'){c.fillStyle=p.accent+'99';c.fillRect(0,52,128,24);c.fillStyle=p.dark+'a0';c.fillRect(0,59,128,10);}
   }
   const g=c.createLinearGradient(0,0,0,128);for(const [t,color]of [[0,'#010714ba'],[.3,p.light+'26'],[.47,'#ffffff4d'],[.6,'#ffffff06'],[1,'#010714ce']])g.addColorStop(t,color);c.fillStyle=g;c.fillRect(0,0,128,128);
@@ -44,6 +45,23 @@
   size=Math.max(1,Math.min(500,Number(size)||34));const p=species(id);c.save();c.shadowColor='#010611';c.shadowBlur=size*.18;
   if(loaded){const w=image.naturalWidth/3,h=image.naturalHeight/2,col=p.cell%3,row=Math.floor(p.cell/3);c.drawImage(image,col*w,row*h,w,h,-size*1.13,-size*1.21,size*2.86,size*2.42);}
   else{ellipse(c,0,0,size*1.24,size*.87,p.dark);ellipse(c,size*.35,0,size*1.12,size*.68,p.mid);for(const side of [-1,1]){ellipse(c,size*.55,size*.4*side,size*.17,size*.12,p.accent);ellipse(c,size*.6,size*.4*side,size*.035,size*.1,'#08131d');}}
+  if(id==='snake-sovereign'){
+   c.shadowColor='#f1ce82';c.shadowBlur=size*.18;c.fillStyle='#e3bd6e';c.strokeStyle='#fff0c4';c.lineWidth=Math.max(.7,size*.025);
+   c.beginPath();c.moveTo(-size*.72,-size*.52);c.lineTo(-size*.78,-size*1.08);c.lineTo(-size*.34,-size*.84);c.lineTo(0,-size*1.25);c.lineTo(size*.3,-size*.84);c.lineTo(size*.67,-size*1.08);c.lineTo(size*.61,-size*.51);c.closePath();c.fill();c.stroke();
+   ellipse(c,-size*.02,-size*.66,size*.1,size*.095,'#6be6c0');
+  }
+  c.restore();
+ }
+ function aura(c,s,time=0,reduced=false){
+  if(s?.skin!=='snake-sovereign')return;
+  const points=s.segments||[],radius=9+Math.sqrt(s.mass||28)*.7;
+  c.save();c.lineCap='round';c.lineJoin='round';c.strokeStyle='#e9c679';c.globalAlpha=.13;c.lineWidth=radius*2.8;
+  c.beginPath();points.slice(0,90).forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();
+  if(!reduced)for(let i=0;i<8;i++){
+   const p=points[Math.min(points.length-1,Math.floor((i+1)*points.length/9))];if(!p)continue;
+   const phase=time/650+i*2.4,x=p.x+Math.cos(phase)*(radius+7),y=p.y+Math.sin(phase)*(radius+7),r=1.5+(1+Math.sin(phase))*.7;
+   c.globalAlpha=.35+.25*Math.sin(phase);c.fillStyle=i%2?'#ffde91':'#b3efdd';c.beginPath();c.moveTo(x-r,y);c.lineTo(x,y-r*1.8);c.lineTo(x+r,y);c.lineTo(x,y+r*1.8);c.closePath();c.fill();
+  }
   c.restore();
  }
  function body(c,input,id,radius=13,boost=false,_variant=0,budget=80){
@@ -63,7 +81,7 @@
  }
  function preview(canvas,id,time=0,{rotation=0,zoom=1,clear=true}={}){
   const c=canvas.getContext('2d');if(!c)return;const width=canvas.width,height=canvas.height;c.setTransform(1,0,0,1,0,0);if(clear)c.clearRect(0,0,width,height);c.save();c.scale(width/600,height/360);c.translate(300,180);c.rotate(rotation);c.scale(zoom,zoom);c.translate(-300,-180);
-  const points=Array.from({length:80},(_,i)=>{const t=i/79;return {x:442-t*335,y:158+Math.sin(t*11.2+time*.6)*(30+t*35)};});body(c,points,id,18,false,0,80);c.translate(points[0].x,points[0].y);c.rotate(Math.atan2(points[0].y-points[1].y,points[0].x-points[1].x));head(c,id,id==='snake-gold'?37:34);c.restore();
+  const points=Array.from({length:80},(_,i)=>{const t=i/79;return {x:442-t*335,y:158+Math.sin(t*11.2+time*.6)*(30+t*35)};});aura(c,{skin:id,segments:points,mass:70},time*1000,root.matchMedia?.('(prefers-reduced-motion: reduce)').matches);body(c,points,id,18,false,0,80);c.translate(points[0].x,points[0].y);c.rotate(Math.atan2(points[0].y-points[1].y,points[0].x-points[1].x));head(c,id,id==='snake-gold'?37:34);c.restore();
  }
- root.BS_SERPENT_ART=Object.freeze({SPECIES,IDS:Object.freeze(IDS),ready,head,body,preview,pathPoints,material});
+ root.BS_SERPENT_ART=Object.freeze({SPECIES,IDS:Object.freeze(IDS),ready,head,body,aura,preview,pathPoints,material});
 })(window);

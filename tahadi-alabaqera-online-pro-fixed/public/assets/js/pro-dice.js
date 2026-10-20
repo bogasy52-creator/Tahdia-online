@@ -15,7 +15,7 @@
  function mount(el,bonus=false){
   if(!el||el.dataset.proDie)return;el.dataset.proDie='1';el.classList.add('pro-die');el.innerHTML='';
   const cube=document.createElement('div');cube.className='pro-die-cube';
-  for(let n=1;n<=6;n++){const face=document.createElement('div');face.className='pro-face face-'+n;if(bonus){face.innerHTML=`<svg viewBox="0 0 48 48" aria-hidden="true">${symbols[n-1]}</svg>`;}else for(const p of faces[n]){const pip=document.createElement('i');pip.className='pro-pip pos-'+p;face.appendChild(pip)}cube.appendChild(face)}
+  for(let n=1;n<=6;n++){const face=document.createElement('div');face.className='pro-face face-'+n;const rim=document.createElement('span');rim.className='pro-face-rim';rim.setAttribute('aria-hidden','true');face.appendChild(rim);if(bonus){face.innerHTML=`<svg viewBox="0 0 48 48" aria-hidden="true">${symbols[n-1]}</svg>`;}else for(const p of faces[n]){const pip=document.createElement('i');pip.className='pro-pip pos-'+p;face.appendChild(pip)}cube.appendChild(face)}
   if(bonus)el.dataset.bonus='true';
   const flight=document.createElement('div'),shadow=document.createElement('i');flight.className='pro-die-flight';shadow.className='pro-die-shadow';shadow.setAttribute('aria-hidden','true');flight.appendChild(cube);el.append(shadow,flight);set(el,Number(el.dataset.value)||1);
  }

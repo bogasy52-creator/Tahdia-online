@@ -57,9 +57,11 @@
   ctx.beginPath();ctx.moveTo(-65,-64);ctx.lineTo(21,-96);ctx.lineTo(92,-48);ctx.lineTo(13,-16);ctx.closePath();ctx.fillStyle=gradient(ctx,[-65,-90],[75,-16],['#fff1dc',color]);ctx.fill();
   ctx.beginPath();ctx.moveTo(-65,-64);ctx.lineTo(13,-16);ctx.lineTo(13,93);ctx.lineTo(-65,43);ctx.closePath();ctx.fillStyle=gradient(ctx,[-65,-40],[18,95],[color,'#061323']);ctx.fill();
   ctx.beginPath();ctx.moveTo(13,-16);ctx.lineTo(92,-48);ctx.lineTo(92,60);ctx.lineTo(13,93);ctx.closePath();ctx.fillStyle=gradient(ctx,[90,-45],[13,91],['#ffffff',color]);ctx.fill();
-  const dark=['dice-midnight','dice-nebula','dice-ruby'].includes(item.id)?'#f2e2c7':'#182734';
-  for(const [x,y]of [[36,7],[72,-7],[36,58],[72,44],[54,26]])ellipse(ctx,x,y,5,7,dark);for(const [x,y]of [[-40,-29],[-10,26]])ellipse(ctx,x,y,5,7,dark);
-  for(const [x,y]of [[-18,-57],[15,-69],[40,-47]])ellipse(ctx,x,y,7,4,'#172331');ctx.restore();
+  const dark=['dice-midnight','dice-nebula','dice-ruby','dice-obsidian','dice-crystal'].includes(item.id)?'#f2e2c7':'#182734';
+  const pip=(x,y,rx,ry,fill)=>{if(item.design==='crystal'){ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);ctx.fillStyle=fill;ctx.fillRect(-rx,-ry,rx*2,ry*2);ctx.restore();}else if(item.design==='obsidian'){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x-rx,y-ry,rx*2,ry*2,1.5);ctx.fill();}else ellipse(ctx,x,y,rx,ry,fill);};
+  if(item.design){ctx.lineWidth=item.design==='obsidian'?3:1.5;ctx.strokeStyle=item.design==='crystal'?'#a6ffe9':'#ddbc79';for(const pts of [[[-65,-64],[21,-96],[92,-48],[13,-16]],[[-65,-64],[13,-16],[13,93],[-65,43]],[[13,-16],[92,-48],[92,60],[13,93]]]){ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.stroke();}if(item.design==='porcelain'){ctx.strokeStyle='#d9c49d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,-10);ctx.lineTo(84,-35);ctx.lineTo(84,55);ctx.lineTo(20,82);ctx.closePath();ctx.stroke();}}
+  for(const [x,y]of [[36,7],[72,-7],[36,58],[72,44],[54,26]])pip(x,y,5,7,dark);for(const [x,y]of [[-40,-29],[-10,26]])pip(x,y,5,7,dark);
+  for(const [x,y]of [[-18,-57],[15,-69],[40,-47]])pip(x,y,7,4,dark);ctx.restore();
  }
  function paintPawn(canvas,id,player=0){
   if(root.BS_STONES?.draw(canvas,id,player,{style:document.documentElement.dataset.pieceArt==='original'?'original':'royal'}))return;

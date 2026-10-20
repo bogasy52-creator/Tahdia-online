@@ -2,8 +2,8 @@
 (() => {
   const root = window, doc = document;
   const colors = ['#62f4c8', '#53b7ff', '#c98cff', '#ffd166', '#ff6e91', '#ffffff'];
-  const gameRoutes = new Set(['accuracy', 'dice', 'jackaroo', 'journey', 'local', 'logic', 'memory', 'online', 'paths-online', 'picture', 'puzzle', 'quiz', 'reaction', 'serpent', 'snakes', 'sudoku', 'zahra']);
-  const titles = {accuracy:'تحدي التصويب',dice:'تحدي النرد',jackaroo:'جاكارو',journey:'رحلة النجوم',local:'تحدي العباقرة',logic:'تحدي المنطق',memory:'تحدي الذاكرة',online:'العباقرة أونلاين','paths-online':'توصيل الأرقام',picture:'سباق الصور',puzzle:'ترتيب الأرقام',quiz:'تحدي العباقرة',reaction:'سرعة الاستجابة',serpent:'حلبة الثعبان',snakes:'سلم وثعبان',sudoku:'سودوكو',zahra:'الزهرة'};
+  const gameRoutes = new Set(['dice', 'jackaroo', 'journey', 'local', 'logic', 'memory', 'online', 'paths-online', 'picture', 'puzzle', 'quiz', 'reaction', 'serpent', 'snakes', 'sudoku', 'zahra']);
+  const titles = {dice:'تحدي النرد',jackaroo:'جاكارو',journey:'رحلة النجوم',local:'تحدي العباقرة',logic:'تحدي المنطق',memory:'تحدي الذاكرة',online:'العباقرة أونلاين','paths-online':'توصيل الأرقام',picture:'سباق الصور',puzzle:'ترتيب الأرقام',quiz:'تحدي العباقرة',reaction:'سرعة الاستجابة',serpent:'حلبة الثعبان',snakes:'سلم وثعبان',sudoku:'سودوكو',zahra:'الزهرة'};
   const inviteGames = {'paths-online':'paths',online:'quiz'};
   const route = new URL(location.href).pathname.replace(/\.html$/, '').replace(/^\//, '') || 'index';
   const enabled = () => root.BS_AUDIO?.getSettings?.().effects !== false;
@@ -11,7 +11,7 @@
   const effectHost = () => doc.querySelector('dialog[open]') || doc.body;
   let layer = null, context = null, socialLoader = null, celebrationKey = '';
 
-  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=25.3.0'; doc.head?.appendChild(css);
+  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=26.0.0'; doc.head?.appendChild(css);
 
   function effectLayer() {
     const parent = effectHost();
@@ -72,7 +72,7 @@
     if(!/^\d{6}$/.test(code))for(const id of['soCode','pathRoomCode','roomCode','code','gameRoomCode']){const element=doc.getElementById(id),value=element?.textContent?.trim();if(element?.tagName!=='INPUT'&&/^\d{6}$/.test(value||'')&&!element.closest('[hidden],.hidden')){code=value;break;}}
     const joinable=context?.joinable!==false&&/^\d{6}$/.test(code);url.search='';url.hash='';if(joinable)url.searchParams.set('room',code);if(cleanRoute==='journey'&&context?.journeyGame)url.searchParams.set('game',context.journeyGame);return{game,code:joinable?code:'',url:url.href,joinable,title:titles[cleanRoute]||'تحدي العباقرة'};
   }
-  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=25.3.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);});return socialLoader;}
+  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=26.0.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);});return socialLoader;}
   function openInvite(){
     if(doc.getElementById('bsInvitePanel'))return;const source=doc.activeElement,data=inviteData(),shade=doc.createElement('div'),card=doc.createElement('section');shade.id='bsInvitePanel';shade.className='bs-invite-shade';card.className='bs-invite-card';card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','bsInviteTitle');
     const icon=doc.createElement('span');icon.className='bs-invite-icon';icon.textContent='♟+';const title=doc.createElement('h2');title.id='bsInviteTitle';title.textContent=data.joinable?'ادعُ صديقك إلى الغرفة':'تحدَّ صديقًا الآن';const note=doc.createElement('p');note.textContent=data.joinable?`الغرفة ${data.code} جاهزة. أرسل دعوة من حسابك أو شاركها مباشرة.`:`إذا بدأت المباراة فلا يمكن الانضمام إلى الجولة الجارية. ستصل دعوة لتحدٍّ جديد في ${data.title}، أو شارك رابط اللعبة.`;card.append(icon,title,note);
@@ -87,7 +87,10 @@
   function mountCommand(){
     if(!gameRoutes.has(route)||doc.getElementById('bsGameCommand'))return;doc.body.classList.add('bs-ui-v25');const bar=doc.createElement('nav');bar.id='bsGameCommand';bar.className='bs-game-command';bar.setAttribute('aria-label','أدوات اللعبة');
     const start=doc.createElement('div');start.className='bs-command-start';const backButton=doc.createElement('button');backButton.type='button';backButton.className='bs-command-back';backButton.innerHTML='<span aria-hidden="true">→</span><b>رجوع</b>';backButton.onclick=back;const home=doc.createElement('a');home.href='/';home.className='bs-command-home';home.setAttribute('aria-label','كل الألعاب');home.textContent='⌂';start.append(backButton,home);
-    const identity=doc.createElement('div');identity.className='bs-command-identity';const mark=doc.createElement('span');mark.textContent='BS';const copy=doc.createElement('div'),title=doc.createElement('b'),status=doc.createElement('small');title.textContent=titles[route]||'تحدي العباقرة';status.dataset.commandStatus='';copy.append(title,status);identity.append(mark,copy);const invite=doc.createElement('button');invite.type='button';invite.className='bs-command-invite';invite.dataset.commandInvite='';invite.onclick=openInvite;bar.append(start,identity,invite);doc.body.prepend(bar);updateCommand();
+    const identity=doc.createElement('div');identity.className='bs-command-identity';const mark=doc.createElement('span');mark.textContent='BS';const copy=doc.createElement('div'),title=doc.createElement('b'),status=doc.createElement('small');title.textContent=titles[route]||'تحدي العباقرة';status.dataset.commandStatus='';copy.append(title,status);identity.append(mark,copy);const invite=doc.createElement('button');invite.type='button';invite.className='bs-command-invite';invite.dataset.commandInvite='';invite.onclick=openInvite;bar.append(start,identity,invite);doc.body.prepend(bar);
+    const header=doc.querySelector('.bs-topbar,.serpent-nav,.picture-header');
+    if(header){const utilities=doc.createElement('div');utilities.className='v26-command-utilities';for(const control of header.querySelectorAll('button,.coin-chip')){if(control.getAttribute('data-audio-toggle')!==null)control.setAttribute('aria-label','تبديل الصوت');if(control.getAttribute('data-settings-open')!==null)control.setAttribute('aria-label','إعدادات اللعب');utilities.appendChild(control);}bar.appendChild(utilities);header.classList.add('v26-replaced-header');}
+    updateCommand();
   }
   function observeFeedback(){
     if(typeof root.MutationObserver!=='function'||typeof root.Element!=='function')return;

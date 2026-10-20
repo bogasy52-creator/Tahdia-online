@@ -38,7 +38,7 @@ test('manager grants are idempotent, audited, bounded and applied to the request
  assert.equal((await api(env,'/api/social/career',undefined,a.data.token)).data.career.coins,350);
  assert.equal((await api(env,'/api/social/admin/action',{...body,amount:500},token)).response.status,409);
  const invalid=await api(env,'/api/social/admin/action',{...body,requestId:'grant-test-002',amount:1e12},token);assert.equal(invalid.response.status,400);
- const unlock=await api(env,'/api/social/admin/action',{username:'playera',action:'unlock-all',requestId:'unlock-test-001'},token);assert.equal(unlock.data.account.career.owned.length,Career.CATALOG.length-1);assert.equal(unlock.data.account.career.owned.includes('title-manager'),false);
+ const unlock=await api(env,'/api/social/admin/action',{username:'playera',action:'unlock-all',requestId:'unlock-test-001'},token);assert.equal(unlock.data.account.career.owned.length,Career.CATALOG.filter(item=>item.source!=='owner').length);assert.equal(unlock.data.account.career.owned.includes('title-manager'),false);assert.equal(unlock.data.account.career.owned.includes('snake-sovereign'),false);
  const audit=(await api(env,'/api/social/admin',undefined,token)).data.audit;assert.equal(audit.filter(x=>x.requestId===body.requestId).length,1);
  assert.equal((await api(env,'/api/social/admin/action',{username:'missing',action:'unlock-all',requestId:'missing-test-001'},token)).response.status,404);
  const lookup=await api(env,'/api/social/admin/account?username=playera',undefined,token);assert.equal(lookup.data.account.profile.username,'playera');assert.equal(lookup.data.account.profile.password,undefined);

@@ -1,6 +1,7 @@
 /* Shared, deterministic progression and cosmetic catalogue. */
 (function(root){
   'use strict';
+  const RETIRED=new Set(['pawn-onyx','dice-midnight','dice-copper','dice-aurora','board-ocean','board-sand','board-twilight','table-slate','table-emerald','table-midnight','title-collector','title-champion']);
   const CATALOG=Object.freeze([
     {id:'character-fox',type:'character',name:'الثعلب',description:'شخصية البداية المجانية للثعابين والسلالم.',price:0,color:'#efa866',asset:'fox'},
     {id:'character-cat',type:'character',name:'القطة الوردية',description:'قطة وردية مرسومة على قاعدة ذهبية.',price:150,color:'#ed9ec5',asset:'cat'},
@@ -53,11 +54,15 @@
     {id:'title-legend',type:'title',name:'أسطورة النيون',description:'لقب حصري يُفتح بإنجاز 50 جولة.',price:0,color:'#c79aff',source:'achievement',objective:'fifty-games'},
     {id:'title-starfinder',type:'title',name:'صائد النجوم',description:'لقب حصري لرحلة النجوم. اجمع 30 نجمة من المراحل لفتحه.',price:0,color:'#efd29b',source:'journey',unlockStars:30},
     {id:'title-pathmaster',type:'title',name:'سيّد المسارات',description:'لقب إنجاز حصري. اجمع 120 نجمة من مراحل المغامرة.',price:0,color:'#a5dfca',source:'journey',unlockStars:120},
-    {id:'title-manager',type:'title',name:'مدير الحلبة',description:'هوية المدير الموثّقة لحساب bosrag.',price:0,color:'#f2ce87',source:'owner'}
-  ].map(i=>Object.freeze({...i,rarity:i.source?'exclusive':i.price>=450?'legendary':i.price>=140?'rare':'common'})));
+    {id:'title-manager',type:'title',name:'مدير الحلبة',description:'هوية المدير الموثّقة لحساب bosrag.',price:0,color:'#f2ce87',source:'owner'},
+    {id:'dice-porcelain',type:'dice',design:'porcelain',name:'نرد البورسلان',description:'سيراميك عاجي بحواف ذهبية ونقاط محفورة. أناقة الطاولة الأصلية.',price:280,color:'#eee8d9'},
+    {id:'dice-crystal',type:'dice',design:'crystal',name:'نرد الكريستال',description:'حواف مشطوفة ونقاط ماسية مضيئة داخل زجاج زمردي.',price:480,color:'#3da99a'},
+    {id:'dice-obsidian',type:'dice',design:'obsidian',name:'نرد الأوبسيديان',description:'حجر أسود مصقول، زوايا نحاسية ونقاط ذهبية مربّعة.',price:520,color:'#17212b'},
+    {id:'snake-sovereign',type:'snake',name:'سيّد الحلبة',description:'خاص بالمدير: درع أوبسيديان، تاج ذهبي وأثر نجمي. المظهر لا يغيّر قوة اللعب.',price:0,color:'#e7c376',source:'owner'}
+  ].map(i=>Object.freeze({...i,retired:RETIRED.has(i.id),rarity:i.source?'exclusive':i.price>=450?'legendary':i.price>=140?'rare':'common'})));
   const BUNDLES=Object.freeze([
     {id:'reactor-set',name:'مجموعة المفاعل',description:'ثعابين ونرد وحلبة وأثر حركة بهوية كهربائية واحدة.',color:'#57d9ff',items:['snake-toxic','dice-nebula','board-cyber','trail-comet']},
-    {id:'aurora-set',name:'مجموعة الشفق',description:'الأفعى الشفقية وحجر الجمشت ونرد الشفق مع احتفال خاص.',color:'#c390ff',items:['snake-aurora','pawn-amethyst','dice-aurora','board-twilight','victory-aurora']},
+    {id:'aurora-set',name:'مجموعة الكريستال',description:'أفعى شفقية وحجر جمشت ونرد كريستالي مع احتفال خاص.',color:'#88daca',items:['snake-aurora','pawn-amethyst','dice-crystal','victory-aurora']},
     {id:'royal-set',name:'مجموعة التتويج',description:'حجر ونرد وحلبة وطاولة ملكية مع نجوم الفوز.',color:'#f4cb79',items:['pawn-gold','dice-gold','board-royal','table-royal','victory-royal']}
   ].map(b=>Object.freeze({...b,items:Object.freeze(b.items),discount:.25})));
   const OBJECTIVES=Object.freeze([
@@ -76,6 +81,9 @@
   ].map(Object.freeze));
   const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku'];
   const COSMETIC_STYLES=Object.freeze({
+    'dice-porcelain':{'--die-color':'#eee8d9','--die-highlight':'#fffef9','--die-shade':'#b7a37c','--die-pip':'#24313b','--die-pip-light':'#546575','--die-edge':'#d8bd82','--die-radius':'21%','--die-pip-radius':'50%'},
+    'dice-crystal':{'--die-color':'#208b7b','--die-highlight':'#a5f1d9','--die-shade':'#0b3b3b','--die-pip':'#d6fff1','--die-pip-light':'#ffffff','--die-edge':'#85ebd0','--die-radius':'7%','--die-pip-radius':'12%'},
+    'dice-obsidian':{'--die-color':'#17212b','--die-highlight':'#566573','--die-shade':'#080d14','--die-pip':'#ebc677','--die-pip-light':'#fff0bb','--die-edge':'#bd9860','--die-radius':'11%','--die-pip-radius':'22%'},
     'dice-ivory':{'--die-color':'#f3eee3','--die-highlight':'#ffffff','--die-shade':'#c7bda8','--die-pip':'#08101f','--die-pip-light':'#344257'},
     'dice-midnight':{'--die-color':'#202c40','--die-highlight':'#526982','--die-shade':'#101a2a','--die-pip':'#f6ecd9','--die-pip-light':'#ffffff'},
     'dice-copper':{'--die-color':'#ce9564','--die-highlight':'#ffe0b5','--die-shade':'#744122','--die-pip':'#23150c','--die-pip-light':'#50331d'},
@@ -117,13 +125,13 @@
     for(const kind of ['daily','weekly']){const key=kind==='daily'?riyadhDay(now):riyadhWeek(now);if(p.missions[kind].key!==key)p.missions[kind]=period({key});const m=p.missions[kind];m.games++;if(win)m.wins++;if(verified)m.online++;if(!m.variety.includes(game))m.variety.push(game)}
     p.receipts.push(receipt);return normalize(p);
   }
-  function purchase(raw,id,{now=Date.now(),expectedPrice}={}){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');if(!p.owned.includes(id)){if(item.source)throw new Error('item_locked');const price=itemPrice(id,now);if(expectedPrice!=null&&expectedPrice!==price)throw new Error('price_changed');if(p.coins<price)throw new Error('insufficient_coins');p.coins-=price;p.owned.push(id)}p.equipped[item.type]=id;return normalize(p)}
+  function purchase(raw,id,{now=Date.now(),expectedPrice}={}){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');if(!p.owned.includes(id)){if(item.source)throw new Error('item_locked');if(item.retired)throw new Error('item_retired');const price=itemPrice(id,now);if(expectedPrice!=null&&expectedPrice!==price)throw new Error('price_changed');if(p.coins<price)throw new Error('insufficient_coins');p.coins-=price;p.owned.push(id)}p.equipped[item.type]=id;return normalize(p)}
   function equip(raw,id){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item||!p.owned.includes(id))throw new Error('item_not_owned');p.equipped[item.type]=id;return normalize(p)}
   const DAILY_GIFTS=Object.freeze([30,40,50,60,75,90,120]);
   function riyadhDay(now=Date.now()){return new Date(now+10800000).toISOString().slice(0,10)}
   function riyadhWeek(now=Date.now()){const date=new Date(riyadhDay(now)+'T00:00:00Z');date.setUTCDate(date.getUTCDate()-(date.getUTCDay()+6)%7);return date.toISOString().slice(0,10)}
   function dailyOffer(now=Date.now()){
-    const items=CATALOG.filter(i=>i.price>=300&&!i.source),day=riyadhDay(now),index=Math.floor(Date.parse(day)/86400000)%items.length,item=items[index];
+    const items=CATALOG.filter(i=>i.price>=300&&!i.source&&!i.retired),day=riyadhDay(now),index=Math.floor(Date.parse(day)/86400000)%items.length,item=items[index];
     return {id:item.id,price:Math.floor(item.price*.8),originalPrice:item.price,day};
   }
   function itemPrice(id,now=Date.now()){const item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');const offer=dailyOffer(now);return offer.id===id?offer.price:item.price}
@@ -156,7 +164,7 @@
   function cartQuote(raw,ids,{now=Date.now()}={}){
     const p=normalize(raw);
     if(!Array.isArray(ids)||ids.length<1||ids.length>12||new Set(ids).size!==ids.length)throw new Error('invalid_cart');
-    const items=ids.map(id=>{const item=CATALOG.find(item=>item.id===id);if(!item)throw new Error('item_not_found');const owned=p.owned.includes(id);if(item.source&&!owned)throw new Error('item_locked');return {id,type:item.type,price:owned?0:itemPrice(id,now),owned};});
+    const items=ids.map(id=>{const item=CATALOG.find(item=>item.id===id);if(!item)throw new Error('item_not_found');const owned=p.owned.includes(id);if(item.source&&!owned)throw new Error('item_locked');if(item.retired&&!owned)throw new Error('item_retired');return {id,type:item.type,price:owned?0:itemPrice(id,now),owned};});
     return {items,price:items.reduce((sum,item)=>sum+item.price,0),missing:items.filter(item=>!item.owned).map(item=>item.id)};
   }
   function purchaseCart(raw,ids,{now=Date.now(),expectedPrice,requestId}={}){
