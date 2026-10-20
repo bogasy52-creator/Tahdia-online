@@ -115,11 +115,78 @@ function paintGround(ctx,g,w,now,animate){
  }
 }
 function paintRoyal(ctx,s,now,animate){
- const r=23+(animate?Math.sin(now/400)*2:0);ctx.save();ctx.translate(s.x,s.y);
- ctx.shadowColor='#fbd478';ctx.shadowBlur=20;ctx.strokeStyle='#dfad4a';ctx.lineWidth=3;ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
- ctx.rotate((Number(s.angle)||0)+Math.PI/2);ctx.shadowBlur=7;ctx.fillStyle='#ffd775';ctx.strokeStyle='#6d451c';ctx.lineWidth=2;
- ctx.beginPath();ctx.moveTo(-14,-26);ctx.lineTo(-14,-42);ctx.lineTo(-6,-35);ctx.lineTo(0,-48);ctx.lineTo(7,-35);ctx.lineTo(14,-42);ctx.lineTo(14,-26);ctx.closePath();ctx.fill();ctx.stroke();
- ctx.fillStyle='#f9f2c6';ctx.beginPath();ctx.arc(0,-35,3,0,Math.PI*2);ctx.fill();ctx.restore();
+ // Unique owner avatar: "Void Wyrm". No crown; a spectral dragon crest with rune orbit,
+ // twin horns, glowing eyes and a moving eclipse aura. Cosmetic only.
+ const t=animate?now/1000:0,r=27+(animate?Math.sin(t*3)*1.8:0);
+ ctx.save();ctx.translate(s.x,s.y);
+ // Eclipse rings and broken rune orbit
+ ctx.globalCompositeOperation='lighter';
+ ctx.shadowColor='#7cf7ff';ctx.shadowBlur=24;
+ ctx.strokeStyle='#37dfff';ctx.lineWidth=3;ctx.globalAlpha=.8;
+ ctx.beginPath();ctx.ellipse(0,0,r+8,r*.72,animate?t*.22:0,.2,Math.PI*1.82);ctx.stroke();
+ ctx.strokeStyle='#c18cff';ctx.lineWidth=2;ctx.globalAlpha=.85;
+ ctx.beginPath();ctx.ellipse(0,0,r+15,r*.9,animate?-t*.3:0,Math.PI*1.05,Math.PI*2.72);ctx.stroke();
+ // Rune sparks travel around the head
+ for(let k=0;k<6;k++){
+  const a=(Math.PI*2*k/6)+(animate?t*(k%2?-.75:.9):0),rr=r+12+(k%2)*4;
+  const x=Math.cos(a)*rr,y=Math.sin(a)*rr;
+  ctx.save();ctx.translate(x,y);ctx.rotate(a+t);
+  ctx.fillStyle=k%2?'#d6a4ff':'#9affff';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=12;
+  ctx.beginPath();ctx.moveTo(0,-4);ctx.lineTo(3,0);ctx.lineTo(0,4);ctx.lineTo(-3,0);ctx.closePath();ctx.fill();ctx.restore();
+ }
+ // Dragon head silhouette oriented with the snake
+ ctx.globalCompositeOperation='source-over';ctx.rotate((Number(s.angle)||0)+Math.PI/2);
+ ctx.shadowColor='#27e7ff';ctx.shadowBlur=20;
+ const grad=ctx.createLinearGradient(-18,-20,18,18);
+ grad.addColorStop(0,'#d5fbff');grad.addColorStop(.38,'#36bde9');grad.addColorStop(1,'#5130a0');
+ ctx.fillStyle=grad;ctx.strokeStyle='#b6fbff';ctx.lineWidth=2.2;
+ ctx.beginPath();
+ ctx.moveTo(0,-25);ctx.lineTo(10,-18);ctx.lineTo(19,-30);ctx.lineTo(17,-12);
+ ctx.lineTo(23,-2);ctx.lineTo(12,8);ctx.lineTo(9,17);ctx.lineTo(0,22);
+ ctx.lineTo(-9,17);ctx.lineTo(-12,8);ctx.lineTo(-23,-2);ctx.lineTo(-17,-12);
+ ctx.lineTo(-19,-30);ctx.lineTo(-10,-18);ctx.closePath();ctx.fill();ctx.stroke();
+ // Brow ridges and twin cyan eyes
+ ctx.shadowColor='#f4ffff';ctx.shadowBlur=9;ctx.fillStyle='#f5ffff';
+ for(const x of [-8,8]){ctx.beginPath();ctx.ellipse(x,-4,3.1,5.2,x*.025,0,Math.PI*2);ctx.fill();}
+ ctx.fillStyle='#18264d';for(const x of [-8,8]){ctx.beginPath();ctx.arc(x,-3,1.4,0,Math.PI*2);ctx.fill();}
+ // Energy fangs
+ ctx.shadowBlur=7;ctx.fillStyle='#a6ffff';ctx.beginPath();
+ ctx.moveTo(-5,11);ctx.lineTo(-2,17);ctx.lineTo(0,11);ctx.lineTo(2,17);ctx.lineTo(5,11);ctx.closePath();ctx.fill();
+ ctx.restore();
+}
+function paintWorldEffects(ctx,g,w,now,animate){
+ if(!animate)return;
+ const t=now/1000,cx=g.width/2,cy=g.height/2;
+ ctx.save();
+ if(w.id==='volcano'){
+  // Pulsing magma fissures and ember sparks around the currently dangerous sector.
+  const a=(w.hotSector||0)*Math.PI/2;
+  ctx.strokeStyle='#ff6738';ctx.shadowColor='#ff351d';ctx.shadowBlur=13;ctx.lineWidth=3;ctx.globalAlpha=.55;
+  for(let k=0;k<7;k++){
+   const rr=g.width*(.2+k*.035),ang=a-.32+k*.1;
+   ctx.beginPath();ctx.moveTo(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr);
+   ctx.lineTo(cx+Math.cos(ang+.025)* (rr+28),cy+Math.sin(ang+.025)*(rr+28));
+   ctx.lineTo(cx+Math.cos(ang-.018)*(rr+51),cy+Math.sin(ang-.018)*(rr+51));ctx.stroke();
+  }
+  for(let k=0;k<14;k++){const q=(t*.18+k/14)%1,ang=a-.48+q*.96,rr=g.width*(.16+q*.3);
+   ctx.globalAlpha=.18+(1-q)*.55;ctx.fillStyle=k%2?'#ffd36b':'#ff542f';
+   ctx.beginPath();ctx.arc(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr,2+(k%3),0,Math.PI*2);ctx.fill();}
+ }else if(w.id==='ruins'){
+  // Ancient glyph rings pulse around the central relic; no solid collision geometry.
+  ctx.translate(cx,cy);ctx.rotate(t*.045);ctx.strokeStyle='#e9cf91';ctx.shadowColor='#d4a85c';ctx.shadowBlur=9;ctx.globalAlpha=.3;ctx.lineWidth=2;
+  for(let ring=0;ring<3;ring++){ctx.beginPath();ctx.ellipse(0,0,g.width*(.12+ring*.055),g.height*(.1+ring*.05),ring*.35,0,Math.PI*2);ctx.stroke();}
+  for(let k=0;k<12;k++){const a=k*Math.PI/6,rr=Math.min(g.width,g.height)*.25;ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.rotate(-a);ctx.fillStyle='#ffe9ac';ctx.globalAlpha=.3+.15*Math.sin(t*2+k);ctx.fillRect(-2,-6,4,12);ctx.restore();}
+ }else if(w.id==='storm'){
+  // Moving wind bands and periodic lightning arcs at the arena edge.
+  ctx.strokeStyle='#8beaff';ctx.shadowColor='#65dfff';ctx.shadowBlur=12;ctx.lineWidth=2;ctx.globalAlpha=.22;
+  for(let k=0;k<9;k++){const y=(k* g.height/9 + (t*55)%g.height);ctx.beginPath();ctx.moveTo(20,y);ctx.bezierCurveTo(g.width*.32,y-24,g.width*.64,y+24,g.width-20,y-8);ctx.stroke();}
+  if(Math.floor(t/8)%4===0){const side=Math.floor(t/8)%4;ctx.globalAlpha=.65;ctx.lineWidth=3;ctx.beginPath();
+   if(side===0){ctx.moveTo(80,0);ctx.lineTo(120,70);ctx.lineTo(92,118);ctx.lineTo(175,188);}
+   else if(side===1){ctx.moveTo(g.width,120);ctx.lineTo(g.width-85,155);ctx.lineTo(g.width-52,225);ctx.lineTo(g.width-160,280);}
+   else if(side===2){ctx.moveTo(g.width-100,g.height);ctx.lineTo(g.width-140,g.height-75);ctx.lineTo(g.width-80,g.height-130);}
+   else {ctx.moveTo(0,g.height-100);ctx.lineTo(75,g.height-145);ctx.lineTo(42,g.height-205);ctx.lineTo(132,g.height-245);}ctx.stroke();}
+ }
+ ctx.restore();
 }
 export function drawSerpentWorld(renderer,now=0){
  const g=renderer?.game,w=g?.world;if(!w||!renderer?.ctx)return;
@@ -132,6 +199,7 @@ export function drawSerpentWorld(renderer,now=0){
   if(w.id!=='classic')paintGround(ctx,g,w,now,animate);
   if(w.id==='volcano'){ctx.save();ctx.globalAlpha=.13;ctx.fillStyle='#ff522e';const a=(w.hotSector||0)*Math.PI/2;ctx.beginPath();ctx.moveTo(g.width/2,g.height/2);ctx.arc(g.width/2,g.height/2,g.width*.47,a-.46,a+.46);ctx.closePath();ctx.fill();ctx.restore();}
   if(w.id==='storm'&&w.frenzy){ctx.save();ctx.strokeStyle='#a8eaff';ctx.globalAlpha=.35;ctx.lineWidth=8;ctx.beginPath();ctx.arc(g.width/2,g.height/2,Math.min(g.width,g.height)*.32+Math.sin(now/160)*18,0,Math.PI*2);ctx.stroke();ctx.restore();}
+  paintWorldEffects(ctx,g,w,now,animate);
   if(w.ownerBadge){const snake=g.snakes.find(s=>s.id===w.ownerSnakeId&&s.alive);if(snake)paintRoyal(ctx,snake,now,animate);}
   ctx.restore();
  }

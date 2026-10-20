@@ -58,3 +58,15 @@ test('UI exposes all new maps, owner uses existing entitlement only, online stay
  for(const token of ['value="classic"','value="neon"','value="forest"','value="crystals"','value="9"','value="legendary"','value="treasure"','arenaWorldStatus'])assert.ok(html.includes(token),token);
  assert.doesNotMatch(html,/value="caves"|مغارات/);
 });
+
+
+test('arena maps have distinct animated effects and owner has a unique void-wyrm identity, not a crown',async()=>{
+ const source=await readFile(new URL('../public/assets/js/serpent-worlds-v25-2.js',import.meta.url),'utf8');
+ assert.match(source,/function paintWorldEffects/);
+ assert.match(source,/w\.id==='volcano'/);
+ assert.match(source,/w\.id==='ruins'/);
+ assert.match(source,/w\.id==='storm'/);
+ assert.match(source,/Void Wyrm/);
+ assert.match(source,/cyan eyes/);
+ assert.doesNotMatch(source,/function paintRoyal[\s\S]{0,500}lineTo\(0,-48\)/);
+});

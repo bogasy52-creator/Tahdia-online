@@ -205,7 +205,7 @@ ec82695b6b41699d81539e6356a747d500717e8be5db81f480c5cba3f71a0718  ./public/asset
 0faf151c724f4991492f1b50257acc40fa331263f2d1b85edc6f5d6bb38d392c  ./public/assets/js/serpent-network.js
 111015f8a7d528c361b1cfd016e00355b05f2856bee6af5e7a3d5be06b16f5e5  ./public/assets/js/serpent-renderer.js
 317ca6b50762ecfa0fae4026b56f10624b9c373f0b699d4fef47ffb49302a1ef  ./public/assets/js/serpent-ui.js
-38d8ff4ef5bf74e73cfcd8f45fe9b114bccbe0630b815b1a3035a9e4a66a0045  ./public/assets/js/serpent-worlds-v25-2.js
+41c61025fe4d2e3665c84e3f9d6b26f6ae69876d7adc5a80d59728b4a1027212  ./public/assets/js/serpent-worlds-v25-2.js
 81452474ff5a1422d83221e3483244c5c7cfd2c8090810c6435475012936e14d  ./public/assets/js/shop.js
 6c5e474d1ae081f9c217df5d72cd3a9297eca2c98645ed06dd9be7353e236bea  ./public/assets/js/snake-pro-career-engine.js
 0de1a8d0a4f148c748e3f1865b41d440bfc3a0e4db6d51443013f64855219087  ./public/assets/js/snake-pro-upgrade.js
@@ -572,7 +572,7 @@ cdd3ff4a94ac0538aaf066e36b58f29997813ff1df31bf5df2df9373437546d7  ./test/serpent
 7a54d514cce73a552b02601ebc7bbe832d52fecb3a6e02b3c3a7f1a8955db724  ./test/serpent-route.test.js
 991efccbab7b015130698ab102e10c756e940095780d9c667f40bd7c9a605f7a  ./test/serpent-ui.test.js
 a79893b54b5350064a27b5eb6e1597bcb2223b7711e29f4f45fd74e85416e8ce  ./test/serpent-v23.test.js
-c61ac12b7acddf117d18b7ca79280dbc4e6530a390da5fc88fa6e5d00c8a878b  ./test/serpent-worlds-v25-2.test.js
+272d9d33a39230c07e1d102fcb9f78b833e702fbecfb152618c8b8e19ea42dd3  ./test/serpent-worlds-v25-2.test.js
 cff0cc1f54a8b73e8efb44271bb50692dc5fa7eabb2a7af16b0773bba5ffe598  ./test/snake-reference-skin.test.js
 0b528bdd2e4e9fee946536d0390dec20495c96c708c4df58cff2293146b205dd  ./test/snakes-engine.test.js
 036f5bc7f92b8c04252ca4c4a2e42f7f1d2f3a48e1be522bbad340097753c32a  ./test/snakes-online-enhanced.test.js
