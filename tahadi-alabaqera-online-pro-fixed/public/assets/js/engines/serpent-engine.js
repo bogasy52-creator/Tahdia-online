@@ -1,5 +1,6 @@
 import {updateArenaDrops,powerActive,arenaSpeed} from './arena-drops-v24.js';
 import {ARENA_RULES,resolveArenaCombat,arenaTurnRate} from './serpent-combat-v23.js';
+import {initializeArenaWorld,stepArenaWorld,arenaWorldSnapshot,worldPreset} from './arena-worlds-v27.js';
 /* Shared authoritative simulation. All distances are world units, time seconds. */
 const TAU=Math.PI*2,MIN_MASS=24,MAX_MASS=180,SPACING=5;
 export const SERPENT_SPEED=108,SERPENT_BOOST_SPEED=190,SERPENT_TURN_RATE=6.4;
@@ -31,13 +32,15 @@ function makeSnake(g,player,index,count){
 }
 export function createSerpentGame(players,options={}){
  if(!Array.isArray(players)||players.length<1||players.length>10||new Set(players.map(p=>p.id)).size!==players.length)throw new Error('invalid_players');
+ if(options.worldId){const p=worldPreset(options.worldId);options={...options,width:p.width,height:p.height,foodCount:p.foodCount};}
  const g={version:1,width:clamp(Number(options.width)||1800,800,2400),height:clamp(Number(options.height)||1800,800,2400),collisionMode:['tail-guard','predator',ARENA_RULES].includes(options.collisionMode)?options.collisionMode:'classic',nextTreasureAt:15,matchMode:options.matchMode==='survival'?'survival':'timed',duration:clamp(Number(options.duration)||120,.1,300),difficulty:['easy','medium','hard'].includes(options.difficulty)?options.difficulty:'medium',foodCount:clamp(Math.floor(options.foodCount??220),0,350),randomState:(Number(options.seed)>>>0)||41,nextFood:0,elapsed:0,tick:0,status:'playing',winners:[],events:[],snakes:[],food:[]};
- g.snakes=players.map((p,i)=>makeSnake(g,p,i,players.length));replenish(g);if(g.collisionMode===ARENA_RULES){g.powerDrops=options.powerDrops!==false;g.drops=[];g.nextDropAt=3;g.nextDropId=0;}return g;
+ g.snakes=players.map((p,i)=>makeSnake(g,p,i,players.length));replenish(g);if(g.collisionMode===ARENA_RULES){g.powerDrops=options.powerDrops!==false;g.drops=[];g.nextDropAt=3;g.nextDropId=0;}if(options.worldId)initializeArenaWorld(g,options.worldId,{training:options.training,difficulty:options.trainingDifficulty});return g;
 }
 export function addSerpentBots(g,count){
  const add=clamp(Math.floor(Number(count)||0),0,10-g.snakes.length),total=g.snakes.length+add;
  for(let i=0;i<add;i++){const index=g.snakes.length;g.snakes.push(makeSnake(g,{id:'bot-'+index,skin:['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma'][i%6],name:['فهد','وميض','كوبرا','برق','طيف','شهاب','مرجان','صقر'][i%8],bot:true},index,total));}
  if(g.tick===0)g.snakes=g.snakes.map((s,i)=>makeSnake(g,s,i,total));
+ if(g.world?.version===27&&g.tick===0)initializeArenaWorld(g,g.world.id,{training:g.world.training,difficulty:g.world.difficulty});
  return g;
 }
 export function steerSerpent(g,id,input){
@@ -95,6 +98,7 @@ function move(g,s,dt){
  const turn=g.collisionMode===ARENA_RULES?arenaTurnRate(s):s.bot&&forgiving(g)?(g.difficulty==='hard'?4.6:3.2):SERPENT_TURN_RATE,desired=serpentSteeringAngle(g,s,s.targetAngle),delta=angleDelta(desired,s.angle);s.angle+=clamp(delta,-turn*dt,turn*dt);if(desired!==s.targetAngle)s.targetAngle=desired;
  if(s.mass<=MIN_MASS)s.boost=false;
  let speed=g.collisionMode===ARENA_RULES?arenaSpeed(s,s.boost,g.elapsed):s.boost?SERPENT_BOOST_SPEED:SERPENT_SPEED;
+ speed*=clamp(s.worldSpeed||1,.7,1.3);
  if(s.bot)speed*=forgiving(g)?(g.difficulty==='easy'?.62:g.difficulty==='hard'?.92:.72):(g.difficulty==='easy'?.8:g.difficulty==='hard'?1:.93);
  if(s.boost){s.mass=Math.max(MIN_MASS,s.mass-4*dt);s.boostFoodTime=(s.boostFoodTime||0)+dt;if(s.boostFoodTime>=.25-1e-9){s.boostFoodTime=Math.max(0,s.boostFoodTime-.25);const tail=s.segments.at(-1)||s;g.food.push(food(g,tail.x,tail.y,1));}}else s.boostFoodTime=0;
  s.x+=Math.cos(s.angle)*speed*dt;s.y+=Math.sin(s.angle)*speed*dt;
@@ -148,6 +152,7 @@ function advanceSerpent(g,delta){
   g.nextTreasureAt=g.elapsed+15;const focus=g.snakes.find(s=>s.alive),x=clamp((focus?.x||g.width/2)+Math.cos(focus?.angle||0)*160,90,g.width-90),y=clamp((focus?.y||g.height/2)+Math.sin(focus?.angle||0)*160,90,g.height-90);
   for(let i=0;i<12;i++){const angle=i*TAU/12;g.food.push(food(g,x+Math.cos(angle)*55,y+Math.sin(angle)*55,i%3===0?5:3,i%3===0?'gem':'star'));}g.events.push({type:'treasure',x,y,tick:g.tick});
  }
+ stepArenaWorld(g,dt);
  const humans=g.snakes.filter(s=>!s.bot),alive=humans.filter(s=>s.alive);
  const living=g.snakes.filter(s=>s.alive),survival=g.matchMode==='survival';
  if(survival?(living.length===0||g.snakes.length>1&&living.length===1):(g.elapsed>=g.duration||!alive.length||humans.length>1&&alive.length===1)){
@@ -163,5 +168,5 @@ export function stepSerpent(g,delta){
  g.tick=tick;g.events=events.map(e=>e.type==='treasure'?{...e,tick}:e);return g;
 }
 export function serpentSnapshot(g){
- return {...(g.powerDrops?{powerDrops:true,drops:(g.drops||[]).map(d=>({...d}))}:{}),version:1,tick:g.tick,width:g.width,height:g.height,collisionMode:g.collisionMode||'classic',matchMode:g.matchMode||'timed',elapsed:g.elapsed,duration:g.duration,status:g.status,winners:[...g.winners],events:g.events.map(e=>({...e})),snakes:g.snakes.map(({id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments,deathReason,killedBy,powers})=>({...(g.collisionMode===ARENA_RULES?{deathReason:deathReason||null,killedBy:killedBy||null,powers:{...powers}}:{}),id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments:segments.map(p=>({...p}))})),food:g.food.map(f=>({...f}))};
+ return {...(g.world?.version===27?{world:arenaWorldSnapshot(g.world)}:{}),...(g.powerDrops?{powerDrops:true,drops:(g.drops||[]).map(d=>({...d}))}:{}),version:1,tick:g.tick,width:g.width,height:g.height,collisionMode:g.collisionMode||'classic',matchMode:g.matchMode||'timed',elapsed:g.elapsed,duration:g.duration,status:g.status,winners:[...g.winners],events:g.events.map(e=>({...e})),snakes:g.snakes.map(({id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments,deathReason,killedBy,powers,worldStats,worldSpeed,portalReadyAt})=>({...(g.world?.version===27?{worldStats:{...worldStats},worldSpeed:worldSpeed||1,portalReadyAt:portalReadyAt||0}:{}),...(g.collisionMode===ARENA_RULES?{deathReason:deathReason||null,killedBy:killedBy||null,powers:{...powers}}:{}),id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments:segments.map(p=>({...p}))})),food:g.food.map(f=>({...f}))};
 }

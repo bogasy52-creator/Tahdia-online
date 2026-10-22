@@ -47,11 +47,11 @@ test('legendary bots still pursue players',()=>{
 test('renderer overlay safely exits when no camera is provided',()=>{
  const g=game();setupSerpentWorld(g,'classic');assert.doesNotThrow(()=>drawSerpentWorld({game:g}));
 });
-test('UI exposes all new maps, owner uses existing entitlement only, online stays unchanged',async()=>{
+test('UI retains authenticated owner entitlement and uses shared online maps',async()=>{
  const s=await readFile(new URL('../public/assets/js/serpent-ui.js',import.meta.url),'utf8');
  assert.match(s,/ownerAllowed\(accountAccess/);
  assert.match(s,/source==='owner'/);
- assert.match(s,/ownerSnakeId:selfId/);
+ assert.match(s,/worldId:world.id/);assert.match(s,/worldId:\$\('arenaWorld'\).value/);
  assert.match(s,/mode==='online'\?Math\.min\(6,10-Number/);
  assert.match(s,/difficulty==='legendary'\?'hard':difficulty/);
  const html=await readFile(new URL('../public/serpent.html',import.meta.url),'utf8');

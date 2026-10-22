@@ -58,7 +58,7 @@
     {id:'dice-porcelain',type:'dice',design:'porcelain',name:'نرد البورسلان',description:'سيراميك عاجي بحواف ذهبية ونقاط محفورة. أناقة الطاولة الأصلية.',price:280,color:'#eee8d9'},
     {id:'dice-crystal',type:'dice',design:'crystal',name:'نرد الكريستال',description:'حواف مشطوفة ونقاط ماسية مضيئة داخل زجاج زمردي.',price:480,color:'#3da99a'},
     {id:'dice-obsidian',type:'dice',design:'obsidian',name:'نرد الأوبسيديان',description:'حجر أسود مصقول، زوايا نحاسية ونقاط ذهبية مربّعة.',price:520,color:'#17212b'},
-    {id:'snake-sovereign',type:'snake',name:'سيّد الحلبة',description:'خاص بالمدير: درع أوبسيديان، تاج ذهبي وأثر نجمي. المظهر لا يغيّر قوة اللعب.',price:0,color:'#e7c376',source:'owner'}
+    {id:'snake-sovereign',type:'snake',name:'سيّد الحلبة',description:'خاص بالمدير: درع أوبسيديان، عيون زمردية وأثر نجمي هادئ. المظهر لا يغيّر قوة اللعب.',price:0,color:'#e7c376',source:'owner'}
   ].map(i=>Object.freeze({...i,retired:RETIRED.has(i.id),rarity:i.source?'exclusive':i.price>=450?'legendary':i.price>=140?'rare':'common'})));
   const BUNDLES=Object.freeze([
     {id:'reactor-set',name:'مجموعة المفاعل',description:'ثعابين ونرد وحلبة وأثر حركة بهوية كهربائية واحدة.',color:'#57d9ff',items:['snake-toxic','dice-nebula','board-cyber','trail-comet']},

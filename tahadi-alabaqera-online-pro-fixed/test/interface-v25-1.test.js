@@ -23,8 +23,9 @@ test('game pages retain only one game command bar and the compatibility API dele
  assert.equal(h.doc.querySelectorAll('#bsGameCommand').length,1);
  assert.equal(h.doc.querySelectorAll('#hubRail,.bs-premium-nav').length,0);
  assert.equal(h.context.BS_GAME_FX,original);
- h.context.TAHDIA_PREMIUM.openInvite();
- assert.equal(h.doc.querySelectorAll('#bsInvitePanel').length,1);
+ const calls=[];h.context.BS_SOCIAL.openInvitePicker=async data=>calls.push(data);
+ await h.context.TAHDIA_PREMIUM.openInvite();
+ assert.equal(calls.length,1);assert.equal(calls[0].game,'sudoku');assert.equal(h.doc.querySelectorAll('#bsInvitePanel').length,0);
 });
 test('replacing the header preserves the Sudoku rules and picture leave actions',async()=>{
  for(const [page,id]of [['sudoku.html','sudokuHelp'],['picture.html','leave']]){

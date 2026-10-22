@@ -46,9 +46,8 @@
   if(loaded){const w=image.naturalWidth/3,h=image.naturalHeight/2,col=p.cell%3,row=Math.floor(p.cell/3);c.drawImage(image,col*w,row*h,w,h,-size*1.13,-size*1.21,size*2.86,size*2.42);}
   else{ellipse(c,0,0,size*1.24,size*.87,p.dark);ellipse(c,size*.35,0,size*1.12,size*.68,p.mid);for(const side of [-1,1]){ellipse(c,size*.55,size*.4*side,size*.17,size*.12,p.accent);ellipse(c,size*.6,size*.4*side,size*.035,size*.1,'#08131d');}}
   if(id==='snake-sovereign'){
-   c.shadowColor='#f1ce82';c.shadowBlur=size*.18;c.fillStyle='#e3bd6e';c.strokeStyle='#fff0c4';c.lineWidth=Math.max(.7,size*.025);
-   c.beginPath();c.moveTo(-size*.72,-size*.52);c.lineTo(-size*.78,-size*1.08);c.lineTo(-size*.34,-size*.84);c.lineTo(0,-size*1.25);c.lineTo(size*.3,-size*.84);c.lineTo(size*.67,-size*1.08);c.lineTo(size*.61,-size*.51);c.closePath();c.fill();c.stroke();
-   ellipse(c,-size*.02,-size*.66,size*.1,size*.095,'#6be6c0');
+   c.shadowColor='#86ead4';c.shadowBlur=size*.12;c.strokeStyle='#efd38d';c.lineWidth=Math.max(.8,size*.035);c.beginPath();c.moveTo(-size*.55,-size*.34);c.quadraticCurveTo(size*.24,-size*.55,size*.8,-size*.18);c.stroke();
+   for(const side of [-1,1]){ellipse(c,size*.48,size*.28*side,size*.11,size*.07,'#c6ffee');ellipse(c,size*.5,size*.28*side,size*.025,size*.065,'#0b222c');}
   }
   c.restore();
  }

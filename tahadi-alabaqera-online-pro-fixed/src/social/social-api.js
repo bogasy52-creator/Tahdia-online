@@ -306,6 +306,7 @@ export async function handleSocialRequest(request, env, options = {}) {
     const targetUsername = normalizeUsername(body.username);
     const game = normalizeGame(body.game);
     const roomCode = normalizeRoomCode(body.roomCode);
+    const variant=body.variant;if(variant!==undefined&&!(game==='journey'&&['paths','jewels'].includes(variant)))return json({ok:false,error:'نوع التحدي غير صالح'},400);
     if (!validUsername(targetUsername) || !game || (body.roomCode && !roomCode)) return json({ ok: false, error: "بيانات الدعوة غير صالحة" }, 400);
     const targetStub = stubFor(env, targetUsername);
     if (!targetStub || !(await publicProfile(env, targetUsername))) return json({ ok: false, error: "الحساب غير موجود" }, 404);
@@ -319,6 +320,7 @@ export async function handleSocialRequest(request, env, options = {}) {
       displayName: cleanDisplayName(auth.profile.displayName),
       game,
       roomCode,
+      variant,
     });
     return json(result.data, result.response.status);
   }

@@ -136,7 +136,8 @@
     "assets/css/mobile-v21.css",
     "assets/css/arena-v23.css",
     "assets/css/arena-hotfix-v23-1.css",
-    "assets/css/arena-v24.css"
+    "assets/css/arena-v24.css",
+    "assets/css/arena-v27.css"
   ],
   "shop.html": [
     "assets/css/platform.css",

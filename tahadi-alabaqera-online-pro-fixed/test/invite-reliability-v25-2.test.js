@@ -15,7 +15,8 @@ test('rooms toolbar stays in document flow on mobile paths match',async()=>{
 test('no misleading live-room invitation after match begins',async()=>{
  const source=await load('public/assets/js/play-feedback-v24-1.js');
  assert.match(source,/إذا بدأت المباراة فلا يمكن الانضمام/);
- assert.match(source,/invite\.textContent=data\.joinable\?'دعوة للغرفة':'تحدَّ صديقًا'/);
+ assert.match(source,/roundClosed:context\?\.joinable===false/);
+ assert.match(source,/invite\.textContent='دعوة صديق'/);
 });
 
 test('offline recipient sees persisted invitation on next dashboard read (isolated client harness)', async()=>{

@@ -1,8 +1,8 @@
 import {createSudokuGrid,paintSudokuGrid,sudokuEntryConflict,sudokuKey}from './sudoku-grid.js';
 import {createSudoku,moveSudoku,restoreSudoku,sudokuHint,sudokuWrongCells,sudokuConflicts,sudokuStars,validSudokuNotes,SUDOKU_TIERS}from'./engines/sudoku-engine.js';
 import {SUDOKU_PEERS}from'./engines/sudoku-core.js';
-import * as progress from'./journey-client.js?v=26.0.0';
-import {nextStage,dayKey}from'./engines/journey-engine.js?v=26.0.0';
+import * as progress from'./journey-client.js?v=27.0.0';
+import {nextStage,dayKey}from'./engines/journey-engine.js?v=27.0.0';
 const $=id=>document.getElementById(id),show=(id,yes)=>$(id).hidden=!yes,account=()=>window.BS_CAREER?.account?.()||'guest',key=()=> 'tahdia-sudoku-v20:'+account(),now=()=>Date.now();
 const ratio=(a,b)=>'\u2066'+a+' / '+b+'\u2069';
 const MAX_MISTAKES=3;let mistakes=0,locked=false;

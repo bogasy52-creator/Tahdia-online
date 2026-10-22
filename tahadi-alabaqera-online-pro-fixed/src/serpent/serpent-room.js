@@ -1,6 +1,7 @@
 import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
 import {getSocialStub} from '../social/social-api.js';
 import {compactSerpentFrame} from '../../public/assets/js/serpent-network.js';
+import {validWorld} from '../../public/assets/js/engines/arena-worlds-v27.js';
 
 const TTL=30*60_000,PROTOCOL='busraj-serpent-v1';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'cache-control':'no-store'}});
@@ -21,7 +22,7 @@ export class SerpentRoom {
  async schedule(){if(!this.room)return;const at=this.room.publicMatch&&this.room.status==='lobby'&&this.room.lobbyDeadline?Math.min(this.room.expiresAt,this.room.lobbyDeadline):this.room.status==='finished'&&!this.room.rewardsComplete?Math.min(this.room.expiresAt,Date.now()+10_000):this.room.expiresAt;await this.ctx.storage.setAlarm(at);}
  publicState(){
   if(!this.room)return null;const r=this.room;
-  return {code:r.code,status:r.status,round:r.round,playerLimit:r.playerLimit,publicMatch:r.publicMatch===true,lobbyDeadline:r.lobbyDeadline||null,serverNow:Date.now(),botCount:r.botCount||0,difficulty:r.difficulty||'medium',duration:r.duration,matchMode:r.matchMode||'timed',rewardsComplete:r.rewardsComplete,players:r.players.map(({id,name,role,ready,connected,skin})=>({id,name,role,ready,connected,skin})),game:r.game?serpentSnapshot(r.game):null};
+  return {code:r.code,status:r.status,round:r.round,worldId:r.worldId||'classic',playerLimit:r.playerLimit,publicMatch:r.publicMatch===true,lobbyDeadline:r.lobbyDeadline||null,serverNow:Date.now(),botCount:r.botCount||0,difficulty:r.difficulty||'medium',duration:r.duration,matchMode:r.matchMode||'timed',rewardsComplete:r.rewardsComplete,players:r.players.map(({id,name,role,ready,connected,skin})=>({id,name,role,ready,connected,skin})),game:r.game?serpentSnapshot(r.game):null};
  }
  broadcast(full=false){const state=this.publicState(),delta=!full&&state?.status==='playing'&&this.lastFrame?.round===state.round&&this.lastFrame?.game;const payload=JSON.stringify(delta?compactSerpentFrame(state,this.lastFrame):{type:'state',state});let packed=null;for(const ws of this.ctx.getWebSockets())if(isOpen(ws))try{if(delta&&ws.deserializeAttachment()?.packedBody){packed??=JSON.stringify(compactSerpentFrame(state,this.lastFrame,true));ws.send(packed);}else ws.send(payload)}catch{}this.lastFrame=state;}
  error(ws,message){try{ws.send(JSON.stringify({type:'error',message}))}catch{}}
@@ -58,8 +59,9 @@ export class SerpentRoom {
    const body=await request.json().catch(()=>({}));
    if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);
    const count=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed';
+   const worldId=body.publicMatch===true?['neon','forest','crystals','volcano','ruins','storm'][Number(body.code)%6]:body.worldId??'classic';if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
    if(!Number.isInteger(count)||count<2||count>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-count)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration)||!/^\d{6}$/.test(body.code||'')||typeof body.hostKey!=='string'||body.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
-   this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'arena-v23',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
+   this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',worldId,playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'arena-v23',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
    await this.save();await this.schedule();return json({ok:true},201);
   }
   if(!this.room||this.room.expiresAt<=Date.now())return json({ok:false,error:'الغرفة غير موجودة أو انتهت'},404);
@@ -104,10 +106,12 @@ export class SerpentRoom {
   if(msg.type==='resync'){const now=Date.now();if(!p.resyncAt||now-p.resyncAt>=500){p.resyncAt=now;this.broadcast(true);}return;}
   if(msg.type==='configure'){
    if(p.role!=='host')return this.error(ws,'تعديل البوتات للمضيف فقط');if(this.room.status!=='lobby')return;
+   if(this.room.publicMatch)return this.error(ws,'إعدادات المواجهة السريعة يحددها السيرفر');
    const matchMode=msg.matchMode??this.room.matchMode??'timed',duration=msg.duration??this.room.duration;
+   const worldId=msg.worldId??this.room.worldId??'classic';if(!validWorld(worldId))return this.error(ws,'خريطة الحلبة غير صالحة');
    if(!Number.isInteger(msg.botCount)||msg.botCount<0||msg.botCount>Math.min(6,10-this.room.playerLimit)||!['easy','medium','hard'].includes(msg.difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return this.error(ws,'اختر عدد بوتات وصعوبة وطريقة لعب صالحة؛ الحد الكلي عشرة');
-   if(this.room.botCount===msg.botCount&&this.room.difficulty===msg.difficulty&&(this.room.matchMode||'timed')===matchMode&&this.room.duration===duration)return;
-   this.room.botCount=msg.botCount;this.room.difficulty=msg.difficulty;this.room.matchMode=matchMode;this.room.duration=duration;for(const player of this.room.players)player.ready=false;await this.save();this.broadcast();return;
+   if(this.room.botCount===msg.botCount&&this.room.difficulty===msg.difficulty&&(this.room.matchMode||'timed')===matchMode&&this.room.duration===duration&&(this.room.worldId||'classic')===worldId)return;
+   this.room.worldId=worldId;this.room.botCount=msg.botCount;this.room.difficulty=msg.difficulty;this.room.matchMode=matchMode;this.room.duration=duration;for(const player of this.room.players)player.ready=false;await this.save();this.broadcast();return;
   }
   if(msg.type==='input'){
    if(this.room.status!=='playing')return;const now=Date.now();if(p.lastInputAt&&now-p.lastInputAt<30){if(msg.boost===false){const snake=this.room.game.snakes.find(s=>s.id===p.id);if(snake)snake.boost=false;}return;}p.lastInputAt=now;
@@ -118,7 +122,7 @@ export class SerpentRoom {
   if(msg.type==='start'){
    if(p.role!=='host')return this.error(ws,'بدء الجولة للمضيف فقط');if(this.room.status!=='lobby')return;
    this.syncConnections();if(this.room.players.length!==this.room.playerLimit||!this.room.players.every(p=>p.ready&&p.connected))return this.error(ws,'انتظر اكتمال الغرفة وجاهزية الجميع');
-   this.room.collisionMode='arena-v23';this.room.round++;this.room.game=createSerpentGame(this.room.players,{collisionMode:this.room.collisionMode,width:1400,height:1400,foodCount:260,matchMode:this.room.matchMode||'timed',duration:this.room.duration,difficulty:this.room.difficulty||'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount||0);this.room.status='playing';this.room.rewardsComplete=false;
+   this.room.collisionMode='arena-v23';this.room.round++;this.room.game=createSerpentGame(this.room.players,{collisionMode:this.room.collisionMode,worldId:this.room.worldId||'classic',matchMode:this.room.matchMode||'timed',duration:this.room.duration,difficulty:this.room.difficulty||'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount||0);this.room.status='playing';this.room.rewardsComplete=false;
    await this.save();await this.schedule();this.broadcast();this.run();return;
   }
   if(msg.type==='rematch'){
@@ -142,7 +146,7 @@ export class SerpentRoom {
   if(this.room.publicMatch&&this.room.status==='lobby'&&this.room.lobbyDeadline&&this.room.lobbyDeadline<=Date.now()){
    this.syncConnections();this.room.players=this.room.players.filter(p=>p.connected);
    if(!this.room.players.length){this.room.lobbyDeadline=null;this.room.expiresAt=Date.now()+60000;await this.save();await this.schedule();return;}
-   this.room.botCount=Math.max(0,this.room.playerLimit-this.room.players.length);this.room.collisionMode='arena-v23';this.room.round++;this.room.game=createSerpentGame(this.room.players,{collisionMode:'arena-v23',width:1200,height:1200,foodCount:260,matchMode:'survival',difficulty:'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount);this.room.status='playing';this.room.rewardsComplete=false;await this.save();await this.schedule();this.broadcast(true);this.run();return;
+   this.room.botCount=Math.max(0,this.room.playerLimit-this.room.players.length);this.room.collisionMode='arena-v23';this.room.round++;this.room.game=createSerpentGame(this.room.players,{collisionMode:'arena-v23',worldId:this.room.worldId||'classic',matchMode:'survival',difficulty:'medium',seed:crypto.getRandomValues(new Uint32Array(1))[0]});addSerpentBots(this.room.game,this.room.botCount);this.room.status='playing';this.room.rewardsComplete=false;await this.save();await this.schedule();this.broadcast(true);this.run();return;
   }
   this.syncConnections();if(this.room.expiresAt<=Date.now()&&this.room.status==='playing'&&this.room.players.some(p=>p.connected)){this.room.expiresAt=Date.now()+TTL;await this.save();await this.schedule();return;}
   if(this.room.expiresAt<=Date.now()){this.stop();for(const ws of this.ctx.getWebSockets())try{ws.close(1000,'room_expired')}catch{}await this.ctx.storage.delete('serpent');await this.ctx.storage.deleteAlarm();this.room=null;return;}

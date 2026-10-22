@@ -13,10 +13,12 @@ import {ArenaGestures} from '../public/assets/js/arena-gestures.js';
 import {applySerpentFrame} from '../public/assets/js/serpent-network.js';
 import {arenaTelemetry,resolveTrialSkin} from '../public/assets/js/serpent-renderer.js';
 import * as serpentWorlds from '../public/assets/js/serpent-worlds-v25-2.js';
+import {installExperienceHarness} from './arena-experience-harness.mjs';
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 async function ui(){
  const h=await createDOM('serpent.html'),peers=[],inputs=[];h.context.requestAnimationFrame=()=>0;
  Object.assign(h.context,serpentWorlds);
+ await installExperienceHarness(h);
  Object.assign(h.context,serpent,{ARENA_POWERS,powerActive,ArenaGestures,applySerpentFrame,arenaTelemetry,resolveTrialSkin,steerSerpent:(_game,id,input)=>inputs.push({id,...input})});
  h.context.SerpentRenderer=class{constructor(){this.cameras=new Map()}reset(){}resize(){}setQuality(){}setGame(){}draw(){}};
  h.context.WebSocket=class{static OPEN=1;constructor(){this.readyState=0;peers.push(this)}close(code,reason){this.readyState=3;queueMicrotask(()=>this.onclose?.({code,reason}))}send(){}};

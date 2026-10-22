@@ -64,7 +64,7 @@ export function normalizeGame(value) {
   return SOCIAL_CHALLENGE_GAMES.has(game) ? game : "";
 }
 
-export function gameJoinPath(game, roomCode) {
+export function gameJoinPath(game, roomCode, variant) {
   const normalizedGame = normalizeGame(game);
   const code = normalizeRoomCode(roomCode);
   if (!normalizedGame) return "";
@@ -76,6 +76,7 @@ export function gameJoinPath(game, roomCode) {
     return `/${normalizedGame}?room=${encodeURIComponent(code)}`;
   }
   const direct = {paths:"/paths-online",quiz:"/online"};
+  if(normalizedGame==='journey'&&['paths','jewels'].includes(variant))return '/journey?game='+variant;
   return direct[normalizedGame] || `/${normalizedGame}`;
 }
 

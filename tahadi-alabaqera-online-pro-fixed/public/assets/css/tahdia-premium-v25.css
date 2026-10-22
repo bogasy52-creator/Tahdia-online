@@ -93,6 +93,7 @@ body.home-v26 .home-game:hover{transform:translateY(-4px);border-color:#9a804f!i
 body.home-v26 .game-number{display:none!important}
 body.home-v26 .game-cover{height:170px!important;position:relative;overflow:hidden;margin:0 0 14px!important;border-radius:0!important;background:radial-gradient(ellipse at 50% 80%,#294947,#132030 75%)!important;display:grid;place-items:center;transform:none!important}
 body.home-v26 .game-cover img{width:100%!important;height:100%!important;object-fit:contain!important;transform:none!important;max-width:100%!important;opacity:1!important;filter:none!important}
+body.home-v26 .game-cover img.game-card-scene{object-fit:cover!important;object-position:center!important}
 body.home-v26 .home-serpent .game-cover img{object-fit:cover!important;object-position:20% 40%}
 body.home-v26 .home-picture-cover img{object-fit:cover!important}
 body.home-v26 .game-cover svg{width:90px;height:90px;fill:none;stroke:#edc27c;stroke-width:1.3}

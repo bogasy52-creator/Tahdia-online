@@ -1,8 +1,9 @@
 import {paintPowerDrop,paintSnakePower} from './arena-powers-art-v24.js';
 import {ARENA_POWERS,powerActive,arenaSpeed} from './engines/arena-drops-v24.js';
 import {paintArenaFloor,paintArenaFood,paintCombatZones} from './arena-art-v23.js';
+import {paintWorldFloor,paintWorldFeatures,paintEnergyFood} from './arena-worlds-art-v27.js';
 import {arenaTurnRate} from './engines/serpent-combat-v23.js';
-import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=26.0.0';
+import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=27.0.0';
 const lerp=(a,b,t)=>a+(b-a)*t;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const foodSprites=new Map();
@@ -85,7 +86,7 @@ export class SerpentRenderer {
    const age=Math.min(this.predictionWindow()/1000,Math.max(0,(now-this.received)/1000)),input=this.inputs.get(s.id);
    const delta=input?Math.atan2(Math.sin(input.angle-s.angle),Math.cos(input.angle-s.angle)):0;
    const angle=s.angle+Math.max(-(this.game.collisionMode==='arena-v23'?arenaTurnRate({boost:input?.boost&&s.mass>24}):SERPENT_TURN_RATE)*age,Math.min((this.game.collisionMode==='arena-v23'?arenaTurnRate({boost:input?.boost&&s.mass>24}):SERPENT_TURN_RATE)*age,delta));
-   const speed=this.game.collisionMode==='arena-v23'?arenaSpeed(s,input?.boost&&s.mass>24,this.game.elapsed):input?.boost&&s.mass>24?SERPENT_BOOST_SPEED:SERPENT_SPEED,travel=(s.angle+angle)/2;
+   const speed=(this.game.collisionMode==='arena-v23'?arenaSpeed(s,input?.boost&&s.mass>24,this.game.elapsed):input?.boost&&s.mass>24?SERPENT_BOOST_SPEED:SERPENT_SPEED)*(s.worldSpeed||1),travel=(s.angle+angle)/2;
    const x=s.x+Math.cos(travel)*speed*age,y=s.y+Math.sin(travel)*speed*age;
    // Presentation only. Collisions, rewards and death remain server-owned.
    return {...s,x,y,angle,segments:['predator','arena-v23'].includes(this.game.collisionMode)?followSerpentBody(s.segments.map(p=>({...p})),x,y,s.segments.length):[{x,y},...s.segments.slice(0,-1)]};
@@ -103,6 +104,8 @@ export class SerpentRenderer {
    const key=event.eventId||this.game.tick+':'+index;if(this.seenEvents.has(key))continue;this.seenEvents.add(key);
    if(event.type==='power'&&this.ids.includes(event.id)){const p=ARENA_POWERS[event.kind];if(p){this.announce(p.icon+' '+p.name+' · '+p.duration+' ثوانٍ');window.BS_AUDIO?.play?.('reward',{volume:.2});if(!this.reducedMotion)this.effects.push({id:event.id,x:event.x,y:event.y,born:now,text:p.icon,color:p.color,strong:true});}}
    if(event.type==='shield'&&this.ids.includes(event.id))this.announce('⬡ الحماية صدّت الاصطدام');
+   if(['world-warning','world-active','fountain'].includes(event.type))this.announce(event.text);
+   if(['zone','portal','rail','combo','lava'].includes(event.type)&&this.ids.includes(event.id)){if(['portal','combo','rail'].includes(event.type))this.announce(event.text);if(!this.reducedMotion)this.effects.push({id:event.id,x:event.x,y:event.y,born:now,text:event.text,color:event.type==='lava'?'#ff9b77':event.type==='combo'?'#ffe1a1':'#a7f2e5',strong:['portal','combo'].includes(event.type)});}
    if(event.type==='treasure'){this.announce('✦ كنز الحلبة ظهر! اجمع النجوم والبلورات');if(!this.reducedMotion)this.effects.push({id:this.ids[0],x:event.x,y:event.y,born:now,text:'كنز الحلبة',color:'#ffe3a0',strong:true});window.BS_AUDIO?.play?.('reward',{volume:.24});}
   }
   if(this.seenEvents.size>128)this.seenEvents=new Set([...this.seenEvents].slice(-64));
@@ -179,7 +182,8 @@ export class SerpentRenderer {
   const light=ctx.createRadialGradient(v.x+v.w*.45,v.y+v.h*.4,0,v.x+v.w*.5,v.y+v.h*.5,v.w*.7);
   light.addColorStop(0,'#1c374b');light.addColorStop(1,'#091424');ctx.fillStyle=light;ctx.fillRect(v.x,v.y,v.w,v.h);
   ctx.translate(v.x+v.w/2,v.y+v.h/2);ctx.scale(zoom,zoom);ctx.translate(-camera.x,-camera.y);
-  if(g.collisionMode==='arena-v23')paintArenaFloor(ctx,g,{minX,minY,maxX,maxY},zoom);else{
+  if(g.world?.version===27){paintWorldFloor(ctx,g,{minX,minY,maxX,maxY},zoom);paintWorldFeatures(ctx,g,{minX,minY,maxX,maxY},now,this.reducedMotion||this.quality==='fast');}
+  else if(g.collisionMode==='arena-v23')paintArenaFloor(ctx,g,{minX,minY,maxX,maxY},zoom);else{
   ctx.strokeStyle='#75bbb31b';ctx.lineWidth=1/zoom;ctx.beginPath();
   for(let x=Math.max(0,Math.floor(minX/80)*80);x<=Math.min(g.width,maxX);x+=80){ctx.moveTo(x,Math.max(0,minY));ctx.lineTo(x,Math.min(g.height,maxY));}
   for(let y=Math.max(0,Math.floor(minY/80)*80);y<=Math.min(g.height,maxY);y+=80){ctx.moveTo(Math.max(0,minX),y);ctx.lineTo(Math.min(g.width,maxX),y);}
@@ -192,6 +196,7 @@ export class SerpentRenderer {
   }
   for(const f of g.food){
    if(f.x<minX-20||f.x>maxX+20||f.y<minY-20||f.y>maxY+20)continue;
+   if(g.world?.version===27){paintEnergyFood(ctx,f,now,this.reducedMotion);continue;}
    if(g.collisionMode==='arena-v23'){paintArenaFood(ctx,f,now,this.reducedMotion);continue;}
    const kind=f.kind||['apple','citrus','grapes','gem','berry'][f.hue%5],size=(f.radius||6)*4.6;
    const pulse=!this.reducedMotion&&['star','gem'].includes(kind)?1+Math.sin(now/260+f.x)*.08:1;ctx.drawImage(foodSprite(kind),f.x-size*pulse/2,f.y-size*pulse/2,size*pulse,size*pulse);
@@ -252,6 +257,7 @@ export class SerpentRenderer {
   const layout=arenaMapLayout(v,this.ids.length===2,this.width);if(!layout)return;const {size,x,y}=layout;
   ctx.save();ctx.fillStyle='#101c36df';ctx.fillRect(x,y,size,size);ctx.strokeStyle='#7694c67a';ctx.lineWidth=1;ctx.strokeRect(x,y,size,size);
   ctx.strokeStyle='#7090b525';for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(x+i*size/4,y);ctx.lineTo(x+i*size/4,y+size);ctx.moveTo(x,y+i*size/4);ctx.lineTo(x+size,y+i*size/4);ctx.stroke();}
+  for(const z of g.world?.zones||[]){ctx.strokeStyle=g.world.phase==='active'?'#ffc797':'#9dcfdf88';ctx.beginPath();ctx.arc(x+z.x/g.width*size,y+z.y/g.height*size,Math.max(2,z.radius/g.width*size),0,Math.PI*2);ctx.stroke();}
   for(const f of g.food){if(f.value<3||!Number.isFinite(f.x)||!Number.isFinite(f.y))continue;ctx.fillStyle=f.kind==='gem'?'#86f5fb':'#ffd27c';ctx.beginPath();ctx.arc(x+clamp(f.x/g.width,0,1)*size,y+clamp(f.y/g.height,0,1)*size,1.5,0,Math.PI*2);ctx.fill();}
   for(const snake of g.snakes){if(!snake.alive||snake.id!==id&&powerActive(snake,'ghost',g.elapsed))continue;const sx=x+clamp(snake.x/g.width,0,1)*size,sy=y+clamp(snake.y/g.height,0,1)*size;
    ctx.fillStyle=snake.id===id?'#e2fbff':snake.bot?'#e8ae86':'#b6a4f7';ctx.beginPath();ctx.arc(sx,sy,snake.id===id?3.5:2.2,0,Math.PI*2);ctx.fill();

@@ -460,10 +460,11 @@ export function createSocialUserClass(DurableObject) {
     }
     const game = normalizeGame(body.game);
     const roomCode = normalizeRoomCode(body.roomCode);
-    const joinPath = gameJoinPath(game, roomCode);
+    const variant=body.variant;if(variant!==undefined&&!(game==='journey'&&['paths','jewels'].includes(variant)))return json({ok:false,error:'invalid_invite'},400);
+    const joinPath = gameJoinPath(game, roomCode, variant);
     if (!game || !joinPath) return json({ ok: false, error: "invalid_invite" }, 400);
     const existing=await this.ctx.storage.list({prefix:'notification:',reverse:true,limit:SOCIAL_MAX_NOTIFICATIONS});
-    const duplicate=[...existing.values()].find(n=>n.type==='game_invite'&&n.from?.username===fromUsername&&n.game===game&&n.roomCode===roomCode&&!n.read&&n.expiresAt>Date.now()&&Date.now()-n.createdAt<15000);
+    const duplicate=[...existing.values()].find(n=>n.type==='game_invite'&&n.from?.username===fromUsername&&n.game===game&&n.roomCode===roomCode&&n.joinPath===joinPath&&!n.read&&n.expiresAt>Date.now()&&Date.now()-n.createdAt<15000);
     if(duplicate)return json({ok:true,invite:duplicate,deduplicated:true});
     const invite = {
       id: crypto.randomUUID(),
@@ -472,6 +473,7 @@ export function createSocialUserClass(DurableObject) {
       game,
       roomCode,
       joinPath,
+      ...(variant?{variant}:{}),
       createdAt: Date.now(),
       expiresAt: Date.now() + SOCIAL_INVITE_TTL_MS,
       read: false,

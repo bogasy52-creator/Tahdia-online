@@ -125,14 +125,14 @@
   async function block(username) { const data = await api('/api/social/block', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function unblock(username) { const data = await api('/api/social/unblock', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function settings(values) { const data = await api('/api/social/settings', { method: 'POST', body: JSON.stringify(values) }); state.dashboard = null; return data; }
-  async function invite(username, game, roomCode) { return api('/api/social/invites', { method: 'POST', body: JSON.stringify({ username, game, roomCode }) }); }
+  async function invite(username, game, roomCode, variant) { return api('/api/social/invites', { method: 'POST', body: JSON.stringify({ username, game, roomCode, ...(variant?{variant}:{}) }) }); }
   async function readNotifications(ids = []) { const data = await api('/api/social/notifications/read', { method: 'POST', body: JSON.stringify({ ids }),keepalive:true }); state.dashboard = null; return data; }
 
   function emit(type, detail) { events.dispatchEvent(new CustomEvent(type, { detail })); }
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
-    if(!/^\/(?:online|picture|jackaroo|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?$/.test(notification.joinPath))return;
+    if(!/^(?:\/(?:online|picture|jackaroo|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/.test(notification.joinPath))return;
     if (notification.id && seenInvites.has(String(notification.id))) return;
     rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);
     let wrap = document.querySelector('#bsSocialInvite');
@@ -263,25 +263,26 @@
     });
   }
 
-  async function openInvitePicker({ game, roomCode } = {}) {
+  async function openInvitePicker({ game, roomCode, variant, title:gameTitle, roundClosed, share } = {}) {
     if (!token()) {
       toast('سجّل الدخول أولًا لإرسال دعوة لصديق');
       setTimeout(() => { location.href = `/social?next=${encodeURIComponent(location.pathname + location.search)}`; }, 650);
       return;
     }
-    let data;
+    const openedSession=token(),source=document.activeElement;let data;
     try { data = await me(true); } catch (error) { toast(error.message); return; }
-    if(!data)return;
+    if(!data||openedSession!==token())return;
     const friends = [...(data.friends || [])].sort((a, b) => Number(b.online) - Number(a.online) || String(a.displayName).localeCompare(String(b.displayName), 'ar'));
     let modal = document.querySelector('#bsInviteFriendsModal');
     if (!modal) {
-      modal = document.createElement('div'); modal.id = 'bsInviteFriendsModal'; modal.className = 'bs-modal'; document.body.appendChild(modal);
+      modal = document.createElement('div'); modal.id = 'bsInviteFriendsModal'; modal.className = 'bs-modal';
     }
+    const parent=document.fullscreenElement||document.querySelector('body.serpent-active #arenaPlay')||document.body;if(modal.parentElement!==parent)parent.appendChild(modal);
     modal.innerHTML = '';
-    const panel = document.createElement('section'); panel.className = 'bs-panel bs-social-picker';
+    const panel = document.createElement('section'); panel.className = 'bs-panel bs-social-picker';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','دعوة صديق لهذه اللعبة');
     const head = document.createElement('div'); head.className = 'bs-social-picker-head';
-    const copy = document.createElement('div'); const title = document.createElement('h2'); title.textContent = '👥 دعوة صديق'; const note = document.createElement('small'); note.textContent = roomCode ? `الغرفة ${roomCode}` : 'تحدٍ مباشر من داخل اللعبة'; copy.append(title, note);
-    const close = document.createElement('button'); close.type = 'button'; close.className = 'bs-icon-btn'; close.textContent = '✕'; close.onclick = () => modal.classList.remove('open');
+    const copy = document.createElement('div'); const title = document.createElement('h2'); title.textContent = 'دعوة صديق · '+(gameTitle||'اللعبة الحالية'); const note = document.createElement('small'); note.textContent = roomCode ? `يدخل صديقك إلى غرفتك ${roomCode}` : roundClosed?'الجولة بدأت؛ الدعوة لتحدٍ جديد في نفس اللعبة':'يفتح صديقك نفس اللعبة مباشرة'; copy.append(title, note);
+    const dismiss=()=>{modal.classList.remove('open');source?.focus?.();};const close = document.createElement('button'); close.type = 'button'; close.className = 'bs-icon-btn'; close.textContent = '✕';close.setAttribute('aria-label','إغلاق دعوة الأصدقاء');close.onclick=dismiss;
     head.append(copy, close); panel.appendChild(head);
     const list = document.createElement('div'); list.className = 'bs-social-picker-list';
     if (!friends.length) {
@@ -291,13 +292,15 @@
       const row = document.createElement('div'); row.className = 'bs-social-picker-row';
       const who = document.createElement('div'); const name = document.createElement('b'); name.textContent = `${friend.online ? '🟢' : '⚫'} ${friend.displayName}`; const user = document.createElement('small'); user.textContent = `@${friend.username}`; who.append(name, user);
       const send = document.createElement('button'); send.type = 'button'; send.className = 'bs-btn cyan'; send.textContent = 'دعوة';
-      send.onclick = async () => { send.disabled = true; try { await invite(friend.username, game, roomCode); send.textContent = 'حُفظت ✓'; toast(`حُفظت الدعوة لدى ${friend.displayName} وستظهر عند اتصاله`); } catch (error) { send.disabled = false; toast(error.message); } };
+      send.onclick = async () => {if(openedSession!==token()){toast('تغيّر الحساب؛ افتح قائمة الأصدقاء مجددًا');dismiss();return;} send.disabled = true; try { await invite(friend.username, game, roomCode, variant); send.textContent = 'أُرسلت ✓'; toast(friend.online?`أُرسلت الدعوة إلى ${friend.displayName}`:`حُفظت الدعوة لدى ${friend.displayName} وستظهر عند اتصاله`); } catch (error) { send.disabled = false; toast(error.message); } };
       row.append(who, send); list.appendChild(row);
     }
     panel.appendChild(list);
+    if(typeof share==='function'){const button=document.createElement('button');button.type='button';button.className='bs-btn';button.textContent='مشاركة رابط اللعبة';button.onclick=share;panel.append(button);}
     const footer = document.createElement('a'); footer.href = '/social'; footer.className = 'bs-social-picker-footer'; footer.textContent = 'إدارة الأصدقاء ←'; panel.appendChild(footer);
     modal.appendChild(panel); modal.classList.add('open');
-    modal.onclick = (event) => { if (event.target === modal) modal.classList.remove('open'); };
+    modal.onclick = (event) => { if (event.target === modal) dismiss(); };
+    panel.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();dismiss();}if(event.key==='Tab'){const controls=[...panel.querySelectorAll('button,a,input')].filter(n=>!n.disabled),first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}};close.focus();
   }
 
   const apiPublic = {

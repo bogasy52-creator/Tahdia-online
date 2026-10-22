@@ -12,5 +12,5 @@ test('snakes premium arcade UI exposes action HUD and player progress', () => {
 });
 
 test('PWA cache is bumped for the premium snakes release', () => {
-  assert.match(sw, /CACHE_NAME\s*=\s*'busraj-games-v55-release-26-0-0'/);
+  assert.match(sw, /CACHE_NAME\s*=\s*'busraj-games-v56-release-27-0-0'/);
 });

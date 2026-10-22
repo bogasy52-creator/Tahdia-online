@@ -14,15 +14,18 @@ async function join(code,protocols=[]){
  const welcome=await next(m=>m.type==='welcome');return{socket,next,...welcome};
 }
 try{
- const health=await api('/api/health');assert.equal(health.data.release,'26.0.0');checks.push('Worker and frontend release agree');
+ const health=await api('/api/health');assert.equal(health.data.release,'27.0.0');checks.push('Worker and frontend release agree');
  const signup=async(username)=>(await api('/api/social/signup',{username,displayName:username,password:'Runtime-test-only-2026'})).data.token;
  const a=await signup('alice26'),b=await signup('bob26'),owner=await signup('bosrag');
  await api('/api/social/friends/request',{username:'bob26'},a);await api('/api/social/friends/respond',{username:'alice26',accept:true},b);
+ const pathChallenge=await api('/api/social/invites',{username:'bob26',game:'journey',variant:'paths'},a),jewelChallenge=await api('/api/social/invites',{username:'bob26',game:'journey',variant:'jewels'},a);
+ assert.equal(pathChallenge.response.status,200);assert.equal(pathChallenge.data.invite.joinPath,'/journey?game=paths');assert.equal(jewelChallenge.data.invite.joinPath,'/journey?game=jewels');assert.notEqual(pathChallenge.data.invite.id,jewelChallenge.data.invite.id);
+ const invalidVariant=await api('/api/social/invites',{username:'bob26',game:'journey',variant:'https://evil.invalid'},a);assert.equal(invalidVariant.response.status,400);checks.push('Direct friend challenges preserve paths versus jewels and reject arbitrary destinations');
  const created=await api('/api/board/rooms',{game:'snakes',name:'Alice',playerLimit:2,variant:'adventure'});assert.equal(created.response.status,200);const {code,hostKey}=created.data;
  const host=await join(code,['hk.'+hostKey,'st.'+a]);
  const invite=await api('/api/social/invites',{username:'bob26',game:'snakes',roomCode:code},a);assert.equal(invite.response.status,200);
  const duplicate=await api('/api/social/invites',{username:'bob26',game:'snakes',roomCode:code},a);assert.equal(duplicate.data.invite.id,invite.data.invite.id);
- const inbox=await api('/api/social/me',undefined,b);assert.equal(inbox.data.notifications.filter(n=>n.type==='game_invite').length,1);checks.push('Offline invitation persists once despite rapid repeats');
+ const inbox=await api('/api/social/me',undefined,b);assert.equal(inbox.data.notifications.filter(n=>n.type==='game_invite'&&n.game==='snakes').length,1);checks.push('Offline invitation persists once despite rapid repeats');
  const guest=await join(code,['st.'+b]);host.socket.send(JSON.stringify({type:'ping'}));assert.equal((await host.next(m=>m.type==='pong')).type,'pong');checks.push('Board heartbeat replies without mutating game state');
  host.socket.send(JSON.stringify({type:'ready',ready:true}));guest.socket.send(JSON.stringify({type:'ready',ready:true}));await host.next(m=>m.type==='state'&&m.state.players.every(p=>p.ready));
  host.socket.send(JSON.stringify({type:'start'}));const started=(await host.next(m=>m.type==='state'&&m.state.status==='playing')).state;assert.equal(started.players.length,2);checks.push('Two real WebSocket players ready and start an enhanced board');
