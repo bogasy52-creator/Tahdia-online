@@ -1,8 +1,8 @@
 import {ARENA_POWERS,powerActive} from './engines/arena-drops-v24.js';
-import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=27.0.0';
-import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=27.0.0';
-import {ArenaGestures} from './arena-gestures.js?v=27.0.0-s1';
-import {applySerpentFrame} from './serpent-network.js?v=27.0.0';
+import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSteeringAngle} from './engines/serpent-engine.js?v=28.0.0';
+import {SerpentRenderer,arenaTelemetry,resolveTrialSkin} from './serpent-renderer.js?v=28.0.0';
+import {ArenaGestures} from './arena-gestures.js?v=28.0.0-s1';
+import {applySerpentFrame} from './serpent-network.js?v=28.0.0';
 import {SERPENT_WORLDS,ownerAllowed} from './engines/arena-worlds-v27.js';
 import {installArenaExperience,updateArenaExperience,resetTraining} from './arena-experience-v27.js';
 

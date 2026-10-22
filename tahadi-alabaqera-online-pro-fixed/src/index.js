@@ -13,6 +13,7 @@ import { handleSocialRequest, authenticate, getSocialStub } from "./social/socia
 import { createQuickArenaClass } from "./quick/arena.js";
 import { createSocialUserClass } from "./social/social-user.js";
 import { generateSafeQuestions } from "./ai-questions.js";
+import {createRelay,relayView,answerRelay,relayResults,relayReveal} from '../public/assets/js/engines/quiz-relay-v28.js';
 import { SerpentRoom } from './serpent/serpent-room.js';
 
 class SocialDelegateBase {
@@ -21,7 +22,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='27.0.0';
+const RELEASE='28.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -210,11 +211,12 @@ function makePlan(categoryIds, rounds = 12, recentQids = []) {
   const addQuestion = (cat, value) => {
     const all = cat.questions.filter((q) => !value || q.v === value);
     const unused = all.filter((q) => !plan.some((p) => p.qid === questionRef(cat, q)));
-    const fresh = unused.filter((q) => !recent.has(questionRef(cat, q)));
-    const pool = fresh.length ? fresh : (unused.length ? unused : all);
+    const diverse = unused.filter(q=>!q.mediaFamily||!plan.some(p=>p.mediaFamily===q.mediaFamily));
+    const fresh = diverse.filter((q) => !recent.has(questionRef(cat, q)));
+    const pool = fresh.length ? fresh : (diverse.length ? diverse : (unused.length ? unused : all));
     if (!pool.length) return false;
     const q = pick(pool);
-    plan.push({ catId: cat.id, qid: questionRef(cat, q) });
+    plan.push({ catId: cat.id, qid: questionRef(cat, q),mediaFamily:q.mediaFamily||null });
     return true;
   };
 
@@ -640,6 +642,7 @@ export class GameRoom extends DurableObject {
         recentQids: [],
         winnerId: null,
         mode: [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
+        relayEnabled: [4,6].includes(Number(body.playerLimit)),
         playerLimit: [2,4,5,6,7,8].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
@@ -727,7 +730,7 @@ export class GameRoom extends DurableObject {
       token: token(),
       name: cleanName(name),
       role,
-      team: this.room.mode === 'teams-4' ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : this.room.mode === 'teams-6' ? (this.room.order.length % 2 === 0 ? 'A' : 'B') : null,
+      team: ['teams-4','teams-6'].includes(this.room.mode) ? (this.room.order.filter(id=>this.room.players[id]?.team==='A').length<=this.room.order.filter(id=>this.room.players[id]?.team==='B').length?'A':'B') : null,
       score: 0,
       ready: false,
       connected: true,
@@ -763,7 +766,7 @@ export class GameRoom extends DurableObject {
     try { msg = JSON.parse(rawText); }
     catch { return this.sendError(ws, "رسالة غير صالحة"); }
 
-    if(['answer','buzz','power'].includes(msg.type)){const required=ws.deserializeAttachment()?.roundContext;if((required||Object.hasOwn(msg,'roundIndex')||Object.hasOwn(msg,'matchId'))&&(msg.matchId!==this.room.matchId||msg.roundIndex!==this.room.roundIndex))return this.sendError(ws,'تغير السؤال؛ انتظر تحديث الجولة');}
+    if(['answer','buzz','power','relay_answer'].includes(msg.type)){const required=msg.type==='relay_answer'||ws.deserializeAttachment()?.roundContext;if((required||Object.hasOwn(msg,'roundIndex')||Object.hasOwn(msg,'matchId'))&&(msg.matchId!==this.room.matchId||msg.roundIndex!==this.room.roundIndex))return this.sendError(ws,'تغير السؤال؛ انتظر تحديث الجولة');}
 
     try {
       switch (msg.type) {
@@ -784,6 +787,14 @@ export class GameRoom extends DurableObject {
             for(const p of Object.values(this.room.players))p.ready=false;
             await this.persistAndBroadcast();
           }
+          break;
+
+        case "set_relay":
+          if(player.role!=='host'||this.room.status!=='lobby')return this.sendError(ws,'للمضيف فقط');
+          if(!['teams-4','teams-6'].includes(this.room.mode)||typeof msg.enabled!=='boolean')return this.sendError(ws,'سلسلة الفريق متاحة لفريقين من 4 أو 6 لاعبين');
+          this.room.relayEnabled=msg.enabled;
+          for(const p of Object.values(this.room.players))p.ready=false;
+          await this.persistAndBroadcast();
           break;
 
         case "set_round_count":
@@ -809,6 +820,7 @@ export class GameRoom extends DurableObject {
           if (this.room.status !== "lobby") return;
           if (this.room.order.length < 2) return this.sendError(ws, "يلزم لاعبان على الأقل");
           if(this.room.mode!=='free'&&this.room.order.length!==this.room.playerLimit)return this.sendError(ws,"انتظر اكتمال الفريقين");
+          if(this.room.mode!=='free'&&['A','B'].some(team=>this.room.order.filter(id=>this.room.players[id].team===team).length!==this.room.playerLimit/2)){for(const [index,id]of this.room.order.entries()){this.room.players[id].team=index%2?'B':'A';this.room.players[id].ready=false;}await this.persistAndBroadcast();return this.sendError(ws,'أعدنا توازن الفريقين؛ أكدوا الاستعداد مجددًا');}
           if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال اللاعبين");
           if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "يجب أن يكون جميع اللاعبين جاهزين");
           if (this.room.selectedCategories.length !== 6) return this.sendError(ws, "اختر 6 فئات");
@@ -817,6 +829,10 @@ export class GameRoom extends DurableObject {
 
         case "answer":
           await this.handleAnswer(player, Number(msg.choice));
+          break;
+
+        case "relay_answer":
+          await this.handleRelayAnswer(player,msg,ws);
           break;
 
         case "buzz":
@@ -950,7 +966,7 @@ export class GameRoom extends DurableObject {
 
     const out = {
       code: this.room.code,
-      serverNow:Date.now(),matchId:this.room.matchId||'',mode:this.room.mode,playerLimit:this.room.playerLimit,rewardsComplete:this.room.rewardsComplete!==false,teamScores:['A','B'].map(team=>({team,score:this.room.order.reduce((n,id)=>n+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})),
+      serverNow:Date.now(),matchId:this.room.matchId||'',mode:this.room.mode,relayEnabled:Boolean(this.room.relayEnabled),playerLimit:this.room.playerLimit,rewardsComplete:this.room.rewardsComplete!==false,teamScores:['A','B'].map(team=>({team,score:this.room.order.reduce((n,id)=>n+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})),
       status: this.room.status,
       selectedCategories: this.room.selectedCategories,
       categories: CATEGORIES.map((c) => ({ id: c.id, name: c.name, icon: c.icon, desc: c.desc })),
@@ -984,6 +1000,10 @@ export class GameRoom extends DurableObject {
       if (c.mode === "secret" && c.phase === "secret") base.options = c.options;
       if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner === playerId) base.options = c.options;
       if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer === playerId) base.options = c.options;
+      if(c.mode==='relay'){
+        base.relay=relayView(c.relays?.[me?.team],playerId);
+        base.teamProgress=Object.entries(c.relays||{}).map(([team,r])=>({team,stage:r.stage,count:r.members.length,complete:r.complete,failed:r.failed}));
+      }
       out.current = base;
     }
     return out;
@@ -996,6 +1016,7 @@ export class GameRoom extends DurableObject {
     this.room.lastReveal = null;
     this.room.roundIndex = -1;
     this.room.roundPlan = makePlan(this.room.selectedCategories, this.room.roundCount, this.room.recentQids || []);
+    if(this.room.relayEnabled&&['teams-4','teams-6'].includes(this.room.mode))this.room.roundPlan=this.room.roundPlan.map((round,index)=>({...round,mode:(index+1)%4===0?'relay':round.mode}));
     this.room.recentQids = [...new Set([
       ...this.room.roundPlan.map((x) => x.qid),
       ...(this.room.recentQids || []),
@@ -1025,6 +1046,12 @@ export class GameRoom extends DurableObject {
       return;
     }
     const { cat, q } = found;
+    if(plan.mode==='relay'){
+      const now=Date.now(),seed=this.room.roundIndex+this.room.matchId.split('').reduce((n,c)=>n+c.charCodeAt(0),0);
+      const relays=Object.fromEntries(['A','B'].map(team=>[team,createRelay({seed,members:this.room.order.filter(id=>this.room.players[id]?.team===team),now})]));
+      this.room.current={mode:'relay',phase:'relay',category:{id:'relay',name:'سلسلة الفريق',icon:'puzzle'},value:q.v,question:'كل عضو يحل جزءًا ويسلّم الناتج لزميله. اكملوا السلسلة معًا.',media:null,relays,deadline:now+60000,startedAt:now,answerOpensAt:now,answers:{},options:[],correctIndex:-1,correctAnswer:'سلسلة الفريق · نتائج الأجزاء أدناه',double:{},blocked:{}};
+      await this.persistAndBroadcast();await this.ctx.storage.setAlarm(this.room.current.deadline);return;
+    }
     const { options, correctIndex } = buildChoices(cat, q);
     const now = Date.now();
     const isSecret = plan.mode === "secret";
@@ -1043,6 +1070,8 @@ export class GameRoom extends DurableObject {
         focusY: Number.isFinite(q.focusY) ? q.focusY : 50,
         replays: Number.isInteger(q.replays) ? q.replays : (q.media === "sound" ? 2 : null),
         credit: q.credit || "",
+        revealSrc: q.revealSrc || q.src || '',
+        generated: Boolean(q.generated),
         memory: q.media === "memory" ? (q.memory || null) : null,
       } : null,
       options,
@@ -1062,6 +1091,22 @@ export class GameRoom extends DurableObject {
   }
 
   opponentId(playerId){const player=this.room.players[playerId];return this.room.order.find(id=>id!==playerId&&this.room.players[id]?.connected&&(!player?.team||this.room.players[id].team!==player.team))||null;}
+
+  async handleRelayAnswer(player,msg,ws){
+    const c=this.room.current;if(this.room.status!=='playing'||c?.mode!=='relay')return;
+    const relay=c.relays?.[player.team];
+    const result=answerRelay(relay,{playerId:player.id,choice:msg.choice,stageId:msg.stageId,now:Date.now()});
+    if(!result.accepted)return this.sendError(ws,result.error==='wrong_member'?'هذا الجزء لزميلك':result.error==='stage_changed'?'وصلنا إلى جزء جديد؛ انتظر تحديث الفريق':'انتهى الوقت أو سبق إرسال هذا الاختيار');
+    if(Object.values(c.relays).every(r=>r.complete||r.failed)){await this.finalizeRelay();return;}
+    await this.persistAndBroadcast();await this.ctx.storage.setAlarm(c.deadline);
+  }
+
+  async finalizeRelay(){
+    const c=this.room.current;if(c?.mode!=='relay')return;
+    const results={};
+    for(const relay of Object.values(c.relays))for(const [id,result]of Object.entries(relayResults(relay,c.value))){results[id]=result;if(this.room.players[id])this.room.players[id].score+=result.gain;}
+    await this.revealRound(results);
+  }
 
   allowedToAnswer(playerId) {
     const c = this.room.current;
@@ -1202,6 +1247,7 @@ export class GameRoom extends DurableObject {
       correctIndex: c.correctIndex,
       correctAnswer: c.correctAnswer,
       results,
+      relay: c.mode==='relay'?Object.entries(c.relays).map(([team,r])=>({team,...relayReveal(r)})):null,
       nextAt: Date.now() + 5000,
     };
     this.room.current = null;
@@ -1267,6 +1313,7 @@ export class GameRoom extends DurableObject {
     }
 
     if (["lobby", "finished"].includes(this.room.status)) {
+      if(this.room.status==='finished'&&this.room.rewardsComplete===false&&now>=(this.room.rewardRetryAt||0)){await this.saveQuizRewards();this.broadcastState();}
       if (this.cleanupLobbySeats()) await this.persistAndBroadcast();
       await this.scheduleLobbyAlarm();
       return;
@@ -1288,6 +1335,8 @@ export class GameRoom extends DurableObject {
       return;
     }
 
+    if(c.mode==='relay'){await this.finalizeRelay();return;}
+
     if (c.mode === "buzzer" && c.phase === "buzzer") {
       const results = Object.fromEntries(this.room.order.map((id) => [id, { correct: false, gain: 0, choice: null }]));
       await this.revealRound(results);
@@ -1295,7 +1344,7 @@ export class GameRoom extends DurableObject {
     }
 
     if (c.mode === "buzzer" && c.phase === "buzzer_answer") {
-      const opponentId = this.room.order.find((id) => id !== c.buzzWinner);
+      const opponentId = this.opponentId(c.buzzWinner);
       if (opponentId && !c.blocked?.[opponentId]) {
         c.phase = "steal";
         c.stealPlayer = opponentId;

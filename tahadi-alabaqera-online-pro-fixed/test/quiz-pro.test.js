@@ -36,11 +36,12 @@ test('sound challenge ships 60 balanced local clips with two-play fairness', asy
   }
 });
 
-test('zoom challenge ships 60 balanced local photographic challenges', async()=>{
-  const c=byId('zoom');assert.ok(c);assert.equal(c.questions.length,60);
-  for(const v of [100,200,300]) assert.equal(c.questions.filter(q=>q.v===v).length,20);
+test('zoom preserves 60 balanced photographs and adds four identified AI challenges', async()=>{
+  const c=byId('zoom');assert.ok(c);assert.equal(c.questions.length,64);
+  for(const v of [100,200,300]) assert.equal(c.questions.filter(q=>q.v===v&&!q.generated).length,20);
+  assert.equal(c.questions.filter(q=>q.generated).length,4);
   for(const q of c.questions){
-    assert.equal(q.media,'zoom');assert.ok(!/^https?:/i.test(q.src));assert.match(q.src,/assets\/quiz_photos\/.+\.webp$/);
+    assert.equal(q.media,'zoom');assert.ok(!/^https?:/i.test(q.src));assert.match(q.src,q.generated?/assets\/quiz_ai_v28\/.+\.webp$/:/assets\/quiz_photos\/.+\.webp$/);
     assert.ok(Number(q.zoom)>Number(q.hintZoom)&&Number(q.hintZoom)>=1,`${q.id} zoom stages`);
     assert.ok(Number(q.focusX)>=0&&Number(q.focusX)<=100&&Number(q.focusY)>=0&&Number(q.focusY)<=100,`${q.id} focus`);
     assert.ok(String(q.credit||'').includes('صورة'),`${q.id} needs photo provenance note`);
@@ -69,7 +70,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v56-release-27-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
+  assert.match(sw,/busraj-games-v57-release-28-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });

@@ -73,3 +73,22 @@ test('board reactions use rendered foley instead of oscillator beeps', async () 
 });
 
 test('opening a game creates no audio players and aliases share one lazy sample',async()=>{const {api,created}=await loadAudio({muted:false,effects:true,volume:1});assert.equal(created.length,0);api.play('move');api.play('boardStep');api.play('step');assert.equal(created.length,1);api.play('win');assert.equal(created.length,2);});
+
+test('question content follows mute and volume while suppressing background cues',async()=>{
+ const {api,played}=await loadAudio({muted:false,effects:true,timer:true,volume:.6});
+ const clip={paused:false,ended:false},release=api.registerContent(clip);
+ assert.equal(clip.volume,.6);assert.equal(clip.muted,false);
+ api.play('correct');api.timerTick(3);api.timerEnd();assert.equal(played.length,0);
+ api.setMuted(true);assert.equal(clip.muted,true);api.update({volume:.3});assert.equal(clip.volume,.3);
+ api.setMuted(false);release();api.play('correct');assert.equal(played.length,1);
+});
+test('quiz events have seven distinct short rendered cues',async()=>{
+ const {api,played}=await loadAudio({muted:false,effects:true,timer:true,volume:1});
+ for(const name of ['round','correct','wrong','reveal','buzzer','relay'])api.play(name);api.timerEnd();
+ assert.equal(new Set(played).size,7);assert.ok(played.every(src=>src.includes('/quiz-v28/')&&src.endsWith('.wav')));
+});
+test('invalid saved volume and invalid updates cannot produce a NaN audio volume',async()=>{
+ const {api}=await loadAudio({volume:'broken'});assert.equal(api.getSettings().volume,.72);
+ api.update({volume:NaN});assert.equal(api.getSettings().volume,.72);
+ api.update({volume:7});assert.equal(api.getSettings().volume,1);
+});

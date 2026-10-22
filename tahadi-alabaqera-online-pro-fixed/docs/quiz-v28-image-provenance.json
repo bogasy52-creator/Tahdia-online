@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "created_for": "v28 quiz zoom assets",
+  "generation_mode": "built-in image_gen",
+  "generation_tool": "image_gen.imagegen",
+  "ai_generated": true,
+  "external_photographic_source": false,
+  "transparent_background": false,
+  "generation_issues": [],
+  "assets": [
+    {
+      "name": "pineapple",
+      "web_path": "/assets/quiz_ai_v28/pineapple.webp",
+      "project_path": "/workspace/scratch/110996794f9f/v28-work/tahadi-alabaqera-online-pro-fixed/public/assets/quiz_ai_v28/pineapple.webp",
+      "source_path": "/workspace/scratch/110996794f9f/generated_images/exec-ec3d3975-b679-46e7-b70b-0766afb3955d.png",
+      "prompt": "Use case: product-mockup\nAsset type: photographic image for a zoom-in object-identification quiz.\nPrimary request: one complete whole ripe pineapple, upright with its entire leafy crown visible and highly detailed golden brown diamond rind, in a sharp landscape photograph.\nScene/backdrop: simple dark charcoal studio background and matte dark surface.\nStyle/medium: photorealistic professional studio macro-quality product photograph, no illustration.\nComposition/framing: landscape 3:2 frame; single pineapple centered, fills most of image height with a little clean margin; whole object fully in frame. Front rind sharply focused with fine scales and small thorns visible, suitable for a tight crop before full-object reveal.\nLighting/mood: crisp soft side lighting reveals texture while keeping natural color.\nConstraints: exactly one unambiguous subject, no hands, no accessories, no other fruit, no text, labels, logos or watermark. Deep focus across subject. No motion blur.",
+      "visual_inspection": "Visually inspected generated image: whole upright pineapple and leafy crown fully visible; clear diamond rind texture; simple dark background; no text.",
+      "width": 1536,
+      "height": 1024,
+      "format": "WEBP",
+      "bytes": 239006,
+      "sha256": "b44f3e6ff3c1d97e3b14fb4026253b8f92a3fa238967fd984ac65a8d3d0e32ed",
+      "source_bytes": 2245440,
+      "conversion": {
+        "format": "WebP",
+        "quality": 93,
+        "method": 6,
+        "resize": false,
+        "crop": false
+      }
+    },
+    {
+      "name": "seashell",
+      "web_path": "/assets/quiz_ai_v28/seashell.webp",
+      "project_path": "/workspace/scratch/110996794f9f/v28-work/tahadi-alabaqera-online-pro-fixed/public/assets/quiz_ai_v28/seashell.webp",
+      "source_path": "/workspace/scratch/110996794f9f/generated_images/exec-1448d81d-5d45-4241-a0d1-db94612a56bd.png",
+      "prompt": "Use case: product-mockup\nAsset type: photographic image for a zoom-in object-identification quiz.\nPrimary request: one complete natural spiral seashell, a large cream and warm beige conch-like shell with visibly spiraling whorls and clear raised growth ridges, in a sharp landscape photograph.\nScene/backdrop: simple dark charcoal studio background and matte dark surface.\nStyle/medium: photorealistic professional studio macro-quality product photograph, no illustration.\nComposition/framing: landscape 3:2 frame; one single shell centered in a clear three-quarter side view showing its complete pointed spiral and opening, fills most of the frame with clean margins. Entire shell fully visible. Fine ridged shell texture sharply resolved and suitable for a tight crop before full-object reveal.\nLighting/mood: crisp soft side lighting reveals natural ridge relief.\nConstraints: exactly one unambiguous seashell, no animal, no sand, no beach props, no text, labels, logos or watermark. Deep focus across subject. No motion blur.",
+      "visual_inspection": "Visually inspected generated image: one complete spiral conch-like shell with ridges and open aperture; sharply detailed cream/brown texture; simple dark background; no text.",
+      "width": 1536,
+      "height": 1024,
+      "format": "WEBP",
+      "bytes": 279792,
+      "sha256": "c4c098cb01e11e395fd3a5ee794feedfc79c9153c3955306a9943f97cc3ef2fc",
+      "source_bytes": 2296020,
+      "conversion": {
+        "format": "WebP",
+        "quality": 93,
+        "method": 6,
+        "resize": false,
+        "crop": false
+      }
+    },
+    {
+      "name": "kiwi",
+      "web_path": "/assets/quiz_ai_v28/kiwi.webp",
+      "project_path": "/workspace/scratch/110996794f9f/v28-work/tahadi-alabaqera-online-pro-fixed/public/assets/quiz_ai_v28/kiwi.webp",
+      "source_path": "/workspace/scratch/110996794f9f/generated_images/exec-661b991c-83f1-4bae-9699-7eab59ddc163.png",
+      "prompt": "Use case: product-mockup\nAsset type: photographic image for a zoom-in object-identification quiz.\nPrimary request: one sliced green kiwi fruit represented by its two halves: a cut half with bright green flesh, pale central core and sharp ring of tiny black seeds facing the camera, alongside its other half turned slightly to show the fuzzy brown skin and whole-fruit shape.\nScene/backdrop: simple dark charcoal studio background and matte dark surface.\nStyle/medium: photorealistic professional studio macro-quality food photograph, no illustration.\nComposition/framing: landscape 3:2 frame; kiwi halves centered close together, complete forms entirely within the frame, cut face fills a substantial central area for tight seed-detail crop before full-fruit reveal.\nLighting/mood: crisp soft studio side lighting; natural fresh green color and highly detailed seeds and flesh.\nConstraints: only the kiwi fruit, no knife, no plate, no hands, no other fruit, no text, labels, logos or watermark. Deep focus across fruit. No motion blur.",
+      "visual_inspection": "Visually inspected generated image: two halves of one kiwi, with crisp seeds, green flesh and fuzzy skin; unambiguous kiwi identity; simple dark background; no text.",
+      "width": 1536,
+      "height": 1024,
+      "format": "WEBP",
+      "bytes": 373768,
+      "sha256": "23269622be75cb8c35c9ebc5fa30fbba1a894ded0fb239ef55a8c5ae485d4439",
+      "source_bytes": 2617324,
+      "conversion": {
+        "format": "WebP",
+        "quality": 93,
+        "method": 6,
+        "resize": false,
+        "crop": false
+      }
+    },
+    {
+      "name": "sunflower",
+      "web_path": "/assets/quiz_ai_v28/sunflower.webp",
+      "project_path": "/workspace/scratch/110996794f9f/v28-work/tahadi-alabaqera-online-pro-fixed/public/assets/quiz_ai_v28/sunflower.webp",
+      "source_path": "/workspace/scratch/110996794f9f/generated_images/exec-1ad65858-eeeb-4559-8c39-27a025ef2660.png",
+      "prompt": "Use case: photorealistic-natural\nAsset type: photographic image for a zoom-in object-identification quiz.\nPrimary request: one complete sunflower flower head photographed straight on, with distinctive dark brown center showing crisp naturally spiraling seed florets and a full ring of golden yellow petals.\nScene/backdrop: simple dark charcoal softly blurred studio background, no other flowers.\nStyle/medium: photorealistic professional botanical macro-quality photograph, no illustration.\nComposition/framing: landscape 3:2 frame; centered single flower head occupies most of image height, every petal fully within the frame with a little margin; the round seed center is large, sharply focused and finely textured, suitable for a tight crop then full-object reveal. A short natural green stem may show beneath.\nLighting/mood: soft directional studio light makes each seed floret and petal vein visible; natural warm yellow and brown.\nConstraints: one unambiguous sunflower, complete distinctive central disk and seed spiral pattern, no insects, no hands, no vase, no other objects, no text, labels, logos or watermark. Deep focus across flower. No motion blur.",
+      "visual_inspection": "Visually inspected generated image: one complete sunflower head with all petals and full dark seed disk; visible seed spiral, short green stem; simple dark background; no text.",
+      "width": 1536,
+      "height": 1024,
+      "format": "WEBP",
+      "bytes": 271546,
+      "sha256": "3df231f222ed04f9dcb899702bb96144e4c6685451aa93442b22aea83de2910a",
+      "source_bytes": 2111447,
+      "conversion": {
+        "format": "WebP",
+        "quality": 93,
+        "method": 6,
+        "resize": false,
+        "crop": false
+      }
+    }
+  ]
+}

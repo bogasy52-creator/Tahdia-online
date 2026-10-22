@@ -1,4 +1,4 @@
-import {GEM_COLORS} from './engines/match3-engine.js?v=27.0.0';
+import {GEM_COLORS} from './engines/match3-engine.js?v=28.0.0';
 const clamp=n=>Math.max(0,Math.min(1,n)),ease=n=>1-Math.pow(1-n,3);
 const pathColors=['#62e7ba','#ffd35d','#b79aff','#ff83ad','#79d1ff','#ffac66','#e4eee8','#ee7691','#a6d16f'];
 function gemPath(c,kind,r) {

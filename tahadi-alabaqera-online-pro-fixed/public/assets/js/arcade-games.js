@@ -1,4 +1,4 @@
-import {generatePuzzle,movePuzzle,memoryPair,shuffled,logicQuestion,arcadeRules} from './engines/arcade-engine.js?v=27.0.0';
+import {generatePuzzle,movePuzzle,memoryPair,shuffled,logicQuestion,arcadeRules} from './engines/arcade-engine.js?v=28.0.0';
 const game=document.body.dataset.arcade,$=id=>document.getElementById(id),now=()=>performance.now();
 const names={casual:'مريح',standard:'متوازن',expert:'محترف'};
 let active=false,paused=false,generation=0,receipt='',clock=null,delay=null,round=null,level='standard',rules={},pauseAt=0,pauseOffset=0,started=0,returnFocus=null;

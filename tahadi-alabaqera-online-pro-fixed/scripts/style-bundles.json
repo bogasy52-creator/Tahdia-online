@@ -72,7 +72,8 @@
     "assets/css/studio-v16.css",
     "assets/css/quiz-v19.css",
     "assets/css/quiz-v21.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/quiz-v28.css"
   ],
   "logic.html": [
     "assets/css/platform.css",
@@ -102,7 +103,8 @@
     "assets/css/studio-v16.css",
     "assets/css/quiz-v19.css",
     "assets/css/quiz-v21.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/quiz-v28.css"
   ],
   "puzzle.html": [
     "assets/css/platform.css",
@@ -210,7 +212,8 @@
     "assets/css/picture.css",
     "assets/css/quiz-v19.css",
     "assets/css/quiz-v21.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/quiz-v28.css"
   ],
   "sudoku.html": [
     "assets/css/platform.css",
