@@ -1,0 +1,7 @@
+// Durable Object values have a size ceiling. Long snake bodies are retained in full.
+// The header and all chunks commit in one transaction, so reconnects see one revision.
+const KEY='partyRoom',PREFIX='partyChunk:',SIZE=16000;
+export async function loadParty(storage,key=KEY){const prefix=key===KEY?PREFIX:key+'Chunk:',raw=await storage.get(key);if(!raw?.chunked29)return raw||null;if(!Number.isInteger(raw.count)||raw.count<1||raw.count>512)throw Error('invalid_party_storage');const keys=Array.from({length:raw.count},(_,i)=>prefix+i),parts=await storage.get(keys),text=keys.map(k=>parts.get(k)).join('');if(keys.some(k=>typeof parts.get(k)!=='string')||text.length!==raw.chars)throw Error('incomplete_party_storage');return JSON.parse(text);}
+export async function storeParty(storage,room,key=KEY){const prefix=key===KEY?PREFIX:key+'Chunk:',text=JSON.stringify(room),large=new TextEncoder().encode(text).byteLength>90000,old=await storage.get(key),count=large?Math.ceil(text.length/SIZE):0;
+ if(!large&&!old?.chunked29){await storage.put(key,room);return;}
+ await storage.transaction(async tx=>{if(large){const values={[key]:{chunked29:true,count,chars:text.length}};for(let i=0;i<count;i++)values[prefix+i]=text.slice(i*SIZE,(i+1)*SIZE);await tx.put(values);}else await tx.put(key,room);if(old?.chunked29&&old.count>count)await tx.delete(Array.from({length:old.count-count},(_,i)=>prefix+(i+count)));});}

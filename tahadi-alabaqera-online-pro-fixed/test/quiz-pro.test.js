@@ -27,9 +27,9 @@ test('quiz bank is expanded, balanced, and uniquely identified', () => {
   }
 });
 
-test('sound challenge ships 60 balanced local clips with two-play fairness', async()=>{
-  const c=byId('sounds');assert.ok(c);assert.equal(c.questions.length,60);
-  for(const v of [100,200,300]) assert.equal(c.questions.filter(q=>q.v===v).length,20);
+test('sound challenge ships 72 balanced local clips with two-play fairness', async()=>{
+  const c=byId('sounds');assert.ok(c);assert.equal(c.questions.length,72);
+  for(const v of [100,200,300]) assert.equal(c.questions.filter(q=>q.v===v).length,24);
   for(const q of c.questions){
     assert.equal(q.media,'sound');assert.equal(q.replays,2);assert.ok(!/^https?:/i.test(q.src));
     await access(join(pub,q.src));
@@ -70,7 +70,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v57-release-28-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
+  assert.match(sw,/busraj-games-v58-release-29-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });

@@ -10,7 +10,7 @@ export function resolveArenaCombat(snakes){
  const rear=new Set(dead.keys());
  for(let i=0;i<living.length;i++)for(let j=i+1;j<living.length;j++){
   const a=living[i],b=living[j];if(rear.has(a.id)||rear.has(b.id))continue;
-  const frontContact=(attacker,other)=>{let best=distance(attacker,other),part=0;for(let k=1;k<other.segments.length;k++){const d=distance(attacker,other.segments[k]);if(d<best){best=d;part=k;}}return part<=ARENA_FRONT_PARTS&&best<radius(attacker)+radius(other);};
+  const frontContact=(attacker,other)=>{const squared=p=>{const x=attacker.x-p.x,y=attacker.y-p.y;return x*x+y*y;};let best=squared(other);for(let k=1;k<Math.min(other.segments.length,ARENA_FRONT_PARTS+1);k++)best=Math.min(best,squared(other.segments[k]));const contact=radius(attacker)+radius(other);if(best>=contact*contact)return false;for(let k=ARENA_FRONT_PARTS+1;k<other.segments.length;k++)if(squared(other.segments[k])<best)return false;return true;};
   if(frontContact(a,b)||frontContact(b,a))duels.push([a,b]);
  }
  // Snapshot lengths: scoring, boost and collection cannot change a duel halfway through resolution.

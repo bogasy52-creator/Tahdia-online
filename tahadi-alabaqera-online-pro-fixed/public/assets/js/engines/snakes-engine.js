@@ -1,5 +1,5 @@
 export const DEFAULT_SNAKES_JUMPS=Object.freeze({4:14,9:31,20:38,28:84,40:59,51:67,63:81,71:91,17:7,54:34,62:19,68:50,87:24,93:73,95:75,99:78});
-export function createSnakesGame(names=['لاعب 1','لاعب 2'],options={}){const clean=names.slice(0,4).map((n,i)=>String(n||`لاعب ${i+1}`).slice(0,20));if(clean.length<2)throw new Error('snakes_requires_2_players');return{players:clean.map((name,i)=>({id:i,name,position:0})),entrySix:options.entrySix!==false,turn:0,winner:null,lastRoll:null,lastEvent:null,jumps:{...DEFAULT_SNAKES_JUMPS,...(options.jumps??{})},moveCount:0}}
+export function createSnakesGame(names=['لاعب 1','لاعب 2'],options={}){const clean=names.slice(0,20).map((n,i)=>String(n||`لاعب ${i+1}`).slice(0,20));if(clean.length<2)throw new Error('snakes_requires_2_players');return{players:clean.map((name,i)=>({id:i,name,position:0})),entrySix:options.entrySix!==false,turn:0,winner:null,lastRoll:null,lastEvent:null,jumps:{...DEFAULT_SNAKES_JUMPS,...(options.jumps??{})},moveCount:0}}
 export function playSnakesRoll(state,roll){
  if(state.winner!==null)return state;
  if(!Number.isInteger(roll)||roll<1||roll>6)throw new Error('invalid_roll');

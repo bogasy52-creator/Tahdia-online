@@ -21,7 +21,7 @@ function normalThree(d){const id=CATEGORIES[0].id;d.qa.start(select(id));for(let
 test('local question audio charges only successful plays, honors mute, and rejects busy or revealed replays',async()=>{
  const d=await local();d.qa.start(select('sounds'));d.qa.open('sounds');const button=d.doc.querySelector('.playSound');
  d.fail(true);await button.onclick();assert.equal(d.qa.get().current.soundPlays||0,0);
- const failedCount=d.clips.length;d.settings.muted=true;await button.onclick();assert.equal(d.clips.length,failedCount);
+ const failedCount=d.clips.length;d.settings.muted=true;d.context.BS_QUIZ_AUDIO={enable:()=>{d.settings.muted=false;return d.settings;}};await button.onclick();assert.equal(d.settings.muted,false);assert.equal(d.clips.length,failedCount+1);
  d.settings.muted=false;d.fail(false);await button.onclick();assert.equal(d.qa.get().current.soundPlays,1);assert.equal(d.clips.at(-1).volume,.6);
  await button.onclick();assert.equal(d.qa.get().current.soundPlays,1);d.clips.at(-1).onended();
  d.doc.getElementById('revealBtn').click();const count=d.clips.length;await button.onclick();assert.equal(d.clips.length,count);
@@ -64,7 +64,7 @@ test('online relay shows only the active member clue and hides ordinary powers',
  engine.answerRelay(r,{playerId:'a0',choice:r.steps[0].correctIndex,stageId:engine.relayStageId(r),now:1000001});d.qa.set(state({roundIndex:3,current:current({mode:'relay',phase:'relay',relay:engine.relayView(r,'a0')})}));assert.equal(d.doc.querySelector('.relay-clue'),null);assert.match(d.doc.querySelector('.relay-status').textContent,/a1/);
 });
 test('all image and sound alternatives use distinct families and new AI images are explicitly identified',()=>{
- for(const id of ['zoom','sounds']){const cat=CATEGORIES.find(c=>c.id===id);for(const q of cat.questions){assert.equal(q.distractors.length,3);const families=[q.mediaFamily];for(const a of q.distractors){const other=cat.questions.find(x=>x.a===a);assert.ok(other);families.push(other.mediaFamily);}assert.equal(new Set(families).size,4,q.id);}}
+ for(const id of ['zoom','sounds']){const cat=CATEGORIES.find(c=>c.id===id);for(const q of cat.questions){assert.equal(q.distractors.length,3);if(q.kind==='audio_pattern'){assert.equal(new Set([q.a,...q.distractors]).size,4);continue;}const families=[q.mediaFamily];for(const a of q.distractors){const other=cat.questions.find(x=>x.a===a);assert.ok(other);families.push(other.mediaFamily);}assert.equal(new Set(families).size,4,q.id);}}
  const images=CATEGORIES.find(c=>c.id==='zoom').questions.filter(q=>q.id.startsWith('ai-zoom-'));assert.equal(images.length,4);for(const q of images){assert.equal(q.generated,true);assert.equal(q.revealSrc,q.src);assert.match(q.credit,/مولّدة/);}
 });
 test('a failed replacement image exposes retry and a successful retry removes the error controls',async()=>{

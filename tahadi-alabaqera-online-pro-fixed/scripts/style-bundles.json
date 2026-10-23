@@ -225,5 +225,9 @@
   "paths-online.html": [
     "assets/css/platform.css",
     "assets/css/paths-online-v24.css"
+  ],
+  "party.html": [
+    "assets/css/party-v29.css",
+    "/assets/css/tahdia-premium-v25.css"
   ]
 }

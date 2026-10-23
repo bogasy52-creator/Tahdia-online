@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "28.0.0",
+  "version": "29.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -29,7 +29,9 @@
     "test:browser:v26": "node scripts/test-browser-v26.mjs",
     "test:online:v26": "node scripts/verify-online-v26.mjs",
     "test:worlds": "node scripts/verify-arena-worlds-v27.mjs",
-    "test:quiz": "node scripts/verify-quiz-v28-runtime.mjs"
+    "test:quiz": "node scripts/verify-quiz-v28-runtime.mjs",
+    "test:party": "node scripts/verify-party-v29-runtime.mjs",
+    "test:rooms20": "node scripts/verify-rooms20-v29.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.1",

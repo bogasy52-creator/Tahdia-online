@@ -1,0 +1,206 @@
+[
+  {
+    "id": "sound-v29-01",
+    "v": 100,
+    "q": "كم نقرة تسمع في هذا المقطع؟ التحدي 1.",
+    "a": "2 نقرات",
+    "distractors": [
+      "1 نقرات",
+      "3 نقرات",
+      "4 نقرات"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-01.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:1",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-02",
+    "v": 100,
+    "q": "كم نقرة تسمع في هذا المقطع؟ التحدي 2.",
+    "a": "3 نقرات",
+    "distractors": [
+      "1 نقرات",
+      "2 نقرات",
+      "4 نقرات"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-02.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:2",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-03",
+    "v": 100,
+    "q": "كم نقرة تسمع في هذا المقطع؟ التحدي 3.",
+    "a": "4 نقرات",
+    "distractors": [
+      "1 نقرات",
+      "2 نقرات",
+      "3 نقرات"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-03.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:3",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-04",
+    "v": 100,
+    "q": "كم نقرة تسمع في هذا المقطع؟ التحدي 4.",
+    "a": "5 نقرات",
+    "distractors": [
+      "1 نقرات",
+      "2 نقرات",
+      "3 نقرات"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-04.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:4",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-05",
+    "v": 200,
+    "q": "كيف يتغيّر ارتفاع النغمات؟ استمع إلى النمط 1.",
+    "a": "ترتفع تدريجيًا",
+    "distractors": [
+      "تنخفض تدريجيًا",
+      "ثابتة",
+      "عالٍ ثم منخفض بالتناوب"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-05.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:5",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-06",
+    "v": 200,
+    "q": "كيف يتغيّر ارتفاع النغمات؟ استمع إلى النمط 2.",
+    "a": "تنخفض تدريجيًا",
+    "distractors": [
+      "ترتفع تدريجيًا",
+      "ثابتة",
+      "منخفض ثم عالٍ بالتناوب"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-06.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:6",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-07",
+    "v": 200,
+    "q": "كيف يتغيّر ارتفاع النغمات؟ استمع إلى النمط 3.",
+    "a": "منخفض ثم عالٍ بالتناوب",
+    "distractors": [
+      "عالٍ ثم منخفض بالتناوب",
+      "ترتفع تدريجيًا",
+      "تنخفض تدريجيًا"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-07.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:7",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-08",
+    "v": 200,
+    "q": "كيف يتغيّر ارتفاع النغمات؟ استمع إلى النمط 4.",
+    "a": "عالٍ ثم منخفض بالتناوب",
+    "distractors": [
+      "منخفض ثم عالٍ بالتناوب",
+      "ترتفع تدريجيًا",
+      "ثابتة"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-08.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:8",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-09",
+    "v": 300,
+    "q": "أي وصف يطابق إيقاع المقطع 1؟",
+    "a": "منتظم بفواصل متساوية",
+    "distractors": [
+      "يتسارع",
+      "يتباطأ",
+      "نقرتان ثم توقف طويل"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-09.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:9",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-10",
+    "v": 300,
+    "q": "أي وصف يطابق إيقاع المقطع 2؟",
+    "a": "يتسارع",
+    "distractors": [
+      "يتباطأ",
+      "منتظم بفواصل متساوية",
+      "كل النقرات في لحظة واحدة"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-10.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:10",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-11",
+    "v": 300,
+    "q": "أي وصف يطابق إيقاع المقطع 3؟",
+    "a": "يتباطأ",
+    "distractors": [
+      "يتسارع",
+      "منتظم بفواصل متساوية",
+      "نقرتان فقط"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-11.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:11",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  },
+  {
+    "id": "sound-v29-12",
+    "v": 300,
+    "q": "أي وصف يطابق إيقاع المقطع 4؟",
+    "a": "مجموعتان، في كل مجموعة نقرتان",
+    "distractors": [
+      "أربع نقرات بفواصل متساوية",
+      "ثلاث مجموعات",
+      "مجموعة واحدة من نقرتين"
+    ],
+    "media": "sound",
+    "replays": 2,
+    "src": "assets/sounds-v29/pattern-12.wav",
+    "kind": "audio_pattern",
+    "mediaFamily": "pattern:12",
+    "credit": "مقطع أصلي مصمّم للتحدي؛ عدد النغمات والإيقاع مطابقان للإجابة"
+  }
+]

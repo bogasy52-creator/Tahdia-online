@@ -7,7 +7,7 @@ const root=process.cwd(),pub=join(root,'public');
 test('mobile board stylesheet is shipped and cached', async()=>{
   await access(join(pub,'assets/css/mobile-game.css'));
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v57-release-28-0-0/);
+  assert.match(sw,/busraj-games-v58-release-29-0-0/);
   assert.ok(sw.includes('/assets/css/mobile-game.css'));
 });
 
@@ -27,7 +27,7 @@ test('snakes pieces cannot be clipped during movement', async()=>{
 test('zahra pieces are promoted above the board when occupied', async()=>{
   const html=await readFile(join(pub,'zahra.html'),'utf8');
   const css=await readFile(join(pub,'assets/css/mobile-game.css'),'utf8');
-  assert.ok(html.includes("classList.add('occupied-cell')"));
+  assert.ok(html.includes("renderPetalBoard($('#board'),state"));
   assert.ok(html.includes('async function animateLudoPiece('));
   assert.ok(html.includes("classList.add('moving-piece')"));
   assert.match(css,/game-zahra\.game-running \.ludo-cell\.occupied-cell/);

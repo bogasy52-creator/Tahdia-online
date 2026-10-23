@@ -3,7 +3,7 @@ import {ARENA_POWERS,powerActive,arenaSpeed} from './engines/arena-drops-v24.js'
 import {paintArenaFloor,paintArenaFood,paintCombatZones} from './arena-art-v23.js';
 import {paintWorldFloor,paintWorldFeatures,paintEnergyFood} from './arena-worlds-art-v27.js';
 import {arenaTurnRate} from './engines/serpent-combat-v23.js';
-import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=28.0.0';
+import {SERPENT_SPEED,SERPENT_BOOST_SPEED,SERPENT_TURN_RATE,followSerpentBody,serpentSteeringAngle} from './engines/serpent-engine.js?v=29.0.0';
 const lerp=(a,b,t)=>a+(b-a)*t;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const foodSprites=new Map();

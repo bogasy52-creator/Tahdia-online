@@ -52,7 +52,7 @@ test('UI retains authenticated owner entitlement and uses shared online maps',as
  assert.match(s,/ownerAllowed\(accountAccess/);
  assert.match(s,/source==='owner'/);
  assert.match(s,/worldId:world.id/);assert.match(s,/worldId:\$\('arenaWorld'\).value/);
- assert.match(s,/mode==='online'\?Math\.min\(6,10-Number/);
+ assert.match(s,/mode==='online'\?Math\.min\(6,20-Number/);
  assert.match(s,/difficulty==='legendary'\?'hard':difficulty/);
  const html=await readFile(new URL('../public/serpent.html',import.meta.url),'utf8');
  for(const token of ['value="classic"','value="neon"','value="forest"','value="crystals"','value="9"','value="legendary"','value="treasure"','arenaWorldStatus'])assert.ok(html.includes(token),token);

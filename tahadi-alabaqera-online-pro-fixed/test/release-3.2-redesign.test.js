@@ -28,7 +28,7 @@ test('mobile snake stage is edge-to-edge and keeps the cockpit directly under th
   assert.match(css,/body\.game-snakes\.game-running \.snake-side,[\s\S]*height:auto!important;[\s\S]*margin:0!important/);
 });
 
-test('jackaroo ships a visible wooden board, home pockets and legal move selection',async()=>{const jack=await read('public/jackaroo.html'),css=await read('public/assets/css/pro-games.css');for(const marker of ['app-jackaroo.css','home-pocket','chooseMarble','highlightMoves','legalActions'])assert.ok(jack.includes(marker));assert.match(css,/\.jack-board/);assert.match(css,/\.track-hole/);assert.match(css,/\.safe-hole/)});
+test('jackaroo ships a complete responsive petal board and legal move selection',async()=>{const jack=await read('public/jackaroo.html'),css=await read('public/assets/css/pro-games.css');for(const marker of ['app-jackaroo.css','renderPetalBoard','chooseMarble','highlightMoves','legalActions'])assert.ok(jack.includes(marker));assert.match(css,/\.jack-board/);assert.match(css,/\.track-hole/);assert.match(css,/\.safe-hole/)});
 
 test('genius question-selection board is a compact category-card grid with no score or point overlap', async()=>{
   const local=await read('public/local.html'), online=await read('public/online.html'), css=await read('public/assets/css/quiz-board-v2.css');
@@ -43,6 +43,6 @@ test('genius question-selection board is a compact category-card grid with no sc
 
 test('3.2 PWA cache includes every new presentation layer', async()=>{
   const sw=await read('public/service-worker.js');
-  assert.match(sw,/busraj-games-v57-release-28-0-0/);
+  assert.match(sw,/busraj-games-v58-release-29-0-0/);
   for(const asset of ['/assets/css/snakes-premium.css','/assets/css/zahra-premium.css','/assets/css/jackaroo-next.css','/assets/css/quiz-board-v2.css']) assert.ok(sw.includes(asset),`missing ${asset}`);
 });

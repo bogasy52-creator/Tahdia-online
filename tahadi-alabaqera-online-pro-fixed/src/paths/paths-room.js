@@ -5,7 +5,7 @@ const secret=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().repl
 const json=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const cleanName=value=>String(value||'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,20)||'لاعب';
 export function pathsSettings(value){
-  return Number.isInteger(value?.difficulty)&&value.difficulty>=1&&value.difficulty<=5&&Number.isInteger(value?.capacity)&&value.capacity>=1&&value.capacity<=10;
+  return Number.isInteger(value?.difficulty)&&value.difficulty>=1&&value.difficulty<=5&&Number.isInteger(value?.capacity)&&value.capacity>=1&&value.capacity<=20;
 }
 
 export class PathsRoom{
@@ -116,7 +116,7 @@ export class PathsRoom{
         if(['playing','countdown'].includes(r.status))return this.error(ws,'ارجع للمدخل لإغلاق اتصالك؛ مقعدك محفوظ حتى نهاية الجولة');
         delete r.players[p.id];r.order=r.order.filter(id=>id!==p.id);this.cleanup();try{ws.close(4002,'left');}catch{}
       }else if(m.type==='settings'&&p.role==='host'&&r.status==='lobby'){
-        if(!pathsSettings(m)||m.capacity<r.order.length)return this.error(ws,'اختر صعوبة من 1 إلى 5 وعددًا يستوعب الموجودين حتى 10');
+        if(!pathsSettings(m)||m.capacity<r.order.length)return this.error(ws,'اختر صعوبة من 1 إلى 5 وعددًا يستوعب الموجودين حتى 20');
         r.difficulty=m.difficulty;r.capacity=m.capacity;
       }else if(m.type==='start'&&p.role==='host'&&r.status==='lobby'){
         if(m.difficulty!==undefined||m.capacity!==undefined){if(!pathsSettings(m)||m.capacity<r.order.length)return this.error(ws,'إعدادات البداية غير صالحة');r.difficulty=m.difficulty;r.capacity=m.capacity;}

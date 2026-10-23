@@ -23,6 +23,6 @@ test('entry guard catches row, column and 3x3 duplicates and accepts Arabic/Pers
  const empty=Array(81).fill(0);for(const peer of [1,9,10]){const b=empty.slice();b[peer]=8;assert.equal(sudokuEntryConflict(b,empty,0,8),true);assert.equal(sudokuEntryConflict(b,empty,0,7),false);}assert.equal(sudokuEntryConflict(empty,empty,-1,1),true);assert.equal(sudokuKey('٠١٢٣٤٥٦٧٨٩'),'0123456789');assert.equal(sudokuKey('۰۱۲۳۴۵۶۷۸۹'),'0123456789');
 });
 test('all difficulty selections remain available online, without unlocking campaign stages',async()=>{
- const h=await createDOM('sudoku.html');assert.equal(h.doc.getElementById('soDifficulty').children.length,5);assert.equal(h.doc.getElementById('soCapacity').children.length,10);assert.equal(h.doc.getElementById('soCodeInput').getAttribute('inputmode'),'numeric');
+ const h=await createDOM('sudoku.html');assert.equal(h.doc.getElementById('soDifficulty').children.length,5);assert.equal(h.doc.getElementById('soCapacity').children.length,20);assert.equal(h.doc.getElementById('soCodeInput').getAttribute('inputmode'),'numeric');
  const css=await readFile(new URL('../public/assets/css/sudoku-v22.css',import.meta.url),'utf8');assert.match(css,/grid-template-columns:repeat\(9,minmax\(0,1fr\)\)/);assert.match(css,/grid-template-rows:repeat\(9,minmax\(0,1fr\)\)/);assert.match(css,/appearance:none/);assert.match(css,/color-scheme:light/);
 });

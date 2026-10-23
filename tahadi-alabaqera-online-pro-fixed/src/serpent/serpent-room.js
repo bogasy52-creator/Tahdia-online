@@ -1,3 +1,4 @@
+import {loadParty,storeParty} from '../party/party-storage.js';
 import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
 import {getSocialStub} from '../social/social-api.js';
 import {compactSerpentFrame} from '../../public/assets/js/serpent-network.js';
@@ -12,13 +13,13 @@ const isOpen=ws=>!ws.closed&&(ws.readyState===undefined||ws.readyState===1);
 export class SerpentRoom {
  constructor(ctx,env){
   this.ctx=ctx;this.env=env;this.room=null;this.timer=null;this.lastSave=0;this.saving=null;this.finishedWork=null;
-  this.ready=ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('serpent')||null;if(this.room){this.syncConnections();this.run();}});
+  this.ready=ctx.blockConcurrencyWhile(async()=>{this.room=await loadParty(ctx.storage,'serpent');if(this.room){this.syncConnections();this.run();}});
  }
  syncConnections(){
   if(!this.room)return;const ids=new Set(this.ctx.getWebSockets().filter(isOpen).map(ws=>{try{const a=ws.deserializeAttachment(),p=this.room.players.find(p=>p.id===a?.playerId);return p&&(!p.connection||p.connection===a.connection)?a.playerId:null}catch{return null}}));
   for(const p of this.room.players)p.connected=ids.has(p.id);
  }
- async save(){if(this.room)await this.ctx.storage.put('serpent',this.room);}
+ async save(){if(this.room)await storeParty(this.ctx.storage,this.room,'serpent');}
  async schedule(){if(!this.room)return;const at=this.room.publicMatch&&this.room.status==='lobby'&&this.room.lobbyDeadline?Math.min(this.room.expiresAt,this.room.lobbyDeadline):this.room.status==='finished'&&!this.room.rewardsComplete?Math.min(this.room.expiresAt,Date.now()+10_000):this.room.expiresAt;await this.ctx.storage.setAlarm(at);}
  publicState(){
   if(!this.room)return null;const r=this.room;
@@ -60,7 +61,7 @@ export class SerpentRoom {
    if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);
    const count=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed';
    const worldId=body.publicMatch===true?['neon','forest','crystals','volcano','ruins','storm'][Number(body.code)%6]:body.worldId??'classic';if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
-   if(!Number.isInteger(count)||count<2||count>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-count)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration)||!/^\d{6}$/.test(body.code||'')||typeof body.hostKey!=='string'||body.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
+   if(!Number.isInteger(count)||count<2||count>20||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,20-count)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration)||!/^\d{6}$/.test(body.code||'')||typeof body.hostKey!=='string'||body.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
    this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',worldId,playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'arena-v23',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
    await this.save();await this.schedule();return json({ok:true},201);
   }
@@ -109,7 +110,7 @@ export class SerpentRoom {
    if(this.room.publicMatch)return this.error(ws,'إعدادات المواجهة السريعة يحددها السيرفر');
    const matchMode=msg.matchMode??this.room.matchMode??'timed',duration=msg.duration??this.room.duration;
    const worldId=msg.worldId??this.room.worldId??'classic';if(!validWorld(worldId))return this.error(ws,'خريطة الحلبة غير صالحة');
-   if(!Number.isInteger(msg.botCount)||msg.botCount<0||msg.botCount>Math.min(6,10-this.room.playerLimit)||!['easy','medium','hard'].includes(msg.difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return this.error(ws,'اختر عدد بوتات وصعوبة وطريقة لعب صالحة؛ الحد الكلي عشرة');
+   if(!Number.isInteger(msg.botCount)||msg.botCount<0||msg.botCount>Math.min(6,20-this.room.playerLimit)||!['easy','medium','hard'].includes(msg.difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return this.error(ws,'اختر عدد بوتات وصعوبة وطريقة لعب صالحة؛ الحد الكلي عشرون');
    if(this.room.botCount===msg.botCount&&this.room.difficulty===msg.difficulty&&(this.room.matchMode||'timed')===matchMode&&this.room.duration===duration&&(this.room.worldId||'classic')===worldId)return;
    this.room.worldId=worldId;this.room.botCount=msg.botCount;this.room.difficulty=msg.difficulty;this.room.matchMode=matchMode;this.room.duration=duration;for(const player of this.room.players)player.ready=false;await this.save();this.broadcast();return;
   }

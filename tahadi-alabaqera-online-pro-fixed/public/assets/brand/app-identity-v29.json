@@ -1,0 +1,45 @@
+{
+  "version": "29.0.0",
+  "name": "بوسراج للألعاب",
+  "short_name": "بوسراج",
+  "generation": {
+    "tool": "imagegen",
+    "mode": "new icon, then Arabic spelling refinement and adaptive safe-area variant",
+    "prompt": "Create a polished square icon for بوسراج, midnight navy full-bleed background, champagne gold interlocking game-controller ribbon emblem with a small turquoise accent, correct bold Arabic name بوسراج beneath it, no crown or mascot, no rounded outer frame. Refine the rightmost Arabic ب to exactly one dot. For Android maskable variant shrink the entire emblem and word together and keep all gold artwork inside the central 76% diameter circle.",
+    "postprocessing": "Size and file-format exports only; no repainting or lettering edits outside imagegen."
+  },
+  "variants": [
+    {
+      "file": "icon-192.png",
+      "size": 192,
+      "bytes": 45220,
+      "sha256": "ac51180272b51f5507061f9c1828ac52d02f4734f036e1bfbe0a532fe4fa6c04"
+    },
+    {
+      "file": "icon-512.png",
+      "size": 512,
+      "bytes": 275017,
+      "sha256": "a3698599fc6034a180025a063683f99fb2a1552abef6a92b67cb036ca174074b"
+    },
+    {
+      "file": "apple-touch-icon.png",
+      "size": 180,
+      "bytes": 40488,
+      "sha256": "935df80f5c94d1802f64ae39d2de596f4c5011437e3b9cb273980ec242a5228f"
+    },
+    {
+      "file": "icon-maskable-512.png",
+      "size": 512,
+      "bytes": 238706,
+      "sha256": "4d3e08122248b46fe6c6d4c5598f92c09ae6ce330910fe46f6d292bd31ef2ef4"
+    },
+    {
+      "file": "favicon-32.png",
+      "size": 32,
+      "bytes": 2246,
+      "sha256": "f288fbc6e3ff3fed52c087b0076823cb79e2c576484a3c6a9debb283c19451a4"
+    }
+  ],
+  "maskable_gold_radius_fraction": 0.2996,
+  "head_metadata_pages": 24
+}

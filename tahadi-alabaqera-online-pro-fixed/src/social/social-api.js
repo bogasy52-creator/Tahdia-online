@@ -88,10 +88,10 @@ async function call(stub, path, body = {}) {
 }
 
 async function validateInviteRoom(env, game, roomCode) {
-  const shared=['quiz','serpent','picture','sudoku','paths'].includes(game),namespace=shared?env?.ROOMS:env?.BOARD_ROOMS;
+  const shared=['party','quiz','serpent','picture','sudoku','paths'].includes(game),namespace=shared?env?.ROOMS:env?.BOARD_ROOMS;
   if(!namespace)return {ok:false,status:503,error:'محرك الغرفة غير متاح'};
   try {
-    const prefix={picture:'picture:',serpent:'__serpent__:',sudoku:'sudoku:',paths:'paths:'}[game]||'',hostname={picture:'picture',serpent:'serpent',sudoku:'sudoku',paths:'paths',quiz:'room'}[game]||'board';
+    const prefix={party:'party:',picture:'picture:',serpent:'__serpent__:',sudoku:'sudoku:',paths:'paths:'}[game]||'',hostname={party:'party',picture:'picture',serpent:'serpent',sudoku:'sudoku',paths:'paths',quiz:'room'}[game]||'board';
     const stub=namespace.get(namespace.idFromName(prefix+roomCode));
     const response=await stub.fetch('https://'+hostname+'.internal/status');
     const data = await readJson(response);

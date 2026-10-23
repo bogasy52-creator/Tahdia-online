@@ -7,7 +7,7 @@ const secret=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().repl
 const json=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const cleanName=value=>String(value||'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,20)||'لاعب';
 export function sudokuSettings(value){
-  return Number.isInteger(value?.difficulty)&&value.difficulty>=1&&value.difficulty<=5&&Number.isInteger(value?.capacity)&&value.capacity>=1&&value.capacity<=10;
+  return Number.isInteger(value?.difficulty)&&value.difficulty>=1&&value.difficulty<=5&&Number.isInteger(value?.capacity)&&value.capacity>=1&&value.capacity<=20;
 }
 
 export class SudokuRoom{
@@ -116,12 +116,12 @@ export class SudokuRoom{
       const text=typeof raw==='string'?raw:new TextDecoder().decode(raw);if(text.length>1024)return this.error(ws,'الرسالة كبيرة');
       let m;try{m=JSON.parse(text);}catch{return this.error(ws,'رسالة غير صالحة');}if(!m||typeof m!=='object')return this.error(ws,'رسالة غير صالحة');
       const second=Math.floor(Date.now()/1000);if(p.messageSecond!==second){p.messageSecond=second;p.messageCount=0;}if(++p.messageCount>30)return this.error(ws,'تمهّل قليلًا');
-      if(m.type==='ping'){this.broadcast();await this.schedule();return;}
+      if(m.type==='ping'){ws.send(JSON.stringify({type:'state',state:this.snapshot(p.id)}));return;}
       if(m.type==='leave'){
         if(['playing','countdown'].includes(r.status))return this.error(ws,'ارجع للمدخل لإغلاق اتصالك؛ مقعدك محفوظ حتى نهاية الجولة');
         delete r.players[p.id];r.order=r.order.filter(id=>id!==p.id);this.cleanup();try{ws.close(4002,'left');}catch{}
       }else if(m.type==='settings'&&p.role==='host'&&r.status==='lobby'){
-        if(!sudokuSettings(m)||m.capacity<r.order.length)return this.error(ws,'اختر صعوبة من 1 إلى 5 وعددًا يستوعب الموجودين حتى 10');
+        if(!sudokuSettings(m)||m.capacity<r.order.length)return this.error(ws,'اختر صعوبة من 1 إلى 5 وعددًا يستوعب الموجودين حتى 20');
         r.difficulty=m.difficulty;r.capacity=m.capacity;
       }else if(m.type==='start'&&p.role==='host'&&r.status==='lobby'){
         if(m.difficulty!==undefined||m.capacity!==undefined){if(!sudokuSettings(m)||m.capacity<r.order.length)return this.error(ws,'إعدادات البداية غير صالحة');r.difficulty=m.difficulty;r.capacity=m.capacity;}

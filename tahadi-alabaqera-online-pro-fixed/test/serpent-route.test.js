@@ -10,6 +10,6 @@ test('serpent rooms use the existing isolated namespace and return no host key i
 });
 test('serpent create rejects invalid limits and cross-origin requests',async()=>{
  const env=environment();env.ROOMS={idFromName:n=>n,get:()=>({fetch:async()=>Response.json({ok:true})})};
- for(const playerLimit of [1,9,2.5]){const r=await api(env,'/api/serpent/rooms',{playerLimit});assert.equal(r.response.status,400);}
+ for(const playerLimit of [1,21,2.5]){const r=await api(env,'/api/serpent/rooms',{playerLimit});assert.equal(r.response.status,400);}
  const {default:Worker}=await import('../src/index.js');const r=await Worker.fetch(new Request('https://game.test/api/serpent/rooms',{method:'POST',headers:{Origin:'https://evil.test'},body:'{}'}),env);assert.equal(r.status,403);
 });

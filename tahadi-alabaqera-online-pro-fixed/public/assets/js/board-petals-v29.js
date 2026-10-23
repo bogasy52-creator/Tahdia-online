@@ -1,0 +1,21 @@
+import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js';
+export const BOARD_COLORS=['#ae95ff','#58d5f7','#ffc56d','#62e4aa','#ff88ad','#f39b68'];
+const NS='http://www.w3.org/2000/svg',oldPositions=new WeakMap();
+function node(tag,attrs={},text){const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;return n;}
+const polar=(angle,r)=>({x:100+Math.cos(angle)*r,y:100+Math.sin(angle)*r});
+export function petalStonePoint(state,seat,index,game='zahra'){
+ const g=boardGeometry(state),progress=(state.players[seat].tokens||state.players[seat].marbles)[index],a=seat*2*Math.PI/g.seats-Math.PI/2;
+ if(progress<0){const p=polar(a,79);return{x:p.x+(index%2?5:-5),y:p.y+(index<2?-5:5)};}
+ if(progress>=g.track){const p=polar(a,progress===g.finish?8:33-(progress-g.track)*6),same=(state.players[seat].tokens||state.players[seat].marbles).flatMap((value,i)=>value===progress?[i]:[]),o=stoneOffset(same.indexOf(index),same.length,3);p.x+=o.x;p.y+=o.y;return p;}
+ const global=boardStonePosition(seat,progress,state),p=polar(global*2*Math.PI/g.track-Math.PI/2,52),stack=[];
+ state.players.forEach((player,pi)=>(player.tokens||player.marbles).forEach((v,ti)=>{if(boardStonePosition(pi,v,state)===global)stack.push(pi+':'+ti);}));
+ const offset=stoneOffset(stack.indexOf(seat+':'+index),stack.length,Math.min(5,2+stack.length));return{x:p.x+offset.x,y:p.y+offset.y};
+}
+export function renderPetalBoard(target,state,{game='zahra',legal=[],legalStones=[],onPick=()=>{},onSelect=null,active=state.turn}={}){
+ const g=boardGeometry(state),svg=node('svg',{viewBox:'0 0 200 200',role:'group','aria-label':game==='zahra'?'لوحة الزهرة؛ أربعة أحجار لكل لاعب':'لوحة جاكارو'});svg.classList.add('petal-board-v29');
+ svg.append(node('circle',{cx:100,cy:100,r:98,fill:'#101e31',stroke:'#526078','stroke-width':.6}),node('circle',{cx:100,cy:100,r:61,fill:'#14293b',stroke:'#64828a','stroke-opacity':.4}));
+ for(let i=0;i<g.seats;i++){const a=i*2*Math.PI/g.seats-Math.PI/2,p=polar(a,79),color=BOARD_COLORS[i];svg.append(node('circle',{cx:p.x,cy:p.y,r:15,fill:color+'19',stroke:color,'stroke-width':i===active?1.2:.5}));for(let h=0;h<4;h++){const t=polar(a,33-h*6);svg.append(node('circle',{cx:t.x,cy:t.y,r:2.3,fill:color+'55','data-home':i+':'+h}));}}
+ for(let i=0;i<g.track;i++){const p=polar(i*2*Math.PI/g.track-Math.PI/2,52),start=g.starts.indexOf(i),c=node('circle',{cx:p.x,cy:p.y,r:2.2,fill:start>=0?BOARD_COLORS[start]:'#bfd7d9','fill-opacity':start>=0?1:.5,'data-track':i});svg.append(c);if(g.safe.has(i)&&game==='zahra')svg.append(node('text',{x:p.x,y:p.y+.9,'text-anchor':'middle','font-size':3,fill:'#14293b'},'✦'));}
+ svg.append(node('circle',{cx:100,cy:100,r:10,fill:'#213e4a',stroke:'#64d6c0','data-finish':'true'}),node('text',{x:100,y:102,'text-anchor':'middle','font-size':7,fill:'#c1f7e6'},'✦'));
+ const previous=oldPositions.get(target)||new Map(),positions=new Map();state.players.forEach((player,pi)=>(player.tokens||player.marbles).forEach((_,ti)=>{const key=pi+':'+ti,p=petalStonePoint(state,pi,ti,game),can=pi===active&&legal.includes(ti)||legalStones.includes(pi+':'+ti),piece=node('g',{'data-stone':key,'data-player':pi,'data-token':ti,transform:`translate(${p.x} ${p.y})`,role:'button',tabindex:can?0:-1,'aria-label':player.name+'، حجر '+(ti+1),'aria-disabled':!can});piece.classList.add('petal-stone-v29');if(can)piece.classList.add('legal');piece.append(node('circle',{r:6.1,fill:'transparent'}),node('circle',{r:3.8,fill:BOARD_COLORS[pi],stroke:can?'#fff':'#091421','stroke-width':can?1.3:.65}),node('circle',{cx:-1,cy:-1,r:1.1,fill:'#fff','fill-opacity':.65}),node('text',{y:1.3,'text-anchor':'middle','font-size':3.4,fill:'#102134','font-weight':900},ti+1));if(can){piece.onclick=()=>onSelect?onSelect(pi,ti):onPick(ti);piece.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();if(onSelect)onSelect(pi,ti);else onPick(ti);}};}svg.append(piece);const old=previous.get(key);if(old&&(old.x!==p.x||old.y!==p.y)&&!matchMedia('(prefers-reduced-motion: reduce)').matches)piece.animate([{transform:`translate(${old.x}px,${old.y}px)`},{transform:`translate(${p.x}px,${p.y}px)`}],{duration:320,easing:'cubic-bezier(.2,.7,.2,1)'});positions.set(key,p);}));oldPositions.set(target,positions);target.replaceChildren(svg);
+}

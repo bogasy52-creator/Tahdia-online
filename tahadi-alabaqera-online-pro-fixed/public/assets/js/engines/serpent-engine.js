@@ -31,13 +31,13 @@ function makeSnake(g,player,index,count){
  return {id:String(player.id),name:String(player.name||'لاعب').replace(/[<>\u0000-\u001f]/g,'').slice(0,24),skin:String(player.skin||'snake-wild'),color:player.color||['#5ce9bb','#d8a3ff','#ffc778','#71cfff','#ff92b1','#c4e779','#f6b695','#8babff'][index%8],bot:player.bot===true,x,y,angle,targetAngle:angle,boost:false,alive:true,mass:28,score:0,kills:0,segments:Array.from({length:28},(_,i)=>({x:x-Math.cos(angle)*i*SPACING,y:y-Math.sin(angle)*i*SPACING})),respawnAt:null};
 }
 export function createSerpentGame(players,options={}){
- if(!Array.isArray(players)||players.length<1||players.length>10||new Set(players.map(p=>p.id)).size!==players.length)throw new Error('invalid_players');
+ if(!Array.isArray(players)||players.length<1||players.length>20||new Set(players.map(p=>p.id)).size!==players.length)throw new Error('invalid_players');
  if(options.worldId){const p=worldPreset(options.worldId);options={...options,width:p.width,height:p.height,foodCount:p.foodCount};}
- const g={version:1,width:clamp(Number(options.width)||1800,800,2400),height:clamp(Number(options.height)||1800,800,2400),collisionMode:['tail-guard','predator',ARENA_RULES].includes(options.collisionMode)?options.collisionMode:'classic',nextTreasureAt:15,matchMode:options.matchMode==='survival'?'survival':'timed',duration:clamp(Number(options.duration)||120,.1,300),difficulty:['easy','medium','hard'].includes(options.difficulty)?options.difficulty:'medium',foodCount:clamp(Math.floor(options.foodCount??220),0,350),randomState:(Number(options.seed)>>>0)||41,nextFood:0,elapsed:0,tick:0,status:'playing',winners:[],events:[],snakes:[],food:[]};
+ const g={version:1,width:clamp(Number(options.width)||1800,800,2400),height:clamp(Number(options.height)||1800,800,2400),collisionMode:['tail-guard','predator',ARENA_RULES].includes(options.collisionMode)?options.collisionMode:'classic',nextTreasureAt:15,matchMode:options.matchMode==='survival'?'survival':'timed',duration:clamp(Number(options.duration)||120,.1,900),difficulty:['easy','medium','hard'].includes(options.difficulty)?options.difficulty:'medium',foodCount:clamp(Math.floor(options.foodCount??220),0,350),randomState:(Number(options.seed)>>>0)||41,nextFood:0,elapsed:0,tick:0,status:'playing',winners:[],events:[],snakes:[],food:[]};
  g.snakes=players.map((p,i)=>makeSnake(g,p,i,players.length));replenish(g);if(g.collisionMode===ARENA_RULES){g.powerDrops=options.powerDrops!==false;g.drops=[];g.nextDropAt=3;g.nextDropId=0;}if(options.worldId)initializeArenaWorld(g,options.worldId,{training:options.training,difficulty:options.trainingDifficulty});return g;
 }
 export function addSerpentBots(g,count){
- const add=clamp(Math.floor(Number(count)||0),0,10-g.snakes.length),total=g.snakes.length+add;
+ const add=clamp(Math.floor(Number(count)||0),0,20-g.snakes.length),total=g.snakes.length+add;
  for(let i=0;i<add;i++){const index=g.snakes.length;g.snakes.push(makeSnake(g,{id:'bot-'+index,skin:['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma'][i%6],name:['فهد','وميض','كوبرا','برق','طيف','شهاب','مرجان','صقر'][i%8],bot:true},index,total));}
  if(g.tick===0)g.snakes=g.snakes.map((s,i)=>makeSnake(g,s,i,total));
  if(g.world?.version===27&&g.tick===0)initializeArenaWorld(g,g.world.id,{training:g.world.training,difficulty:g.world.difficulty});

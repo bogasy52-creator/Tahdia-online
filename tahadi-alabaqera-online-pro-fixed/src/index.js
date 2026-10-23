@@ -1,3 +1,5 @@
+import {PartyRoom} from './party/party-room.js';
+import {normalizePlaylist} from '../public/assets/js/engines/party-catalog-v29.js';
 import {PathsRoom,pathsSettings} from './paths/paths-room.js';
 import {SudokuRoom,sudokuSettings} from './sudoku/sudoku-room.js';
 import {ImageRoom} from './images/image-room.js';
@@ -22,7 +24,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='28.0.0';
+const RELEASE='29.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
@@ -299,6 +301,21 @@ export default {
     const socialResponse = await handleSocialRequest(request, env, { rateLimit });
     if (socialResponse) return socialResponse;
 
+    if(url.pathname.startsWith('/api/party/')){
+      if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
+      const limited=await rateLimit(request,env,'party-api',240,60000);if(limited)return limited;
+      if(url.pathname==='/api/party/rooms'&&request.method==='POST'){
+        const text=await request.text();if(text.length>6000)return json({ok:false,error:'طلب كبير'},413);
+        let body;try{body=JSON.parse(text);normalizePlaylist(body.playlist);if(!Number.isInteger(body.capacity)||body.capacity<1||body.capacity>20)throw Error('اختر عددًا من 1 إلى 20');}catch(e){return json({ok:false,error:e.message||'إعدادات غير صالحة'},400);}
+        for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('party:'+code)),res=await stub.fetch('https://party.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:body.capacity,playlist:body.playlist})});if(res.status===201){const data=await res.json();return json({ok:true,code,hostKey,capacity:data.capacity});}if(res.status===400)return res;}
+        return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
+      }
+      const m=url.pathname.match(/^\/api\/party\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
+      const headers=new Headers(request.headers);headers.delete('x-bs-account');
+      if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth)headers.set('x-bs-account',auth.username);}
+      return env.ROOMS.get(env.ROOMS.idFromName('party:'+m[1])).fetch(new Request('https://party.internal/'+m[2]+url.search,{headers}));
+    }
+
     if(url.pathname.startsWith('/api/paths/')){
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
       const limited=await rateLimit(request,env,'paths-api',120,60000);if(limited)return limited;
@@ -306,7 +323,7 @@ export default {
         if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let settings;try{settings=JSON.parse(text);}catch{return json({ok:false,error:'إعدادات غير صالحة'},400);}
-        if(!pathsSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 10'},400);
+        if(!pathsSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 20'},400);
         for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('paths:'+code));const res=await stub.fetch('https://paths.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
@@ -329,7 +346,7 @@ export default {
         if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let settings;try{settings=JSON.parse(text);}catch{return json({ok:false,error:'إعدادات غير صالحة'},400);}
-        if(!sudokuSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 10'},400);
+        if(!sudokuSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 20'},400);
         for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+code));const res=await stub.fetch('https://sudoku.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
@@ -350,7 +367,7 @@ export default {
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
       const limited=await rateLimit(request,env,'picture:'+ (url.pathname.endsWith('/generate')?'generate':'api'),url.pathname.endsWith('/generate')?12:120,60000);if(limited)return limited;
       if(url.pathname==='/api/picture/rooms'&&request.method==='POST'){
-        for(let attempt=0;attempt<8;attempt++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+code));const res=await stub.fetch('https://picture.internal/init',{method:'POST',body:JSON.stringify({code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
+        const body=await request.json().catch(()=>({})),capacity=body.capacity??2;if(!Number.isInteger(capacity)||capacity<1||capacity>20)return json({ok:false,error:'اختر عدد اللاعبين من 1 إلى 20'},400);for(let attempt=0;attempt<8;attempt++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+code));const res=await stub.fetch('https://picture.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity})});if(res.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
       const m=url.pathname.match(/^\/api\/picture\/rooms\/(\d{6})\/(ws|status|generate|art\/[a-f0-9-]{36})$/);if(!m)return json({ok:false,error:'not_found'},404);
       if(request.method!==(m[2]==='generate'?'POST':'GET'))return json({ok:false,error:'method_not_allowed'},405);
@@ -462,7 +479,7 @@ export default {
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
       const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed',worldId=body.worldId??'classic';
       if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
-      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>8||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,10-playerLimit)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
+      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>20||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,20-playerLimit)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
       for(let attempt=0;attempt<5;attempt++){
         const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
         const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration,botCount,difficulty,matchMode,worldId})});
@@ -502,7 +519,7 @@ export default {
           try { variant = normalizeSnakesVariant(body.variant); }
           catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
         }
-        const playerLimit = game === "jackaroo" ? 4 : Math.min(4, Math.max(2, Number(body.playerLimit) || 2));
+        const playerLimit = game === "jackaroo" ? (Number(body.playerLimit)===6?6:4) : Math.min(game==="zahra"?6:20, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
           const code = roomCode();
@@ -590,6 +607,8 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async partyDelegate(){if(!this.partyRoom)this.partyRoom=new PartyRoom(this.ctx,this.env);await this.partyRoom.ready;return this.partyRoom;}
+
   async pathsDelegate(){if(!this.pathsRoom)this.pathsRoom=new PathsRoom(this.ctx,this.env);await this.pathsRoom.ready;return this.pathsRoom;}
 
   async sudokuDelegate(){if(!this.sudokuRoom)this.sudokuRoom=new SudokuRoom(this.ctx,this.env);await this.sudokuRoom.ready;return this.sudokuRoom;}
@@ -600,6 +619,7 @@ export class GameRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if(url.hostname==='party.internal')return (await this.partyDelegate()).fetch(request);
     if(url.hostname==='paths.internal')return (await this.pathsDelegate()).fetch(request);
     if(url.hostname==='sudoku.internal')return (await this.sudokuDelegate()).fetch(request);
     if(url.hostname==='picture.internal')return (await this.pictureDelegate()).fetch(request);
@@ -643,7 +663,7 @@ export class GameRoom extends DurableObject {
         winnerId: null,
         mode: [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
         relayEnabled: [4,6].includes(Number(body.playerLimit)),
-        playerLimit: [2,4,5,6,7,8].includes(Number(body.playerLimit)) ? Number(body.playerLimit) : 8,
+        playerLimit: Number.isInteger(body.playerLimit)&&body.playerLimit>=2&&body.playerLimit<=20 ? body.playerLimit : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
       await this.persist();
@@ -752,6 +772,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketMessage(ws, raw);
@@ -859,6 +880,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketClose(ws);
@@ -878,6 +900,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.picture)return (await this.pictureDelegate()).webSocketError(ws);
@@ -1287,6 +1310,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.partyRoom||await this.ctx.storage.get('partyRoom'))return (await this.partyDelegate()).alarm();
     if(this.pathsRoom||await this.ctx.storage.get('pathsRoom'))return (await this.pathsDelegate()).alarm();
     if(this.sudokuRoom||await this.ctx.storage.get('sudokuRoom'))return (await this.sudokuDelegate()).alarm();
     if(this.pictureRoom||await this.ctx.storage.get('imageRoom')||await this.ctx.storage.get('imageQuota'))return (await this.pictureDelegate()).alarm();
@@ -1386,7 +1410,7 @@ export class BoardRoom extends DurableObject {
     if(this.room)return json({ok:false,error:'room_exists'},409);
     const game=String(body.game||'');if(!['snakes','zahra','jackaroo'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
-    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='jackaroo'?4:Math.min(4,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
+    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(game==='zahra'?6:20,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.expiresAt);this.room=room;return json({ok:true},201)}
     catch(error){const requestId=crypto.randomUUID();this.room=null;try{await this.ctx.storage.delete('room');await this.ctx.storage.deleteAlarm()}catch(rollback){console.error('board initialization rollback failed',{requestId,error:rollback.message})}console.error('board initialization failed',{requestId,error:error.message});return json({ok:false,code:'ROOM_INITIALIZATION_FAILED',error:'تعذر حفظ الغرفة على السيرفر. حاول مرة أخرى.',requestId},503)}
   }
