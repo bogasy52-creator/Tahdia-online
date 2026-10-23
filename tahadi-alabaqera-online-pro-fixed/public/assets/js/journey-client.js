@@ -1,4 +1,4 @@
-import {GAMES,normalizeJourney, commitJourney, dayKey, journeyStats} from './engines/journey-engine.js?v=29.0.0';
+import {GAMES,normalizeJourney, commitJourney, dayKey, journeyStats} from './engines/journey-engine.js?v=29.1.0';
 const PREFIX = 'tahdia-journey-v17:', QUEUE = 'tahdia-journey-outbox-v17:';
 let chain = Promise.resolve(), revision = 0;
 const session = () => { try { return localStorage.getItem('bs_social_session') || ''; } catch { return ''; } };

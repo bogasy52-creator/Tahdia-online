@@ -132,7 +132,7 @@
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
-    if(!/^(?:\/(?:online|picture|jackaroo|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/.test(notification.joinPath))return;
+    if(!/^(?:\/(?:party|online|picture|jackaroo|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/.test(notification.joinPath))return;
     if (notification.id && seenInvites.has(String(notification.id))) return;
     rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);
     let wrap = document.querySelector('#bsSocialInvite');

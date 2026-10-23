@@ -86,7 +86,7 @@ export function applyPartyAction(room,id,message,now=Date.now()){
  }else if(game==='picture'){
   const next=placeImageTile(p.board,action.piece,action.cell);p.board=next;p.progress=imageProgress(next)/next.length;p.score=Math.floor(p.progress*10000);if(p.progress===1)completed(p,now);feedback='correct';
  }else if(game==='memory'){
-  const result=memoryPair(p.state,requireActionIndex(action.cell,p.state.deck.length));if(!result.accepted)throw Error('انتظر إغلاق البطاقتين أو اختر بطاقة أخرى');p.state=result;p.progress=result.matched.length/result.deck.length;p.score=Math.floor(p.progress*10000);if(result.locked){p.unlockAt=now+900;feedback='wrong';}else feedback=result.matched.length?'correct':'flip';if(result.won)completed(p,now);
+  const previousMatches=p.state.matched.length,result=memoryPair(p.state,requireActionIndex(action.cell,p.state.deck.length));if(!result.accepted)throw Error('انتظر إغلاق البطاقتين أو اختر بطاقة أخرى');p.state=result;p.progress=result.matched.length/result.deck.length;p.score=Math.floor(p.progress*10000);if(result.locked){p.unlockAt=now+900;feedback='wrong';}else feedback=result.matched.length>previousMatches?'correct':'flip';if(result.won)completed(p,now);
  }else if(game==='puzzle'){
   const result=movePuzzle(p.tiles,requireActionIndex(action.cell,9));if(!result.moved)throw Error('حرّك رقمًا بجانب الفراغ');p.tiles=result.tiles;p.progress=p.tiles.filter((v,i)=>v&&v===i+1).length/8;p.score=Math.floor(p.progress*10000);if(result.solved)completed(p,now);feedback='move';
  }else if(['quiz','logic'].includes(game)){
@@ -173,6 +173,11 @@ export function configureParty(room,id,message,now=Date.now()){
   if(!['lobby','countdown'].includes(room.status))throw Error('الاستعداد متاح قبل البداية');p.ready=message.ready===true;if(!p.ready&&room.status==='countdown'){room.status='lobby';room.startsAt=0;}return;
  }
  if(p.role!=='host')throw Error('هذا الخيار للمضيف فقط');
+ if(message.type==='remove'){
+  const target=room.players[message.playerId];
+  if(room.status!=='lobby'||!target||target.id===id||target.connected)throw Error('يمكن إخلاء مقعد لاعب منقطع في اللوبي فقط');
+  room.order=room.order.filter(key=>key!==target.id);delete room.players[target.id];if(room.roster)room.roster=room.roster.filter(key=>key!==target.id);return;
+ }
  if(message.type==='playlist'){
   if(message.playlistRevision!==room.playlistRevision)throw Error('تغيرت القائمة؛ أعد تحميلها');const rows=normalizePlaylist(message.playlist);if(room.order.length>playlistCapacity(rows))throw Error('الجاكارو والزهرة حدهم 6 لاعبين؛ عدد الغرفة الحالي أكبر');
   if(room.status==='lobby'||room.status==='finished')room.playlist=rows;else{const prefix=room.playlist.slice(0,room.cursor+1);if(prefix.length+rows.length>20)throw Error('حد القائمة 20 لعبة');room.playlist=[...prefix,...rows];}

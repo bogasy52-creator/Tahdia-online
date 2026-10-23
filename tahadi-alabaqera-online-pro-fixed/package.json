@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "29.0.0",
+  "version": "29.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "esbuild": "0.28.1",
-    "miniflare": "5.20260828.0-alpha",
-    "playwright": "^1.51.1",
+    "miniflare": "5.20261019.2-beta",
+    "playwright": "1.64.1",
     "wrangler": "4.127.1"
   }
 }

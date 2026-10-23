@@ -19,7 +19,7 @@ test('no misleading live-room invitation after match begins',async()=>{
  assert.match(source,/invite\.textContent='دعوة صديق'/);
 });
 
-test('offline recipient sees persisted invitation on next dashboard read (isolated client harness)', async()=>{
+for(const [game,joinPath] of [['paths','/paths-online?room=123456'],['sudoku','/sudoku?room=123456'],['party','/party?room=123456']])test('offline recipient sees the exact '+game+' room invitation on next dashboard read', async()=>{
  const {runInNewContext}=await import('node:vm');
  const source=await load('public/assets/js/social-client.js');
  const cache=new Map([['bs_social_session','recipient.secret'],['bs_social_profile',JSON.stringify({username:'recipient',displayName:'Rec'})]]);
@@ -36,7 +36,7 @@ test('offline recipient sees persisted invitation on next dashboard read (isolat
   set innerHTML(_value){this.children=[];}
  }
  const document={body:new Element('body'),hidden:false,createElement:tag=>new Element(tag),querySelector:q=>q.startsWith('#')?byId.get(q.slice(1))||null:null,querySelectorAll:()=>[],addEventListener:()=>{}};
- const notifications=[{id:'inv-one',type:'game_invite',game:'paths',roomCode:'123456',joinPath:'/paths-online?room=123456',createdAt:Date.now(),expiresAt:Date.now()+60000,read:false,from:{displayName:'Friend'}}];
+ const notifications=[{id:'inv-one',type:'game_invite',game,roomCode:'123456',joinPath,createdAt:Date.now(),expiresAt:Date.now()+60000,read:false,from:{displayName:'Friend'}}];
  let reads=0;
  const fetch=async(_path)=>({ok:true,status:200,json:async()=>{reads++;return {ok:true,profile:{username:'recipient',displayName:'Rec'},notifications,unread:1,friends:[]};}});
  const window={addEventListener(){},dispatchEvent(){},WebSocket:undefined};
@@ -47,6 +47,6 @@ test('offline recipient sees persisted invitation on next dashboard read (isolat
  assert.ok(reads>0,'dashboard polled even without WebSocket');
  assert.ok(card,'saved invite appears in-game');
  assert.ok(card.children.some(x=>x.textContent.includes('دعوة من Friend')));
- assert.equal(card.children.find(x=>x.className==='bs-social-invite-actions').children[0].href,'/paths-online?room=123456');
+ assert.equal(card.children.find(x=>x.className==='bs-social-invite-actions').children[0].href,joinPath);
  assert.ok((cache.get('bs_seen_invites_v25_2:recipient')||'').includes('inv-one'));
 });

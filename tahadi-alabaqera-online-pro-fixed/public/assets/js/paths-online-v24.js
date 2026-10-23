@@ -1,5 +1,5 @@
-import {drawBoard} from './journey-renderer.js?v=29.0.0';
-import {adjacent} from './engines/journey-engine.js?v=29.0.0';
+import {drawBoard} from './journey-renderer.js?v=29.1.0';
+import {adjacent} from './engines/journey-engine.js?v=29.1.0';
 const $=id=>document.getElementById(id),show=(id,yes)=>$(id).hidden=!yes;
 const read=k=>{try{return localStorage.getItem(k)||'';}catch{return '';}},write=(k,v)=>{try{localStorage.setItem(k,v);}catch{}},remove=k=>{try{localStorage.removeItem(k);}catch{}};
 const account=()=>window.BS_CAREER?.account?.()||read('bs_social_session').split('.')[0]||'guest',key=()=> 'tahdia-paths-room-v24:'+account();

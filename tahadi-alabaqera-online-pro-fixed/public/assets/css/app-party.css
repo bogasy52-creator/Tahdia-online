@@ -219,3 +219,5 @@ body.party-app{--party-ink:#edf2ff;--party-muted:#a2afca;--party-line:#ffffff15;
 
 .party-brand>img{display:block;width:48px;height:48px;flex:0 0 48px;border-radius:14px;object-fit:cover;border:1px solid #d6bc7945}
 @media(max-width:600px){.party-brand{gap:7px}.party-brand>img{width:40px;height:40px;flex-basis:40px}}
+
+.party-remove-player{border:1px solid #efbd724a;background:#efbd7212;color:#efca92;border-radius:9px;padding:6px 8px;font:inherit;font-size:11px;min-height:32px;white-space:nowrap;cursor:pointer}.party-player-row>div{min-width:0}.party-player-row>div b{overflow-wrap:anywhere}

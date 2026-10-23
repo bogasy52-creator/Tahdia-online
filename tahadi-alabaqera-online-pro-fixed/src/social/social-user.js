@@ -74,8 +74,8 @@ export function createSocialUserClass(DurableObject) {
       ? await request.json().catch(() => ({}))
       : {};
 
-    if (url.pathname === "/signup" && request.method === "POST") return this.signup(body);
-    if (url.pathname === "/login" && request.method === "POST") return this.login(body);
+    if (url.pathname === "/signup" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.signup(body));
+    if (url.pathname === "/login" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.login(body));
     if (url.pathname === "/validate" && request.method === "POST") return this.validateSession(body.secret);
     if (url.pathname === "/logout" && request.method === "POST") return this.logout(body.secret);
     if (url.pathname === "/public" && request.method === "GET") return this.publicData();
@@ -181,12 +181,16 @@ export function createSocialUserClass(DurableObject) {
     const hash = await sha256(secret);
     const createdAt = Date.now();
     const expiresAt = createdAt + 30 * 24 * 60 * 60 * 1000;
-    await this.ctx.storage.put(`session:${hash}`, { createdAt, expiresAt });
-    const sessions = await this.ctx.storage.list({ prefix: "session:", reverse: true });
-    if (sessions.size > 8) {
-      const keys = [...sessions.keys()].slice(8);
-      if (keys.length) await this.ctx.storage.delete(keys);
-    }
+    const currentKey = `session:${hash}`;
+    await this.ctx.storage.transaction(async tx => {
+      await tx.put(currentKey, { createdAt, expiresAt });
+      const sessions = await tx.list({ prefix: "session:" });
+      const recent = [...sessions].filter(([key, record]) => key !== currentKey && Number(record?.expiresAt) > createdAt)
+        .sort(([a, left], [b, right]) => Number(right.createdAt || 0) - Number(left.createdAt || 0) || a.localeCompare(b));
+      const retained = new Set([currentKey, ...recent.slice(0, 7).map(([key]) => key)]);
+      const removed = [...sessions.keys()].filter(key => !retained.has(key));
+      if (removed.length) await tx.delete(removed);
+    });
     return { token: createSessionToken(this.profile.username, secret), expiresAt };
   }
 

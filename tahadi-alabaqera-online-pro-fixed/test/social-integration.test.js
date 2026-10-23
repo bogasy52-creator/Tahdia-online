@@ -8,7 +8,7 @@ class FakeDurableObject {
 }
 
 class FakeStorage {
-  constructor() { this.map = new Map(); }
+  constructor() { this.map = new Map(); this.queue = Promise.resolve(); }
   async get(key) { return structuredClone(this.map.get(key)); }
   async put(key, value) { this.map.set(key, structuredClone(value)); }
   async delete(key) {
@@ -16,6 +16,7 @@ class FakeStorage {
     return this.map.delete(key);
   }
   async deleteAll() { this.map.clear(); }
+  transaction(fn) { const work=this.queue.then(async()=>{const before=structuredClone(this.map);try{return await fn(this);}catch(error){this.map=before;throw error;}});this.queue=work.catch(()=>{});return work; }
   async list({ prefix = '', limit = Infinity, reverse = false } = {}) {
     let entries = [...this.map.entries()].filter(([key]) => key.startsWith(prefix));
     entries.sort(([a], [b]) => a.localeCompare(b));
@@ -27,7 +28,7 @@ class FakeStorage {
 
 class FakeContext {
   constructor() { this.storage = new FakeStorage(); this.sockets = []; this.waits = []; this.ready = Promise.resolve(); }
-  blockConcurrencyWhile(fn) { this.ready = Promise.resolve().then(fn); return this.ready; }
+  blockConcurrencyWhile(fn) { const work=this.ready.then(fn);this.ready=work.catch(()=>{});return work; }
   getWebSockets() { return [...this.sockets]; }
   acceptWebSocket(ws) { this.sockets.push(ws); }
   waitUntil(promise) { this.waits.push(Promise.resolve(promise)); }

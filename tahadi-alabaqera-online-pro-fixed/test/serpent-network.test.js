@@ -19,3 +19,10 @@ test('negotiated long-body packets preserve every segment within half a world un
 test('a malformed packed body requests resynchronization instead of crashing the client',()=>{
  const g=createSerpentGame([{id:'a'}],{foodCount:0});g.snakes[0].segments=Array.from({length:180},(_,i)=>({x:500-i*5,y:500}));const previous={round:1,game:serpentSnapshot(g)};g.tick=2;const packet=compactSerpentFrame({round:1,game:serpentSnapshot(g)},previous,true);packet.state.game.snakes[0].body.data='invalid!';assert.equal(applySerpentFrame(previous,packet),null);
 });
+test('modern long-body frames halve body bytes while preserving all points within half a world unit',()=>{
+ const game=createSerpentGame([{id:'a'},{id:'b'}],{collisionMode:'arena-v23',foodCount:0});
+ for(const snake of game.snakes){snake.mass=700;snake.segments=Array.from({length:700},(_,i)=>({x:1000+500*Math.cos(i*.01),y:1000+500*Math.sin(i*.01)}));}
+ const prior={round:1,game:serpentSnapshot(game)};game.tick=2;const current={round:1,game:serpentSnapshot(game)},legacy=compactSerpentFrame(current,prior,'tight'),modern=compactSerpentFrame(current,prior,'efficient'),decoded=applySerpentFrame(prior,modern);
+ assert.equal(modern.state.game.snakes[0].body.encoding,'n4u1');assert.ok(JSON.stringify(modern).length<JSON.stringify(legacy).length*.65);
+ decoded.game.snakes.forEach((snake,s)=>{assert.equal(snake.segments.length,700);snake.segments.forEach((point,i)=>{assert.ok(Math.abs(point.x-current.game.snakes[s].segments[i].x)<=.5);assert.ok(Math.abs(point.y-current.game.snakes[s].segments[i].y)<=.5);});});
+});

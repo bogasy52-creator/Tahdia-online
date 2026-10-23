@@ -1,4 +1,4 @@
-import {createSnakesGame} from './snakes-engine.js?v=29.0.0';
+import {createSnakesGame} from './snakes-engine.js?v=29.1.0';
 
 export const ADVENTURE_EVENTS = Object.freeze({
  boost:{icon:'⚡',name:'دفعة سرعة',text:'ثلاث خطوات إضافية'},

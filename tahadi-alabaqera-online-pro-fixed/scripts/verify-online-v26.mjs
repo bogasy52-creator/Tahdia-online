@@ -14,7 +14,7 @@ async function join(code,protocols=[]){
  const welcome=await next(m=>m.type==='welcome');return{socket,next,...welcome};
 }
 try{
- const health=await api('/api/health');assert.equal(health.data.release,'29.0.0');checks.push('Worker and frontend release agree');
+ const health=await api('/api/health');assert.equal(health.data.release,'29.1.0');checks.push('Worker and frontend release agree');
  const signup=async(username)=>(await api('/api/social/signup',{username,displayName:username,password:'Runtime-test-only-2026'})).data.token;
  const a=await signup('alice26'),b=await signup('bob26'),owner=await signup('bosrag');
  await api('/api/social/friends/request',{username:'bob26'},a);await api('/api/social/friends/respond',{username:'alice26',accept:true},b);

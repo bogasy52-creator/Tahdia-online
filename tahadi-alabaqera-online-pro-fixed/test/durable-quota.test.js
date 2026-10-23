@@ -48,6 +48,11 @@ test('quota failure in the global rate guard is reported without another DO requ
  const env=environment();let calls=0;env.ROOMS={idFromName:name=>name,get:()=>({fetch:async()=>{calls++;throw Error('Exceeded allowed volume of requests in Durable Objects free tier.')}})};
  const res=await api(env,'/api/board/rooms',{game:'snakes',name:'A'});assert.equal(res.data.code,'DURABLE_REQUEST_LIMIT');assert.equal(calls,1);assert.equal(env.BOARD_ROOMS.objects.size,0);
 });
+test('party routes respect an exhausted quota without repeatedly calling the room service',async()=>{
+ const env=environment();let calls=0;env.ROOMS={idFromName:name=>name,get:()=>({fetch:async()=>{calls++;throw Error('Exceeded allowed volume of requests in Durable Objects free tier.');}})};
+ for(let i=0;i<3;i++){const res=await api(env,'/api/party/rooms',{capacity:20,playlist:['memory']});assert.equal(res.response.status,503);assert.equal(res.data.code,'DURABLE_REQUEST_LIMIT');}
+ assert.equal(calls,1);
+});
 for(const data of [
  {ok:false,code:'DURABLE_REQUEST_LIMIT',error:'وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة ٣:٠٠ صباحًا بتوقيت السعودية.'},
  {ok:false,error:'تعذر تشغيل غرفة اللعبة — Exceeded allowed volume of requests in Durable Objects free tier.'}

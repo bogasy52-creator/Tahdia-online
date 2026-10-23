@@ -2,8 +2,8 @@ import {readdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';import{fileURLToPath}from'node:url';
 const root=fileURLToPath(new URL('../public/',import.meta.url));
 const release=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
-let count=0;const css='<link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=29.0.0">';
-const js='<script src="/assets/js/tahdia-premium-v25.js?v=29.0.0"></script>';
+let count=0;const css='<link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=29.1.0">';
+const js='<script src="/assets/js/tahdia-premium-v25.js?v=29.1.0"></script>';
 const changed=new Set(['arcade-games','journey-ui','paths-online-v24','picture-ui','play-feedback-v24-1','serpent-ui','social-client','sudoku-online','sudoku-ui','home-v19']);
 for(const name of await readdir(root)){
  if(!name.endsWith('.html')||['offline.html','accuracy.html'].includes(name))continue;

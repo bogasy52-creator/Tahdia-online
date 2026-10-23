@@ -1,7 +1,7 @@
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=20000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة، مع نفس قواعد الرأس والذيل والقدرات.'},
- {id:'snakes',name:'الثعبان والسلالم',kind:'board',image:'assets/arena/arena-plate-v17.webp',hint:'حتى 20 لاعبًا على اللوحة نفسها؛ الرميات والتحرك من السيرفر.'},
+ {id:'snakes',name:'الثعبان والسلالم',kind:'board',image:'assets/brand/snakes-studio-v29-1.webp',hint:'حتى 20 لاعبًا على اللوحة نفسها؛ الرميات والتحرك من السيرفر.'},
  {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,image:'assets/arena/jackaroo-table-v17.webp',hint:'حتى ستة لاعبين؛ فريقان، ولوحة تتسع لأحجار الجميع.'},
  {id:'zahra',name:'الزهرة',kind:'board',maxPlayers:6,image:'assets/game-cards-v27/zahra.svg',hint:'حتى ستة لاعبين؛ ستة ألوان، وأربعة أحجار منفصلة لكل لاعب.'},
  {id:'dice',name:'تحدي النرد',kind:'board',image:'assets/brand/dice-studio-v26.webp',hint:'ارمِ أو ثبّت رصيدك؛ الحظ والخطة يصنعان الفارق.'},

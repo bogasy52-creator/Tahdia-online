@@ -1,24 +1,31 @@
 /* Compact presentation frames; gameplay continues to use full precision on the server. */
 const q=n=>Math.round(n*10)/10;
-function packedBody(points,tight=false){
+function packedBody(points,tight=false,scale=2){
  if(points.length<128)return null;
- const origin=[Math.round(points[0].x*2),Math.round(points[0].y*2)],bytes=new Uint8Array((points.length-1)*2);let x=origin[0],y=origin[1];
- for(let i=1;i<points.length;i++){const nx=Math.round(points[i].x*2),ny=Math.round(points[i].y*2),dx=nx-x,dy=ny-y;if(Math.abs(dx)>127||Math.abs(dy)>127)return null;bytes[(i-1)*2]=dx&255;bytes[(i-1)*2+1]=dy&255;x=nx;y=ny;}
- if(tight){const small=new Uint8Array(points.length-1);let fits=true;for(let i=0;i<small.length;i++){const dx=bytes[i*2]>127?bytes[i*2]-256:bytes[i*2],dy=bytes[i*2+1]>127?bytes[i*2+1]-256:bytes[i*2+1];if(dx< -8||dx>7||dy< -8||dy>7){fits=false;break;}small[i]=(dx+8)*16+dy+8;}if(fits)return{origin,count:points.length,encoding:'n4',data:btoa(Array.from(small,b=>String.fromCharCode(b)).join(''))};}
- return {origin,count:points.length,data:btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''))};
+ const origin=[Math.round(points[0].x*scale),Math.round(points[0].y*scale)],bytes=new Uint8Array((points.length-1)*2);let x=origin[0],y=origin[1];
+ for(let i=1;i<points.length;i++){const nx=Math.round(points[i].x*scale),ny=Math.round(points[i].y*scale),dx=nx-x,dy=ny-y;if(Math.abs(dx)>127||Math.abs(dy)>127)return null;bytes[(i-1)*2]=dx&255;bytes[(i-1)*2+1]=dy&255;x=nx;y=ny;}
+ if(tight){const small=new Uint8Array(points.length-1);let fits=true;for(let i=0;i<small.length;i++){const dx=bytes[i*2]>127?bytes[i*2]-256:bytes[i*2],dy=bytes[i*2+1]>127?bytes[i*2+1]-256:bytes[i*2+1];if(dx< -8||dx>7||dy< -8||dy>7){fits=false;break;}small[i]=(dx+8)*16+dy+8;}if(fits)return{origin,count:points.length,encoding:scale===1?'n4u1':'n4',data:btoa(Array.from(small,b=>String.fromCharCode(b)).join(''))};}
+ return {origin,count:points.length,...(scale===1?{encoding:'i8u1'}:{}),data:btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''))};
 }
 function unpackBody(body){
  if(!body||!Number.isInteger(body.count)||body.count<1||body.count>2048||!Array.isArray(body.origin)||body.origin.length!==2||body.origin.some(n=>!Number.isInteger(n)||Math.abs(n)>1e7)||typeof body.data!=='string'||body.data.length>6000)return null;
- let raw;try{raw=atob(body.data);}catch{return null;}const tight=body.encoding==='n4';if(body.encoding&&body.encoding!=='n4'||raw.length!==(body.count-1)*(tight?1:2))return null;
- let[x,y]=body.origin;const points=[{x:x/2,y:y/2}];for(let i=0;i<raw.length;i+=tight?1:2){if(tight){const v=raw.charCodeAt(i);x+=(v>>4)-8;y+=(v&15)-8;}else{const dx=raw.charCodeAt(i),dy=raw.charCodeAt(i+1);x+=dx>127?dx-256:dx;y+=dy>127?dy-256:dy;}points.push({x:x/2,y:y/2});}return points;
+ let raw;try{raw=atob(body.data);}catch{return null;}const tight=['n4','n4u1'].includes(body.encoding),scale=['n4u1','i8u1'].includes(body.encoding)?1:2;if(body.encoding&&!['n4','n4u1','i8u1'].includes(body.encoding)||raw.length!==(body.count-1)*(tight?1:2))return null;
+ let[x,y]=body.origin;const points=[{x:x/scale,y:y/scale}];for(let i=0;i<raw.length;i+=tight?1:2){if(tight){const v=raw.charCodeAt(i);x+=(v>>4)-8;y+=(v&15)-8;}else{const dx=raw.charCodeAt(i),dy=raw.charCodeAt(i+1);x+=dx>127?dx-256:dx;y+=dy>127?dy-256:dy;}points.push({x:x/scale,y:y/scale});}return points;
 }
 export function compactSerpentFrame(state,previous,packed=false){
  const game=state.game,old=new Map(previous.game.food.map(f=>[f.id,f])),current=new Set(game.food.map(f=>f.id));
  const {food,...rest}=game;
- return {type:'frame',baseTick:previous.game.tick,foodAdded:food.filter(f=>!old.has(f.id)),foodRemoved:[...old.keys()].filter(id=>!current.has(id)),state:{...state,game:{...rest,snakes:game.snakes.map(s=>{const body=packed?packedBody(s.segments,packed==='tight'):null;return {...s,x:q(s.x),y:q(s.y),segments:body?undefined:s.segments.map(p=>[q(p.x),q(p.y)]),...(body?{body}:{} )};})}}};
+ return {type:'frame',baseTick:previous.game.tick,foodAdded:food.filter(f=>!old.has(f.id)),foodRemoved:[...old.keys()].filter(id=>!current.has(id)),state:{...state,game:{...rest,snakes:game.snakes.map(s=>{const body=packed?packedBody(s.segments,packed==='tight'||packed==='efficient',packed==='efficient'?1:2):null;return {...s,x:q(s.x),y:q(s.y),segments:body?undefined:s.segments.map(p=>[q(p.x),q(p.y)]),...(body?{body}:{} )};})}}};
+}
+export function compactSerpentKeyframe(state,packed='tight'){
+ const game=state.game;
+ return {type:'keyframe',state:{...state,game:{...game,snakes:game.snakes.map(s=>{const body=packed?packedBody(s.segments,packed==='tight'||packed==='efficient',packed==='efficient'?1:2):null;return {...s,x:q(s.x),y:q(s.y),segments:body?undefined:s.segments.map(p=>[q(p.x),q(p.y)]),...(body?{body}:{})};})}}};
 }
 export function applySerpentFrame(previous,packet){
- if(!previous?.game||previous.game.tick!==packet.baseTick)return null;
- const food=new Map(previous.game.food.map(f=>[f.id,f]));for(const id of packet.foodRemoved)food.delete(id);for(const f of packet.foodAdded)food.set(f.id,f);
+ const keyframe=packet?.type==='keyframe';
+ if(!packet?.state?.game||!Array.isArray(packet.state.game.snakes))return null;
+ if(!keyframe&&(!previous?.game||previous.game.tick!==packet.baseTick))return null;
+ if(keyframe&&!Array.isArray(packet.state.game.food))return null;
+ const food=new Map((keyframe?packet.state.game.food:previous.game.food).map(f=>[f.id,f]));if(!keyframe){for(const id of packet.foodRemoved)food.delete(id);for(const f of packet.foodAdded)food.set(f.id,f);}
  const snakes=[];for(const s of packet.state.game.snakes){const segments=s.body?unpackBody(s.body):s.segments?.map(([x,y])=>({x,y}));if(!segments)return null;const {body,...rest}=s;snakes.push({...rest,segments});}return {...packet.state,game:{...packet.state.game,food:[...food.values()],snakes}};
 }
