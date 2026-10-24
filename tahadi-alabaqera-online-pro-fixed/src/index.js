@@ -17,6 +17,8 @@ import { createSocialUserClass } from "./social/social-user.js";
 import { generateSafeQuestions } from "./ai-questions.js";
 import {createRelay,relayView,answerRelay,relayResults,relayReveal} from '../public/assets/js/engines/quiz-relay-v28.js';
 import { SerpentRoom } from './serpent/serpent-room.js';
+import { validWorld } from '../public/assets/js/engines/arena-worlds-v27.js';
+import { LeaderboardStore, LEADERBOARD_OBJECT } from './leaderboard/leaderboard.js';
 
 class SocialDelegateBase {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; }
@@ -24,8 +26,10 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='30.0.0';
+const RELEASE='30.1.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
+// Live reactions in board-game rooms: a fixed vocabulary, never free text.
+const BOARD_EMOTES=new Set(['clap','fire','laugh','wow','angry','gg','luck','fast']),EMOTE_GAP_MS=1500,EMOTE_PER_MINUTE=12;
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
@@ -74,8 +78,14 @@ function memoryRateLimit(request, bucket, limit, windowMs) {
   return null;
 }
 
+// Only abuse-sensitive buckets (password guessing, paid generation APIs) use the
+// globally consistent Durable Object counter. Everything else is counted in the
+// isolate's memory so ordinary play does not spend an extra Durable Object
+// request on every API call (the free tier counts both requests).
+const DURABLE_RATE_BUCKETS = new Set(['social-auth', 'ai-questions', 'picture:generate']);
+function usesDurableRateLimit(bucket) { return DURABLE_RATE_BUCKETS.has(String(bucket)); }
 async function rateLimit(request, env, bucket, limit, windowMs) {
-  if (!env?.ROOMS) return memoryRateLimit(request, bucket, limit, windowMs);
+  if (!env?.ROOMS || !usesDurableRateLimit(bucket)) return memoryRateLimit(request, bucket, limit, windowMs);
   const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() || "local";
   try {
     const id = env.ROOMS.idFromName(`__rate__:${ip}`);
@@ -261,7 +271,7 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
@@ -300,6 +310,29 @@ export default {
 
     const socialResponse = await handleSocialRequest(request, env, { rateLimit });
     if (socialResponse) return socialResponse;
+
+    if (request.method === 'GET' && url.pathname === '/api/leaderboard') {
+      const limited = await rateLimit(request, env, 'leaderboard', 90, 60_000);
+      if (limited) return limited;
+      if (!env.BOARD_ROOMS?.idFromName) return json({ ok: false, error: 'لوحة الأبطال غير مفعّلة على السيرفر' }, 503);
+      const period = url.searchParams.get('period') === 'season' ? 'season' : 'week';
+      const player = String(url.searchParams.get('player') || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+      // The shared board (no personal row) is cached briefly, so popular page
+      // views do not each wake the leaderboard object.
+      const cache = player ? null : globalThis.caches?.default, cacheKey = new Request(url.origin + '/api/leaderboard?period=' + period);
+      if (cache) { const hit = await cache.match(cacheKey).catch(() => null); if (hit) return hit; }
+      try {
+        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(LEADERBOARD_OBJECT));
+        const res = await stub.fetch('https://leaderboard.internal/top?period=' + period + (player ? '&player=' + player : ''));
+        const data = await res.json();
+        const response = new Response(JSON.stringify(data), { status: res.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': cache ? 'public, max-age=30' : 'no-store', 'x-content-type-options': 'nosniff' } });
+        if (cache && res.ok) await cache.put(cacheKey, response.clone()).catch(() => {});
+        return response;
+      } catch (error) {
+        if (isDurableRequestQuotaError(error)) throw error;
+        return json({ ok: false, error: 'تعذر تحميل لوحة الأبطال الآن، حاول بعد قليل' }, 503);
+      }
+    }
 
     if(url.pathname.startsWith('/api/party/')){
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
@@ -478,7 +511,7 @@ export default {
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
       const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed',worldId=body.worldId??'classic';
-      if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
+      if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
       if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>20||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,20-playerLimit)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
       for(let attempt=0;attempt<5;attempt++){
         const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
@@ -1594,6 +1627,7 @@ export class BoardRoom extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
     if (url.hostname === "social.internal") return (await this.socialDelegate()).fetch(request);
+    if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo'],snakesVariants:['classic','adventure']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
@@ -1652,6 +1686,17 @@ export class BoardRoom extends DurableObject {
     return json({ ok: false, error: "not_found" }, 404);
   }
 
+  // Reactions are relayed to everyone in the room and never touch the game
+  // state, its version or storage. Each player is limited in memory.
+  relayEmote(player,emote){
+    const id=String(emote||'');if(!BOARD_EMOTES.has(id))return;
+    const now=Date.now(),log=(this.emoteLog??=new Map()),recent=(log.get(player.id)||[]).filter(t=>now-t<60000);
+    if(recent.length>=EMOTE_PER_MINUTE||recent.length&&now-recent.at(-1)<EMOTE_GAP_MS)return;
+    recent.push(now);log.set(player.id,recent);
+    const packet=JSON.stringify({type:'emote',from:player.id,name:player.name,emote:id,at:now});
+    for(const socket of this.ctx.getWebSockets()){try{if(socket.deserializeAttachment()?.playerId)socket.send(packet);}catch{}}
+  }
+
   async webSocketMessage(ws, raw) {
     try {
       if (ws.deserializeAttachment()?.username) return (await this.socialDelegate()).webSocketMessage(ws, raw);
@@ -1664,6 +1709,7 @@ export class BoardRoom extends DurableObject {
     let msg; try { msg = JSON.parse(text); } catch { return this.sendError(ws, "رسالة غير صالحة"); }
     if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',serverNow:Date.now()}))}catch{}return;}
     if(msg.type==='resync'){try{ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)}))}catch{}return;}
+    if(msg.type==='emote')return this.relayEmote(player,msg.emote);
     try {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);

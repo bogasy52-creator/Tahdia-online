@@ -4,9 +4,16 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?
    tapered body mesh between the rule engine's head and tail cells. */
 (function(){
  'use strict';
- const cobra=new Image(),objects=new Image();
- cobra.src='assets/arena/neon-cobra.webp';objects.src='assets/arena/objects-v17.webp';
- const plate=new Image();plate.src='assets/arena/arena-plate-v17.webp';
+ // These sheets weigh about 1.2 MB. Pages that only borrow a helper (Ludo and
+ // Jackaroo stones, shop previews) must not download them up front, so each
+ // sheet is requested the first time something actually draws with it.
+ const ART={cobra:'assets/arena/neon-cobra.webp',objects:'assets/arena/objects-v17.webp',plate:'assets/arena/arena-plate-v17.webp'};
+ const cobra=new Image(),objects=new Image(),plate=new Image();
+ const requested=new Set();
+ function need(img,key){if(!requested.has(key)){requested.add(key);img.src=ART[key];}return img;}
+ // On the snakes page the board will be needed, so warm the sheets once the
+ // menu has finished loading instead of competing with its first paint.
+ if(document.body?.classList.contains('game-snakes')){const warm=()=>{need(cobra,'cobra');need(objects,'objects');need(plate,'plate');},idle=()=>'requestIdleCallback' in window?requestIdleCallback(warm,{timeout:2500}):setTimeout(warm,1200);document.readyState==='complete'?idle():addEventListener('load',idle,{once:true});}
  const snakes=new Map(),ladders=new Map(),skins=new Map();let canvas,ctx,routes=[],width=0,height=0,clock=0,last=0,frame=0,paintedAt=0;
  const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  const ease=t=>Math.sin(Math.max(0,Math.min(1,t))*Math.PI);
@@ -21,7 +28,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?
   skins.set(key,result);return result;
  }
  function layout(entries){
-  const board=document.getElementById('board');if(!board)return;
+  const board=document.getElementById('board');if(!board)return;need(cobra,'cobra');need(objects,'objects');need(plate,'plate');
   const game=document.getElementById('game');if(game&&!game.querySelector?.('.arena-frame')){const background=document.createElement('img');background.className='arena-frame';background.src=plate.src;background.alt='';background.setAttribute('aria-hidden','true');game.prepend?.(background);}
   if(!canvas){canvas=document.createElement('canvas');canvas.className='arena-live-creatures';canvas.setAttribute('aria-hidden','true');document.getElementById('boardWrap').appendChild(canvas);ctx=canvas.getContext('2d',{alpha:true});}
   const dpr=Math.min(devicePixelRatio||1,2),r=board.getBoundingClientRect();width=r.width;height=r.height;
@@ -146,7 +153,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?
  }
  function crystal(el,player){
   const c=document.createElement('canvas');c.className='crystal-sprite';c.width=144;c.height=180;c.setAttribute('aria-hidden','true');
-  if(window.BS_STONES?.draw(c,document.documentElement.dataset.pawn,player)){el.appendChild(c);return c;}
+  if(window.BS_STONES?.draw(c,document.documentElement.dataset.pawn,player)){el.appendChild(c);return c;}need(objects,'objects');
   const paint=()=>{const pawn=document.documentElement.dataset.pawn;if(['pawn-orb','pawn-crown'].includes(pawn)&&window.BS_COSMETIC_ART){window.BS_COSMETIC_ART.ready.then(()=>window.BS_COSMETIC_ART.paintPawn(c,pawn,player));return;}const context=c.getContext('2d');context.clearRect(0,0,144,180);context.filter=player===2||player===3?'hue-rotate(-150deg)':'none';context.drawImage(objects,player%2?1400:785,60,480,690,0,0,144,180)};
   objects.complete&&objects.naturalWidth?paint():objects.addEventListener('load',paint,{once:true});el.appendChild(c);return c;
  }
@@ -159,7 +166,7 @@ import {recolorBluePixels,ARENA_HUES,cosmeticSnakeHue} from './arena-palette.js?
   const sync=()=>{clear();if(window.BS_PRO?.paused)return;started=performance.now();timer=setTimeout(finish,remaining)};
   window.addEventListener('bs-match-pause',sync);sync();
  })}
- function portrait(el,id,from=id==='snake-plasma'?95:99){
+ function portrait(el,id,from=id==='snake-plasma'?95:99){need(cobra,'cobra');
   const c=document.createElement('canvas');c.width=360;c.height=283;c.setAttribute('aria-hidden','true');
   const paint=()=>c.getContext('2d').drawImage(skin(cosmeticSnakeHue(id,from),id).head,0,0,360,283);
   cobra.complete&&cobra.naturalWidth?paint():cobra.addEventListener('load',paint,{once:true});el.appendChild(c);return c;

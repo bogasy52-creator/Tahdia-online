@@ -60,7 +60,7 @@ export class SerpentRoom {
    const body=await request.json().catch(()=>({}));
    if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);
    const count=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed';
-   const worldId=body.publicMatch===true?['neon','forest','crystals','volcano','ruins','storm'][Number(body.code)%6]:body.worldId??'classic';if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
+   const worldId=body.publicMatch===true?['neon','forest','crystals','volcano','ruins','storm','glacier','mirage'][Number(body.code)%8]:body.worldId??'classic';if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
    if(!Number.isInteger(count)||count<2||count>20||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,20-count)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration)||!/^\d{6}$/.test(body.code||'')||typeof body.hostKey!=='string'||body.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
    this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',worldId,playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'arena-v23',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
    await this.save();await this.schedule();return json({ok:true},201);

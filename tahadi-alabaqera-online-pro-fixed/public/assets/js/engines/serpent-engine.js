@@ -48,6 +48,14 @@ export function steerSerpent(g,id,input){
  s.targetAngle=Math.atan2(Math.sin(input.angle),Math.cos(input.angle));s.boost=input.boost===true&&s.mass>MIN_MASS;return true;
 }
 function radius(s){return 7+Math.sqrt(s.mass)*.55;}
+// Hazard awareness for capable bots: keep out of an erupting (or about to
+// erupt) lava vent and away from the expanding frost ring.
+function avoidHazards(g,s,ax,ay){
+ const wd=g.world;if(wd?.version!==27)return [ax,ay];
+ if(wd.id==='volcano'&&wd.phase!=='calm'){const z=wd.zones[wd.cycle%3],dx=s.x-z.x,dy=s.y-z.y,d=Math.hypot(dx,dy),reach=z.radius+130;if(d>1&&d<reach){const k=(1-d/reach)*4.5;ax+=dx/d*k;ay+=dy/d*k;}}
+ if(wd.id==='glacier'&&wd.phase==='active'){const z=wd.zones[0],dx=s.x-z.x,dy=s.y-z.y,d=Math.hypot(dx,dy),gap=d-z.pulse;if(d>1&&Math.abs(gap)<150){const k=(1-Math.abs(gap)/150)*4.5,side=gap<0?-1:1;ax+=dx/d*k*side;ay+=dy/d*k*side;}}
+ return [ax,ay];
+}
 function botSteering(g,s){
  // Legendary solo opponents lead moving targets, prioritize dangerous interceptions,
  // and choose food only when no safe attack is available.
@@ -55,14 +63,17 @@ function botSteering(g,s){
   if(g.elapsed<(s.nextThinkAt||0))return;
   s.nextThinkAt=g.elapsed+.12;
   const humans=g.snakes.filter(h=>!h.bot&&h.alive).map(h=>({h,d:distance(s,h)})).sort((a,b)=>a.d-b.d);
-  const target=humans.find(x=>x.d<560);
+  // Pack behaviour: each legendary bot takes a different human (by distance
+  // rank) and approaches from its own side instead of all stacking on one.
+  const pack=g.snakes.filter(b=>b.bot&&b.alive&&b.id<s.id).length,pool=humans.filter(x=>x.d<700),target=pool.length?pool[pack%pool.length]:null;
   let tx=s.x+Math.cos(s.angle)*220,ty=s.y+Math.sin(s.angle)*220;
-  if(target){const h=target.h,lead=Math.min(1.1,target.d/260);tx=h.x+Math.cos(h.angle)*SERPENT_SPEED*lead;ty=h.y+Math.sin(h.angle)*SERPENT_SPEED*lead;}
+  if(target){const h=target.h,lead=Math.min(1.1,target.d/260),flank=((pack%3)-1)*85;tx=h.x+Math.cos(h.angle)*SERPENT_SPEED*lead-Math.sin(h.angle)*flank;ty=h.y+Math.sin(h.angle)*SERPENT_SPEED*lead+Math.cos(h.angle)*flank;}
   else {let best=null,value=Infinity;for(const f of g.food){const d=distance(s,f)/Math.sqrt(f.value);if(d<value){best=f;value=d;}}if(best){tx=best.x;ty=best.y;}}
   let ax=tx-s.x,ay=ty-s.y,len=Math.hypot(ax,ay)||1;ax/=len;ay/=len;
   const look=target?190:130;
   for(const other of g.snakes){if(!other.alive||other.id===s.id)continue;for(let i=0;i<other.segments.length;i+=3){const p=other.segments[i],dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy);if(d>1&&d<look){const k=(1-d/look)*3.2;ax+=dx/d*k;ay+=dy/d*k;}}}
   const margin=145;if(s.x<margin)ax+=2.7*(1-s.x/margin);if(s.x>g.width-margin)ax-=2.7*(1-(g.width-s.x)/margin);if(s.y<margin)ay+=2.7*(1-s.y/margin);if(s.y>g.height-margin)ay-=2.7*(1-(g.height-s.y)/margin);
+  [ax,ay]=avoidHazards(g,s,ax,ay);
   s.targetAngle=Math.atan2(ay,ax);s.boost=!!target&&target.d>100&&target.d<420&&s.mass>MIN_MASS+12;return;
  }
  if(forgiving(g)){
@@ -74,6 +85,7 @@ function botSteering(g,s){
   x=clamp(x,90,g.width-90);y=clamp(y,90,g.height-90);
   let ax=x-s.x,ay=y-s.y,length=Math.hypot(ax,ay)||1;ax/=length;ay/=length;
   for(const other of g.snakes){if(!other.alive||other.id===s.id)continue;const p=other.segments.at(-1);if(!p)continue;const dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy);if(d>1&&d<65){ax+=dx/d*(1-d/65);ay+=dy/d*(1-d/65);}}
+  if(g.difficulty==='hard')[ax,ay]=avoidHazards(g,s,ax,ay);
   s.targetAngle=Math.atan2(ay,ax);s.boost=false;return;
  }
  const ahead=g.difficulty==='easy'?80:g.difficulty==='hard'?175:125;

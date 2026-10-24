@@ -20,7 +20,7 @@ test('mobile boost and floating joystick no longer overlap on the right',async()
 });
 test('hotfix assets bust the previous mobile cache',async()=>{
  const html=await src('public/serpent.html'),sw=await src('public/service-worker.js');
- assert.match(html,/app-serpent\.css\?v=v?30\.0\.0/);
- assert.match(html,/serpent-ui\.js\?v=v?30\.0\.0/);
- assert.match(sw,/busraj-games-v60-release-30-0-0/);
+ assert.match(html,/app-serpent\.css\?v=v?30\.1\.0/);
+ assert.match(html,/serpent-ui\.js\?v=v?30\.1\.0/);
+ assert.match(sw,/busraj-games-v60-release-30-1-0/);
 });

@@ -5,8 +5,10 @@
  const PALETTES=[['#a9ecc3','#378d6b','#102e2b','#e6cf90'],['#e9d3ff','#8961bb','#342440','#efb3eb'],['#ffe6a8','#be8c34','#52381d','#fff3c5'],['#e5fcff','#65b8d9','#23415f','#b4edff'],['#ddff91','#76a52c','#27361c','#e2ff75'],['#bcfaff','#448dc5','#392853','#dc93ff'],['#e3c680','#243e43','#09151f','#ffe4a3']];
  const KINDS=['viper','ribbon','cobra','crystal','dragon','plasma','sovereign'];
  const SPECIES=Object.freeze(Object.fromEntries(IDS.map((id,i)=>[id,Object.freeze({kind:KINDS[i],light:PALETTES[i][0],mid:PALETTES[i][1],dark:PALETTES[i][2],accent:PALETTES[i][3],cell:i===6?2:i})])));
- const image=new Image(),materials=new Map(),patterns=new WeakMap();let loaded=false;
- const ready=new Promise(resolve=>{image.onload=()=>{loaded=!!image.naturalWidth;resolve(loaded)};image.onerror=()=>resolve(false);image.src='assets/arena/v16/serpent-heads.webp';});
+ const image=new Image(),materials=new Map(),patterns=new WeakMap();let loaded=false,loading=null;
+ // The 460 KB head sheet is requested on first use, not on every page that
+ // includes this helper (board games load it only for cosmetic previews).
+ function start(){if(!loading)loading=new Promise(resolve=>{image.onload=()=>{loaded=!!image.naturalWidth;resolve(loaded)};image.onerror=()=>resolve(false);image.src='assets/arena/v16/serpent-heads.webp';});return loading;}
  const species=id=>SPECIES[id]||SPECIES['snake-wild'];
  function ellipse(c,x,y,rx,ry,color){c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fillStyle=color;c.fill();}
  function material(id){
@@ -41,7 +43,7 @@
   const limit=Math.min(160,Math.max(24,Math.round(Number(budget)||80)));if(valid.length<=limit)return valid;
   return Array.from({length:limit},(_,i)=>valid[Math.round(i*(valid.length-1)/(limit-1))]);
  }
- function head(c,id,size=34){
+ function head(c,id,size=34){if(!loading)start();
   size=Math.max(1,Math.min(500,Number(size)||34));const p=species(id);c.save();c.shadowColor='#010611';c.shadowBlur=size*.18;
   if(loaded){const w=image.naturalWidth/3,h=image.naturalHeight/2,col=p.cell%3,row=Math.floor(p.cell/3);c.drawImage(image,col*w,row*h,w,h,-size*1.13,-size*1.21,size*2.86,size*2.42);}
   else{ellipse(c,0,0,size*1.24,size*.87,p.dark);ellipse(c,size*.35,0,size*1.12,size*.68,p.mid);for(const side of [-1,1]){ellipse(c,size*.55,size*.4*side,size*.17,size*.12,p.accent);ellipse(c,size*.6,size*.4*side,size*.035,size*.1,'#08131d');}}
@@ -82,5 +84,5 @@
   const c=canvas.getContext('2d');if(!c)return;const width=canvas.width,height=canvas.height;c.setTransform(1,0,0,1,0,0);if(clear)c.clearRect(0,0,width,height);c.save();c.scale(width/600,height/360);c.translate(300,180);c.rotate(rotation);c.scale(zoom,zoom);c.translate(-300,-180);
   const points=Array.from({length:80},(_,i)=>{const t=i/79;return {x:442-t*335,y:158+Math.sin(t*11.2+time*.6)*(30+t*35)};});aura(c,{skin:id,segments:points,mass:70},time*1000,root.matchMedia?.('(prefers-reduced-motion: reduce)').matches);body(c,points,id,18,false,0,80);c.translate(points[0].x,points[0].y);c.rotate(Math.atan2(points[0].y-points[1].y,points[0].x-points[1].x));head(c,id,id==='snake-gold'?37:34);c.restore();
  }
- root.BS_SERPENT_ART=Object.freeze({SPECIES,IDS:Object.freeze(IDS),ready,head,body,aura,preview,pathPoints,material});
+ root.BS_SERPENT_ART=Object.freeze({SPECIES,IDS:Object.freeze(IDS),get ready(){return start();},head,body,aura,preview,pathPoints,material});
 })(window);

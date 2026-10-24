@@ -1,0 +1,112 @@
+/* Tahdia 30.1.0 — لوحة الأبطال.
+   One loud element: the podium, carried by oversized Arabic rank numerals.
+   Everything else stays in the house palette and stays quiet. */
+.leaderboard-page{
+  --lb-night:#0b1522;--lb-deep:#112131;--lb-raise:#162a3b;--lb-line:#2d4657;
+  --lb-text:#f0f4ed;--lb-muted:#a6bcc8;--lb-mint:#a9dfc7;--lb-mint-ink:#173a2d;
+  --lb-gold:#eed093;--lb-silver:#cad6de;--lb-bronze:#dba57b;
+  background:var(--lb-night);color:var(--lb-text);font-family:Tajawal,system-ui,sans-serif;
+}
+.leaderboard-page .lb-shell{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.leaderboard-page .lb-shell>section,.leaderboard-page .lb-shell>aside{max-width:760px;margin-inline:auto}
+.lb-visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Hero */
+.lb-hero{padding:14px 4px 4px}
+.lb-hero h1{margin:0;font-size:clamp(30px,8vw,46px);font-weight:900;line-height:1.15;letter-spacing:0}
+.lb-hero>p{margin:6px 0 0;max-width:44ch;color:var(--lb-muted);font-size:15px;line-height:1.7}
+.lb-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px;margin-top:16px}
+.lb-tabs{display:inline-grid;grid-auto-flow:column;gap:4px;padding:4px;border:1px solid var(--lb-line);border-radius:999px;background:var(--lb-deep)}
+.lb-tabs button{min-height:44px;min-width:112px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--lb-muted);font:700 15px/1 Tajawal,system-ui,sans-serif;cursor:pointer}
+.lb-tabs button[aria-selected="true"]{background:var(--lb-mint);color:var(--lb-mint-ink)}
+.lb-tabs button:focus-visible{outline:3px solid var(--lb-gold);outline-offset:2px}
+.lb-countdown{margin:0;color:var(--lb-muted);font-size:14px}
+.lb-countdown b{color:var(--lb-text);font-weight:700}
+
+/* Your standing */
+.lb-me{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;margin-top:16px;padding:14px 16px;border:1px solid #3d6a5c;border-radius:16px;background:#13302a}
+.lb-me-rank{display:grid;place-items:center;min-width:52px;height:52px;padding:0 8px;border-radius:14px;background:var(--lb-mint);color:var(--lb-mint-ink);font-weight:900;font-size:24px}
+.lb-me-rank.is-out{font-size:15px}
+.lb-me-copy b{display:block;font-size:16px}
+.lb-me-copy span{display:block;margin-top:3px;color:#c6dcd3;font-size:13px;line-height:1.6}
+.lb-me .bs-btn{white-space:nowrap}
+@media (max-width:520px){.lb-me{grid-template-columns:auto 1fr}.lb-me .bs-btn{grid-column:1/-1;justify-content:center}}
+
+/* Podium — the page's one memorable element: each player stands on a block
+   carrying an oversized Arabic numeral in their medal colour. */
+.lb-panel{margin-top:18px}
+.lb-podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"second first third";align-items:end;gap:8px}
+.lb-step{display:grid;grid-template-rows:auto auto;align-items:end;min-width:0;color:inherit;--medal:var(--lb-line);animation:lb-rise .52s cubic-bezier(.2,.8,.2,1) both}
+.lb-step[data-rank="1"]{grid-area:first;--medal:var(--lb-gold);--block:118px;--num:104px}
+.lb-step[data-rank="2"]{grid-area:second;--medal:var(--lb-silver);--block:88px;--num:82px;animation-delay:.08s}
+.lb-step[data-rank="3"]{grid-area:third;--medal:var(--lb-bronze);--block:70px;--num:70px;animation-delay:.16s}
+.lb-person{position:relative;display:grid;justify-items:center;gap:4px;padding:18px 4px 12px;text-align:center;min-width:0}
+.lb-block{position:relative;display:grid;place-items:center;height:var(--block);overflow:hidden;border:1px solid color-mix(in srgb,var(--medal) 45%,transparent);border-bottom:0;border-top:3px solid var(--medal);border-radius:14px 14px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--medal) 20%,var(--lb-deep)),var(--lb-deep) 85%)}
+.lb-numeral{display:block;font-size:var(--num);font-weight:900;line-height:1;color:var(--medal);transform:translateY(5%);text-shadow:0 2px 0 #0006}
+.lb-avatar{position:relative;display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:#0d1b28;border:3px solid var(--medal,var(--lb-line));color:var(--lb-text);font-size:22px;font-weight:900}
+.lb-step[data-rank="1"] .lb-avatar{width:72px;height:72px;font-size:28px;box-shadow:0 0 0 6px color-mix(in srgb,var(--lb-gold) 16%,transparent)}
+.lb-crown{position:absolute;top:-15px;inset-inline-start:50%;translate:50% 0;width:28px;height:20px;color:var(--lb-gold)}
+.lb-step .lb-name{max-width:100%;overflow:hidden;font-size:15px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.lb-step .lb-points{color:var(--medal);font-size:19px;font-weight:900;line-height:1.2}
+.lb-step .lb-points small{color:var(--lb-muted);font-size:12px;font-weight:400}
+.lb-step.is-empty{animation:none}
+.lb-step.is-empty .lb-avatar{border-style:dashed;border-color:var(--lb-line);color:var(--lb-muted)}
+.lb-step.is-empty .lb-name{color:var(--lb-muted);font-weight:400;font-size:13px}
+.lb-step.is-empty .lb-block{border-style:dashed;border-top-style:solid;background:transparent}
+.lb-step.is-empty .lb-numeral{opacity:.35}
+.lb-step.is-me .lb-avatar{box-shadow:0 0 0 4px var(--lb-mint)}
+.lb-tag{display:inline-block;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--lb-gold) 16%,transparent);color:var(--lb-gold);font-size:11px;font-weight:700}
+.lb-tag.me{background:color-mix(in srgb,var(--lb-mint) 18%,transparent);color:var(--lb-mint)}
+@keyframes lb-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+/* Ranks 4 and below */
+.lb-list{list-style:none;margin:0;padding:0;border:1px solid var(--lb-line);border-radius:0 0 16px 16px;background:var(--lb-deep)}
+.lb-podium:not(:empty)+.lb-list{border-top:0}
+.lb-list:empty{display:none}
+.lb-row{display:grid;grid-template-columns:42px 40px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:62px;padding:8px 14px;border-top:1px solid #213849}
+.lb-row:first-child{border-top:0}
+.lb-rank{color:var(--lb-muted);font-size:17px;font-weight:900;text-align:center}
+.lb-row .lb-avatar{width:40px;height:40px;border-width:2px;font-size:16px}
+.lb-who{min-width:0}
+.lb-who b{display:flex;align-items:center;gap:6px;overflow:hidden;font-size:15px;white-space:nowrap}
+.lb-who b>span{overflow:hidden;text-overflow:ellipsis}
+.lb-who small{display:block;margin-top:2px;color:var(--lb-muted);font-size:12px}
+.lb-row .lb-points{font-size:16px;font-weight:900;white-space:nowrap}
+.lb-row .lb-points small{color:var(--lb-muted);font-size:11px;font-weight:400}
+.lb-row.is-me{background:#173329;box-shadow:inset -3px 0 0 var(--lb-mint)}
+.lb-row.is-owner .lb-who b{color:var(--lb-gold)}
+.lb-row .lb-crown{position:static;translate:none;width:18px;height:13px;flex:none}
+
+/* States */
+.lb-panel[aria-busy="true"] .lb-podium:empty{min-height:250px;background:linear-gradient(90deg,#132536 30%,#183044 50%,#132536 70%) 0 0/200% 100%;border-radius:18px;animation:lb-wait 1.2s linear infinite}
+@keyframes lb-wait{to{background-position:-200% 0}}
+.lb-empty,.lb-error{margin-top:14px;padding:20px;border:1px dashed var(--lb-line);border-radius:16px;text-align:center}
+.lb-empty p,.lb-error p{margin:0 auto 14px;max-width:40ch;color:var(--lb-muted);line-height:1.8}
+.lb-empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+
+/* Previous champions */
+.lb-previous{margin-top:28px}
+.lb-previous h2,.lb-rules h2{margin:0 0 12px;font-size:19px;font-weight:900}
+.lb-previous ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.lb-previous li{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--lb-line);border-top:3px solid var(--medal);border-radius:12px;background:var(--lb-deep);min-width:0}
+.lb-previous li b{overflow:hidden;font-size:14px;text-overflow:ellipsis;white-space:nowrap}
+.lb-previous li span{color:var(--lb-muted);font-size:12px}
+
+/* How points work */
+.lb-rules{margin-top:28px;padding:18px;border:1px solid var(--lb-line);border-radius:16px;background:var(--lb-deep)}
+.lb-rules dl{display:grid;gap:8px;margin:0 0 12px}
+.lb-rules dl>div{display:flex;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid #213849}
+.lb-rules dt{color:var(--lb-text)}
+.lb-rules dd{margin:0;color:var(--lb-gold);font-weight:900;white-space:nowrap}
+.lb-rules p{margin:10px 0 0;color:var(--lb-muted);font-size:14px;line-height:1.85}
+
+@media (max-width:420px){
+  .lb-podium{gap:6px}
+  .lb-step[data-rank="1"]{--block:104px;--num:92px}.lb-step[data-rank="2"]{--block:78px;--num:72px}.lb-step[data-rank="3"]{--block:62px;--num:60px}
+  .lb-avatar{width:50px;height:50px;font-size:20px}.lb-step[data-rank="1"] .lb-avatar{width:64px;height:64px;font-size:25px}
+  .lb-step .lb-points{font-size:17px}
+  .lb-row{grid-template-columns:34px 36px minmax(0,1fr) auto;gap:9px;padding-inline:10px}
+  .lb-row .lb-avatar{width:36px;height:36px}
+  .lb-tabs button{min-width:96px}
+}
+@media (prefers-reduced-motion:reduce){.lb-step{animation:none}.lb-panel[aria-busy="true"] .lb-podium:empty{animation:none}}

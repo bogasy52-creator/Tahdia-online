@@ -56,7 +56,8 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/tabletop-v30.css"
+    "assets/css/tabletop-v30.css",
+    "assets/css/release-v30-1.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -168,7 +169,8 @@
     "assets/css/experience-v15.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/tabletop-v30.css"
+    "assets/css/tabletop-v30.css",
+    "assets/css/release-v30-1.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -200,7 +202,8 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/tabletop-v30.css"
+    "assets/css/tabletop-v30.css",
+    "assets/css/release-v30-1.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
@@ -232,5 +235,9 @@
     "/assets/css/tahdia-premium-v25.css",
     "assets/css/tabletop-v30.css",
     "assets/css/memory-v30.css"
+  ],
+  "leaderboard.html": [
+    "assets/css/platform.css",
+    "assets/css/leaderboard-v30-1.css"
   ]
 }

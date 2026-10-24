@@ -15,11 +15,19 @@ const gestures=new ArenaGestures({mode:'floating',steer:(index,angle)=>{controls
 let mode='quick',game=null,room=null,socket=null,selfId=null,paused=false,online=false,networkActive=false,reconnects=0,reconnectTimer=null,lastFrame=performance.now(),accumulator=0,lastInput=0,lastHud=0,receipt='',resultShown='',mouseAngle=null;
 let lastNetworkMessage=0,lastHeartbeat=0,connectionWelcomed=false;
 document.addEventListener('bs-ui-overlay',()=>{if(!online&&game?.status==='playing')pause(true);});
+// A live round streams frames about ten times a second, so five silent seconds
+// mean a dead link. Outside a round nothing is streamed: a slow heartbeat keeps
+// the room open without spending a Durable Object request every two seconds.
+const LIVE_SILENCE_MS=5000,IDLE_SILENCE_MS=45000,IDLE_HEARTBEAT_MS=20000;
 function networkTick(){
  if(!networkActive||!online||!connectionWelcomed||!socket||socket.readyState!==WebSocket.OPEN||document.hidden)return;
- const now=performance.now();if(lastNetworkMessage&&now-lastNetworkMessage>5000){socket.close(4000,'stale_connection');return;}
- if(now-lastHeartbeat>=2000&&(socket.bufferedAmount||0)<8192){lastHeartbeat=now;socket.send(JSON.stringify({type:'ping',sentAt:now}));}
+ const now=performance.now(),live=room?.status==='playing';if(lastNetworkMessage&&now-lastNetworkMessage>(live?LIVE_SILENCE_MS:IDLE_SILENCE_MS)){socket.close(4000,'stale_connection');return;}
+ if(!live&&now-lastHeartbeat>=IDLE_HEARTBEAT_MS&&(socket.bufferedAmount||0)<8192){lastHeartbeat=now;socket.send(JSON.stringify({type:'ping',sentAt:now}));}
 }
+// Steering is sent only when it changes (or once a second as a refresh), not on
+// every animation frame: each message is a billed Durable Object request.
+let lastSentInput=null;const INPUT_MIN_MS=50,INPUT_REFRESH_MS=1000,INPUT_ANGLE_EPSILON=.03;
+function inputChanged(angle,boost){if(!lastSentInput)return true;if(lastSentInput.boost!==boost)return true;return Math.abs(Math.atan2(Math.sin(angle-lastSentInput.angle),Math.cos(angle-lastSentInput.angle)))>INPUT_ANGLE_EPSILON;}
 setInterval(networkTick,1000);
 let connectionEpoch=0,requestController=null,cancelConnect=null;const rewardRefreshes=new Set();
 const show=(id,yes=true)=>{const el=$(id);if(!el)return;el.classList.toggle('hidden',!yes);if(el.classList.contains('arena-overlay')){el.hidden=!yes;el.inert=!yes;el.dataset.open=String(yes);el.setAttribute('aria-hidden',String(!yes));}};
@@ -31,7 +39,7 @@ function exitStageFullscreen(){if(document.fullscreenElement===$('arenaPlay'))Pr
 const say=text=>{const target=online&&room?.status==='lobby'?$('lobbyMessage'):$('arenaMessage');target.textContent=text;};
 function saved(){try{return JSON.parse(localStorage.getItem(SESSION)||'null')}catch{return null}}
 function remember(value){try{value?localStorage.setItem(SESSION,JSON.stringify(value)):localStorage.removeItem(SESSION)}catch{}show('arenaResume',!!value);}
-function release(){gestures.clear();mousePointers.clear();renderer.inputs?.clear();keys.clear();mouseAngle=null;headings.fill(null);for(const c of controls){c.angle=null;c.boost=false;}for(const id of ['boost1','boost2'])$(id).classList.remove('active');document.querySelectorAll('.arena-joystick i').forEach(el=>el.style.transform='');if(online&&socket?.readyState===WebSocket.OPEN&&game){const mine=game.snakes.find(s=>s.id===selfId);if(mine)socket.send(JSON.stringify({type:'input',angle:mine.angle,boost:false}));}}
+function release(){gestures.clear();mousePointers.clear();renderer.inputs?.clear();keys.clear();mouseAngle=null;headings.fill(null);for(const c of controls){c.angle=null;c.boost=false;}for(const id of ['boost1','boost2'])$(id).classList.remove('active');document.querySelectorAll('.arena-joystick i').forEach(el=>el.style.transform='');if(online&&socket?.readyState===WebSocket.OPEN&&game){const mine=game.snakes.find(s=>s.id===selfId);if(mine){socket.send(JSON.stringify({type:'input',angle:mine.angle,boost:false}));lastSentInput={angle:mine.angle,boost:false};}}}
 function selectMode(next){
  const previousMode=mode;if(mode!==next)quit(false);mode=next;if(mode==='solo'&&previousMode!==mode)$('arenaTraining').dispatchEvent(new Event('change'));$('arenaStart').disabled=false;$('arenaJoin').disabled=false;$('arenaModes').querySelectorAll('button').forEach(b=>{b.classList.toggle('selected',b.dataset.mode===mode);b.setAttribute('aria-pressed',String(b.dataset.mode===mode));});
  const quick=mode==='quick',net=mode==='online';show('arenaCoachField',mode==='solo');show('arenaOptions',!quick);show('secondNameField',mode==='duo');show('botsField',!quick);show('difficultyField',!quick);$('arenaMatchMode').closest('label').classList.toggle('hidden',quick);show('durationField',!quick&&$('arenaMatchMode').value!=='survival');show('onlineCountField',net);show('arenaWorldField',!quick&&!net);show('onlineJoin',net);show('localControlHint');if(net){$('arenaBots').value='0';if($('arenaDifficulty').value==='legendary')$('arenaDifficulty').value='hard';if($('arenaMatchMode').value==='treasure')$('arenaMatchMode').value='timed';}for(const item of $('arenaDifficulty').options)item.disabled=net&&item.value==='legendary';for(const item of $('arenaMatchMode').options)item.disabled=net&&item.value==='treasure';limitBots();
@@ -74,7 +82,7 @@ async function connectRoom(code,credentials={},attempt){
  return new Promise((resolve,reject)=>{
   let welcomed=false;const cancel=()=>{clearTimeout(timeout);if(!welcomed)reject(cancelled());if(socket===ws)socket=null;ws.close(1000,'cancelled');};cancelConnect=cancel;const timeout=setTimeout(()=>{if(!welcomed){ws.close();reject(new Error('انتهت مهلة الاتصال. تأكد من الرمز ونشر السيرفر الجديد.'));}},9000);
   ws.onmessage=event=>{if(socket!==ws||!activeAttempt(epoch))return;let message;try{message=JSON.parse(event.data)}catch{return}lastNetworkMessage=performance.now();
-   if(message.type==='welcome'){welcomed=true;connectionWelcomed=true;clearTimeout(timeout);if(cancelConnect===cancel)cancelConnect=null;selfId=message.playerId;reconnects=0;remember({code,token:message.token,playerId:selfId});show('arenaConnection',false);acceptRoom(message.state);resolve();}
+   if(message.type==='welcome'){welcomed=true;lastSentInput=null;connectionWelcomed=true;clearTimeout(timeout);if(cancelConnect===cancel)cancelConnect=null;selfId=message.playerId;reconnects=0;remember({code,token:message.token,playerId:selfId});show('arenaConnection',false);acceptRoom(message.state);resolve();}
    else if(message.type==='state')acceptRoom(message.state);
    else if(message.type==='frame'){if(message.state?.game?.tick<=game?.tick)return;const next=applySerpentFrame(room,message);if(next)acceptRoom(next);else ws.send(JSON.stringify({type:'resync'}));}
    else if(message.type==='error')say(message.message);
@@ -150,7 +158,7 @@ function pause(next=!paused){if(online||!game||game.status!=='playing')return;pa
 function keyboardAngle(index){const p2=index===1,list=p2?['KeyA','KeyD','KeyW','KeyS']:['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'];let x=Number(keys.has(list[1]))-Number(keys.has(list[0])),y=Number(keys.has(list[3]))-Number(keys.has(list[2]));if(!p2&&mode!=='duo'){x+=Number(keys.has('KeyD'))-Number(keys.has('KeyA'));y+=Number(keys.has('KeyS'))-Number(keys.has('KeyW'));}return x||y?Math.atan2(y,x):null;}
 function applyInputs(now){
  const ids=!online&&mode==='duo'?[selfId,'local-2']:[selfId];ids.forEach((id,index)=>{const s=game.snakes.find(s=>s.id===id);if(!s?.alive)return;const manual=controls[index].angle??keyboardAngle(index)??(index===0?mouseAngle:null);if(manual!==null)headings[index]=manual;else if(headings[index]!==null)headings[index]=serpentSteeringAngle(game,s,headings[index]);const angle=manual??headings[index]??s.targetAngle??s.angle,boost=controls[index].boost||(index===0?keys.has('Space')||(mode!=='duo'&&(keys.has('ShiftLeft')||keys.has('ShiftRight'))):keys.has('ShiftLeft')||keys.has('ShiftRight'));
-  if(online){renderer.setInput?.(id,angle,boost);if(now-lastInput>=50&&socket?.readyState===WebSocket.OPEN&&(socket.bufferedAmount||0)<8192){socket.send(JSON.stringify({type:'input',angle,boost}));lastInput=now;}}else steerSerpent(game,id,{angle,boost});
+  if(online){renderer.setInput?.(id,angle,boost);if(now-lastInput>=INPUT_MIN_MS&&(inputChanged(angle,boost)||now-lastInput>=INPUT_REFRESH_MS)&&socket?.readyState===WebSocket.OPEN&&(socket.bufferedAmount||0)<8192){socket.send(JSON.stringify({type:'input',angle,boost}));lastInput=now;lastSentInput={angle,boost};}}else steerSerpent(game,id,{angle,boost});
  });
 }
 function frame(now){

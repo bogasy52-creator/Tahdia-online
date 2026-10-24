@@ -13,8 +13,7 @@
  const sources={cobra:'assets/arena/neon-cobra.webp',head:'assets/arena/serpent-head.png',objects:'assets/arena/objects-v17.webp',orb:'assets/arena/pawn-orb.webp',crown:'assets/arena/pawn-crown.webp',board:'assets/arena/arena-plate-v17.webp',table:'assets/arena/jackaroo-table-v17.webp'};
  const pending=new Map();for(const key of Object.keys(sources))images[key]=new Image();
  function load(key){if(pending.has(key))return pending.get(key);const value=new Promise(resolve=>{const img=images[key];img.onload=()=>resolve(true);img.onerror=()=>resolve(false);img.src=sources[key];});pending.set(key,value);return value;}
- function ensure(item){const keys=item.type==='snake'?(root.BS_SERPENT_ART?[]:['head','cobra']):item.type==='board'?['board']:item.type==='table'?['table']:item.type==='pawn'&&!root.BS_STONES?[item.id==='pawn-orb'?'orb':item.id==='pawn-crown'?'crown':'objects']:[];return Promise.all(keys.map(load)).then(()=>root.BS_SERPENT_ART?.ready);}
- const ready=Promise.resolve(root.BS_SERPENT_ART?.ready);
+ function ensure(item){const keys=item.type==='snake'?(root.BS_SERPENT_ART?[]:['head','cobra']):item.type==='board'?['board']:item.type==='table'?['table']:item.type==='pawn'&&!root.BS_STONES?[item.id==='pawn-orb'?'orb':item.id==='pawn-crown'?'crown':'objects']:[];return Promise.all(keys.map(load)).then(()=>item.type==='snake'?root.BS_SERPENT_ART?.ready:undefined);}
  const hues={'snake-wild':-92,'snake-aurora':55,'snake-gold':185,'snake-ice':-15,'snake-toxic':-125,'snake-plasma':28};
  function raster(id,variant=0){
   const key=id+':'+variant;if(cache.has(key))return cache.get(key);if(!images.head.naturalWidth||!images.cobra.naturalWidth)return null;
@@ -98,5 +97,7 @@
   if(live&&!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){let previous=0;const tick=now=>{if(!canvas.isConnected)return;if(!document.hidden&&canvas.getClientRects().length&&now-previous>60){paint(canvas,item,now/1000);previous=now;}root.requestAnimationFrame(tick);};root.requestAnimationFrame(tick);}
   return canvas;
  }
- root.BS_COSMETIC_ART={SPECIES,head,body,mount,paint,paintPawn,ready,ensure};
+ // `ready` is lazy: reading it starts the arena head sheet download, so pages
+ // that never preview a snake never fetch it.
+ root.BS_COSMETIC_ART={SPECIES,head,body,mount,paint,paintPawn,get ready(){return Promise.resolve(root.BS_SERPENT_ART?.ready);},ensure};
 })(window);

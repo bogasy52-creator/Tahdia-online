@@ -1,4 +1,8 @@
 import {normalizeRoomCode,timedFetch} from './online/connection-utils.js';
+// Pages with a board-game room share the active room through window events,
+// so add-ons such as live reactions need no changes inside each game page.
+function announce(type,detail){try{if(typeof globalThis.dispatchEvent==='function'&&typeof CustomEvent==='function')globalThis.dispatchEvent(new CustomEvent(type,{detail}));}catch{}}
+function announceRoom(client,state){globalThis.BS_BOARD_ROOM=client?{client,state}:null;announce('bs-board-room',globalThis.BS_BOARD_ROOM);}
 export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
@@ -71,7 +75,7 @@ export class BoardOnlineClient {
         if(msg.type==='welcome'){
           if(!msg.state)return;
           this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{}
-          const state=stamp(msg.state);this.onState(state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
+          const state=stamp(msg.state);this.onState(state);announceRoom(this,state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
           if(!settled){settled=true;clearTimeout(timer);this.cancelOpening=null;resolve(state);}
           clearInterval(this.heartbeat);this.heartbeat=setInterval(()=>{
             if(this.ws!==ws||globalThis.document?.hidden)return;
@@ -80,7 +84,9 @@ export class BoardOnlineClient {
           },20000);this.heartbeat?.unref?.();
         }else if(msg.type==='state'){
           if(!msg.state||this.version!=null&&(msg.state.version<this.version||msg.state.version===this.version&&identity(msg.state)===this.stateKey))return;
-          this.onState(stamp(msg.state));
+          const state=stamp(msg.state);this.onState(state);announceRoom(this,state);
+        }else if(msg.type==='emote'){
+          announce('bs-board-emote',{from:msg.from,name:msg.name,emote:msg.emote,at:msg.at});
         }else if(msg.type==='error'){
           const message=msg.message||'تعذر دخول الغرفة';this.onError(message);
           if(!settled){this.terminal=true;fail(message);this.stopTransport();this.onStatus({online:false,reconnecting:false,text:message});}
@@ -111,7 +117,13 @@ export class BoardOnlineClient {
     if((this.ws.bufferedAmount||0)>65536){this.onError('الاتصال بطيء؛ انتظر وصول آخر حركة');return false}
     try{this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}catch{this.onError('تعذر إرسال الحركة؛ نتصل مجددًا');this.recoverSocket(this.ws);return false}
   }
+  // Quick reactions are best effort: never an error toast, never a resend.
+  react(emote){
+    if(!this.ws||this.ws.readyState!==WebSocket.OPEN)return false;
+    try{this.ws.send(JSON.stringify({type:'emote',emote:String(emote)}));return true}catch{return false}
+  }
   close(){
+    if(globalThis.BS_BOARD_ROOM?.client===this)announceRoom(null,null);
     this.closedByUser=true;this.requestEpoch++;clearTimeout(this.reconnectTimer);this.reconnectTimer=null;
     try{if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify({type:'leave'}));}catch{}
     this.stopTransport();

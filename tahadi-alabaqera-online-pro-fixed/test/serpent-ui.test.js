@@ -36,9 +36,25 @@ test('a failed reconnect preserves intent for the remaining bounded retries',asy
 });
 
 test('a brief online swipe retains its desired direction between network sends',async()=>{const h=await ui(),g=createSerpentGame([{id:'a'}],{collisionMode:'predator',foodCount:0});g.snakes[0].angle=g.snakes[0].targetAngle=0;g.snakes[0].x=g.snakes[0].y=500;h.context.shortSwipe(serpentSnapshot(g));assert.equal(h.context.sent.length,1);assert.ok(Math.abs(h.context.sent[0].angle-Math.PI/2)<1e-8);});
-test('a silent open connection is closed for reconnection instead of leaving a frozen arena forever',async()=>{
- const h=await ui();vm.runInContext(`online=true;networkActive=true;connectionWelcomed=true;lastNetworkMessage=1;lastHeartbeat=1;globalThis.closed=[];socket={readyState:1,bufferedAmount:0,send(){},close:(...args)=>closed.push(args)};`,h.context);
- h.setTime(3000);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed.length,0);h.setTime(6001);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed[0][0],4000);assert.equal(h.context.closed[0][1],'stale_connection');
+test('a silent open connection during a live round is closed for reconnection instead of leaving a frozen arena forever',async()=>{
+ const h=await ui();vm.runInContext(`online=true;networkActive=true;connectionWelcomed=true;room={status:'playing'};lastNetworkMessage=1;lastHeartbeat=1;globalThis.closed=[];globalThis.pings=[];socket={readyState:1,bufferedAmount:0,send:v=>pings.push(JSON.parse(v)),close:(...args)=>closed.push(args)};`,h.context);
+ h.setTime(3000);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed.length,0);assert.equal(h.context.pings.length,0,'live rounds stream frames, so no heartbeat is spent');
+ h.setTime(6001);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed[0][0],4000);assert.equal(h.context.closed[0][1],'stale_connection');
+});
+test('outside a live round the heartbeat is slow and silence is tolerated longer',async()=>{
+ const h=await ui();vm.runInContext(`online=true;networkActive=true;connectionWelcomed=true;room={status:'lobby'};lastNetworkMessage=1;lastHeartbeat=1;globalThis.closed=[];globalThis.pings=[];socket={readyState:1,bufferedAmount:0,send:v=>pings.push(JSON.parse(v)),close:(...args)=>closed.push(args)};`,h.context);
+ for(const t of [2001,6001,12001])h.setTime(t),vm.runInContext('networkTick()',h.context);
+ assert.equal(h.context.pings.length,0,'no ping every two seconds in the lobby');assert.equal(h.context.closed.length,0,'six silent seconds in the lobby are normal');
+ h.setTime(20002);vm.runInContext('networkTick()',h.context);assert.equal(h.context.pings.length,1);assert.equal(h.context.pings[0].type,'ping');
+ h.setTime(45002);vm.runInContext('networkTick()',h.context);assert.equal(h.context.closed[0][1],'stale_connection');
+});
+test('online steering is sent when it changes and refreshed once a second, not on every frame',async()=>{
+ const h=await ui(),g=serpentSnapshot(createSerpentGame([{id:'a'}],{collisionMode:'arena-v23',foodCount:0}));h.context.testGame=g;
+ vm.runInContext(`online=true;selfId='a';game=testGame;lastInput=0;lastSentInput=null;globalThis.inputs=[];socket={readyState:1,bufferedAmount:0,send:raw=>inputs.push(JSON.parse(raw))};controls[0].angle=.5;for(let t=100;t<=900;t+=16)applyInputs(t);`,h.context);
+ assert.equal(h.context.inputs.length,1,'a held direction is sent once');
+ vm.runInContext(`for(let t=916;t<=1200;t+=16)applyInputs(t);`,h.context);assert.equal(h.context.inputs.length,2,'refreshed after one second');
+ vm.runInContext(`controls[0].angle=1.2;applyInputs(1260);controls[0].boost=true;applyInputs(1320);`,h.context);
+ assert.equal(h.context.inputs.length,4);assert.equal(h.context.inputs[2].angle,1.2);assert.equal(h.context.inputs[3].boost,true);
 });
 test('a congested socket skips old steering while retaining the newest input after it drains',async()=>{
  const h=await ui(),g=serpentSnapshot(createSerpentGame([{id:'a'}],{collisionMode:'arena-v23',foodCount:0}));h.context.testGame=g;

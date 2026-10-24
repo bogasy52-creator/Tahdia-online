@@ -1,3 +1,4 @@
+import {issueVerifiedResults} from '../rooms/verified-results.js';
 import {createStrictPaths,moveStrictPaths} from '../../public/assets/js/engines/paths-v20.js';
 const TTL=60*60000,GRACE=45000,LOBBY_MS=20000;
 const DURATIONS=[5,7,10,12,15].map(n=>n*60000);
@@ -38,10 +39,13 @@ export class PathsRoom{
     if(r.status==='countdown')times.push(r.startsAt);
     if(r.status==='playing')times.push(r.deadline);
     if(['lobby','finished'].includes(r.status))for(const p of Object.values(r.players))if(!p.connected&&p.disconnectedAt)times.push(p.disconnectedAt+GRACE);
+    if(r.status==='finished'&&r.rewardsComplete===false)times.push(Math.max(now+1000,r.rewardRetryAt||0));
     await this.ctx.storage.setAlarm(Math.max(now+1,Math.min(...times.filter(t=>t>now))));
   }
   cleanup(){
     const r=this.room;if(!r||!['lobby','finished'].includes(r.status))return;
+    // Keep every player until their verified result is saved.
+    if(r.status==='finished'&&r.rewardsComplete===false)return;
     for(const id of [...r.order]){const p=r.players[id];if(!p.connected&&p.disconnectedAt&&Date.now()-p.disconnectedAt>=GRACE){delete r.players[id];r.order=r.order.filter(x=>x!==id);}}
     if(r.order.length&&!r.order.some(id=>r.players[id].role==='host'))r.players[r.order.find(id=>r.players[id].connected)||r.order[0]].role='host';
   }
@@ -55,7 +59,7 @@ export class PathsRoom{
         // The server chooses the stage and retains its answer; neither is sent in the lobby.
         const random=crypto.getRandomValues(new Uint32Array(1));
         const ranges=[[1,6],[7,24],[25,48],[49,84],[85,120]],[first,last]=ranges[r.difficulty-1];
-        r.puzzle=createStrictPaths(first+random[0]%(last-first+1));r.status='playing';
+        r.puzzle=createStrictPaths(first+random[0]%(last-first+1));r.status='playing';r.rewardsComplete=false;r.rewardRetryAt=null;r.rewardAttempts=0;
         r.deadline=r.startsAt+DURATIONS[r.difficulty-1];
         for(const p of Object.values(r.players)){p.board=structuredClone(r.puzzle);p.seq=0;p.correct=0;p.faults=0;p.lastFault='';p.finishedAt=0;}
       }
@@ -123,6 +127,7 @@ export class PathsRoom{
         r.status='countdown';r.finishedAt=0;r.startsAt=Date.now()+LOBBY_MS;r.round=crypto.randomUUID();r.winnerId=null;
       }else if(m.type==='cancel'&&p.role==='host'&&r.status==='countdown'){
         r.status='lobby';r.startsAt=0;r.round='';
+      }else if(m.type==='rematch'&&p.role==='host'&&r.status==='finished'&&r.rewardsComplete===false){return this.error(ws,'جاري حفظ نتيجة المباراة؛ أعد المحاولة بعد لحظات');
       }else if(m.type==='rematch'&&p.role==='host'&&r.status==='finished'){
         r.status='lobby';r.startsAt=0;r.deadline=0;r.puzzle=null;r.winnerId=null;for(const x of Object.values(r.players)){x.correct=0;x.finishedAt=0;}this.cleanup();
       }else if(['path','clear','reset'].includes(m.type)&&r.status==='playing'){
@@ -152,7 +157,9 @@ export class PathsRoom{
     const r=this.room;if(r.status!=='playing')return;r.status='finished';r.finishedAt=Date.now();
     // A timeout may end in a tie. Never fabricate a winner from join order.
     if(!r.winnerId){const rows=r.order.map(id=>r.players[id]).sort((a,b)=>b.correct-a.correct);r.winnerId=rows[0]?.correct>0&&(!rows[1]||rows[0].correct>rows[1].correct)?rows[0].id:null;}
-    await this.save();this.broadcast();await this.schedule();
+    await this.save();this.broadcast();
+    // Results are issued after everyone has seen the final board.
+    await issueVerifiedResults(this.env,r,'paths');await this.save();await this.schedule();
   }
   async webSocketClose(ws){
     await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{
@@ -161,5 +168,5 @@ export class PathsRoom{
     });
   }
   async webSocketError(ws){return this.webSocketClose(ws);}
-  async alarm(){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{await this.advance();if(!this.room)return;this.sync();this.cleanup();await this.save();this.broadcast();await this.schedule();});}
+  async alarm(){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{await this.advance();if(!this.room)return;if(this.room.status==='finished'&&this.room.rewardsComplete===false&&Date.now()>=(this.room.rewardRetryAt||0))await issueVerifiedResults(this.env,this.room,'paths');this.sync();this.cleanup();await this.save();this.broadcast();await this.schedule();});}
 }

@@ -1,6 +1,7 @@
 import {Career} from '../career/core.js';
 import {normalizeJourney,commitJourney,journeyStats} from '../../public/assets/js/engines/journey-engine.js';
 import {OWNER_USERNAME,isOwner,accountAccess,accountCareer} from './account-policy.js';
+import {LEADERBOARD_OBJECT} from '../leaderboard/leaderboard.js';
 import {
   SOCIAL_INVITE_TTL_MS,
   SOCIAL_MAX_FRIENDS,
@@ -123,6 +124,7 @@ export function createSocialUserClass(DurableObject) {
           if(action==='rename'){career=Career.normalize({...career,name:body.name});this.profile.displayName=career.name;await this.ctx.storage.put('profile',this.profile);}
         }catch(e){return json({ok:false,error:e.message},400)}
         await this.ctx.storage.put('career',career);
+        if(action==='verified')await this.reportLeaderboard({receipt:String(body.id||''),game:body.game,win:body.win===true});
         return json({ok:true,career,access:accountAccess(this.profile),serverNow:Date.now()});
       });
     }
@@ -291,6 +293,17 @@ export function createSocialUserClass(DurableObject) {
       await tx.put(key,{fingerprint,at,action:body.action,username});
     });
     return json(result);
+  }
+
+  // Verified online results also feed the weekly and season boards. This is
+  // best effort: a ladder outage must never block or repeat a career reward,
+  // and the board itself ignores a receipt it has already counted.
+  async reportLeaderboard(result){
+    const ns=this.env?.BOARD_ROOMS;if(!ns?.idFromName||!this.profile)return;
+    try{
+      const stub=ns.get(ns.idFromName(LEADERBOARD_OBJECT));
+      await stub.fetch('https://leaderboard.internal/record',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...result,username:this.profile.username,name:this.profile.displayName,owner:isOwner(this.profile),at:Date.now()})});
+    }catch(error){console.error('leaderboard record failed',error?.message||error);}
   }
 
   async validateSession(secret) {

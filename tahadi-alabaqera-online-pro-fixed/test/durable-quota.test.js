@@ -45,8 +45,13 @@ test('quota exhaustion returns the real cause and stops further DO calls until t
  assert.equal((await api(env,'/api/board/rooms',{game:'snakes',name:'A'})).response.status,200);assert.equal(calls,2);
 });
 test('quota failure in the global rate guard is reported without another DO request',async()=>{
+ // Since 30.1.0 only password and paid-generation routes use the Durable Object guard.
  const env=environment();let calls=0;env.ROOMS={idFromName:name=>name,get:()=>({fetch:async()=>{calls++;throw Error('Exceeded allowed volume of requests in Durable Objects free tier.')}})};
- const res=await api(env,'/api/board/rooms',{game:'snakes',name:'A'});assert.equal(res.data.code,'DURABLE_REQUEST_LIMIT');assert.equal(calls,1);assert.equal(env.BOARD_ROOMS.objects.size,0);
+ const res=await api(env,'/api/social/login',{username:'playera',password:'StrongPass123!'});assert.equal(res.data.code,'DURABLE_REQUEST_LIMIT');assert.equal(calls,1);assert.equal(env.BOARD_ROOMS.objects.size,0);
+});
+test('ordinary game routes no longer depend on the global Durable Object rate guard',async()=>{
+ const env=environment();let calls=0;env.ROOMS={idFromName:name=>name,get:()=>({fetch:async()=>{calls++;throw Error('Exceeded allowed volume of requests in Durable Objects free tier.')}})};
+ const res=await api(env,'/api/board/rooms',{game:'snakes',name:'A'});assert.equal(res.response.status,200,JSON.stringify(res.data));assert.equal(calls,0);
 });
 test('party routes respect an exhausted quota without repeatedly calling the room service',async()=>{
  const env=environment();let calls=0;env.ROOMS={idFromName:name=>name,get:()=>({fetch:async()=>{calls++;throw Error('Exceeded allowed volume of requests in Durable Objects free tier.');}})};

@@ -5,17 +5,18 @@
   window.__TAHDIA_INTERFACE_25_1__ = true;
   const doc = document;
   const route = new URL(location.href).pathname.replace(/\/$/,'').replace(/\.html$/,'').split('/').at(-1)||'index';
-  const shellRoutes = new Set(['index','shop','social']);
+  const shellRoutes = new Set(['index','shop','social','leaderboard']);
   const icons = {
     home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
     games:'<path d="M7 6h10c3 0 4 10 4 12s-3 2-6-2H9c-3 4-6 4-6 2S4 6 7 6ZM8 9v6m-3-3h6m5-2h.01m3 4h.01"/>',
     journey:'<path d="m12 3 3 6 6 1-4.5 4.5 1 6.5-5.5-3-5.5 3 1-6.5L3 10l6-1z"/>',
     shop:'<path d="M4 8h16l-1 13H5zM8 8V6a4 4 0 0 1 8 0v2"/>',
-    friends:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-16a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/>'
+    friends:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-16a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/>',
+    leaders:'<path d="M8 21h8m-4-4v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3m10-4h3v1a3 3 0 0 1-3 3"/>'
   };
   const links = [
     ['home','الرئيسية','/','index'],['games','كل الألعاب','/#games','games'],
-    ['journey','رحلة النجوم','/journey','journey'],['shop','المتجر','/shop','shop'],['friends','الأصدقاء','/social','social']
+    ['journey','رحلة النجوم','/journey','journey'],['leaders','الأبطال','/leaderboard','leaderboard'],['shop','المتجر','/shop','shop'],['friends','الأصدقاء','/social','social']
   ];
   function icon(name){return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+icons[name]+'</svg>';}
   function mountShell(){

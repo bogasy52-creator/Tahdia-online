@@ -1,3 +1,4 @@
+import {issueVerifiedResults} from '../rooms/verified-results.js';
 import {createSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
 
@@ -41,10 +42,13 @@ export class SudokuRoom{
     if(r.status==='countdown')times.push(r.startsAt);
     if(r.status==='playing')times.push(r.deadline);
     if(['lobby','finished'].includes(r.status))for(const p of Object.values(r.players))if(!p.connected&&p.disconnectedAt)times.push(p.disconnectedAt+GRACE);
+    if(r.status==='finished'&&r.rewardsComplete===false)times.push(Math.max(now+1000,r.rewardRetryAt||0));
     await this.ctx.storage.setAlarm(Math.max(now+1,Math.min(...times.filter(t=>t>now))));
   }
   cleanup(){
     const r=this.room;if(!r||!['lobby','finished'].includes(r.status))return;
+    // Keep every player until their verified result is saved.
+    if(r.status==='finished'&&r.rewardsComplete===false)return;
     for(const id of [...r.order]){const p=r.players[id];if(!p.connected&&p.disconnectedAt&&Date.now()-p.disconnectedAt>=GRACE){delete r.players[id];r.order=r.order.filter(x=>x!==id);}}
     if(r.order.length&&!r.order.some(id=>r.players[id].role==='host'))r.players[r.order.find(id=>r.players[id].connected)||r.order[0]].role='host';
   }
@@ -60,7 +64,7 @@ export class SudokuRoom{
         const puzzle=createSudoku((r.difficulty-1)*24+1+random[0]%24);
         const result=solveSudoku(puzzle.initial);
         if(result.count!==1||result.limited)throw Error('invalid_sudoku_stage');
-        r.initial=puzzle.initial;r.solution=result.solution;r.status='playing';
+        r.initial=puzzle.initial;r.solution=result.solution;r.status='playing';r.rewardsComplete=false;r.rewardRetryAt=null;r.rewardAttempts=0;
         r.deadline=r.startsAt+DURATIONS[r.difficulty-1];
         for(const p of Object.values(r.players)){p.board=[...r.initial];p.history=[];p.seq=0;p.correct=0;p.mistakes=0;p.eliminatedAt=0;p.finishedAt=0;}
       }
@@ -128,6 +132,7 @@ export class SudokuRoom{
         r.status='countdown';r.finishedAt=0;r.startsAt=Date.now()+LOBBY_MS;r.round=crypto.randomUUID();r.winnerId=null;
       }else if(m.type==='cancel'&&p.role==='host'&&r.status==='countdown'){
         r.status='lobby';r.startsAt=0;r.round='';
+      }else if(m.type==='rematch'&&p.role==='host'&&r.status==='finished'&&r.rewardsComplete===false){return this.error(ws,'جاري حفظ نتيجة المباراة؛ أعد المحاولة بعد لحظات');
       }else if(m.type==='rematch'&&p.role==='host'&&r.status==='finished'){
         r.status='lobby';r.startsAt=0;r.deadline=0;r.initial=[];r.solution=[];r.winnerId=null;for(const x of Object.values(r.players)){x.correct=0;x.mistakes=0;x.eliminatedAt=0;x.finishedAt=0;}this.cleanup();
       }else if((m.type==='move'||m.type==='undo')&&r.status==='playing'){
@@ -156,7 +161,9 @@ export class SudokuRoom{
     const r=this.room;if(r.status!=='playing')return;r.status='finished';r.finishedAt=Date.now();
     // A timeout may end in a tie. Never fabricate a winner from join order.
     if(!r.winnerId){const rows=r.order.map(id=>r.players[id]).filter(p=>!p.eliminatedAt).sort((a,b)=>b.correct-a.correct);r.winnerId=rows[0]?.correct>0&&(!rows[1]||rows[0].correct>rows[1].correct)?rows[0].id:null;}
-    await this.save();this.broadcast();await this.schedule();
+    await this.save();this.broadcast();
+    // Results are issued after everyone has seen the final board.
+    await issueVerifiedResults(this.env,r,'sudoku');await this.save();await this.schedule();
   }
   async webSocketClose(ws){
     await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{
@@ -165,5 +172,5 @@ export class SudokuRoom{
     });
   }
   async webSocketError(ws){return this.webSocketClose(ws);}
-  async alarm(){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{await this.advance();if(!this.room)return;this.sync();this.cleanup();await this.save();this.broadcast();await this.schedule();});}
+  async alarm(){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{await this.advance();if(!this.room)return;if(this.room.status==='finished'&&this.room.rewardsComplete===false&&Date.now()>=(this.room.rewardRetryAt||0))await issueVerifiedResults(this.env,this.room,'sudoku');this.sync();this.cleanup();await this.save();this.broadcast();await this.schedule();});}
 }
