@@ -1,3 +1,4 @@
+import {loadAtelier} from './atelier-harness.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDOM} from './dom-harness.mjs';
@@ -32,25 +33,26 @@ test('switching accounts while a guest storage lock waits cannot spend guest coi
 });
 test('a displayed daily offer cannot silently charge the full price after Riyadh midnight',async()=>{
  const h=await createDOM('shop.html');let time=Date.parse('2026-10-12T20:59:59Z');const RealDate=Date;
+ while(!Career.COLLECTION.some(i=>i.id===Career.dailyOffer(time).id))time+=86400000;
  h.context.Date=class extends RealDate{constructor(...args){super(...(args.length?args:[time]))}static now(){return time}};
- h.storage.set(KEY,JSON.stringify(Career.normalize({coins:5000})));await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await h.runFile('assets/js/shop.js');
- const offer=Career.dailyOffer(time),before=h.context.BS_CAREER.get(),opener=h.doc.querySelector('[data-item="'+offer.id+'"] .item-inspect');opener.onclick();const button=h.doc.getElementById('itemAction');assert.ok(button&&!button.disabled);
+ h.storage.set(KEY,JSON.stringify(Career.normalize({coins:5000})));await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await loadAtelier(h);
+ const offer=Career.dailyOffer(time),before=h.context.BS_CAREER.get(),opener=h.doc.querySelector('[data-item="'+offer.id+'"] [data-control="inspect"]');opener.onclick();const button=h.doc.getElementById('previewAction');assert.ok(button&&!button.disabled);
  time+=2000;assert.notEqual(Career.itemPrice(offer.id,time),Career.itemPrice(offer.id,time-2000));await button.onclick();
- assert.deepEqual(h.context.BS_CAREER.get(),before);assert.ok(h.doc.getElementById('storeMessage').textContent.includes('تغيّر سعر العرض'));
+ assert.deepEqual(h.context.BS_CAREER.get(),before);assert.ok(h.doc.getElementById('previewMessage').textContent.includes('تغيّر السعر'));
 });
 test('the inspector restores focus to the new connected opener after purchase and rerender',async()=>{
- const h=await guest();await h.runFile('assets/js/shop.js');const opener=h.doc.querySelector('[data-item="pawn-jade"] .item-inspect');opener.focus();opener.onclick();
- assert.equal(h.doc.querySelector('main').inert,true);assert.equal(h.doc.activeElement.id,'itemClose');await h.doc.getElementById('itemAction').onclick();assert.equal(opener.isConnected,false);
- h.doc.getElementById('itemClose').onclick();assert.equal(h.doc.querySelector('main').inert,false);assert.equal(h.doc.activeElement.isConnected,true);assert.equal(h.doc.activeElement.closest('[data-item]').dataset.item,'pawn-jade');assert.equal(h.doc.activeElement.dataset.control,'inspect');
+ const h=await guest();await loadAtelier(h);const opener=h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]');opener.focus();opener.onclick();
+ assert.equal(h.doc.getElementById('previewDialog').open,true);assert.equal(h.doc.activeElement.id,'previewClose');await h.doc.getElementById('previewAction').onclick();assert.equal(opener.isConnected,false);
+ h.doc.getElementById('previewClose').onclick();assert.equal(h.doc.getElementById('previewDialog').open,false);assert.equal(h.doc.activeElement.isConnected,true);assert.equal(h.doc.activeElement.closest('[data-item]').dataset.item,'pawn-rook');assert.equal(h.doc.activeElement.dataset.control,'inspect');
 });
 test('inspector keyboard trap recovers escaped focus and Escape restores the page',async()=>{
- const h=await guest();await h.runFile('assets/js/shop.js');h.doc.querySelector('[data-item="snake-gold"] .item-inspect').onclick();h.doc.activeElement=h.doc.body;
- const tab={type:'keydown',key:'Tab',preventDefault(){this.prevented=true}};h.doc.dispatchEvent(tab);assert.equal(tab.prevented,true);assert.equal(h.doc.activeElement.id,'itemClose');
- h.doc.dispatchEvent({type:'keydown',key:'Escape',preventDefault(){}});assert.equal(h.doc.getElementById('itemDialog').classList.contains('hidden'),true);assert.equal(h.doc.activeElement.dataset.control,'inspect');
+ const h=await guest();await loadAtelier(h);h.doc.querySelector('[data-item="pawn-orbit"] [data-control="inspect"]').onclick();h.doc.activeElement=h.doc.body;
+ const dialog=h.doc.getElementById('previewDialog'),tab={type:'keydown',key:'Tab',preventDefault(){this.prevented=true}};dialog.dispatchEvent(tab);assert.equal(tab.prevented,true);assert.equal(h.doc.activeElement.id,'previewClose');
+ dialog.dispatchEvent({type:'keydown',key:'Escape',preventDefault(){}});assert.equal(dialog.open,false);assert.equal(h.doc.activeElement.dataset.control,'inspect');
 });
 test('inventory exposes all equipped appearances and clear filters recovers empty results',async()=>{
- const h=await guest();await h.runFile('assets/js/shop.js');assert.equal(h.doc.querySelectorAll('[data-loadout]').length,9);
- for(const type of ['snake','character','pawn','dice','board','table','trail','victory','title'])assert.ok(h.doc.querySelector('[data-loadout="'+type+'"]'));
- h.doc.getElementById('storeSearch').dispatchEvent({type:'input',target:{value:'اسم غير موجود إطلاقا'}});assert.equal(h.doc.querySelectorAll('[data-item]').length,0);assert.equal(h.doc.getElementById('storeEmpty').classList.contains('hidden'),false);
- h.doc.getElementById('storeReset').onclick();assert.ok(h.doc.querySelectorAll('[data-item]').length>9);assert.equal(h.doc.getElementById('storeSearch').value,'');assert.equal(h.doc.activeElement.id,'storeSearch');
+ const h=await guest();await loadAtelier(h);assert.equal(h.doc.querySelectorAll('[data-loadout]').length,6);
+ for(const type of ['pawn','dice','table','trail','victory','title'])assert.ok(h.doc.querySelector('[data-loadout="'+type+'"]'));
+ h.doc.getElementById('collectionSearch').dispatchEvent({type:'input',target:{value:'اسم غير موجود إطلاقا'}});assert.equal(h.doc.querySelectorAll('[data-item]').length,0);assert.equal(h.doc.getElementById('collectionEmpty').hidden,false);
+ h.doc.getElementById('clearFilters').onclick();assert.equal(h.doc.querySelectorAll('[data-item]').length,24);assert.equal(h.doc.getElementById('collectionSearch').value,'');assert.equal(h.doc.activeElement.id,'collectionSearch');
 });

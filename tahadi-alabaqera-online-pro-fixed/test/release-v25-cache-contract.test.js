@@ -7,8 +7,8 @@ test('v25 release verification and cache builder agree on the same version', asy
   read('package.json'), read('scripts/verify-v7.mjs'), read('scripts/build-offline.mjs')
  ]);
  const version = JSON.parse(packageText).version;
- assert.equal(version, '29.1.0');
- assert.match(builder, /busraj-games-v59-release-29-1-0/);
- assert.match(verifier, /busraj-games-v59-release-29-1-0/);
- assert.match(verifier, /assert\.equal\(pkg\.version,'29\.1\.0'\)/);
+ assert.equal(version, '30.0.0');
+ assert.match(builder, /busraj-games-v60-release-/);assert.match(builder,/release\.replaceAll/);
+ assert.match(verifier, /busraj-games-v60-release-/);assert.match(verifier,/pkg\.version\.replaceAll/);
+ assert.match(verifier, /assert\.equal\(pkg\.version,'30\.0\.0'\)/);
 });

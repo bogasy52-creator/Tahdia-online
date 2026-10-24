@@ -28,14 +28,15 @@ for(const file of files){
  }
 }
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8')),lock=JSON.parse(await readFile(join(root,'package-lock.json'),'utf8'));
-assert.equal(pkg.version,'29.1.0');assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version);
+assert.equal(pkg.version,'30.0.0');assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version);
 const config=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
 assert.ok(config.durable_objects.bindings.some(b=>b.name==='QUICK_ARENA'&&b.class_name==='QuickArena'));
 assert.equal(config.migrations.at(-1).tag,'v6-authoritative-quick-arena');
 const sw=await readFile(join(publicDir,'service-worker.js'),'utf8'),shell=sw.match(/const\s+APP_SHELL\s*=\s*\[([\s\S]*?)\];/)[1],paths=[...shell.matchAll(/['"]([^'"]+)['"]/g)].map(m=>m[1]);
-assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.match(sw,/const CACHE_NAME = 'busraj-games-v59-release-29-1-0'/);
+assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.ok(sw.includes("const CACHE_NAME = 'busraj-games-v60-release-"+pkg.version.replaceAll('.','-')+"'"));
 const demand=JSON.parse(sw.match(/const ON_DEMAND = (\[[\s\S]*?\]);/)[1]);
-for(const asset of ['serpent-ui.js','serpent-renderer.js','engines/serpent-engine.js','cosmetic-art.js','profile-core.js','career-client.js','pro-dice.js','shop.js','arcade-games.js','pro-experience.js','engines/snakes-adventure.js','engines/bot-strategy.js'])assert.ok(demand.includes('/assets/js/'+asset),'on-demand dependency absent: '+asset);
+for(const asset of ['serpent-ui.js','serpent-renderer.js','engines/serpent-engine.js','cosmetic-art.js','profile-core.js','career-client.js','pro-dice.js','atelier-shop-v30.js','memory-art-v30.js','board-petals-v29.js','arcade-games.js','pro-experience.js','engines/snakes-adventure.js','engines/bot-strategy.js'])assert.ok(demand.includes('/assets/js/'+asset),'on-demand dependency absent: '+asset);
+for(const asset of ['memory-objects.webp','collection-hero.webp'])assert.ok(demand.includes('/assets/atelier-v30/'+asset),'new collection art absent: '+asset);
 for(const page of ['serpent','snakes','jackaroo','zahra','dice','shop','puzzle','memory','reaction','accuracy','logic','online','social','local','journey'])assert.ok(demand.includes('/'+page+'.html'),'on-demand page absent: '+page);
 for(const core of ['journey-ui.js','journey-client.js','journey-renderer.js','engines/journey-engine.js','match3-renderer.js','engines/match3-engine.js'])assert.ok(paths.includes('/assets/js/'+core+'?v='+pkg.version),'offline journey dependency absent: '+core);
 let coreBytes=0;for(const path of paths)coreBytes+=(await stat(join(publicDir,path==='/'?'index.html':path.slice(1).split('?')[0]))).size;assert.ok(coreBytes<1000000,'offline install exceeds 1 MB: '+coreBytes);

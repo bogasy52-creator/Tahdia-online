@@ -11,7 +11,7 @@
   const effectHost = () => doc.querySelector('dialog[open]') || doc.fullscreenElement || doc.querySelector('body.serpent-active #arenaPlay') || doc.body;
   let layer = null, context = null, socialLoader = null, celebrationKey = '';
 
-  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=29.1.0'; doc.head?.appendChild(css);
+  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=30.0.0'; doc.head?.appendChild(css);
 
   function effectLayer() {
     const parent = effectHost();
@@ -56,8 +56,9 @@
     const cleanName = String(name || 'فوز مستحق!').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,48) || 'فوز مستحق!', key = (options.key || cleanName)+':'+(options.round || '');
     if (celebrationKey === key) return; celebrationKey = key; doc.getElementById('bsVictory')?.remove();
     const source=doc.activeElement,wrap=doc.createElement('div'); wrap.id='bsVictory'; wrap.className='bs-victory'+(options.self===false?' is-rival':''); wrap.setAttribute('role','dialog'); wrap.setAttribute('aria-modal','true'); wrap.setAttribute('aria-label','نتيجة الجولة');
+    const collectible=root.BS_CAREER_CORE?.COLLECTION?.find(item=>item.id===(options.design||root.BS_CAREER?.get?.()?.equipped?.victory));if(collectible){wrap.dataset.design=collectible.id;wrap.style.setProperty('--celebration-color',collectible.color);}
     const rays=doc.createElement('div'); rays.className='bs-victory-rays'; rays.setAttribute('aria-hidden','true'); const card=doc.createElement('section'); card.className='bs-victory-card';
-    const crown=doc.createElement('div'); crown.className='bs-victory-crown'; crown.textContent=options.tie?'◆':'♛'; const eyebrow=doc.createElement('span'); eyebrow.textContent=options.tie?'نهاية متعادلة':options.self===false?'بطل الجولة':'انتصار أسطوري'; const title=doc.createElement('h2'); title.textContent=cleanName;
+    const crown=doc.createElement('div'); crown.className='bs-victory-crown'; crown.textContent=options.tie?'◆':collectible?.design==='bloom'?'❋':collectible?.design==='orbit'?'◎':collectible?'✧':'♛'; const eyebrow=doc.createElement('span'); eyebrow.textContent=options.tie?'نهاية متعادلة':options.self===false?'بطل الجولة':'انتصار أسطوري'; const title=doc.createElement('h2'); title.textContent=cleanName;
     const dismiss=()=>{const restore=wrap.contains(doc.activeElement);wrap.remove();if(restore)source?.focus?.();};
     const subtitle=doc.createElement('p'); subtitle.textContent=options.subtitle||(options.tie?'جولة قوية تستحق الإعادة.':options.self===false?'حسم الجولة بجدارة.':'هذا الفوز لك. احتفل به!'); const close=doc.createElement('button'); close.type='button'; close.textContent='متابعة ←'; close.onclick=dismiss; card.append(crown,eyebrow,title,subtitle,close); wrap.append(rays,card);
     wrap.addEventListener('keydown',event=>{event.stopPropagation?.();if(event.key==='Escape'){event.preventDefault();dismiss();}else if(event.key==='Tab'){event.preventDefault();close.focus();}});
@@ -73,7 +74,7 @@
     const journeyGame=context?.journeyGame||url.searchParams.get('game')||'jewels';
     const joinable=context?.joinable!==false&&/^\d{6}$/.test(code);url.search='';url.hash='';if(joinable)url.searchParams.set('room',code);if(cleanRoute==='journey')url.searchParams.set('game',journeyGame==='paths'?'paths':'jewels');return{game,variant:cleanRoute==='journey'?(journeyGame==='paths'?'paths':'jewels'):undefined,code:joinable?code:'',roundClosed:context?.joinable===false&&!!context?.code,url:url.href,joinable,title:cleanRoute==='journey'?(journeyGame==='paths'?'مسارات الألوان':'ماستر الجواهر'):titles[cleanRoute]||'تحدي العباقرة'};
   }
-  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=29.1.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);}).catch(error=>{socialLoader=null;throw error;});return socialLoader;}
+  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=30.0.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);}).catch(error=>{socialLoader=null;throw error;});return socialLoader;}
   let inviteOpening=false;
   async function openInvite(){
     if(inviteOpening)return;inviteOpening=true;

@@ -1,8 +1,8 @@
 /* A tumbling cube settles with one complete readable result face. */
 .die.pro-die,.game-snakes #game.neon-arena .die.pro-die{transform:none!important;perspective:900px!important;overflow:visible!important;isolation:auto}
 .pro-die-cube{filter:none!important;transform-style:preserve-3d!important;overflow:visible!important}
-.pro-face{box-sizing:border-box;backface-visibility:hidden!important;background:linear-gradient(140deg,#fff 5%,var(--die-color,#eaeef5) 55%,#cad1dd 100%)!important;box-shadow:inset 2px 3px 3px #fff,inset -3px -4px 6px #7882915e!important;border-radius:13%!important;border:1px solid #bac2ce!important;padding:14%!important;gap:3%!important}
-.pro-pip{width:82%!important;height:82%!important;max-width:none;max-height:none;background:radial-gradient(circle at 55% 60%,#263343,#030b16 70%)!important;box-shadow:inset 1px 2px 2px #000,0 1px 0 #fff9!important}
+.pro-face{box-sizing:border-box;backface-visibility:hidden!important;background:linear-gradient(140deg,var(--die-highlight,#fff) 5%,var(--die-color,#eaeef5) 55%,var(--die-shade,#cad1dd) 100%)!important;box-shadow:inset 2px 3px 3px var(--die-highlight,#fff),inset -3px -4px 6px #7882915e!important;border-radius:var(--die-radius,13%)!important;border:1px solid var(--die-edge,#bac2ce)!important;padding:14%!important;gap:3%!important}
+.pro-pip{width:82%!important;height:82%!important;max-width:none;max-height:none;border-radius:var(--die-pip-radius,50%);background:radial-gradient(circle at 55% 60%,var(--die-pip-light,#263343),var(--die-pip,#030b16) 70%)!important;box-shadow:inset 1px 2px 2px #0005,0 1px 0 #fff5!important}
 .pro-die:not(.is-rolling) .pro-face{visibility:hidden}
 .pro-die[data-value='1']:not(.is-rolling) .face-1,.pro-die[data-value='2']:not(.is-rolling) .face-2,.pro-die[data-value='3']:not(.is-rolling) .face-3,.pro-die[data-value='4']:not(.is-rolling) .face-4,.pro-die[data-value='5']:not(.is-rolling) .face-5,.pro-die[data-value='6']:not(.is-rolling) .face-6{visibility:visible}
 .pro-die.is-rolling .pro-face{visibility:visible}
@@ -10,7 +10,7 @@
 #game.neon-arena .dice-stage{top:80.7%!important;left:35%!important;width:30%!important;height:8.4%!important}
 #game.neon-arena .die.pro-die{--die-size:clamp(50px,8.4dvh,100px)}
 #game.neon-arena .pro-face{padding:14%!important}
-#game.neon-arena .pro-pip{width:82%!important;height:82%!important;background:radial-gradient(circle at 55% 60%,#263343,#030b16 70%)!important}
+#game.neon-arena .pro-pip{width:82%!important;height:82%!important;background:radial-gradient(circle at 55% 60%,var(--die-pip-light,#263343),var(--die-pip,#030b16) 70%)!important}
 #game.neon-arena .dice-second{transform:scale(.66)!important;left:76%!important}
 #game.neon-arena .dice-stage.has-double .die:first-child{transform:scale(.82)!important}
 .bonus-overlay{position:fixed;inset:0;background:#020710d9;backdrop-filter:blur(5px);display:grid;place-items:center;z-index:1100;padding:20px}

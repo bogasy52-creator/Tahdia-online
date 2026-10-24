@@ -7,7 +7,7 @@ const root=process.cwd(),pub=join(root,'public');
 test('mobile board stylesheet is shipped and cached', async()=>{
   await access(join(pub,'assets/css/mobile-game.css'));
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v59-release-29-1-0/);
+  assert.match(sw,/busraj-games-v60-release-30-0-0/);
   assert.ok(sw.includes('/assets/css/mobile-game.css'));
 });
 

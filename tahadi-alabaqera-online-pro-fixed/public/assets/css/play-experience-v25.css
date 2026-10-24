@@ -19,3 +19,9 @@
 .bs-social-invite-actions{display:flex;gap:10px;}
 .bs-social-invite-actions .bs-btn{flex:1;min-height:44px;display:grid;place-items:center;text-decoration:none;}
 @media(max-width:640px){.paths-online-page .bs-game-command{grid-template-columns:auto minmax(0,1fr) auto;gap:6px;}.paths-online-page .bs-command-identity b{max-width:28vw;}.bs-social-invite-card{bottom:calc(12px + env(safe-area-inset-bottom));}}
+
+/* New collection celebrations apply in every game. */
+.bs-victory[data-design="victory-nova"] .bs-victory-rays{background:repeating-conic-gradient(from 0deg,#f0ce8a22 0deg 4deg,transparent 4deg 15deg)}
+.bs-victory[data-design="victory-bloom"] .bs-victory-confetti{border-radius:90% 10% 90% 10%;width:17px;height:11px}
+.bs-victory[data-design="victory-orbit"] .bs-victory-rays{border:2px solid #8dd8c555;border-radius:50%;width:55vmin;height:55vmin;inset:50% auto auto 50%;transform:translate(-50%,-50%);box-shadow:0 0 0 35px #8dd8c50a,0 0 0 70px #8dd8c509}
+.bs-victory[data-design^="victory-"] .bs-victory-crown{font-size:62px;color:var(--celebration-color,#e2be83)}

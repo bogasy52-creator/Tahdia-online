@@ -18,7 +18,7 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith((async () => {
       try { const response = await fetch(event.request); if (response.ok) event.waitUntil(remember(RUNTIME_CACHE,event.request,response.clone(),144).catch(() => {})); return response; }
-      catch { return await caches.match(event.request) || await caches.match(url.pathname) || await caches.match(url.pathname.replace(/\/$/,'') + '.html') || await caches.match('/offline.html'); }
+      catch { return await caches.match(event.request) || await caches.match(url.pathname === '/index.html' ? '/' : url.pathname) || await caches.match(url.pathname.replace(/\/$/,'') + '.html') || await caches.match('/offline.html'); }
     })()); return;
   }
   if (!allowed.has(url.pathname)) return;

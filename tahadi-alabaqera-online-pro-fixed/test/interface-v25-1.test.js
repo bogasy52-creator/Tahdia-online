@@ -1,3 +1,4 @@
+import {loadAtelier} from './atelier-harness.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -66,9 +67,9 @@ test('the premium CSS parses without warnings and keeps responsive rules scoped 
  assert.doesNotMatch(css,/(?:#soBoard|#pathCanvas|#arenaCanvas)\s*\{[^}]*(?:width|height|transform):/);
  assert.match(css,/\.serpent-active \.bs-game-command[^}]*display:none!important/);
 });
-test('store preview keeps the new sidebar inert and restores it on close',async()=>{
- const h=await createDOM('shop.html');await h.runFile('assets/js/tahdia-premium-v25.js');await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await h.runFile('assets/js/shop.js');
- const rail=h.doc.getElementById('hubRail'),inspect=h.doc.querySelector('[data-item="pawn-jade"] .item-inspect');inspect.onclick();assert.equal(rail.inert,true);assert.equal(h.doc.activeElement.id,'itemClose');h.doc.getElementById('itemClose').onclick();assert.equal(rail.inert,false);
+test('new store owns one header and its native preview restores focus on close',async()=>{
+ const h=await createDOM('shop.html');await h.runFile('assets/js/tahdia-premium-v25.js');await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await loadAtelier(h);
+ assert.equal(h.doc.getElementById('hubRail'),null);assert.equal(h.doc.querySelectorAll('.atelier-header').length,1);const inspect=h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]');inspect.focus();inspect.onclick();assert.equal(h.doc.getElementById('previewDialog').open,true);assert.equal(h.doc.activeElement.id,'previewClose');h.doc.getElementById('previewClose').onclick();assert.equal(h.doc.getElementById('previewDialog').open,false);assert.equal(h.doc.activeElement,inspect);
 });
 test('winner dialog traps Tab, handles Escape and restores the original focus',async()=>{
  const h=await createDOM('sudoku.html');await h.runFile('assets/js/play-feedback-v24-1.js');const opener=h.doc.getElementById('sudokuOnlineLaunch');opener.focus();h.context.BS_GAME_FX.celebrate('سالم',{key:'keyboard-round'});const modal=h.doc.getElementById('bsVictory'),button=modal.querySelector('button');assert.equal(h.doc.activeElement,button);modal.dispatchEvent({type:'keydown',key:'Tab',preventDefault(){}});assert.equal(h.doc.activeElement,button);modal.dispatchEvent({type:'keydown',key:'Escape',preventDefault(){}});assert.equal(h.doc.getElementById('bsVictory'),null);assert.equal(h.doc.activeElement,opener);

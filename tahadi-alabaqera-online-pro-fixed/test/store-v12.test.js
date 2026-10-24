@@ -1,20 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDOM} from './dom-harness.mjs';
+import {loadAtelier} from './atelier-harness.mjs';
 import {Career} from '../src/career/core.js';
-async function store(){const h=await createDOM('shop.html');await h.runFile('assets/js/profile-core.js');let p=Career.normalize({coins:3000}),calls=0;h.context.BS_CAREER={get:()=>p,catalog:Career.CATALOG,now:()=>Date.parse('2026-10-12'),access:()=>({role:'player'}),purchase:async id=>{calls++;await Promise.resolve();p=Career.purchase(p,id)},equip:async id=>{calls++;p=Career.equip(p,id)}};await h.runFile('assets/js/shop.js');return {...h,profile:()=>p,calls:()=>calls};}
-test('inspecting an item does not debit or equip and shows the actual item',async()=>{
- const h=await store(),p=h.profile(),inspect=h.doc.querySelector('[data-item="snake-gold"] .item-inspect');assert.ok(inspect,'store must expose inspection');inspect.onclick();
- assert.equal(h.calls(),0);assert.equal(h.profile().coins,p.coins);assert.equal(h.profile().equipped.snake,'snake-wild');assert.equal(h.doc.getElementById('itemDialog').classList.contains('hidden'),false);assert.equal(h.doc.getElementById('itemName').textContent,'أفعى الشمس');
- h.doc.getElementById('itemClose').onclick();assert.equal(h.doc.getElementById('itemDialog').classList.contains('hidden'),true);
+async function store(){const h=await createDOM('shop.html');let p=Career.normalize({coins:3000}),calls=0;h.context.BS_CAREER={get:()=>p,now:()=>Date.parse('2026-10-12'),purchase:async(id,options)=>{calls++;await Promise.resolve();p=Career.purchase(p,id,options)},equip:async id=>{calls++;p=Career.equip(p,id)}};await loadAtelier(h);return {...h,profile:()=>p,calls:()=>calls};}
+test('inspection does not debit or equip and closes its native dialog',async()=>{
+ const h=await store(),p=structuredClone(h.profile());h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]').onclick();assert.equal(h.calls(),0);assert.deepEqual(h.profile(),p);assert.equal(h.doc.getElementById('previewDialog').open,true);assert.equal(h.doc.getElementById('previewName').textContent,'الحصن');h.doc.getElementById('previewClose').onclick();assert.equal(h.doc.getElementById('previewDialog').open,false);
 });
-test('the inspection purchase uses the real store API once and updates ownership',async()=>{
- const h=await store(),inspect=h.doc.querySelector('[data-item="pawn-jade"] .item-inspect');assert.ok(inspect);inspect.onclick();const btn=h.doc.getElementById('itemAction');await Promise.all([btn.onclick(),btn.onclick()]);
- assert.equal(h.calls(),1);assert.equal(h.profile().coins,2880);assert.equal(h.profile().equipped.pawn,'pawn-jade');assert.ok(h.doc.getElementById('itemOwnership').textContent.includes('مجهّز'));
+test('preview purchase debits once, equips once and updates ownership visibly',async()=>{
+ const h=await store();h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]').onclick();const button=h.doc.getElementById('previewAction'),price=Career.itemPrice('pawn-rook');await Promise.all([button.onclick(),button.onclick()]);assert.equal(h.calls(),1);assert.equal(h.profile().coins,3000-price);assert.equal(h.profile().equipped.pawn,'pawn-rook');assert.match(h.doc.getElementById('previewOwnership').textContent,/مجهّزة/);
 });
-test('store cards and inspection use a static image without a canvas or native-dialog dependency',async()=>{
- const h=await store();h.doc.querySelector('[data-item="pawn-jade"] .item-inspect').onclick();
- const image=h.doc.getElementById('itemArt').querySelector('img');assert.ok(image);assert.equal(image.src,'assets/previews/pawn-jade.webp');
- assert.equal(h.doc.getElementById('itemArt').querySelector('canvas'),null);assert.equal(h.doc.getElementById('itemDialog').tagName,'DIV');
- assert.equal(h.doc.querySelector('[data-item="snake-gold"] img').src,'assets/previews/snake-gold.webp');
+test('product cards and preview render the exact sculpted SVG rather than a generic picture',async()=>{
+ const h=await store();h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]').onclick();assert.ok(h.doc.getElementById('previewArt').querySelector('[data-piece-design="rook"]'));assert.equal(h.doc.getElementById('previewArt').querySelector('canvas'),null);assert.equal(h.doc.getElementById('previewDialog').tagName,'DIALOG');assert.ok(h.doc.querySelector('[data-item="pawn-lotus"] [data-piece-design="lotus"]'));assert.equal(h.doc.querySelector('[data-item="snake-gold"]'),null);
 });

@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const RETIRED=new Set(['pawn-onyx','dice-midnight','dice-copper','dice-aurora','board-ocean','board-sand','board-twilight','table-slate','table-emerald','table-midnight','title-collector','title-champion']);
-  const CATALOG=Object.freeze([
+  const LEGACY_CATALOG=Object.freeze([
     {id:'character-fox',type:'character',name:'الثعلب',description:'شخصية البداية المجانية للثعابين والسلالم.',price:0,color:'#efa866',asset:'fox'},
     {id:'character-cat',type:'character',name:'القطة الوردية',description:'قطة وردية مرسومة على قاعدة ذهبية.',price:150,color:'#ed9ec5',asset:'cat'},
     {id:'character-robot',type:'character',name:'الروبوت',description:'روبوت صغير بتفاصيل معدنية مضيئة.',price:220,color:'#8bcbd6',asset:'robot'},
@@ -60,7 +60,39 @@
     {id:'dice-obsidian',type:'dice',design:'obsidian',name:'نرد الأوبسيديان',description:'حجر أسود مصقول، زوايا نحاسية ونقاط ذهبية مربّعة.',price:520,color:'#17212b'},
     {id:'snake-sovereign',type:'snake',name:'سيّد الحلبة',description:'خاص بالمدير: درع أوبسيديان، عيون زمردية وأثر نجمي هادئ. المظهر لا يغيّر قوة اللعب.',price:0,color:'#e7c376',source:'owner'}
   ].map(i=>Object.freeze({...i,retired:RETIRED.has(i.id),rarity:i.source?'exclusive':i.price>=450?'legendary':i.price>=140?'rare':'common'})));
+  // The previous catalogue remains readable for existing purchases and older
+  // game clients. The new storefront exposes COLLECTION only.
+  const COLLECTION=Object.freeze([
+    {id:'pawn-atlas',type:'pawn',name:'أطلس',subtitle:'تيتانيوم مصقول',design:'spire',price:0,color:'#a5b5bb',collection:'atelier-30'},
+    {id:'pawn-rook',type:'pawn',name:'الحصن',subtitle:'هندسة معمارية',design:'rook',price:240,color:'#cc9d68',collection:'atelier-30'},
+    {id:'pawn-orbit',type:'pawn',name:'المدار',subtitle:'نواة داخل حلقة',design:'orbit',price:380,color:'#d4ad68',collection:'atelier-30'},
+    {id:'pawn-lance',type:'pawn',name:'الرمح',subtitle:'كربون ومعدن',design:'lance',price:320,color:'#7e969c',collection:'atelier-30'},
+    {id:'pawn-lotus',type:'pawn',name:'اللوتس',subtitle:'زجاج منحوت',design:'lotus',price:460,color:'#e49f9e',collection:'atelier-30'},
+    {id:'pawn-monolith',type:'pawn',name:'المونوليث',subtitle:'بلورة هندسية',design:'monolith',price:580,color:'#b4d8ce',collection:'atelier-30'},
+    {id:'dice-studio',type:'dice',name:'ستوديو',subtitle:'بورسلان ونقاط حبرية',design:'porcelain',price:0,color:'#eee8da',collection:'atelier-30'},
+    {id:'dice-smoke',type:'dice',name:'الدخان',subtitle:'زجاج داكن وحواف معدنية',design:'smoke',price:320,color:'#59646b',collection:'atelier-30'},
+    {id:'dice-oxblood',type:'dice',name:'العقيق',subtitle:'راتنج خمري عميق',design:'resin',price:380,color:'#8f3543',collection:'atelier-30'},
+    {id:'dice-milled',type:'dice',name:'المشغول',subtitle:'ألمنيوم مشطوف',design:'milled',price:480,color:'#9ba9ae',collection:'atelier-30'},
+    {id:'table-club',type:'table',name:'النادي',subtitle:'جوز داكن وتطعيم نحاسي',design:'walnut',price:0,color:'#9f7550',collection:'atelier-30'},
+    {id:'table-gallery',type:'table',name:'المعرض',subtitle:'عاج وحبر فحمي',design:'ivory',price:280,color:'#d5cbb7',collection:'atelier-30'},
+    {id:'table-nocturne',type:'table',name:'نوكترن',subtitle:'كربون ومسارات مضيئة',design:'carbon',price:420,color:'#657b85',collection:'atelier-30'},
+    {id:'table-botanic',type:'table',name:'الحديقة',subtitle:'يشم وتطعيم نباتي',design:'jade',price:460,color:'#5eaa91',collection:'atelier-30'},
+    {id:'trail-pencil',type:'trail',name:'خط الضوء',subtitle:'مسار رفيع وهادئ',design:'line',price:0,color:'#e5d6b8',collection:'atelier-30'},
+    {id:'trail-ripple',type:'trail',name:'تموّج',subtitle:'حلقات عند الوصول',design:'ripple',price:160,color:'#7bd0be',collection:'atelier-30'},
+    {id:'trail-meteor',type:'trail',name:'شهاب',subtitle:'ذيل من شرارات قصيرة',design:'meteor',price:240,color:'#f4b36c',collection:'atelier-30'},
+    {id:'trail-echo',type:'trail',name:'صدى',subtitle:'أثر هندسي متتابع',design:'echo',price:320,color:'#94b4e5',collection:'atelier-30'},
+    {id:'victory-studio',type:'victory',name:'لحظة الفوز',subtitle:'حلقة ضوء وقصاصات',design:'studio',price:0,color:'#d6b77e',collection:'atelier-30'},
+    {id:'victory-nova',type:'victory',name:'نوفا',subtitle:'انفجار نجمي محدود',design:'nova',price:360,color:'#e5bc76',collection:'atelier-30'},
+    {id:'victory-bloom',type:'victory',name:'تفتّح',subtitle:'بتلات مضيئة',design:'bloom',price:380,color:'#e2a5b3',collection:'atelier-30'},
+    {id:'victory-orbit',type:'victory',name:'احتفال المدار',subtitle:'حلقات متقاطعة',design:'orbit',price:480,color:'#8dd8c5',collection:'atelier-30'},
+    {id:'title-tactician',type:'title',name:'صانع الخطط',subtitle:'توقيعك على الطاولة',design:'signature',price:180,color:'#c9b38e',collection:'atelier-30'},
+    {id:'title-virtuoso',type:'title',name:'مايسترو',subtitle:'هوية المجموعات',design:'signature',price:420,color:'#e5b7a4',collection:'atelier-30'}
+  ].map(item=>Object.freeze({...item,description:item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'مادة '+item.subtitle+' للوحتي الجاكارو والزهرة، مع مسارات ونهايات واضحة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+  const CATALOG=Object.freeze([...LEGACY_CATALOG,...COLLECTION]);
   const BUNDLES=Object.freeze([
+    {id:'atelier-club',name:'مجموعة النادي',description:'جوز داكن، حجر الحصن، نرد العقيق وأثر الشهاب.',color:'#bb865a',collection:'atelier-30',items:['pawn-rook','dice-oxblood','table-club','trail-meteor']},
+    {id:'atelier-gallery',name:'مجموعة المعرض',description:'لوحة عاجية، حجر المدار، نرد مشغول واحتفال نوفا.',color:'#d4c4a3',collection:'atelier-30',items:['pawn-orbit','dice-milled','table-gallery','victory-nova']},
+    {id:'atelier-botanic',name:'مجموعة الحديقة',description:'يشم وزجاج اللوتس وتموّج الضوء وبتلات الفوز.',color:'#77b7a1',collection:'atelier-30',items:['pawn-lotus','table-botanic','trail-ripple','victory-bloom']},
     {id:'reactor-set',name:'مجموعة المفاعل',description:'ثعابين ونرد وحلبة وأثر حركة بهوية كهربائية واحدة.',color:'#57d9ff',items:['snake-toxic','dice-nebula','board-cyber','trail-comet']},
     {id:'aurora-set',name:'مجموعة الكريستال',description:'أفعى شفقية وحجر جمشت ونرد كريستالي مع احتفال خاص.',color:'#88daca',items:['snake-aurora','pawn-amethyst','dice-crystal','victory-aurora']},
     {id:'royal-set',name:'مجموعة التتويج',description:'حجر ونرد وحلبة وطاولة ملكية مع نجوم الفوز.',color:'#f4cb79',items:['pawn-gold','dice-gold','board-royal','table-royal','victory-royal']}
@@ -81,6 +113,12 @@
   ].map(Object.freeze));
   const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku'];
   const COSMETIC_STYLES=Object.freeze({
+    'dice-studio':{'--die-color':'#eee8da','--die-highlight':'#fffdf4','--die-shade':'#b9aa8f','--die-pip':'#182027','--die-pip-light':'#465158','--die-edge':'#b8a484','--die-radius':'18%','--die-pip-radius':'50%'},
+    'dice-smoke':{'--die-color':'#39454c','--die-highlight':'#a8b8ba','--die-shade':'#10191f','--die-pip':'#f2dfb9','--die-pip-light':'#fff9e9','--die-edge':'#94a9ae','--die-radius':'12%','--die-pip-radius':'50%'},
+    'dice-oxblood':{'--die-color':'#842c39','--die-highlight':'#d98489','--die-shade':'#300f1b','--die-pip':'#fff3dc','--die-pip-light':'#fff','--die-edge':'#d29b78','--die-radius':'21%','--die-pip-radius':'50%'},
+    'dice-milled':{'--die-color':'#aab7bb','--die-highlight':'#f5fbf9','--die-shade':'#3f535b','--die-pip':'#1b252b','--die-pip-light':'#56686d','--die-edge':'#d0d7d3','--die-radius':'7%','--die-pip-radius':'20%'},
+    'table-club':{'--table-look':'none'},'table-gallery':{'--table-look':'none'},'table-nocturne':{'--table-look':'none'},'table-botanic':{'--table-look':'none'},
+    'trail-pencil':{'--trail-color':'#e5d6b8'},'trail-ripple':{'--trail-color':'#7bd0be'},'trail-meteor':{'--trail-color':'#f4b36c'},'trail-echo':{'--trail-color':'#94b4e5'},
     'dice-porcelain':{'--die-color':'#eee8d9','--die-highlight':'#fffef9','--die-shade':'#b7a37c','--die-pip':'#24313b','--die-pip-light':'#546575','--die-edge':'#d8bd82','--die-radius':'21%','--die-pip-radius':'50%'},
     'dice-crystal':{'--die-color':'#208b7b','--die-highlight':'#a5f1d9','--die-shade':'#0b3b3b','--die-pip':'#d6fff1','--die-pip-light':'#ffffff','--die-edge':'#85ebd0','--die-radius':'7%','--die-pip-radius':'12%'},
     'dice-obsidian':{'--die-color':'#17212b','--die-highlight':'#566573','--die-shade':'#080d14','--die-pip':'#ebc677','--die-pip-light':'#fff0bb','--die-edge':'#bd9860','--die-radius':'11%','--die-pip-radius':'22%'},
@@ -181,5 +219,5 @@
     return normalize(p);
   }
   function unlockJourney(raw,stars){const p=normalize(raw);for(const item of CATALOG)if(item.source==='journey'&&Number.isSafeInteger(stars)&&stars>=item.unlockStars&&!p.owned.includes(item.id))p.owned.push(item.id);return normalize(p);}
-  root.BS_CAREER_CORE=Object.freeze({unlockJourney,CATALOG,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
+  root.BS_CAREER_CORE=Object.freeze({unlockJourney,CATALOG,COLLECTION,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
 })(globalThis);

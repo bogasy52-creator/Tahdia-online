@@ -1,3 +1,4 @@
+import {loadAtelier} from './atelier-harness.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Career} from '../src/career/core.js';
@@ -35,8 +36,8 @@ test('actual Worker checkout is authenticated, server-priced, atomic and retry-s
  assert.equal((await api(env,'/api/social/career/cart',{...body,ids:['snake-plasma']},token)).data.error,'checkout_conflict');
 });
 test('store basket persists, checkout debits once and closing the drawer restores focus',async()=>{
- const h=await createDOM('shop.html');h.storage.set('busraj-career-v6',JSON.stringify(Career.normalize({coins:2000})));await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await h.runFile('assets/js/shop.js');
- for(const id of ids)h.doc.querySelector('[data-item="'+id+'"] .cart-add-v15').onclick();assert.equal(h.doc.getElementById('cartCount').textContent,'2');assert.equal(JSON.parse(h.storage.get('tahdia-cart-v15:guest')).ids.length,2);
- const opener=h.doc.getElementById('cartOpen');opener.focus();opener.onclick();assert.equal(h.doc.activeElement.id,'cartClose');assert.equal(h.doc.querySelector('main').inert,true);
- const price=Number(h.doc.getElementById('cartTotal').textContent),checkout=h.doc.getElementById('cartCheckout');await Promise.all([checkout.onclick(),checkout.onclick()]);assert.equal(h.context.BS_CAREER.get().coins,2000-price);assert.equal(h.doc.getElementById('cartCount').textContent,'0');assert.equal(h.doc.getElementById('cartDialog').classList.contains('hidden'),true);assert.equal(h.doc.activeElement,opener);
+ const h=await createDOM('shop.html');h.storage.set('busraj-career-v6',JSON.stringify(Career.normalize({coins:2000})));await h.runFile('assets/js/profile-core.js');await h.runFile('assets/js/career-client.js');await h.context.BS_CAREER.refresh();await loadAtelier(h);
+ for(const id of ['pawn-rook','dice-smoke'])h.doc.querySelector('[data-item="'+id+'"] .atelier-add').onclick();assert.equal(h.doc.getElementById('bagCount').textContent,'2');assert.equal(JSON.parse(h.storage.get('atelier30:bag:guest')).length,2);
+ const opener=h.doc.getElementById('bagOpen');opener.focus();opener.onclick();assert.equal(h.doc.activeElement.id,'bagClose');assert.equal(h.doc.getElementById('bagDialog').open,true);
+ const price=Number(h.doc.getElementById('bagTotal').textContent),checkout=h.doc.getElementById('bagCheckout');await Promise.all([checkout.onclick(),checkout.onclick()]);assert.equal(h.context.BS_CAREER.get().coins,2000-price);assert.equal(h.doc.getElementById('bagCount').textContent,'0');assert.equal(h.doc.getElementById('bagDialog').open,false);assert.equal(h.doc.activeElement,opener);
 });

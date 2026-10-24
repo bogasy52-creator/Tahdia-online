@@ -19,7 +19,7 @@
   ];
   function icon(name){return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+icons[name]+'</svg>';}
   function mountShell(){
-    if(!shellRoutes.has(route))return;
+    if(!shellRoutes.has(route)||doc.body.classList.contains('atelier-shop-v30'))return;
     doc.body.classList.add('hub-page','hub-'+route);
     if(!doc.getElementById('hubRail')){
       const nav=doc.createElement('nav');nav.id='hubRail';nav.className='hub-rail';nav.setAttribute('aria-label','التنقل الرئيسي');

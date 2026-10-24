@@ -153,8 +153,8 @@ html[data-pawn='pawn-onyx'] .game-jackaroo .jack-piece .crystal-sprite{filter:dr
 /* A tumbling cube settles with one complete readable result face. */
 .die.pro-die,.game-snakes #game.neon-arena .die.pro-die{transform:none!important;perspective:900px!important;overflow:visible!important;isolation:auto}
 .pro-die-cube{filter:none!important;transform-style:preserve-3d!important;overflow:visible!important}
-.pro-face{box-sizing:border-box;backface-visibility:hidden!important;background:linear-gradient(140deg,#fff 5%,var(--die-color,#eaeef5) 55%,#cad1dd 100%)!important;box-shadow:inset 2px 3px 3px #fff,inset -3px -4px 6px #7882915e!important;border-radius:13%!important;border:1px solid #bac2ce!important;padding:14%!important;gap:3%!important}
-.pro-pip{width:82%!important;height:82%!important;max-width:none;max-height:none;background:radial-gradient(circle at 55% 60%,#263343,#030b16 70%)!important;box-shadow:inset 1px 2px 2px #000,0 1px 0 #fff9!important}
+.pro-face{box-sizing:border-box;backface-visibility:hidden!important;background:linear-gradient(140deg,var(--die-highlight,#fff) 5%,var(--die-color,#eaeef5) 55%,var(--die-shade,#cad1dd) 100%)!important;box-shadow:inset 2px 3px 3px var(--die-highlight,#fff),inset -3px -4px 6px #7882915e!important;border-radius:var(--die-radius,13%)!important;border:1px solid var(--die-edge,#bac2ce)!important;padding:14%!important;gap:3%!important}
+.pro-pip{width:82%!important;height:82%!important;max-width:none;max-height:none;border-radius:var(--die-pip-radius,50%);background:radial-gradient(circle at 55% 60%,var(--die-pip-light,#263343),var(--die-pip,#030b16) 70%)!important;box-shadow:inset 1px 2px 2px #0005,0 1px 0 #fff5!important}
 .pro-die:not(.is-rolling) .pro-face{visibility:hidden}
 .pro-die[data-value='1']:not(.is-rolling) .face-1,.pro-die[data-value='2']:not(.is-rolling) .face-2,.pro-die[data-value='3']:not(.is-rolling) .face-3,.pro-die[data-value='4']:not(.is-rolling) .face-4,.pro-die[data-value='5']:not(.is-rolling) .face-5,.pro-die[data-value='6']:not(.is-rolling) .face-6{visibility:visible}
 .pro-die.is-rolling .pro-face{visibility:visible}
@@ -162,7 +162,7 @@ html[data-pawn='pawn-onyx'] .game-jackaroo .jack-piece .crystal-sprite{filter:dr
 #game.neon-arena .dice-stage{top:80.7%!important;left:35%!important;width:30%!important;height:8.4%!important}
 #game.neon-arena .die.pro-die{--die-size:clamp(50px,8.4dvh,100px)}
 #game.neon-arena .pro-face{padding:14%!important}
-#game.neon-arena .pro-pip{width:82%!important;height:82%!important;background:radial-gradient(circle at 55% 60%,#263343,#030b16 70%)!important}
+#game.neon-arena .pro-pip{width:82%!important;height:82%!important;background:radial-gradient(circle at 55% 60%,var(--die-pip-light,#263343),var(--die-pip,#030b16) 70%)!important}
 #game.neon-arena .dice-second{transform:scale(.66)!important;left:76%!important}
 #game.neon-arena .dice-stage.has-double .die:first-child{transform:scale(.82)!important}
 .bonus-overlay{position:fixed;inset:0;background:#020710d9;backdrop-filter:blur(5px);display:grid;place-items:center;z-index:1100;padding:20px}
@@ -546,3 +546,28 @@ body.journey-page,body.picture-page{inline-size:100%;max-inline-size:100%;min-in
 @supports not (height:100dvh){@media(max-width:600px){.journey-play{height:100vh;max-height:100vh}.stage-canvas-wrap{width:min(100%,56vh)}}}
 
 body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-inline-size:0;flex-wrap:wrap}
+
+/* assets/css/tabletop-v30.css */
+/* Exact SVG geometry is shared by the local boards, online rooms and previews. */
+.petal-board-v30{display:block;width:100%;height:auto;max-width:760px;margin:auto;overflow:visible;filter:drop-shadow(0 18px 20px #0005);font-family:Tajawal,system-ui,sans-serif}
+#board.petal-layout-v29{background:#101b20!important;isolation:isolate;border:0!important;box-shadow:none!important;padding:8px!important;overflow:visible!important;aspect-ratio:1;max-width:780px;margin-inline:auto;border-radius:25px!important}
+#board.petal-layout-v29:before,#board.petal-layout-v29:after{display:none!important}
+#board.petal-layout-v29>.petal-board-v30{position:relative;z-index:2;width:100%;height:auto;max-height:none;filter:drop-shadow(0 13px 12px #0006)}
+.petal-board-v30 .atelier-piece-v30{transition:filter .18s;outline:none;transform-box:view-box}
+.petal-board-v30 .atelier-piece-v30.legal{cursor:pointer;filter:drop-shadow(0 0 1.4px #fff7bf)}
+.petal-board-v30 .atelier-piece-v30.legal:focus-visible{filter:drop-shadow(0 0 2px #ffffff)}
+.petal-board-v30 [data-seat][data-active="true"]>circle:first-child{stroke-dasharray:3 1.3;animation:seat-turn-v30 15s linear infinite}
+.petal-board-v30 [data-legal-ring]{stroke-dasharray:2 1;animation:seat-turn-v30 9s linear infinite}
+.party-board-atelier-v30{max-width:730px;width:100%;margin:5px auto 15px;padding:8px;aspect-ratio:1}
+.game-jackaroo #game .toolbar,.game-ludo #game .toolbar{border-color:#58605a;background:#18272c}
+.game-jackaroo #game .board-wrap,.game-ludo #game .board-wrap{background:#101b20;border-radius:24px}
+.game-jackaroo .hand .card{border-radius:12px;box-shadow:0 8px 18px #0004}
+.game-jackaroo .hand .card.selected{outline:2px solid #e6c69c;outline-offset:3px}
+.atelier-board-detail-v30{font-size:12px;color:#a9b6b1;margin:8px 0 14px;text-align:center;line-height:1.7}
+.bs-victory[data-design="victory-nova"] .bs-victory-rays{background:repeating-conic-gradient(from 0deg,#f0ce8a22 0deg 4deg,transparent 4deg 15deg)}
+.bs-victory[data-design="victory-bloom"] .bs-victory-confetti{border-radius:90% 10% 90% 10%;width:17px;height:11px}
+.bs-victory[data-design="victory-orbit"] .bs-victory-rays{border:2px solid #8dd8c555;border-radius:50%;width:55vmin;height:55vmin;inset:50% auto auto 50%;transform:translate(-50%,-50%);box-shadow:0 0 0 35px #8dd8c50a,0 0 0 70px #8dd8c509}
+.bs-victory[data-design^="victory-"] .bs-victory-crown{font-size:62px;color:var(--celebration-color,#e2be83)}
+@keyframes seat-turn-v30{to{stroke-dashoffset:70}}
+@media(max-width:600px){#board.petal-layout-v29{padding:2px!important;border-radius:13px!important;max-width:none}.party-board-atelier-v30{padding:0;margin:0 auto 12px}.petal-board-v30{filter:drop-shadow(0 9px 9px #0004)}.game-jackaroo #game .board-wrap,.game-ludo #game .board-wrap{border-radius:14px}}
+@media(prefers-reduced-motion:reduce){.petal-board-v30 [data-seat][data-active="true"]>circle:first-child,.petal-board-v30 [data-legal-ring]{animation:none}.petal-board-v30 .atelier-piece-v30{transition:none}}

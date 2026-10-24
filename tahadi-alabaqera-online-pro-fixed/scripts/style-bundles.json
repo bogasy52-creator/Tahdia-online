@@ -29,7 +29,8 @@
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/tabletop-v30.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -54,7 +55,8 @@
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/tabletop-v30.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -91,7 +93,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/memory-v30.css"
   ],
   "online.html": [
     "assets/css/platform.css",
@@ -143,16 +146,12 @@
   ],
   "shop.html": [
     "assets/css/platform.css",
+    "assets/css/game-kit.css",
     "assets/css/pro-games.css",
     "assets/css/pro-v7.css",
-    "assets/css/arena-suite.css",
     "assets/css/dice-refined.css",
-    "assets/css/cosmetics.css",
-    "assets/css/gameplay-v134.css",
-    "assets/css/professional-v14.css",
-    "assets/css/experience-v15.css",
-    "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/atelier-shop-v30.css",
+    "assets/css/tabletop-v30.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -168,7 +167,8 @@
     "assets/css/professional-v14.css",
     "assets/css/experience-v15.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/tabletop-v30.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -199,7 +199,8 @@
     "assets/css/royal-play.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/tabletop-v30.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
@@ -228,6 +229,8 @@
   ],
   "party.html": [
     "assets/css/party-v29.css",
-    "/assets/css/tahdia-premium-v25.css"
+    "/assets/css/tahdia-premium-v25.css",
+    "assets/css/tabletop-v30.css",
+    "assets/css/memory-v30.css"
   ]
 }

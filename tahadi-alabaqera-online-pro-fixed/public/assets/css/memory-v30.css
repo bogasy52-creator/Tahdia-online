@@ -1,0 +1,30 @@
+/* The same lightweight illustrated cards are used locally and in shared rooms. */
+body[data-arcade="memory"] .arcade-shell{max-width:930px;margin:30px auto 60px}
+body[data-arcade="memory"] .arcade-shell>h1{font-size:clamp(30px,5vw,48px);letter-spacing:-1.2px;color:#f4eddf;margin:9px 0}
+body[data-arcade="memory"] .arcade-shell>p{max-width:560px;color:#abb8ba;line-height:1.9}
+body[data-arcade="memory"] .arcade-game{background:#131e23;border:1px solid #47504d;border-radius:22px;padding:26px}
+.memory-grid-v30{display:grid;gap:clamp(7px,1.5vw,13px);max-width:700px;width:100%;margin:22px auto;direction:ltr;perspective:1000px;min-height:0}
+.memory-tile-v30{position:relative;display:block;aspect-ratio:1;min-width:0;width:100%;padding:0!important;border:0!important;border-radius:13px!important;background:transparent!important;cursor:pointer;perspective:900px;outline-offset:5px;touch-action:manipulation;opacity:1!important;box-shadow:none!important}
+.memory-flipper-v30{display:block;position:absolute;inset:0;transform-style:preserve-3d;transition:transform .3s cubic-bezier(.2,.65,.3,1);border-radius:inherit}
+.memory-tile-v30.open .memory-flipper-v30,.memory-tile-v30.matched .memory-flipper-v30{transform:rotateY(180deg)}
+.memory-back-v30,.memory-front-v30{position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.memory-back-v30{background:linear-gradient(145deg,#263a40,#13252c);border:1px solid #526d72;box-shadow:inset 0 0 0 5px #1a2c32,inset 0 0 0 6px #c6ad7638,0 5px 9px #0003}
+.memory-back-v30:after{content:"";position:absolute;inset:11px;border:1px solid #9fbaa71f;border-radius:4px}
+.memory-back-v30 svg{width:35%;height:35%;fill:none;stroke:#d1ba89;stroke-width:1.2;opacity:.85}
+.memory-front-v30{transform:rotateY(180deg);background-color:#eae5da;background-image:url('/assets/atelier-v30/memory-objects.webp');background-size:400% 400%;box-shadow:inset 0 0 0 1px #ffffff80,0 4px 9px #0002}
+.memory-tile-v30.matched .memory-front-v30{box-shadow:inset 0 0 0 3px #74bb9b,0 0 0 1px #74bb9b55}
+.memory-check-v30{position:absolute;right:6px;bottom:6px;display:none;width:21px;height:21px;border-radius:50%;background:#174d3c;color:#edfff4;font-size:13px;line-height:21px;text-align:center;font-weight:800}
+.memory-tile-v30.matched .memory-check-v30{display:block}
+.memory-tile-v30.new-match{animation:memory-match-v30 .55s ease-out}
+.memory-tile-v30:not(:disabled):hover .memory-back-v30{border-color:#d1ba89;background:linear-gradient(145deg,#35505a,#1b3038)}
+.memory-tile-v30:focus-visible{outline:3px solid #ead4a5}
+.memory-progress-v30{height:4px;background:#334641;border-radius:9px;overflow:hidden;margin-top:10px}
+.memory-progress-v30 i{display:block;height:100%;width:0;background:#8dc9aa;transition:width .3s}
+.memory-intro-v30{display:flex;align-items:center;gap:12px;color:#a4b7ad;font-size:13px;margin:17px 0 0}
+.memory-intro-v30 i{width:7px;height:7px;border-radius:50%;background:#9cc3b0;flex:none}
+.party-memory-stats-v30{color:#d6c4a1;text-align:center;font-size:14px;padding:6px 0 0}
+.party-memory-notice-v30{color:#aabcb9;text-align:center;font-size:13px;line-height:1.8}
+.party-game-stage .memory-grid-v30,.party-stage .memory-grid-v30{max-width:680px}
+@keyframes memory-match-v30{0%,100%{filter:brightness(1);translate:0 0}45%{filter:brightness(1.15);translate:0 -4px}}
+@media(max-width:600px){body[data-arcade="memory"] .arcade-game{padding:16px 12px}.memory-grid-v30{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px}.memory-tile-v30{border-radius:10px!important}.memory-check-v30{width:17px;height:17px;line-height:17px;font-size:11px;right:4px;bottom:4px}body[data-arcade="memory"] .arcade-shell{margin-top:22px}.party-stage .memory-grid-v30{gap:7px}}
+@media(prefers-reduced-motion:reduce){.memory-flipper-v30{transition:none}.memory-tile-v30.new-match{animation:none}.memory-progress-v30 i{transition:none}}

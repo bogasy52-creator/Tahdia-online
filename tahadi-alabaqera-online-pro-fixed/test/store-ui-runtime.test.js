@@ -1,28 +1,29 @@
+import {loadAtelier} from './atelier-harness.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDOM} from './dom-harness.mjs';
 import {Career} from '../src/career/core.js';
 const now=Date.parse('2026-10-12T12:00:00Z');
-async function store(profile=Career.normalize({coins:1000})){const h=await createDOM('shop.html');await h.runFile('assets/js/profile-core.js');let p=profile,calls=0;h.context.BS_CAREER={get:()=>p,catalog:Career.CATALOG,now:()=>now,account:()=>null,access:()=>({role:'player'}),purchase:async id=>{calls++;await Promise.resolve();p=Career.purchase(p,id,{now})},equip:async id=>{p=Career.equip(p,id)},bundle:async id=>{calls++;await Promise.resolve();p=Career.purchaseBundle(p,id,{now})},claim:async id=>{calls++;await Promise.resolve();p=Career.claimObjective(p,id,{now})}};await h.runFile('assets/js/shop.js');return {...h,get:()=>p,calls:()=>calls}}
+async function store(profile=Career.normalize({coins:1000})){const h=await createDOM('shop.html');await h.runFile('assets/js/profile-core.js');let p=profile,calls=0;h.context.BS_CAREER={get:()=>p,catalog:Career.CATALOG,now:()=>now,account:()=>null,access:()=>({role:'player'}),purchase:async id=>{calls++;await Promise.resolve();p=Career.purchase(p,id,{now})},equip:async id=>{p=Career.equip(p,id)},bundle:async id=>{calls++;await Promise.resolve();p=Career.purchaseBundle(p,id,{now})},claim:async id=>{calls++;await Promise.resolve();p=Career.claimObjective(p,id,{now})}};await loadAtelier(h);return {...h,get:()=>p,calls:()=>calls}}
 test('store shows actual bundles, earning progress and only accessible catalogue entries',async()=>{
- const h=await store();assert.equal(h.doc.querySelectorAll('.bundle-card').length,3);assert.equal(h.doc.querySelectorAll('.mission-card').length,12);
- assert.equal(h.doc.querySelector('[data-item="title-manager"]'),null);assert.ok(h.doc.getElementById('collectionCount').textContent.startsWith('9 / '));assert.equal(h.doc.querySelector('[data-item="character-fox"]'),null);assert.ok(h.doc.querySelector('[data-item="character-princess"]'));
- h.doc.getElementById('storeViews').dispatchEvent({type:'click',target:h.doc.querySelector('[data-view="missions"]')});assert.equal(h.doc.getElementById('missionsView').classList.contains('hidden'),false);
+ const h=await store();assert.equal(h.doc.querySelectorAll('.atelier-set').length,3);assert.equal(h.doc.querySelectorAll('.atelier-product').length,24);
+ assert.equal(h.doc.querySelector('[data-item="title-manager"]'),null);assert.equal(h.doc.getElementById('collectionCount').textContent,'24 قطعة');assert.equal(h.doc.querySelector('[data-item="character-fox"]'),null);assert.ok(h.doc.querySelector('[data-item="pawn-monolith"]'));
+ h.doc.querySelector('[data-view="rewards"]').onclick();assert.equal(h.doc.getElementById('rewardsSection').hidden,false);assert.equal(h.doc.querySelectorAll('.atelier-objective').length,12);
 });
-test('equipping a purchased character switches an old original-stone preference to characters',async()=>{
- const h=await store();h.storage.set('bs-piece-art','original');h.doc.querySelector('[data-item="character-princess"] .item-inspect').onclick();await h.doc.getElementById('itemAction').onclick();
- assert.equal(h.get().equipped.character,'character-princess');assert.equal(h.storage.get('bs-piece-art'),'characters');
+test('equipping a sculpture leaves unrelated legacy appearances and player preferences intact',async()=>{
+ const h=await store(),character=h.get().equipped.character;h.storage.set('bs-piece-art','original');h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]').onclick();await h.doc.getElementById('previewAction').onclick();
+ assert.equal(h.get().equipped.pawn,'pawn-rook');assert.equal(h.get().equipped.character,character);assert.equal(h.storage.get('bs-piece-art'),'original');
 });
 test('mission claim click credits once and updates the visible reward status',async()=>{
- let p=Career.normalize();for(let i=0;i<3;i++)p=Career.reward(p,{id:'ui:'+i,game:'snakes',win:true,now});const h=await store(p),button=h.doc.querySelector('[data-objective="daily-play"] button');
+ let p=Career.normalize();for(let i=0;i<3;i++)p=Career.reward(p,{id:'ui:'+i,game:'snakes',win:true,now});const h=await store(p);h.doc.querySelector('[data-view="rewards"]').onclick();const button=h.doc.querySelector('[data-objective="daily-play"] button');
  assert.equal(button.disabled,false);const before=p.coins;await Promise.all([button.onclick(),button.onclick()]);assert.equal(h.calls(),1);assert.equal(h.get().coins,before+30);
- assert.ok(h.doc.querySelector('[data-objective="daily-play"]').textContent.includes('تم الاستلام'));
+ assert.ok(h.doc.querySelector('[data-objective="daily-play"]').textContent.includes('مستلمة'));
 });
-test('bundle click purchases its missing items once and goal tracking stays scoped to the account',async()=>{
- const h=await store(Career.normalize({coins:5000})),button=h.doc.querySelector('[data-bundle="reactor-set"] .bundle-buy'),quote=Career.bundleQuote(h.get(),'reactor-set',{now});
+test('a new coordinated bundle buys its missing items once and equips its real materials',async()=>{
+ const h=await store(Career.normalize({coins:5000})),button=h.doc.querySelector('[data-bundle="atelier-club"] button'),quote=Career.bundleQuote(h.get(),'atelier-club',{now});
  await Promise.all([button.onclick(),button.onclick()]);assert.equal(h.calls(),1);assert.equal(h.get().coins,5000-quote.price);
- assert.equal(h.doc.querySelector('[data-bundle="reactor-set"] .bundle-buy').textContent,'تجهيز المجموعة');
- const goal=h.doc.querySelector('[data-item="snake-plasma"] .goal-button');goal.onclick();assert.equal(h.storage.get('busraj-store-goal-v11:guest'),'snake-plasma');assert.ok(h.doc.getElementById('storeGoal').textContent.includes('أفاعي البلازما'));
+ assert.equal(h.doc.querySelector('[data-bundle="atelier-club"] button').textContent,'تجهيز المجموعة');
+ assert.equal(h.get().equipped.pawn,'pawn-rook');assert.equal(h.get().equipped.dice,'dice-oxblood');assert.equal(h.get().equipped.trail,'trail-meteor');
 });
 test('authenticated cosmetics apply the actual die palette, trail and title to the game document',async()=>{
  const h=await createDOM('snakes.html');h.context.AbortSignal=AbortSignal;h.storage.set('bs_social_session','playera.'+'a'.repeat(43));
