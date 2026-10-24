@@ -1,0 +1,135 @@
+/* Tahdia 31.0.0 — reactions: the board button, the picker sheet and the
+   effects layer. Tiers carry meaning: slate free, blue rare, violet epic,
+   gold legendary, emerald for the manager's exclusive. */
+@property --rx-p{syntax:'<number>';inherits:false;initial-value:0}
+:root{--rx-ink:#eef4fa;--rx-muted:#9fb3c6;--rx-panel:#0f1d2f;--rx-line:#2a4560;--rx-gold:#f0b429;
+ --rx-common:#8fa3b8;--rx-rare:#4fa3ff;--rx-epic:#b37dff;--rx-legendary:#ffc24a;--rx-exclusive:#3ddc97}
+
+/* Button on the board's corner */
+.rx-host{position:relative!important}
+.rx-fab{position:absolute;z-index:60;inset-inline-end:6px;bottom:6px;width:42px;height:42px;border-radius:50%;border:1.5px solid #ffffff2e;
+ background:radial-gradient(circle at 35% 30%,#24415f,#0d1a2a 72%);color:var(--rx-ink);display:grid;place-items:center;cursor:pointer;padding:0;
+ box-shadow:0 8px 18px #0008,inset 0 1px 0 #ffffff26;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}
+.rx-fab[hidden]{display:none!important}
+.rx-fab:active{transform:scale(.92)}
+.rx-fab:focus-visible{outline:3px solid var(--rx-gold);outline-offset:3px}
+.rx-fab-face{font-size:22px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 1px 1px #0006)}
+.rx-fab-ring{position:absolute;inset:-3px;border-radius:50%;pointer-events:none;opacity:0;
+ background:conic-gradient(var(--rx-gold) calc(var(--rx-p)*360deg),#ffffff14 0);-webkit-mask:radial-gradient(circle,transparent 21px,#000 22px);mask:radial-gradient(circle,transparent 21px,#000 22px)}
+.rx-fab.is-cooling .rx-fab-ring{opacity:1;animation:rx-cool var(--rx-cool-ms,1500ms) linear forwards}
+.rx-fab.is-cooling .rx-fab-face{opacity:.55}
+@keyframes rx-cool{from{--rx-p:0}to{--rx-p:1}}
+body.game-snakes .rx-fab{bottom:auto;top:calc(100% + 4px);inset-inline-end:2px;width:40px;height:40px}
+/* the turn line under the snakes board leaves room for the button */
+:is(html,#v31) body.game-snakes.game-running #status{padding-inline:46px!important}
+body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
+
+/* Picker sheet */
+.rx-sheet{position:fixed;z-index:9600;inset-inline:0;bottom:0;margin:0 auto;width:min(560px,100%);max-height:min(72vh,560px);display:flex;flex-direction:column;
+ background:linear-gradient(180deg,#132538,var(--rx-panel) 40%);color:var(--rx-ink);border:1px solid var(--rx-line);border-bottom:0;border-radius:22px 22px 0 0;
+ box-shadow:0 -18px 50px #000a;padding:10px 14px calc(12px + env(safe-area-inset-bottom));font-family:Tajawal,system-ui,sans-serif;animation:rx-sheet-in .24s cubic-bezier(.2,.8,.2,1)}
+.rx-sheet[hidden]{display:none!important}
+.rx-sheet::before{content:'';display:block;width:42px;height:4px;border-radius:4px;background:#ffffff33;margin:0 auto 8px}
+@keyframes rx-sheet-in{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.rx-sheet-head{display:flex;align-items:center;gap:10px}
+.rx-sheet-head h2{margin:0;font-size:18px;font-weight:800;letter-spacing:0}
+.rx-tabs{flex:1 1 auto;display:flex;gap:4px;padding:4px;border-radius:14px;background:#0a1522;border:1px solid #1f3650;min-width:0}
+.rx-tab{flex:1 1 0;min-width:0;border:0;border-radius:10px;padding:8px 4px;background:transparent;color:var(--rx-muted);font:700 13.5px/1 Tajawal,system-ui,sans-serif;cursor:pointer}
+.rx-tab.is-active{background:linear-gradient(180deg,#f6c445,#e0a213);color:#1b1302;box-shadow:0 2px 8px #f0b42944}
+.rx-tab:focus-visible,.rx-item:focus-visible,.rx-close:focus-visible,.rx-shop-link:focus-visible{outline:3px solid var(--rx-gold);outline-offset:2px}
+.rx-close{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid var(--rx-line);background:#0c1826;color:var(--rx-ink);font-size:22px;line-height:1;cursor:pointer}
+.rx-sheet-body{overflow-y:auto;overscroll-behavior:contain;margin-top:12px;padding-bottom:4px}
+.rx-grid{display:grid;gap:8px}
+.rx-grid-emote{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}
+.rx-grid-phrase{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rx-grid-move{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rx-item{--tier:var(--rx-common);position:relative;border:1px solid color-mix(in srgb,var(--tier) 38%,transparent);border-radius:16px;cursor:pointer;color:var(--rx-ink);
+ background:linear-gradient(180deg,color-mix(in srgb,var(--tier) 16%,#13263a),#0d1a29);display:grid;place-items:center;gap:2px;padding:8px 4px;min-height:58px;font-family:Tajawal,system-ui,sans-serif;
+ -webkit-tap-highlight-color:transparent;transition:transform .12s ease,border-color .12s ease}
+.rx-item:active{transform:scale(.94)}
+.rx-item:disabled{opacity:.45;cursor:default}
+.rx-item.tier-rare{--tier:var(--rx-rare)}.rx-item.tier-epic{--tier:var(--rx-epic)}.rx-item.tier-legendary{--tier:var(--rx-legendary)}.rx-item.tier-exclusive{--tier:var(--rx-exclusive)}
+.rx-item-glyph{font-size:30px;line-height:1.05;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.rx-item-name{font-size:11.5px;font-weight:700;color:var(--rx-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rx-item.is-phrase{justify-items:start;text-align:start;padding:11px 12px;min-height:50px;border-radius:16px 16px 16px 6px}
+.rx-item-text{font-size:14.5px;font-weight:800;line-height:1.35}
+.rx-item.is-move{min-height:92px;padding:10px 6px 8px}
+.rx-item.is-move .rx-item-glyph{font-size:32px}
+.rx-item.is-move .rx-item-name{color:var(--rx-ink);font-size:12.5px}
+.rx-tier{font-style:normal;font-size:10.5px;font-weight:800;color:var(--tier)}
+.rx-item.is-locked{background:#0b1622;border-style:dashed}
+.rx-item.is-locked :is(.rx-item-glyph,.rx-item-text){filter:grayscale(.85);opacity:.55}
+.rx-lock{font-style:normal;font-size:10.5px;font-weight:800;color:#1b1302;background:var(--tier);border-radius:999px;padding:2px 7px;line-height:1.2;white-space:nowrap}
+.rx-grid-emote .rx-lock{position:absolute;bottom:-6px;inset-inline:6px;text-align:center}
+.rx-grid-emote .is-locked .rx-item-name{display:none}
+.rx-item.is-phrase .rx-lock{margin-top:4px}
+.rx-lock-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:10px 12px;border-radius:14px;background:#1a2d44;border:1px solid #33557a;font-size:13.5px;font-weight:700}
+.rx-lock-go{flex:0 0 auto;padding:7px 12px;border-radius:999px;background:var(--rx-gold);color:#1b1302;text-decoration:none;font-weight:800;font-size:13px}
+.rx-sheet-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #1f3650}
+.rx-hint{color:var(--rx-muted);font-size:12.5px}
+.rx-shop-link{color:var(--rx-gold);font-weight:800;font-size:13.5px;text-decoration:none}
+
+/* Effects layer */
+.rx-layer{position:fixed;inset:0;z-index:9400;pointer-events:none;overflow:hidden;font-family:Tajawal,system-ui,sans-serif}
+.rx-canvas{position:fixed;left:0;top:0;pointer-events:none}
+.rx-live{position:fixed;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.rx-emote{position:absolute;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:4px;transition:opacity .45s ease,transform .45s ease}
+.rx-emote-glyph{font-size:66px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 6px 10px #0007)}
+.rx-emote-name{padding:3px 10px;border-radius:999px;background:#0d1a29e6;border:1px solid #ffffff2a;color:#fff;font-size:12.5px;font-weight:800;white-space:nowrap}
+.rx-emote.tier-legendary .rx-emote-glyph{filter:drop-shadow(0 0 16px #ffc24acc) drop-shadow(0 6px 10px #0007)}
+.rx-emote.tier-epic .rx-emote-glyph{filter:drop-shadow(0 0 14px #b37dffaa) drop-shadow(0 6px 10px #0007)}
+.rx-emote.out{opacity:0;transform:translate(-50%,-70%) scale(.8)}
+.fx-clap .rx-emote-glyph{animation:rx-clap .32s ease-in-out 3 .45s}
+.fx-flame .rx-emote-glyph{animation:rx-flicker .18s ease-in-out infinite alternate .4s}
+.fx-shake .rx-emote-glyph,.fx-steam .rx-emote-glyph,.fx-blast .rx-emote-glyph{animation:rx-shake .12s linear 8 .45s}
+.fx-pop .rx-emote-glyph{animation:rx-pop .5s cubic-bezier(.2,1.6,.4,1) .3s}
+.fx-plead .rx-emote-glyph,.fx-tears .rx-emote-glyph,.fx-hush .rx-emote-glyph{animation:rx-bob .7s ease-in-out infinite alternate .4s}
+.fx-frost .rx-emote-glyph{animation:rx-shiver .09s linear 12 .45s;filter:drop-shadow(0 0 14px #8fe3ffcc)}
+.fx-spin .rx-emote-glyph{animation:rx-spin .9s cubic-bezier(.2,.8,.2,1) .35s}
+.fx-devil .rx-emote-glyph{animation:rx-glow-violet .6s ease-in-out infinite alternate .4s}
+.fx-slither .rx-emote-glyph{animation:rx-slither 1.4s ease-in-out .35s}
+.fx-sparkle .rx-emote-glyph{animation:rx-tilt .8s ease-in-out infinite alternate .4s}
+.fx-launch .rx-emote-glyph{animation:rx-launch 1.6s cubic-bezier(.5,0,.8,.4) .5s forwards}
+.fx-royal .rx-emote-glyph{animation:rx-pop .6s cubic-bezier(.2,1.6,.4,1) .3s,rx-glow-gold .8s ease-in-out infinite alternate .9s}
+.fx-prism .rx-emote-glyph{animation:rx-prism 1.6s linear infinite .3s}
+.fx-shine .rx-emote-glyph{animation:rx-pop .5s cubic-bezier(.2,1.6,.4,1) .3s}
+@keyframes rx-clap{50%{transform:scale(1.22)}}
+@keyframes rx-flicker{from{transform:scale(1) translateY(0)}to{transform:scale(1.08,1.14) translateY(-3px)}}
+@keyframes rx-shake{25%{transform:translateX(-5px) rotate(-4deg)}75%{transform:translateX(5px) rotate(4deg)}}
+@keyframes rx-pop{0%{transform:scale(.6)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+@keyframes rx-bob{to{transform:translateY(-7px)}}
+@keyframes rx-shiver{50%{transform:translateX(2px)}}
+@keyframes rx-spin{to{transform:rotate(720deg)}}
+@keyframes rx-glow-violet{to{filter:drop-shadow(0 0 20px #b16bff) drop-shadow(0 6px 10px #0007)}}
+@keyframes rx-glow-gold{to{filter:drop-shadow(0 0 26px #ffd36b) drop-shadow(0 6px 10px #0007)}}
+@keyframes rx-slither{25%{transform:translate(-28px,-8px) rotate(-12deg)}50%{transform:translate(0,0) rotate(0)}75%{transform:translate(28px,-8px) rotate(12deg)}}
+@keyframes rx-tilt{from{transform:rotate(-8deg)}to{transform:rotate(8deg) scale(1.06)}}
+@keyframes rx-launch{0%{transform:none}20%{transform:translateY(6px)}100%{transform:translate(40px,-60vh) rotate(-20deg);opacity:0}}
+@keyframes rx-prism{to{filter:hue-rotate(360deg) drop-shadow(0 0 16px #7ff0ff)}}
+
+.rx-phrase{position:absolute;transform:translate(-50%,0);max-width:min(84vw,420px);display:grid;gap:2px;padding:9px 14px 10px;border-radius:18px 18px 18px 6px;
+ background:#0d1a29f0;border:1.5px solid #ffffff30;color:#fff;box-shadow:0 10px 26px #0009;animation:rx-phrase-in .32s cubic-bezier(.2,1.4,.4,1);transition:opacity .4s ease,transform .4s ease}
+.rx-phrase b{font-size:12px;font-weight:800;color:#9fd8c7}
+.rx-phrase span{font-size:16.5px;font-weight:800;line-height:1.35}
+.rx-phrase.is-mine b{color:var(--rx-gold)}
+.rx-phrase.tier-rare{border-color:var(--rx-rare)}
+.rx-phrase.tier-epic{border-color:transparent;background:linear-gradient(#0d1a29f2,#0d1a29f2) padding-box,linear-gradient(120deg,#b37dff,#5dd6ff) border-box}
+.rx-phrase.tier-legendary{border-color:transparent;background:linear-gradient(#1d1606f2,#120d04f2) padding-box,linear-gradient(120deg,#a8741c,#fff1bf,#a8741c,#ffc24a) border-box;background-size:auto,300% 100%;animation:rx-phrase-in .32s cubic-bezier(.2,1.4,.4,1),rx-shimmer 2.4s linear infinite}
+.rx-phrase.tier-legendary span{color:#ffe6a3}
+.rx-phrase.out{opacity:0;transform:translate(-50%,-14px)}
+@keyframes rx-phrase-in{from{transform:translate(-50%,12px) scale(.9);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@keyframes rx-shimmer{to{background-position:0 0,300% 0}}
+
+.rx-banner{position:absolute;transform:translate(-50%,0);display:flex;align-items:center;gap:10px;padding:7px 14px 7px 10px;border-radius:999px;background:#0d1a29f2;border:1.5px solid var(--tier,#ffffff33);
+ color:#fff;box-shadow:0 10px 30px #000a,0 0 22px color-mix(in srgb,var(--tier,#fff) 35%,transparent);animation:rx-phrase-in .35s cubic-bezier(.2,1.4,.4,1);transition:opacity .4s ease,transform .4s ease;white-space:nowrap}
+.rx-banner.tier-rare{--tier:var(--rx-rare)}.rx-banner.tier-epic{--tier:var(--rx-epic)}.rx-banner.tier-legendary{--tier:var(--rx-legendary)}.rx-banner.tier-exclusive{--tier:var(--rx-exclusive)}.rx-banner.tier-common{--tier:var(--rx-common)}
+.rx-banner-icon{font-size:26px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.rx-banner b{display:block;font-size:13.5px;font-weight:800}
+.rx-banner small{display:block;font-size:12px;color:var(--rx-muted);font-weight:700}
+.rx-banner.out{opacity:0;transform:translate(-50%,-12px)}
+
+@media (prefers-reduced-motion:reduce){
+ .rx-sheet,.rx-phrase,.rx-banner{animation:none!important}
+ .rx-emote-glyph{animation:none!important}
+ .rx-fab.is-cooling .rx-fab-ring{animation:none;--rx-p:1}
+}

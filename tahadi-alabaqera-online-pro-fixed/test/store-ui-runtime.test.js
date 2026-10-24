@@ -6,8 +6,9 @@ import {Career} from '../src/career/core.js';
 const now=Date.parse('2026-10-12T12:00:00Z');
 async function store(profile=Career.normalize({coins:1000})){const h=await createDOM('shop.html');await h.runFile('assets/js/profile-core.js');let p=profile,calls=0;h.context.BS_CAREER={get:()=>p,catalog:Career.CATALOG,now:()=>now,account:()=>null,access:()=>({role:'player'}),purchase:async id=>{calls++;await Promise.resolve();p=Career.purchase(p,id,{now})},equip:async id=>{p=Career.equip(p,id)},bundle:async id=>{calls++;await Promise.resolve();p=Career.purchaseBundle(p,id,{now})},claim:async id=>{calls++;await Promise.resolve();p=Career.claimObjective(p,id,{now})}};await loadAtelier(h);return {...h,get:()=>p,calls:()=>calls}}
 test('store shows actual bundles, earning progress and only accessible catalogue entries',async()=>{
- const h=await store();assert.equal(h.doc.querySelectorAll('.atelier-set').length,3);assert.equal(h.doc.querySelectorAll('.atelier-product').length,24);
- assert.equal(h.doc.querySelector('[data-item="title-manager"]'),null);assert.equal(h.doc.getElementById('collectionCount').textContent,'24 قطعة');assert.equal(h.doc.querySelector('[data-item="character-fox"]'),null);assert.ok(h.doc.querySelector('[data-item="pawn-monolith"]'));
+ const h=await store(),shelf=new Set(Career.STOREFRONT),visible=Career.STOREFRONT.filter(id=>Career.CATALOG.find(i=>i.id===id).source!=='owner').length;
+ assert.equal(h.doc.querySelectorAll('.atelier-set').length,Career.BUNDLES.filter(b=>b.items.every(id=>shelf.has(id))).length);assert.equal(h.doc.querySelectorAll('.atelier-product').length,visible);
+ assert.ok(!h.doc.querySelector('[data-item="title-manager"]'));assert.equal(h.doc.getElementById('collectionCount').textContent,visible+' قطعة');assert.ok(h.doc.querySelector('[data-item="character-fox"]'));assert.ok(h.doc.querySelector('[data-item="pawn-monolith"]'));
  h.doc.querySelector('[data-view="rewards"]').onclick();assert.equal(h.doc.getElementById('rewardsSection').hidden,false);assert.equal(h.doc.querySelectorAll('.atelier-objective').length,12);
 });
 test('equipping a sculpture leaves unrelated legacy appearances and player preferences intact',async()=>{

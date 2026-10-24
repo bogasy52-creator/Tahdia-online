@@ -1,0 +1,134 @@
+/* Tahdia 31.0.0 — Zahra and Jackaroo pages around the new tables
+   (board-petals-v29.js): lobby, player chips, dice dock, cards. */
+:root{--tbl-ink:#eef3f7;--tbl-muted:#9fb3c4;--tbl-panel:#122236;--tbl-line:#26405a;--tbl-gold:#f2c14e}
+
+/* ---------- Lobby ---------- */
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup.tbl-setup{max-width:760px!important;margin:4px auto 28px!important;padding:14px!important;border-radius:22px!important;background:linear-gradient(180deg,#132439,#0d1a2a)!important;border:1px solid var(--tbl-line)!important;box-shadow:0 20px 50px #0007!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) .tbl-hero{display:grid;grid-template-columns:1fr 46%;align-items:center;gap:12px;min-height:180px;padding:16px;border-radius:18px;overflow:hidden;border:1px solid #2d4a62;background:radial-gradient(120% 140% at 85% 15%,#24405f 0%,#132a3f 55%,#0e1c2c 100%)}
+:is(html,#v31) body.game-jackaroo .tbl-hero{background:radial-gradient(120% 140% at 85% 15%,#1f5f45 0%,#143327 55%,#0e1c2c 100%);border-color:#2f5a45}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) .tbl-kicker{display:inline-block;margin-bottom:8px;padding:4px 10px;border-radius:999px;background:#f2c14e1f;color:var(--tbl-gold);font-size:12px;font-weight:800}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) .tbl-hero h1{margin:0 0 8px!important;font-size:clamp(28px,7.5vw,42px)!important;line-height:1.1!important;color:#fff!important;font-weight:900!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) .tbl-hero p{margin:0!important;color:#c7d6e2!important;font-size:14px!important;line-height:1.7!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) .tbl-hero-art{width:100%;max-width:230px;aspect-ratio:1;justify-self:end;filter:drop-shadow(0 14px 22px #0009);transform:rotate(-5deg)}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) .tbl-hero-art svg{width:100%;height:100%;display:block}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .play-mode{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4px!important;padding:4px!important;margin:14px 0!important;border-radius:14px!important;background:#0a1626!important;border:1px solid var(--tbl-line)!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .play-mode button{min-height:42px!important;border-radius:11px!important;border:0!important;background:transparent!important;color:var(--tbl-muted)!important;font-weight:800!important;font-size:14px!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .play-mode button.active{background:linear-gradient(180deg,#f6d27a,#e2ad3d)!important;color:#2b1a02!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .setup-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px 12px!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .setup-grid>div:empty{display:none}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .bs-field>span{font-size:12.5px!important;color:var(--tbl-muted)!important;font-weight:700!important;margin-bottom:5px!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .bs-field select,:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .bs-field input{min-height:46px!important;border-radius:12px!important;border:1px solid #2c4763!important;background:#0c1a2b!important;color:#fff!important;font-size:15px!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #setup .bs-field[data-seat]>span::before{content:'';display:inline-block;width:10px;height:10px;margin-inline-end:6px;border-radius:50%;background:var(--seat);vertical-align:-1px;box-shadow:0 0 0 2px #ffffff22}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #startBtn{width:100%!important;min-height:56px!important;margin-top:14px!important;border-radius:16px!important;font-size:18px!important;font-weight:900!important;background:linear-gradient(180deg,#ffd877,#e9a92e)!important;color:#2b1a02!important;border:0!important;box-shadow:0 10px 24px #e9a92e55,inset 0 1px 0 #fff8!important}
+
+/* ---------- Game shell ---------- */
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31{display:block!important;max-width:1100px!important;margin:0 auto!important;padding:0 8px 20px!important;background:none!important;border:0!important;box-shadow:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .game-toolbar{display:flex!important;align-items:center!important;gap:6px!important;margin:0 0 8px!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-height:0!important;position:static!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .toolbar-title h1,:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .toolbar-title p{display:none!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .toolbar-title{display:flex!important;gap:6px;flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .game-toolbar{flex-wrap:nowrap!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .toolbar-title :is(#deckCount,#dealText){padding:5px 9px;border-radius:999px;background:#13263b;border:1px solid #2a4560;color:#cfe0ec;font-size:11px;font-weight:700;white-space:nowrap}
+:is(html,#v31) body.game-zahra #game.tbl31 .toolbar-title{display:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .toolbar-actions{display:flex!important;gap:6px!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .game-toolbar .bs-btn{flex:0 0 auto!important;min-height:34px!important;padding:0 12px!important;border-radius:999px!important;font-size:12.5px!important;font-weight:800!important;background:#13263b!important;border:1px solid #2a4560!important;color:#d8e4ec!important;box-shadow:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .round-roster{display:block!important;margin:0 0 10px!important;padding:0!important;background:none!important;border:0!important;position:static!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #livebar{margin:0 0 8px!important}
+
+/* Player chips. */
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players{display:flex!important;gap:8px!important;overflow-x:auto!important;scrollbar-width:none;padding:2px 2px 4px!important;margin:0!important;background:none!important;border:0!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players>:is(.player-row,.player-jack){position:relative!important;flex:1 1 0!important;min-width:84px!important;display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;padding:8px 10px!important;border-radius:14px!important;background:linear-gradient(180deg,#152a40,#10213a)!important;border:1px solid #27425c!important;box-shadow:none!important;color:var(--tbl-ink)!important;transform:none!important;overflow:hidden!important;min-height:0!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players>.turn{border-color:var(--seat,#f2c14e)!important;box-shadow:0 0 0 1px var(--seat,#f2c14e),0 6px 18px #0006!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players>.turn::after{content:'';position:absolute;inset:auto 10px 0;height:3px;border-radius:3px 3px 0 0;background:var(--seat,#f2c14e)}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players .player-dot{display:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players>*::before{content:none!important;display:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players .chip-piece{flex:0 0 auto;width:24px;height:36px}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #players .chip-piece{width:26px;height:26px}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players>*>div{min-width:0;flex:1 1 auto}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players b{display:block;font-size:13px!important;color:#fff!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players .mini-note{font-size:11px!important;color:var(--tbl-muted)!important;margin:2px 0 0!important;white-space:nowrap}
+@media (max-width:620px){
+ :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players:has(>:nth-child(3)){display:grid!important;grid-template-columns:1fr 1fr!important;overflow:visible!important}
+ :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players:has(>:nth-child(5)){grid-template-columns:1fr 1fr 1fr!important}
+ :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players:has(>:nth-child(5)) .mini-note{display:none!important}
+ :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players:has(>:nth-child(3))>*{min-width:0!important;padding:7px 9px!important}
+}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #players .score,:is(html,#v31) body.game-jackaroo #game.tbl31 #players .player-jack>b:last-child{font:900 20px/1.25 Tajawal,system-ui,sans-serif!important;color:var(--seat,#fff)!important;max-width:none;overflow:visible!important;text-overflow:clip!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #players .home-marbles{display:flex;gap:2px;margin-top:3px}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #players .home-marbles i{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:inset -1px -1px 1px #0005}
+
+/* ---------- Zahra board and dice dock ---------- */
+:is(html,#v31) body.game-zahra #game.tbl31 .game-layout{display:grid!important;grid-template-columns:1fr auto!important;grid-template-areas:'board board' 'status status' 'roll dice' 'help help' 'rules rules'!important;gap:10px!important;align-items:center!important;height:auto!important;padding:0!important;margin:0!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .game-side{display:contents!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .game-main{display:contents!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .ludo-frame{grid-area:board!important;width:min(100%,600px)!important;margin:0 auto!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .ludo-help{grid-area:help!important;display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:6px!important;margin:0!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .ludo-help span{padding:5px 10px!important;border-radius:999px!important;background:#0e1d2f!important;border:1px solid #223a52!important;color:#b9cbd8!important;font-size:11.5px!important}
+:is(html,#v31) body.game-zahra #game.tbl31 #status{grid-area:status!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-stage{grid-area:dice!important}
+:is(html,#v31) body.game-zahra #game.tbl31 #roll{grid-area:roll!important}
+:is(html,#v31) body.game-zahra #game.tbl31 details.rules{grid-area:rules!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #board{position:relative!important;display:block!important;width:100%!important;height:auto!important;aspect-ratio:1/1!important;margin:0 auto!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;transform:none!important;gap:0!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #board>svg.table-v31{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 16px 30px #000a)}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #board :is(.table-art,.jack-center){display:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 #status{margin:0!important;padding:0!important;text-align:center!important;font:800 15px/1.5 Tajawal,system-ui,sans-serif!important;color:#fff!important;background:none!important;border:0!important;min-height:22px}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-stage{position:relative!important;width:76px!important;height:76px!important;display:grid!important;place-items:center!important;margin:0!important;padding:0!important;background:radial-gradient(circle at 50% 60%,#1d3550,#0d1a2b 70%)!important;border-radius:20px!important;border:1px solid #2a4662!important;box-shadow:inset 0 2px 10px #0008!important;inset:auto!important;transform:none!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-stage::after{display:none!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-stage .die.pro-die{--die-size:44px}
+:is(html,#v31) body.game-zahra #game.tbl31 #roll{width:100%!important;min-height:58px!important;margin:0!important;padding:0 18px!important;border-radius:18px!important;border:0!important;font:900 17px/1 Tajawal,system-ui,sans-serif!important;color:#2b1a02!important;background:linear-gradient(180deg,#ffdc7d,#eaa62c)!important;box-shadow:0 8px 0 #9c6512,0 14px 22px #0007,inset 0 1px 0 #fff9!important;transition:transform .08s ease,box-shadow .08s ease}
+:is(html,#v31) body.game-zahra #game.tbl31 #roll:not(:disabled):active{transform:translateY(5px);box-shadow:0 3px 0 #9c6512,0 6px 12px #0006!important}
+:is(html,#v31) body.game-zahra #game.tbl31 #roll:disabled{filter:grayscale(.55) brightness(.75)!important;box-shadow:0 4px 0 #5b4a2a!important;opacity:1!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 details.rules{margin:0!important;border-radius:12px!important;background:#0e1d2f!important;border:1px solid #223a52!important;color:#c4d4e0!important;padding:10px 12px!important}
+
+/* Stones that can move bob and wear a pulsing ring. */
+:is(html,#v31) .table-v31 .petal-stone-v29{cursor:default;outline:none}
+:is(html,#v31) .table-v31 .petal-stone-v29.legal{cursor:pointer}
+:is(html,#v31) .table-v31 .petal-stone-v29.legal .stone-bob{animation:tbl-bob .9s ease-in-out infinite}
+:is(html,#v31) .table-v31 .legal-ring{animation:tbl-ring 1s ease-in-out infinite}
+:is(html,#v31) .table-v31 .petal-stone-v29:focus-visible .legal-ring{stroke:#f2c14e;stroke-width:1.2}
+:is(html,#v31) .table-v31 .yard-glow{animation:tbl-glow 1.4s ease-in-out infinite}
+:is(html,#v31) .table-v31 .legal-destination{stroke:#ffffff!important;stroke-width:1.2!important;animation:tbl-ring 1s ease-in-out infinite}
+@keyframes tbl-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+@keyframes tbl-ring{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes tbl-glow{0%,100%{opacity:.25}50%{opacity:.95}}
+
+/* ---------- Jackaroo layout, cards and actions ---------- */
+:is(html,#v31) body.game-jackaroo #game.tbl31 .jack-layout{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;padding:0!important;margin:0!important;height:auto!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .jack-main{padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .jack-board-wrap{width:min(100%,600px)!important;margin:0 auto!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;aspect-ratio:auto!important;height:auto!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .jack-side{display:grid!important;gap:10px!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .team-rail{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;order:3}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .team-card{display:grid!important;gap:2px!important;padding:10px 12px!important;border-radius:14px!important;background:#0f2133!important;border:1px solid #27425c!important;color:#cfe0ec!important;font-size:12px!important;min-height:0!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .team-card b{color:var(--tbl-gold)!important;font-size:13.5px!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #status{order:0}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .hand-title{order:1;display:flex!important;justify-content:space-between!important;align-items:center!important;margin:0!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .hand-title b{color:#fff!important;font-size:14px!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #hand{order:1;display:flex!important;justify-content:center!important;align-items:flex-end!important;gap:0!important;min-height:132px!important;padding:16px 8px 6px!important;margin:0!important;border-radius:18px!important;background:radial-gradient(120% 100% at 50% 100%,#1f5f45,#123b2b 70%)!important;border:1px solid #2f6a52!important;box-shadow:inset 0 4px 16px #0007!important;overflow:visible!important;flex-wrap:nowrap!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #actions{order:2;display:grid!important;gap:6px!important;margin:0!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 #players{order:2}
+:is(html,#v31) body.game-jackaroo #game.tbl31 details.rules{order:4}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .rules-note{order:5;font-size:11.5px!important;color:#7f97ab!important;text-align:center!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .action-btn{min-height:44px!important;padding:8px 12px!important;border-radius:12px!important;border:1px solid #3a5a74!important;background:linear-gradient(180deg,#1b3550,#13283d)!important;color:#fff!important;font-weight:800!important;font-size:13.5px!important;text-align:start!important}
+:is(html,#v31) body.game-jackaroo #game.tbl31 .action-btn:hover{border-color:var(--tbl-gold)!important}
+
+:is(html,#v31) body.game-jackaroo .playing-card{position:relative!important;flex:0 0 auto!important;width:72px!important;height:104px!important;margin:0 -7px!important;padding:0!important;border-radius:9px!important;border:1px solid #d9d2c2!important;background:linear-gradient(160deg,#ffffff 0%,#fbf7ee 60%,#efe7d6 100%)!important;box-shadow:0 6px 14px #0007,inset 0 0 0 3px #ffffff,inset 0 0 0 4px #e8dcc3!important;color:#1d2430!important;cursor:pointer;transform:rotate(var(--tilt,0deg)) translateY(0);transform-origin:50% 120%;transition:transform .18s cubic-bezier(.2,1.2,.4,1),box-shadow .18s ease;display:block!important;overflow:hidden!important;font-family:Georgia,'Times New Roman',serif!important}
+:is(html,#v31) body.game-jackaroo .playing-card:nth-child(1){--tilt:-9deg}:is(html,#v31) body.game-jackaroo .playing-card:nth-child(2){--tilt:-3deg}:is(html,#v31) body.game-jackaroo .playing-card:nth-child(3){--tilt:3deg}:is(html,#v31) body.game-jackaroo .playing-card:nth-child(4){--tilt:9deg}:is(html,#v31) body.game-jackaroo .playing-card:nth-child(5){--tilt:14deg}
+:is(html,#v31) body.game-jackaroo .playing-card.red{color:#c81f37!important}
+:is(html,#v31) body.game-jackaroo .playing-card .rank{position:absolute!important;top:5px!important;left:7px!important;font:700 19px/1 Georgia,'Times New Roman',serif!important;letter-spacing:-.5px}
+:is(html,#v31) body.game-jackaroo .playing-card .suit-corner{position:absolute;top:26px;left:8px;font-size:13px;line-height:1}
+:is(html,#v31) body.game-jackaroo .playing-card .suit{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;font-size:40px!important;line-height:1!important;padding-top:8px}
+:is(html,#v31) body.game-jackaroo .playing-card .corner-flip{position:absolute;bottom:5px;right:7px;transform:rotate(180deg);font:700 15px/1 Georgia,'Times New Roman',serif;opacity:.9}
+:is(html,#v31) body.game-jackaroo .playing-card.face .suit{font-size:30px!important;padding-top:14px}
+:is(html,#v31) body.game-jackaroo .playing-card.face .suit::before{content:attr(data-face);position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);font:700 34px/1 Georgia,serif;color:inherit;opacity:.18}
+:is(html,#v31) body.game-jackaroo .playing-card.selected{transform:rotate(0deg) translateY(-22px) scale(1.06)!important;box-shadow:0 0 0 3px #f2c14e,0 16px 26px #000a,inset 0 0 0 3px #ffffff!important;z-index:2}
+:is(html,#v31) body.game-jackaroo .playing-card:not(:disabled):not(.selected):hover{transform:rotate(var(--tilt,0deg)) translateY(-8px)}
+:is(html,#v31) body.game-jackaroo .playing-card:disabled{cursor:default;filter:brightness(.92)}
+:is(html,#v31) body.game-jackaroo .playing-card.card-back{background:repeating-linear-gradient(45deg,#7c1d2e 0 6px,#962639 6px 12px)!important;border:3px solid #fff!important;box-shadow:0 6px 14px #0007,inset 0 0 0 2px #e9c27a!important}
+:is(html,#v31) body.game-jackaroo .playing-card.card-back::after{content:'♠';position:absolute;inset:0;display:grid;place-items:center;font-size:30px;color:#e9c27a;opacity:.85}
+
+/* ---------- Wider screens ---------- */
+@media (min-width:900px){
+ :is(html,#v31) body.game-zahra #game.tbl31 .game-layout{grid-template-columns:minmax(0,1fr) 190px 90px!important;grid-template-areas:'board status status' 'board roll dice' 'board help help' 'board rules rules'!important;align-items:start!important;column-gap:16px!important}
+ :is(html,#v31) body.game-jackaroo #game.tbl31 .jack-layout{grid-template-columns:minmax(0,1fr) 360px!important;align-items:start!important}
+}
+@media (max-width:380px){:is(html,#v31) body.game-jackaroo .playing-card{width:62px!important;height:90px!important}:is(html,#v31) body.game-jackaroo .playing-card .suit{font-size:32px!important}}
+@media (prefers-reduced-motion:reduce){:is(html,#v31) .table-v31 :is(.stone-bob,.legal-ring,.yard-glow){animation:none!important}}

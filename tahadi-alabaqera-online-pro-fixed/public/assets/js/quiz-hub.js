@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id),selectionKey='bs-quiz-lineup-v21';
 let catalog=[],selected=[],selectedOnly=false;
-const symbols={palm:'❋',map:'⌖',scroll:'▤',globe:'◎',atom:'⚛',rocket:'↗',chip:'▦',car:'◈',tag:'◇',ball:'◉',trophy:'♜',letter:'أ',puzzle:'✚',chef:'♨',film:'▣',bulb:'✦',paw:'♧',quran:'▥',tafsir:'⌕',meanings:'ض',soundcat:'♫',zoom:'⊕',memory:'∞'};
+const symbols={ai:'✧',palm:'❋',map:'⌖',scroll:'▤',globe:'◎',atom:'⚛',rocket:'↗',chip:'▦',car:'◈',tag:'◇',ball:'◉',trophy:'♜',letter:'أ',puzzle:'✚',chef:'♨',film:'▣',bulb:'✦',paw:'♧',quran:'▥',tafsir:'⌕',meanings:'ض',soundcat:'♫',zoom:'⊕',memory:'∞'};
 const normalize=value=>String(value||'').normalize('NFKC').replace(/[\u064b-\u065f\u0670]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').trim();
 function persist(){try{localStorage.setItem(selectionKey,JSON.stringify(selected));}catch{}}
 function remove(id){selected=selected.filter(value=>value!==id);persist();render();}
@@ -28,4 +28,15 @@ $('quizSelected').onclick=()=>{selectedOnly=!selectedOnly;$('quizSelected').setA
 $('quizClear').onclick=()=>{selected=[];persist();render();};
 $('quizRandom').onclick=()=>{const all=[...catalog];for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}selected=all.slice(0,6).map(category=>category.id);persist();render();};
 $('quizLaunch').onclick=()=>{if(selected.length===6)location.assign('/local?categories='+encodeURIComponent(selected.join(',')));};
-fetch('/assets/quiz-catalog.json').then(response=>{if(!response.ok)throw Error();return response.json();}).then(data=>{if(!Array.isArray(data)||data.length<6)throw Error();catalog=data;try{const saved=JSON.parse(localStorage.getItem(selectionKey)||'[]');if(Array.isArray(saved))selected=[...new Set(saved)].filter(id=>catalog.some(category=>category.id===id)).slice(0,6);}catch{}render();}).catch(()=>{$('categoryStatus').textContent='تعذر تحميل الفئات. تقدر تبدأ من اللعب المحلي مباشرة.';$('quizRandom').disabled=true;});
+// AI pictures are offered when the server has enough of them; the local
+// board reads the same pack from this device afterwards.
+const AI_PACK='bs-quiz-ai-pack-v31';
+function aiEntry(items){const n=Array.isArray(items)?items.length:0,balanced=[100,200,300].every(v=>items.filter(q=>q?.v===v).length>=2);return n&&balanced?{id:'aiPictures',name:'صور الذكاء',icon:'ai',desc:'صور يولّدها الذكاء الاصطناعي: خمّن وش اللي في الصورة',count:n}:null;}
+function restoreSelection(){try{const saved=JSON.parse(localStorage.getItem(selectionKey)||'[]');if(Array.isArray(saved))selected=[...new Set(saved)].filter(id=>catalog.some(category=>category.id===id)).slice(0,6);}catch{}}
+fetch('/assets/quiz-catalog.json').then(response=>{if(!response.ok)throw Error();return response.json();}).then(data=>{if(!Array.isArray(data)||data.length<6)throw Error();catalog=data;restoreSelection();render();
+ const useAi=items=>{const entry=aiEntry(items||[]);catalog=entry?[entry,...catalog.filter(c=>c.id!==entry.id)]:catalog.filter(c=>c.id!=='aiPictures');restoreSelection();render();};
+ let cached=null;try{cached=JSON.parse(localStorage.getItem(AI_PACK)||'null');}catch{}
+ if(Array.isArray(cached?.items))useAi(cached.items);
+ // One check every ten minutes per device keeps the Worker request count low.
+ if(!(Date.now()-Number(cached?.at||0)<600000))fetch('/api/quiz/ai/pack',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(pack=>{if(!pack||!Array.isArray(pack.items))return;try{localStorage.setItem(AI_PACK,JSON.stringify({at:Date.now(),items:pack.items}));}catch{}useAi(pack.items);}).catch(()=>{});
+}).catch(()=>{$('categoryStatus').textContent='تعذر تحميل الفئات. تقدر تبدأ من اللعب المحلي مباشرة.';$('quizRandom').disabled=true;});

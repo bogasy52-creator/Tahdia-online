@@ -8,7 +8,7 @@ import {readFile} from 'node:fs/promises';
 async function renderer(){
  const frames=[],timers=new Map(),events=new Map(),calls=[],proxy={dataset:{}},canvas={dataset:{},setAttribute(){}};
  let wall=0,nextTimer=0;
- const ctx={setTransform(){},clearRect(){calls.push('clear')},save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},clip(){},fill(){},stroke(){calls.push('body')},createLinearGradient:()=>({addColorStop(){}}),drawImage(...args){assert.ok(args.slice(1).every(Number.isFinite));assert.ok(args[3]>0&&args[4]>0&&args[7]>0&&args[8]>0);calls.push('raster')}};
+ const ctx={setTransform(){},clearRect(){calls.push('clear')},save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},bezierCurveTo(){},quadraticCurveTo(){},arc(){},ellipse(){},closePath(){},clip(){},fill(){},fillText(){},stroke(){calls.push('body')},createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}}),drawImage(...args){assert.ok(args.slice(1).every(Number.isFinite));assert.ok(args[3]>0&&args[4]>0&&args[7]>0&&args[8]>0);calls.push('raster')}};
  ctx.getImageData=()=>({data:new Uint8ClampedArray([0,100,255,255])});ctx.putImageData=()=>{};
  canvas.getContext=()=>ctx;
  const board={getBoundingClientRect:()=>({width:390,height:490})},game={classList:{contains:()=>false}},wrap={appendChild(){}};
@@ -21,8 +21,8 @@ async function renderer(){
  context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}},{from:4,to:14,index:1,a:{x:200,y:900},b:{x:500,y:800}}]);
  return {context,canvas,proxy,calls,timers,events,step(ms){wall=ms;frames.shift()?.(ms)},time(ms){wall=ms}};
 }
-test('arena renders independent raster snakes and ladders, and does not clear skipped frames',async()=>{
- const h=await renderer();h.step(100);assert.equal(h.canvas.dataset.assets,'ready');assert.equal(h.canvas.dataset.snakes,1);assert.equal(h.canvas.dataset.ladders,1);assert.ok(h.calls.filter(x=>x==='raster').length>64&&h.calls.includes('body'));
+test('arena draws independent vector snakes and ladders without images, and does not clear skipped frames',async()=>{
+ const h=await renderer();h.step(100);assert.equal(h.canvas.dataset.assets,'ready');assert.equal(h.canvas.dataset.snakes,1);assert.equal(h.canvas.dataset.ladders,1);assert.equal(h.calls.filter(x=>x==='raster').length,0);assert.ok(h.calls.filter(x=>x==='body').length>8);
  const clears=h.calls.filter(x=>x==='clear').length;h.step(115);assert.equal(h.calls.filter(x=>x==='clear').length,clears,'throttled frames must retain the previous drawing');
 });
 test('the visible creature grows, freezes while paused, and returns to its original scale',async()=>{
@@ -36,8 +36,11 @@ test('growth completion is independent of render frames and excludes paused time
  h.time(10000);h.context.BS_PRO.paused=false;h.events.get('bs-match-pause')();assert.equal([...h.timers.values()][0].ms,700);
  [...h.timers.values()][0].fn();await waiting;assert.ok(done);assert.equal(h.events.size,0);
 });
-test('every existing stone keeps the original raster art rather than the V12 polygon replacement',async()=>{
- const h=await renderer();h.context.BS_COSMETIC_ART={paint(){throw new Error('old stones must not be replaced')}};
- for(const pawn of ['pawn-classic','pawn-jade','pawn-onyx','pawn-amethyst','pawn-gold','pawn-prism']){h.context.document.documentElement.dataset.pawn=pawn;const c=h.context.BS_ARENA.crystal({appendChild(){}},1);assert.equal(c.width,144);assert.equal(c.height,180);}
- assert.equal(h.calls.filter(c=>c==='raster').length,6);
+test('every shop stone becomes its vector piece in the player colour, and characters keep their sheet',async()=>{
+ const h=await renderer(),made=[],shapes={'pawn-jade':'gem','pawn-gold':'crown','pawn-orb':'orb'};h.context.BS_COSMETIC_ART={paint(){throw new Error('old stones must not be replaced')}};
+ h.context.BS_PIECES={equipped:()=>h.context.document.documentElement.dataset.pawn,designFor:id=>shapes[id]||'classic',icon:(doc,opts)=>{made.push(opts);return {opts};}};
+ for(const pawn of ['pawn-classic','pawn-jade','pawn-gold','pawn-orb']){h.context.document.documentElement.dataset.pawn=pawn;const node=h.context.BS_ARENA.crystal({appendChild(){}},1);assert.equal(node.opts.color,h.context.BS_ARENA.PLAYER_COLORS[1]);}
+ assert.deepEqual(made.map(o=>o.design),['classic','gem','crown','orb']);
+ h.context.document.documentElement.dataset.pieceArt='characters';h.context.BS_STONES={draw:()=>true};const c=h.context.BS_ARENA.crystal({appendChild(){}},0);assert.equal(c.width,144);assert.equal(c.height,180);
+ assert.equal(h.calls.filter(c=>c==='raster').length,0);
 });

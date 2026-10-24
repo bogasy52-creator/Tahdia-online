@@ -9,11 +9,14 @@ import * as Arcade from '../public/assets/js/engines/arcade-engine.js';
 import {environment,api,signup} from './worker-harness.mjs';
 const now=Date.parse('2026-10-23T12:00:00Z');
 const state=seats=>({turn:0,players:Array.from({length:seats},(_,i)=>({name:'لاعب '+(i+1),tokens:[-1,-1,-1,-1]}))});
-test('the replacement store contains 24 unique designs, five free essentials and no legacy products',async()=>{
+test('the store shows every storefront design once, without retired or duplicate pieces or the manager items',async()=>{
  assert.equal(Career.COLLECTION.length,24);assert.equal(new Set(Career.COLLECTION.map(i=>i.id)).size,24);assert.equal(Career.COLLECTION.filter(i=>i.price===0).length,5);
  const h=await createDOM('shop.html');h.context.BS_CAREER={get:()=>Career.normalize({coins:5000}),now:()=>now};await loadAtelier(h);
- assert.equal(h.doc.querySelectorAll('.atelier-product').length,24);for(const item of Career.COLLECTION)assert.ok(h.doc.querySelector('[data-item="'+item.id+'"]'));
- for(const id of ['pawn-jade','dice-copper','snake-gold','character-princess','title-manager'])assert.equal(h.doc.querySelector('[data-item="'+id+'"]'),null);
+ const shelf=Career.STOREFRONT.filter(id=>Career.CATALOG.find(i=>i.id===id).source!=='owner');
+ assert.equal(h.doc.querySelectorAll('.atelier-product').length,shelf.length);assert.equal(new Set(Career.STOREFRONT).size,Career.STOREFRONT.length);
+ for(const item of [...Career.COLLECTION,...Career.REACTIONS.filter(i=>!i.source)])assert.ok(h.doc.querySelector('[data-item="'+item.id+'"]'),item.id);
+ for(const id of ['snake-gold','character-princess','board-cyber'])assert.ok(h.doc.querySelector('[data-item="'+id+'"]'),id);
+ for(const id of ['pawn-jade','pawn-prism','dice-copper','table-cyber','title-manager','snake-sovereign','move-sovereign'])assert.ok(!h.doc.querySelector('[data-item="'+id+'"]'),id);
 });
 test('all replacement pieces can be bought and equipped without losing old ownership or receipts',()=>{
  let p=Career.normalize({coins:20000,owned:['pawn-jade','snake-plasma'],receipts:['earlier-round']});

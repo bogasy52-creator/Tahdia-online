@@ -17,7 +17,7 @@ export class BoardOnlineClient {
     const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
-        const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة ٣:٠٠ صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
+        const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
       }
       let failure=data;
       if(res.status>=500)try{const check=await fetch('/api/board/health',{cache:'no-store',signal:AbortSignal.timeout(9000)}),health=await check.json().catch(()=>({}));if(health.code)failure={...data,...health,requestId:data.requestId||health.requestId}}catch{}
@@ -87,6 +87,8 @@ export class BoardOnlineClient {
           const state=stamp(msg.state);this.onState(state);announceRoom(this,state);
         }else if(msg.type==='emote'){
           announce('bs-board-emote',{from:msg.from,name:msg.name,emote:msg.emote,at:msg.at});
+        }else if(msg.type==='emote-locked'){
+          announce('bs-board-emote-locked',{emote:msg.emote});
         }else if(msg.type==='error'){
           const message=msg.message||'تعذر دخول الغرفة';this.onError(message);
           if(!settled){this.terminal=true;fail(message);this.stopTransport();this.onStatus({online:false,reconnecting:false,text:message});}

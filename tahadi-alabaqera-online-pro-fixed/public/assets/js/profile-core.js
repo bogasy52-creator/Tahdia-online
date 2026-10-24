@@ -15,7 +15,7 @@
     {id:'dice-ivory',type:'dice',name:'نرد العاج',description:'نقاط واضحة وحركة قصيرة.',price:0,color:'#f6f0e4'},
     {id:'dice-midnight',type:'dice',name:'نرد منتصف الليل',description:'لون داكن ونقاط عاجية.',price:140,color:'#202c40'},
     {id:'dice-copper',type:'dice',name:'نرد النحاس',description:'نحاس مطفي ونقاط داكنة.',price:220,color:'#ce9564'},
-    {id:'board-forest',type:'board',name:'حلبة النيون',description:'معدن داكن وشقوق صخرية وخانات حيّة.',price:0,color:'#184c3b'},
+    {id:'board-forest',type:'board',name:'لوح الخشب',description:'خشب دافئ وخانات عاجية مرقّمة بوضوح للثعابين والسلالم.',price:0,color:'#c48a52'},
     {id:'board-ocean',type:'board',name:'لوحة المحيط',description:'درجات زرقاء هادئة.',price:160,color:'#173f61'},
     {id:'board-sand',type:'board',name:'لوحة الرمال',description:'ألوان رملية دافئة.',price:160,color:'#62492c'},
     {id:'table-walnut',type:'table',name:'طاولة الجوز',description:'خشب دافئ ومسارات عاجية.',price:0,color:'#5b3928'},
@@ -30,14 +30,14 @@
     {id:'dice-aurora',type:'dice',name:'نرد الشفق',description:'نرد بنفسجي بأوجه ونقاط واضحة.',price:340,color:'#b6a0ee'},
     {id:'dice-gold',type:'dice',name:'نرد الملك',description:'ذهب عميق ونقاط سوداء مصقولة.',price:520,color:'#e3b65e'},
     {id:'board-twilight',type:'board',name:'لوحة الغسق',description:'خانات بنفسجية وإطار داكن.',price:360,color:'#68608e'},
-    {id:'board-royal',type:'board',name:'لوحة القصر',description:'خانات عاجية وذهبية بلوحة الثعبان.',price:550,color:'#ab8050'},
+    {id:'board-royal',type:'board',name:'لوحة القصر',description:'عاج وذهب بإطار ملكي لثعابين وسلالم أنيقة.',price:550,color:'#c8a159'},
     {id:'table-midnight',type:'table',name:'طاولة منتصف الليل',description:'طاولة جاكارو داكنة بأمان واضح.',price:380,color:'#1f273d'},
     {id:'table-royal',type:'table',name:'طاولة القصر',description:'طاولة جاكارو بنفسجية بإطار ذهبي.',price:580,color:'#4a3659'},
     {id:'snake-toxic',type:'snake',name:'أفاعي الزمرد الكهربائي',description:'دروع خضراء لامعة وعيون نيون مع حركة الافتراس الكاملة.',price:420,color:'#8aef48'},
     {id:'snake-plasma',type:'snake',name:'أفاعي البلازما',description:'ألوان سماوية وبنفسجية متدرجة بين الثعابين.',price:600,color:'#ca73ff'},
     {id:'dice-nebula',type:'dice',name:'نرد السديم',description:'أوجه زرقاء معدنية ونقاط عاجية كبيرة.',price:380,color:'#245797'},
     {id:'dice-ruby',type:'dice',name:'نرد الياقوت',description:'ياقوت أحمر مصقول ونقاط مضيئة.',price:460,color:'#a32f50'},
-    {id:'board-cyber',type:'board',name:'حلبة المفاعل',description:'إطار أزرق كهربائي وخانات محفورة واضحة.',price:440,color:'#32ceef'},
+    {id:'board-cyber',type:'board',name:'حلبة المفاعل',description:'لوحة ليلية بخانات داكنة وإطار نيون أزرق.',price:440,color:'#32ceef'},
     {id:'table-cyber',type:'table',name:'طاولة المفاعل',description:'جاكارو بسطح أزرق معدني وأحجار واضحة.',price:460,color:'#4c91db'},
     {id:'pawn-prism',type:'pawn',name:'كريستال الطيف',description:'لمعة طيفية تتحرك بهدوء حول الحجر.',price:600,color:'#b7f8ff'},
     {id:'pawn-orb',type:'pawn',name:'كرة المفاعل',description:'كرة كريستال سماوية معلّقة في مخالب معدنية على قاعدة مضيئة.',price:360,color:'#56e5ec'},
@@ -58,7 +58,7 @@
     {id:'dice-porcelain',type:'dice',design:'porcelain',name:'نرد البورسلان',description:'سيراميك عاجي بحواف ذهبية ونقاط محفورة. أناقة الطاولة الأصلية.',price:280,color:'#eee8d9'},
     {id:'dice-crystal',type:'dice',design:'crystal',name:'نرد الكريستال',description:'حواف مشطوفة ونقاط ماسية مضيئة داخل زجاج زمردي.',price:480,color:'#3da99a'},
     {id:'dice-obsidian',type:'dice',design:'obsidian',name:'نرد الأوبسيديان',description:'حجر أسود مصقول، زوايا نحاسية ونقاط ذهبية مربّعة.',price:520,color:'#17212b'},
-    {id:'snake-sovereign',type:'snake',name:'سيّد الحلبة',description:'خاص بالمدير: درع أوبسيديان، عيون زمردية وأثر نجمي هادئ. المظهر لا يغيّر قوة اللعب.',price:0,color:'#e7c376',source:'owner'}
+    {id:'snake-sovereign',type:'snake',name:'سيّد الحلبة',description:'خاص بالمدير: حراشف زمردية بنقوش ذهبية، رأس متوّج بعيون زمردية، وهالة ذهبية تتنفّس حوله مع شرر. المظهر لا يغيّر قوة اللعب.',price:0,color:'#e7c376',source:'owner'}
   ].map(i=>Object.freeze({...i,retired:RETIRED.has(i.id),rarity:i.source?'exclusive':i.price>=450?'legendary':i.price>=140?'rare':'common'})));
   // The previous catalogue remains readable for existing purchases and older
   // game clients. The new storefront exposes COLLECTION only.
@@ -88,14 +88,87 @@
     {id:'title-tactician',type:'title',name:'صانع الخطط',subtitle:'توقيعك على الطاولة',design:'signature',price:180,color:'#c9b38e',collection:'atelier-30'},
     {id:'title-virtuoso',type:'title',name:'مايسترو',subtitle:'هوية المجموعات',design:'signature',price:420,color:'#e5b7a4',collection:'atelier-30'}
   ].map(item=>Object.freeze({...item,description:item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'مادة '+item.subtitle+' للوحتي الجاكارو والزهرة، مع مسارات ونهايات واضحة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
-  const CATALOG=Object.freeze([...LEGACY_CATALOG,...COLLECTION]);
+  // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
+  // phrases and board-wide moves. They are owned, never equipped, and the
+  // first eight keep the ids older rooms already relay (`legacy`).
+  const REACTION_TYPES=Object.freeze(['emote','phrase','move']);
+  const REACTIONS=Object.freeze([
+    {id:'emote-clap',type:'emote',name:'برافو',glyph:'👏',fx:'clap',price:0,color:'#f4c95d',legacy:'clap'},
+    {id:'emote-fire',type:'emote',name:'نار',glyph:'🔥',fx:'flame',price:0,color:'#ff7a3d',legacy:'fire'},
+    {id:'emote-laugh',type:'emote',name:'ضحكتني',glyph:'😂',fx:'shake',price:0,color:'#ffd54a',legacy:'laugh'},
+    {id:'emote-wow',type:'emote',name:'واو',glyph:'😮',fx:'pop',price:0,color:'#8fd3ff',legacy:'wow'},
+    {id:'emote-angry',type:'emote',name:'قهر',glyph:'😤',fx:'steam',price:0,color:'#ff6b6b',legacy:'angry'},
+    {id:'emote-please',type:'emote',name:'تكفى',glyph:'🙏',fx:'plead',price:140,color:'#ffcf8a'},
+    {id:'emote-cool',type:'emote',name:'رايق',glyph:'😎',fx:'shine',price:160,color:'#5ec8ff'},
+    {id:'emote-cry',type:'emote',name:'دموع',glyph:'😭',fx:'tears',price:160,color:'#7cc4ff'},
+    {id:'emote-shh',type:'emote',name:'اسكت',glyph:'🤫',fx:'hush',price:180,color:'#c3a6ff'},
+    {id:'emote-freeze',type:'emote',name:'تجمّدت',glyph:'🥶',fx:'frost',price:200,color:'#8fe3ff'},
+    {id:'emote-dice',type:'emote',name:'حظ النرد',glyph:'🎲',fx:'spin',price:200,color:'#f2efe6'},
+    {id:'emote-mind',type:'emote',name:'انفجر مخي',glyph:'🤯',fx:'blast',price:220,color:'#ff9a3c'},
+    {id:'emote-devil',type:'emote',name:'شرير',glyph:'😈',fx:'devil',price:260,color:'#b16bff'},
+    {id:'emote-snake',type:'emote',name:'لدغة',glyph:'🐍',fx:'slither',price:260,color:'#6cd88f'},
+    {id:'emote-genius',type:'emote',name:'عبقري',glyph:'🧠',fx:'sparkle',price:320,color:'#ff9ec7'},
+    {id:'emote-rocket',type:'emote',name:'طيران',glyph:'🚀',fx:'launch',price:340,color:'#ff8a5c'},
+    {id:'emote-crown',type:'emote',name:'الملك',glyph:'👑',fx:'royal',price:480,color:'#ffd36b'},
+    {id:'emote-diamond',type:'emote',name:'ألماسة',glyph:'💎',fx:'prism',price:520,color:'#7ff0ff'},
+    {id:'phrase-hello',type:'phrase',name:'السلام عليكم',glyph:'👋',text:'السلام عليكم 👋',price:0,color:'#9fd8c7'},
+    {id:'phrase-gg',type:'phrase',name:'لعب نظيف',glyph:'🤝',text:'لعب نظيف 🤝',price:0,color:'#9fd8c7',legacy:'gg'},
+    {id:'phrase-luck',type:'phrase',name:'حظ أوفر',glyph:'🍀',text:'حظ أوفر 🍀',price:0,color:'#9fd8c7',legacy:'luck'},
+    {id:'phrase-fast',type:'phrase',name:'بسرعة شوي',glyph:'⚡',text:'بسرعة شوي ⚡',price:0,color:'#9fd8c7',legacy:'fast'},
+    {id:'phrase-lucky',type:'phrase',name:'يا حظك',glyph:'😏',text:'يا حظك! 😏',price:120,color:'#86c8ff'},
+    {id:'phrase-help',type:'phrase',name:'الله يعين',glyph:'😂',text:'الله يعين 😂',price:120,color:'#86c8ff'},
+    {id:'phrase-mine',type:'phrase',name:'خلها علي',glyph:'😎',text:'خلها علي 😎',price:140,color:'#86c8ff'},
+    {id:'phrase-pro',type:'phrase',name:'ضربة معلّم',glyph:'🎯',text:'ضربة معلّم 🎯',price:160,color:'#8fb4ff'},
+    {id:'phrase-focus',type:'phrase',name:'ركّز معي',glyph:'🧠',text:'ركّز معي 🧠',price:160,color:'#8fb4ff'},
+    {id:'phrase-wait',type:'phrase',name:'الحلو للآخر',glyph:'⏳',text:'الحلو للآخر ⏳',price:180,color:'#8fb4ff'},
+    {id:'phrase-next',type:'phrase',name:'انتظر رميتي',glyph:'🎲',text:'انتظر رميتي الجاية 🎲',price:180,color:'#8fb4ff'},
+    {id:'phrase-trap',type:'phrase',name:'ورّطت نفسك',glyph:'😅',text:'تراك ورّطت نفسك 😅',price:200,color:'#a99bff'},
+    {id:'phrase-shock',type:'phrase',name:'يا ساتر',glyph:'😳',text:'يا ساتر من حظك 😳',price:200,color:'#a99bff'},
+    {id:'phrase-nomercy',type:'phrase',name:'ما فيه رحمة',glyph:'😈',text:'ما فيه رحمة 😈',price:240,color:'#c58bff'},
+    {id:'phrase-round',type:'phrase',name:'الجولة لي',glyph:'👑',text:'هذي الجولة لي 👑',price:300,color:'#e3a3ff'},
+    {id:'phrase-congrats',type:'phrase',name:'مبروك مقدمًا',glyph:'🏆',text:'مبروك مقدمًا 🏆',price:300,color:'#e3a3ff'},
+    {id:'phrase-genius',type:'phrase',name:'أنا العبقري',glyph:'✨',text:'أنا العبقري هنا 🧠✨',price:480,color:'#ffd36b'},
+    {id:'move-confetti',type:'move',name:'قصاصات',glyph:'🎉',fx:'confetti',price:0,color:'#ffcf5a'},
+    {id:'move-snow',type:'move',name:'ثلج',glyph:'❄️',fx:'snow',price:220,color:'#bfeaff'},
+    {id:'move-hearts',type:'move',name:'قلوب',glyph:'💞',fx:'hearts',price:240,color:'#ff7eb6'},
+    {id:'move-roses',type:'move',name:'ورد',glyph:'🌹',fx:'roses',price:280,color:'#ff5f7a'},
+    {id:'move-lightning',type:'move',name:'صاعقة',glyph:'⚡',fx:'lightning',price:320,color:'#ffe55c'},
+    {id:'move-quake',type:'move',name:'زلزال',glyph:'💥',fx:'quake',price:320,color:'#ff9a52'},
+    {id:'move-fireworks',type:'move',name:'ألعاب نارية',glyph:'🎆',fx:'fireworks',price:380,color:'#ff6bd6'},
+    {id:'move-rocket',type:'move',name:'صاروخ',glyph:'🚀',fx:'rocket',price:420,color:'#ff8a5c'},
+    {id:'move-goldrain',type:'move',name:'مطر ذهبي',glyph:'💰',fx:'gold',price:520,color:'#ffd36b'},
+    {id:'move-crown',type:'move',name:'تتويج',glyph:'👑',fx:'crown',price:600,color:'#ffc94d'},
+    {id:'move-sovereign',type:'move',name:'هيبة المدير',glyph:'🐍',fx:'sovereign',price:0,color:'#e7c376',source:'owner'}
+  ].map(item=>Object.freeze({...item,collection:'reactions-31',description:item.type==='emote'?'إيموجي متحرك يظهر فوق اللوحة لكل اللاعبين، مع صوت خفيف.':item.type==='phrase'?'عبارة جاهزة تظهر باسمك في فقاعة داخل الغرفة.':item.source==='owner'?'حركة المدير: هالة ذهبية وثعبان ملكي يلتف حول اللوحة.':'حركة استعراضية تملأ اللوحة بمؤثرات وأصوات لكل اللاعبين.',rarity:item.source?'exclusive':item.price>=450?'legendary':item.price>=300?'epic':item.price>=150?'rare':'common',retired:false})));
+  const LEGACY_REACTIONS=Object.freeze(Object.fromEntries(REACTIONS.filter(item=>item.legacy).map(item=>[item.legacy,item.id])));
+  const CATALOG=Object.freeze([...LEGACY_CATALOG,...COLLECTION,...REACTIONS]);
+  // What the 31.0.0 storefront shows: every design with its own look, no
+  // retired pieces and no second copy of an identical shape or material.
+  const STOREFRONT=Object.freeze([
+    'pawn-classic','pawn-atlas','pawn-rook','pawn-lance','pawn-amethyst','pawn-orb','pawn-orbit','pawn-lotus','pawn-crown','pawn-monolith',
+    'character-fox','character-cat','character-robot','character-princess','character-fairy','character-astronaut',
+    'dice-studio','dice-porcelain','dice-smoke','dice-nebula','dice-oxblood','dice-milled','dice-crystal','dice-obsidian','dice-gold',
+    'table-club','table-gallery','table-nocturne','table-botanic','table-royal',
+    'board-forest','board-cyber','board-royal',
+    'snake-wild','snake-aurora','snake-ice','snake-toxic','snake-gold','snake-plasma','snake-sovereign',
+    ...REACTIONS.map(item=>item.id),
+    'trail-pencil','trail-ripple','trail-comet','trail-meteor','trail-echo','trail-plasma',
+    'victory-studio','victory-aurora','victory-nova','victory-bloom','victory-royal','victory-orbit',
+    'title-player','title-tactician','title-virtuoso','title-legend','title-starfinder','title-pathmaster','title-manager'
+  ]);
+  const isReaction=item=>Boolean(item)&&REACTION_TYPES.includes(item.type);
+  const reactionOf=value=>{const id=LEGACY_REACTIONS[value]||value;return REACTIONS.find(item=>item.id===id)||null;};
+  const SLOTS=['character','pawn','dice','board','table','snake','trail','victory','title'];
   const BUNDLES=Object.freeze([
     {id:'atelier-club',name:'مجموعة النادي',description:'جوز داكن، حجر الحصن، نرد العقيق وأثر الشهاب.',color:'#bb865a',collection:'atelier-30',items:['pawn-rook','dice-oxblood','table-club','trail-meteor']},
     {id:'atelier-gallery',name:'مجموعة المعرض',description:'لوحة عاجية، حجر المدار، نرد مشغول واحتفال نوفا.',color:'#d4c4a3',collection:'atelier-30',items:['pawn-orbit','dice-milled','table-gallery','victory-nova']},
     {id:'atelier-botanic',name:'مجموعة الحديقة',description:'يشم وزجاج اللوتس وتموّج الضوء وبتلات الفوز.',color:'#77b7a1',collection:'atelier-30',items:['pawn-lotus','table-botanic','trail-ripple','victory-bloom']},
     {id:'reactor-set',name:'مجموعة المفاعل',description:'ثعابين ونرد وحلبة وأثر حركة بهوية كهربائية واحدة.',color:'#57d9ff',items:['snake-toxic','dice-nebula','board-cyber','trail-comet']},
     {id:'aurora-set',name:'مجموعة الكريستال',description:'أفعى شفقية وحجر جمشت ونرد كريستالي مع احتفال خاص.',color:'#88daca',items:['snake-aurora','pawn-amethyst','dice-crystal','victory-aurora']},
-    {id:'royal-set',name:'مجموعة التتويج',description:'حجر ونرد وحلبة وطاولة ملكية مع نجوم الفوز.',color:'#f4cb79',items:['pawn-gold','dice-gold','board-royal','table-royal','victory-royal']}
+    {id:'royal-set',name:'مجموعة التتويج',description:'حجر ونرد وحلبة وطاولة ملكية مع نجوم الفوز.',color:'#f4cb79',items:['pawn-gold','dice-gold','board-royal','table-royal','victory-royal']},
+    {id:'react-fans',name:'باقة المشجّع',description:'رايق، انفجر مخي، طيران وعبارة ضربة معلّم.',color:'#5ec8ff',collection:'reactions-31',items:['emote-cool','emote-mind','emote-rocket','phrase-pro']},
+    {id:'react-banter',name:'باقة الطقطقة',description:'يا حظك، ورّطت نفسك، ما فيه رحمة مع اسكت وشرير.',color:'#b16bff',collection:'reactions-31',items:['phrase-lucky','phrase-trap','phrase-nomercy','emote-shh','emote-devil']},
+    {id:'react-show',name:'باقة الاستعراض',description:'ألعاب نارية وصاعقة ومطر ذهبي مع إيموجي الملك.',color:'#ffc94d',collection:'reactions-31',items:['move-fireworks','move-lightning','move-goldrain','emote-crown']}
   ].map(b=>Object.freeze({...b,items:Object.freeze(b.items),discount:.25})));
   const OBJECTIVES=Object.freeze([
     {id:'daily-play',kind:'daily',name:'ثلاث جولات اليوم',description:'أكمل 3 جولات من أي لعبة.',metric:'games',goal:3,coins:30},
@@ -147,7 +220,7 @@
     const free=CATALOG.filter(i=>i.price===0&&!i.source).map(i=>i.id);
     const owned=[...new Set([...free,...(Array.isArray(raw.owned)?raw.owned:[])])].filter(id=>CATALOG.some(i=>i.id===id));
     const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player'};
-    for(const [type,id] of Object.entries(raw.equipped||{}))if(owned.includes(id)&&CATALOG.some(i=>i.id===id&&i.type===type))equipped[type]=id;
+    for(const [type,id] of Object.entries(raw.equipped||{}))if(SLOTS.includes(type)&&owned.includes(id)&&CATALOG.some(i=>i.id===id&&i.type===type))equipped[type]=id;
     const xp=finite(raw.xp),rankedXP=finite(raw.rankedXP);
     return {version:12,dailyDay:String(raw.dailyDay||''),dailyStreak:Math.min(7,finite(raw.dailyStreak)),name:String(raw.name||'لاعب العباقرة').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,24)||'لاعب العباقرة',xp,rankedXP,coins:raw.coins==null?100:finite(raw.coins),wins:finite(raw.wins),losses:finite(raw.losses),games:finite(raw.games),rankedWins:finite(raw.rankedWins),rankedLosses:finite(raw.rankedLosses),level:Math.floor(xp/1000)+1,rank:rankedXP>=20000?'Diamond':rankedXP>=8000?'Gold':rankedXP>=2500?'Silver':'Bronze',owned,equipped,receipts:Array.isArray(raw.receipts)?raw.receipts.filter(x=>typeof x==='string').slice(-300):[],checkouts:Array.isArray(raw.checkouts)?raw.checkouts.slice(-60).filter(row=>row&&typeof row.id==='string'&&/^[a-zA-Z0-9_-]{16,80}$/.test(row.id)&&Array.isArray(row.ids)&&row.ids.length>0&&row.ids.length<=12&&row.ids.every(id=>CATALOG.some(item=>item.id===id))&&Number.isSafeInteger(row.price)&&row.price>=0).map(row=>({id:row.id,ids:[...row.ids],price:row.price})):[],practiceDay:String(raw.practiceDay||''),practiceCount:finite(raw.practiceCount),missions:{daily:period(raw.missions?.daily),weekly:period(raw.missions?.weekly)},achievements:[...new Set(Array.isArray(raw.achievements)?raw.achievements:[])].filter(x=>OBJECTIVES.some(o=>o.id===x&&o.kind==='achievement'))};
   }
@@ -163,13 +236,13 @@
     for(const kind of ['daily','weekly']){const key=kind==='daily'?riyadhDay(now):riyadhWeek(now);if(p.missions[kind].key!==key)p.missions[kind]=period({key});const m=p.missions[kind];m.games++;if(win)m.wins++;if(verified)m.online++;if(!m.variety.includes(game))m.variety.push(game)}
     p.receipts.push(receipt);return normalize(p);
   }
-  function purchase(raw,id,{now=Date.now(),expectedPrice}={}){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');if(!p.owned.includes(id)){if(item.source)throw new Error('item_locked');if(item.retired)throw new Error('item_retired');const price=itemPrice(id,now);if(expectedPrice!=null&&expectedPrice!==price)throw new Error('price_changed');if(p.coins<price)throw new Error('insufficient_coins');p.coins-=price;p.owned.push(id)}p.equipped[item.type]=id;return normalize(p)}
-  function equip(raw,id){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item||!p.owned.includes(id))throw new Error('item_not_owned');p.equipped[item.type]=id;return normalize(p)}
+  function purchase(raw,id,{now=Date.now(),expectedPrice}={}){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');if(!p.owned.includes(id)){if(item.source)throw new Error('item_locked');if(item.retired)throw new Error('item_retired');const price=itemPrice(id,now);if(expectedPrice!=null&&expectedPrice!==price)throw new Error('price_changed');if(p.coins<price)throw new Error('insufficient_coins');p.coins-=price;p.owned.push(id)}if(!isReaction(item))p.equipped[item.type]=id;return normalize(p)}
+  function equip(raw,id){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item||!p.owned.includes(id))throw new Error('item_not_owned');if(!isReaction(item))p.equipped[item.type]=id;return normalize(p)}
   const DAILY_GIFTS=Object.freeze([30,40,50,60,75,90,120]);
   function riyadhDay(now=Date.now()){return new Date(now+10800000).toISOString().slice(0,10)}
   function riyadhWeek(now=Date.now()){const date=new Date(riyadhDay(now)+'T00:00:00Z');date.setUTCDate(date.getUTCDate()-(date.getUTCDay()+6)%7);return date.toISOString().slice(0,10)}
   function dailyOffer(now=Date.now()){
-    const items=CATALOG.filter(i=>i.price>=300&&!i.source&&!i.retired),day=riyadhDay(now),index=Math.floor(Date.parse(day)/86400000)%items.length,item=items[index];
+    const items=CATALOG.filter(i=>STOREFRONT.includes(i.id)&&i.price>=300&&!i.source&&!i.retired),day=riyadhDay(now),index=Math.floor(Date.parse(day)/86400000)%items.length,item=items[index];
     return {id:item.id,price:Math.floor(item.price*.8),originalPrice:item.price,day};
   }
   function itemPrice(id,now=Date.now()){const item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');const offer=dailyOffer(now);return offer.id===id?offer.price:item.price}
@@ -197,7 +270,7 @@
     return {id,missing,price,originalPrice,saving:originalPrice-price};
   }
   function purchaseBundle(raw,id,{now=Date.now(),expectedPrice}={}){
-    const p=normalize(raw),quote=bundleQuote(p,id,{now}),bundle=BUNDLES.find(b=>b.id===id);if(expectedPrice!=null&&expectedPrice!==quote.price)throw new Error('price_changed');if(p.coins<quote.price)throw new Error('insufficient_coins');p.coins-=quote.price;p.owned.push(...quote.missing);for(const id of bundle.items){const item=CATALOG.find(i=>i.id===id);p.equipped[item.type]=id}return normalize(p);
+    const p=normalize(raw),quote=bundleQuote(p,id,{now}),bundle=BUNDLES.find(b=>b.id===id);if(expectedPrice!=null&&expectedPrice!==quote.price)throw new Error('price_changed');if(p.coins<quote.price)throw new Error('insufficient_coins');p.coins-=quote.price;p.owned.push(...quote.missing);for(const id of bundle.items){const item=CATALOG.find(i=>i.id===id);if(!isReaction(item))p.equipped[item.type]=id}return normalize(p);
   }
   function cartQuote(raw,ids,{now=Date.now()}={}){
     const p=normalize(raw);
@@ -214,10 +287,10 @@
     if(!Number.isSafeInteger(expectedPrice)||expectedPrice<0||expectedPrice!==quote.price)throw new Error('price_changed');
     if(p.coins<quote.price)throw new Error('insufficient_coins');
     p.coins-=quote.price;p.owned.push(...quote.missing);
-    for(const item of quote.items)p.equipped[item.type]=item.id;
+    for(const item of quote.items)if(!REACTION_TYPES.includes(item.type))p.equipped[item.type]=item.id;
     p.checkouts.push({id:requestId,ids:[...ids],price:quote.price});
     return normalize(p);
   }
   function unlockJourney(raw,stars){const p=normalize(raw);for(const item of CATALOG)if(item.source==='journey'&&Number.isSafeInteger(stars)&&stars>=item.unlockStars&&!p.owned.includes(item.id))p.owned.push(item.id);return normalize(p);}
-  root.BS_CAREER_CORE=Object.freeze({unlockJourney,CATALOG,COLLECTION,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
+  root.BS_CAREER_CORE=Object.freeze({unlockJourney,CATALOG,COLLECTION,REACTIONS,REACTION_TYPES,LEGACY_REACTIONS,STOREFRONT,SLOTS,isReaction,reactionOf,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
 })(globalThis);

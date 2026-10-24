@@ -35,7 +35,7 @@
 
 </style>
 
-<link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-online.css?v=30.1.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=30.1.0"></head>
+<link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-online.css?v=31.0.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=31.0.0"></head>
 <body class="release-v26 quiz-v19">
 <div class="app" id="app">
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">منافسة فردية وفرق • النتيجة من الخادم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
@@ -51,7 +51,7 @@
   </div>
 </div>
 <div class="private-title">لعب خاص مع الأصدقاء</div>
-<div class="card"><b>➕ إنشاء غرفة</b><div class="mut">اختر عدد اللاعبين، والاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="createName" maxlength="20" placeholder="اسم اختياري"><select id="playerLimit" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="2">مواجهة فردية (2)</option><option value="4" selected>فريقان: ٢ ضد ٢</option><option value="6">فريقان: ٣ ضد ٣</option><option value="5">منافسة فردية (5)</option><option value="7">منافسة فردية (7)</option><option value="8">منافسة فردية (8)</option><option value="3">3</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select><button id="createBtn" class="btn cyan">إنشاء غرفة جديدة</button><div class="form-note">إذا تركت الاسم فارغًا سنستخدم اسم حسابك أو اسمًا افتراضيًا.</div></div></div>
+<div class="card"><b>➕ إنشاء غرفة</b><div class="mut">اختر عدد اللاعبين، والاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="createName" maxlength="20" placeholder="اسم اختياري"><select id="playerLimit" style="min-height:49px;border:1px solid var(--line);border-radius:14px;background:#090d18;color:#fff;padding:10px"><option value="2">مواجهة فردية (2)</option><option value="4" selected>فريقان: 2 ضد 2</option><option value="6">فريقان: 3 ضد 3</option><option value="5">منافسة فردية (5)</option><option value="7">منافسة فردية (7)</option><option value="8">منافسة فردية (8)</option><option value="3">3</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select><button id="createBtn" class="btn cyan">إنشاء غرفة جديدة</button><div class="form-note">إذا تركت الاسم فارغًا سنستخدم اسم حسابك أو اسمًا افتراضيًا.</div></div></div>
 <div class="card"><b>🔑 دخول غرفة</b><div class="mut">اكتب كود الـ 6 أرقام فقط؛ الاسم اختياري.</div><div class="form" style="margin-top:9px"><input id="joinCode" inputmode="numeric" maxlength="6" placeholder="مثال: 482731"><input id="joinName" maxlength="20" placeholder="اسم اختياري"><button id="joinBtn" class="btn">دخول التحدي</button><div class="form-note">بدون اسم؟ ندخلك باسم تلقائي.</div></div></div>
 </div>
 </section>
@@ -113,14 +113,14 @@
 <div class="footer">© 2026 بوسراج — تحدي العباقرة Online. اللعب السريع متزامن مباشرة، والغرف الخاصة تعمل بمحرك السيرفر.</div>
 <div id="toast" class="toast hidden"></div>
 </div>
-<script src="assets/js/audio-manager.js?v=30.1.0"></script>
-<script src="assets/js/quiz-audio-v29.js?v=30.1.0"></script><script src="assets/js/quiz-visuals-v28.js?v=30.1.0"></script>
-<script type="module" src="assets/js/quiz-team-v28.js?v=30.1.0"></script>
-<script src="assets/js/platform.js?v=30.1.0"></script>
+<script src="assets/js/audio-manager.js?v=31.0.0"></script>
+<script src="assets/js/quiz-audio-v29.js?v=31.0.0"></script><script src="assets/js/quiz-visuals-v28.js?v=31.0.0"></script>
+<script type="module" src="assets/js/quiz-team-v28.js?v=31.0.0"></script>
+<script src="assets/js/platform.js?v=31.0.0"></script>
 
 
-<script src="assets/js/matchmaking.js?v=30.1.0"></script>
-<script src="assets/js/social-client.js?v=30.1.0"></script>
+<script src="assets/js/matchmaking.js?v=31.0.0"></script>
+<script src="assets/js/social-client.js?v=31.0.0"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -153,7 +153,8 @@ extra:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>',
 pass:'<path d="M4 8h12M13 5l3 3-3 3M20 16H8M11 13l-3 3 3 3"/>',
 shuffle:'<path d="M4 7h3c5 0 5 10 10 10h3M17 14l3 3-3 3M4 17h3c2 0 3-2 4-4M14 7c1 0 2 0 3 0h3M17 4l3 3-3 3"/>',
 install:'<path d="M12 3v12M8 11l4 4 4-4M5 19h14"/>',
-memory:'<path d="M9 4a3 3 0 0 0-5 2 3 3 0 0 0 1 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V6a3 3 0 0 0-3-2zM15 4a3 3 0 0 1 5 2 3 3 0 0 1-1 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V6a3 3 0 0 1 3-2zM9 8h3M12 12H8M12 15h3"/>'
+memory:'<path d="M9 4a3 3 0 0 0-5 2 3 3 0 0 0 1 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V6a3 3 0 0 0-3-2zM15 4a3 3 0 0 1 5 2 3 3 0 0 1-1 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V6a3 3 0 0 1 3-2zM9 8h3M12 12H8M12 15h3"/>',
+ai:'<path d="M4 6h10v12H4zM4 15l3-3 3 3 2-2 2 2M10 9.5h.01M18 3l.8 2.2L21 6l-2.2.8L18 9l-.8-2.2L15 6l2.2-.8zM18.5 13l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z"/>'
 };return '<span class="catIcon"><svg viewBox="0 0 24 24">'+p[k]+'</svg></span>'}
 let ws=null,state=null,myId=null,roomCode=null,reconnectTimer=null,reconnectDelay=800,tickId=null,hostSel=new Set(),manualClose=false,lastAudioSecond=null,lastAudioPhase='',lastRevealAudio=-1,finishedAudioPlayed=false,questionAudio=null,questionAudioRAF=0,activeZoomImg=null,questionAudioRelease=null,memoryTimer=null;
 const soundPlayCounts=new Map(),waveCache=new Map(),zoomLevels=new Map();
@@ -387,5 +388,5 @@ const quickMatchParam=qs.get('quickMatch')||qs.get('match');
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
-<script type="module" src="assets/js/quick-match-game.js?v=30.1.0"></script>
-<script src="assets/js/profile-core.js?v=30.1.0"></script><script src="assets/js/career-client.js?v=30.1.0"></script><script defer src="assets/js/client-health.js?v=30.1.0"></script><script src="assets/js/play-feedback-v24-1.js?v=30.1.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=30.1.0"></script></body></html>
+<script type="module" src="assets/js/quick-match-game.js?v=31.0.0"></script>
+<script src="assets/js/profile-core.js?v=31.0.0"></script><script src="assets/js/career-client.js?v=31.0.0"></script><script defer src="assets/js/client-health.js?v=31.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=31.0.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=31.0.0"></script></body></html>

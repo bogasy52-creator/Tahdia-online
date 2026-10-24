@@ -26,7 +26,7 @@ test('a signed-in player sees the podium, the list, their own standing and last 
  assert.equal(h.requests[0].searchParams.get('period'),'week');assert.equal(h.requests[0].searchParams.get('player'),'reem22');
  const steps=h.$('lbPodium').children;assert.equal(steps.length,3);
  assert.deepEqual(steps.map(s=>s.dataset.rank),['1','2','3']);
- assert.match(steps[0].textContent,/BoSraG/);assert.match(steps[0].textContent,/المدير/);assert.match(steps[0].textContent,/١/);
+ assert.match(steps[0].textContent,/BoSraG/);assert.match(steps[0].textContent,/المدير/);assert.match(steps[0].textContent,/1,500/);assert.doesNotMatch(steps[0].textContent,/[٠-٩]/,'numbers use Western digits');
  const rows=h.$('lbList').children;assert.equal(rows.length,2);assert.ok(rows[0].classList.contains('is-me'));assert.equal(rows[0].getAttribute('aria-current'),'true');
  assert.match(h.$('lbMe').textContent,/مركزك 4/);assert.equal(h.$('lbMe').hidden,false);
  assert.equal(h.$('lbPrevious').hidden,false);assert.equal(h.$('lbPrevList').children.length,3);

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const root = new URL('../', import.meta.url).pathname;
 const pub = join(root,'public');
 
-test('every dice game uses one shared professional die provider',async()=>{const snakes=await readFile(join(pub,'snakes.html'),'utf8');assert.match(snakes,/pro-dice\.js/);assert.doesNotMatch(snakes,/luxury-game-ui\.js/);for(const file of ['zahra.html','dice.html']){const html=await readFile(join(pub,file),'utf8');assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/luxury-game-ui\.js/)}const die=await readFile(join(pub,'assets/js/pro-dice.js'),'utf8');assert.match(die,/running\.has\(el\)/);assert.match(die,/duration:1180/);assert.doesNotMatch(die,/setInterval|MutationObserver/)});
+test('every dice game uses one shared professional die provider',async()=>{const snakes=await readFile(join(pub,'snakes.html'),'utf8');assert.match(snakes,/pro-dice\.js/);assert.doesNotMatch(snakes,/luxury-game-ui\.js/);for(const file of ['zahra.html','dice.html']){const html=await readFile(join(pub,file),'utf8');assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/luxury-game-ui\.js/)}const die=await readFile(join(pub,'assets/js/pro-dice.js'),'utf8');assert.match(die,/running\.has\(el\)/);assert.match(die,/duration=1040/);assert.doesNotMatch(die,/setInterval|MutationObserver/)});
 
 test('the redesigned board games share professional pieces and readable labels',async()=>{for(const file of ['snakes.html','jackaroo.html']){const html=await readFile(join(pub,file),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.match(html,/pawn-label/)}const css=await readFile(join(pub,'assets/css/pro-games.css'),'utf8');assert.match(css,/\.snake-token/);assert.match(css,/\.jack-piece/)});
 
@@ -18,7 +18,7 @@ test('service worker caches luxury presentation assets', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
   assert.ok(sw.includes('/assets/css/luxury-game-ui.css'));
   assert.ok(sw.includes('/assets/js/luxury-game-ui.js'));
-  assert.match(sw,/busraj-games-v60-release-30-1-0/);
+  assert.match(sw,/busraj-games-v60-release-31-0-0/);
 });
 
 

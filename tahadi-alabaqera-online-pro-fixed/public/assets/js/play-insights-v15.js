@@ -11,7 +11,7 @@
    const rolls=(event.rolls||[state.lastRoll]).filter(value=>Number.isInteger(value)&&value>=1&&value<=6),stats=this.players[index]||{rolls:0,ladders:0,snakes:0,bonuses:0};
    stats.rolls+=rolls.length;stats.ladders+=Number(event.jumpType==='ladder'||event.bonusJumpType==='ladder');stats.snakes+=Number(event.jumpType==='snake'||event.bonusJumpType==='snake');stats.bonuses+=Number(Boolean(event.bonusRoll));this.players[index]=stats;
    const kind=event.blocked?'blocked':event.waitingEntry?'entry':event.bonusRoll?'bonus':event.jumpType||'move';
-   const descriptions={blocked:'رقم زائد · تحتاج الوصول الدقيق',entry:'بانتظار رمية ٦',ladder:'سلم! صعود إلى ',snake:'ثعبان! نزول إلى ',bonus:'مكافأة · الوصول إلى ',move:'وصل إلى '};
+   const descriptions={blocked:'رقم زائد · تحتاج الوصول الدقيق',entry:'بانتظار رمية 6',ladder:'سلم! صعود إلى ',snake:'ثعبان! نزول إلى ',bonus:'مكافأة · الوصول إلى ',move:'وصل إلى '};
    this.rows.unshift({move,index,name:player.name,rolls,position:count(player.position),kind,text:descriptions[kind]+(['entry','blocked'].includes(kind)?'':count(player.position))});this.rows=this.rows.slice(0,12);
   }
   snapshot(){return {lastMove:this.lastMove,players:this.players.map(value=>value?{...value}:null),rows:this.rows.map(row=>({...row,rolls:[...row.rolls]})),partial:this.partial};}

@@ -3,7 +3,7 @@
   'use strict';
   const $=id=>document.getElementById(id);
   const points=new Intl.NumberFormat('en-US');
-  const NUMERALS=['','١','٢','٣'];
+  const NUMERALS=['','1','2','3'];
   const COPY={
     week:{tab:'tabWeek',ends:'يتجدد الترتيب بعد',previous:'أبطال الأسبوع الماضي',empty:'لا توجد نتائج موثّقة هذا الأسبوع حتى الآن. أول فوز أونلاين يضعك في المركز الأول.',none:'لم تلعب مباراة موثّقة هذا الأسبوع.'},
     season:{tab:'tabSeason',ends:'ينتهي الموسم بعد',previous:'أبطال الموسم الماضي',empty:'لا توجد نتائج موثّقة في هذا الموسم حتى الآن. أول فوز أونلاين يضعك في المركز الأول.',none:'لم تلعب مباراة موثّقة في هذا الموسم.'}

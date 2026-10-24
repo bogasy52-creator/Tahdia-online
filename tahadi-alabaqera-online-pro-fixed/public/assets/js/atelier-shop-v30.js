@@ -1,4 +1,4 @@
-import {renderPetalBoard,createAtelierPiece,BOARD_COLORS} from './board-petals-v29.js?v=30.1.0';
+import {renderPetalBoard,createAtelierPiece,BOARD_COLORS} from './board-petals-v29.js?v=31.0.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=window.BS_CAREER;
 const catalogue=core.COLLECTION,types={pawn:'حجر اللعب',dice:'النرد',table:'الطاولة',trail:'أثر الحركة',victory:'احتفال الفوز',title:'اللقب'};
 const ns='http://www.w3.org/2000/svg';let artSequence=0,view='shop',filter='all',query='',sort='featured',pending=false,previewId=null,previewCleanup=()=>{},bag=[],favorites=[],accountKey='',checkout=null;

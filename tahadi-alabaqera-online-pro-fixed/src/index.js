@@ -19,6 +19,10 @@ import {createRelay,relayView,answerRelay,relayResults,relayReveal} from '../pub
 import { SerpentRoom } from './serpent/serpent-room.js';
 import { validWorld } from '../public/assets/js/engines/arena-worlds-v27.js';
 import { LeaderboardStore, LEADERBOARD_OBJECT } from './leaderboard/leaderboard.js';
+import { Career } from './career/core.js';
+import { QuizImageBank, QUIZ_AI_OBJECT } from './quiz/ai-bank.js';
+import { aiCategory } from './quiz/ai-subjects.js';
+import { isOwner } from './social/account-policy.js';
 
 class SocialDelegateBase {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; }
@@ -26,10 +30,14 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='30.1.0';
+const RELEASE='31.0.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
-const BOARD_EMOTES=new Set(['clap','fire','laugh','wow','angry','gg','luck','fast']),EMOTE_GAP_MS=1500,EMOTE_PER_MINUTE=12;
+// Free reactions work for everyone; paid ones only for the account that
+// bought them (sent by the Worker at the WebSocket upgrade, never the client).
+const FREE_REACTIONS=new Set(Career.REACTIONS.filter(item=>item.price===0&&!item.source).map(item=>item.id));
+const PAID_REACTIONS=new Set(Career.REACTIONS.filter(item=>item.price>0||item.source).map(item=>item.id));
+const EMOTE_GAP_MS=1500,EMOTE_PER_MINUTE=12,MOVE_GAP_MS=6000,MOVE_PER_MINUTE=4;
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
@@ -45,7 +53,7 @@ function isDurableRequestQuotaError(error) {
 function durableQuotaResponse(env) {
   const now = Date.now(), resetAt = DURABLE_QUOTA_RESETS.get(env) || (Math.floor(now / 86400000) + 1) * 86400000;
   DURABLE_QUOTA_RESETS.set(env, resetAt);
-  return new Response(JSON.stringify({ok:false,online:false,code:'DURABLE_REQUEST_LIMIT',error:'وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة ٣:٠٠ صباحًا بتوقيت السعودية.',resetAt,release:RELEASE}), {
+  return new Response(JSON.stringify({ok:false,online:false,code:'DURABLE_REQUEST_LIMIT',error:'وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.',resetAt,release:RELEASE}), {
     status:503,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','retry-after':String(Math.max(1,Math.ceil((resetAt-now)/1000))),'x-content-type-options':'nosniff'}
   });
 }
@@ -215,8 +223,8 @@ function balancedModes(rounds) {
   return modes.map((_, i) => i % 2 === 0 ? "secret" : "buzzer");
 }
 
-function makePlan(categoryIds, rounds = 12, recentQids = []) {
-  const chosen = categoryIds.map((id) => CATEGORY_MAP.get(id)).filter(Boolean);
+function makePlan(categoryIds, rounds = 12, recentQids = [], extra = null) {
+  const chosen = categoryIds.map((id) => CATEGORY_MAP.get(id) || extra?.get(id)).filter(Boolean);
   if (!chosen.length) return [];
   const recent = new Set(Array.isArray(recentQids) ? recentQids : []);
   const plan = [];
@@ -247,8 +255,8 @@ function makePlan(categoryIds, rounds = 12, recentQids = []) {
   return order.map((x, i) => ({ ...x, mode: modes[i] }));
 }
 
-function qFromRef(catId, qid) {
-  const cat = CATEGORY_MAP.get(catId);
+function qFromRef(catId, qid, extra = null) {
+  const cat = CATEGORY_MAP.get(catId) || extra?.get(catId);
   if (!cat) return null;
   const idx = Number(String(qid).split(":")[1]);
   const q = cat.questions[idx];
@@ -332,6 +340,40 @@ export default {
         if (isDurableRequestQuotaError(error)) throw error;
         return json({ ok: false, error: 'تعذر تحميل لوحة الأبطال الآن، حاول بعد قليل' }, 503);
       }
+    }
+
+    if (url.pathname.startsWith('/api/quiz/ai/')) {
+      if (!env.BOARD_ROOMS?.idFromName) return json({ ok: false, error: 'صور الذكاء غير مفعّلة على السيرفر' }, 503);
+      const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(QUIZ_AI_OBJECT)), cache = globalThis.caches?.default, packKey = new Request(url.origin + '/api/quiz/ai/pack');
+      const image = url.pathname.match(/^\/api\/quiz\/ai\/image\/([a-z0-9-]{2,30})\.webp$/);
+      if (image && request.method === 'GET') {
+        const limited = await rateLimit(request, env, 'quiz-ai-image', 240, 60_000); if (limited) return limited;
+        if (cache) { const hit = await cache.match(request).catch(() => null); if (hit) return hit; }
+        try { const res = await stub.fetch('https://quizai.internal/image?id=' + image[1]); if (cache && res.ok) await cache.put(request, res.clone()).catch(() => {}); return res; }
+        catch (error) { if (isDurableRequestQuotaError(error)) throw error; return json({ ok: false, error: 'تعذر تحميل الصورة' }, 503); }
+      }
+      if (url.pathname === '/api/quiz/ai/pack' && request.method === 'GET') {
+        const limited = await rateLimit(request, env, 'quiz-ai-pack', 120, 60_000); if (limited) return limited;
+        if (cache) { const hit = await cache.match(packKey).catch(() => null); if (hit) return hit; }
+        try {
+          const res = await stub.fetch('https://quizai.internal/pack'), data = await res.json();
+          const response = new Response(JSON.stringify(data), { status: res.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': cache ? 'public, max-age=60' : 'no-store', 'x-content-type-options': 'nosniff' } });
+          if (cache && res.ok) await cache.put(packKey, response.clone()).catch(() => {});
+          return response;
+        } catch (error) { if (isDurableRequestQuotaError(error)) throw error; return json({ ok: false, error: 'تعذر تحميل صور الذكاء' }, 503); }
+      }
+      if (request.method === 'POST' && ['/api/quiz/ai/generate', '/api/quiz/ai/remove', '/api/quiz/ai/status'].includes(url.pathname)) {
+        const limited = await rateLimit(request, env, 'quiz-ai-admin', 20, 60_000); if (limited) return limited;
+        const auth = await authenticate(request, env);
+        if (!auth) return json({ ok: false, error: 'unauthorized' }, 401);
+        if (!isOwner(auth.profile || { username: auth.username })) return json({ ok: false, error: 'forbidden' }, 403);
+        const body = (await request.text()).slice(0, 512);
+        if (url.pathname === '/api/quiz/ai/status') { const res = await stub.fetch('https://quizai.internal/pack'); return new Response(res.body, { status: res.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } }); }
+        const res = await stub.fetch('https://quizai.internal/' + url.pathname.split('/').pop(), { method: 'POST', headers: { 'content-type': 'application/json', 'x-bs-owner': '1' }, body });
+        if (cache && res.ok) await cache.delete(packKey).catch(() => {});
+        return res;
+      }
+      return json({ ok: false, error: 'not_found' }, 404);
     }
 
     if(url.pathname.startsWith('/api/party/')){
@@ -585,9 +627,9 @@ export default {
         const id = env.BOARD_ROOMS.idFromName(code);
         const stub = env.BOARD_ROOMS.get(id);
         if (suffix === "/ws") {
-          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');
+          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');headers.delete('x-bs-reactions');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
-          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));}}}
+          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));}}}
           return await stub.fetch(new Request(request,{headers}));
         }
         return await stub.fetch("https://board.internal/status");
@@ -618,10 +660,27 @@ export class GameRoom extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.room = null;
+    this.aiPack = null;
     this.ctx.blockConcurrencyWhile(async () => {
       this.room = (await this.ctx.storage.get("room")) || null;
+      this.aiPack = (await this.ctx.storage.get("aiPack")) || null;
       this.syncConnectedFlags();
     });
+  }
+
+  // AI pictures join the quiz only when the shared bank has enough of them.
+  extraCategories() { const cat = this.aiPack ? aiCategory(this.aiPack) : null; return cat ? new Map([[cat.id, cat]]) : null; }
+  categoryList() { const extra = this.extraCategories(); return [...CATEGORIES, ...(extra ? extra.values() : [])].map((c) => ({ id: c.id, name: c.name, icon: c.icon, desc: c.desc })); }
+  hasCategory(id) { return CATEGORY_MAP.has(id) || Boolean(this.extraCategories()?.has(id)); }
+  async loadAiPack() {
+    try {
+      if (!this.env?.BOARD_ROOMS?.idFromName) return;
+      const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(QUIZ_AI_OBJECT));
+      const res = await stub.fetch('https://quizai.internal/pack'), data = await res.json();
+      const items = Array.isArray(data?.items) ? data.items.slice(0, 80) : [];
+      this.aiPack = aiCategory(items) ? items : null;
+      if (this.aiPack) await this.ctx.storage.put('aiPack', this.aiPack); else await this.ctx.storage.delete('aiPack');
+    } catch (error) { if (isDurableRequestQuotaError(error)) throw error; this.aiPack = null; }
   }
 
   syncConnectedFlags() {
@@ -699,6 +758,7 @@ export class GameRoom extends DurableObject {
         playerLimit: Number.isInteger(body.playerLimit)&&body.playerLimit>=2&&body.playerLimit<=20 ? body.playerLimit : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
       };
+      await this.loadAiPack();
       await this.persist();
       await this.ctx.storage.setAlarm(this.room.expiresAt);
       return json({ ok: true }, 201);
@@ -834,7 +894,7 @@ export class GameRoom extends DurableObject {
           if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
           {
             const ids = [...new Set(Array.isArray(msg.categories) ? msg.categories : [])]
-              .filter((id) => CATEGORY_MAP.has(id))
+              .filter((id) => this.hasCategory(id))
               .slice(0, 6);
             if (ids.length !== 6) return this.sendError(ws, "اختر 6 فئات");
             this.room.selectedCategories = ids;
@@ -864,7 +924,7 @@ export class GameRoom extends DurableObject {
 
         case "random_categories":
           if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
-          this.room.selectedCategories = shuffle(CATEGORIES.map((c) => c.id)).slice(0, 6);
+          this.room.selectedCategories = shuffle(this.categoryList().map((c) => c.id)).slice(0, 6);
           for(const p of Object.values(this.room.players))p.ready=false;
           await this.persistAndBroadcast();
           break;
@@ -1025,7 +1085,7 @@ export class GameRoom extends DurableObject {
       serverNow:Date.now(),matchId:this.room.matchId||'',mode:this.room.mode,relayEnabled:Boolean(this.room.relayEnabled),playerLimit:this.room.playerLimit,rewardsComplete:this.room.rewardsComplete!==false,teamScores:['A','B'].map(team=>({team,score:this.room.order.reduce((n,id)=>n+(this.room.players[id]?.team===team?this.room.players[id].score:0),0)})),
       status: this.room.status,
       selectedCategories: this.room.selectedCategories,
-      categories: CATEGORIES.map((c) => ({ id: c.id, name: c.name, icon: c.icon, desc: c.desc })),
+      categories: this.categoryList(),
       players,
       me: me ? { id: me.id, role: me.role, powers: me.powers } : null,
       roundIndex: this.room.roundIndex,
@@ -1071,7 +1131,7 @@ export class GameRoom extends DurableObject {
     this.room.winnerId = null;
     this.room.lastReveal = null;
     this.room.roundIndex = -1;
-    this.room.roundPlan = makePlan(this.room.selectedCategories, this.room.roundCount, this.room.recentQids || []);
+    this.room.roundPlan = makePlan(this.room.selectedCategories, this.room.roundCount, this.room.recentQids || [], this.extraCategories());
     if(this.room.relayEnabled&&['teams-4','teams-6'].includes(this.room.mode))this.room.roundPlan=this.room.roundPlan.map((round,index)=>({...round,mode:(index+1)%4===0?'relay':round.mode}));
     this.room.recentQids = [...new Set([
       ...this.room.roundPlan.map((x) => x.qid),
@@ -1096,7 +1156,7 @@ export class GameRoom extends DurableObject {
     }
 
     const plan = this.room.roundPlan[this.room.roundIndex];
-    const found = qFromRef(plan.catId, plan.qid);
+    const found = qFromRef(plan.catId, plan.qid, this.extraCategories());
     if (!found) {
       await this.startNextRound();
       return;
@@ -1628,6 +1688,7 @@ export class BoardRoom extends DurableObject {
     const url = new URL(request.url);
     if (url.hostname === "social.internal") return (await this.socialDelegate()).fetch(request);
     if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
+    if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo'],snakesVariants:['classic','adventure']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
@@ -1670,6 +1731,7 @@ export class BoardRoom extends DurableObject {
         if(this.room.status==='lobby')player.character=player.allowedCharacters.includes(equipped)?equipped:player.allowedCharacters.includes(requested)?requested:'fox';
       }
       if(request.headers.get('x-bs-account'))player.username=request.headers.get('x-bs-account');
+      {let bought=[];try{bought=JSON.parse(request.headers.get('x-bs-reactions')||'[]')}catch{}player.reactions=(Array.isArray(bought)?bought:[]).filter((id,index,list)=>PAID_REACTIONS.has(id)&&list.indexOf(id)===index);}
       for (const old of this.ctx.getWebSockets()) {
         try { if (old.deserializeAttachment()?.playerId === player.id) old.close(4001, "reconnected"); } catch {}
       }
@@ -1688,12 +1750,15 @@ export class BoardRoom extends DurableObject {
 
   // Reactions are relayed to everyone in the room and never touch the game
   // state, its version or storage. Each player is limited in memory.
-  relayEmote(player,emote){
-    const id=String(emote||'');if(!BOARD_EMOTES.has(id))return;
-    const now=Date.now(),log=(this.emoteLog??=new Map()),recent=(log.get(player.id)||[]).filter(t=>now-t<60000);
+  relayEmote(player,emote,ws){
+    const item=typeof emote==='string'?Career.reactionOf(emote):null;if(!item)return;
+    if(!FREE_REACTIONS.has(item.id)&&!(player.reactions||[]).includes(item.id)){try{ws?.send(JSON.stringify({type:'emote-locked',emote:item.id}))}catch{}return;}
+    const move=item.type==='move',now=Date.now(),log=(this.emoteLog??=new Map()),recent=(log.get(player.id)||[]).filter(t=>now-t<60000),moves=(this.moveLog??=new Map()),recentMoves=(moves.get(player.id)||[]).filter(t=>now-t<60000);
     if(recent.length>=EMOTE_PER_MINUTE||recent.length&&now-recent.at(-1)<EMOTE_GAP_MS)return;
-    recent.push(now);log.set(player.id,recent);
-    const packet=JSON.stringify({type:'emote',from:player.id,name:player.name,emote:id,at:now});
+    if(move&&(recentMoves.length>=MOVE_PER_MINUTE||recentMoves.length&&now-recentMoves.at(-1)<MOVE_GAP_MS))return;
+    recent.push(now);log.set(player.id,recent);if(move){recentMoves.push(now);moves.set(player.id,recentMoves);}
+    // Older pages know the first eight by their short ids.
+    const packet=JSON.stringify({type:'emote',from:player.id,name:player.name,emote:item.legacy||item.id,at:now});
     for(const socket of this.ctx.getWebSockets()){try{if(socket.deserializeAttachment()?.playerId)socket.send(packet);}catch{}}
   }
 
@@ -1709,7 +1774,7 @@ export class BoardRoom extends DurableObject {
     let msg; try { msg = JSON.parse(text); } catch { return this.sendError(ws, "رسالة غير صالحة"); }
     if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',serverNow:Date.now()}))}catch{}return;}
     if(msg.type==='resync'){try{ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)}))}catch{}return;}
-    if(msg.type==='emote')return this.relayEmote(player,msg.emote);
+    if(msg.type==='emote')return this.relayEmote(player,msg.emote,ws);
     try {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);

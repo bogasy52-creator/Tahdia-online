@@ -23,12 +23,12 @@ function render() {
   const p=progress.get(),stats=progress.stats(),day=progress.today();
   $('journeyMilestoneCopy').textContent=stats.stars<30?'باقي '+(30-stats.stars)+' نجمة وتفتح لقب صائد النجوم':stats.stars<120?'فتحت صائد النجوم · باقي '+(120-stats.stars)+' نجمة للقب سيّد المسارات':'✓ فتحت لقبي صائد النجوم وسيّد المسارات · جهّز لقبك في المتجر';
   $('journeyStars').textContent=stats.stars;$('journeyCompleted').textContent=stats.completed+' / '+totalStageCount();$('journeyStreak').textContent=stats.streak;
-  $('dailyDate').textContent=new Intl.DateTimeFormat('ar-SA',{weekday:'long',day:'numeric',month:'long',calendar:'gregory',timeZone:'Asia/Riyadh'}).format(new Date(now()));
+  $('dailyDate').textContent=new Intl.DateTimeFormat('ar-SA-u-nu-latn',{weekday:'long',day:'numeric',month:'long',calendar:'gregory',timeZone:'Asia/Riyadh'}).format(new Date(now()));
   $('dailyJewelsStatus').textContent=p.daily[day]?.jewels?'✓ اكتمل · '+p.daily[day].jewels+' نجوم · تقدر تحسّنها':'بدّل وطابق واجمع الهدف · لوحة اليوم للجميع';
   $('sudokuCampaignProgress').textContent=Object.keys(p.stages.sudoku).length+' / 120 مرحلة';
   $('dailySudokuStatus').textContent=p.daily[day]?.sudoku?'✓ اكتمل · '+p.daily[day].sudoku+' نجوم':'لغز يتجدد يوميًا · حل واحد';
   $('dailyPathsStatus').textContent=p.daily[day]?.paths?'✓ اكتمل · '+p.daily[day].paths+' نجوم · تقدر تحسّنها':'وصّل كل الأزواج وغطّ اللوحة';
-  const week=$('journeyWeek');week.replaceChildren();for(let i=6;i>=0;i--){const date=dayKey(now()-i*86400000),done=Object.keys(p.daily[date]||{}).length,el=document.createElement('span');el.className=done?'done':'';el.textContent=done?'✦':i===0?'اليوم':new Intl.DateTimeFormat('ar-SA',{weekday:'short',timeZone:'Asia/Riyadh'}).format(new Date(now()-i*86400000));el.title=date+' · '+done+' / 3';if(i===0)el.setAttribute('aria-current','date');week.appendChild(el);}
+  const week=$('journeyWeek');week.replaceChildren();for(let i=6;i>=0;i--){const date=dayKey(now()-i*86400000),done=Object.keys(p.daily[date]||{}).length,el=document.createElement('span');el.className=done?'done':'';el.textContent=done?'✦':i===0?'اليوم':new Intl.DateTimeFormat('ar-SA-u-nu-latn',{weekday:'short',timeZone:'Asia/Riyadh'}).format(new Date(now()-i*86400000));el.title=date+' · '+done+' / 3';if(i===0)el.setAttribute('aria-current','date');week.appendChild(el);}
   for(const id of Object.keys(names))$(id+'Progress').textContent=Object.keys(p.stages[id]).length+' / '+stageCount(id)+' مرحلة';
   document.querySelectorAll('[data-game]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.game===game)));
   const chapterNames=chaptersFor(game);chapter=Math.min(chapter,chapterNames.length-1);$('chapterNumber').textContent='العالم '+(chapter+1)+' / '+chapterNames.length;$('chapterTitle').textContent=chapterNames[chapter];

@@ -656,3 +656,42 @@ body.serpent-active .arena-combat-guide,body.serpent-active .serpent-main{displa
 .arena-drop-guide{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1;color:#cee8dc;font-size:11px;line-height:1.8}.arena-drop-guide span{padding:5px 8px;border:1px solid #7eb49c55;border-radius:7px}
 @media(max-height:480px) and (orientation:landscape){.serpent-page #arenaPlay .arena-live-hint,.serpent-page #arenaPlay .arena-coach-task-v15{display:none!important}.arena-power-bar{top:calc(70px + env(safe-area-inset-top));max-width:128px;gap:3px}.arena-power-bar span{font-size:9px;padding:3px 6px}}
 @media(prefers-reduced-motion:reduce){.arena-power-bar *{transition:none;animation:none}}
+
+/* assets/css/release-v31.css */
+/* Tahdia 31.0.0 — shared rules for every game page.
+   `:is(html,#v31)` lifts these rules above the older layered themes without
+   relying on load order (the premium theme loads after the route bundle). */
+
+/* The friends-room shortcut belongs to menus, never inside a running game. */
+:is(html,#v31) body.game-running .bs-party-entry-v29,
+:is(html,#v31) body.sudoku-playing .bs-party-entry-v29,
+:is(html,#v31) body.picture-playing .bs-party-entry-v29,
+:is(html,#v31) body.serpent-active .bs-party-entry-v29,
+:is(html,#v31) body:has(#roomLobby:not(.hidden)) .bs-party-entry-v29,
+:is(html,#v31) body:has(#arcadeLevel:disabled) .bs-party-entry-v29,
+:is(html,#v31) body:has(#arenaLobby:not(.hidden)) .bs-party-entry-v29,
+:is(html,#v31) body:has(#arenaPlay:not(.hidden)) .bs-party-entry-v29,
+:is(html,#v31) body:has(#pathRoom:not([hidden])) .bs-party-entry-v29,
+:is(html,#v31) body:has(#pathMatch:not([hidden])) .bs-party-entry-v29,
+:is(html,#v31) body:has(#journeyPlay[open]) .bs-party-entry-v29{display:none!important}
+
+/* One slim row of controls while a board game is running. */
+:is(html,#v31) body.game-running .bs-game-command{flex-wrap:nowrap!important;gap:6px!important;padding:6px 8px!important;margin:6px auto 8px!important;min-height:0!important;width:calc(100% - 16px)!important;max-width:1100px!important;border-radius:14px!important}
+:is(html,#v31) body.game-running .bs-game-command .coin-chip,
+:is(html,#v31) body.game-running .bs-command-home,
+:is(html,#v31) body.game-running .bs-command-identity > span,
+:is(html,#v31) body.game-running .bs-command-identity small,
+:is(html,#v31) body.game-running .v26-command-utilities a[href="/shop"],
+:is(html,#v31) body.game-running .v26-command-utilities .journey-shortcut-v17{display:none!important}
+:is(html,#v31) body.game-running .bs-command-start{flex:0 0 auto!important}
+:is(html,#v31) body.game-running .bs-command-back{min-width:40px!important;min-height:38px!important;padding:0 10px!important}
+:is(html,#v31) body.game-running .bs-command-back b{display:none!important}
+:is(html,#v31) body.game-running .bs-command-identity{flex:1 1 auto!important;min-width:0!important;justify-content:center!important;text-align:center!important}
+:is(html,#v31) body.game-running .bs-command-identity b{font-size:15px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(html,#v31) body.game-running .bs-command-invite{flex:0 0 auto!important;min-height:38px!important;padding:0 11px!important;font-size:0!important}
+:is(html,#v31) body.game-running .bs-command-invite::before{content:'＋ دعوة';font-size:13px;font-weight:700}
+:is(html,#v31) body.game-running .v26-command-utilities{flex:0 0 auto!important;display:flex!important;gap:6px!important;margin:0!important;width:auto!important}
+:is(html,#v31) body.game-running .v26-command-utilities button{min-width:38px!important;min-height:38px!important;padding:0!important}
+
+/* Numbers stay Western and line up in scores and timers. */
+.bs-num,[data-career-coins]{font-variant-numeric:tabular-nums lining-nums}

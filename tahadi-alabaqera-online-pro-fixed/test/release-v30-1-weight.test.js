@@ -35,19 +35,18 @@ test('pages that only borrow the stone helper do not download the cobra, ladder 
  assert.deepEqual(h.requested,[],'the v30 stones draw without the old sprite sheet');
 });
 
-test('the snakes board requests its art once, when it is laid out',async()=>{
+test('the snakes board is drawn as vectors and downloads no sprite sheets when laid out',async()=>{
  const h=await arenaHelpers();
  h.context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}}]);
- assert.deepEqual([...h.requested].sort(),['assets/arena/arena-plate-v17.webp','assets/arena/neon-cobra.webp','assets/arena/objects-v17.webp']);
  h.context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}}]);
- assert.equal(h.requested.length,3,'no duplicate requests on later layouts');
+ assert.deepEqual(h.requested,[]);
 });
 
-test('on the snakes page the sheets are warmed after the menu has loaded, not during it',async()=>{
+test('the snakes page warms nothing in the background; only the lobby portrait fetches its art',async()=>{
  const h=await arenaHelpers({snakesPage:true});
- assert.deepEqual(h.requested,[]);
- h.events.get('load')();h.events.get('idle')();
- assert.equal(h.requested.length,3);
+ assert.deepEqual(h.requested,[]);assert.equal(h.events.has('idle'),false);
+ h.context.BS_ARENA.portrait({appendChild(){}});h.context.BS_ARENA.portrait({appendChild(){}});
+ assert.deepEqual(h.requested,['assets/arena/neon-cobra.webp'],'one request however often the portrait is drawn');
 });
 
 test('the arena head sheet is fetched on first use, not when a page includes the helper',async()=>{

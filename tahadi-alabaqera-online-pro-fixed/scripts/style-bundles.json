@@ -30,7 +30,9 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/tabletop-v30.css"
+    "assets/css/tabletop-v30.css",
+    "assets/css/release-v31.css",
+    "assets/css/dice-v31.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -57,13 +59,18 @@
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
     "assets/css/tabletop-v30.css",
-    "assets/css/release-v30-1.css"
+    "assets/css/release-v30-1.css",
+    "assets/css/release-v31.css",
+    "assets/css/dice-v31.css",
+    "assets/css/tables-v31.css",
+    "assets/css/reactions-v31.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
     "assets/css/journey.css",
     "assets/css/brain-v20.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css"
   ],
   "local.html": [
     "assets/css/platform.css",
@@ -85,7 +92,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css"
   ],
   "memory.html": [
     "assets/css/platform.css",
@@ -95,7 +103,8 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/memory-v30.css"
+    "assets/css/memory-v30.css",
+    "assets/css/release-v31.css"
   ],
   "online.html": [
     "assets/css/platform.css",
@@ -117,7 +126,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css"
   ],
   "reaction.html": [
     "assets/css/platform.css",
@@ -126,7 +136,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css"
   ],
   "serpent.html": [
     "assets/css/platform.css",
@@ -143,16 +154,15 @@
     "assets/css/arena-v23.css",
     "assets/css/arena-hotfix-v23-1.css",
     "assets/css/arena-v24.css",
-    "assets/css/arena-v27.css"
+    "assets/css/arena-v27.css",
+    "assets/css/release-v31.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
-    "assets/css/game-kit.css",
-    "assets/css/pro-games.css",
-    "assets/css/pro-v7.css",
-    "assets/css/dice-refined.css",
-    "assets/css/atelier-shop-v30.css",
-    "assets/css/tabletop-v30.css"
+    "assets/css/tabletop-v30.css",
+    "assets/css/dice-v31.css",
+    "assets/css/reactions-v31.css",
+    "assets/css/shop-v31.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -170,7 +180,11 @@
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
     "assets/css/tabletop-v30.css",
-    "assets/css/release-v30-1.css"
+    "assets/css/release-v30-1.css",
+    "assets/css/release-v31.css",
+    "assets/css/dice-v31.css",
+    "assets/css/snakes-v31.css",
+    "assets/css/reactions-v31.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -203,13 +217,18 @@
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
     "assets/css/tabletop-v30.css",
-    "assets/css/release-v30-1.css"
+    "assets/css/release-v30-1.css",
+    "assets/css/release-v31.css",
+    "assets/css/dice-v31.css",
+    "assets/css/tables-v31.css",
+    "assets/css/reactions-v31.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/picture-v21.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css"
   ],
   "quiz.html": [
     "assets/css/platform.css",
@@ -224,11 +243,13 @@
     "assets/css/picture.css",
     "assets/css/sudoku.css",
     "assets/css/mobile-v21.css",
-    "assets/css/sudoku-v22.css"
+    "assets/css/sudoku-v22.css",
+    "assets/css/release-v31.css"
   ],
   "paths-online.html": [
     "assets/css/platform.css",
-    "assets/css/paths-online-v24.css"
+    "assets/css/paths-online-v24.css",
+    "assets/css/release-v31.css"
   ],
   "party.html": [
     "assets/css/party-v29.css",
