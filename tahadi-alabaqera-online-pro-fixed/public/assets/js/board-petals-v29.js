@@ -25,6 +25,51 @@ const pieces=()=>globalThis.BS_PIECES;
 function rgb(hex){const h=String(hex).replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)||0);}
 function mix(a,b,t){const x=rgb(a),y=rgb(b);return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('');}
 
+/* ---------- Player names ---------- */
+// A name gets the room its seat has: it shrinks a little, then wraps onto two
+// lines (where the seat has height for it), then ends in an ellipsis. Widths
+// come from the browser's own text metrics; without a canvas (tests) a
+// generous estimate is used.
+let ruler;
+function nameWidth(text,size){
+  if(ruler===undefined){try{ruler=globalThis.document?.createElement?.('canvas')?.getContext?.('2d')||null;}catch{ruler=null;}}
+  if(ruler){let w=0;for(const font of ['800 100px Tajawal, Arial, sans-serif','800 100px Arial, sans-serif']){ruler.font=font;w=Math.max(w,ruler.measureText(text).width||0);}if(w>0)return w/100*size;}
+  let w=0;for(const ch of text)w+=/\s/.test(ch)?.3:/[A-Z؀-ۿ]/.test(ch)?.66:.6;return w*size;
+}
+function clipName(text,room,size){
+  if(nameWidth(text,size)<=room)return text;
+  const chars=[...text];
+  while(chars.length>1&&nameWidth(chars.join('').trimEnd()+'…',size)>room)chars.pop();
+  return chars.join('').trimEnd()+'…';
+}
+export function fitName(text,room,size,maxLines=1){
+  text=String(text||'').trim();
+  if(!text)return {lines:[],size,width:0};
+  const full=nameWidth(text,size);
+  if(full<=room)return {lines:[text],size,width:full};
+  const floor=size*.8,single=Math.max(floor,size*room/full);
+  if(nameWidth(text,single)<=room+1e-6)return {lines:[text],size:single,width:nameWidth(text,single)};
+  const words=text.split(/\s+/);
+  if(maxLines>1&&words.length>1){
+    let best=null;
+    for(let i=1;i<words.length;i++){const a=words.slice(0,i).join(' '),b=words.slice(i).join(' '),w=Math.max(nameWidth(a,1),nameWidth(b,1));if(!best||w<best.w)best={a,b,w};}
+    const s=Math.max(floor,Math.min(size*.92,room/best.w)),lines=[clipName(best.a,room,s),clipName(best.b,room,s)];
+    return {lines,size:s,width:Math.max(...lines.map(l=>nameWidth(l,s)))};
+  }
+  const line=clipName(text,room,floor);
+  return {lines:[line],size:floor,width:nameWidth(line,floor)};
+}
+// Very long names are cut before measuring; the board shows what fits.
+function playerLabel(p){const chars=[...String(p?.name||'').trim()];return chars.length>32?chars.slice(0,31).join('').trimEnd()+'…':chars.join('');}
+// cy is the middle of the name block.
+function nameText(x,cy,fit,attrs={}){
+  const size=+fit.size.toFixed(2),lines=fit.lines.length?fit.lines:[''],lh=size*1.12;
+  const t=n('text',{x:+x.toFixed(2),'text-anchor':'middle','font-size':size,'font-weight':800,'font-family':'Tajawal,Arial,sans-serif',...attrs});
+  if(lines.length===1){t.setAttribute('y',(cy+size*.34).toFixed(2));t.textContent=lines[0];return t;}
+  lines.forEach((line,i)=>t.append(n('tspan',{x:+x.toFixed(2),y:(cy+(i-(lines.length-1)/2)*lh+size*.34).toFixed(2)},line)));
+  return t;
+}
+
 /* ---------- Geometry ---------- */
 // Zahra: arms of three cells around the centre. Index order runs clockwise;
 // seat s starts on the second cell of its arm and enters its lane from the
@@ -82,10 +127,13 @@ function rotRect(p,w,h,a,attrs){return n('rect',{x:p.x-w/2,y:p.y-h/2,width:w,hei
 function arrow(p,a,size,fill){const t=a,dx=Math.cos(t),dy=Math.sin(t),px=-dy,py=dx;return n('path',{d:`M${p.x+dx*size} ${p.y+dy*size}L${p.x-dx*size*.6+px*size*.75} ${p.y-dy*size*.6+py*size*.75}L${p.x-dx*size*.6-px*size*.75} ${p.y-dy*size*.6-py*size*.75}Z`,fill});}
 
 function drawCross(svg,defs,prefix,state,L,theme,active){
-  const seats=L.seats,c=L.c,names=state.players.map(p=>String(p?.name||'').slice(0,12));
+  const seats=L.seats,c=L.c,names=state.players.map(playerLabel);
   const frame=gradient(defs,prefix+'-frame',[[0,theme.frame[0]],[.3,theme.frame[1]],[1,theme.frame[2]]]);
   if(seats===4){
-    svg.append(n('rect',{x:1,y:2.6,width:198,height:198,rx:9,fill:'#000',opacity:.28}),n('rect',{x:1,y:1,width:198,height:198,rx:9,fill:frame}),n('rect',{x:3.4,y:3.4,width:193.2,height:193.2,rx:6,fill:theme.surface,stroke:theme.rim,'stroke-width':.7}));
+    svg.append(n('rect',{x:1,y:2.6,width:198,height:198,rx:9,fill:'#000',opacity:.28}),n('rect',{x:1,y:1,width:198,height:198,rx:9,fill:frame}),
+      n('rect',{x:1.5,y:1.5,width:197,height:197,rx:8.6,fill:'none',stroke:'#ffffff','stroke-width':.6,opacity:.28}),
+      n('rect',{x:3.4,y:3.4,width:193.2,height:193.2,rx:6,fill:theme.surface,stroke:theme.rim,'stroke-width':.7}),
+      n('rect',{x:3.4,y:3.4,width:193.2,height:193.2,rx:6,fill:radial(defs,prefix+'-vignette',[[0,'#ffffff',.0],[.72,'#000000',0],[1,'#000000',.16]],.42,.38,.75)}));
   }else{
     // A round table: six arms and six yards all reach the rim.
     svg.append(n('circle',{cx:100,cy:101.6,r:99,fill:'#000',opacity:.28}),n('circle',{cx:100,cy:100,r:99,fill:frame}),n('circle',{cx:100,cy:100,r:95.4,fill:theme.surface,stroke:theme.rim,'stroke-width':.7}));
@@ -96,29 +144,34 @@ function drawCross(svg,defs,prefix,state,L,theme,active){
     const g=n('g',{'data-yard':s,'data-active':String(on),opacity:live?1:.38});
     if(y.kind==='square'){
       const x=y.x-y.size/2,yy=y.y-y.size/2;
+      g.append(n('rect',{x:x+.6,y:yy+1.2,width:y.size-1.2,height:y.size-1.2,rx:4,fill:'#000',opacity:.18}));
       g.append(n('rect',{x:x+.6,y:yy+.6,width:y.size-1.2,height:y.size-1.2,rx:4,fill}));
+      g.append(n('rect',{x:x+1.1,y:yy+1.1,width:y.size-2.2,height:y.size-2.2,rx:3.6,fill:'none',stroke:'#ffffff','stroke-width':.55,opacity:.38}));
       g.append(n('rect',{x:x+c*.9,y:yy+c*.9,width:y.size-c*1.8,height:y.size-c*1.8,rx:5,fill:theme.plate,stroke:mix(color,'#000000',.15),'stroke-width':.5}));
+      g.append(n('rect',{x:x+c*.9,y:yy+c*.9,width:y.size-c*1.8,height:y.size-c*1.8,rx:5,fill:gradient(defs,`${prefix}-tray-${s}`,[[0,'rgba(0,0,0,.16)'],[.22,'rgba(0,0,0,0)'],[1,'rgba(255,255,255,0)']],0,1),'pointer-events':'none'}));
       if(on)g.append(n('rect',{x:x+.6,y:yy+.6,width:y.size-1.2,height:y.size-1.2,rx:4,fill:'none',stroke:'#ffffff','stroke-width':1.3,class:'yard-glow'}));
-      g.append(n('text',{x:y.x,y:yy+c*.62,'text-anchor':'middle','font-size':3.5,'font-weight':800,fill:'#ffffff','font-family':'Tajawal,Arial,sans-serif'},live?names[s]:''));
+      g.append(nameText(y.x,yy+c*.62-3.5*.34,fitName(live?names[s]:'',y.size-8,3.5),{fill:'#ffffff'}));
     }else{
       g.append(n('circle',{cx:y.x,cy:y.y,r:y.r+1.6,fill}),n('circle',{cx:y.x,cy:y.y,r:y.r-.4,fill:theme.plate,stroke:mix(color,'#000000',.15),'stroke-width':.45}));
       if(on)g.append(n('circle',{cx:y.x,cy:y.y,r:y.r+1.6,fill:'none',stroke:'#ffffff','stroke-width':1.1,class:'yard-glow'}));
-      if(live&&names[s]){const w=Math.min(24,4+names[s].length*2.1);g.append(n('rect',{x:y.x-w/2,y:y.y+y.r-2.2,width:w,height:5.2,rx:2.6,fill:mix(color,'#000000',.2),stroke:'#ffffff','stroke-width':.35}),n('text',{x:y.x,y:y.y+y.r+1.4,'text-anchor':'middle','font-size':3,'font-weight':800,fill:'#ffffff','font-family':'Tajawal,Arial,sans-serif'},names[s]));}
+      // the plate sits between two arms, so it never grows past 24 units
+      if(live&&names[s]){const fit=fitName(names[s],20.4,3),w=Math.min(24,Math.max(9,fit.width+4.2));g.append(n('rect',{x:y.x-w/2,y:y.y+y.r-2.2,width:w,height:5.2,rx:2.6,fill:mix(color,'#000000',.2),stroke:'#ffffff','stroke-width':.35}),nameText(y.x,y.y+y.r+.4,fit,{fill:'#ffffff'}));}
     }
-    for(const b of L.bases[s])g.append(n('circle',{cx:b.x,cy:b.y,r:c*.5,fill:mix(color,'#ffffff',.55),stroke:mix(color,'#000000',.1),'stroke-width':.45}),n('circle',{cx:b.x,cy:b.y+c*.08,r:c*.36,fill:mix(color,'#000000',.08),opacity:.35}));
+    const well=radial(defs,`${prefix}-well-${s}`,[[0,mix(color,'#ffffff',.72)],[.62,mix(color,'#ffffff',.45)],[1,mix(color,'#000000',.18)]],.6,.66,.62);
+    for(const b of L.bases[s])g.append(n('circle',{cx:b.x,cy:b.y,r:c*.52,fill:well,stroke:mix(color,'#000000',.12),'stroke-width':.45}),n('path',{d:`M${(b.x-c*.42).toFixed(2)} ${(b.y-c*.12).toFixed(2)}A${(c*.44).toFixed(2)} ${(c*.44).toFixed(2)} 0 0 1 ${(b.x+c*.12).toFixed(2)} ${(b.y-c*.42).toFixed(2)}`,fill:'none',stroke:'#000',opacity:.18,'stroke-width':c*.07,'stroke-linecap':'round'}));
     svg.append(g);
   }
   // Track.
-  const cellSize=c*.94;
+  const cellSize=c*.94,cellFill=gradient(defs,prefix+'-cell',[[0,mix(theme.cell,'#ffffff',.6)],[.55,theme.cell],[1,mix(theme.cell,'#000000',.07)]]);
   L.track.forEach((p,i)=>{
     const start=boardGeometry(state).starts.indexOf(i),safe=boardGeometry(state).safe.has(i)&&start<0,color=start>=0?BOARD_COLORS[start]:null,a=seats===6?p.a:0;
-    svg.append(rotRect(p,cellSize,cellSize,a,{fill:color||theme.cell,stroke:theme.line,'stroke-width':.4,'data-track':i}));
+    svg.append(rotRect({x:p.x+.25,y:p.y+.45},cellSize,cellSize,a,{fill:'#000',opacity:.12}),rotRect(p,cellSize,cellSize,a,{fill:color?gradient(defs,`${prefix}-start-${i}`,[[0,mix(color,'#ffffff',.28)],[1,mix(color,'#000000',.08)]]):cellFill,stroke:color?mix(color,'#000000',.2):theme.line,'stroke-width':.4,'data-track':i}));
     if(color){const next=L.track[(i+1)%L.track.length];svg.append(arrow(p,Math.atan2(next.y-p.y,next.x-p.x),c*.26,'#ffffff'));}
     else if(safe)svg.append(n('path',{d:star(p.x,p.y,c*.32),fill:'#c9a032',opacity:.9}));
   });
   // Home lanes and gates.
   for(let s=0;s<seats;s++){
-    const color=BOARD_COLORS[s],lane=gradient(defs,`${prefix}-lane-${s}`,[[0,mix(color,'#ffffff',.25)],[1,color]]),a=seats===6?L.angle(s):0;
+    const color=BOARD_COLORS[s],lane=gradient(defs,`${prefix}-lane-${s}`,[[0,mix(color,'#ffffff',.42)],[.5,color],[1,mix(color,'#000000',.12)]]),a=seats===6?L.angle(s):0;
     L.lanes[s].forEach((p,h)=>svg.append(rotRect(p,cellSize,cellSize,a,{fill:lane,stroke:mix(color,'#000000',.18),'stroke-width':.4,'data-home':s+':'+h})));
     const gate=L.gates[s];svg.append(rotRect(gate,cellSize,cellSize,a,{fill:color,stroke:mix(color,'#000000',.18),'stroke-width':.4}),arrow(gate,L.angle(s)+Math.PI,c*.27,'#ffffff'));
   }
@@ -126,8 +179,10 @@ function drawCross(svg,defs,prefix,state,L,theme,active){
   const finishGroup=n('g',{'data-finish':'true'}),R=seats===6?L.R0-c*.62:c*1.5;
   for(let s=0;s<seats;s++){
     const a1=L.angle(s)-Math.PI/seats,a2=L.angle(s)+Math.PI/seats,k=seats===4?Math.SQRT2:1/Math.cos(Math.PI/6),p1={x:100+Math.cos(a1)*R*k,y:100+Math.sin(a1)*R*k},p2={x:100+Math.cos(a2)*R*k,y:100+Math.sin(a2)*R*k};
-    finishGroup.append(n('path',{d:`M100 100L${xy(p1)}L${xy(p2)}Z`,fill:BOARD_COLORS[s],stroke:'#ffffff','stroke-width':.5,opacity:s<state.players.length?1:.45}));
+    const tri=radial(defs,`${prefix}-tri-${s}`,[[0,mix(BOARD_COLORS[s],'#ffffff',.35)],[1,mix(BOARD_COLORS[s],'#000000',.12)]],.5,.5,.7);
+    finishGroup.append(n('path',{d:`M100 100L${xy(p1)}L${xy(p2)}Z`,fill:tri,stroke:'#ffffff','stroke-width':.5,opacity:s<state.players.length?1:.45}));
   }
+  finishGroup.append(n('circle',{cx:100.4,cy:101,r:c*.95,fill:'#000',opacity:.12}));
   const petals=n('g',{transform:'translate(100 100)'});
   for(let i=0;i<8;i++)petals.append(n('ellipse',{cx:0,cy:-c*.48,rx:c*.2,ry:c*.42,fill:'#ffffff',opacity:.92,transform:`rotate(${i*45})`}));
   petals.append(n('circle',{r:c*.24,fill:'#f2c14e',stroke:'#ffffff','stroke-width':.5}));
@@ -135,26 +190,32 @@ function drawCross(svg,defs,prefix,state,L,theme,active){
 }
 
 function drawRing(svg,defs,prefix,state,L,theme,active){
-  const seats=L.seats,four=seats===4,names=state.players.map(p=>String(p?.name||'').slice(0,12));
+  const seats=L.seats,four=seats===4,names=state.players.map(playerLabel);
   const frame=gradient(defs,prefix+'-frame',[[0,theme.frame[0]],[.3,theme.frame[1]],[1,theme.frame[2]]]);
   const felt=radial(defs,prefix+'-felt',[[0,theme.felt[0]],[.7,theme.felt[1]],[1,theme.felt[2]]]);
   const outline=four?'M26 1H174Q199 1 199 26V174Q199 199 174 199H26Q1 199 1 174V26Q1 1 26 1Z':'M'+Array.from({length:6},(_,i)=>xy({x:100+Math.cos(i*Math.PI/3-Math.PI/2)*99,y:100+Math.sin(i*Math.PI/3-Math.PI/2)*99})).join('L')+'Z';
   const inner=four?'M28 6H172Q194 6 194 28V172Q194 194 172 194H28Q6 194 6 172V28Q6 6 28 6Z':'M'+Array.from({length:6},(_,i)=>xy({x:100+Math.cos(i*Math.PI/3-Math.PI/2)*93,y:100+Math.sin(i*Math.PI/3-Math.PI/2)*93})).join('L')+'Z';
-  svg.append(n('path',{d:outline,fill:'#000',opacity:.3,transform:'translate(0 1.8)'}),n('path',{d:outline,fill:frame}),n('path',{d:inner,fill:felt,stroke:theme.rim,'stroke-width':.8}));
+  svg.append(n('path',{d:outline,fill:'#000',opacity:.3,transform:'translate(0 1.8)'}),n('path',{d:outline,fill:frame}),n('path',{d:outline,fill:'none',stroke:'#ffffff','stroke-width':.6,opacity:.26,transform:'translate(.4 .4) scale(.996)'}),n('path',{d:inner,fill:felt,stroke:theme.rim,'stroke-width':.8}));
   // Felt texture and an inlaid ring.
   const grain=n('pattern',{id:prefix+'-weave',width:3,height:3,patternUnits:'userSpaceOnUse'});grain.append(n('path',{d:'M0 3 3 0',stroke:'#ffffff',opacity:.05,'stroke-width':.5}));defs.append(grain);
   svg.append(n('path',{d:inner,fill:paint(prefix+'-weave')}));
   svg.append(n('circle',{cx:100,cy:100,r:four?66:67,fill:'none',stroke:theme.rim,'stroke-width':.35,opacity:.55}),n('circle',{cx:100,cy:100,r:46,fill:'none',stroke:theme.rim,'stroke-width':.35,opacity:.4}));
   if(four)[['♠',18,18],['♥',182,18],['♦',182,186],['♣',18,186]].forEach(([suit,x,y],i)=>svg.append(n('text',{x,y,'text-anchor':'middle','font-size':9,fill:i===1||i===2?'#e0474c':theme.rim,opacity:.32},suit)));
-  const hole=radial(defs,prefix+'-hole',[[0,'#000000',1],[.75,theme.hole,1],[1,mix(theme.hole,'#ffffff',.25),1]],.5,.42,.6);
+  // carved holes: dark under the top-left lip, lit on the far wall
+  const hole=radial(defs,prefix+'-hole',[[0,mix(theme.hole,'#ffffff',.22),1],[.45,theme.hole,1],[.85,'#000000',1],[1,'#000000',1]],.62,.68,.72);
   // Pockets (bases) with name plates.
   for(let s=0;s<seats;s++){
     const p=L.pockets[s],color=BOARD_COLORS[s],live=s<state.players.length,on=s===active,deg=(p.a+Math.PI/2)*180/Math.PI;
     const g=n('g',{'data-pocket':s,'data-active':String(on),opacity:live?1:.38});
-    g.append(n('rect',{x:p.x-15.8,y:p.y-5.4,width:31.6,height:10.8,rx:5.4,fill:mix(color,'#000000',.25),stroke:on?'#ffffff':mix(color,'#ffffff',.25),'stroke-width':on?1:.5,transform:`rotate(${deg.toFixed(2)} ${p.x.toFixed(2)} ${p.y.toFixed(2)})`,class:on?'yard-glow':null}));
+    const tf=`rotate(${deg.toFixed(2)} ${p.x.toFixed(2)} ${p.y.toFixed(2)})`;
+    g.append(n('rect',{x:p.x-15.8,y:p.y-4.9,width:31.6,height:10.8,rx:5.4,fill:'#000',opacity:.25,transform:tf}));
+    g.append(n('rect',{x:p.x-15.8,y:p.y-5.4,width:31.6,height:10.8,rx:5.4,fill:gradient(defs,`${prefix}-pocket-${s}`,[[0,mix(color,'#000000',.45)],[.4,mix(color,'#000000',.22)],[1,mix(color,'#ffffff',.08)]],0,1),stroke:on?'#ffffff':mix(color,'#ffffff',.3),'stroke-width':on?1:.5,transform:tf,class:on?'yard-glow':null}));
     for(const b of L.bases[s])g.append(n('circle',{cx:b.x,cy:b.y,r:L.hole,fill:hole,stroke:mix(color,'#ffffff',.3),'stroke-width':.45}));
-    const label={x:100+Math.cos(p.a)*(four?68.5:69),y:100+Math.sin(p.a)*(four?68.5:69)};
-    g.append(n('text',{x:label.x,y:label.y+1.1,'text-anchor':'middle','font-size':3.2,'font-weight':800,fill:theme.label,'font-family':'Tajawal,Arial,sans-serif',opacity:.95},live?names[s]:''));
+    // The name sits between the ring and the pocket. Side seats only have a
+    // narrow band there, so a long name shrinks, wraps or ends in an ellipsis.
+    const side=Math.abs(Math.cos(p.a))>.3,radius=side?(four?67.6:68):(four?68.5:69),room=side?(four?18.4:16.5):50;
+    const label={x:100+Math.cos(p.a)*radius,y:100+Math.sin(p.a)*radius};
+    g.append(nameText(label.x,label.y,fitName(live?names[s]:'',room,3.2,side?2:1),{fill:theme.label,opacity:.95}));
     svg.append(g);
   }
   // Track holes; start holes wear the seat colour.
@@ -171,7 +232,8 @@ function drawRing(svg,defs,prefix,state,L,theme,active){
   }
   // Centre medallion.
   const finish=n('g',{'data-finish':'true'}),medal=radial(defs,prefix+'-medal',[[0,mix(theme.felt[0],'#ffffff',.15)],[1,theme.felt[2]]]);
-  finish.append(n('circle',{cx:100,cy:100,r:15.5,fill:medal,stroke:theme.rim,'stroke-width':.8}),n('circle',{cx:100,cy:100,r:13.6,fill:'none',stroke:theme.rim,'stroke-width':.3,opacity:.7}));
+  const brass=gradient(defs,prefix+'-brass',[[0,'#fff3c4'],[.35,theme.rim],[1,mix(theme.rim,'#000000',.45)]]);
+  finish.append(n('circle',{cx:100.5,cy:101.3,r:16.4,fill:'#000',opacity:.25}),n('circle',{cx:100,cy:100,r:16.2,fill:brass}),n('circle',{cx:100,cy:100,r:15,fill:medal,stroke:mix(theme.rim,'#000000',.3),'stroke-width':.4}),n('circle',{cx:100,cy:100,r:13.6,fill:'none',stroke:theme.rim,'stroke-width':.3,opacity:.7}));
   ['♠','♥','♦','♣'].forEach((suit,i)=>{const a=i*Math.PI/2-Math.PI/4;finish.append(n('text',{x:100+Math.cos(a)*9.2,y:100+Math.sin(a)*9.2+1.4,'text-anchor':'middle','font-size':3.8,fill:i===1||i===2?'#e0474c':theme.medal,opacity:.85},suit));});
   finish.append(n('text',{x:100,y:101.4,'text-anchor':'middle','font-size':4,'font-weight':900,fill:theme.medal,'font-family':'Tajawal,Arial,sans-serif'},'جاكارو'));
   svg.append(finish);
@@ -188,13 +250,13 @@ export function createAtelierPiece({prefix='piece',color='#2f86e8',kind='classic
 function stoneGraphic(game,defs,prefix,seat,c){
   const P=pieces(),color=BOARD_COLORS[seat],pawn=equipped('pawn');
   if(game==='jackaroo'){
-    const g=n('g',{transform:'scale(.6)'});
+    const g=n('g',{transform:'scale(.66)'});
     if(P)g.append(P.marble(document,defs,{style:P.marbleFor(pawn),color,scope:prefix+'-m'+seat}));
     else g.append(n('circle',{r:5,fill:color,stroke:'#fff','stroke-width':.6}));
     return g;
   }
-  const scale=c/12.8*.66,g=n('g',{transform:`translate(0 ${(c*.28).toFixed(2)}) scale(${scale.toFixed(3)})`});
-  if(P)g.append(P.pawn(document,defs,{design:KINDS[pawn]||'classic',color,scope:prefix+'-p'+seat}));
+  const scale=c/12.8*.8,g=n('g',{transform:`translate(0 ${(c*.3).toFixed(2)}) scale(${scale.toFixed(3)})`});
+  if(P)g.append(P.pawn(document,defs,{design:KINDS[pawn]||'classic',item:pawn,color,scope:prefix+'-p'+seat}));
   else g.append(createAtelierPiece({prefix:prefix+'-p'+seat,color}));
   return g;
 }

@@ -101,6 +101,13 @@ html[data-dice=dice-smoke],html[data-dice=dice-nebula]{--die-one:#ffdf9d}
 
 @media (prefers-reduced-motion:reduce){:is(html,#v31) .pro-die.v31.is-six .pro-die-glow{animation:none;opacity:.6}}
 
+/* 31.1.0 — the GPU die (dice-3d-v31-1.js). The canvas is larger than the
+   die so it can hop and cast its shadow; the CSS cube stays as a fallback. */
+:is(html,#v31) .die.pro-die.v31.die3d{overflow:visible!important;background:none!important;box-shadow:none!important}
+:is(html,#v31) .die.pro-die.v31.die3d>.pro-die-flight,:is(html,#v31) .die.pro-die.v31.die3d>.pro-die-shadow{display:none!important}
+:is(html,#v31) .die.pro-die.v31.die3d>.die3d-canvas{position:absolute!important;left:-30%!important;top:-30%!important;width:160%!important;height:160%!important;max-width:none!important;pointer-events:none!important;z-index:2!important;display:block!important}
+:is(html,#v31) .die.pro-die.v31.die3d>.pro-die-glow{z-index:1!important}
+
 /* assets/css/reactions-v31.css */
 /* Tahdia 31.0.0 — reactions: the board button, the picker sheet and the
    effects layer. Tiers carry meaning: slate free, blue rare, violet epic,
@@ -537,3 +544,16 @@ body.shop31 .sx-bag-summary small{color:var(--sx-muted);font-size:12px}
 @media (prefers-reduced-motion:reduce){
  body.shop31 *{animation:none!important;transition:none!important}
 }
+
+/* assets/css/shop-v31-1.css */
+/* Tahdia 31.1.0 — shop touches for the 3D pieces, the GPU dice and the real
+   board pictures. */
+/* the account line wraps instead of being cut off */
+body.shop31 .sx-title small{white-space:normal!important;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.3!important;font-size:11px!important}
+@media(max-width:340px){body.shop31 .sx-title small{-webkit-line-clamp:3;font-size:10px!important;line-height:1.25!important}}
+/* boards: a picture of the real board, its frame casting a soft shadow */
+body.shop31 .sx-board-photo{display:block;width:84%;height:auto;aspect-ratio:1;max-height:88%;object-fit:contain;border-radius:11%;filter:drop-shadow(0 12px 16px rgba(0,0,0,.55))}
+body.shop31 .sx-preview-stage .sx-board-photo{width:min(88%,330px);border-radius:7%}
+body.shop31 .sx-hero .sx-board-photo{width:min(78%,260px)}
+/* 3D stones already carry their own contact shadow */
+body.shop31 .sx-pawn-art{filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))!important}

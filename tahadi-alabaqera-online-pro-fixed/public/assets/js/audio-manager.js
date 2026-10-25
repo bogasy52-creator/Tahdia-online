@@ -10,6 +10,8 @@
   const audio={},samplePool={},contentPlayers=new Set();
   const quizFiles={round:'round',correct:'correct',wrong:'wrong',reveal:'reveal',buzzer:'buzzer',relay:'relay',quizTimeout:'timeout'};
   for(const [name,file] of Object.entries(quizFiles))samples[name]='assets/sounds/quiz-v28/'+file+'.wav';
+  // 31.1.0: a clear crunch-and-gulp when a snake eats a stone.
+  samples.snakeEat='assets/sounds/board-v31-1/snake-eat.wav';
   // Create/decode only a sound the player uses, sharing aliases of the same file.
   function sample(name){const src=samples[name]||samples.click;if(!samplePool[src]){const a=new Audio(src);a.preload='none';a.volume=settings.volume*.9;samplePool[src]=a;}return audio[name]=samplePool[src];}
   const diceSamples={soft:['soft-1','soft-2'],wood:['wood-1','wood-2'],crystal:['crystal-1','crystal-2']},diceAudio={},diceCursor={dice:-1,diceImpact:-1};
@@ -33,6 +35,8 @@
   function setMuted(v){settings.muted=Boolean(v);applySettings();save();return settings.muted}function toggleMuted(){return setMuted(!settings.muted)}
   function update(next){const requested=Number(next.volume??settings.volume);settings={...settings,...next,volume:Number.isFinite(requested)?Math.min(1,Math.max(0,requested)):settings.volume};for(const a of Object.values(audio))a.volume=settings.volume*.9;applySettings();save();return {...settings}}
   function getSettings(){return {...settings}}function dispose(){try{ctx?.close()}catch{}ctx=null;}
-  window.BS_AUDIO={play,timerTick,timerEnd,vibrate,setMuted,toggleMuted,update,getSettings,unlock,dispose,tone,registerContent,contentActive};
+    // Fetch the sounds a game is about to need so the first one is not late.
+  function prime(names=[]){for(const name of names){try{const a=sample(name);if(a&&a.preload!=='auto'){a.preload='auto';a.load?.();}}catch{}}}
+  window.BS_AUDIO={play,timerTick,timerEnd,vibrate,setMuted,toggleMuted,update,getSettings,unlock,dispose,tone,registerContent,contentActive,prime};
   const starter=()=>unlock();window.addEventListener('pointerdown',starter,{once:true,passive:true});window.addEventListener('keydown',starter,{once:true})
 })();

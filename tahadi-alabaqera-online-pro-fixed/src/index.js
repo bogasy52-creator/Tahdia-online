@@ -30,7 +30,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='31.0.0';
+const RELEASE='31.1.0';
 const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
 // Free reactions work for everyone; paid ones only for the account that

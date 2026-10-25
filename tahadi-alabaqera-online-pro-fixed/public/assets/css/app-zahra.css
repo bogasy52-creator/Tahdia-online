@@ -691,6 +691,13 @@ html[data-dice=dice-smoke],html[data-dice=dice-nebula]{--die-one:#ffdf9d}
 
 @media (prefers-reduced-motion:reduce){:is(html,#v31) .pro-die.v31.is-six .pro-die-glow{animation:none;opacity:.6}}
 
+/* 31.1.0 — the GPU die (dice-3d-v31-1.js). The canvas is larger than the
+   die so it can hop and cast its shadow; the CSS cube stays as a fallback. */
+:is(html,#v31) .die.pro-die.v31.die3d{overflow:visible!important;background:none!important;box-shadow:none!important}
+:is(html,#v31) .die.pro-die.v31.die3d>.pro-die-flight,:is(html,#v31) .die.pro-die.v31.die3d>.pro-die-shadow{display:none!important}
+:is(html,#v31) .die.pro-die.v31.die3d>.die3d-canvas{position:absolute!important;left:-30%!important;top:-30%!important;width:160%!important;height:160%!important;max-width:none!important;pointer-events:none!important;z-index:2!important;display:block!important}
+:is(html,#v31) .die.pro-die.v31.die3d>.pro-die-glow{z-index:1!important}
+
 /* assets/css/tables-v31.css */
 /* Tahdia 31.0.0 — Zahra and Jackaroo pages around the new tables
    (board-petals-v29.js): lobby, player chips, dice dock, cards. */

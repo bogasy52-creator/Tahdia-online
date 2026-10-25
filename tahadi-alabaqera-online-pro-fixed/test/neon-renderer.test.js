@@ -21,7 +21,7 @@ async function renderer(){
  context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}},{from:4,to:14,index:1,a:{x:200,y:900},b:{x:500,y:800}}]);
  return {context,canvas,proxy,calls,timers,events,step(ms){wall=ms;frames.shift()?.(ms)},time(ms){wall=ms}};
 }
-test('arena draws independent vector snakes and ladders without images, and does not clear skipped frames',async()=>{
+test('without the arena art helper the board still draws its snakes and ladders, and throttled frames keep the last drawing',async()=>{
  const h=await renderer();h.step(100);assert.equal(h.canvas.dataset.assets,'ready');assert.equal(h.canvas.dataset.snakes,1);assert.equal(h.canvas.dataset.ladders,1);assert.equal(h.calls.filter(x=>x==='raster').length,0);assert.ok(h.calls.filter(x=>x==='body').length>8);
  const clears=h.calls.filter(x=>x==='clear').length;h.step(115);assert.equal(h.calls.filter(x=>x==='clear').length,clears,'throttled frames must retain the previous drawing');
 });
@@ -36,7 +36,7 @@ test('growth completion is independent of render frames and excludes paused time
  h.time(10000);h.context.BS_PRO.paused=false;h.events.get('bs-match-pause')();assert.equal([...h.timers.values()][0].ms,700);
  [...h.timers.values()][0].fn();await waiting;assert.ok(done);assert.equal(h.events.size,0);
 });
-test('every shop stone becomes its vector piece in the player colour, and characters keep their sheet',async()=>{
+test('every shop stone becomes its 3D piece in the player colour, and characters keep their sheet',async()=>{
  const h=await renderer(),made=[],shapes={'pawn-jade':'gem','pawn-gold':'crown','pawn-orb':'orb'};h.context.BS_COSMETIC_ART={paint(){throw new Error('old stones must not be replaced')}};
  h.context.BS_PIECES={equipped:()=>h.context.document.documentElement.dataset.pawn,designFor:id=>shapes[id]||'classic',icon:(doc,opts)=>{made.push(opts);return {opts};}};
  for(const pawn of ['pawn-classic','pawn-jade','pawn-gold','pawn-orb']){h.context.document.documentElement.dataset.pawn=pawn;const node=h.context.BS_ARENA.crystal({appendChild(){}},1);assert.equal(node.opts.color,h.context.BS_ARENA.PLAYER_COLORS[1]);}

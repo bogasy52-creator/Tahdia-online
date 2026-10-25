@@ -3,7 +3,7 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=31.0.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=31.1.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
@@ -53,8 +53,19 @@ function message(text,error=false){$('shopMessage').textContent=text;$('shopMess
 
 /* ---------- art ---------- */
 function svgGradient(defs,id,stops,x2=0,y2=1){const g=svgNode('linearGradient',{id,x1:0,y1:0,x2,y2});stops.forEach(([o,c,a])=>g.append(svgNode('stop',{offset:o,'stop-color':c,'stop-opacity':a??1})));defs.append(g);return 'url(#'+id+')';}
-function pawnColor(item){const list=window.BS_PIECES?.COLORS||['#e0474c','#2f86e8','#f0b429','#22a565','#8b5cf6','#f2711c'];const index=catalogue().filter(i=>i.type==='pawn').findIndex(i=>i.id===item.id);return list[(index<0?1:index)%list.length];}
+// each stone is shown in the player colour that suits its material best
+const SHOWCASE={'pawn-classic':0,'pawn-atlas':1,'pawn-rook':2,'pawn-onyx':3,'pawn-orbit':5,'pawn-lance':1,'pawn-lotus':0,'pawn-monolith':3,'pawn-prism':4,'pawn-jade':3,'pawn-amethyst':4,'pawn-gold':2,'pawn-crown':4,'pawn-orb':1};
+function pawnColor(item){const list=window.BS_PIECES?.COLORS||['#e0474c','#2f86e8','#f0b429','#22a565','#8b5cf6','#f2711c'];const fixed=SHOWCASE[item.id];if(fixed!==undefined)return list[fixed%list.length];const index=catalogue().filter(i=>i.type==='pawn').findIndex(i=>i.id===item.id);return list[(index<0?1:index)%list.length];}
+// 31.1.0: the shop shows each board exactly as it plays — a picture of the real
+// board with its tiles, ladders and arena snakes. The drawing below stays as a fallback.
+const BOARD_PHOTOS=new Set(['board-forest','board-ocean','board-sand','board-twilight','board-royal','board-cyber']);
 function miniBoard(stage,item){
+ if(!BOARD_PHOTOS.has(item.id))return vectorBoard(stage,item);
+ const img=make('img','sx-board-photo');img.alt='';img.loading='lazy';img.decoding='async';img.src='/assets/previews/board-v311-'+item.id.slice(6)+'.webp';
+ img.addEventListener('error',()=>{img.remove();vectorBoard(stage,item);},{once:true});
+ stage.append(img);
+}
+function vectorBoard(stage,item){
  const look=BOARD_LOOK[item.id]||BOARD_LOOK['board-forest'],prefix='sxb'+(++artSequence),svg=svgNode('svg',{viewBox:'0 0 120 120','aria-hidden':'true',focusable:'false',class:'sx-board-art'}),defs=svgNode('defs');svg.append(defs);
  const frame=svgGradient(defs,prefix+'f',[[0,look.hi],[.25,look.frame],[1,look.dark]],1,1);
  svg.append(svgNode('rect',{x:4,y:4,width:112,height:112,rx:12,fill:frame}));
@@ -92,11 +103,11 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame='
   const state={turn:0,players:Array.from({length:seats},(_,i)=>({name:['أنت','سارة','محمد','ريم','خالد','نور'][i],tokens:[i===0?3:-1,i===1?9:-1,-1,-1],marbles:[i===0?3:-1,i===1?9:-1,-1,-1]}))};
   renderPetalBoard(stage,state,{game:boardGame,material:TABLE_MATERIAL[item.id]||item.design||'walnut',preview:true,active:-1});
  }else if(item.type==='dice'){
-  for(const [name,value]of Object.entries(core.COSMETIC_STYLES[item.id]||{}))stage.style.setProperty(name,value);
+  stage.dataset.diceSkin=item.id;for(const [name,value]of Object.entries(core.COSMETIC_STYLES[item.id]||{}))stage.style.setProperty(name,value);
   if(DIE_ONE[item.id])stage.style.setProperty('--die-one',DIE_ONE[item.id]);
   const die=make('div','die');stage.append(die);window.BS_DICE?.mount?.(die);window.BS_DICE?.set?.(die,5);stage.roll=()=>window.BS_DICE?.roll?.(die,window.BS_DICE.random(),{quiet:false});
  }else if(item.type==='pawn'){
-  const svg=window.BS_PIECES?.icon?.(document,{design:window.BS_PIECES.designFor(item.id),color:playerColor||pawnColor(item),className:'sx-pawn-art',label:''});if(svg)stage.append(svg);
+  const svg=window.BS_PIECES?.icon?.(document,{design:window.BS_PIECES.designFor(item.id),item:item.id,color:playerColor||pawnColor(item),className:'sx-pawn-art',label:'',size:'l'});if(svg)stage.append(svg);
  }else if(item.type==='character'){
   const img=make('img','sx-character-art');img.src='/assets/characters/'+(item.asset||'fox')+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
  }else if(item.type==='snake'){

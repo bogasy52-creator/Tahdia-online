@@ -1,4 +1,5 @@
-/* Tahdia 31.0.0 — one shared 3D die for every dice game.
+/* Tahdia 31.1.0 — one shared 3D die for every dice game (GPU die from
+   dice-3d-v31-1.js when available, this CSS cube otherwise).
    A real cube: six rounded faces around a solid core (no see-through edges),
    a tumbling throw that lands on the exact face, and a short glow on a six. */
 (function(){
@@ -38,11 +39,14 @@
     flight.className='pro-die-flight';shadow.className='pro-die-shadow';shadow.setAttribute('aria-hidden','true');glow.className='pro-die-glow';glow.setAttribute('aria-hidden','true');
     flight.appendChild(cube);el.append(shadow,glow,flight);
     set(el,Number(el.dataset.value)||1);
+    // 31.1.0: a real 3D die drawn on the GPU when the device supports it.
+    if(!bonus)try{window.BS_DIE3D?.attach?.(el);}catch{}
   }
   function mountBonus(el){mount(el,true);}
   function set(el,value){
     if(!rotations[value])return;
     const cube=el.querySelector('.pro-die-cube');if(cube)cube.style.transform=transform(value);
+    el.__die3d?.set?.(value);
     el.dataset.value=value;el.setAttribute('role','img');
     el.setAttribute('aria-label',el.dataset.bonus?'نرد المكافآت: '+bonusNames[value-1]:'نتيجة النرد '+value);
   }
@@ -56,7 +60,11 @@
       let anims=[];
       if(!quiet){window.BS_AUDIO?.play?.('dice');window.BS_AUDIO?.vibrate?.([10,30,10]);}
       try{
-        if(!reduce&&cube?.animate){
+        if(el.__die3d){
+          const duration=reduce?0:1040;
+          if(!quiet&&!reduce)setTimeout(()=>window.BS_AUDIO?.play?.('diceImpact',{volume:.3}),Math.round(duration*.36));
+          await el.__die3d.roll(value,duration);
+        }else if(!reduce&&cube?.animate){
           const [x,y]=rotations[value],spinX=(Math.random()<.5?-1:1)*360,spinY=720;
           const final=`rotateX(${x+spinX*2}deg) rotateY(${y+spinY}deg)`;
           const from=cube.style.transform||transform(1),duration=1040;

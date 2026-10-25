@@ -162,7 +162,8 @@
     "assets/css/tabletop-v30.css",
     "assets/css/dice-v31.css",
     "assets/css/reactions-v31.css",
-    "assets/css/shop-v31.css"
+    "assets/css/shop-v31.css",
+    "assets/css/shop-v31-1.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -184,6 +185,7 @@
     "assets/css/release-v31.css",
     "assets/css/dice-v31.css",
     "assets/css/snakes-v31.css",
+    "assets/css/snakes-board-v31-1.css",
     "assets/css/reactions-v31.css"
   ],
   "social.html": [

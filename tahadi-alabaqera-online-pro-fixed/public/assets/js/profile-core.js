@@ -9,7 +9,7 @@
     {id:'character-princess',type:'character',name:'الأميرة البنفسجية',description:'أميرة بفستان بنفسجي وتاج ذهبي.',price:300,color:'#c3a1ef',asset:'princess'},
     {id:'character-fairy',type:'character',name:'جنيّة النعناع',description:'جنيّة بأجنحة وتفاصيل خضراء ناعمة.',price:380,color:'#9ee3c0',asset:'fairy'},
     {id:'character-astronaut',type:'character',name:'رائدة الفضاء',description:'رائدة فضاء بخوذة لامعة على قاعدة ذهبية.',price:450,color:'#95c4ec',asset:'astronaut'},
-    {id:'pawn-classic',type:'pawn',name:'الحجر الكلاسيكي',description:'كريستال مضيء على قاعدة معدنية.',price:0,color:'#e8e5db'},
+    {id:'pawn-classic',type:'pawn',name:'الحجر الكلاسيكي',description:'حجر لامع بلون اللاعب، بطوق فضي وقاعدة مدرّجة.',price:0,color:'#e8e5db'},
     {id:'pawn-jade',type:'pawn',name:'حجر اليشم',description:'أخضر هادئ بلمسة حجرية.',price:120,color:'#55ba98'},
     {id:'pawn-onyx',type:'pawn',name:'حجر الأونيكس',description:'أسود مصقول بحافة ذهبية.',price:180,color:'#28313e'},
     {id:'dice-ivory',type:'dice',name:'نرد العاج',description:'نقاط واضحة وحركة قصيرة.',price:0,color:'#f6f0e4'},

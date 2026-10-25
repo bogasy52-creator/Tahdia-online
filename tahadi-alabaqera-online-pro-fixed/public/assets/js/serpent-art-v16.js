@@ -130,7 +130,7 @@
    const gem=c.createRadialGradient(tip-S*.02,y-S*.02,0,tip,y,S*.08);gem.addColorStop(0,'#e6fff1');gem.addColorStop(.5,'#3ce38f');gem.addColorStop(1,'#0b4a2c');c.fillStyle=gem;c.beginPath();c.arc(tip,y,S*(y===0?.075:.06),0,Math.PI*2);c.fill();}
   c.restore();
  }
- function body(c,input,id,radius=13,boost=false,_variant=0,budget=80){
+ function body(c,input,id,radius=13,boost=false,_variant=0,budget=80,{patternScale=0}={}){
   if(id==='snake-sovereign')return sovereignBody(c,input,Math.max(1,Math.min(300,Number(radius)||13)),boost,budget);
   const points=pathPoints(input,budget);if(points.length<2)return;const p=species(id),r=Math.max(1,Math.min(300,Number(radius)||13)),n=points.length,texture=material(id);
   const edges=points.map((a,i)=>{const prev=points[Math.max(0,i-1)],next=points[Math.min(n-1,i+1)],dx=prev.x-next.x,dy=prev.y-next.y,len=Math.hypot(dx,dy)||1;return {...a,nx:-dy/len,ny:dx/len,w:r*(.04+.96*Math.pow(1-i/(n-1),p.kind==='ribbon'?.65:p.kind==='crystal'?.35:.44))*(p.kind==='cobra'&&i/(n-1)<.19?1+Math.sin(i/(n-1)/.19*Math.PI)*.38:1)};});
@@ -139,7 +139,9 @@
   const trace=(from,to)=>{c.beginPath();c.moveTo(points[from].x,points[from].y);for(let i=from+1;i<=to;i++)c.lineTo(points[i].x,points[i].y);};
   c.save();c.lineCap='round';c.lineJoin='round';
   const tailStart=Math.max(1,Math.floor((n-1)*.75));
-  let cache=patterns.get(c);if(!cache){cache=new Map();patterns.set(c,cache);}let pattern=cache.get(p.kind);if(!cache.has(p.kind)){try{pattern=c.createPattern?.(texture,'repeat')||null;}catch{pattern=null;}cache.set(p.kind,pattern);}
+  // Board snakes are thinner than arena snakes, so their scales shrink with them.
+  const patternKey=patternScale>0?p.kind+'@'+patternScale.toFixed(3):p.kind;
+  let cache=patterns.get(c);if(!cache){cache=new Map();patterns.set(c,cache);}let pattern=cache.get(patternKey);if(!cache.has(patternKey)){try{pattern=c.createPattern?.(texture,'repeat')||null;if(pattern&&patternScale>0&&typeof DOMMatrix==='function')pattern.setTransform?.(new DOMMatrix().scaleSelf(patternScale,patternScale));}catch{pattern=null;}cache.set(patternKey,pattern);}
   for(let i=n-1;i>tailStart;i--){const a=edges[i],b=edges[i-1],width=r*Math.max(.06,(n-i)/(n-tailStart));c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.lineWidth=width*2+.8;c.strokeStyle=p.dark;c.stroke();c.lineWidth=width*2;c.strokeStyle=pattern||p.mid;c.stroke();}
   trace(0,tailStart);c.lineWidth=r*2+1.2;c.strokeStyle=p.dark;c.stroke();c.lineWidth=r*2;c.strokeStyle=pattern||p.mid;c.stroke();
   trace(0,tailStart);c.lineWidth=Math.max(1,r*.26);c.strokeStyle=p.light+'70';c.stroke();

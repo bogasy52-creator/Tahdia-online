@@ -1,0 +1,48 @@
+/* Tahdia 31.1.0 — the snakes & ladders board, rebuilt.
+   Raised tiles with a bevel and grout lines, light falling from the top left,
+   a deep frame with an inlaid rim, marked snake heads and ladder feet, and
+   the arena's snakes on top (neon-arena.js). Each board from the shop is a
+   full material: wood, palace, ocean, sand, dusk and reactor. */
+html{--snl-grout:#4a2b12;--snl-tile:#f8ecd4;--snl-tile-alt:#ecd3a4;--snl-tile-num:#6a4220;--snl-num-glow:rgba(255,255,255,.65);--snl-tile-hi:rgba(255,255,255,.7);--snl-tile-lo:rgba(70,40,10,.2);--snl-glow:rgba(255,236,190,.28);
+ --snl-snake-tint:#e0474c;--snl-ladder-tint:#22a565;--snl-frame-a:#c48a52;--snl-frame-b:#7a4a24;--snl-frame-c:#3a200b;--snl-inlay:#e9c27a}
+html[data-board=board-royal]{--snl-grout:#9a7633;--snl-tile:#fdf8ee;--snl-tile-alt:#f1e2bd;--snl-tile-num:#7d5b1f;--snl-frame-a:#fff0c4;--snl-frame-b:#c8a159;--snl-frame-c:#6e4f17;--snl-inlay:#fff3cf;--snl-glow:rgba(255,246,214,.34)}
+html[data-board=board-ocean]{--snl-grout:#103a57;--snl-tile:#eef7fc;--snl-tile-alt:#cfe6f4;--snl-tile-num:#1f5272;--snl-tile-lo:rgba(10,50,80,.2);--snl-frame-a:#5aa7d6;--snl-frame-b:#1d5f8c;--snl-frame-c:#0b2b44;--snl-inlay:#bfe7ff;--snl-glow:rgba(220,244,255,.3)}
+html[data-board=board-sand]{--snl-grout:#6b4a26;--snl-tile:#f7e9cb;--snl-tile-alt:#e8cc95;--snl-tile-num:#6d4a20;--snl-frame-a:#d6aa6c;--snl-frame-b:#8f6334;--snl-frame-c:#4a2f12;--snl-inlay:#f6dca6}
+html[data-board=board-twilight]{--snl-grout:#120c26;--snl-tile:#2d2556;--snl-tile-alt:#231c46;--snl-tile-num:#d8ccff;--snl-num-glow:rgba(10,4,30,.8);--snl-tile-hi:rgba(200,180,255,.22);--snl-tile-lo:rgba(0,0,0,.35);--snl-frame-a:#7f6fc4;--snl-frame-b:#3a2f6e;--snl-frame-c:#140e2c;--snl-inlay:#c9b8ff;--snl-glow:rgba(200,180,255,.14)}
+html[data-board=board-cyber]{--snl-grout:#03111b;--snl-tile:#10283b;--snl-tile-alt:#0b1e2e;--snl-tile-num:#86ecff;--snl-num-glow:rgba(0,10,20,.85);--snl-tile-hi:rgba(110,230,255,.18);--snl-tile-lo:rgba(0,0,0,.4);--snl-frame-a:#3fd0f5;--snl-frame-b:#0e3550;--snl-frame-c:#041521;--snl-inlay:#55e1ff;--snl-glow:rgba(110,230,255,.12)}
+
+/* ---------- frame ---------- */
+:is(html,#v31) body.game-snakes #game.snl31 #boardWrap{padding:3.6%!important;border-radius:22px!important;
+ background:linear-gradient(150deg,rgba(255,255,255,.3),rgba(255,255,255,0) 32%),repeating-linear-gradient(98deg,rgba(0,0,0,.05) 0 2px,rgba(0,0,0,0) 2px 9px),linear-gradient(150deg,var(--snl-frame-a) 0%,var(--snl-frame-b) 28%,var(--snl-frame-c) 100%)!important;
+ box-shadow:0 22px 44px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.4),inset 0 0 0 1px rgba(0,0,0,.45)!important}
+:is(html,#v31) body.game-snakes #game.snl31 #boardWrap::before{inset:2.45%!important;border-radius:13px!important;box-shadow:0 0 0 2px var(--snl-inlay),0 0 0 3.5px rgba(0,0,0,.35),inset 0 0 14px rgba(0,0,0,.4)!important}
+
+/* ---------- tiles ---------- */
+:is(html,#v31) body.game-snakes #game.snl31 #board{gap:2px!important;padding:2px!important;border-radius:11px!important;background:var(--snl-grout)!important;box-shadow:inset 0 3px 8px rgba(0,0,0,.5)!important;isolation:isolate}
+:is(html,#v31) body.game-snakes #game.snl31 #board::after{content:'';position:absolute;inset:0;border-radius:11px;pointer-events:none;z-index:2;
+ background:radial-gradient(130% 95% at 16% 8%,var(--snl-glow),rgba(255,255,255,0) 58%),radial-gradient(150% 130% at 50% 50%,rgba(0,0,0,0) 62%,rgba(0,0,0,.2))}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell{--t:var(--snl-tile);border-radius:5px!important;
+ background:linear-gradient(155deg,var(--snl-tile-hi),rgba(255,255,255,0) 46%),var(--t)!important;
+ box-shadow:inset 0 1.5px 0 var(--snl-tile-hi),inset 0 -2px 0 var(--snl-tile-lo),inset -1.5px 0 0 var(--snl-tile-lo),0 1px 1.5px rgba(0,0,0,.28)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.tile-alt{--t:var(--snl-tile-alt)}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell>b{left:9%!important;top:7%!important;font:900 clamp(9px,2.55vw,13.5px)/1 Tajawal,system-ui,sans-serif!important;color:var(--snl-tile-num)!important;opacity:.92!important;text-shadow:0 1px 0 var(--snl-num-glow)!important;letter-spacing:-.02em}
+/* Danger and lift: the heads and ladder feet are tinted so a player sees them at a glance. */
+@supports (background:color-mix(in srgb,red,blue)){
+ :is(html,#v31) body.game-snakes #game.snl31 .snake-cell.snake-head-cell{--t:color-mix(in srgb,var(--snl-tile) 74%,var(--snl-snake-tint))}
+ :is(html,#v31) body.game-snakes #game.snl31 .snake-cell.ladder-foot-cell{--t:color-mix(in srgb,var(--snl-tile) 76%,var(--snl-ladder-tint))}
+}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="1"]{--t:#8fd8ad;background:radial-gradient(circle at 40% 30%,#e6fff0,#8fd8ad 62%,#4fae78)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="1"]::after{content:'▶';position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(10px,3vw,16px);color:#1f6f45;opacity:.55;transform:scaleX(-1)}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="100"]{background:radial-gradient(circle at 40% 30%,#fff6cf,#f2c14e 58%,#b9862a)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),inset 0 -2px 0 rgba(120,80,10,.35),0 0 10px rgba(242,193,78,.55)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="100"]>b{color:#6b4706!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.trail-lit{--t:#fff3c4}
+:is(html,#v31):is([data-board=board-cyber],[data-board=board-twilight]) body.game-snakes #game.snl31 .snake-cell.trail-lit{--t:#355a7a}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.bonus-cell{--t:#e6d8ff}
+/* the old cyber edge line is replaced by the bevel */
+:is(html,#v31):is([data-board=board-cyber],[data-board=board-twilight]) body.game-snakes #game.snl31 .snake-cell{box-shadow:inset 0 1.5px 0 var(--snl-tile-hi),inset 0 -2px 0 var(--snl-tile-lo),0 1px 1.5px rgba(0,0,0,.4)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.active-cell{box-shadow:inset 0 0 0 2.5px var(--active-color,#f2c14e),0 0 8px var(--active-color,#f2c14e)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.route-highlight{box-shadow:inset 0 0 0 3px #2f86e8,0 0 8px #2f86e8!important}
+
+/* ---------- stones ---------- */
+/* 3D stones carry their own light and shadow; old glow filters are not needed. */
+:is(html,#v31) body.game-snakes :is(.snake-token,.snake-travel-pawn,.start-token) .crystal-sprite.piece-svg{filter:none!important}

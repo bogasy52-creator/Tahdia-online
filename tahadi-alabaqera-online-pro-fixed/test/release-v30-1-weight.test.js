@@ -35,7 +35,7 @@ test('pages that only borrow the stone helper do not download the cobra, ladder 
  assert.deepEqual(h.requested,[],'the v30 stones draw without the old sprite sheet');
 });
 
-test('the snakes board is drawn as vectors and downloads no sprite sheets when laid out',async()=>{
+test('laying out the snakes board downloads no cobra, ladder or board sheets (only the arena head sheet, through its own helper)',async()=>{
  const h=await arenaHelpers();
  h.context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}}]);
  h.context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}}]);
