@@ -155,7 +155,8 @@
     "assets/css/arena-hotfix-v23-1.css",
     "assets/css/arena-v24.css",
     "assets/css/arena-v27.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/serpent-v32.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
@@ -163,7 +164,8 @@
     "assets/css/dice-v31.css",
     "assets/css/reactions-v31.css",
     "assets/css/shop-v31.css",
-    "assets/css/shop-v31-1.css"
+    "assets/css/shop-v31-1.css",
+    "assets/css/shop-v32.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -186,6 +188,7 @@
     "assets/css/dice-v31.css",
     "assets/css/snakes-v31.css",
     "assets/css/snakes-board-v31-1.css",
+    "assets/css/snakes-board-v32.css",
     "assets/css/reactions-v31.css"
   ],
   "social.html": [
@@ -262,5 +265,13 @@
   "leaderboard.html": [
     "assets/css/platform.css",
     "assets/css/leaderboard-v30-1.css"
+  ],
+  "baloot.html": [
+    "assets/css/platform.css",
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css",
+    "assets/css/play-experience-v25.css",
+    "assets/css/reactions-v31.css",
+    "assets/css/baloot-v32.css"
   ]
 }

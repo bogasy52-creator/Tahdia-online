@@ -999,6 +999,91 @@ html[data-board=board-cyber]{--snl-grout:#03111b;--snl-tile:#10283b;--snl-tile-a
 /* 3D stones carry their own light and shadow; old glow filters are not needed. */
 :is(html,#v31) body.game-snakes :is(.snake-token,.snake-travel-pawn,.start-token) .crystal-sprite.piece-svg{filter:none!important}
 
+/* assets/css/snakes-board-v32.css */
+/* Tahdia 32.0.0 — snakes & ladders boards, second pass.
+   The free board is now the jewel board: dark glass tiles whose colour runs
+   from emerald at the start through sapphire and violet to ruby at the top,
+   so the climb itself reads on the board, under gold ladders and a gold 100.
+   The palace board turns to black marble on gold grout, and two new boards
+   join the shop: lava (basalt over glowing seams) and galaxy (night tiles
+   with stars under a nebula). Snake heads and ladder feet keep their marks. */
+
+/* ---------- jewel: the default board ---------- */
+html{--snl-grout:#05070d;--snl-tile:#173f85;--snl-tile-alt:#133571;--snl-tile-num:rgba(255,255,255,.88);--snl-num-glow:rgba(0,0,0,.45);
+ --snl-tile-hi:rgba(255,255,255,.2);--snl-tile-lo:rgba(0,0,0,.38);--snl-glow:rgba(160,200,255,.1);
+ --snl-snake-tint:#ff2d55;--snl-ladder-tint:#3ddc97;--snl-frame-a:#454b6d;--snl-frame-b:#171b2e;--snl-frame-c:#07080f;--snl-inlay:#d9b46a;
+ --snl-sheen:radial-gradient(120% 90% at 22% 12%,rgba(255,255,255,.17),rgba(255,255,255,0) 56%);--snl-veil:linear-gradient(160deg,rgba(255,255,255,.05),rgba(0,0,0,.2))}
+html[data-board=board-forest]{--snl-grout:#05070d;--snl-tile-num:rgba(255,255,255,.88);--snl-num-glow:rgba(0,0,0,.45);--snl-tile-hi:rgba(255,255,255,.2);--snl-tile-lo:rgba(0,0,0,.38);--snl-glow:rgba(160,200,255,.1);
+ --snl-frame-a:#454b6d;--snl-frame-b:#171b2e;--snl-frame-c:#07080f;--snl-inlay:#d9b46a}
+
+/* each row of ten has its own stone; the alternate tile is a shade deeper */
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(-n+10){--snl-tile:#8a2347;--snl-tile-alt:#761d3c}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+11):nth-child(-n+20){--snl-tile:#7c2163;--snl-tile-alt:#6a1c54}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+21):nth-child(-n+30){--snl-tile:#6a2478;--snl-tile-alt:#5a1e66}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+31):nth-child(-n+40){--snl-tile:#552985;--snl-tile-alt:#482271}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+41):nth-child(-n+50){--snl-tile:#3f2f8a;--snl-tile-alt:#352776}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+51):nth-child(-n+60){--snl-tile:#2a368c;--snl-tile-alt:#232d77}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+61):nth-child(-n+70){--snl-tile:#173f85;--snl-tile-alt:#133571}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+71):nth-child(-n+80){--snl-tile:#10537a;--snl-tile-alt:#0d4567}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+81):nth-child(-n+90){--snl-tile:#0e5c66;--snl-tile-alt:#0b4d56}
+:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+91){--snl-tile:#0f5e4f;--snl-tile-alt:#0c4f43}
+
+/* glass tiles: a lit corner, a darker foot and a hairline rim */
+/* (the alternate, lit and bonus tiles need the same weight as their 31.0 colours) */
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell,:is(html,#v31) body.game-snakes #game.snl31 .snake-cell:is(.tile-alt,.trail-lit,.bonus-cell){background:var(--snl-sheen),var(--snl-veil),var(--t)!important;
+ box-shadow:inset 0 1px 0 var(--snl-tile-hi),inset 0 -2px 0 var(--snl-tile-lo),inset 0 0 0 1px rgba(255,255,255,.035),0 1px 1.5px rgba(0,0,0,.4)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell>b{font-weight:800!important;opacity:1!important}
+:is(html,#v31) body.game-snakes #game.snl31 #board::after{background:radial-gradient(130% 95% at 16% 8%,var(--snl-glow),rgba(255,255,255,0) 58%),radial-gradient(150% 130% at 50% 50%,rgba(0,0,0,0) 60%,rgba(0,0,0,.28))}
+/* the frame: obsidian with a gold inlay */
+:is(html,#v31) body.game-snakes #game.snl31 #boardWrap{background:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,0) 30%),linear-gradient(150deg,var(--snl-frame-a) 0%,var(--snl-frame-b) 30%,var(--snl-frame-c) 100%)!important}
+:is(html,#v31) body.game-snakes #game.snl31 #boardWrap::before{box-shadow:0 0 0 1.5px var(--snl-inlay),0 0 0 3px rgba(0,0,0,.5),0 0 18px rgba(0,0,0,.45),inset 0 0 14px rgba(0,0,0,.5)!important}
+
+/* marks: danger glows red, a lift glows mint, both still read on any stone */
+@supports (background:color-mix(in srgb,red,blue)){
+ :is(html,#v31) body.game-snakes #game.snl31 .snake-cell.snake-head-cell{--t:color-mix(in srgb,var(--snl-tile) 58%,var(--snl-snake-tint))}
+ :is(html,#v31) body.game-snakes #game.snl31 .snake-cell.ladder-foot-cell{--t:color-mix(in srgb,var(--snl-tile) 60%,var(--snl-ladder-tint))}
+ :is(html,#v31) body.game-snakes #game.snl31 .snake-cell.trail-lit{--t:color-mix(in srgb,var(--snl-tile) 55%,#fff6cf)}
+ :is(html,#v31) body.game-snakes #game.snl31 .snake-cell.bonus-cell{--t:color-mix(in srgb,var(--snl-tile) 50%,#b48cff)}
+}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.snake-head-cell{box-shadow:inset 0 0 0 1.5px rgba(255,90,120,.55),inset 0 1px 0 var(--snl-tile-hi),inset 0 -2px 0 var(--snl-tile-lo),0 1px 1.5px rgba(0,0,0,.4)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.ladder-foot-cell{box-shadow:inset 0 0 0 1.5px rgba(80,240,170,.5),inset 0 1px 0 var(--snl-tile-hi),inset 0 -2px 0 var(--snl-tile-lo),0 1px 1.5px rgba(0,0,0,.4)!important}
+/* start and finish */
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="1"]{background:radial-gradient(circle at 40% 30%,#c9ffe6,#38c98d 58%,#127a55)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,60,40,.4),0 0 10px rgba(56,201,141,.45)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="1"]>b{color:#063d29!important;text-shadow:0 1px 0 rgba(255,255,255,.5)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="1"]::after{color:#063d29}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="100"]{background:radial-gradient(circle at 40% 30%,#fff6cf,#f2c14e 56%,#a8741d)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.8),inset 0 -2px 0 rgba(120,80,10,.4),0 0 14px rgba(242,193,78,.65)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell[data-n="100"]>b{color:#5a3a04!important;text-shadow:0 1px 0 rgba(255,255,255,.55)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.active-cell{box-shadow:inset 0 0 0 2.5px var(--active-color,#f2c14e),0 0 10px var(--active-color,#f2c14e)!important}
+:is(html,#v31) body.game-snakes #game.snl31 .snake-cell.route-highlight{box-shadow:inset 0 0 0 3px #6fd3ff,0 0 10px #2f86e8!important}
+
+/* ---------- palace: black marble on gold ---------- */
+html[data-board=board-royal]{--snl-grout:#b38f48;--snl-tile:#141318;--snl-tile-alt:#1c1a20;--snl-tile-num:#ecca7c;--snl-num-glow:rgba(0,0,0,.6);--snl-tile-hi:rgba(255,236,190,.16);--snl-tile-lo:rgba(0,0,0,.5);--snl-glow:rgba(255,226,160,.12);
+ --snl-frame-a:#fff0c4;--snl-frame-b:#c8a159;--snl-frame-c:#5e420f;--snl-inlay:#2a2016;--snl-snake-tint:#ff3355;--snl-ladder-tint:#3ddc97;
+ --snl-veil:linear-gradient(118deg,rgba(0,0,0,0) 38%,rgba(236,202,124,.13) 39.5%,rgba(0,0,0,0) 41.5%,rgba(0,0,0,0) 66%,rgba(255,255,255,.06) 67%,rgba(0,0,0,0) 68.5%)}
+html[data-board=board-royal] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(3n){--snl-veil:linear-gradient(64deg,rgba(0,0,0,0) 22%,rgba(236,202,124,.12) 23.5%,rgba(0,0,0,0) 25.5%,rgba(0,0,0,0) 70%,rgba(255,255,255,.05) 71%,rgba(0,0,0,0) 72.5%)}
+html[data-board=board-royal] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(5n+1){--snl-veil:linear-gradient(150deg,rgba(0,0,0,0) 52%,rgba(236,202,124,.14) 53.5%,rgba(0,0,0,0) 55.5%)}
+html[data-board=board-royal] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(7n+2){--snl-veil:linear-gradient(30deg,rgba(0,0,0,0) 30%,rgba(255,255,255,.06) 31%,rgba(0,0,0,0) 33%,rgba(0,0,0,0) 58%,rgba(236,202,124,.12) 59.5%,rgba(0,0,0,0) 61.5%)}
+html[data-board=board-royal] body.game-snakes #game.snl31 #board{background:linear-gradient(135deg,#e9cd86,#a9823b 45%,#e3c47c 70%,#8c6827)!important}
+
+/* ---------- lava: basalt over glowing seams ---------- */
+html[data-board=board-lava]{--snl-grout:#ff6a1f;--snl-tile:#1d1513;--snl-tile-alt:#261b17;--snl-tile-num:#ffb27a;--snl-num-glow:rgba(0,0,0,.65);--snl-tile-hi:rgba(255,190,140,.12);--snl-tile-lo:rgba(0,0,0,.55);--snl-glow:rgba(255,120,40,.12);
+ --snl-frame-a:#5a3423;--snl-frame-b:#24140d;--snl-frame-c:#0b0604;--snl-inlay:#ff7a2e;--snl-snake-tint:#ff2d55;--snl-ladder-tint:#ffd166;
+ --snl-veil:radial-gradient(90% 60% at 50% 115%,rgba(255,96,24,.32),rgba(255,96,24,0) 70%)}
+html[data-board=board-lava] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(4n+1){--snl-veil:radial-gradient(90% 60% at 50% 115%,rgba(255,96,24,.32),rgba(255,96,24,0) 70%),linear-gradient(128deg,rgba(0,0,0,0) 46%,rgba(255,120,40,.5) 47.5%,rgba(0,0,0,0) 49%)}
+html[data-board=board-lava] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(6n+3){--snl-veil:radial-gradient(90% 60% at 50% 115%,rgba(255,96,24,.3),rgba(255,96,24,0) 70%),linear-gradient(42deg,rgba(0,0,0,0) 60%,rgba(255,140,50,.45) 61.5%,rgba(0,0,0,0) 63%)}
+html[data-board=board-lava] body.game-snakes #game.snl31 #board{background:radial-gradient(40% 35% at 25% 30%,#ffb347,rgba(255,106,31,0)),radial-gradient(45% 40% at 75% 70%,#ff8a2a,rgba(255,106,31,0)),radial-gradient(35% 30% at 60% 15%,#ffcc66,rgba(255,106,31,0)),#c2410c!important;box-shadow:inset 0 3px 8px rgba(0,0,0,.55),0 0 18px rgba(255,90,20,.25)!important}
+
+/* ---------- galaxy: night tiles under a nebula ---------- */
+html[data-board=board-galaxy]{--snl-grout:#07061a;--snl-tile:#141238;--snl-tile-alt:#1a1745;--snl-tile-num:#d6ceff;--snl-num-glow:rgba(0,0,0,.6);--snl-tile-hi:rgba(210,200,255,.16);--snl-tile-lo:rgba(0,0,0,.45);--snl-glow:rgba(190,170,255,.1);
+ --snl-frame-a:#a59cec;--snl-frame-b:#2f2868;--snl-frame-c:#0c0a22;--snl-inlay:#d8ceff;--snl-snake-tint:#ff4fa3;--snl-ladder-tint:#5ef0ff;
+ --snl-veil:radial-gradient(1.4px 1.4px at 22% 34%,#fff 60%,rgba(255,255,255,0)),radial-gradient(1px 1px at 72% 68%,rgba(255,255,255,.8) 60%,rgba(255,255,255,0))}
+html[data-board=board-galaxy] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(3n+1){--snl-veil:radial-gradient(1.2px 1.2px at 64% 26%,#fff 60%,rgba(255,255,255,0)),radial-gradient(1px 1px at 30% 76%,rgba(200,220,255,.85) 60%,rgba(255,255,255,0)),radial-gradient(1px 1px at 84% 84%,rgba(255,255,255,.6) 60%,rgba(255,255,255,0))}
+html[data-board=board-galaxy] body.game-snakes #game.snl31 #board>.snake-cell:nth-child(4n+2){--snl-veil:radial-gradient(1.6px 1.6px at 46% 58%,#fff 60%,rgba(255,255,255,0)),radial-gradient(1px 1px at 80% 22%,rgba(255,220,255,.8) 60%,rgba(255,255,255,0))}
+html[data-board=board-galaxy] body.game-snakes #game.snl31 #board::after{background:radial-gradient(42% 32% at 30% 38%,rgba(170,90,255,.32),rgba(170,90,255,0)),radial-gradient(36% 30% at 76% 70%,rgba(40,200,255,.24),rgba(40,200,255,0)),radial-gradient(30% 24% at 62% 16%,rgba(255,80,180,.2),rgba(255,80,180,0)),radial-gradient(150% 130% at 50% 50%,rgba(0,0,0,0) 60%,rgba(0,0,0,.32));mix-blend-mode:screen}
+
+/* ---------- reactor keeps its neon frame; the tiles get the glass ---------- */
+html[data-board=board-cyber]{--snl-veil:linear-gradient(160deg,rgba(110,230,255,.06),rgba(0,0,0,.22))}
+
 /* assets/css/reactions-v31.css */
 /* Tahdia 31.0.0 — reactions: the board button, the picker sheet and the
    effects layer. Tiers carry meaning: slate free, blue rare, violet epic,

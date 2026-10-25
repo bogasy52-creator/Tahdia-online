@@ -121,7 +121,10 @@ test('player names on the tables fit their seat: shrink, wrap, then an ellipsis'
 
 test('the shop shows each board as it plays',async()=>{
  const shop=await read('assets/js/shop-v31.js');
- for(const item of Career.CATALOG.filter(i=>i.type==='board')){assert.ok(await exists('assets/previews/board-v311-'+item.id.slice(6)+'.webp'),item.id);}
- assert.match(shop,/\/assets\/previews\/board-v311-'\+item\.id\.slice\(6\)\+'\.webp'/);
+ // 32.0.0: the boards on sale have new pictures, the retired ones keep theirs
+ const photos=Object.fromEntries([...shop.matchAll(/'(board-[a-z]+)':'(board-v3[0-9]+-[a-z]+)'/g)].map(m=>[m[1],m[2]]));
+ for(const item of Career.CATALOG.filter(i=>i.type==='board')){assert.ok(photos[item.id],item.id);assert.ok(await exists('assets/previews/'+photos[item.id]+'.webp'),item.id);}
+ for(const id of Career.STOREFRONT.filter(id=>id.startsWith('board-')))assert.match(photos[id],/^board-v32-/,id);
+ assert.match(shop,/'\/assets\/previews\/'\+BOARD_PHOTOS\[item\.id\]\+'\.webp'/);
  assert.match(shop,/stage\.dataset\.diceSkin=item\.id/);
 });

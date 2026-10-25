@@ -1,10 +1,12 @@
-/* Board stones: characters and crystal pawns on canvas, plus step sparks.
+/* Board stones: hero characters and crystal pawns on canvas, plus step sparks.
    31.0.0: glossy vector stones (pieces-v31.js) are the default; character
    and crystal art download only when a player actually picks them. */
 (function(root){
   'use strict';
   const palettes=[['#c9f7ff','#42c5f5','#15548b'],['#f4dbff','#bd75ee','#63369a'],['#fff0be','#f0c35e','#956329'],['#d0ffe8','#57d9a6','#216b55']];
-  const characters=[{id:'princess',name:'الأميرة البنفسجية'},{id:'fairy',name:'جنيّة النعناع'},{id:'astronaut',name:'رائدة الفضاء'},{id:'fox',name:'الثعلب'},{id:'cat',name:'القطة الوردية'},{id:'robot',name:'الروبوت'}];
+  // 32.0.0: heroes in helmets and masks (assets/heroes); the short ids are the ones rooms exchange.
+  const characters=(root.BS_CAREER_CORE?.HEROES||[{id:'fox',name:'الملثّم',art:'desert'},{id:'cat',name:'النينجا',art:'ninja'},{id:'robot',name:'الروبوت',art:'robot'},{id:'princess',name:'الفارس',art:'knight'},{id:'fairy',name:'الصقر الذهبي',art:'falcon'},{id:'astronaut',name:'رائد الفضاء',art:'astronaut'}]).map(h=>({id:h.id,name:h.name,art:h.art}));
+  const artOf=id=>'/assets/heroes/'+(characters.find(c=>c.id===id)?.art||'desert')+'.webp';
   const STYLES=['glossy','characters','royal'];
   let choices=['fox','fox','fox','fox'],onlineChoices=null;
   const owned=id=>id==='fox'||root.BS_CAREER?.get?.().owned?.includes('character-'+id);
@@ -15,7 +17,7 @@
     if(!characterReady)characterReady=Promise.all(characters.map(item=>new Promise(resolve=>{
       const image=new Image();characterImages.set(item.id,image);
       image.onload=()=>{for(const canvas of document.querySelectorAll('.crystal-sprite[data-art="character"]'))drawCharacter(canvas,Number(canvas.dataset.player));resolve();};
-      image.onerror=resolve;image.src='assets/characters/'+item.id+'.webp';
+      image.onerror=resolve;image.src=artOf(item.id);
     })));
     return characterReady;
   }
@@ -38,8 +40,10 @@
     const index=Math.abs(Number(player)||0)%4,id=characters.some(c=>c.id===preview)?preview:characterId(player),image=characterImages.get(id);
     canvas.width=288;canvas.height=360;canvas.dataset.art='character';canvas.dataset.character=id;canvas.dataset.player=String(player);
     const ctx=canvas.getContext('2d');if(!ctx)return false;
-    ctx.clearRect(0,0,288,360);ctx.strokeStyle=palettes[index][1];ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(144,339,92,12,0,0,Math.PI*2);ctx.stroke();
+    ctx.clearRect(0,0,288,360);
     if(image?.naturalWidth){const scale=Math.min(280/image.naturalWidth,354/image.naturalHeight),w=image.naturalWidth*scale,h=image.naturalHeight*scale;ctx.drawImage(image,(288-w)/2,356-h,w,h);}
+    // the player's colour rings the plinth so every hero still reads as a seat
+    ctx.save();ctx.strokeStyle=palettes[index][1];ctx.lineWidth=7;ctx.shadowColor=palettes[index][1];ctx.shadowBlur=10;ctx.beginPath();ctx.ellipse(144,334,108,19,0,0,Math.PI);ctx.stroke();ctx.restore();
     return true;
   }
   function draw(canvas,id='pawn-classic',player=0,options={}){
@@ -99,14 +103,14 @@
   for(let player=0;player<4;player++){
     const field=document.getElementById('pawnCharacter'+player),preview=document.getElementById('pawnPreview'+player);if(!field)continue;
     field.value=choices[player];
-    const paint=()=>{if(preview){preview.src='assets/characters/'+choices[player]+'.webp';preview.alt=root.BS_STONES.characterName(player);}};paint();
+    const paint=()=>{if(preview){preview.src=artOf(choices[player]);preview.alt=root.BS_STONES.characterName(player);}};paint();
     field.addEventListener('change',()=>{if(!characters.some(c=>c.id===field.value))return;choices[player]=field.value;paint();try{localStorage.setItem('bs-pawn-characters',JSON.stringify(choices))}catch{}root.dispatchEvent(new CustomEvent('bs-piece-art-change'));});
   }
   const ownCharacter=document.getElementById('onlineCharacter');
   function syncEquipped(){
     const id=equipped();if(ownCharacter)ownCharacter.value=root.BS_CAREER?.account?.()?id:'fox';
     // Character pictures are only fetched when characters are in use.
-    if(document.documentElement.dataset.pieceArt==='characters')for(const [field,asset] of [['equippedCharacterPreview',id],['onlineCharacterPreview',ownCharacter?.value||id]]){const image=document.getElementById(field);if(image){image.src='assets/characters/'+asset+'.webp';image.alt=characters.find(c=>c.id===asset)?.name||'';}}
+    if(document.documentElement.dataset.pieceArt==='characters')for(const [field,asset] of [['equippedCharacterPreview',id],['onlineCharacterPreview',ownCharacter?.value||id]]){const image=document.getElementById(field);if(image){image.src=artOf(asset);image.alt=characters.find(c=>c.id===asset)?.name||'';}}
     root.dispatchEvent(new CustomEvent('bs-piece-art-change'));
   }
   syncEquipped();root.addEventListener('bs-career-change',syncEquipped);

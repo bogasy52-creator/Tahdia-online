@@ -11,7 +11,7 @@
   const effectHost = () => doc.querySelector('dialog[open]') || doc.fullscreenElement || doc.querySelector('body.serpent-active #arenaPlay') || doc.body;
   let layer = null, context = null, socialLoader = null, celebrationKey = '';
 
-  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=31.1.0'; doc.head?.appendChild(css);
+  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=32.0.0'; doc.head?.appendChild(css);
 
   function effectLayer() {
     const parent = effectHost();
@@ -74,7 +74,7 @@
     const journeyGame=context?.journeyGame||url.searchParams.get('game')||'jewels';
     const joinable=context?.joinable!==false&&/^\d{6}$/.test(code);url.search='';url.hash='';if(joinable)url.searchParams.set('room',code);if(cleanRoute==='journey')url.searchParams.set('game',journeyGame==='paths'?'paths':'jewels');return{game,variant:cleanRoute==='journey'?(journeyGame==='paths'?'paths':'jewels'):undefined,code:joinable?code:'',roundClosed:context?.joinable===false&&!!context?.code,url:url.href,joinable,title:cleanRoute==='journey'?(journeyGame==='paths'?'مسارات الألوان':'ماستر الجواهر'):titles[cleanRoute]||'تحدي العباقرة'};
   }
-  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=31.1.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);}).catch(error=>{socialLoader=null;throw error;});return socialLoader;}
+  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=32.0.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);}).catch(error=>{socialLoader=null;throw error;});return socialLoader;}
   let inviteOpening=false;
   async function openInvite(){
     if(inviteOpening)return;inviteOpening=true;

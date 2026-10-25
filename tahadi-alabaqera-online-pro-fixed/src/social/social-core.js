@@ -6,7 +6,7 @@ export const SOCIAL_MAX_FRIENDS = 100;
 export const SOCIAL_MAX_REQUESTS = 100;
 export const SOCIAL_MAX_NOTIFICATIONS = 60;
 export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
-export const SOCIAL_ONLINE_GAMES = new Set(["party", "quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths"]);
+export const SOCIAL_ONLINE_GAMES = new Set(["party", "quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths", "baloot"]);
 export const SOCIAL_CHALLENGE_GAMES = new Set([
   ...SOCIAL_ONLINE_GAMES,
   "dice", "journey", "local", "logic", "memory", "puzzle", "reaction",

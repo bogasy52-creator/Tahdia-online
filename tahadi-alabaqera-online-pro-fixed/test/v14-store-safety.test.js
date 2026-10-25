@@ -51,8 +51,8 @@ test('inspector keyboard trap recovers escaped focus and Escape restores the pag
  dialog.dispatchEvent({type:'keydown',key:'Escape',preventDefault(){}});assert.equal(dialog.open,false);assert.equal(h.doc.activeElement.dataset.control,'inspect');
 });
 test('inventory exposes all equipped appearances and clear filters recovers empty results',async()=>{
- const h=await guest();await loadAtelier(h);assert.equal(h.doc.querySelectorAll('[data-loadout]').length,9);
- for(const type of ['pawn','dice','table','board','character','snake','trail','victory','title'])assert.ok(h.doc.querySelector('[data-loadout="'+type+'"]'));
+ const h=await guest();await loadAtelier(h);assert.equal(h.doc.querySelectorAll('[data-loadout]').length,10);
+ for(const type of ['pawn','dice','table','board','character','deck','snake','trail','victory','title'])assert.ok(h.doc.querySelector('[data-loadout="'+type+'"]'));
  h.doc.getElementById('collectionSearch').dispatchEvent({type:'input',target:{value:'اسم غير موجود إطلاقا'}});assert.equal(h.doc.querySelectorAll('[data-item]').length,0);assert.equal(h.doc.getElementById('collectionEmpty').hidden,false);
  h.doc.getElementById('clearFilters').onclick();assert.equal(h.doc.querySelectorAll('[data-item]').length,Career.STOREFRONT.filter(id=>Career.CATALOG.find(i=>i.id===id).source!=='owner').length);assert.equal(h.doc.getElementById('collectionSearch').value,'');assert.equal(h.doc.activeElement.id,'collectionSearch');
 });

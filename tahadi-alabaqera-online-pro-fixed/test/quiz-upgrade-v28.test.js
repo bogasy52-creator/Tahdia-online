@@ -64,7 +64,9 @@ test('online relay shows only the active member clue and hides ordinary powers',
  engine.answerRelay(r,{playerId:'a0',choice:r.steps[0].correctIndex,stageId:engine.relayStageId(r),now:1000001});d.qa.set(state({roundIndex:3,current:current({mode:'relay',phase:'relay',relay:engine.relayView(r,'a0')})}));assert.equal(d.doc.querySelector('.relay-clue'),null);assert.match(d.doc.querySelector('.relay-status').textContent,/a1/);
 });
 test('all image and sound alternatives use distinct families and new AI images are explicitly identified',()=>{
- for(const id of ['zoom','sounds']){const cat=CATEGORIES.find(c=>c.id===id);for(const q of cat.questions){assert.equal(q.distractors.length,3);if(q.kind==='audio_pattern'){assert.equal(new Set([q.a,...q.distractors]).size,4);continue;}const families=[q.mediaFamily];for(const a of q.distractors){const other=cat.questions.find(x=>x.a===a);assert.ok(other);families.push(other.mediaFamily);}assert.equal(new Set(families).size,4,q.id);}}
+ // 32.0.0: zoom choices are look-alikes (an orange for a basketball); a choice
+ // that names another picture in the bank must belong to a different family
+ for(const id of ['zoom','sounds']){const cat=CATEGORIES.find(c=>c.id===id);for(const q of cat.questions){assert.equal(q.distractors.length,3);assert.equal(new Set([q.a,...q.distractors]).size,4,q.id);if(q.kind==='audio_pattern')continue;const families=[q.mediaFamily];for(const a of q.distractors){const other=cat.questions.find(x=>x.a===a);if(id==='sounds')assert.ok(other);if(other)families.push(other.mediaFamily);}assert.equal(new Set(families).size,families.length,q.id);}}
  const images=CATEGORIES.find(c=>c.id==='zoom').questions.filter(q=>q.id.startsWith('ai-zoom-'));assert.equal(images.length,4);for(const q of images){assert.equal(q.generated,true);assert.equal(q.revealSrc,q.src);assert.match(q.credit,/مولّدة/);}
 });
 test('a failed replacement image exposes retry and a successful retry removes the error controls',async()=>{

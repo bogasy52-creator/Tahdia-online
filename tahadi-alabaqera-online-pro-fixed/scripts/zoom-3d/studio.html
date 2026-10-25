@@ -1,0 +1,27 @@
+<!doctype html><html><body style="margin:0;background:#000"><canvas id="c"></canvas>
+<script src="objects-shader.js"></script>
+<script>
+const canvas=document.getElementById('c');
+const gl=canvas.getContext('webgl2',{premultipliedAlpha:false,preserveDrawingBuffer:true,antialias:false,alpha:true});
+function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+const vs=`#version 300 es
+in vec2 a;void main(){gl_Position=vec4(a,0.,1.);}`;
+const prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,vs));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,window.OBJECTS_FRAG));gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(prog,'a');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const U=n=>gl.getUniformLocation(prog,n);
+const lin=h=>{h=h.replace('#','');return [0,2,4].map(i=>Math.pow(parseInt(h.slice(i,i+2),16)/255,2.2));};
+window.renderSprite=function(o){
+  canvas.width=o.w;canvas.height=o.h;gl.viewport(0,0,o.w,o.h);
+  gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform2f(U('uRes'),o.w,o.h);gl.uniform1i(U('uObj'),o.obj);gl.uniform3fv(U('uTarget'),o.target||[0,.45,0]);
+  gl.uniform1f(U('uDist'),o.dist||3.2);gl.uniform1f(U('uElev'),o.elev??.42);gl.uniform1f(U('uYaw'),o.yaw||0);gl.uniform1f(U('uFov'),o.fov||.5);
+  gl.uniform3fv(U('uBg'),lin(o.bg||'#d9dde4'));gl.uniform3fv(U('uFloor'),lin(o.floor||o.bg||'#d9dde4'));gl.uniform3fv(U('uTint'),lin(o.tint||'#f2b71c'));gl.uniform1i(U('uFloorOn'),o.floorOn??1);
+  const t0=performance.now();gl.drawArrays(gl.TRIANGLES,0,3);gl.finish();
+  const px=new Uint8Array(4);gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  return {ms:performance.now()-t0,url:canvas.toDataURL('image/png')};
+};
+window.ready=true;
+</script></body></html>

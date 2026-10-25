@@ -5,7 +5,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
    species with the equipped one first. They slither, flick their tongues and,
    when a stone lands on a head, lunge, bite, swallow it (a lump runs down the
    body), swell, and stay a little bigger for every stone they have eaten in
-   this match. Ladders are round wooden (or gold, or neon) beams that light up
+   this match. Ladders are round gold (or wooden, ember, starlit or neon) beams that light up
    rung by rung while a stone climbs. */
 (function(){
   'use strict';
@@ -30,9 +30,12 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   const LADDERS={
     classic:{dark:'#3f230c',mid:'#94602f',light:'#d9a46c',hi:'#ffe2b5',peg:'#2a1606',glow:'#ffd27a'},
     royal:{dark:'#5c3d0b',mid:'#c29236',light:'#efd28a',hi:'#fff6d8',peg:'#3e2905',glow:'#fff0a8'},
-    cyber:{dark:'#06202e',mid:'#1a6f92',light:'#4fd9fb',hi:'#d4fbff',peg:'#041723',glow:'#6ff6ff'}
+    cyber:{dark:'#06202e',mid:'#1a6f92',light:'#4fd9fb',hi:'#d4fbff',peg:'#041723',glow:'#6ff6ff'},
+    ember:{dark:'#140804',mid:'#5b2a14',light:'#ff8a3d',hi:'#ffd2a1',peg:'#0d0503',glow:'#ffb347'},
+    cosmic:{dark:'#1b1638',mid:'#6c5fb8',light:'#cdc4ff',hi:'#f5f2ff',peg:'#100c26',glow:'#d9ccff'}
   };
-  const boardTheme=()=>{const id=document.documentElement?.dataset?.board||'';return /royal|sand/.test(id)?'royal':/cyber|twilight/.test(id)?'cyber':'classic';};
+  // 32.0.0: the jewel board (the free one) climbs on gold ladders too
+  const boardTheme=()=>{const id=document.documentElement?.dataset?.board||'board-forest';return /lava/.test(id)?'ember':/galaxy/.test(id)?'cosmic':/royal|sand|forest/.test(id)?'royal':/cyber|twilight/.test(id)?'cyber':'classic';};
 
   function layout(entries){
     const board=document.getElementById('board');if(!board)return;
@@ -76,7 +79,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     const count=Math.max(3,Math.round(len/(cell*.42))),travel=active?((clock-s.at)/1100)%1:-1;
     ctx.save();ctx.lineCap='round';
     // soft shadow on the board
-    ctx.strokeStyle='rgba(28,14,4,.26)';
+    ctx.strokeStyle=t===LADDERS.classic?'rgba(28,14,4,.26)':'rgba(0,0,0,.42)';
     for(const side of [-1,1]){ctx.lineWidth=rail*1.1;ctx.beginPath();ctx.moveTo(ax+nx*half*side+cell*.06,ay+ny*half*side+cell*.1);ctx.lineTo(bx+nx*half*side+cell*.06,by+ny*half*side+cell*.1);ctx.stroke();}
     for(let i=1;i<count;i++){const f=i/count,x=r.a.x+dx*f+cell*.06,y=r.a.y+dy*f+cell*.1;ctx.lineWidth=rungW;ctx.beginPath();ctx.moveTo(x+nx*half,y+ny*half);ctx.lineTo(x-nx*half,y-ny*half);ctx.stroke();}
     // rungs, then the rails over their ends

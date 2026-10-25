@@ -557,3 +557,20 @@ body.shop31 .sx-preview-stage .sx-board-photo{width:min(88%,330px);border-radius
 body.shop31 .sx-hero .sx-board-photo{width:min(78%,260px)}
 /* 3D stones already carry their own contact shadow */
 body.shop31 .sx-pawn-art{filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))!important}
+
+/* assets/css/shop-v32.css */
+/* Tahdia 32.0.0 — shop: Baloot decks as a fan of three cards, and the
+   hero characters standing a little taller on their plinths. */
+body.shop31 .sx-deck-fan{position:relative;width:min(78%,62cqh);height:72%;height:72cqh;display:block}
+body.shop31 .sx-deck-card{position:absolute;left:50%;bottom:6%;height:78%;width:auto;aspect-ratio:5/7;border-radius:6%;
+ transform-origin:50% 96%;transform:translateX(calc(-50% + (var(--i) - 1) * 16%)) rotate(calc((var(--i) - 1) * 15deg));
+ box-shadow:0 6px 14px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06)}
+body.shop31 .sx-deck-card:nth-child(2){z-index:2}
+body.shop31 .sx-deck-card:nth-child(3){z-index:3}
+body.shop31 .sx-card:hover .sx-deck-card{transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+body.shop31 .sx-card:hover .sx-deck-card:nth-child(1){transform:translateX(-66%) rotate(-20deg)}
+body.shop31 .sx-card:hover .sx-deck-card:nth-child(3){transform:translateX(-34%) rotate(20deg) translateY(-2%)}
+body.shop31 .sx-slot-art .sx-deck-fan{width:86%;height:86%}
+body.shop31 .sx-set-cell .sx-deck-fan{width:88%;height:84%}
+body.shop31 .sx-character-art{height:92%;height:92cqh;filter:drop-shadow(0 12px 14px rgba(0,0,0,.55))}
+@media (prefers-reduced-motion:reduce){body.shop31 .sx-card:hover .sx-deck-card{transition:none}}

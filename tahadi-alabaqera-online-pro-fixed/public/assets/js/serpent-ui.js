@@ -185,7 +185,29 @@ function touchCue(index,e){
  const dx=pointer?.knobX||0,dy=pointer?.knobY||0,magnitude=Math.hypot(dx,dy),scale=magnitude?Math.min(1,travel/magnitude):0;
  knob.style.transform=`translate(${(dx*scale).toFixed(1)}px,${(dy*scale).toFixed(1)}px)`;
 }
-setInterval(()=>{if(!room?.publicMatch||room.status!=='lobby')return;const remaining=Math.max(0,Math.ceil((room.lobbyDeadline-(room.serverNow+Date.now()-room.clientReceivedAt))/1000));$('quickCountdown').textContent=String(remaining);},250);
+// Public lobby countdown: a ring that empties, with the seconds drawn in the
+// middle. The canvas is cleared and redrawn on every frame, so a new digit
+// never keeps marks of the one before it (iPhone left parts of old glyphs
+// behind when the number was plain text).
+const LOBBY_MS=15000;let lobbyFrame=0;
+function lobbyCountdown(){
+ lobbyFrame=0;
+ if(!room?.publicMatch||room.status!=='lobby')return;
+ const left=room.lobbyDeadline?Math.max(0,room.lobbyDeadline-(room.serverNow+Date.now()-room.clientReceivedAt)):LOBBY_MS,seconds=Math.ceil(left/1000),label=$('quickCountdown'),canvas=$('quickCountdownRing');
+ if(label&&label.textContent!==String(seconds))label.textContent=String(seconds);
+ const c=canvas?.getContext?.('2d');
+ if(c){
+  const css=canvas.clientWidth||132,dpr=Math.min(3,window.devicePixelRatio||1),px=Math.round(css*dpr);
+  if(canvas.width!==px){canvas.width=px;canvas.height=px;}
+  const mid=css/2,r=mid-7,share=Math.min(1,left/Math.max(LOBBY_MS,left)),warm=seconds<=3;
+  c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,css,css);c.lineWidth=8;c.lineCap='round';
+  c.strokeStyle='rgba(255,255,255,.1)';c.beginPath();c.arc(mid,mid,r,0,Math.PI*2);c.stroke();
+  if(share>0){const g=c.createLinearGradient(0,0,css,css);g.addColorStop(0,warm?'#ffd27a':'#9ff3cf');g.addColorStop(1,warm?'#ff8a5c':'#e9d27c');c.strokeStyle=g;c.beginPath();c.arc(mid,mid,r,-Math.PI/2,-Math.PI/2+share*Math.PI*2);c.stroke();}
+  c.fillStyle=warm?'#ffe2b8':'#e6f7da';c.font='800 '+Math.round(css*.4)+'px Tajawal, system-ui, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(String(seconds),mid,mid+css*.025);
+ }
+ if(left>0&&room.lobbyDeadline)lobbyFrame=requestAnimationFrame(lobbyCountdown);
+}
+setInterval(()=>{if(!lobbyFrame)lobbyCountdown();},400);
 const arenaCanvas=$('arenaCanvas');
 arenaCanvas.addEventListener('pointerdown',e=>{
  if(paused||!game||game.status!=='playing')return;e.preventDefault();

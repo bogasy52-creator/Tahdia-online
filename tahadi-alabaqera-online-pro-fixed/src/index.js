@@ -11,6 +11,7 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from "./games/snakes-server.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
+import { BALOOT_LOBBY_MS, freeBalootSeat, startBalootRoom, applyBalootMove, balootAlarm, balootPlayers, balootRoomView, balootWinFor } from "./games/baloot-server.js";
 import { handleSocialRequest, authenticate, getSocialStub } from "./social/social-api.js";
 import { createQuickArenaClass } from "./quick/arena.js";
 import { createSocialUserClass } from "./social/social-user.js";
@@ -30,8 +31,9 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='31.1.0';
-const BOARD_CHARACTERS=['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
+const RELEASE='32.0.0';
+// 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
+const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
 // Free reactions work for everyone; paid ones only for the account that
 // bought them (sent by the Worker at the WebSocket upgrade, never the client).
@@ -173,6 +175,10 @@ function shuffle(items) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function secureUnit() {
+  return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
 }
 
 function pick(items) {
@@ -580,6 +586,21 @@ export default {
       const internal=new URL(request.url);internal.hostname='serpent.internal';internal.pathname='/ws';return stub.fetch(new Request(internal,{headers}));
     }
 
+    // Quick Baloot: a seat on an open public table; empty seats get bots.
+    if (request.method === "POST" && url.pathname === "/api/baloot/quick") {
+      const limited = await rateLimit(request, env, "baloot-quick", 20, 60_000);
+      if (limited) return limited;
+      if (!env.BOARD_ROOMS || typeof env.BOARD_ROOMS.idFromName !== "function") return json({ ok: false, code: "BOARD_BINDING_MISSING", error: "محرك الغرف غير مربوط بالسيرفر" }, 503);
+      try {
+        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:baloot:v32"));
+        return await stub.fetch("https://balootquick.internal/assign", { method: "POST" });
+      } catch (err) {
+        if (isDurableRequestQuotaError(err)) throw err;
+        console.error("baloot quick failed", err);
+        return json({ ok: false, error: "تعذر إيجاد طاولة الآن" }, 503);
+      }
+    }
+
     if (request.method === "POST" && url.pathname === "/api/board/rooms") {
       const limited = await rateLimit(request, env, "board-create", 12, 60_000);
       if (limited) return limited;
@@ -588,13 +609,13 @@ export default {
         let body = {};
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
-        if (!["snakes", "zahra", "jackaroo"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        if (!["snakes", "zahra", "jackaroo", "baloot"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
         let variant = 'classic';
         if (game === 'snakes') {
           try { variant = normalizeSnakesVariant(body.variant); }
           catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
         }
-        const playerLimit = game === "jackaroo" ? (Number(body.playerLimit)===6?6:4) : Math.min(game==="zahra"?6:20, Math.max(2, Number(body.playerLimit) || 2));
+        const playerLimit = game === "baloot" ? 4 : game === "jackaroo" ? (Number(body.playerLimit)===6?6:4) : Math.min(game==="zahra"?6:20, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
           const code = roomCode();
@@ -1501,10 +1522,12 @@ export class BoardRoom extends DurableObject {
 
   async initializeRoom(body){
     if(this.room)return json({ok:false,error:'room_exists'},409);
-    const game=String(body.game||'');if(!['snakes','zahra','jackaroo'].includes(game))return json({ok:false,error:'invalid_game'},400);
+    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','baloot'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
-    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(game==='zahra'?6:20,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
-    try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.expiresAt);this.room=room;return json({ok:true},201)}
+    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='baloot'?4:game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(game==='zahra'?6:20,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
+    // Baloot: a public table starts by itself after the lobby countdown.
+    if(game==='baloot'){room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch?now+BALOOT_LOBBY_MS:null;room.bots=[];room.batch=null;room.nextHandAt=null;}
+    try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.publicMatch?room.lobbyDeadline:room.expiresAt);this.room=room;return json({ok:true},201)}
     catch(error){const requestId=crypto.randomUUID();this.room=null;try{await this.ctx.storage.delete('room');await this.ctx.storage.deleteAlarm()}catch(rollback){console.error('board initialization rollback failed',{requestId,error:rollback.message})}console.error('board initialization failed',{requestId,error:error.message});return json({ok:false,code:'ROOM_INITIALIZATION_FAILED',error:'تعذر حفظ الغرفة على السيرفر. حاول مرة أخرى.',requestId},503)}
   }
 
@@ -1523,7 +1546,7 @@ export class BoardRoom extends DurableObject {
     await this.ctx.storage.put("room", this.room);
     if(this.room.status==='finished'&&!this.room.rewardsComplete){
       const endedAt=this.room.startedAt;
-      const rewards=this.room.order.map((id,index)=>{const player=this.room.players[id];return {username:player.username,id:'board:'+this.room.code+':'+endedAt+':'+player.id,game:this.room.game,win:this.room.game==='jackaroo'?this.room.state.winnerTeam===index%2:this.room.state.winner===index}});
+      const rewards=this.room.order.map((id,index)=>{const player=this.room.players[id];return {username:player.username,id:'board:'+this.room.code+':'+endedAt+':'+player.id,game:this.room.game,win:this.room.game==='baloot'?balootWinFor(this.room,player):this.room.game==='jackaroo'?this.room.state.winnerTeam===index%2:this.room.state.winner===index}});
       try{
         for(const reward of rewards){
           if(!reward.username)continue;
@@ -1539,6 +1562,7 @@ export class BoardRoom extends DurableObject {
   addPlayer(name, role) {
     const id = crypto.randomUUID();
     const p = { id, token: token(), name: cleanName(name), role, ready: false, connected: true, disconnectedAt: null };
+    if (this.room.game === 'baloot') p.seat = freeBalootSeat(this.room);
     this.room.players[id] = p;
     this.room.order.push(id);
     return p;
@@ -1594,6 +1618,16 @@ export class BoardRoom extends DurableObject {
   publicState(playerId) {
     if (!this.room) return null;
     const me = this.room.players[playerId];
+    if (this.room.game === 'baloot') {
+      return {
+        code: this.room.code, game: 'baloot', variant: 'classic', serverNow: Date.now(), playerLimit: 4,
+        status: this.room.status, version: this.room.version || 0, startedAt: this.room.startedAt || null,
+        players: balootPlayers(this.room),
+        me: me ? { id: me.id, index: me.seat, role: me.role } : null,
+        turnDeadline: this.room.turnDeadline || null,
+        ...balootRoomView(this.room, me),
+      };
+    }
     return {
       code: this.room.code,
       game: this.room.game,
@@ -1663,6 +1697,10 @@ export class BoardRoom extends DurableObject {
     if (!this.room) return;
     const now = Date.now();
     const candidates = [this.room.expiresAt];
+    if (this.room.game === 'baloot') {
+      if (this.room.status === 'lobby' && this.room.publicMatch && this.room.lobbyDeadline) candidates.push(this.room.lobbyDeadline);
+      if (this.room.status === 'playing' && this.room.nextHandAt) candidates.push(this.room.nextHandAt);
+    }
     if (this.room.status === 'finished' && !this.room.rewardsComplete) candidates.push(this.room.rewardRetryAt || now + 10000);
     if (this.room.status === "playing" && this.room.turnDeadline) candidates.push(this.room.turnDeadline);
     if (["lobby", "finished"].includes(this.room.status)) {
@@ -1689,7 +1727,8 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "social.internal") return (await this.socialDelegate()).fetch(request);
     if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo'],snakesVariants:['classic','adventure']});
+    if (url.hostname === "balootquick.internal") return this.ctx.blockConcurrencyWhile(() => this.balootQuick());
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','baloot'],snakesVariants:['classic','adventure']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -1716,7 +1755,7 @@ export class BoardRoom extends DurableObject {
         if (!player) player = this.addPlayer(name, "host");
       }
       if (!player) {
-        if (this.room.order.length === 0) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
+        if (this.room.order.length === 0 && !this.room.publicMatch) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
         this.syncConnected();
         this.cleanupStaleLobbyGuests();
@@ -1724,7 +1763,7 @@ export class BoardRoom extends DurableObject {
         player = this.addPlayer(name, "guest");
       } else if (name) player.name = name;
 
-      if(this.room.game==='snakes'){
+      if(this.room.game==='snakes'||this.room.game==='baloot'){
         let owned=[];try{owned=JSON.parse(request.headers.get('x-bs-characters')||'[]')}catch{}
         player.allowedCharacters=['fox',...(Array.isArray(owned)?owned:[])].filter((id,index,list)=>BOARD_CHARACTERS.includes(id)&&list.indexOf(id)===index);
         const requested=url.searchParams.get('character'),equipped=request.headers.get('x-bs-character');
@@ -1746,6 +1785,27 @@ export class BoardRoom extends DurableObject {
       return webSocketResponse(client, protocol);
     }
     return json({ ok: false, error: "not_found" }, 404);
+  }
+
+  // Quick Baloot: one Durable Object hands out seats on an open public table
+  // and opens a new one when it is full or about to start.
+  async balootQuick() {
+    const now = Date.now();
+    let open = (await this.ctx.storage.get('balootQuick')) || null;
+    if (open && (open.assigned >= 4 || now >= open.closesAt)) open = null;
+    if (!open) {
+      for (let attempt = 0; attempt < 8 && !open; attempt++) {
+        const code = roomCode();
+        const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
+        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game: 'baloot', playerLimit: 4, publicMatch: true }) });
+        if (res.status === 201) open = { code, createdAt: now, closesAt: now + BALOOT_LOBBY_MS - 3000, assigned: 0 };
+        else if (res.status !== 409) break;
+      }
+      if (!open) return json({ ok: false, error: 'تعذر فتح طاولة الآن، حاول بعد لحظة' }, 503);
+    }
+    open.assigned += 1;
+    await this.ctx.storage.put('balootQuick', open);
+    return json({ ok: true, code: open.code });
   }
 
   // Reactions are relayed to everyone in the room and never touch the game
@@ -1789,6 +1849,27 @@ export class BoardRoom extends DurableObject {
       if (msg.type === "ready") {
         if (this.room.status !== "lobby") return;
         player.ready = Boolean(msg.ready);
+        return await this.saveAndBroadcast();
+      }
+      if (this.room.game === 'baloot' && msg.type === 'start') {
+        if (player.role !== 'host' || this.room.publicMatch) return this.sendError(ws, 'بدء المباراة للمضيف فقط');
+        if (this.room.status !== 'lobby') return;
+        startBalootRoom(this.room, secureUnit, Date.now());
+        for (const id of this.room.order) this.room.players[id].ready = true;
+        this.room.version++;
+        return await this.saveAndBroadcast();
+      }
+      if (this.room.game === 'baloot' && msg.type === 'baloot') {
+        if (this.room.status !== 'playing' || !this.room.state) return this.sendError(ws, 'المباراة غير نشطة');
+        if (msg.expectedVersion !== undefined && msg.expectedVersion !== null && msg.expectedVersion !== this.room.version) return this.sendError(ws, 'تغيرت حالة الطاولة — انتظر التحديث');
+        try { applyBalootMove(this.room, player, msg.action, secureUnit, Date.now()); }
+        catch (error) {
+          const code = String(error?.message || error);
+          const messages = { wrong_turn: 'مو دورك الآن', illegal_card: 'هذي الورقة ما تنلعب الحين', illegal_bid: 'هذا الشراء غير متاح', illegal_double: 'هذا الدبل غير متاح', invalid_action: 'أمر غير معروف' };
+          return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
+        }
+        this.room.version++;
+        if (this.room.state.phase === 'finished') this.finishGame();
         return await this.saveAndBroadcast();
       }
       if (msg.type === "start") {
@@ -1882,6 +1963,7 @@ export class BoardRoom extends DurableObject {
   async resetForRematch() {
     this.room.status = "lobby";
     this.room.state = null;
+    if (this.room.game === 'baloot') { this.room.bots = []; this.room.batch = null; this.room.nextHandAt = null; this.room.turnTotal = null; }
     this.room.pendingRoll = null;
     this.room.turnDeadline = null;
     this.room.version++;
@@ -1969,7 +2051,17 @@ export class BoardRoom extends DurableObject {
       this.room = null;
       return;
     }
-    if (this.room.status === "playing" && this.room.turnDeadline && now >= this.room.turnDeadline) {
+    if (this.room.game === 'baloot') {
+      const done = balootAlarm(this.room, secureUnit, now);
+      if (done === 'empty') { await this.ctx.storage.deleteAll(); this.room = null; return; }
+      if (done) {
+        this.room.version++;
+        if (this.room.state?.phase === 'finished') this.finishGame();
+        await this.saveAndBroadcast();
+        return;
+      }
+    }
+    if (this.room.status === "playing" && this.room.turnDeadline && now >= this.room.turnDeadline && this.room.game !== 'baloot') {
       await this.handleTurnTimeout();
       return;
     }

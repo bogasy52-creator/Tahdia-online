@@ -4,7 +4,7 @@ import '../public/assets/js/profile-core.js';
 import {createSerpentGame,addSerpentBots,stepSerpent} from '../public/assets/js/engines/serpent-engine.js';
 const Core=globalThis.BS_CAREER_CORE;
 test('only one character is free and paid characters require purchase before equip',()=>{
- const items=Core.CATALOG.filter(i=>i.type==='character');assert.equal(items.length,6);assert.deepEqual(items.filter(i=>i.price===0).map(i=>i.id),['character-fox']);
+ const items=Core.CATALOG.filter(i=>i.type==='character');assert.equal(items.length,12);assert.deepEqual(items.filter(i=>i.price===0).map(i=>i.id),['character-fox']);
  const fresh=Core.normalize();assert.equal(fresh.equipped.character,'character-fox');assert.equal(fresh.owned.filter(id=>id.startsWith('character-')).length,1);assert.throws(()=>Core.equip(fresh,'character-princess'),/not_owned/);
  const paid=Core.purchase(Core.normalize({coins:1000}),'character-princess',{now:0});assert.equal(paid.equipped.character,'character-princess');assert.equal(paid.coins,1000-Core.itemPrice('character-princess',0));assert.equal(Core.purchase(paid,'character-princess',{now:0}).coins,paid.coins);
 });

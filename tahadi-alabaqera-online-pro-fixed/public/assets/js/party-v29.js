@@ -3,7 +3,7 @@ import {PARTY_GAMES,partyGame,playlistCapacity} from './engines/party-catalog-v2
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
-import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=31.1.0';
+import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=32.0.0';
 let boardSurface=null,boardSurfaceRound='';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeCode=value=>String(value||'').replace(/[٠-٩]/g,n=>'٠١٢٣٤٥٦٧٨٩'.indexOf(n)).replace(/[۰-۹]/g,n=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(n)).replace(/\D/g,'').slice(0,6);

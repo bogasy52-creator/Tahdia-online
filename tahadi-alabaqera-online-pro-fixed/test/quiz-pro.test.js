@@ -36,12 +36,17 @@ test('sound challenge ships 72 balanced local clips with two-play fairness', asy
   }
 });
 
-test('zoom preserves 60 balanced photographs and adds four identified AI challenges', async()=>{
-  const c=byId('zoom');assert.ok(c);assert.equal(c.questions.length,64);
-  for(const v of [100,200,300]) assert.equal(c.questions.filter(q=>q.v===v&&!q.generated).length,20);
+// 32.0.0: the zoom bank was curated (no wrong answers, no repeated pictures)
+// and grown with studio renders of everyday objects made for the challenge.
+test('zoom mixes real photographs, studio renders and four identified AI challenges', async()=>{
+  const c=byId('zoom');assert.ok(c);assert.ok(c.questions.length>=40,`zoom has ${c.questions.length}`);
+  for(const v of [100,200,300]) assert.ok(c.questions.filter(q=>q.v===v).length>=6,`few ${v} questions`);
   assert.equal(c.questions.filter(q=>q.generated).length,4);
+  assert.ok(c.questions.filter(q=>q.rendered).length>=18);
+  assert.ok(new Set(c.questions.map(q=>q.mediaFamily)).size>=36);
   for(const q of c.questions){
-    assert.equal(q.media,'zoom');assert.ok(!/^https?:/i.test(q.src));assert.match(q.src,q.generated?/assets\/quiz_ai_v28\/.+\.webp$/:/assets\/quiz_photos\/.+\.webp$/);
+    assert.equal(q.media,'zoom');assert.ok(!/^https?:/i.test(q.src));assert.match(q.src,q.generated?/assets\/quiz_ai_v28\/.+\.webp$/:q.rendered?/assets\/quiz_render_v32\/.+\.webp$/:/assets\/quiz_photos\/.+\.webp$/);
+    if(q.rendered)assert.match(q.credit,/مجسّم/);
     assert.ok(Number(q.zoom)>Number(q.hintZoom)&&Number(q.hintZoom)>=1,`${q.id} zoom stages`);
     assert.ok(Number(q.focusX)>=0&&Number(q.focusX)<=100&&Number(q.focusY)>=0&&Number(q.focusY)<=100,`${q.id} focus`);
     assert.ok(String(q.credit||'').includes('صورة'),`${q.id} needs photo provenance note`);
@@ -70,7 +75,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v60-release-31-1-0/);assert.match(sw,/busraj-quiz-media-v4/);
+  assert.match(sw,/busraj-games-v60-release-32-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });

@@ -1,0 +1,77 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0a1416"><title>بلوت — بوسراج</title><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><meta name="description" content="بلوت سعودي: صن وحكم وأشكل، مشاريع وبلوت ودبل، ضد البوتات أو أونلاين مع أصحابك."><link rel="stylesheet" href="assets/css/app-baloot.css?v=32.0.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=32.0.0"></head>
+<body class="release-v26 bs-page game-baloot release-v32"><main class="bs-shell bl-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>بلوت</b><span>صن وحكم · فريقان</span></span></a><div class="bs-actions"><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop?filter=deck" aria-label="أوراق اللعب في المتجر">◈</a><a class="bs-icon-btn" href="./" style="text-decoration:none" aria-label="الرئيسية">⌂</a></div></header>
+<section id="setup" class="bl-setup">
+ <div class="bl-hero"><div class="bl-hero-copy"><span class="bl-kicker">طاولة بوسراج</span><h1>بلوت</h1><p>صن وحكم وأشكل، سرا وخمسين ومية، بلوت ودبل وقهوة. أنت وشريكك ضد الفريق الثاني، والأول إلى 152 يربح الصكّة.</p></div><div id="heroFan" class="bl-hero-fan" aria-hidden="true"></div></div>
+ <div class="bl-modes" role="tablist" aria-label="طريقة اللعب">
+  <button type="button" class="bl-mode is-on" data-mode="bots" role="tab" aria-selected="true"><b>ضد البوتات</b><span>أنت وشريك بوت ضد بوتين</span></button>
+  <button type="button" class="bl-mode" data-mode="quick" role="tab" aria-selected="false"><b>لعب سريع</b><span>لاعبون حقيقيون، والبوت يكمل الطاولة</span></button>
+  <button type="button" class="bl-mode" data-mode="room" role="tab" aria-selected="false"><b>غرفة خاصة</b><span>العب مع أصحابك برمز</span></button>
+ </div>
+ <div class="bl-panel" data-panel="bots">
+  <label class="bl-field"><span>اسمك</span><input id="nameBots" maxlength="20" autocomplete="nickname" value="أنت"></label>
+  <label class="bl-field"><span>مستوى البوتات</span><select id="botLevel"><option value="easy">سهل</option><option value="medium">متوسط</option><option value="hard" selected>محترف</option></select></label>
+  <label class="bl-field"><span>طول المباراة</span><select id="target"><option value="152" selected>صكّة كاملة · 152</option><option value="102">صكّة قصيرة · 102</option></select></label>
+  <button id="startBots" type="button" class="bl-cta">ابدأ اللعب</button>
+ </div>
+ <div class="bl-panel" data-panel="quick" hidden>
+  <label class="bl-field"><span>اسمك</span><input id="nameQuick" maxlength="20" autocomplete="nickname" value="لاعب"></label>
+  <p class="bl-note">ندخلك أول طاولة فيها مكان. بعد 15 ثانية تبدأ اللعبة، والبوت يكمل المقاعد الفاضية.</p>
+  <button id="startQuick" type="button" class="bl-cta">ابحث عن طاولة</button>
+ </div>
+ <div class="bl-panel" data-panel="room" hidden>
+  <label class="bl-field"><span>اسمك</span><input id="nameRoom" maxlength="20" autocomplete="nickname" value="لاعب"></label>
+  <div class="bl-room-actions"><button id="createRoom" type="button" class="bl-cta">أنشئ غرفة</button><div class="bl-join"><input id="joinCode" inputmode="numeric" maxlength="6" placeholder="رمز من 6 أرقام" aria-label="رمز الغرفة"><button id="joinRoom" type="button" class="bl-btn">ادخل</button></div></div>
+  <p class="bl-note">أول لاعبين يكونون شركاء. المضيف يبدأ متى ما بغى، والبوت يكمل المقاعد الفاضية.</p>
+ </div>
+ <div id="lobby" class="bl-lobby" hidden>
+  <div class="bl-lobby-head"><div><span class="bl-kicker" id="lobbyKind">غرفة خاصة</span><h2 id="lobbyTitle">بانتظار اللاعبين</h2></div><div class="bl-code"><span>الرمز</span><b id="lobbyCode">——————</b><button id="copyCode" type="button" class="bl-btn">نسخ</button></div></div>
+  <div id="lobbyCountdown" class="bl-countdown" hidden><canvas id="lobbyRing" width="96" height="96" aria-hidden="true"></canvas><span><b id="lobbySeconds">15</b> ثانية وتبدأ</span></div>
+  <div id="lobbySeats" class="bl-seats-list"></div>
+  <p id="lobbyNote" class="bl-note"></p>
+  <div class="bl-lobby-actions"><button id="inviteFriends" type="button" class="bl-btn">ادعُ صديق</button><button id="readyBtn" type="button" class="bl-btn">أنا جاهز</button><button id="hostStart" type="button" class="bl-cta" hidden>ابدأ الآن</button><button id="leaveLobby" type="button" class="bl-btn ghost">خروج</button></div>
+ </div>
+ <p id="setupMessage" class="bl-message" role="status" aria-live="polite"></p>
+ <details class="bl-rules"><summary>طريقة اللعب باختصار</summary>
+  <ul>
+   <li><b>التوزيع:</b> خمس أوراق لكل لاعب وورقة مكشوفة. يبدأ الشراء من يمين الموزع.</li>
+   <li><b>الشراء:</b> «حكم» على شكل الورقة المكشوفة، أو «صن» بلا حكم، أو «أشكل» (صن والورقة لشريكك) لليسار والموزع. الصن يغلب الحكم. في الجولة الثانية «حكم ثاني» على شكل آخر.</li>
+   <li><b>اللعب:</b> تلتزم بالشكل. في الحكم إذا ما عندك الشكل تقطع بالحكم إلا إذا كان شريكك آكل، وتكبّر على حكم الخصم إذا تقدر.</li>
+   <li><b>الأبناط:</b> الصن 130 والحكم 162 مع «الأرض» 10 لآخر أكلة. المشتري لازم يجيب أكثر من النصف وإلا تروح كلها للخصم.</li>
+   <li><b>المشاريع:</b> سرا (3 متتالية)، خمسين (4)، مية (5 أو أربع صور أو عشرات)، أربعمية (4 إكك في الصن). «بلوت» شايب وبنت الحكم بيد واحدة.</li>
+   <li><b>الدبل:</b> في الحكم: دبل ثم ثري ثم فور ثم قهوة تنهي الصكّة.</li>
+  </ul>
+ </details>
+</section>
+<section id="table" class="bl-game" hidden aria-label="طاولة البلوت">
+ <div class="bl-hud">
+  <button id="leaveTable" type="button" class="bl-round-btn" aria-label="خروج من الطاولة">✕</button>
+  <div class="bl-score" aria-live="polite"><div class="bl-team us"><span>لنا</span><b id="scoreUs">0</b></div><div class="bl-target"><small>إلى</small><b id="scoreTarget">152</b></div><div class="bl-team them"><span>لهم</span><b id="scoreThem">0</b></div></div>
+  <button id="openLog" type="button" class="bl-round-btn" aria-label="سجل الجولات">☰</button>
+ </div>
+ <div class="bl-contract-line"><span id="contractChip" class="bl-contract" hidden></span><span id="trickCount" class="bl-tricks" hidden></span><span id="netState" class="bl-net" hidden></span></div>
+ <div id="felt" class="bl-felt">
+  <div class="bl-felt-inner">
+   <div class="bl-seat" data-pos="top"><div class="bl-backs"></div><div class="bl-avatar"><span class="bl-face"></span><i class="bl-timer"></i></div><div class="bl-name"><b></b><small></small></div><div class="bl-bubble" hidden></div></div>
+   <div class="bl-seat" data-pos="left"><div class="bl-backs"></div><div class="bl-avatar"><span class="bl-face"></span><i class="bl-timer"></i></div><div class="bl-name"><b></b><small></small></div><div class="bl-bubble" hidden></div></div>
+   <div class="bl-seat" data-pos="right"><div class="bl-backs"></div><div class="bl-avatar"><span class="bl-face"></span><i class="bl-timer"></i></div><div class="bl-name"><b></b><small></small></div><div class="bl-bubble" hidden></div></div>
+   <div class="bl-seat me" data-pos="bottom"><div class="bl-avatar"><span class="bl-face"></span><i class="bl-timer"></i></div><div class="bl-name"><b></b><small></small></div><div class="bl-bubble" hidden></div></div>
+   <div class="bl-center">
+    <div id="deck" class="bl-deck" hidden></div>
+    <div id="exposed" class="bl-exposed" hidden></div>
+    <div class="bl-slot" data-pos="top"></div><div class="bl-slot" data-pos="left"></div><div class="bl-slot" data-pos="right"></div><div class="bl-slot" data-pos="bottom"></div>
+    <div id="banner" class="bl-banner" hidden></div>
+   </div>
+   <div id="pile0" class="bl-pile" data-team="0"></div><div id="pile1" class="bl-pile" data-team="1"></div>
+  </div>
+ </div>
+ <div id="prompt" class="bl-prompt" aria-live="polite"></div>
+ <div id="actions" class="bl-actions"></div>
+ <div id="hand" class="bl-hand" aria-label="أوراقك"></div>
+</section>
+</main>
+<div id="resultSheet" class="bl-sheet" role="dialog" aria-modal="true" aria-labelledby="resultTitle" hidden><div class="bl-sheet-card"><h2 id="resultTitle"></h2><p id="resultLine" class="bl-sheet-line"></p><table class="bl-breakdown"><thead><tr><th></th><th>لنا</th><th>لهم</th></tr></thead><tbody id="resultRows"></tbody></table><div class="bl-sheet-total"><span>المجموع</span><b id="resultTotals"></b></div><button id="nextHand" type="button" class="bl-cta">الجولة التالية</button></div></div>
+<div id="logSheet" class="bl-sheet" role="dialog" aria-modal="true" aria-labelledby="logTitle" hidden><div class="bl-sheet-card"><h2 id="logTitle">سجل الصكّة</h2><table class="bl-breakdown"><thead><tr><th>الجولة</th><th>لنا</th><th>لهم</th></tr></thead><tbody id="logRows"></tbody></table><button id="closeLog" type="button" class="bl-btn">إغلاق</button></div></div>
+<div id="matchEnd" class="bl-overlay" role="dialog" aria-modal="true" aria-labelledby="matchTitle" hidden><div class="bl-end-card"><div class="bl-end-fan" aria-hidden="true"></div><h2 id="matchTitle"></h2><p id="matchLine"></p><div class="bl-end-actions"><button id="playAgain" type="button" class="bl-cta">صكّة جديدة</button><button id="endExit" type="button" class="bl-btn">القائمة</button></div></div></div>
+<div id="toast" class="bl-toast" role="status" aria-live="polite" hidden></div>
+<script src="assets/js/audio-manager.js?v=32.0.0"></script><script src="assets/js/platform.js?v=32.0.0"></script><script src="assets/js/social-client.js?v=32.0.0"></script><script src="assets/js/profile-core.js?v=32.0.0"></script><script src="assets/js/career-client.js?v=32.0.0"></script><script src="assets/js/ui-icons.js?v=32.0.0"></script><script defer src="assets/js/client-health.js?v=32.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=32.0.0"></script><script src="assets/js/reactions-v31.js?v=32.0.0"></script><script src="assets/js/baloot-cards.js?v=32.0.0"></script><script type="module" src="assets/js/baloot-table.js?v=32.0.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=32.0.0"></script></body></html>

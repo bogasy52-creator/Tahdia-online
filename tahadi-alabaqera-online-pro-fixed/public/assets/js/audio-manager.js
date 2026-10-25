@@ -12,6 +12,8 @@
   for(const [name,file] of Object.entries(quizFiles))samples[name]='assets/sounds/quiz-v28/'+file+'.wav';
   // 31.1.0: a clear crunch-and-gulp when a snake eats a stone.
   samples.snakeEat='assets/sounds/board-v31-1/snake-eat.wav';
+  // 32.0.0: the Baloot table.
+  for(const [name,file] of Object.entries({balootDeal:'deal',balootPlay:'play',balootTrick:'trick',balootShuffle:'shuffle',balootFlip:'flip',balootBid:'bid',balootBuy:'buy',balootDouble:'double',balootChime:'chime'}))samples[name]='assets/sounds/baloot-v32/'+file+'.wav';
   // Create/decode only a sound the player uses, sharing aliases of the same file.
   function sample(name){const src=samples[name]||samples.click;if(!samplePool[src]){const a=new Audio(src);a.preload='none';a.volume=settings.volume*.9;samplePool[src]=a;}return audio[name]=samplePool[src];}
   const diceSamples={soft:['soft-1','soft-2'],wood:['wood-1','wood-2'],crystal:['crystal-1','crystal-2']},diceAudio={},diceCursor={dice:-1,diceImpact:-1};

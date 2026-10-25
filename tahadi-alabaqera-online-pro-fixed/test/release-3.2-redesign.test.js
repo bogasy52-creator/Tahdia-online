@@ -43,6 +43,6 @@ test('genius question-selection board is a compact category-card grid with no sc
 
 test('3.2 PWA cache includes every new presentation layer', async()=>{
   const sw=await read('public/service-worker.js');
-  assert.match(sw,/busraj-games-v60-release-31-1-0/);
+  assert.match(sw,/busraj-games-v60-release-32-0-0/);
   for(const asset of ['/assets/css/snakes-premium.css','/assets/css/zahra-premium.css','/assets/css/jackaroo-next.css','/assets/css/quiz-board-v2.css']) assert.ok(sw.includes(asset),`missing ${asset}`);
 });

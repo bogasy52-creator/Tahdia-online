@@ -132,7 +132,7 @@
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
-    if(!/^(?:\/(?:party|online|picture|jackaroo|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/.test(notification.joinPath))return;
+    if(!/^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/.test(notification.joinPath))return;
     if (notification.id && seenInvites.has(String(notification.id))) return;
     rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);
     let wrap = document.querySelector('#bsSocialInvite');
@@ -146,7 +146,7 @@
     const title = document.createElement('b');
     title.textContent = `🎮 دعوة من ${notification.from?.displayName || notification.from?.username || 'صديق'}`;
     const sub = document.createElement('span');
-    const labels = { party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'النرد', journey: 'رحلة النجوم', local: 'العباقرة المحلي', logic: 'المنطق', memory: 'الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'سرعة الاستجابة' };
+    const labels = { party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'النرد', journey: 'رحلة النجوم', local: 'العباقرة المحلي', logic: 'المنطق', memory: 'الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'سرعة الاستجابة' };
     sub.textContent = notification.roomCode ? `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}` : `تحدٍ جديد • ${labels[notification.game] || notification.game}`;
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';

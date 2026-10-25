@@ -3,15 +3,16 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=31.1.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=32.0.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
  ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في السلم والثعبان والزهرة، وتصير كرات زجاجية في الجاكارو.'],
- ['character','الشخصيات','🦊','شخصيات على قاعدة ذهبية تمشي بدل الأحجار في السلم والثعبان.'],
+ ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في السلم والثعبان، وتكون صورتك على طاولة البلوت.'],
  ['dice','النرد','🎲','نرد ثلاثي الأبعاد يظهر في كل ألعاب النرد.'],
  ['table','الطاولات','🪵','خامة لوحتي الجاكارو والزهرة: الإطار والسطح والخانات.'],
- ['board','ألواح السلالم','🪜','لوح السلم والثعبان بخاناته وإطاره.'],
+ ['board','ألواح السلالم','🪜','لوح السلم والثعبان بخاناته وإطاره وسلالمه.'],
+ ['deck','ورق البلوت','🃏','ورق اللعب على طاولة البلوت: الوجه والظهر في يدك وعلى الطاولة.'],
  ['snake','الثعابين','🐍','إطلالتك في حلبة الثعبان أمام بقية اللاعبين.'],
  ['emote','إيموجي','😎','إيموجي متحرك تطلقه داخل الغرف، ويظهر لكل اللاعبين.'],
  ['phrase','عبارات','💬','عبارات جاهزة تظهر باسمك في فقاعة داخل الغرفة.'],
@@ -23,11 +24,11 @@ const CATS=[
 const TYPE_LABEL=Object.fromEntries(CATS.map(([id,label])=>[id,label]));
 const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
 const REACTION=new Set(core.REACTION_TYPES||['emote','phrase','move']);
-const SLOTS=['pawn','dice','table','board','character','snake','trail','victory','title'];
+const SLOTS=['pawn','dice','table','board','character','deck','snake','trail','victory','title'];
 const TABLE_MATERIAL={'table-club':'walnut','table-gallery':'ivory','table-nocturne':'carbon','table-botanic':'jade','table-royal':'royal','table-walnut':'walnut','table-cyber':'carbon'};
-const BOARD_LOOK={'board-forest':{cell:'#f8efd9',alt:'#eedcb6',num:'#7a5532',frame:'#6d4221',dark:'#3f230d',hi:'#b07a45',snake:'#2f9e57'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
+const BOARD_LOOK={'board-forest':{cell:'#3f2f8a',alt:'#173f85',num:'#ffffff',frame:'#171b2e',dark:'#07080f',hi:'#454b6d',snake:'#ff2d55',ladder:'#d9b46a'},'board-lava':{cell:'#1d1513',alt:'#261b17',num:'#ffb27a',frame:'#24140d',dark:'#0b0604',hi:'#ff7a2e',snake:'#ff2d55',ladder:'#ff8a3d'},'board-galaxy':{cell:'#141238',alt:'#1a1745',num:'#d6ceff',frame:'#2f2868',dark:'#0c0a22',hi:'#a59cec',snake:'#ff4fa3',ladder:'#cdc4ff'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
 const DIE_ONE={'dice-obsidian':'#ebc677','dice-crystal':'#d6fff1','dice-smoke':'#ffdf9d','dice-nebula':'#ffdf9d'};
-const TRY={pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في السلم والثعبان'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح السلم والثعبان'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
+const TRY={deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في السلم والثعبان'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح السلم والثعبان'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
 let heroParts=null,view='shop',filter='all',query='',sort='featured',pending=false,previewId=null,previewCleanup=()=>{},bag=[],favorites=[],accountKey='',checkout=null,observer=null,clock=null,artSequence=0;
 
 /* ---------- small helpers ---------- */
@@ -58,10 +59,11 @@ const SHOWCASE={'pawn-classic':0,'pawn-atlas':1,'pawn-rook':2,'pawn-onyx':3,'paw
 function pawnColor(item){const list=window.BS_PIECES?.COLORS||['#e0474c','#2f86e8','#f0b429','#22a565','#8b5cf6','#f2711c'];const fixed=SHOWCASE[item.id];if(fixed!==undefined)return list[fixed%list.length];const index=catalogue().filter(i=>i.type==='pawn').findIndex(i=>i.id===item.id);return list[(index<0?1:index)%list.length];}
 // 31.1.0: the shop shows each board exactly as it plays — a picture of the real
 // board with its tiles, ladders and arena snakes. The drawing below stays as a fallback.
-const BOARD_PHOTOS=new Set(['board-forest','board-ocean','board-sand','board-twilight','board-royal','board-cyber']);
+// 32.0.0: the five boards on sale have new pictures; retired ones keep theirs.
+const BOARD_PHOTOS={'board-forest':'board-v32-forest','board-royal':'board-v32-royal','board-cyber':'board-v32-cyber','board-lava':'board-v32-lava','board-galaxy':'board-v32-galaxy','board-ocean':'board-v311-ocean','board-sand':'board-v311-sand','board-twilight':'board-v311-twilight'};
 function miniBoard(stage,item){
- if(!BOARD_PHOTOS.has(item.id))return vectorBoard(stage,item);
- const img=make('img','sx-board-photo');img.alt='';img.loading='lazy';img.decoding='async';img.src='/assets/previews/board-v311-'+item.id.slice(6)+'.webp';
+ if(!BOARD_PHOTOS[item.id])return vectorBoard(stage,item);
+ const img=make('img','sx-board-photo');img.alt='';img.loading='lazy';img.decoding='async';img.src='/assets/previews/'+BOARD_PHOTOS[item.id]+'.webp';
  img.addEventListener('error',()=>{img.remove();vectorBoard(stage,item);},{once:true});
  stage.append(img);
 }
@@ -70,7 +72,7 @@ function vectorBoard(stage,item){
  const frame=svgGradient(defs,prefix+'f',[[0,look.hi],[.25,look.frame],[1,look.dark]],1,1);
  svg.append(svgNode('rect',{x:4,y:4,width:112,height:112,rx:12,fill:frame}));
  for(let r=0;r<5;r++)for(let c=0;c<5;c++){const x=12+c*19.2,y=12+r*19.2,n=(4-r)*5+((4-r)%2?5-c:c+1);svg.append(svgNode('rect',{x,y,width:19.2,height:19.2,fill:(r+c)%2?look.alt:look.cell}));svg.append(svgNode('text',{x:x+2.2,y:y+6.4,'font-size':5.4,'font-weight':800,'font-family':'Tajawal,sans-serif',fill:look.num},n));}
- const ladder=svgNode('g',{stroke:'#b07a45','stroke-width':2.2,'stroke-linecap':'round'});ladder.append(svgNode('path',{d:'M30 100 62 38M40 104 72 42'}));for(let i=1;i<6;i++){const t=i/6;ladder.append(svgNode('path',{d:`M${30+32*t} ${100-62*t}L${40+32*t} ${104-62*t}`,'stroke-width':1.6}));}svg.append(ladder);
+ const ladder=svgNode('g',{stroke:look.ladder||'#b07a45','stroke-width':2.2,'stroke-linecap':'round'});ladder.append(svgNode('path',{d:'M30 100 62 38M40 104 72 42'}));for(let i=1;i<6;i++){const t=i/6;ladder.append(svgNode('path',{d:`M${30+32*t} ${100-62*t}L${40+32*t} ${104-62*t}`,'stroke-width':1.6}));}svg.append(ladder);
  svg.append(svgNode('path',{d:'M92 30C78 40 98 54 84 66S70 86 86 98',fill:'none',stroke:look.snake,'stroke-width':5.2,'stroke-linecap':'round'}));
  svg.append(svgNode('ellipse',{cx:92,cy:28,rx:5.4,ry:4.4,fill:look.snake}));svg.append(svgNode('circle',{cx:90,cy:27,r:1,fill:'#fff'}));
  stage.append(svg);
@@ -96,6 +98,14 @@ function victoryArt(stage,item,live){
  stage.append(svg);
  if(live&&!reduced()&&svg.animate){const a=svg.animate([{transform:'scale(.92)',opacity:.7},{transform:'scale(1.04)',opacity:1},{transform:'scale(.92)',opacity:.7}],{duration:2200,iterations:Infinity});stage.cleanups.push(()=>a.cancel());}
 }
+// a fan of three cards from the deck: an ace, a court card and the back
+function deckArt(stage,item,live){
+ const cards=window.BS_CARDS;if(!cards)return titleArt(stage,item);
+ const fan=make('div','sx-deck-fan');
+ for(const [card,i] of [['back',0],['KH',1],['AS',2]]){const img=make('img','sx-deck-card');img.alt='';img.decoding='async';img.src=cards.url(card,item.id);img.style.setProperty('--i',String(i));fan.append(img);}
+ stage.append(fan);
+ if(live&&!reduced()&&fan.animate){const a=fan.animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}],{duration:2600,iterations:Infinity,easing:'ease-in-out'});stage.cleanups.push(()=>a.cancel());}
+}
 function titleArt(stage,item){const plate=make('div','sx-title-plate');plate.style.setProperty('--title-color',item.color);plate.append(make('i',null,'✦'),make('b',null,item.name),make('i',null,'✦'));stage.append(plate);}
 export function mountCollectible(target,item,{live=false,playerColor,boardGame='jackaroo',seats=4}={}){
  const stage=make('div','atelier-preview sx-art sx-art-'+item.type+(live?' is-live':''));stage.dataset.collectible=item.id;stage.cleanups=[];target.append(stage);
@@ -109,7 +119,8 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame='
  }else if(item.type==='pawn'){
   const svg=window.BS_PIECES?.icon?.(document,{design:window.BS_PIECES.designFor(item.id),item:item.id,color:playerColor||pawnColor(item),className:'sx-pawn-art',label:'',size:'l'});if(svg)stage.append(svg);
  }else if(item.type==='character'){
-  const img=make('img','sx-character-art');img.src='/assets/characters/'+(item.asset||'fox')+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
+  const img=make('img','sx-character-art');img.src='/assets/heroes/'+(item.asset||'desert')+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
+ }else if(item.type==='deck'){deckArt(stage,item,live);
  }else if(item.type==='snake'){
   const img=make('img','sx-snake-art'+(item.id==='snake-sovereign'?' is-hero':''));img.src=item.id==='snake-sovereign'?'/assets/brand/sovereign-hero.webp':'/assets/previews/'+item.id+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
  }else if(item.type==='board'){miniBoard(stage,item);
