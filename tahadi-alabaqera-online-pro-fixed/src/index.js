@@ -31,7 +31,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='32.0.0';
+const RELEASE='32.0.1';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -167,6 +167,12 @@ function cleanName(value) {
   return String(value || "").normalize("NFKC").trim().replace(/[\u0000-\u001F\u007F<>]/g, "").slice(0, 20) || "لاعب";
 }
 
+// 32.0.1: a signed-in player appears in every room under the account's display
+// name. The name typed on the page, or remembered from guest play, is ignored.
+function accountRoomName(auth) {
+  return cleanName(auth?.profile?.displayName || auth?.username);
+}
+
 function shuffle(items) {
   const a = [...items];
   for (let i = a.length - 1; i > 0; i--) {
@@ -215,18 +221,10 @@ function questionRef(cat, q) {
   return `${cat.id}:${cat.questions.indexOf(q)}`;
 }
 
-function balancedModes(rounds) {
-  const modes = Array.from({ length: rounds }, (_, i) => i < Math.ceil(rounds / 2) ? "secret" : "buzzer");
-  for (let tries = 0; tries < 24; tries++) {
-    const candidate = shuffle(modes);
-    let streak = 1, ok = true;
-    for (let i = 1; i < candidate.length; i++) {
-      streak = candidate[i] === candidate[i - 1] ? streak + 1 : 1;
-      if (streak > 2) { ok = false; break; }
-    }
-    if (ok) return candidate;
-  }
-  return modes.map((_, i) => i % 2 === 0 ? "secret" : "buzzer");
+// 32.0.1: every question is answered in secret by all players at once. The
+// buzzer (the first press took the question from everyone) was removed.
+function roundModes(rounds) {
+  return Array.from({ length: rounds }, () => "secret");
 }
 
 function makePlan(categoryIds, rounds = 12, recentQids = [], extra = null) {
@@ -257,7 +255,7 @@ function makePlan(categoryIds, rounds = 12, recentQids = [], extra = null) {
   while (plan.length < rounds) addQuestion(pick(chosen), null);
 
   const order = shuffle(plan.slice(0, rounds));
-  const modes = balancedModes(order.length);
+  const modes = roundModes(order.length);
   return order.map((x, i) => ({ ...x, mode: modes[i] }));
 }
 
@@ -393,7 +391,7 @@ export default {
       }
       const m=url.pathname.match(/^\/api\/party\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
       const headers=new Headers(request.headers);headers.delete('x-bs-account');
-      if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth)headers.set('x-bs-account',auth.username);}
+      if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}}
       return env.ROOMS.get(env.ROOMS.idFromName('party:'+m[1])).fetch(new Request('https://party.internal/'+m[2]+url.search,{headers}));
     }
 
@@ -415,7 +413,7 @@ export default {
         const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
         const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
         if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
-        if(auth)headers.set('x-bs-account',auth.username);
+        if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}
       }
       return env.ROOMS.get(env.ROOMS.idFromName('paths:'+m[1])).fetch(new Request('https://paths.internal/'+m[2]+url.search,{headers}));
     }
@@ -438,7 +436,7 @@ export default {
         const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
         const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
         if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
-        if(auth)headers.set('x-bs-account',auth.username);
+        if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}
       }
       return env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+m[1])).fetch(new Request('https://sudoku.internal/'+m[2]+url.search,{headers}));
     }
@@ -455,7 +453,7 @@ export default {
       const headers=new Headers(request.headers);headers.delete('x-bs-account');
       if(m[2]==='ws'||m[2]==='generate'){
         const st=m[2]==='ws'?String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3):null;
-        const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(auth)headers.set('x-bs-account',auth.username);else if(m[2]==='generate')return json({ok:false,error:'سجّل الدخول لتوليد صورة'},401);
+        const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(auth){headers.set('x-bs-account',auth.username);if(m[2]==='ws')url.searchParams.set('name',accountRoomName(auth));}else if(m[2]==='generate')return json({ok:false,error:'سجّل الدخول لتوليد صورة'},401);
       }
       if(Number(headers.get('content-length'))>4096)return json({ok:false,error:'طلب كبير'},413);
       let payload;if(request.method==='POST'){payload=await request.text();if(payload.length>4096)return json({ok:false,error:'طلب كبير'},413);}const stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+m[1]));return stub.fetch(new Request('https://picture.internal/'+m[2]+url.search,{method:request.method,headers,body:payload}));
@@ -470,7 +468,7 @@ export default {
       if(url.pathname==='/api/quick/join'){
         const auth=await authenticate(request,env);
         if(request.headers.has('authorization')&&!auth)return json({ok:false,error:'انتهت جلسة حسابك، سجل الدخول مجددًا'},401);
-        body.username=auth?.username||null;body.name=auth?.profile?.displayName||cleanName(body.name);path='/join';
+        body.username=auth?.username||null;body.name=auth?accountRoomName(auth):cleanName(body.name);path='/join';
       } else if(url.pathname==='/api/quick/ticket')path='/ticket';
       else if(url.pathname==='/api/quick/leave')path='/leave';
       else {
@@ -536,8 +534,9 @@ export default {
         if (suffix === "/ws") {
           const headers=new Headers(request.headers);headers.delete('x-bs-account');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
-          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth)headers.set('x-bs-account',auth.username)}
-          return await stub.fetch(new Request(request,{headers}));
+          let named=null;
+          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);named=new URL(request.url);named.searchParams.set('name',accountRoomName(auth));}}
+          return await stub.fetch(named?new Request(named,{method:request.method,headers}):new Request(request,{headers}));
         }
         return await stub.fetch("https://room.internal/status");
       } catch (err) {
@@ -553,7 +552,7 @@ export default {
       const body=await request.json().catch(()=>({})),auth=await authenticate(request,env);
       if(request.headers.has('authorization')&&!auth)return json({ok:false,error:'انتهت جلسة حسابك، سجل الدخول مجددًا'},401);
       const stub=env.QUICK_ARENA.get(env.QUICK_ARENA.idFromName('queue:serpent:v135'));
-      return stub.fetch('https://quick.internal/serpent/join',{method:'POST',body:JSON.stringify({name:auth?.profile?.displayName||cleanName(body.name),username:auth?.username||null})});
+      return stub.fetch('https://quick.internal/serpent/join',{method:'POST',body:JSON.stringify({name:auth?accountRoomName(auth):cleanName(body.name),username:auth?.username||null})});
     }
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
@@ -578,12 +577,13 @@ export default {
       if(serpentMatch[2]!=='/ws')return stub.fetch('https://serpent.internal/status');
       const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-skin');
       const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(s=>s.trim()).find(s=>s.startsWith('st.'))?.slice(3);
+      let accountName='';
       if(st){const auth=await authenticate(new Request(request.url,{headers:{authorization:'Bearer '+st}}),env);if(auth){
-        headers.set('x-bs-account',auth.username);
+        headers.set('x-bs-account',auth.username);accountName=accountRoomName(auth);
         const profile=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});
         if(profile.ok){const data=await profile.json();headers.set('x-bs-skin',data.career?.equipped?.snake||'snake-wild');}
       }}
-      const internal=new URL(request.url);internal.hostname='serpent.internal';internal.pathname='/ws';return stub.fetch(new Request(internal,{headers}));
+      const internal=new URL(request.url);internal.hostname='serpent.internal';internal.pathname='/ws';if(accountName)internal.searchParams.set('name',accountName);return stub.fetch(new Request(internal,{headers}));
     }
 
     // Quick Baloot: a seat on an open public table; empty seats get bots.
@@ -650,8 +650,9 @@ export default {
         if (suffix === "/ws") {
           const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');headers.delete('x-bs-reactions');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
-          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));}}}
-          return await stub.fetch(new Request(request,{headers}));
+          let named=null;
+          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);named=new URL(request.url);named.searchParams.set('name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));}}}
+          return await stub.fetch(named?new Request(named,{method:request.method,headers}):new Request(request,{headers}));
         }
         return await stub.fetch("https://board.internal/status");
       } catch (err) {
@@ -901,7 +902,7 @@ export class GameRoom extends DurableObject {
     try { msg = JSON.parse(rawText); }
     catch { return this.sendError(ws, "رسالة غير صالحة"); }
 
-    if(['answer','buzz','power','relay_answer'].includes(msg.type)){const required=msg.type==='relay_answer'||ws.deserializeAttachment()?.roundContext;if((required||Object.hasOwn(msg,'roundIndex')||Object.hasOwn(msg,'matchId'))&&(msg.matchId!==this.room.matchId||msg.roundIndex!==this.room.roundIndex))return this.sendError(ws,'تغير السؤال؛ انتظر تحديث الجولة');}
+    if(['answer','power','relay_answer'].includes(msg.type)){const required=msg.type==='relay_answer'||ws.deserializeAttachment()?.roundContext;if((required||Object.hasOwn(msg,'roundIndex')||Object.hasOwn(msg,'matchId'))&&(msg.matchId!==this.room.matchId||msg.roundIndex!==this.room.roundIndex))return this.sendError(ws,'تغير السؤال؛ انتظر تحديث الجولة');}
 
     try {
       switch (msg.type) {
@@ -968,10 +969,6 @@ export class GameRoom extends DurableObject {
 
         case "relay_answer":
           await this.handleRelayAnswer(player,msg,ws);
-          break;
-
-        case "buzz":
-          await this.handleBuzz(player);
           break;
 
         case "power":
@@ -1128,15 +1125,11 @@ export class GameRoom extends DurableObject {
         deadline: c.deadline,
         startedAt: c.startedAt,
         answerOpensAt: c.answerOpensAt || c.startedAt,
-        buzzWinner: c.buzzWinner,
-        stealPlayer: c.stealPlayer,
         answeredPlayers: Object.keys(c.answers || {}),
         blocked: Boolean(c.blocked?.[playerId]),
       };
 
       if (c.mode === "secret" && c.phase === "secret") base.options = c.options;
-      if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner === playerId) base.options = c.options;
-      if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer === playerId) base.options = c.options;
       if(c.mode==='relay'){
         base.relay=relayView(c.relays?.[me?.team],playerId);
         base.teamProgress=Object.entries(c.relays||{}).map(([team,r])=>({team,stage:r.stage,count:r.members.length,complete:r.complete,failed:r.failed}));
@@ -1191,13 +1184,13 @@ export class GameRoom extends DurableObject {
     }
     const { options, correctIndex } = buildChoices(cat, q);
     const now = Date.now();
-    const isSecret = plan.mode === "secret";
     const previewMs = q.media === "memory" ? Math.min(8000, Math.max(2500, Number(q.memory?.previewMs) || 4500)) : 0;
     const answerOpensAt = now + previewMs;
-    const responseMs = isSecret ? 30000 : 15000;
+    const responseMs = 30000;
+    // Rounds planned before 32.0.1 may still say "buzzer"; they are answered in secret too.
     this.room.current = {
-      mode: plan.mode,
-      phase: isSecret ? "secret" : "buzzer",
+      mode: "secret",
+      phase: "secret",
       category: { id: cat.id, name: cat.name, icon: cat.icon },
       value: q.v,
       question: q.q,
@@ -1218,8 +1211,6 @@ export class GameRoom extends DurableObject {
       startedAt: now,
       answerOpensAt,
       answers: {},
-      buzzWinner: null,
-      stealPlayer: null,
       double: {},
       blocked: {},
     };
@@ -1249,8 +1240,6 @@ export class GameRoom extends DurableObject {
     const c = this.room.current;
     if (!c) return false;
     if (c.mode === "secret" && c.phase === "secret") return !c.answers[playerId];
-    if (c.mode === "buzzer" && c.phase === "buzzer_answer") return c.buzzWinner === playerId;
-    if (c.mode === "buzzer" && c.phase === "steal") return c.stealPlayer === playerId;
     return false;
   }
 
@@ -1264,45 +1253,8 @@ export class GameRoom extends DurableObject {
 
     c.answers[player.id] = { choice, at: now, bonus: speedBonus(c.deadline, now) };
 
-    if (c.mode === "secret") {
-      if (Object.keys(c.answers).length >= this.room.order.length) await this.finalizeSecret();
-      else await this.persistAndBroadcast();
-      return;
-    }
-
-    if (c.phase === "buzzer_answer") {
-      if (choice === c.correctIndex) {
-        await this.finalizeBuzzer(player.id, true, false);
-      } else {
-        const opponentId = this.opponentId(player.id);
-        if (!opponentId||c.blocked?.[opponentId]) {
-          await this.finalizeBuzzer(player.id, false, false);
-        } else {
-          c.phase = "steal";
-          c.stealPlayer = opponentId;
-          c.deadline = Date.now() + 8000;
-          await this.persistAndBroadcast();
-          await this.ctx.storage.setAlarm(c.deadline);
-        }
-      }
-      return;
-    }
-
-    if (c.phase === "steal") {
-      await this.finalizeBuzzer(player.id, choice === c.correctIndex, true);
-    }
-  }
-
-  async handleBuzz(player) {
-    const c = this.room.current;
-    if (this.room.status !== "playing" || !c || c.mode !== "buzzer" || c.phase !== "buzzer") return;
-    if (Date.now() < (c.answerOpensAt || c.startedAt || 0)) return;
-    if (Date.now() >= c.deadline) return;
-    c.buzzWinner = player.id;
-    c.phase = "buzzer_answer";
-    c.deadline = Date.now() + 10000;
-    await this.persistAndBroadcast();
-    await this.ctx.storage.setAlarm(c.deadline);
+    if (Object.keys(c.answers).length >= this.room.order.length) await this.finalizeSecret();
+    else await this.persistAndBroadcast();
   }
 
   async usePower(player, power) {
@@ -1314,16 +1266,13 @@ export class GameRoom extends DurableObject {
     if (!player.powers[power]) return;
     if (c.blocked?.[player.id]) return;
 
-    const phaseOpen = ["secret", "buzzer", "buzzer_answer", "steal"].includes(c.phase);
-    if (!phaseOpen) return;
+    if (c.phase !== "secret") return;
 
     if (power === "double") {
       if (c.answers[player.id]) return;
       c.double[player.id] = true;
     } else if (power === "time") {
       if (c.answers[player.id]) return;
-      if (c.mode === "buzzer" && c.phase === "buzzer_answer" && c.buzzWinner !== player.id) return;
-      if (c.mode === "buzzer" && c.phase === "steal" && c.stealPlayer !== player.id) return;
       c.deadline += 7000;
       await this.ctx.storage.setAlarm(c.deadline);
     } else if (power === "block") {
@@ -1353,19 +1302,6 @@ export class GameRoom extends DurableObject {
       const gain = correct ? this.pointsFor(id, a) : 0;
       if (gain) this.room.players[id].score += gain;
       results[id] = { correct, gain, choice: a?.choice ?? null };
-    }
-    await this.revealRound(results);
-  }
-
-  async finalizeBuzzer(playerId, correct, stolen) {
-    const c = this.room.current;
-    const results = {};
-    for (const id of this.room.order) results[id] = { correct: false, gain: 0, choice: c.answers[id]?.choice ?? null };
-    if (correct) {
-      const a = c.answers[playerId];
-      const gain = this.pointsFor(playerId, a);
-      this.room.players[playerId].score += gain;
-      results[playerId] = { correct: true, gain, choice: a?.choice ?? null, stolen: Boolean(stolen) };
     }
     await this.revealRound(results);
   }
@@ -1475,29 +1411,9 @@ export class GameRoom extends DurableObject {
 
     if(c.mode==='relay'){await this.finalizeRelay();return;}
 
-    if (c.mode === "buzzer" && c.phase === "buzzer") {
-      const results = Object.fromEntries(this.room.order.map((id) => [id, { correct: false, gain: 0, choice: null }]));
-      await this.revealRound(results);
-      return;
-    }
-
-    if (c.mode === "buzzer" && c.phase === "buzzer_answer") {
-      const opponentId = this.opponentId(c.buzzWinner);
-      if (opponentId && !c.blocked?.[opponentId]) {
-        c.phase = "steal";
-        c.stealPlayer = opponentId;
-        c.deadline = Date.now() + 8000;
-        await this.persistAndBroadcast();
-        await this.ctx.storage.setAlarm(c.deadline);
-      } else {
-        await this.finalizeBuzzer(c.buzzWinner, false, false);
-      }
-      return;
-    }
-
-    if (c.mode === "buzzer" && c.phase === "steal") {
-      await this.finalizeBuzzer(c.stealPlayer, false, true);
-    }
+    // A buzzer round saved before 32.0.1 ends without points when its time is up.
+    const results = Object.fromEntries(this.room.order.map((id) => [id, { correct: false, gain: 0, choice: null }]));
+    await this.revealRound(results);
   }
 }
 

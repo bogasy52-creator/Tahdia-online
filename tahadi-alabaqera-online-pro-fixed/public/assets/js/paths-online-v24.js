@@ -76,5 +76,5 @@ for(const id of ['pathRoomDifficulty','pathRoomCapacity'])$(id).onchange=()=>sen
 $('pathReset').onclick=()=>{clearGesture();move('reset');};$('pathCommit').onclick=commit;
 for(const event of ['bs-career-change','bs-social-session'])window.addEventListener(event,()=>{if(account()!==initialAccount){stop();initialAccount=account();show('pathRoom',false);show('pathEntry',true);show('pathResume',Boolean(saved()));message('تغير الحساب؛ اختر غرفة للحساب الحالي.',true);}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearGesture();else if(state)renderBoard();});window.addEventListener('pagehide',()=>stop());
-setInterval(tick,1000);show('pathResume',Boolean(saved()));const profile=window.BS_CAREER?.get?.();if(profile?.name)$('pathName').value=profile.name;
+setInterval(tick,1000);show('pathResume',Boolean(saved()));const ownName=window.BS_SOCIAL?.accountName?.()||window.BS_CAREER?.get?.()?.name;if(ownName)$('pathName').value=ownName;
 const roomCode=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(roomCode||''))$('pathCode').value=roomCode;

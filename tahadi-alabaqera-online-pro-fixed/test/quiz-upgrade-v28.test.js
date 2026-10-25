@@ -46,17 +46,17 @@ test('a three-member relay resumes its next owner and original deadline, then ex
 
 const players=['a0','b0','a1','b1'].map((id,i)=>({id,name:id,team:id[0].toUpperCase(),score:0,role:i?'guest':'host',connected:true,powers:{double:true,time:true,block:true}}));
 function state(extra={}){return{code:'123456',status:'playing',mode:'teams-4',playerLimit:4,players,teamScores:[{team:'A',score:0},{team:'B',score:0}],roundIndex:0,roundCount:12,serverNow:1000000,matchId:'match-28',...extra};}
-function current(extra={}){return{question:'سؤال',category:{name:'فئة'},value:100,mode:'buzzer',phase:'buzzer',answers:{},options:['أ','ب','ج','د'],startedAt:1000000,deadline:1015000,...extra};}
+function current(extra={}){return{question:'سؤال',category:{name:'فئة'},value:100,mode:'secret',phase:'secret',answeredPlayers:[],options:['أ','ب','ج','د'],startedAt:1000000,deadline:1030000,...extra};}
 async function online(globals={}){
  const cues=[],session=new Map(),d=await createDOM('online.html',{Date:class extends Date{static now(){return 1000000;}},requestAnimationFrame:()=>1,BS_AUDIO:{play:x=>cues.push(x),timerTick(){},timerEnd(){}},sessionStorage:{getItem:k=>session.get(k)||null,setItem:(k,v)=>session.set(k,v)},...globals});
  await d.runFile('assets/js/quiz-team-v28.js',{engine});const code=[...d.html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(s=>s.includes('function renderFinished('));
  vm.runInContext(code.replace(/\}\)\(\);\s*$/,"window.__qa={set:s=>{state=s;myId='a0';render();},renderMedia};})();"),d.context);return{...d,qa:d.context.__qa,cues,session};
 }
 test('a teammate success uses the correct cue and balanced team score placement',async()=>{
- const d=await online(),s=state({lastReveal:{roundIndex:0,mode:'buzzer',category:{name:'فئة'},value:100,question:'سؤال',correctAnswer:'أ',nextAt:1005000,results:{a1:{correct:true,gain:100}}}});d.qa.set(s);for(const t of [...d.timers.values()].filter(t=>t.ms===120))t.fn();assert.ok(d.cues.includes('correct'));assert.ok(!d.cues.includes('wrong'));assert.equal(d.doc.querySelector('.matchTop').children[1].id,'roundBadge');assert.ok(d.doc.querySelector('.matchTop').classList.contains('is-teams'));
+ const d=await online(),s=state({lastReveal:{roundIndex:0,mode:'secret',category:{name:'فئة'},value:100,question:'سؤال',correctAnswer:'أ',nextAt:1005000,results:{a1:{correct:true,gain:100}}}});d.qa.set(s);for(const t of [...d.timers.values()].filter(t=>t.ms===120))t.fn();assert.ok(d.cues.includes('correct'));assert.ok(!d.cues.includes('wrong'));assert.equal(d.doc.querySelector('.matchTop').children[1].id,'roundBadge');assert.ok(d.doc.querySelector('.matchTop').classList.contains('is-teams'));
 });
-test('buzzer phases do not replay a round cue and delayed feedback cannot spill into a new match',async()=>{
- const d=await online();d.qa.set(state({current:current()}));const n=d.cues.length;d.qa.set(state({current:current({phase:'buzzer_answer',buzzWinner:'a1'})}));assert.equal(d.cues.length,n);assert.match(d.doc.getElementById('action').textContent,/زميلك/);
+test('updates within a secret round do not replay its cue and delayed feedback cannot spill into a new match',async()=>{
+ const d=await online();d.qa.set(state({current:current()}));const n=d.cues.length;assert.equal(d.doc.querySelectorAll('#action .choice').length,4);d.qa.set(state({current:current({answeredPlayers:['a0','a1']})}));assert.equal(d.cues.length,n);assert.match(d.doc.getElementById('action').textContent,/تم إرسال إجابتك/);
  d.qa.set(state({lastReveal:{roundIndex:0,category:{name:'فئة'},value:100,question:'س',correctAnswer:'أ',nextAt:1005000,results:{a1:{correct:true}}}}));const deferred=[...d.timers.values()].find(t=>t.ms===120);d.qa.set(state({matchId:'another-match',current:current()}));const before=d.cues.length;deferred.fn();assert.equal(d.cues.length,before);
 });
 test('online relay shows only the active member clue and hides ordinary powers',async()=>{

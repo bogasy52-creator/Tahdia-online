@@ -47,6 +47,8 @@
 
 
   function readStorage(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
+  // another tab signed out (or into another account) while a request was on its way
+  function signedOutElsewhere(session) { try { return localStorage.getItem(STORAGE_KEY) !== session; } catch { return false; } }
   function writeStorage(key, value) { try { if (value) localStorage.setItem(key, value); else localStorage.removeItem(key); } catch {} }
   function parseJson(value, fallback = null) { try { return JSON.parse(value); } catch { return fallback; } }
   function toast(message) { if (window.BS_PLATFORM?.toast) window.BS_PLATFORM.toast(message); else console.info(message); }
@@ -110,7 +112,7 @@
     if (state.dashboard && !force) return state.dashboard;
     const session=token();
     const data = await api('/api/social/me');
-    if(session!==token()||data.profile?.username!==session.split('.')[0])return null;
+    if(session!==token()||signedOutElsewhere(session)||data.profile?.username!==session.split('.')[0])return null;
     state.dashboard = data;
     state.profile = data.profile;
     writeStorage(PROFILE_KEY, JSON.stringify(data.profile || null));
@@ -249,9 +251,38 @@
     if(token())connectRealtime();
   });
 
+  // 32.0.1: signed in, every "your name" field of a game shows the account's
+  // name and is locked there; the rooms use the account name anyway.
+  const ACCOUNT_NAME_HINT = 'هذا اسم حسابك ويظهر لكل اللاعبين. تغيّره من «تعديل الاسم» في الرئيسية.';
+  let accountHintAt = 0;
+  function accountName(profile = cachedProfile()) { return token() ? String(profile?.displayName || '').trim() : ''; }
+  function bindAccountNames(profile) {
+    const name = accountName(profile);
+    document.querySelectorAll('input[data-account-name]').forEach((el) => {
+      if (name) {
+        if (!el.classList.contains('bs-account-name')) el.dataset.guestName = el.value;
+        el.value = name.slice(0, el.maxLength > 0 ? el.maxLength : 24);
+        el.readOnly = true;
+        el.classList.add('bs-account-name');
+        el.title = ACCOUNT_NAME_HINT;
+        if (!el.dataset.accountHint) {
+          el.dataset.accountHint = '1';
+          el.addEventListener('focus', () => { if (!el.readOnly || Date.now() - accountHintAt < 4000) return; accountHintAt = Date.now(); toast(ACCOUNT_NAME_HINT); });
+        }
+      } else if (el.classList.contains('bs-account-name')) {
+        el.readOnly = false;
+        el.classList.remove('bs-account-name');
+        el.removeAttribute('title');
+        el.value = el.dataset.guestName ?? el.defaultValue;
+        delete el.dataset.guestName;
+      }
+    });
+  }
+
   function decorate(data = state.dashboard) {
     const profile = data?.profile || cachedProfile();
     const unread = Number(data?.unread || 0);
+    bindAccountNames(profile);
     document.querySelectorAll('[data-social-name]').forEach((el) => { el.textContent = profile?.displayName || 'حسابي'; });
     document.querySelectorAll('[data-social-open]').forEach((el) => {
       el.setAttribute('href', profile ? '/social' : '/social?auth=1');
@@ -307,10 +338,13 @@
     version: '25.3.0',
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
-    isLoggedIn: () => Boolean(token()), profile: () => cachedProfile(), events,
+    isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,
+    accountName: () => accountName(),
   };
   window.BS_SOCIAL = apiPublic;
   decorate();
+  // pages fill their name fields while they load; lock them again after that
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => decorate());
   if (token()) {
     startInbox();
     connectRealtime();

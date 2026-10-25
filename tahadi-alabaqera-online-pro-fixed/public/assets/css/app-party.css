@@ -222,6 +222,9 @@ body.party-app{--party-ink:#edf2ff;--party-muted:#a2afca;--party-line:#ffffff15;
 
 .party-remove-player{border:1px solid #efbd724a;background:#efbd7212;color:#efca92;border-radius:9px;padding:6px 8px;font:inherit;font-size:11px;min-height:32px;white-space:nowrap;cursor:pointer}.party-player-row>div{min-width:0}.party-player-row>div b{overflow-wrap:anywhere}
 
+/* 32.0.1: your name field showing the signed-in account's name (read-only) */
+input.bs-account-name{cursor:default;border-style:dashed!important;caret-color:transparent}
+
 /* assets/css/tabletop-v30.css */
 /* Exact SVG geometry is shared by the local boards, online rooms and previews. */
 .petal-board-v30{display:block;width:100%;height:auto;max-width:760px;margin:auto;overflow:visible;filter:drop-shadow(0 18px 20px #0005);font-family:Tajawal,system-ui,sans-serif}

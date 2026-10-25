@@ -44,9 +44,10 @@ function fixture(count=4){
  return g;
 }
 function beginRelay(g){const now=Date.now();g.room.current={mode:'relay',phase:'relay',category:{id:'relay',name:'سلسلة الفريق'},value:200,question:'تعاون',deadline:now+60000,startedAt:now,answers:{},options:[],double:{},blocked:{},relays:Object.fromEntries(['A','B'].map(team=>[team,createRelay({seed:3,members:g.room.order.filter(id=>g.room.players[id].team===team),now})]))};}
-test('buzzer timeout gives the steal to a connected opponent rather than a teammate',async()=>{
- const g=fixture();g.room.current={mode:'buzzer',phase:'buzzer_answer',buzzWinner:'a1',answers:{},blocked:{},deadline:Date.now()-1};g.room.players.b0.connected=false;
- await g.alarm();assert.equal(g.room.current.stealPlayer,'b1');
+test('a buzzer round saved before 32.0.1 ends without points when its time is up',async()=>{
+ const g=fixture();g.room.current={mode:'buzzer',phase:'buzzer_answer',buzzWinner:'a1',category:{name:'فئة'},value:100,question:'س',options:['أ','ب'],correctIndex:0,correctAnswer:'أ',answers:{},double:{},blocked:{},deadline:Date.now()-1};
+ await g.handleAnswer(g.room.players.a1,0);assert.equal(g.room.players.a1.score,0,'nobody can take the question first');
+ await g.alarm();assert.equal(g.room.current,null);assert.ok(Object.values(g.room.lastReveal.results).every(r=>r.gain===0));
 });
 test('replacing a disconnected seat restores balanced teams in four and six player lobbies',()=>{
  for(const count of [4,6]){const g=fixture(count);g.room.status='lobby';Object.assign(g.room.players.a1,{connected:false,disconnectedAt:Date.now()-46000});g.cleanupLobbySeats();g.addPlayer('replacement','guest');assert.equal(g.room.order.filter(id=>g.room.players[id].team==='A').length,count/2);assert.equal(g.room.order.filter(id=>g.room.players[id].team==='B').length,count/2);}

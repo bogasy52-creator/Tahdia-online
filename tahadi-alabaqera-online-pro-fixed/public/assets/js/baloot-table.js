@@ -4,11 +4,13 @@
    plus the events since the last update). Events are animated one by one:
    deal, bids, the contract, cards flying to the middle, the trick sweeping to
    its winner, projects, Baloot and the hand result. */
-import { createBalootMatch, applyBalootAction, balootView, balootActions, teamOf, partnerOf } from './engines/baloot-engine.js?v=32.0.0';
-import { chooseBalootAction } from './engines/baloot-bot.js?v=32.0.0';
-import { BoardOnlineClient } from './board-online.js?v=32.0.0';
+import { createBalootMatch, applyBalootAction, balootView, balootActions, teamOf, partnerOf } from './engines/baloot-engine.js?v=32.0.1';
+import { chooseBalootAction } from './engines/baloot-bot.js?v=32.0.1';
+import { BoardOnlineClient } from './board-online.js?v=32.0.1';
 
 const $ = (id) => document.getElementById(id);
+// 32.0.1: signed in, you sit at every table under your account's name.
+const accountName = () => String(window.BS_SOCIAL?.accountName?.() || '').trim().slice(0, 20);
 const POS = ['bottom', 'right', 'top', 'left'];
 const SUIT = { S: '♠', H: '♥', D: '♦', C: '♣' };
 const RED = { H: true, D: true };
@@ -609,8 +611,9 @@ function startBots() {
   ui.me = 0;
   ui.level = $('botLevel').value;
   ui.target = Number($('target').value) || 152;
-  const myName = ($('nameBots').value || '').trim().slice(0, 20) || 'أنت';
-  try { localStorage.setItem('bs_baloot_name', myName); } catch {}
+  const account = accountName();
+  const myName = account || ($('nameBots').value || '').trim().slice(0, 20) || 'أنت';
+  if (!account) try { localStorage.setItem('bs_baloot_name', myName); } catch {}
   const pool = [...BOT_NAMES].sort(() => Math.random() - 0.5);
   const names = [myName, pool[0], pool[1], pool[2]];
   ui.receipt = (window.BS_UUID?.() || (Date.now() + '-' + Math.random().toString(36).slice(2)));
@@ -758,8 +761,9 @@ function paintTimer() {
 async function startOnline(kind) {
   applyCosmetics();
   ui.mode = 'online';
-  const name = (($(kind === 'quick' ? 'nameQuick' : 'nameRoom').value) || '').trim().slice(0, 20) || 'لاعب';
-  try { localStorage.setItem('bs_baloot_name', name); } catch {}
+  const account = accountName();
+  const name = account || (($(kind === 'quick' ? 'nameQuick' : 'nameRoom').value) || '').trim().slice(0, 20) || 'لاعب';
+  if (!account) try { localStorage.setItem('bs_baloot_name', name); } catch {}
   message('');
   ui.client?.close?.();
   ui.client = new BoardOnlineClient('baloot', {
@@ -841,7 +845,7 @@ function init() {
   applyCosmetics();
   heroFan();
   try {
-    const saved = localStorage.getItem('bs_baloot_name');
+    const saved = accountName() || localStorage.getItem('bs_baloot_name');
     if (saved) for (const id of ['nameBots', 'nameQuick', 'nameRoom']) $(id).value = saved;
   } catch {}
   for (const b of document.querySelectorAll('.bl-mode')) b.addEventListener('click', () => selectMode(b.dataset.mode));
@@ -867,8 +871,8 @@ function init() {
   if (code && /^\d{6}$/.test(code)) {
     selectMode('room');
     $('joinCode').value = code;
-    let saved = '';
-    try { saved = localStorage.getItem('bs_baloot_name') || ''; } catch {}
+    let saved = accountName();
+    try { saved = saved || localStorage.getItem('bs_baloot_name') || ''; } catch {}
     if (saved) startOnline('join'); else $('nameRoom').focus();
   }
   else selectMode('bots');

@@ -77,7 +77,7 @@ test('Baloot decks are sold in the shop and equipped on their own slot', async (
   const shop = await read('assets/js/shop-v31.js');
   assert.match(shop, /\['deck','ورق البلوت'/);
   assert.match(shop, /function deckArt\(stage,item,live\)/);
-  assert.match(await read('shop.html'), /assets\/js\/baloot-cards\.js\?v=32\.0\.0/);
+  assert.match(await read('shop.html'), /assets\/js\/baloot-cards\.js\?v=\d+\.\d+\.\d+/);
   const bundles = Core.BUNDLES.filter((b) => ['heroes-set', 'baloot-set'].includes(b.id));
   assert.equal(bundles.length, 2);
   for (const b of bundles) for (const id of b.items) assert.ok(Core.CATALOG.some((item) => item.id === id), id);
