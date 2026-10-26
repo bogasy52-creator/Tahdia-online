@@ -9,6 +9,8 @@
   'use strict';
   const NS='http://www.w3.org/2000/svg',XLINK='http://www.w3.org/1999/xlink',ROOT='/assets/pieces-3d/';
   const COLORS=Object.freeze(['#e0474c','#2f86e8','#f0b429','#22a565','#8b5cf6','#f2711c']);
+  // 32.1.0: four more seat colours (up to ten players) tint the closest studio render
+  const EXTRA=Object.freeze({'#14b8a6':['#22a565','hue-rotate(32deg) saturate(1.15)'],'#ec4899':['#e0474c','hue-rotate(-34deg) saturate(1.2) brightness(1.1)'],'#84cc16':['#22a565','hue-rotate(-44deg) saturate(1.4) brightness(1.15)'],'#94a3b8':['#2f86e8','grayscale(.85) brightness(1.2)']});
   const DESIGNS={'pawn-classic':'classic','pawn-atlas':'atlas','pawn-rook':'rook','pawn-orbit':'orbit','pawn-lance':'lance','pawn-lotus':'lotus','pawn-monolith':'monolith','pawn-jade':'gem','pawn-amethyst':'gem','pawn-onyx':'rook','pawn-gold':'crown','pawn-crown':'crown','pawn-orb':'orb','pawn-prism':'monolith'};
   const ITEMS=Object.freeze(Object.keys(DESIGNS));
   const DEFAULT_ITEM={classic:'pawn-classic',atlas:'pawn-atlas',spire:'pawn-atlas',rook:'pawn-rook',orbit:'pawn-orbit',lance:'pawn-lance',lotus:'pawn-lotus',monolith:'pawn-monolith',gem:'pawn-amethyst',crown:'pawn-gold',orb:'pawn-orb'};
@@ -60,7 +62,9 @@
   let sequence=0;
   function icon(doc,{kind='pawn',design='classic',item,style,color=COLORS[0],className='piece-svg',label='',size='s'}={}){
     sequence++;
+    const extra=EXTRA[String(color||'').toLowerCase()];if(extra)color=extra[0];
     const svg=el(doc,'svg',{viewBox:kind==='marble'?'-6.5 -6.5 13 13':'-7 -19.5 14 22',class:className,'aria-hidden':label?null:'true',role:label?'img':null,'aria-label':label||null,focusable:'false'});
+    if(extra&&svg.style){svg.style.filter=extra[1];svg.style.setProperty('--piece-tint',extra[1]);svg.classList.add('piece-tinted');}
     svg.appendChild(kind==='marble'?marble(doc,null,{style:style||MARBLES[design]||'glass',color,size}):pawn(doc,null,{design,item,color,size}));
     return svg;
   }

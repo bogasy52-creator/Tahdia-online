@@ -1,5 +1,6 @@
 import {loadParty,storeParty} from './party-storage.js';
-import {createParty,addPartyPlayer,partySnapshot,partyRoundView,configureParty,applyPartyAction,advanceParty} from './party-engine.js';
+import {createParty,addPartyPlayer,partySnapshot,partyRoundView,configureParty,applyPartyAction,advanceParty,openPartyLink,failPartyLink,applyLinkResult} from './party-engine.js';
+import {createLinkedRoom} from './party-link.js';
 import {steerSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
 import {compactSerpentFrame,compactSerpentKeyframe} from '../../public/assets/js/serpent-network.js';
 const PROTOCOL='tahdia-party-v29',json=(value,status=200)=>Response.json(value,{status,headers:{'cache-control':'no-store'}});
@@ -11,7 +12,9 @@ export class PartyRoom{
  async save(){if(this.room){this.room.updatedAt=Date.now();try{await storeParty(this.ctx.storage,this.room);this.lastSavedAt=Date.now();this.dirty=false;}catch(error){this.dirty=true;throw error;}}}
  async schedule(){const room=this.room;if(!room)return;const now=Date.now(),r=room.round;let next=room.expiresAt;
   if(room.status==='countdown')next=Math.min(next,room.startsAt);if(room.status==='intermission')next=Math.min(next,room.nextAt);
-  if(room.status==='playing'){next=Math.min(next,r.deadline);if(['quiz','logic'].includes(r.game))next=Math.min(next,r.revealUntil||r.questionDeadline,now<r.answerOpensAt?r.answerOpensAt:Infinity);if(r.game==='reaction')next=Math.min(next,r.signal==='wait'?r.signalAt:r.signalDeadline);if(r.tables)next=Math.min(next,now+650);if(r.game==='memory')for(const p of Object.values(r.participants))if(p.unlockAt)next=Math.min(next,p.unlockAt);if(r.game==='serpent')next=Math.min(next,now+5000);}
+  // a round played in the real game only waits for its result (or opens that game's room)
+  if(room.status==='playing'&&r.link&&r.link.status!=='failed'){next=Math.min(next,r.deadline);if(r.link.status==='creating')next=Math.min(next,now+50);}
+  else if(room.status==='playing'){next=Math.min(next,r.deadline);if(['quiz','logic'].includes(r.game))next=Math.min(next,r.revealUntil||r.questionDeadline,now<r.answerOpensAt?r.answerOpensAt:Infinity);if(r.game==='reaction')next=Math.min(next,r.signal==='wait'?r.signalAt:r.signalDeadline);if(r.tables)next=Math.min(next,now+650);if(r.game==='memory')for(const p of Object.values(r.participants))if(p.unlockAt)next=Math.min(next,p.unlockAt);if(r.game==='serpent')next=Math.min(next,now+5000);}
   const host=room.order.map(id=>room.players[id]).find(p=>p.role==='host');if(host&&!host.connected&&host.disconnectedAt){const grace=host.disconnectedAt+60000;if(now<grace)next=Math.min(next,grace);else if(room.order.some(id=>room.players[id].connected))next=Math.min(next,now+20);}
   await this.ctx.storage.setAlarm(Math.max(now+20,next));
  }
@@ -20,17 +23,29 @@ export class PartyRoom{
  members(){return this.ctx.getWebSockets().filter(ws=>{try{const a=ws.deserializeAttachment();return a?.party&&open(ws)&&this.room?.players[a.playerId]?.connection===a.connection;}catch{return false;}});}
  broadcast(privateIds=[],full=false){if(!this.room)return;this.room.revision++;const common=partySnapshot(this.room,null);if(common.round?.arena)delete common.round.arena;const payload=JSON.stringify({type:'room',state:common}),all=this.members();for(const ws of all){this.send(ws,payload);const id=ws.deserializeAttachment().playerId;if(full||privateIds.includes(id))this.send(ws,{type:'private',sessionId:this.room.sessionId,roundId:this.room.round?.id||null,revision:this.room.revision,me:partyRoundView(this.room,id)?.me||null});}}
  promoteHost(now){const old=Object.values(this.room.players).find(p=>p.role==='host');if(old&&!old.connected&&old.disconnectedAt&&now-old.disconnectedAt>=60000){const next=this.room.order.map(id=>this.room.players[id]).find(p=>p.connected);if(next){old.role='guest';next.role='host';return true;}}return false;}
- run(){if(this.timer!==null||this.room?.status!=='playing'||this.room.round?.game!=='serpent'||!Object.values(this.room.players).some(p=>p.connected))return;this.lastFrame=null;this.timer=setInterval(()=>{if(this.tickBusy)return;this.tickBusy=true;this.enqueue(()=>this.step(Date.now(),true)).catch(()=>{this.stop();return this.ctx.storage.setAlarm(Date.now()+1000).catch(()=>{});}).finally(()=>this.tickBusy=false);},50);this.timer.unref?.();}
+ run(){if(this.timer!==null||this.room?.status!=='playing'||this.room.round?.game!=='serpent'||!this.room.round.arena||!Object.values(this.room.players).some(p=>p.connected))return;this.lastFrame=null;this.timer=setInterval(()=>{if(this.tickBusy)return;this.tickBusy=true;this.enqueue(()=>this.step(Date.now(),true)).catch(()=>{this.stop();return this.ctx.storage.setAlarm(Date.now()+1000).catch(()=>{});}).finally(()=>this.tickBusy=false);},50);this.timer.unref?.();}
  stop(){if(this.timer!==null)clearInterval(this.timer);this.timer=null;this.lastFrame=null;}
- async step(now,arenaTick=false){if(!this.room)return;if(this.dirty){await this.save();this.broadcast([],true);}const result=advanceParty(this.room,now),promoted=this.promoteHost(now);if(arenaTick&&this.room.status==='playing'&&this.room.round?.game==='serpent'){
+ // 32.1.0: open the real game's room for a round that is played there
+ async ensureLink(){
+  const r=this.room?.round;if(this.room?.status!=='playing'||r?.link?.status!=='creating'||this.linkBusy===r.id)return false;
+  this.linkBusy=r.id;
+  try{const res=await createLinkedRoom(this.env,r.game,{settings:r.settings,count:r.link.count,seats:r.link.seats||r.link.count,link:{code:this.room.code,round:r.id,token:r.link.token}});if(this.room?.round!==r)return false;if(res.ok)return openPartyLink(this.room,res,Date.now());r.link.attempts=(r.link.attempts||0)+1;}
+  catch{if(this.room?.round!==r)return false;r.link.attempts=(r.link.attempts||0)+1;}
+  finally{if(this.linkBusy===r.id)this.linkBusy=null;}
+  // two failures: the round is played inside the party instead
+  return r.link.attempts>=2?failPartyLink(this.room,Date.now()):true;
+ }
+ async step(now,arenaTick=false){if(!this.room)return;if(this.dirty){await this.save();this.broadcast([],true);}const result=advanceParty(this.room,now),promoted=this.promoteHost(now);if(await this.ensureLink()){result.changed=true;result.full=true;}if(arenaTick&&this.room.status==='playing'&&this.room.round?.game==='serpent'&&this.room.round.arena){
   const arena=this.room.round.arena;if(arena.tick%2===0){const state={round:this.room.round.id,status:'playing',game:serpentSnapshot(arena)},full=!this.lastFrame||now-(this.lastKeyframeAt||0)>=2000,packet=full?compactSerpentKeyframe(state,'efficient'):compactSerpentFrame(state,this.lastFrame,'efficient');const payload=JSON.stringify({type:'arena',roundId:this.room.round.id,frame:packet});let legacyPayload;for(const ws of this.members()){if(!ws.deserializeAttachment().arenaKeyframes){legacyPayload??=JSON.stringify({type:'arena',roundId:this.room.round.id,frame:full?{type:'state',state}:compactSerpentFrame(state,this.lastFrame,'tight')});this.send(ws,legacyPayload);}else this.send(ws,payload);}this.lastFrame=state;if(full)this.lastKeyframeAt=now;}
   if(now-this.lastSavedAt>=5000||promoted){await this.save();if(promoted)this.broadcast();await this.schedule();}return;
  }
- if(this.room.status!=='playing'||this.room.round?.game!=='serpent')this.stop();if(result.changed||promoted){await this.save();this.broadcast(result.privateIds,result.full);await this.schedule();this.run();}else if(!arenaTick)await this.schedule();}
+ if(this.room.status!=='playing'||this.room.round?.game!=='serpent'||!this.room.round.arena)this.stop();if(result.changed||promoted){await this.save();this.broadcast(result.privateIds,result.full);await this.schedule();this.run();}else if(!arenaTick)await this.schedule();}
  async fetch(request){await this.ready;const url=new URL(request.url);
-  if(url.pathname==='/init'&&request.method==='POST')return this.enqueue(async()=>{if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);try{this.room=createParty(await request.json());await this.save();await this.schedule();return json({ok:true,capacity:this.room.capacity},201);}catch(e){return json({ok:false,error:e.message},400);}});
+  if(url.pathname==='/init'&&request.method==='POST')return this.enqueue(async()=>{if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);try{this.room=createParty({...await request.json(),links:true});await this.save();await this.schedule();return json({ok:true,capacity:this.room.capacity},201);}catch(e){return json({ok:false,error:e.message},400);}});
   if(!this.room||this.room.expiresAt<=Date.now())return json({ok:false,error:'الغرفة انتهت أو غير موجودة'},404);
   if(url.pathname==='/status')return json({ok:true,game:'party',code:this.room.code,status:this.room.status,players:this.room.order.length,playerLimit:this.room.capacity,version:29});
+  // 32.1.0: the real game's room reports its final ranking
+  if(url.pathname==='/link-result'&&request.method==='POST')return this.enqueue(async()=>{const body=await request.json().catch(()=>null);if(!applyLinkResult(this.room,body,Date.now()))return json({ok:false,error:'round_closed'},409);await this.save();this.broadcast([],true);await this.schedule();return json({ok:true});});
   if(url.pathname==='/ws')return this.enqueue(()=>this.connect(request,url));return json({ok:false,error:'not_found'},404);
  }
  async connect(request,url){if(request.headers.get('upgrade')?.toLowerCase()!=='websocket')return json({ok:false,error:'WebSocket required'},426);const protocols=String(request.headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim());if(!protocols.includes(PROTOCOL))return json({ok:false,error:'protocol_required'},426);
@@ -65,7 +80,7 @@ export class PartyRoom{
  async webSocketMessage(ws,raw){await this.ready;const text=typeof raw==='string'?raw:new TextDecoder().decode(raw);if(text.length>6000)return this.error(ws,'الرسالة أكبر من المسموح');let msg;try{msg=JSON.parse(text);}catch{return this.error(ws,'رسالة غير صالحة');}if(!msg||typeof msg!=='object'||Array.isArray(msg))return;
   const a=ws.deserializeAttachment(),p=this.room?.players[a?.playerId];if(!p||p.connection!==a.connection)return;
   if(msg.type==='ping'){this.send(ws,{type:'pong',sentAt:msg.sentAt,serverNow:Date.now()});return;}
-  if(msg.type==='input'){const r=this.room.round;if(this.room.status!=='playing'||r?.game!=='serpent'||msg.roundId!==r.id||msg.sessionId!==this.room.sessionId)return;const now=Date.now();const snake=r.arena.snakes.find(s=>s.id===p.id),release=msg.boost===false&&snake?.boost;if(now-(p.inputAt||0)<30&&!release)return;if(!steerSerpent(r.arena,p.id,{angle:msg.angle,boost:msg.boost===true}))return;p.inputAt=now;r.participants[p.id].actions++;this.run();return;}
+  if(msg.type==='input'){const r=this.room.round;if(this.room.status!=='playing'||r?.game!=='serpent'||!r.arena||msg.roundId!==r.id||msg.sessionId!==this.room.sessionId)return;const now=Date.now();const snake=r.arena.snakes.find(s=>s.id===p.id),release=msg.boost===false&&snake?.boost;if(now-(p.inputAt||0)<30&&!release)return;if(!steerSerpent(r.arena,p.id,{angle:msg.angle,boost:msg.boost===true}))return;p.inputAt=now;r.participants[p.id].actions++;this.run();return;}
   if(msg.type==='action')return this.queueAction(ws,p,msg);
   return this.enqueue(async()=>{try{const now=Date.now();if(msg.type==='sync'){if(now-(p.syncAt||0)<500)return;p.syncAt=now;this.lastFrame=null;this.send(ws,{type:'snapshot',state:partySnapshot(this.room,p.id)});return;}
    if(now-(p.messageAt||0)<35)throw Error('انتظر لحظة بين الحركات');p.messageAt=now;await this.step(now);

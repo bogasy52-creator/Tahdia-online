@@ -1,4 +1,5 @@
 import {OWNER_USERNAME,isOwner} from './account-policy.js';
+import {PRESENCE_OBJECT} from '../presence/presence-registry.js';
 import {
   cleanDisplayName,
   normalizeGame,
@@ -159,6 +160,15 @@ export async function handleSocialRequest(request, env, options = {}) {
   if (request.method==='GET'&&url.pathname==='/api/social/announcement') {
     const result=await call(stubFor(env,OWNER_USERNAME),'/announcement');
     return json(result.data,result.response.status);
+  }
+  // 32.1.0: the owner sees who is on the site right now: per game, per room, signed in or guest
+  if (url.pathname === '/api/social/admin/live') {
+    if (request.method !== 'GET') return json({ ok: false, error: 'method_not_allowed' }, 405);
+    const { response, auth } = await requireAuth(request, env); if (response) return response;
+    if (!isOwner(auth.profile)) return json({ ok: false, error: 'forbidden' }, 403);
+    if (!env?.BOARD_ROOMS) return json({ ok: false, error: 'unavailable' }, 503);
+    const res = await env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(PRESENCE_OBJECT)).fetch('https://presence.internal/summary');
+    return json(await readJson(res), res.status);
   }
   if (/^\/api\/social\/admin(?:\/(account|action))?$/.test(url.pathname)) {
     const {response,auth}=await requireAuth(request,env);if(response)return response;

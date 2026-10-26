@@ -3,6 +3,7 @@ import {createSerpentGame,addSerpentBots,steerSerpent,stepSerpent,serpentSnapsho
 import {getSocialStub} from '../social/social-api.js';
 import {compactSerpentFrame} from '../../public/assets/js/serpent-network.js';
 import {validWorld} from '../../public/assets/js/engines/arena-worlds-v27.js';
+import {cleanPartyLink,settlePartyLink,standings} from '../party/party-link.js';
 
 const TTL=30*60_000,PROTOCOL='busraj-serpent-v1';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'cache-control':'no-store'}});
@@ -52,6 +53,12 @@ export class SerpentRoom {
    }
    this.room.rewardsComplete=true;await this.save();
   }
+  // 32.1.0: a match opened by a group room sends its final ranking back to it
+  if(this.room.partyLink&&!this.room.partyReported&&this.room.game){
+   const g=this.room.game,names=new Map(this.room.players.map(p=>[p.id,p])),win=new Set(g.winners||[]);
+   const rows=g.snakes.filter(s=>names.has(s.id)).sort((a,b)=>Number(win.has(b.id))-Number(win.has(a.id))||Number(Boolean(b.alive))-Number(Boolean(a.alive))||(b.score||0)-(a.score||0)).map(s=>({name:names.get(s.id).name,username:names.get(s.id).username,score:Math.floor(s.score||0),won:win.has(s.id),alive:Boolean(s.alive)}));
+   await settlePartyLink(this.env,this.room,'serpent',standings(rows,(a,b)=>a.won===b.won&&a.alive===b.alive&&a.score===b.score));await this.save();
+  }
   await this.schedule();this.broadcast();
  }
  async fetch(request){
@@ -62,7 +69,7 @@ export class SerpentRoom {
    const count=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed';
    const worldId=body.publicMatch===true?['neon','forest','crystals','volcano','ruins','storm','glacier','mirage'][Number(body.code)%8]:body.worldId??'classic';if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
    if(!Number.isInteger(count)||count<2||count>20||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,20-count)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration)||!/^\d{6}$/.test(body.code||'')||typeof body.hostKey!=='string'||body.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
-   this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',worldId,playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'arena-v23',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL};
+   this.stop();this.room={code:body.code,hostKey:body.hostKey,originalHost:null,status:'lobby',worldId,playerLimit:count,publicMatch:body.publicMatch===true,lobbyDeadline:null,collisionMode:'arena-v23',botCount,difficulty,duration,matchMode,players:[],round:0,game:null,rewardsComplete:true,expiresAt:Date.now()+TTL,partyLink:cleanPartyLink(body.party)};
    await this.save();await this.schedule();return json({ok:true},201);
   }
   if(!this.room||this.room.expiresAt<=Date.now())return json({ok:false,error:'الغرفة غير موجودة أو انتهت'},404);
@@ -70,7 +77,7 @@ export class SerpentRoom {
    if(this.room.status!=='lobby'||this.room.lobbyDeadline&&this.room.lobbyDeadline<=Date.now()||this.room.players.length>=this.room.playerLimit)return json({ok:false,error:'lobby_closed'},409);
    const body=await request.json().catch(()=>({}));if(body.username&&this.room.players.some(p=>p.username===body.username))return json({ok:false,error:'أنت داخل هذا اللوبي بالفعل'},400);
    const p=this.addPlayer(body.name,'guest',body.username||null);p.connected=false;p.ready=true;
-   this.room.lobbyDeadline??=Date.now()+15000;await this.save();await this.schedule();return json({ok:true,token:p.token,playerId:p.id,lobbyDeadline:this.room.lobbyDeadline},201);
+   this.room.lobbyDeadline??=Date.now()+10000;await this.save();await this.schedule();return json({ok:true,token:p.token,playerId:p.id,lobbyDeadline:this.room.lobbyDeadline},201);
   }
   if(url.pathname==='/status')return json({ok:true,game:'serpent',code:this.room.code,status:this.room.status,players:this.room.players.length,playerLimit:this.room.playerLimit,botCount:this.room.botCount||0});
   if(url.pathname==='/ws')return this.connect(request,url);
@@ -82,7 +89,8 @@ export class SerpentRoom {
   const reconnect=protocols.find(s=>s.startsWith('rt.'))?.slice(3),hostKey=protocols.find(s=>s.startsWith('hk.'))?.slice(3),username=request.headers.get('x-bs-account')||null;
   let p=reconnect?this.room.players.find(p=>p.token===reconnect):null;
   if(this.room.publicMatch&&!p)return json({ok:false,error:'ادخل من زر المواجهة السريعة'},403);
-  if(!p&&hostKey===this.room.hostKey){p=this.room.players.find(p=>p.id===this.room.originalHost);if(!p&&this.room.players.length===0){p=this.addPlayer(url.searchParams.get('name'),'host',username);this.room.originalHost=p.id;}}
+  // a room opened by a group room has no host waiting with a key: the first player in hosts it
+  if(!p&&(hostKey===this.room.hostKey||this.room.partyLink&&this.room.players.length===0)){p=this.room.players.find(p=>p.id===this.room.originalHost);if(!p&&this.room.players.length===0){p=this.addPlayer(url.searchParams.get('name'),'host',username);this.room.originalHost=p.id;}}
   if(!p){
    if(this.room.status!=='lobby')return json({ok:false,error:'المباراة بدأت؛ ارجع من جهازك السابق أو انتظر جولة جديدة'},409);
    if(!this.room.players.length)return json({ok:false,error:'بانتظار دخول المضيف'},409);

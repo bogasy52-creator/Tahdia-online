@@ -1,42 +1,27 @@
-/* Tahdia 32.0.0 — playing cards for Baloot (and any table game).
+/* Tahdia 32.1.0 — playing cards for Baloot (and any table game).
    Every face and back is an SVG drawn here, so cards stay sharp at any size
-   and look the same on every phone. Indices are drawn as strokes (no font),
-   courts carry an emblem instead of a portrait: a crown for the King, a
-   jewelled tiara for the Queen and a falcon for the Jack.
+   and look the same on every phone. The faces follow a real deck: serif
+   indices (glyph outlines from DejaVu Serif Condensed Bold), classic suit
+   shapes (Latin Modern), standard pip layouts, and the traditional English
+   pattern courts (card-courts.js) in a framed window, recoloured per deck.
    window.BS_CARDS.face(card, deck) / back(deck) return SVG markup;
    url(card, deck) returns a cached data URL. Cards are 'AS', 'TH', '7C'…  */
 (function () {
   const W = 250, H = 350;
+  // court: the palette of the court artwork (yellow, blue, red, black, white) and its frame
   const DECKS = {
-    'deck-classic': { name: 'كلاسيك بوسراج', face: ['#fffdf7', '#f4ecdc'], edge: '#d8ccb3', red: '#c4253a', black: '#1c2230', gold: ['#f6dd8e', '#c99a3c', '#8c6420'], court: '#fbf3e0', back: 'sadu' },
-    'deck-night': { name: 'ليل المجلس', face: ['#1d2740', '#121a2e'], edge: '#3c4b70', red: '#ff6b7d', black: '#e9eefb', gold: ['#ffe7a3', '#e0b354', '#9a6d1e'], court: '#1a2440', back: 'arabesque', dark: true },
-    'deck-emerald': { name: 'الزمرد', face: ['#fffdf6', '#f1ece0'], edge: '#cfc6ad', red: '#b5243a', black: '#0f3b33', gold: ['#f3dd9a', '#bf9440', '#7e5a1c'], court: '#eef6f0', back: 'emerald' },
-    'deck-four': { name: 'أربعة ألوان', face: ['#ffffff', '#f3f4f7'], edge: '#cfd5e1', red: '#d4283e', black: '#161a24', blue: '#1f6fd6', green: '#178a4e', gold: ['#ffe5a0', '#cfa14a', '#8f6a23'], court: '#f6f8fc', back: 'slate', four: true },
-    'deck-royal': { name: 'الذهب الأسود', face: ['#16130f', '#0b0a08'], edge: '#6b5426', red: '#f0c25c', black: '#f7e3a8', gold: ['#fff1b8', '#e3b450', '#8a6416'], court: '#14110c', back: 'royal', dark: true, foil: true },
+    'deck-classic': { name: 'كلاسيك بوسراج', face: ['#fffefa', '#f5efe2'], edge: '#d8ccb3', red: '#c4253a', black: '#1c2230', gold: ['#f6dd8e', '#c99a3c', '#8c6420'], court: { Y: '#ebb847', B: '#24427f', R: '#c8283c', K: '#1a1d26', W: '#fffdf8', frame: '#1c2230' }, back: 'sadu' },
+    'deck-night': { name: 'ليل المجلس', face: ['#1d2740', '#121a2e'], edge: '#3c4b70', red: '#ff7d8c', black: '#e9eefb', gold: ['#ffe7a3', '#e0b354', '#9a6d1e'], court: { Y: '#e0b354', B: '#2a3c78', R: '#d0405a', K: '#141a2c', W: '#ece6d6', frame: '#e0b354' }, back: 'arabesque', dark: true },
+    'deck-emerald': { name: 'الزمرد', face: ['#fffdf6', '#f1ece0'], edge: '#cfc6ad', red: '#b5243a', black: '#0f3b33', gold: ['#f3dd9a', '#bf9440', '#7e5a1c'], court: { Y: '#e4c46a', B: '#0f5a4a', R: '#b5243a', K: '#0c2c26', W: '#fffdf6', frame: '#0f3b33' }, back: 'emerald' },
+    'deck-four': { name: 'أربعة ألوان', face: ['#ffffff', '#f3f4f7'], edge: '#cfd5e1', red: '#d4283e', black: '#161a24', blue: '#1f6fd6', green: '#178a4e', gold: ['#ffe5a0', '#cfa14a', '#8f6a23'], court: { Y: '#efbe4c', B: '#1f4fa8', R: '#d4283e', K: '#161a24', W: '#ffffff', frame: '#161a24' }, back: 'slate', four: true },
+    'deck-royal': { name: 'الذهب الأسود', face: ['#16130f', '#0b0a08'], edge: '#6b5426', red: '#f0c25c', black: '#f7e3a8', gold: ['#fff1b8', '#e3b450', '#8a6416'], court: { Y: '#e3b450', B: '#5c4520', R: '#a3192d', K: '#16120b', W: '#f6ead0', frame: '#e3b450' }, back: 'royal', dark: true, foil: true },
   };
-  const RANK_LABEL = { A: 'A', K: 'K', Q: 'Q', J: 'J', T: '10', 9: '9', 8: '8', 7: '7' };
   let uid = 0;
 
   // Suit shapes in a 100 × 100 box, centred on (50, 50).
-  const SUIT = {
-    H: 'M50 90C22 68 5 50 5 31 5 15 16 5 30 5 40 5 47 11 50 19 53 11 60 5 70 5 84 5 95 15 95 31 95 50 78 68 50 90Z',
-    D: 'M50 3Q68 28 91 50 68 72 50 97 32 72 9 50 32 28 50 3Z',
-    S: 'M50 4C40 18 5 38 5 59 5 73 15 82 28 82 38 82 45 77 48 71 47 81 42 90 33 96H67C58 90 53 81 52 71 55 77 62 82 72 82 85 82 95 73 95 59 95 38 60 18 50 4Z',
-    C: 'M50 6A21 21 0 0 1 66 41 21 21 0 1 1 55 75C56 84 60 91 67 96H33C40 91 44 84 45 75A21 21 0 1 1 34 41 21 21 0 0 1 50 6Z',
-  };
-
-  // Stroke glyphs for the indices, drawn in a 40 × 60 box.
-  const GLYPH = {
-    A: 'M4 58L20 3 36 58M10 39H30',
-    K: 'M7 3V57M33 3L8 34M17 25L34 57',
-    Q: 'M20 4C8 4 4 16 4 30S8 56 20 56 36 44 36 30 32 4 20 4ZM24 42L36 58',
-    J: 'M30 3V40C30 52 24 57 17 57 10 57 5 52 4 44',
-    1: 'M3 12L12 4V57',
-    0: 'M13 4C6 4 3 16 3 30S6 56 13 56 23 44 23 30 20 4 13 4Z',
-    9: 'M34 24C34 12 28 4 19 4 10 4 5 12 5 21S11 37 19 37 34 31 34 22V36C34 50 27 57 18 57 12 57 8 54 6 49',
-    8: 'M20 30C11 30 6 24 6 17S12 4 20 4 34 10 34 17 29 30 20 30ZM20 30C10 30 4 37 4 44S11 57 20 57 36 51 36 44 30 30 20 30Z',
-    7: 'M5 5H35L15 57',
-  };
+  const SUIT = {"S": "M88.9 61.1c0-13.4-8.1-22.7-18.9-32.6-6-5.5-11.4-10.5-17.4-25.9-.6-1.5-1-2.6-2.6-2.6-1.6 0-2.1 1.3-2.3 2-3.4 8.7-7.3 16.9-15.8 24.6-10.8 9.9-20.8 19.7-20.8 34.5 0 8.2 1.6 26.3 15.7 26.3 .9 0 14.4 0 15-10.7h5.9c-.2 6.1-.6 11.4-3 19.7-.3.8-.3 1.3-.3 1.3 0 2.3 2.2 2.3 3.8 2.3h3.6c1.6 0 3.8 0 3.8-2.3 0 0 0-.5-.5-2-2.5-8.8-2.8-15.1-2.8-19h5.9c.4 9.9 12.5 10.7 15 10.7 13.9 0 15.7-17.6 15.7-26.3z", "H": "M94.5 30.3c0-16.9-6.7-30.3-22.2-30.3-7.9 0-17 4.3-22.3 14.8-5.5-10.8-14.7-14.8-22.3-14.8-15.9 0-22.2 14-22.2 30.3 0 17.4 11.7 31.6 24.3 43.5 9.7 8.8 12.5 11.5 17.8 24.6 .3.7 1.1 1.6 2.4 1.6 1.9 0 2.4-1.5 2.7-2.3 3-7.7 5.6-12.8 13.2-19.9 13.7-13 28.6-27.3 28.6-47.5z", "D": "M87.4 50c0-.9-.4-1.5-1-2-5.7-5.3-21.2-19.9-34.3-46.4-.2-.6-.8-1.6-2.1-1.6-1.3 0-1.7.7-2.6 2.5-10.3 20.9-23.4 35.8-31.7 43.6-.4.4-1.7 1.5-2.2 2-.6.6-.9 1.2-.9 1.9 0 .7.3 1.3.9 1.9 6.2 5.7 21.4 20.2 34.4 46.5 .2.6.8 1.6 2.1 1.6 1.3 0 1.7-.7 2.6-2.5 10.3-20.9 23.4-35.8 31.7-43.6 .4-.4 1.7-1.5 2.2-2 .5-.6.9-1.1.9-1.9z", "C": "M92.1 64.5c0-11.2-6-22.6-17-22.6-5.6 0-9.1 2.9-10.7 4.9l-2.6-5.3c5.4-4.3 8.9-11.2 8.9-18.7 0-12.3-9-22.8-20.7-22.8-11.8 0-20.7 10.6-20.7 22.8 0 7.2 3.3 14.3 8.9 18.6l-2.4 5.4c-1.7-1.9-5.3-4.9-10.9-4.9-11 0-17 11.4-17 22.6 0 12.4 8.3 22.9 19.9 22.9 4.9 0 13.8-2.2 14-10.7h5.9c-.2 6.1-.6 11.4-3 19.7-.3.8-.3 1.3-.3 1.3 0 2.3 2.2 2.3 3.8 2.3h3.6c1.6 0 3.8 0 3.8-2.3 0 0 0-.5-.5-2-2.5-8.8-2.8-15.1-2.8-19h5.9c.2 8.5 9.1 10.7 14 10.7 11.6 0 19.9-10.5 19.9-22.9z"};
+  // Index glyphs: cap height 100, top of the capitals at y = 0.
+  const RANK = {"A": {"d": "M0 100v-8.1h7.3l33.9-91.9h14.4l34 91.9h8.5v8.1h-42.1v-8.1h8.8l-7.5-20.4h-33.7l-7.6 20.4h10.7v8.1zm26.5-36.6h27.9l-13.9-38.3z", "w": 98.1}, "K": {"d": "M0 100v-8.1h11.5v-83.8h-11.5v-8.1h46.3v8.1h-11.5v36.5l38.1-36.5h-9.7v-8.1h33.7v8.1h-12l-32.4 30.9 44 52.9h8.9v8.1h-30.6l-40-48.6v40.5h11.5v8.1z", "w": 105.4}, "Q": {"d": "M48.2 101.9q-22.8-.4-35.5-14-12.7-13.7-12.7-37.8 0-24.2 13-38.1 12.9-13.8 35.6-13.8 22.7 0 35.6 13.8 12.9 13.8 12.9 38.1 0 21.3-10 34.6-9.9 13.2-28.2 16.4 3.2 3.8 7.8 5.5 4.6 1.6 11.9 1.6h3v16.5h-1.7q-11.4 0-19.1-5.5-7.7-5.5-12.6-17.3zm.4-8.1q11.5 0 17.1-10.7 5.6-10.8 5.6-33 0-22.2-5.6-33-5.6-10.8-17.1-10.8-11.5 0-17.1 10.9-5.6 10.9-5.6 32.9 0 22 5.6 32.9 5.6 10.8 17.1 10.8z", "w": 97.1}, "J": {"d": "M0 124v-15.8h7.8q.4 6.3 2.7 9.3 2.4 2.9 6.9 2.9 5.8 0 8.2-5 2.3-5 2.3-18.7v-88.6h-13.1v-8.1h48v8.1h-11.6v89.2q0 16.2-7.3 23.7-7.4 7.5-23.5 7.5-5.1 0-10.1-1.1-5.1-1.1-10.3-3.4z", "w": 62.8}, "1": {"d": "M1.9 100v-8.1h16.9v-80.9l-18.8 12.3v-10l22.6-15.1h19v93.7h16.9v8.1z", "w": 58.5}, "0": {"d": "M37.2 94.1q7.3 0 10-7.3 2.6-7.3 2.6-36.7 0-29.2-2.6-36.6-2.7-7.5-10-7.5-7.2 0-9.9 7.3-2.7 7.3-2.7 36.8 0 29.4 2.7 36.7 2.7 7.3 9.9 7.3zm0 7.8q-18 0-27.6-13.3-9.6-13.4-9.6-38.5 0-25.1 9.6-38.5 9.6-13.4 27.6-13.4 18 0 27.6 13.4 9.5 13.4 9.5 38.5 0 25.1-9.5 38.5-9.6 13.3-27.6 13.3z", "w": 74.3}, "9": {"d": "M35.4 6q-6.2 0-8.8 5.9-2.7 5.8-2.7 20.3 0 14.5 2.7 20.3 2.6 5.9 8.8 5.9 6.2 0 8.8-5.9 2.7-5.8 2.7-20.3 0-14.5-2.7-20.3-2.6-5.9-8.8-5.9zm13.4 53.3q-3.9 3.5-8.8 5.3-4.8 1.8-10.5 1.8-13.8 0-21.6-9-7.9-8.9-7.9-24.6 0-16.7 8.8-25.6 8.8-9 25.2-9 18.4 0 27.9 12.4 9.5 12.4 9.5 36.3 0 27.2-10.5 41.1-10.6 13.9-31.3 13.9-5.4 0-11.6-1-6.3-1-13.4-3v-17.7h7.3q1.6 6.9 5.7 10.4 4.2 3.5 10.9 3.5 10.6 0 15.4-8.2 4.9-8.2 4.9-26.6z", "w": 71.4}, "7": {"d": "M65.9 17l-37.2 83h-12.2l36.1-81h-44.4v13.5h-8.2v-32.5h65.9z", "w": 65.9}, "8": {"d": "M51 46.8q10.8 1.9 16.3 8.7 5.6 6.9 5.6 17.9 0 13.8-9.3 21.2-9.4 7.3-27.1 7.3-17.7 0-27.1-7.3-9.4-7.4-9.4-21.2 0-11 5.6-17.9 5.7-6.8 16.3-8.7-9.4-2.5-14.2-8.1-4.7-5.7-4.7-14.4 0-12.7 8.6-19.4 8.6-6.7 24.9-6.7 16.3 0 24.9 6.7 8.5 6.7 8.5 19.4 0 8.7-4.7 14.4-4.7 5.6-14.2 8.1zm-4.4-22.2q0-10.6-2.3-14.6-2.2-4-7.8-4-5.6 0-7.9 4-2.2 4-2.2 14.6 0 10.5 2.2 14.4 2.3 3.9 7.9 3.9 5.6 0 7.9-3.9 2.2-3.9 2.2-14.4zm2.4 47.7q0-12.3-2.9-16.9-2.8-4.6-9.6-4.6-7 0-9.7 4.6-2.8 4.6-2.8 16.9 0 12.4 2.8 17.1 2.8 4.7 9.7 4.7 6.8 0 9.6-4.7 2.9-4.7 2.9-17.1z", "w": 72.9}};
 
   function colorOf(deck, suit) {
     if (deck.four) return { S: deck.black, H: deck.red, D: deck.blue, C: deck.green }[suit];
@@ -45,36 +30,38 @@
 
   function suitShape(suit, x, y, size, fill, rotate = 0) {
     const s = size / 100;
-    return `<path d="${SUIT[suit]}" fill="${fill}" transform="translate(${x - size / 2} ${y - size / 2}) ${rotate ? `rotate(180 ${size / 2} ${size / 2})` : ''} scale(${s})"/>`;
+    return `<path d="${SUIT[suit]}" fill="${fill}" transform="translate(${(x - size / 2).toFixed(2)} ${(y - size / 2).toFixed(2)})${rotate ? ` rotate(180 ${size / 2} ${size / 2})` : ''} scale(${s.toFixed(4)})"/>`;
   }
 
-  // Big corner indices: in a fanned hand only the left edge of a card shows.
-  function index(rank, suit, fill, deck) {
-    const glyphs = RANK_LABEL[rank].split('');
-    const widths = { 1: 15, 0: 26 };
-    const total = glyphs.reduce((n, g) => n + (widths[g] || 40), 0) + (glyphs.length - 1) * 2;
-    let x = 35 - total / 2;
-    let out = '';
-    for (const g of glyphs) {
-      out += `<path d="${GLYPH[g]}" transform="translate(${x.toFixed(1)} 14)" fill="none" stroke="${fill}" stroke-width="8.6" stroke-linecap="round" stroke-linejoin="round"/>`;
-      x += (widths[g] || 40) + 2;
-    }
-    out += suitShape(suit, 35, 100, 36, fill);
+  // Corner index: the rank over its suit, readable in a fanned hand.
+  function index(rank, suit, fill) {
+    const cap = 44, k = cap / 100, cx = 29;
+    const chars = rank === 'T' ? ['1', '0'] : [rank];
+    // wide letters and the two-digit 10 are narrowed to fit the column beside the court frame
+    const squeeze = rank === 'T' ? 0.66 : ['A', 'K', 'Q'].includes(rank) ? 0.84 : 1;
+    const widths = chars.map((c) => RANK[c].w * k * squeeze), gap = rank === 'T' ? 1 : 0;
+    const total = widths.reduce((a, b) => a + b, 0) + gap * (chars.length - 1);
+    let x = cx - total / 2, out = '';
+    chars.forEach((c, i) => {
+      out += `<path d="${RANK[c].d}" fill="${fill}" transform="translate(${x.toFixed(2)} 14) scale(${(k * squeeze).toFixed(4)} ${k.toFixed(4)})"/>`;
+      x += widths[i] + gap;
+    });
+    out += suitShape(suit, cx, 14 + cap + 28, 30, fill);
     return `<g>${out}</g><g transform="rotate(180 ${W / 2} ${H / 2})">${out}</g>`;
   }
 
+  // Standard pip layouts on a 3 × 5 grid (rows 0–4; the lower half is upside down).
   const PIPS = {
     7: [[0, 0], [2, 0], [0, 2], [2, 2], [0, 4], [2, 4], [1, 1]],
     8: [[0, 0], [2, 0], [0, 2], [2, 2], [0, 4], [2, 4], [1, 1], [1, 3]],
-    9: [[0, 0], [2, 0], [0, 1.333], [2, 1.333], [0, 2.667], [2, 2.667], [0, 4], [2, 4], [1, 2]],
-    T: [[0, 0], [2, 0], [0, 1.333], [2, 1.333], [0, 2.667], [2, 2.667], [0, 4], [2, 4], [1, 0.667], [1, 3.333]],
+    9: [[0, 0], [2, 0], [0, 4 / 3], [2, 4 / 3], [0, 8 / 3], [2, 8 / 3], [0, 4], [2, 4], [1, 2]],
+    T: [[0, 0], [2, 0], [0, 4 / 3], [2, 4 / 3], [0, 8 / 3], [2, 8 / 3], [0, 4], [2, 4], [1, 2 / 3], [1, 10 / 3]],
   };
-
   function pips(rank, suit, fill) {
     let out = '';
     for (const [col, row] of PIPS[rank]) {
-      const x = 87 + col * 38, y = 88 + row * 43.5;
-      out += suitShape(suit, x, y, 40, fill, row > 2 ? 1 : 0);
+      const x = 80 + col * 45, y = 66 + row * 54.5;
+      out += suitShape(suit, x, y, 46, fill, row > 2 ? 1 : 0);
     }
     return out;
   }
@@ -84,46 +71,33 @@
     return `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".45" stop-color="${b}"/><stop offset=".7" stop-color="${a}"/><stop offset="1" stop-color="${c}"/></linearGradient>`;
   }
 
-  // Emblems in a 100 × 70 box.
-  function emblem(rank, gold, ink) {
-    if (rank === 'K') {
-      return `<path d="M14 56L8 18 31 36 50 8 69 36 92 18 86 56Z" fill="${gold}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
-        <rect x="13" y="56" width="74" height="11" rx="3" fill="${gold}" stroke="${ink}" stroke-width="2.4"/>
-        <circle cx="8" cy="16" r="5" fill="${gold}" stroke="${ink}" stroke-width="2"/><circle cx="50" cy="6" r="6" fill="${gold}" stroke="${ink}" stroke-width="2"/><circle cx="92" cy="16" r="5" fill="${gold}" stroke="${ink}" stroke-width="2"/>
-        <circle cx="50" cy="45" r="5.5" fill="${ink}"/><circle cx="30" cy="48" r="3.4" fill="${ink}" opacity=".85"/><circle cx="70" cy="48" r="3.4" fill="${ink}" opacity=".85"/>`;
-    }
-    if (rank === 'Q') {
-      return `<path d="M8 58C20 40 34 32 50 32S80 40 92 58L86 64C74 52 62 48 50 48S26 52 14 64Z" fill="${gold}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
-        <path d="M50 4L62 22 50 40 38 22Z" fill="${ink}" stroke="${gold}" stroke-width="2.6" stroke-linejoin="round"/>
-        <path d="M22 26L30 36 22 46 14 36Z M78 26L86 36 78 46 70 36Z" fill="${ink}" stroke="${gold}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>
-        <circle cx="50" cy="22" r="3.4" fill="${gold}"/>`;
-    }
-    // Jack: a falcon's head in profile.
-    return `<path d="M18 62C14 44 20 24 36 14 48 6 64 6 74 14 82 20 86 28 92 32 86 34 80 34 76 32 78 38 76 44 70 46 74 50 74 56 70 62Z" fill="${gold}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M74 14C82 18 88 24 92 32 86 34 80 34 76 32" fill="${ink}" opacity=".92"/>
-      <circle cx="62" cy="24" r="5.4" fill="${ink}"/><circle cx="63.6" cy="22.6" r="1.6" fill="${gold}"/>
-      <path d="M56 32C50 40 44 46 34 50M50 40C46 48 40 54 30 58" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>`;
-  }
-
+  // The court: the classic double-headed figure in a framed window.
+  const FRAME = { x: 54, y: 44, w: 142, h: 262 };
   function court(rank, suit, deck, ids) {
+    const pal = deck.court;
+    const art = globalThis.BS_COURTS?.get?.(rank + suit) || '';
+    const { x, y, w, h } = FRAME;
+    const s = h / 482, aw = 302 * s;
+    const window_ = `<clipPath id="${ids.clip}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5"/></clipPath>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="${pal.W}"/>`;
+    const figure = art
+      ? `<g clip-path="url(#${ids.clip})"><g transform="translate(${(W / 2 - aw / 2).toFixed(2)} ${y}) scale(${s.toFixed(5)})">${art.replace(/%([YBRKW])%/g, (_, c) => pal[c])}</g></g>`
+      : suitShape(suit, W / 2, H / 2, 70, colorOf(deck, suit));
     const ink = colorOf(deck, suit);
-    const gold = `url(#${ids.gold})`;
-    const hatch = `<pattern id="${ids.gold}h" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V10" stroke="${ink}" stroke-width="1.4" opacity=".07"/></pattern>`;
-    const panel = `<defs>${hatch}</defs><rect x="62" y="34" width="126" height="282" rx="12" fill="${deck.court}" stroke="${gold}" stroke-width="5"/>
-      <rect x="62" y="34" width="126" height="282" rx="12" fill="url(#${ids.gold}h)"/>
-      <rect x="70" y="42" width="110" height="266" rx="8" fill="none" stroke="${gold}" stroke-width="1.6" opacity=".8"/>
-      <path d="M70 175H180" stroke="${gold}" stroke-width="3"/>`;
-    const half = `<g transform="translate(77 66) scale(0.96)">${emblem(rank, gold, ink)}</g>${suitShape(suit, 125, 150, 24, ink)}`;
-    return panel + `<g>${half}</g><g transform="rotate(180 125 175)">${half}</g>`;
+    // a small suit pip in the window's corners, as on a real deck
+    const corner = suitShape(suit, x + 14, y + 15, 17, ink) + suitShape(suit, x + w - 14, y + h - 15, 17, ink, 1);
+    return window_ + figure + corner + `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="${pal.frame}" stroke-width="2.4"/>`;
   }
 
   function ace(suit, deck, ids) {
     const ink = colorOf(deck, suit);
+    if (suit !== 'S') return suitShape(suit, W / 2, H / 2, 112, ink);
+    // the Ace of Spades carries the deck's seal
     const gold = `url(#${ids.gold})`;
-    return `<circle cx="125" cy="175" r="78" fill="none" stroke="${gold}" stroke-width="3"/>
-      <circle cx="125" cy="175" r="70" fill="none" stroke="${ink}" stroke-width="1" opacity=".3"/>
-      ${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<circle cx="${125 + Math.cos(a * Math.PI / 180) * 78}" cy="${175 + Math.sin(a * Math.PI / 180) * 78}" r="4" fill="${gold}"/>`).join('')}
-      ${suitShape(suit, 125, 175, 104, ink)}`;
+    return `<circle cx="125" cy="175" r="80" fill="none" stroke="${gold}" stroke-width="3"/>
+      <circle cx="125" cy="175" r="72" fill="none" stroke="${ink}" stroke-width="1" opacity=".35"/>
+      ${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<circle cx="${(125 + Math.cos(a * Math.PI / 180) * 80).toFixed(1)}" cy="${(175 + Math.sin(a * Math.PI / 180) * 80).toFixed(1)}" r="4" fill="${gold}"/>`).join('')}
+      ${suitShape('S', 125, 172, 118, ink)}`;
   }
 
   function face(card, deckId = 'deck-classic') {
@@ -131,7 +105,7 @@
     const rank = card[0], suit = card[1];
     const ink = colorOf(deck, suit);
     const id = 'c' + (uid++).toString(36);
-    const ids = { gold: id + 'g', paper: id + 'p' };
+    const ids = { gold: id + 'g', paper: id + 'p', clip: id + 'k' };
     let body;
     if (rank === 'A') body = ace(suit, deck, ids);
     else if (rank === 'K' || rank === 'Q' || rank === 'J') body = court(rank, suit, deck, ids);
@@ -139,7 +113,7 @@
     const sheen = deck.dark ? `<rect x="3" y="3" width="${W - 6}" height="${H - 6}" rx="15" fill="url(#${id}s)" opacity=".5"/>` : '';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>${goldGradient(ids.gold, deck)}<linearGradient id="${ids.paper}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${deck.face[0]}"/><stop offset="1" stop-color="${deck.face[1]}"/></linearGradient><linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
       <rect x="1.5" y="1.5" width="${W - 3}" height="${H - 3}" rx="17" fill="url(#${ids.paper})" stroke="${deck.foil ? `url(#${ids.gold})` : deck.edge}" stroke-width="${deck.foil ? 3 : 2}"/>
-      ${body}${index(rank, suit, ink, deck)}${sheen}</svg>`;
+      ${body}${index(rank, suit, ink)}${sheen}</svg>`;
   }
 
   /* ---------- Backs ---------- */

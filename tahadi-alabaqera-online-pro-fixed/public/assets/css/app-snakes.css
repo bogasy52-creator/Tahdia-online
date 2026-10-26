@@ -1087,6 +1087,15 @@ html[data-board=board-galaxy] body.game-snakes #game.snl31 #board::after{backgro
 /* ---------- reactor keeps its neon frame; the tiles get the glass ---------- */
 html[data-board=board-cyber]{--snl-veil:linear-gradient(160deg,rgba(110,230,255,.06),rgba(0,0,0,.22))}
 
+/* 32.1.0: up to ten stones can share a cell or wait at the start */
+:is(html,#v31) body.game-snakes #game.snl31 .token-stack:has(.snake-token:nth-child(3)) .snake-token{width:46%!important;margin:0 -10%!important}
+:is(html,#v31) body.game-snakes #game.snl31 .token-stack:has(.snake-token:nth-child(5)){flex-wrap:wrap!important;align-content:flex-end!important;padding-bottom:4%!important}
+:is(html,#v31) body.game-snakes #game.snl31 .token-stack:has(.snake-token:nth-child(5)) .snake-token{width:34%!important;margin:-16% -6% 0!important}
+:is(html,#v31) body.game-snakes #game.snl31 :is(#mobileStartLane,#startLane):has(.start-token:nth-child(6)){flex-wrap:nowrap!important;justify-content:center!important}
+:is(html,#v31) body.game-snakes #game.snl31 :is(#mobileStartLane,#startLane):has(.start-token:nth-child(6)) .start-token{width:21px!important;height:33px!important;flex:0 0 21px!important;margin:0 -4px!important}
+/* the four extra seat colours tint the studio pawn (the v31 board removes filters otherwise) */
+:is(html,#v31) body.game-snakes :is(#game.snl31,#v31) :is(.snake-token,.snake-travel-pawn,.start-token) .crystal-sprite.piece-svg.piece-tinted,:is(html,#v31) body.game-snakes :is(.snake-token,.snake-travel-pawn,.start-token) .crystal-sprite.piece-svg.piece-tinted{filter:var(--piece-tint)!important}
+
 /* assets/css/reactions-v31.css */
 /* Tahdia 31.0.0 — reactions: the board button, the picker sheet and the
    effects layer. Tiers carry meaning: slate free, blue rare, violet epic,

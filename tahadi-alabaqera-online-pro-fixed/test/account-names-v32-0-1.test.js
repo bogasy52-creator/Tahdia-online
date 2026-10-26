@@ -102,7 +102,8 @@ test('32.0.1: every game name field shows the account name and is locked while s
   assert.match(baloot, /const saved = accountName\(\) \|\| localStorage\.getItem\('bs_baloot_name'\)/);
   assert.match(baloot, /if \(!account\) try \{ localStorage\.setItem\('bs_baloot_name'/);
   assert.match(await read('public/assets/js/party-v29.js'), /\$\('name'\)\.value=window\.BS_SOCIAL\?\.accountName\?\.\(\)\|\|localStorage\.getItem\('bs_party_name'\)/);
-  assert.match(await read('public/assets/js/picture-ui.js'), /url\.searchParams\.set\('name',accountName\(\)\|\|read\('bs-picture-name'\)/);
+  // 32.1.0: inside a party round a guest plays under the party name; the account name still comes first
+  assert.match(await read('public/assets/js/picture-ui.js'), /url\.searchParams\.set\('name',accountName\(\)\|\|(?:window\.BS_PARTY_LINK\?\.name\?\.slice\(0,20\)\|\|)?read\('bs-picture-name'\)/);
   assert.match(await read('public/online.html'), /const account=cleanName\(window\.BS_SOCIAL\?\.accountName\?\.\(\)\);if\(account\)return account;/);
   const career = await read('public/assets/js/career-client.js');
   assert.match(career, /name:accountName\|\|cached\.name/);

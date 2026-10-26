@@ -14,6 +14,10 @@
    - Card points 162 (Hokm) / 130 (Sun) including 10 for the last trick.
      Projects: sira, fifty, hundred, four hundred; Baloot (K+Q of trumps).
    - First team to 152 wins.
+   - 32.1.0 open play (state.open): any card may be played. A card the rules
+     do not allow is a "cut" (قطع), kept secret on the table; a player of the
+     other team may claim (يسجّل) at any time in the hand. A right claim wins
+     the hand for the claimers, a wrong one gives it to the accused team.
    Cards are two-letter strings: rank (7 8 9 T J Q K A) + suit (S H D C). */
 
 export const SUITS = ['S', 'H', 'D', 'C'];
@@ -139,10 +143,11 @@ export function findProjects(hand, contractType) {
 
 /* ---------- Match & hands ---------- */
 
-export function createBalootMatch({ names = ['أنت', 'اليمين', 'الشريك', 'اليسار'], target = TARGET, dealer = null, rng = Math.random } = {}) {
+export function createBalootMatch({ names = ['أنت', 'اليمين', 'الشريك', 'اليسار'], target = TARGET, dealer = null, rng = Math.random, open = false } = {}) {
   const state = {
     kind: 'baloot',
     v: 1,
+    open: Boolean(open),
     names: names.slice(0, 4).map((n, i) => String(n || `لاعب ${i + 1}`).slice(0, 20)),
     target,
     scores: [0, 0],
@@ -179,6 +184,8 @@ export function startHand(state, rng = Math.random) {
   state.startHands = null;
   state.result = null;
   state.leadTop = false;
+  state.violations = [];
+  state.claim = null;
   return state;
 }
 
@@ -238,7 +245,7 @@ function startPlay(state, events) {
   state.phase = 'playing';
   state.doubling = null;
   state.turn = state.bidding.first;
-  state.trick = { leader: state.turn, cards: [] };
+  state.trick = { leader: state.turn, cards: [], top: false };
   events.push({ type: 'play_started', leader: state.turn });
 }
 
@@ -383,14 +390,33 @@ export function legalCards(state, seat = state.turn) {
   return higher.length ? higher : trumps;
 }
 
+// Why a card breaks the rules, for the claim explanation.
+function cutReason(state, seat, card) {
+  const c = state.contract, cards = state.trick.cards, hand = state.hands[seat];
+  if (!cards.length) return 'lead';
+  const led = suitOf(cards[0].card);
+  if (suitOf(card) !== led && hand.some((x) => suitOf(x) === led)) return 'follow';
+  if (c.type === 'hokm' && suitOf(card) !== c.trump && suitOf(card) !== led && hand.some((x) => suitOf(x) === c.trump)) return 'trump';
+  return 'higher';
+}
+
+// The cards a seat may put down now: any card in open play, else the legal ones.
+export function playableCards(state, seat = state.turn) {
+  if (state.phase !== 'playing' || seat !== state.turn) return [];
+  return state.open ? [...state.hands[seat]] : legalCards(state, seat);
+}
+
 function applyPlay(state, seat, action, events, rng) {
   const card = String(action.card || '');
-  if (!legalCards(state, seat).includes(card)) throw new Error('illegal_card');
+  const legal = legalCards(state, seat);
+  if (!playableCards(state, seat).includes(card)) throw new Error('illegal_card');
+  if (!legal.includes(card)) state.violations.push({ seat, card, trick: state.tricks.length, reason: cutReason(state, seat, card), should: legal.slice(0, 3) });
   const c = state.contract;
   const first = state.tricks.length === 0;
   if (!state.trick.cards.length) {
     // Leading the top card left in its suit protects the partner (ekka).
     state.leadTop = suitOf(card) !== c.trump && highestRemaining(state, suitOf(card)) === card;
+    state.trick.top = state.leadTop;
   }
   if (first && action.declare !== false) {
     const found = findProjects(state.startHands[seat], c.type);
@@ -416,7 +442,7 @@ function applyPlay(state, seat, action, events, rng) {
   }
   const win = trickWinner(state.trick.cards, c);
   const points = state.trick.cards.reduce((sum, x) => sum + cardPoints(x.card, c), 0);
-  state.tricks.push({ leader: state.trick.leader, cards: state.trick.cards, winner: win.seat, points });
+  state.tricks.push({ leader: state.trick.leader, cards: state.trick.cards, winner: win.seat, points, top: Boolean(state.trick.top) });
   events.push({ type: 'trick', winner: win.seat, points, cards: clone(state.trick.cards) });
   if (state.tricks.length === 1) resolveProjects(state, events);
   if (state.tricks.length === 8) {
@@ -424,7 +450,7 @@ function applyPlay(state, seat, action, events, rng) {
     return;
   }
   state.turn = win.seat;
-  state.trick = { leader: win.seat, cards: [] };
+  state.trick = { leader: win.seat, cards: [], top: false };
 }
 
 function resolveProjects(state, events) {
@@ -449,7 +475,7 @@ function resolveProjects(state, events) {
 function hokmPoints(abnat) { return Math.floor((abnat + 4) / 10); }
 function sunPoints(abnat) { return abnat % 10 === 5 ? abnat / 5 : Math.round(abnat / 10) * 2; }
 
-function scoreHand(state, events, rng) {
+function scoreHand(state, events, rng, forced = null) {
   const c = state.contract;
   const hokm = c.type === 'hokm';
   const decl = teamOf(c.buyer);
@@ -457,8 +483,7 @@ function scoreHand(state, events, rng) {
   const abnat = [0, 0];
   const tricks = [0, 0];
   for (const t of state.tricks) { abnat[teamOf(t.winner)] += t.points; tricks[teamOf(t.winner)] += 1; }
-  const lastTeam = teamOf(state.tricks[7].winner);
-  abnat[lastTeam] += 10;
+  if (state.tricks.length === 8) abnat[teamOf(state.tricks[7].winner)] += 10;
   const mult = c.multiplier;
   const projectPts = [0, 0];
   if (state.projects?.team !== null && state.projects?.team !== undefined) {
@@ -476,7 +501,16 @@ function scoreHand(state, events, rng) {
   let kaboot = null;
   let counting = null;
   const cardGame = [0, 0];
-  if (tricks[0] === 8 || tricks[1] === 8) {
+  if (forced) {
+    // A claim ends the hand: its winners take the whole hand, like a lost contract.
+    const w = forced.winner;
+    declWins = w === decl;
+    score[w] = full * Math.max(1, mult) + projectPts[0] + projectPts[1] + balootPts[w];
+    score[1 - w] = balootPts[1 - w];
+    // the result shows the projects where they went: all of them to the claim's winners
+    const all = projectPts[0] + projectPts[1];
+    projectPts[w] = all; projectPts[1 - w] = 0;
+  } else if (tricks[0] === 8 || tricks[1] === 8) {
     kaboot = tricks[0] === 8 ? 0 : 1;
     declWins = kaboot === decl;
     const base = hokm ? [0, 25, 50, 75, 100][mult] : mult > 1 ? 88 : 44;
@@ -506,7 +540,7 @@ function scoreHand(state, events, rng) {
   }
   const winnerTeam = declWins ? decl : opp;
   state.scores = [state.scores[0] + score[0], state.scores[1] + score[1]];
-  const result = { handNo: state.handNo, contract: clone(c), abnat, tricks, cardGame, projects: projectPts, baloot: balootPts, score, kaboot, declWins, winnerTeam, counting };
+  const result = { handNo: state.handNo, contract: clone(c), abnat, tricks, cardGame, projects: projectPts, baloot: balootPts, score, kaboot, declWins, winnerTeam, counting, open: Boolean(state.open), claim: state.claim ? clone(state.claim) : null, cuts: clone(state.violations || []) };
   state.result = result;
   state.history.push(result);
   events.push({ type: 'hand_scored', result: clone(result), scores: [...state.scores] });
@@ -532,6 +566,43 @@ export function nextHand(state, rng = Math.random) {
   return [{ type: 'deal', dealer: state.dealer, exposed: state.exposed }];
 }
 
+/* ---------- Claims (open play) ---------- */
+
+export function canClaim(state, seat) {
+  return Boolean(state?.open) && state.phase === 'playing' && !state.claim && Number.isInteger(seat) && seat >= 0 && seat < 4 && (state.played?.length || 0) > 0;
+}
+
+function applyClaim(state, seat, events, rng) {
+  if (!canClaim(state, seat)) throw new Error('illegal_claim');
+  const team = teamOf(seat), accused = 1 - team;
+  const proof = (state.violations || []).find((v) => teamOf(v.seat) === accused) || null;
+  state.claim = { seat, team, accused, correct: Boolean(proof), proof: proof ? clone(proof) : null, trick: state.tricks.length };
+  events.push({ type: 'claim', seat, team, correct: Boolean(proof), proof: proof ? clone(proof) : null });
+  if (state.trick?.cards?.length) state.trick = { ...state.trick, cards: [] };
+  scoreHand(state, events, rng, { winner: proof ? team : accused });
+}
+
+/* What one seat can prove from the table alone: a card it saw played that the
+   rules did not allow, given the cards the same player showed afterwards.
+   (Holding more cards only adds duties, so the proof never lies.) */
+export function provenCuts(view, accusedTeam) {
+  if (!view?.open || !view.contract) return [];
+  const tricks = (view.tricks || []).map((t, index) => ({ ...t, index }));
+  if (view.trick?.cards?.length) tricks.push({ ...view.trick, index: tricks.length });
+  const sequence = [];
+  for (const t of tricks) t.cards.forEach((entry, k) => sequence.push({ ...entry, trick: t.index, before: t.cards.slice(0, k), top: Boolean(t.top) }));
+  const found = [];
+  sequence.forEach((p, i) => {
+    if (teamOf(p.seat) !== accusedTeam) return;
+    const later = sequence.slice(i + 1).filter((x) => x.seat === p.seat).map((x) => x.card);
+    if (!later.length) return;
+    const probe = { phase: 'playing', turn: p.seat, contract: view.contract, hands: [[], [], [], []], trick: { cards: p.before }, leadTop: p.top, played: [] };
+    probe.hands[p.seat] = [p.card, ...later];
+    if (!legalCards(probe, p.seat).includes(p.card)) found.push({ seat: p.seat, card: p.card, trick: p.trick, shown: later.find((x) => legalCards(probe, p.seat).includes(x)) || later[0] });
+  });
+  return found;
+}
+
 /* ---------- Actions ---------- */
 
 export function applyBalootAction(input, seat, action, rng = Math.random) {
@@ -542,6 +613,7 @@ export function applyBalootAction(input, seat, action, rng = Math.random) {
     events.push(...nextHand(state, rng));
     return { state, events };
   }
+  if (action?.type === 'claim') { applyClaim(state, seat, events, rng); return { state, events }; }
   if (seat !== state.turn) throw new Error('wrong_turn');
   if (action?.type === 'bid') applyBid(state, seat, action, events, rng);
   else if (action?.type === 'double') applyDouble(state, seat, action, events);
@@ -554,7 +626,7 @@ export function applyBalootAction(input, seat, action, rng = Math.random) {
 export function balootActions(state, seat = state.turn) {
   if (state.phase === 'bidding') return biddingOptions(state, seat).map((o) => ({ type: 'bid', ...o }));
   if (state.phase === 'doubling') return doublingOptions(state, seat).map((o) => ({ type: 'double', ...o }));
-  if (state.phase === 'playing') return legalCards(state, seat).map((card) => ({ type: 'play', card }));
+  if (state.phase === 'playing') return playableCards(state, seat).map((card) => ({ type: 'play', card }));
   return [];
 }
 
@@ -568,6 +640,8 @@ export function balootView(state, seat) {
   const reveal = state.tricks?.length >= 1;
   view.declared = state.declared.map((list, i) => list.map((p) => (i === seat || (reveal && state.projects?.team === teamOf(i)) ? p : { type: p.type })));
   if (view.baloot && !view.baloot.announced) view.baloot = null;
+  // cuts stay secret until a claim or the end of the hand
+  view.violations = null;
   view.me = seat;
   return view;
 }

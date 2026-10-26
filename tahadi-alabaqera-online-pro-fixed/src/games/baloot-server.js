@@ -5,18 +5,18 @@
 // deal…) go out as one batch that each table animates in order. Only human
 // turns, the lobby countdown of a public table and the pause between hands
 // need an alarm, which keeps Durable Object requests low.
-import { createBalootMatch, applyBalootAction, balootView, teamOf } from '../../public/assets/js/engines/baloot-engine.js';
+import { createBalootMatch, applyBalootAction, balootView, teamOf, partnerOf } from '../../public/assets/js/engines/baloot-engine.js';
 import { chooseBalootAction } from '../../public/assets/js/engines/baloot-bot.js';
 
 export const BALOOT_SEATS = [0, 2, 1, 3]; // the first two players are partners
-export const BALOOT_LOBBY_MS = 15_000;
+export const BALOOT_LOBBY_MS = 10_000;
 export const BALOOT_NEXT_HAND_MS = 6_500;
 export const BALOOT_AWAY_MS = 9_000;
 const TURN_MS = { bidding: 20_000, doubling: 15_000, playing: 25_000 };
 const BOT_NAMES = ['سلطان', 'نايف', 'بندر', 'مشعل', 'تركي', 'فيصل', 'ريان', 'فهد', 'عبدالله', 'خالد'];
 // How long a table needs to show each event, so a human is never timed out
 // while the moves before their turn are still on screen.
-const SHOW_MS = { deal: 1900, bid: 800, second_round: 1200, redeal: 1300, contract: 2700, double: 1000, declare: 0, play: 420, baloot: 500, trick: 1150, projects: 2700, play_started: 0 };
+const SHOW_MS = { deal: 1900, bid: 800, second_round: 1200, redeal: 1300, contract: 2700, double: 1000, declare: 0, play: 420, baloot: 500, trick: 1150, projects: 2700, play_started: 0, claim: 2900 };
 
 export function freeBalootSeat(room) {
   const taken = new Set(Object.values(room.players).map((p) => p.seat));
@@ -48,7 +48,8 @@ export function startBalootRoom(room, rng, now) {
   room.bots = [0, 1, 2, 3].filter((seat) => !names[seat]);
   room.botNames = {};
   for (const seat of room.bots) { names[seat] = pool.shift() || 'بوت'; room.botNames[seat] = names[seat]; }
-  room.state = createBalootMatch({ names, target: 152, rng });
+  // 32.1.0: open play unless the room was made with strict rules
+  room.state = createBalootMatch({ names, target: 152, rng, open: room.open !== false });
   room.status = 'playing';
   room.startedAt = now;
   room.rewardsComplete = false;
@@ -66,7 +67,8 @@ export function runBalootBots(room, rng, now, events, { level = 'hard' } = {}) {
   let guard = 0;
   while (room.state && ['bidding', 'doubling', 'playing'].includes(room.state.phase) && autoSeat(room, room.state.turn) && guard++ < 200) {
     const seat = room.state.turn;
-    const action = chooseBalootAction(balootView(room.state, seat), seat, { level, rng });
+    // a bot never cuts for a team that has a human in it
+    const action = chooseBalootAction(balootView(room.state, seat), seat, { level, rng, honest: !autoSeat(room, partnerOf(seat)) });
     if (!action) break;
     const result = applyBalootAction(room.state, seat, action, rng);
     room.state = result.state;
@@ -92,8 +94,9 @@ export function scheduleBalootTurn(room, now, events) {
 
 export function applyBalootMove(room, player, action, rng, now) {
   if (!room.state || room.status !== 'playing') throw new Error('match_not_playing');
-  if (room.state.turn !== player.seat) throw new Error('wrong_turn');
   const clean = sanitizeAction(action);
+  // a claim (open play) may come from anyone at any moment of the hand
+  if (clean.type !== 'claim' && room.state.turn !== player.seat) throw new Error('wrong_turn');
   const result = applyBalootAction(room.state, player.seat, clean, rng);
   room.state = result.state;
   const events = [...result.events];
@@ -108,6 +111,7 @@ function sanitizeAction(action) {
   if (type === 'bid') return { type, bid: String(action.bid || ''), suit: action.suit ? String(action.suit).slice(0, 1) : undefined };
   if (type === 'double') return { type, call: String(action.call || ''), locked: Boolean(action.locked) };
   if (type === 'play') return { type, card: String(action.card || '').slice(0, 2) };
+  if (type === 'claim') return { type };
   throw new Error('invalid_action');
 }
 
@@ -131,7 +135,7 @@ export function balootAlarm(room, rng, now) {
   }
   if (room.turnDeadline && now >= room.turnDeadline && ['bidding', 'doubling', 'playing'].includes(room.state.phase)) {
     const seat = room.state.turn;
-    const action = chooseBalootAction(balootView(room.state, seat), seat, { level: 'medium', rng });
+    const action = chooseBalootAction(balootView(room.state, seat), seat, { level: 'medium', rng, honest: true });
     const result = applyBalootAction(room.state, seat, action, rng);
     room.state = result.state;
     const events = [...result.events];

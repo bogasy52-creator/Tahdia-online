@@ -52,7 +52,7 @@
 #finalScores .rankRow.mine{box-shadow:inset 0 0 0 1px rgba(147,240,178,.45)}
 </style>
 
-<link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-online.css?v=32.0.1"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=32.0.1"></head>
+<link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-online.css?v=32.1.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=32.1.0"></head>
 <body class="release-v26 quiz-v19">
 <div class="app" id="app">
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">منافسة فردية وفرق • النتيجة من الخادم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
@@ -130,14 +130,14 @@
 <div class="footer">© 2026 بوسراج — تحدي العباقرة Online. اللعب السريع متزامن مباشرة، والغرف الخاصة تعمل بمحرك السيرفر.</div>
 <div id="toast" class="toast hidden"></div>
 </div>
-<script src="assets/js/audio-manager.js?v=32.0.1"></script>
-<script src="assets/js/quiz-audio-v29.js?v=32.0.1"></script><script src="assets/js/quiz-visuals-v28.js?v=32.0.1"></script>
-<script type="module" src="assets/js/quiz-team-v28.js?v=32.0.1"></script>
-<script src="assets/js/platform.js?v=32.0.1"></script>
+<script src="assets/js/party-link-v32.js?v=32.1.0"></script><script src="assets/js/audio-manager.js?v=32.1.0"></script>
+<script src="assets/js/quiz-audio-v29.js?v=32.1.0"></script><script src="assets/js/quiz-visuals-v28.js?v=32.1.0"></script>
+<script type="module" src="assets/js/quiz-team-v28.js?v=32.1.0"></script>
+<script src="assets/js/platform.js?v=32.1.0"></script>
 
 
-<script src="assets/js/matchmaking.js?v=32.0.1"></script>
-<script src="assets/js/social-client.js?v=32.0.1"></script>
+<script src="assets/js/matchmaking.js?v=32.1.0"></script>
+<script src="assets/js/social-client.js?v=32.1.0"></script>
 <script>
 (() => {
 const root=document.getElementById('app'), $=s=>root.querySelector(s);
@@ -181,6 +181,7 @@ const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)
 function cleanName(value){return String(value||'').normalize('NFKC').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,20);}
 function autoPlayerName(inputValue=''){
  const account=cleanName(window.BS_SOCIAL?.accountName?.());if(account)return account;
+ const party=cleanName(window.BS_PARTY_LINK?.name);if(party)return party;
  const typed=cleanName(inputValue);if(typed)return typed;
  try{const p=JSON.parse(localStorage.getItem('tahadi-player')||'null');const saved=cleanName(p?.name||read('online_name')||read('tahdia_guest_name'));if(saved&&saved!=='لاعب'&&saved!=='لاعب العباقرة')return saved}catch{}
  const id=read('tahdia_guest_id')||Math.random().toString(36).slice(-4).toUpperCase();const name='عبقري '+String(id).replace(/[^a-zA-Z0-9]/g,'').slice(-4).toUpperCase();store('online_name',name);return name;
@@ -423,5 +424,5 @@ const quickMatchParam=qs.get('quickMatch')||qs.get('match');
 if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hidden');connect()}else if(quickMatchParam){$('#entry').classList.add('hidden');setNet('','مزامنة المواجهة')}else{$('#entry').classList.remove('hidden');setNet('','اللعب السريع جاهز')}
 })();
 </script>
-<script type="module" src="assets/js/quick-match-game.js?v=32.0.1"></script>
-<script src="assets/js/profile-core.js?v=32.0.1"></script><script src="assets/js/career-client.js?v=32.0.1"></script><script defer src="assets/js/client-health.js?v=32.0.1"></script><script src="assets/js/play-feedback-v24-1.js?v=32.0.1"></script><script src="/assets/js/tahdia-premium-v25.js?v=32.0.1"></script></body></html>
+<script type="module" src="assets/js/quick-match-game.js?v=32.1.0"></script>
+<script src="assets/js/profile-core.js?v=32.1.0"></script><script src="assets/js/career-client.js?v=32.1.0"></script><script defer src="assets/js/client-health.js?v=32.1.0"></script><script src="assets/js/play-feedback-v24-1.js?v=32.1.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=32.1.0"></script></body></html>

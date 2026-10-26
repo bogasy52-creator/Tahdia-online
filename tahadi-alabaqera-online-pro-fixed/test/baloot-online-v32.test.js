@@ -62,7 +62,8 @@ test('humans act on their turn, bots answer at once, timeouts and new hands run 
     }
     const view = h.board.publicState(player.id);
     const action = chooseBalootAction(view.state, s.turn, { level: 'hard' });
-    assert.ok(balootActions(view.state, s.turn).some((a) => JSON.stringify(a) === JSON.stringify(action)));
+    // open play: a player may also claim (يسجّل) a cut it can prove; that is not a turn action
+    assert.ok(action.type === 'claim' || balootActions(view.state, s.turn).some((a) => JSON.stringify(a) === JSON.stringify(action)));
     const before = room.version;
     await h.board.webSocketMessage(h.socket(player), JSON.stringify({ type: 'baloot', action, expectedVersion: room.version }));
     assert.equal(h.board.room.version, before + 1, 'every move is a new version');
@@ -117,4 +118,52 @@ test('quick Baloot hands out four seats per public table and starts it with bots
   empty.instance.room.lobbyDeadline = Date.now() - 1;
   await empty.instance.alarm();
   assert.equal(empty.instance.room, null);
+});
+
+test('32.1.0: table talk carries only the fixed phrases and emoji, at a calm pace', async () => {
+  const h = await makeRoom();
+  const guest = h.board.addPlayer('ماجد', 'guest');
+  const sockets = [h.socket(h.host), h.socket(guest)];
+  h.env.BOARD_ROOMS.peek(h.res.data.code).ctx.sockets.push(...sockets);
+  await h.board.webSocketMessage(sockets[0], JSON.stringify({ type: 'start' }));
+  const talk = (who) => (h.sent.get(who.id) || []).filter((m) => m.type === 'talk');
+  await h.board.webSocketMessage(sockets[1], JSON.stringify({ type: 'talk', kind: 'phrase', id: 'p3' }));
+  assert.deepEqual(talk(h.host).map((m) => [m.kind, m.id, m.seat]), [['phrase', 'p3', guest.seat]], 'everyone at the table hears it');
+  assert.equal(talk(guest).length, 1);
+  await h.board.webSocketMessage(sockets[1], JSON.stringify({ type: 'talk', kind: 'emoji', id: 'e2' }));
+  assert.equal(talk(h.host).length, 1, 'too soon after the last one');
+  await h.board.webSocketMessage(sockets[0], JSON.stringify({ type: 'talk', kind: 'phrase', id: 'free text <b>' }));
+  await h.board.webSocketMessage(sockets[0], JSON.stringify({ type: 'talk', kind: 'text', id: 'p1' }));
+  assert.equal(talk(guest).length, 1, 'nothing but the fixed list is relayed');
+});
+
+test('32.1.0: a Baloot room plays open by default; a claim comes from any seat during play', async () => {
+  const h = await makeRoom();
+  const guest = h.board.addPlayer('ماجد', 'guest');
+  await h.board.webSocketMessage(h.socket(h.host), JSON.stringify({ type: 'start' }));
+  assert.equal(h.board.room.state.open, true);
+  const claimFrom = async (player) => h.board.webSocketMessage(h.socket(player), JSON.stringify({ type: 'baloot', action: { type: 'claim' }, expectedVersion: h.board.room.version }));
+  // during the bidding a claim is refused with a clear reason
+  const v0 = h.board.room.version;
+  await claimFrom(guest);
+  assert.equal(h.board.room.version, v0);
+  assert.match(h.sent.get(guest.id).at(-1).message, /التسجيل/);
+  // play on until a card is on the table, then the player who is not on turn claims
+  const humans = { 0: h.host, 2: guest };
+  for (let step = 0; step < 60 && !(h.board.room.state.phase === 'playing' && h.board.room.state.played?.length); step++) {
+    const s = h.board.room.state, player = humans[s.turn];
+    const action = chooseBalootAction(h.board.publicState(player.id).state, s.turn, { level: 'hard', honest: true });
+    await h.board.webSocketMessage(h.socket(player), JSON.stringify({ type: 'baloot', action, expectedVersion: h.board.room.version }));
+  }
+  const s = h.board.room.state;
+  assert.equal(s.phase, 'playing');
+  const notOnTurn = s.turn === 0 ? guest : h.host;
+  const handNo = s.handNo;
+  await claimFrom(notOnTurn);
+  const result = h.board.room.state.history.find((x) => x.handNo === handNo && x.claim);
+  assert.ok(result, 'the claim ended the hand');
+  // the humans played by the rules; a bot may have cut, and then the claim is right
+  const caught = (s.violations || []).some((v) => v.seat % 2 !== notOnTurn.seat % 2);
+  assert.equal(result.claim.correct, caught);
+  assert.equal(result.winnerTeam, caught ? notOnTurn.seat % 2 : 1 - (notOnTurn.seat % 2), 'a right claim wins the hand, a wrong one gives it away');
 });

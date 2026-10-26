@@ -1,8 +1,9 @@
 import {issueVerifiedResults} from '../rooms/verified-results.js';
+import {cleanPartyLink,settlePartyLink,standings} from '../party/party-link.js';
 import {createSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
 
-const TTL=60*60000,GRACE=45000,LOBBY_MS=20000,MAX_MISTAKES=5;
+const TTL=60*60000,GRACE=45000,LOBBY_MS=10000,MAX_MISTAKES=5;
 const DURATIONS=[10,15,20,25,30].map(n=>n*60000);
 const secret=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','');
 const json=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -77,7 +78,7 @@ export class SudokuRoom{
     if(url.pathname==='/init'&&request.method==='POST')return this.ctx.blockConcurrencyWhile(async()=>{
       if(this.room)return json({ok:false},409);
       const b=await request.json().catch(()=>null);if(!sudokuSettings(b)||!/^\d{6}$/.test(b.code)||typeof b.hostKey!=='string'||b.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
-      this.room={code:b.code,hostKey:b.hostKey,difficulty:b.difficulty,capacity:b.capacity,status:'lobby',players:{},order:[],round:'',createdAt:Date.now(),expiresAt:Date.now()+TTL};
+      this.room={code:b.code,hostKey:b.hostKey,difficulty:b.difficulty,capacity:b.capacity,status:'lobby',players:{},order:[],round:'',createdAt:Date.now(),expiresAt:Date.now()+TTL,partyLink:cleanPartyLink(b.party)};
       await this.save();await this.schedule();return json({ok:true},201);
     });
     return this.ctx.blockConcurrencyWhile(async()=>{
@@ -101,7 +102,7 @@ export class SudokuRoom{
     if(!p){
       if(!['lobby','countdown'].includes(r.status))return json({ok:false,error:'الجولة بدأت؛ انتظر الغرفة التالية'},409);
       if(r.order.length>=r.capacity)return json({ok:false,error:'الغرفة ممتلئة'},409);
-      const first=!r.order.length;if(first&&read('hk.')!==r.hostKey)return json({ok:false,error:'بانتظار المضيف'},403);
+      const first=!r.order.length;if(first&&read('hk.')!==r.hostKey&&!r.partyLink)return json({ok:false,error:'بانتظار المضيف'},403);
       p={id:crypto.randomUUID(),token:secret(),name:cleanName(url.searchParams.get('name')),role:first?'host':'guest',username,joinedAt:Date.now()};r.players[p.id]=p;r.order.push(p.id);
     }
     // Mark the new connection before closing the old socket: its late close cannot disconnect this seat.
@@ -163,7 +164,10 @@ export class SudokuRoom{
     if(!r.winnerId){const rows=r.order.map(id=>r.players[id]).filter(p=>!p.eliminatedAt).sort((a,b)=>b.correct-a.correct);r.winnerId=rows[0]?.correct>0&&(!rows[1]||rows[0].correct>rows[1].correct)?rows[0].id:null;}
     await this.save();this.broadcast();
     // Results are issued after everyone has seen the final board.
-    await issueVerifiedResults(this.env,r,'sudoku');await this.save();await this.schedule();
+    await issueVerifiedResults(this.env,r,'sudoku');
+    // 32.1.0: a match opened by a group room sends its final ranking back to it
+    if(r.partyLink&&!r.partyReported){const rows=r.order.map(id=>r.players[id]).sort((a,b)=>(b.finishedAt>0)-(a.finishedAt>0)||(a.finishedAt&&b.finishedAt?a.finishedAt-b.finishedAt:0)||(a.eliminatedAt>0)-(b.eliminatedAt>0)||(b.correct||0)-(a.correct||0)).map(p=>({name:p.name,username:p.username,score:p.correct||0,won:r.winnerId===p.id,done:p.finishedAt>0,out:p.eliminatedAt>0}));await settlePartyLink(this.env,r,'sudoku',standings(rows,(a,b)=>!a.done&&!b.done&&a.out===b.out&&a.score===b.score));}
+    await this.save();await this.schedule();
   }
   async webSocketClose(ws){
     await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{

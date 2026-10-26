@@ -5,6 +5,8 @@ import {SudokuRoom,sudokuSettings} from './sudoku/sudoku-room.js';
 import {ImageRoom} from './images/image-room.js';
 import {imageGenerationConfig} from './images/generate.js';
 import {clientErrorReport} from './diagnostics/client-errors.js';
+import {PresenceRegistry,PRESENCE_OBJECT,cleanBeat} from './presence/presence-registry.js';
+import {cleanPartyLink,settlePartyLink,standings as partyStandings} from './party/party-link.js';
 
 import { DurableObject } from "cloudflare:workers";
 import { CATEGORIES } from "./questions.js";
@@ -12,6 +14,7 @@ import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
 import { BALOOT_LOBBY_MS, freeBalootSeat, startBalootRoom, applyBalootMove, balootAlarm, balootPlayers, balootRoomView, balootWinFor } from "./games/baloot-server.js";
+import { validTalk } from "../public/assets/js/engines/baloot-talk.js";
 import { handleSocialRequest, authenticate, getSocialStub } from "./social/social-api.js";
 import { createQuickArenaClass } from "./quick/arena.js";
 import { createSocialUserClass } from "./social/social-user.js";
@@ -31,7 +34,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='32.0.1';
+const RELEASE='32.1.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -283,10 +286,27 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
+    // 32.1.0: live presence for the owner's dashboard (see src/presence/presence-registry.js)
+    if (url.pathname === '/api/presence') {
+      if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405);
+      const limited = await rateLimit(request, env, 'presence', 40, 60_000); if (limited) return limited;
+      if (!env?.BOARD_ROOMS) return json({ ok: false, error: 'unavailable' }, 503);
+      const raw = await request.text(); if (raw.length > 2048) return json({ ok: false, error: 'too_large' }, 413);
+      let body = null; try { body = JSON.parse(raw); } catch {}
+      const beat = cleanBeat(body, { country: request.cf?.country });
+      if (!beat) return json({ ok: false, error: 'invalid' }, 400);
+      const asked = beat.vis !== 'leave' && Boolean(request.headers.get('authorization'));
+      let identity = null;
+      if (asked) { const auth = await authenticate(request, env).catch((error) => { if (isDurableRequestQuotaError(error)) throw error; return null; }); if (auth?.username) identity = { user: auth.username, name: auth.profile?.displayName || auth.username }; }
+      const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(PRESENCE_OBJECT));
+      const res = await stub.fetch('https://presence.internal/beat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ beat: { ...body, cc: beat.cc }, identity }) });
+      const data = await res.json().catch(() => ({ ok: false }));
+      return json({ ...data, auth: identity ? 'ok' : asked ? 'failed' : 'none' }, res.status);
+    }
     if (request.method === "GET" && url.pathname === "/api/health") {
       const quizOnline = Boolean(env.ROOMS);
       const boardOnline = Boolean(env.BOARD_ROOMS);
@@ -615,7 +635,8 @@ export default {
           try { variant = normalizeSnakesVariant(body.variant); }
           catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
         }
-        const playerLimit = game === "baloot" ? 4 : game === "jackaroo" ? (Number(body.playerLimit)===6?6:4) : Math.min(game==="zahra"?6:20, Math.max(2, Number(body.playerLimit) || 2));
+        // 32.1.0: Snakes & Ladders rooms take up to ten players
+        const playerLimit = game === "baloot" ? 4 : game === "jackaroo" ? (Number(body.playerLimit)===6?6:4) : Math.min(game==="zahra"?6:10, Math.max(2, Number(body.playerLimit) || 2));
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
           const code = roomCode();
@@ -624,7 +645,7 @@ export default {
           const hostKey = token();
           const res = await stub.fetch("https://board.internal/init", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant }),
+            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant, open: body.open !== false }),
           });
           if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit, variant });
           if(res.status!==409){const failure=await res.json().catch(()=>({})),requestId=failure.requestId||crypto.randomUUID();return json({ok:false,code:failure.code==='ROOM_INITIALIZATION_FAILED'?'ROOM_INITIALIZATION_FAILED':'BOARD_ENGINE_UNAVAILABLE',error:'فشل تشغيل غرفة اللعبة على السيرفر. أعد المحاولة؛ إذا تكرر الخطأ افحص نشر محرك الغرف.',requestId,release:RELEASE},503)}
@@ -779,6 +800,8 @@ export class GameRoom extends DurableObject {
         relayEnabled: [4,6].includes(Number(body.playerLimit)),
         playerLimit: Number.isInteger(body.playerLimit)&&body.playerLimit>=2&&body.playerLimit<=20 ? body.playerLimit : 8,
         expiresAt: now + 24 * 60 * 60 * 1000,
+        // 32.1.0: opened by a group room, which gets the final ranking back
+        partyLink: cleanPartyLink(body.party),
       };
       await this.loadAiPack();
       await this.persist();
@@ -816,11 +839,13 @@ export class GameRoom extends DurableObject {
       }
 
       if (!player) {
-        if (this.room.order.length === 0) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
+        if (this.room.order.length === 0 && !this.room.partyLink) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
         this.cleanupLobbySeats();
         if (this.room.order.length >= (this.room.playerLimit || 8)) return json({ ok: false, error: `الغرفة ممتلئة (الحد الأقصى ${this.room.playerLimit || 8} لاعبين)` }, 409);
-        player = this.addPlayer(name, "guest");
+        // a room opened by a group room (only there can nobody be in yet): the first player in hosts it
+        const firstOfParty = Boolean(this.room.partyLink) && !this.room.order.length;
+        player = this.addPlayer(name, firstOfParty ? "host" : "guest");
       } else if (name) {
         player.name = name;
       }
@@ -1335,7 +1360,9 @@ export class GameRoom extends DurableObject {
       this.room.winnerId=scores[0].score===scores[1].score?null:'team:'+scores[0].team;
     }else{const list=this.room.order.map(id=>this.room.players[id]).sort((a,b)=>b.score-a.score);this.room.winnerId=list.length>1&&list[0].score===list[1].score?null:list[0]?.id||null;}
     this.room.expiresAt=Date.now()+86400000;
-    await this.persistAndBroadcast();await this.saveQuizRewards();this.broadcastState();await this.scheduleLobbyAlarm();
+    await this.persistAndBroadcast();await this.saveQuizRewards();
+    if(this.room.partyLink&&!this.room.partyReported){const rows=this.room.order.map(id=>this.room.players[id]).filter(Boolean).sort((a,b)=>(b.score||0)-(a.score||0)).map(p=>({name:p.name,username:p.username,score:p.score||0,won:this.room.winnerId===p.id}));await settlePartyLink(this.env,this.room,'quiz',partyStandings(rows,(a,b)=>a.score===b.score));await this.persist();}
+    this.broadcastState();await this.scheduleLobbyAlarm();
   }
   async saveQuizRewards(){
     const r=this.room;if(!r||r.status!=='finished'||r.rewardsComplete!==false)return;
@@ -1442,7 +1469,8 @@ export class BoardRoom extends DurableObject {
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
     const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='baloot'?4:game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(game==='zahra'?6:20,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     // Baloot: a public table starts by itself after the lobby countdown.
-    if(game==='baloot'){room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch?now+BALOOT_LOBBY_MS:null;room.bots=[];room.batch=null;room.nextHandAt=null;}
+    if(game==='baloot'){room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch?now+BALOOT_LOBBY_MS:null;room.bots=[];room.batch=null;room.nextHandAt=null;room.open=body.open!==false;}
+    else room.partyLink=cleanPartyLink(body.party);
     try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.publicMatch?room.lobbyDeadline:room.expiresAt);this.room=room;return json({ok:true},201)}
     catch(error){const requestId=crypto.randomUUID();this.room=null;try{await this.ctx.storage.delete('room');await this.ctx.storage.deleteAlarm()}catch(rollback){console.error('board initialization rollback failed',{requestId,error:rollback.message})}console.error('board initialization failed',{requestId,error:error.message});return json({ok:false,code:'ROOM_INITIALIZATION_FAILED',error:'تعذر حفظ الغرفة على السيرفر. حاول مرة أخرى.',requestId},503)}
   }
@@ -1473,6 +1501,16 @@ export class BoardRoom extends DurableObject {
         if(this.room.startedAt===endedAt&&this.room.status==='finished'){this.room.rewardsComplete=true;this.room.rewardRetryAt=null;await this.ctx.storage.put('room',this.room)}
       }catch(error){if(this.room.startedAt===endedAt&&this.room.status==='finished'){this.room.rewardRetryAt=Date.now()+10000;await this.ctx.storage.put('room',this.room)}console.error('Board reward will retry',error.message)}
     }
+    if(this.room.status==='finished'&&this.room.partyLink&&!this.room.partyReported&&this.room.state){await settlePartyLink(this.env,this.room,this.room.game,this.boardStandings());await this.ctx.storage.put('room',this.room);}
+  }
+  // 32.1.0: the final ranking of a board match, for the group room that opened it
+  boardStandings(){
+    const r=this.room,s=r.state,rows=r.order.map((id,i)=>{const p=r.players[id]||{},sp=s.players?.[i]||{};
+      const progress=r.game==='snakes'?Number(sp.position)||0:r.game==='zahra'?(sp.tokens||[]).reduce((n,t)=>n+Math.max(0,t+1),0):(sp.marbles||[]).reduce((n,t)=>n+Math.max(0,t+1),0);
+      const won=r.game==='jackaroo'?s.winnerTeam!==null&&s.winnerTeam!==undefined&&i%2===s.winnerTeam:s.winner===i;
+      return {name:p.name,username:p.username,score:progress,won};});
+    rows.sort((a,b)=>Number(b.won)-Number(a.won)||b.score-a.score);
+    return partyStandings(rows,(a,b)=>a.won===b.won&&(a.won||a.score===b.score));
   }
 
   addPlayer(name, role) {
@@ -1642,6 +1680,7 @@ export class BoardRoom extends DurableObject {
     const url = new URL(request.url);
     if (url.hostname === "social.internal") return (await this.socialDelegate()).fetch(request);
     if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
+    if (url.hostname === "presence.internal") { this.presence ??= new PresenceRegistry(this.ctx); return this.presence.fetch(request); }
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
     if (url.hostname === "balootquick.internal") return this.ctx.blockConcurrencyWhile(() => this.balootQuick());
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','baloot'],snakesVariants:['classic','adventure']});
@@ -1671,12 +1710,13 @@ export class BoardRoom extends DurableObject {
         if (!player) player = this.addPlayer(name, "host");
       }
       if (!player) {
-        if (this.room.order.length === 0 && !this.room.publicMatch) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
+        if (this.room.order.length === 0 && !this.room.publicMatch && !this.room.partyLink) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
         this.syncConnected();
         this.cleanupStaleLobbyGuests();
         if (this.room.order.length >= this.room.playerLimit) return json({ ok: false, error: "الغرفة ممتلئة — اللاعب المنقطع لديه مهلة للعودة" }, 409);
-        player = this.addPlayer(name, "guest");
+        // a room opened by a group room: the first player in hosts it
+        player = this.addPlayer(name, this.room.order.length === 0 && this.room.partyLink ? "host" : "guest");
       } else if (name) player.name = name;
 
       if(this.room.game==='snakes'||this.room.game==='baloot'){
@@ -1738,6 +1778,17 @@ export class BoardRoom extends DurableObject {
     for(const socket of this.ctx.getWebSockets()){try{if(socket.deserializeAttachment()?.playerId)socket.send(packet);}catch{}}
   }
 
+  // 32.1.0: Baloot table talk — only the catalogue's phrases and emoji, by id,
+  // relayed like reactions (no storage, no version) and limited per player.
+  relayTalk(player,msg){
+    if(this.room?.game!=='baloot'||!Number.isInteger(player.seat)||!validTalk(msg.kind,msg.id))return;
+    const now=Date.now(),log=(this.talkLog??=new Map()),recent=(log.get(player.id)||[]).filter(t=>now-t<60000);
+    if(recent.length>=EMOTE_PER_MINUTE||recent.length&&now-recent.at(-1)<EMOTE_GAP_MS)return;
+    recent.push(now);log.set(player.id,recent);
+    const packet=JSON.stringify({type:'talk',from:player.id,seat:player.seat,kind:msg.kind,id:String(msg.id),at:now});
+    for(const socket of this.ctx.getWebSockets()){try{if(socket.deserializeAttachment()?.playerId)socket.send(packet);}catch{}}
+  }
+
   async webSocketMessage(ws, raw) {
     try {
       if (ws.deserializeAttachment()?.username) return (await this.socialDelegate()).webSocketMessage(ws, raw);
@@ -1751,6 +1802,7 @@ export class BoardRoom extends DurableObject {
     if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',serverNow:Date.now()}))}catch{}return;}
     if(msg.type==='resync'){try{ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)}))}catch{}return;}
     if(msg.type==='emote')return this.relayEmote(player,msg.emote,ws);
+    if(msg.type==='talk')return this.relayTalk(player,msg);
     try {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);
@@ -1777,11 +1829,11 @@ export class BoardRoom extends DurableObject {
       }
       if (this.room.game === 'baloot' && msg.type === 'baloot') {
         if (this.room.status !== 'playing' || !this.room.state) return this.sendError(ws, 'المباراة غير نشطة');
-        if (msg.expectedVersion !== undefined && msg.expectedVersion !== null && msg.expectedVersion !== this.room.version) return this.sendError(ws, 'تغيرت حالة الطاولة — انتظر التحديث');
+        if (msg.action?.type !== 'claim' && msg.expectedVersion !== undefined && msg.expectedVersion !== null && msg.expectedVersion !== this.room.version) return this.sendError(ws, 'تغيرت حالة الطاولة — انتظر التحديث');
         try { applyBalootMove(this.room, player, msg.action, secureUnit, Date.now()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { wrong_turn: 'مو دورك الآن', illegal_card: 'هذي الورقة ما تنلعب الحين', illegal_bid: 'هذا الشراء غير متاح', illegal_double: 'هذا الدبل غير متاح', invalid_action: 'أمر غير معروف' };
+          const messages = { wrong_turn: 'مو دورك الآن', illegal_card: 'هذي الورقة ما تنلعب الحين', illegal_bid: 'هذا الشراء غير متاح', illegal_double: 'هذا الدبل غير متاح', illegal_claim: 'التسجيل متاح أثناء اللعب فقط، مرة وحدة في الجولة', invalid_action: 'أمر غير معروف' };
           return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
         this.room.version++;

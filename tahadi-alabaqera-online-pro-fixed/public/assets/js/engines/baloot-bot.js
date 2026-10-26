@@ -3,15 +3,19 @@
    face-up card, the bids, the cards already played and who played them.
    It bids from the strength of its hand, doubles carefully, cashes winners,
    draws trumps when its side bought Hokm, feeds points to a partner who is
-   sure to win and throws its cheapest card when it cannot win. */
+   sure to win and throws its cheapest card when it cannot win.
+   32.1.0 open play: a bot may now and then cut (play a card the rules do not
+   allow) when it wins points, and it claims (يسجّل) only what it can prove from
+   the table: a player who later shows a card he should have played. */
 import {
   SUITS, rankOf, suitOf, teamOf, partnerOf, cardPoints, cardPower, trickWinner,
-  balootActions, findProjects,
+  balootActions, findProjects, legalCards, provenCuts,
 } from './baloot-engine.js';
 
 const PLAIN_ORDER = ['7', '8', '9', 'J', 'Q', 'K', 'T', 'A'];
 const TRUMP_ORDER = ['7', '8', 'Q', 'K', 'T', 'A', '9', 'J'];
-const LEVELS = { easy: { noise: 0.9, bid: 1.25, sun: 5 }, medium: { noise: 0.35, bid: 1, sun: 4.6 }, hard: { noise: 0, bid: 0.92, sun: 4.5 } };
+// catch: chance to notice a cut it can prove; cut: chance to cut when it pays
+const LEVELS = { easy: { noise: 0.9, bid: 1.25, sun: 5, catch: 0.35, cut: 0.07 }, medium: { noise: 0.35, bid: 1, sun: 4.6, catch: 0.7, cut: 0.045 }, hard: { noise: 0, bid: 0.92, sun: 4.5, catch: 0.97, cut: 0.025 } };
 export const BOT_LEVELS = LEVELS;
 
 function hokmStrength(cards, trump) {
@@ -209,8 +213,41 @@ function follow(view, seat, legal, info) {
   return cheapest(keep.length ? keep : legal, c);
 }
 
-function play(view, seat, options, level, rng) {
-  const legal = options.map((o) => o.card);
+// A cut that takes a trick worth having (usually trumping while holding the led suit).
+function cutCard(view, seat, legal, level, rng) {
+  const cards = view.trick?.cards || [];
+  if (!view.open || !level.cut || !cards.length) return null;
+  const c = view.contract, led = suitOf(cards[0].card);
+  const illegal = view.hands[seat].filter((x) => !legal.includes(x));
+  if (!illegal.length) return null;
+  const winning = trickWinner(cards, c);
+  if (teamOf(winning.seat) === teamOf(seat)) return null;
+  const points = cards.reduce((n, x) => n + cardPoints(x.card, c), 0);
+  if (points < 10 && (view.tricks?.length || 0) < 7) return null;
+  const power = cardPower(winning.card, c, led);
+  const winners = illegal.filter((x) => cardPower(x, c, led) > power).sort((a, b) => cardPoints(a, c) - cardPoints(b, c) || cardPower(a, c, led) - cardPower(b, c, led));
+  if (!winners.length || rng() >= level.cut) return null;
+  return winners[0];
+}
+
+// Each bot decides once per proof whether it noticed it.
+function noticed(seat, proof, view, chance) {
+  const key = seat + '|' + proof.seat + '|' + proof.card + '|' + proof.trick + '|' + (view.handNo || 0) + '|' + (view.dealer || 0);
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) / 4294967296 < chance;
+}
+export function botClaim(view, seat, level = 'hard') {
+  if (!view?.open || view.phase !== 'playing' || view.claim) return null;
+  const profile = LEVELS[level] || LEVELS.hard;
+  const proof = provenCuts(view, 1 - teamOf(seat)).find((p) => noticed(seat, p, view, profile.catch));
+  return proof ? { type: 'claim', proof } : null;
+}
+
+function play(view, seat, options, level, rng, honest) {
+  // open play offers every card: the bot still plays by the rules unless it chooses to cut
+  const legal = view.open ? legalCards(view, seat) : options.map((o) => o.card);
+  if (!honest) { const cut = cutCard(view, seat, legal, level, rng); if (cut) return { type: 'play', card: cut }; }
   if (legal.length === 1) return { type: 'play', card: legal[0] };
   if (level.noise && rng() < level.noise * 0.25) return { type: 'play', card: legal[Math.floor(rng() * legal.length)] };
   const info = knowledge(view);
@@ -219,13 +256,14 @@ function play(view, seat, options, level, rng) {
 }
 
 // The action a bot takes for `seat`. `view` should be balootView(state, seat).
-export function chooseBalootAction(view, seat, { level = 'hard', rng = Math.random } = {}) {
+// `honest`: never cut (a server playing for a human who ran out of time).
+export function chooseBalootAction(view, seat, { level = 'hard', rng = Math.random, honest = false } = {}) {
   const options = balootActions(view, seat);
   if (!options.length) return null;
   const profile = LEVELS[level] || LEVELS.hard;
   if (view.phase === 'bidding') return bid(view, seat, options.map(({ type, ...o }) => o), profile);
   if (view.phase === 'doubling') return double(view, seat, options.map(({ type, ...o }) => o), profile);
-  if (view.phase === 'playing') return play(view, seat, options, profile, rng);
+  if (view.phase === 'playing') { const claim = botClaim(view, seat, level); if (claim) return { type: 'claim' }; return play(view, seat, options, profile, rng, honest); }
   return null;
 }
 

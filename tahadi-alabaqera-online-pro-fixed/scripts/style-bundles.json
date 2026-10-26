@@ -16,7 +16,8 @@
     "assets/css/admin.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/admin-live-v32.css"
   ],
   "dice.html": [
     "assets/css/platform.css",
@@ -249,6 +250,7 @@
     "assets/css/sudoku.css",
     "assets/css/mobile-v21.css",
     "assets/css/sudoku-v22.css",
+    "assets/css/sudoku-feedback-v29-1.css",
     "assets/css/release-v31.css"
   ],
   "paths-online.html": [
@@ -260,7 +262,10 @@
     "assets/css/party-v29.css",
     "/assets/css/tahdia-premium-v25.css",
     "assets/css/tabletop-v30.css",
-    "assets/css/memory-v30.css"
+    "assets/css/memory-v30.css",
+    "assets/css/dice-v31.css",
+    "assets/css/party-v32.css",
+    "assets/css/sudoku-feedback-v29-1.css"
   ],
   "leaderboard.html": [
     "assets/css/platform.css",

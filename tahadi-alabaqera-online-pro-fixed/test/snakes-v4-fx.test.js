@@ -64,10 +64,11 @@ test('swallowed stone travels from the head through the full snake body', () => 
 });
 
 test('professional pieces stay distinguishable without relying on color', () => {
-  const profiles=Array.from({length:4},(_,index)=>getPieceProfile(index));
-  assert.equal(new Set(profiles.map(profile=>profile.symbol)).size,4);
-  assert.equal(new Set(profiles.map(profile=>profile.name)).size,4);
-  assert.deepEqual(getPieceProfile(5),profiles[1]);
+  // 32.1.0: ten seats, ten different pieces
+  const profiles=Array.from({length:10},(_,index)=>getPieceProfile(index));
+  assert.equal(new Set(profiles.map(profile=>profile.symbol)).size,10);
+  assert.equal(new Set(profiles.map(profile=>profile.name)).size,10);
+  assert.deepEqual(getPieceProfile(11),profiles[1]);
 });
 
 test('the 3D die exposes a stable orientation for every legal result', () => {

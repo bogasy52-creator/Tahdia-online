@@ -41,8 +41,10 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     const board=document.getElementById('board');if(!board)return;
     if(!canvas){
       canvas=document.createElement('canvas');canvas.className='arena-live-creatures v31 v311';canvas.setAttribute('aria-hidden','true');
-      document.getElementById('boardWrap').appendChild(canvas);ctx=canvas.getContext('2d',{alpha:true});
+      ctx=canvas.getContext('2d',{alpha:true});
     }
+    // 32.1.0: a new board (the group games build one per round) takes the canvas over
+    if(canvas.parentNode!==document.getElementById('boardWrap'))document.getElementById('boardWrap').appendChild(canvas);
     // the painted heads come from the arena sheet, fetched once when the board first appears
     if(!artRequested&&art()){artRequested=true;try{void art().ready;}catch{}}
     const dpr=Math.min(devicePixelRatio||1,2),r=board.getBoundingClientRect();
@@ -176,6 +178,8 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   }
 
   function tick(now){
+    // a board that left the page (a group round ended) stops drawing
+    if(canvas.isConnected===false){frame=0;return;}
     const delta=Math.min(100,now-last);last=now;
     if(document.hidden||window.BS_PRO?.paused||document.getElementById('game')?.classList.contains('hidden')){frame=requestAnimationFrame(tick);return;}
     clock+=delta;
@@ -188,7 +192,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   }
 
   // Pawns: 3D stones by default, characters or crystal on request.
-  const PLAYER_COLORS=['#2f86e8','#8b5cf6','#f0b429','#22a565'];
+  const PLAYER_COLORS=['#2f86e8','#8b5cf6','#f0b429','#22a565','#e5484d','#14b8a6','#f97316','#ec4899','#84cc16','#94a3b8'];
   function crystal(el,player){
     const art=document.documentElement?.dataset?.pieceArt;
     if(art==='characters'||art==='royal'){
@@ -196,7 +200,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
       if(window.BS_STONES?.draw(c,document.documentElement.dataset.pawn,player)){el.appendChild(c);return c;}
     }
     if(window.BS_PIECES){
-      const pawnId=window.BS_PIECES.equipped(),svg=window.BS_PIECES.icon(document,{design:window.BS_PIECES.designFor(pawnId),item:pawnId,color:PLAYER_COLORS[player%4],className:'crystal-sprite piece-svg'});
+      const pawnId=window.BS_PIECES.equipped(),svg=window.BS_PIECES.icon(document,{design:window.BS_PIECES.designFor(pawnId),item:pawnId,color:PLAYER_COLORS[player%PLAYER_COLORS.length],className:'crystal-sprite piece-svg'});
       el.appendChild(svg);return svg;
     }
     const c=document.createElement('canvas');c.className='crystal-sprite';c.width=144;c.height=180;c.setAttribute('aria-hidden','true');el.appendChild(c);return c;

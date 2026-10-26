@@ -1,4 +1,4 @@
-import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,partyGame,normalizePlaylist,playlistCapacity} from '../../public/assets/js/engines/party-catalog-v29.js';
+import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,partyGame,normalizePlaylist,playlistCapacity,capacityMessage,playersLabel} from '../../public/assets/js/engines/party-catalog-v29.js';
 import {CATEGORIES} from '../questions.js';
 import {createSudoku,moveSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
@@ -11,21 +11,32 @@ import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn} from '../..
 import {createJackarooGame,getJackarooActions,playJackarooAction} from '../../public/assets/js/engines/jackaroo-engine.js';
 import {createRaceDiceGame,rollRaceDice,bankRaceDice} from '../../public/assets/js/engines/dice-engine.js';
 import {createSerpentGame,steerSerpent,stepSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
+import {linkedGame,linkable,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
 
 export const PARTY_VERSION=29;
+export const PARTY_BACK_MS=6000; // everyone is back from a game's own page: the standings, briefly
 export const partyName=value=>String(value||'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,24)||'لاعب';
 export function seeded(seed=1){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
 const clone=value=>structuredClone(value),sum=rows=>rows.reduce((a,b)=>a+b,0);
 const uuid=()=>crypto.randomUUID();
-export function createParty({code,hostKey,capacity=20,playlist=['quiz','memory'],now=Date.now()}={}){
+export function createParty({code,hostKey,capacity=20,playlist=['quiz','memory'],links=false,now=Date.now()}={}){
  if(!/^\d{6}$/.test(code||'')||typeof hostKey!=='string'||hostKey.length<32||!Number.isInteger(capacity)||capacity<1||capacity>PARTY_CAPACITY)throw Error('إعدادات الغرفة غير صالحة');
- return{format:PARTY_VERSION,id:uuid(),code,hostKey,capacity:Math.min(capacity,playlistCapacity(normalizePlaylist(playlist))),playlist:normalizePlaylist(playlist),playlistRevision:1,status:'lobby',order:[],players:{},cursor:-1,history:[],sessionId:uuid(),revision:0,round:null,createdAt:now,updatedAt:now,expiresAt:now+24*3600000};
+ return{format:PARTY_VERSION,links:links===true,id:uuid(),code,hostKey,capacity:Math.min(capacity,playlistCapacity(normalizePlaylist(playlist))),playlist:normalizePlaylist(playlist),playlistRevision:1,status:'lobby',order:[],players:{},cursor:-1,history:[],sessionId:uuid(),revision:0,round:null,createdAt:now,updatedAt:now,expiresAt:now+24*3600000};
+}
+// 32.1.0: names are compared the way every game room stores them (at most 20 characters),
+// so a round played in the real game finds each player again by name.
+export const nameKey=value=>String(value||'').normalize('NFKC').replace(/[<>\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,'').replace(/\s+/g,' ').trim().slice(0,20).trim().toLowerCase();
+// Two players never share a name in one party: the second «لاعب» becomes «لاعب 2».
+function distinctName(room,name){
+ const taken=new Set(room.order.map(id=>nameKey(room.players[id]?.name)));if(!taken.has(nameKey(name)))return name;
+ for(let n=2;n<100;n++){const next=name.slice(0,17).trim()+' '+n;if(!taken.has(nameKey(next)))return next;}
+ return name;
 }
 export function addPartyPlayer(room,{name,username=null,now=Date.now()}={}){
  if(room.status!=='lobby')throw Error('القائمة بدأت؛ العودة متاحة للمشاركين أنفسهم');
  if(room.order.length>=room.capacity)throw Error('الغرفة ممتلئة');
  if(username&&room.order.some(id=>room.players[id].username===username))throw Error('الحساب موجود في الغرفة');
- const p={id:uuid(),token:uuid()+uuid(),name:partyName(name),username,role:room.order.length?'guest':'host',joinedAt:now,ready:false,connected:true,score:0,wins:0,seq:0,actions:0,disconnectedAt:null};
+ const p={id:uuid(),token:uuid()+uuid(),name:distinctName(room,partyName(name)),username,role:room.order.length?'guest':'host',joinedAt:now,ready:false,connected:true,score:0,wins:0,seq:0,actions:0,disconnectedAt:null};
  room.players[p.id]=p;room.order.push(p.id);return p;
 }
 export function partyRanking(room){
@@ -48,6 +59,16 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
  room.cursor++;if(room.cursor>=room.playlist.length){room.status='finished';room.round=null;room.finishedAt=now;return;}
  const settings=room.playlist[room.cursor],game=settings.game,random=seeded(seed),r={id:uuid(),game,settings:clone(settings),seed,startedAt:now,deadline:now+settings.duration*1000,participants:{},events:[],revision:0};
  room.round=r;room.status='playing';for(const id of room.roster){r.participants[id]={id,seq:0,actions:0,score:0,progress:0,done:false,won:false,mistakes:0,faults:0};room.players[id].seq=0;}
+ for(const p of Object.values(r.participants)){p.updatedAt=now;p.finishedAt=0;}
+ // 32.1.0: a game that has its own online room is played there, unchanged; the party
+ // waits for its result. With too few players for that game, it stays in the party.
+ const playing=room.roster.filter(id=>room.players[id]?.connected);
+ if(room.links&&linkedGame(game)&&linkable(game,playing.length)){r.link={status:'creating',page:linkedGame(game).page,code:null,token:uuid().replaceAll('-','')+uuid().replaceAll('-',''),count:playing.length,seats:room.roster.length,players:playing,attempts:0,createdAt:now};r.deadline=now+PARTY_LINK_WAIT_MS;return;}
+ setupRoundGame(room,r,now);
+}
+// The game itself inside the party (also the fallback when its real room cannot open).
+export function setupRoundGame(room,r,now=Date.now()){
+ const settings=r.settings,game=r.game,seed=r.seed,random=seeded(seed);
  const level=1+(settings.difficulty-1)*24+seed%12;
  if(game==='sudoku'){const board=createSudoku(Math.min(120,level));r.solution=solveSudoku(board.initial).solution;if(!r.solution)throw Error('تعذر تجهيز سودوكو');for(const p of Object.values(r.participants))p.state=clone(board);}
  else if(['paths','paths-online'].includes(game)){const board=createStrictPaths(Math.min(120,level));for(const p of Object.values(r.participants))p.state=clone(board);}
@@ -59,7 +80,33 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
  else if(game==='reaction'){r.trial=0;r.trials=5;r.signal='wait';r.signalAt=now+1500+Math.floor(random()*2200);r.signalDeadline=r.signalAt+5000;for(const p of Object.values(r.participants)){p.times=[];p.trialChoice=null;}}
  else if(partyGame(game).kind==='board'){r.tables=tableGroups(room,r,random);}
  else if(game==='serpent'){r.arena=createSerpentGame(room.roster.map(id=>({id,name:room.players[id].name,skin:room.players[id].skin||'snake-wild'})),{seed,worldId:settings.worldId,collisionMode:'arena-v23',duration:settings.duration,difficulty:'medium'});r.lastSimulationAt=now;r.stepCarry=0;}
- for(const p of Object.values(r.participants)){p.updatedAt=now;p.finishedAt=0;}
+}
+/* ---------- 32.1.0: rounds played in the real game ---------- */
+export function openPartyLink(room,{code,page},now=Date.now()){
+ const r=room.round;if(room.status!=='playing'||r?.link?.status!=='creating')return false;
+ r.link={...r.link,status:'open',code,page:page||r.link.page,openedAt:now};r.revision++;return true;
+}
+// The real room could not open: the round is played inside the party instead.
+export function failPartyLink(room,now=Date.now()){
+ const r=room.round;if(room.status!=='playing'||r?.link?.status!=='creating')return false;
+ r.link={status:'failed',page:r.link.page};r.startedAt=now;r.deadline=now+r.settings.duration*1000;setupRoundGame(room,r,now);r.revision++;return true;
+}
+/** The real room's final ranking becomes this round's result. */
+export function applyLinkResult(room,body,now=Date.now()){
+ const r=room.round;
+ if(room.status!=='playing'||r?.link?.status!=='open'||body?.round!==r.id||body?.token!==r.link.token)return false;
+ const rows=Array.isArray(body.standings)?body.standings.slice(0,40):[],used=new Set(),count=rows.length;
+ // an account is found by its username; a guest by name, guests first (an account keeps its own row)
+ const open=id=>!used.has(id)&&room.players[id],match=row=>{
+  if(row.username){const id=room.roster.find(id=>open(id)&&room.players[id].username===row.username);if(id)return id;}
+  const key=nameKey(row.name);if(!key)return null;
+  return room.roster.find(id=>open(id)&&!room.players[id].username&&nameKey(room.players[id].name)===key)||room.roster.find(id=>open(id)&&nameKey(room.players[id].name)===key)||null;};
+ // a shared first place is a draw, unless the game itself named a winner
+ const soleFirst=rows.filter(row=>Number(row.rank)===1).length===1;
+ for(const row of rows){const id=match(row);if(!id)continue;used.add(id);const p=r.participants[id];if(!p)continue;
+  const rank=Math.max(1,Math.min(count,Number(row.rank)||count));p.score=count-rank+1;p.won=Boolean(row.won)||rank===1&&soleFirst;p.progress=1;p.actions=Math.max(1,p.actions||0);p.done=true;p.finishedAt=now;p.gameScore=Math.max(0,Number(row.score)||0);}
+ r.link={...r.link,status:'done',doneAt:now,token:undefined};
+ finishPartyRound(room,now);return true;
 }
 const completed=(p,now,won=true)=>{p.done=true;p.won=won;p.finishedAt=now;};
 function requireActionIndex(value,max){if(!Number.isInteger(value)||value<0||value>=max)throw Error('اختيار غير صالح');return value;}
@@ -67,6 +114,7 @@ export function applyPartyAction(room,id,message,now=Date.now()){
  const r=room.round,p=r?.participants[id];if(room.status!=='playing'||!p||message.sessionId!==room.sessionId||message.roundId!==r.id)throw Error('تغيرت اللعبة؛ جار تحديث الغرفة');
  if(now>=r.deadline)throw Error('انتهى وقت اللعبة');
  if(!Number.isInteger(message.seq)||message.seq<1||message.seq>6000)throw Error('تسلسل الحركة غير صالح');
+ if(r.link&&r.link.status!=='failed')throw Error('هذي اللعبة تنلعب في صفحتها الأصلية؛ ادخلها من زر «ادخل اللعبة»');
  if(message.seq<=p.seq)return{duplicate:true,privateIds:[id]};if(message.seq!==p.seq+1)throw Error('انتظر وصول الحركة السابقة');
  const action=message.action;if(!action||typeof action!=='object'||Array.isArray(action))throw Error('حركة غير صالحة');
  if(p.done)throw Error('اكتملت نتيجتك؛ تابع أصحابك من الترتيب');
@@ -128,7 +176,7 @@ function automaticTable(room,r,t,now){
  applyTableAction(room,r,t,action,now,true);return true;
 }
 function roundRows(room,r,now){
- if(r.game==='serpent')for(const snake of r.arena.snakes){const p=r.participants[snake.id];if(p){p.score=Math.floor(snake.score||0);p.progress=snake.alive?1:0;p.won=r.arena.winners?.includes(snake.id)||false;p.done=true;p.finishedAt=snake.alive?now:(snake.diedAt||now);}}
+ if(r.game==='serpent'&&r.arena)for(const snake of r.arena.snakes){const p=r.participants[snake.id];if(p){p.score=Math.floor(snake.score||0);p.progress=snake.alive?1:0;p.won=r.arena.winners?.includes(snake.id)||false;p.done=true;p.finishedAt=snake.alive?now:(snake.diedAt||now);}}
  const rows=room.roster.map(id=>{const p=r.participants[id];return{id,name:room.players[id].name,won:p.won,score:p.score||0,progress:p.progress||0,actions:p.actions||0,mistakes:p.mistakes||0,faults:p.faults||0,finishedAt:p.finishedAt||0};});
  const comparison=(a,b)=>Number(b.won)-Number(a.won)||b.score-a.score||(a.won&&b.won?(a.finishedAt||now)-(b.finishedAt||now):0)||a.mistakes-b.mistakes||a.faults-b.faults;
  rows.sort((a,b)=>comparison(a,b)||room.roster.indexOf(a.id)-room.roster.indexOf(b.id));let rank=0,prior=null;
@@ -138,14 +186,20 @@ export function finishPartyRound(room,now=Date.now(),aborted=false){
  const r=room.round;if(room.status!=='playing'||!r||room.history.some(h=>h.id===r.id))return false;
  const rows=roundRows(room,r,now);if(aborted)for(const p of rows)p.points=0;
  for(const row of rows){const p=room.players[row.id];p.score+=row.points;if(!aborted&&row.rank===1&&row.points>0)p.wins++;}
- room.history.push({id:r.id,game:r.game,name:partyGame(r.game).name,rows,aborted,finishedAt:now});room.status='intermission';room.nextAt=now+PARTY_BREAK_MS;r.finishedAt=now;return true;
+ room.history.push({id:r.id,game:r.game,name:partyGame(r.game).name,rows,aborted,finishedAt:now,linked:Boolean(r.link&&r.link.status!=='failed')});room.status='intermission';r.finishedAt=now;
+ // after a game played on its own page, everyone gets a minute to come back
+ const away=Boolean(r.link&&r.link.status!=='failed');room.returnWait=away;room.nextAt=now+(away?PARTY_RETURN_MS:PARTY_BREAK_MS);if(r.link)r.link={...r.link,status:r.link.status==='open'||r.link.status==='creating'?'closed':r.link.status,token:undefined};return true;
 }
 export function advanceParty(room,now=Date.now()){
  let full=false,changed=false;const privateIds=new Set();
  if(room.status==='countdown'&&now>=room.startsAt){startPartyRound(room,room.startsAt);full=changed=true;}
- if(room.status==='intermission'&&now>=room.nextAt){startPartyRound(room,Math.max(room.nextAt,now));full=changed=true;}
+ // the break after a game played on its own page ends early once everyone is back:
+ // a short look at the updated standings, then the next game
+ if(room.status==='intermission'&&room.returnWait&&now<room.nextAt&&(room.roster||[]).every(id=>room.players[id]?.connected)){room.returnWait=false;room.nextAt=Math.min(room.nextAt,Math.max(now+PARTY_BACK_MS,(room.history.at(-1)?.finishedAt||0)+8000));full=changed=true;}
+ if(room.status==='intermission'&&now>=room.nextAt){room.returnWait=false;startPartyRound(room,Math.max(room.nextAt,now));full=changed=true;}
  if(room.status!=='playing')return{changed,full,privateIds:[...privateIds]};
  const r=room.round;
+ if(r.link&&r.link.status!=='failed'){if(now>=r.deadline){finishPartyRound(room,now);full=changed=true;}return{changed,full,privateIds:[...privateIds]};}
  if(r.game==='serpent'){
   const elapsed=Math.max(0,Math.min(200,now-r.lastSimulationAt));r.lastSimulationAt=now;r.stepCarry=Math.min(200,r.stepCarry+elapsed);const count=Math.floor(r.stepCarry/50);r.stepCarry-=count*50;
   for(let i=0;i<count&&r.arena.status==='playing';i++)stepSerpent(r.arena,.05);changed=changed||count>0;
@@ -179,12 +233,12 @@ export function configureParty(room,id,message,now=Date.now()){
   room.order=room.order.filter(key=>key!==target.id);delete room.players[target.id];if(room.roster)room.roster=room.roster.filter(key=>key!==target.id);return;
  }
  if(message.type==='playlist'){
-  if(message.playlistRevision!==room.playlistRevision)throw Error('تغيرت القائمة؛ أعد تحميلها');const rows=normalizePlaylist(message.playlist);if(room.order.length>playlistCapacity(rows))throw Error('الجاكارو والزهرة حدهم 6 لاعبين؛ عدد الغرفة الحالي أكبر');
+  if(message.playlistRevision!==room.playlistRevision)throw Error('تغيرت القائمة؛ أعد تحميلها');const rows=normalizePlaylist(message.playlist);if(room.order.length>playlistCapacity(rows))throw Error(capacityMessage(rows));
   if(room.status==='lobby'||room.status==='finished')room.playlist=rows;else{const prefix=room.playlist.slice(0,room.cursor+1);if(prefix.length+rows.length>20)throw Error('حد القائمة 20 لعبة');room.playlist=[...prefix,...rows];}
   room.capacity=Math.min(room.capacity,playlistCapacity(room.playlist.slice(Math.max(0,room.cursor+1))));room.playlistRevision++;if(room.status==='lobby')for(const x of Object.values(room.players))x.ready=false;return;
  }
  if(message.type==='capacity'){
-  if(room.status!=='lobby'||!Number.isInteger(message.capacity)||message.capacity<room.order.length||message.capacity>playlistCapacity(room.playlist))throw Error('اختر سعة تستوعب المشاركين حتى 20');room.capacity=message.capacity;return;
+  if(room.status!=='lobby'||!Number.isInteger(message.capacity)||message.capacity<room.order.length||message.capacity>playlistCapacity(room.playlist))throw Error('اختر سعة تستوعب المشاركين حتى '+playersLabel(playlistCapacity(room.playlist)));room.capacity=message.capacity;return;
  }
  if(message.type==='start'){
   if(room.status!=='lobby')throw Error('المنافسة بدأت');if(!room.order.length||!room.order.every(key=>room.players[key].connected&&room.players[key].ready))throw Error('انتظر اتصال واستعداد الجميع');
@@ -198,6 +252,7 @@ export function configureParty(room,id,message,now=Date.now()){
 }
 function publicParticipant(r,p,now){
  if(!p)return null;const base={id:p.id,seq:p.seq,score:p.score,progress:p.progress,done:p.done,won:p.won,mistakes:p.mistakes,faults:p.faults,actions:p.actions,finishedAt:p.finishedAt};
+ if(r.link&&r.link.status!=='failed')return base;
  if(r.game==='sudoku')return{...base,board:p.state.board,initial:p.state.initial};
  if(['paths','paths-online'].includes(r.game)){const s=p.state;return{...base,paths:s.paths,size:s.size,pairs:s.pairs,walls:s.walls,gates:s.gates};}
  if(r.game==='jewels'){const {log,history,seed,...state}=p.state;return{...base,state};}
@@ -211,12 +266,14 @@ function publicParticipant(r,p,now){
 }
 export function partyRoundView(room,id=null,now=Date.now()){
  const r=room.round;if(!r)return null;const view={id:r.id,game:r.game,name:partyGame(r.game).name,startedAt:r.startedAt,deadline:r.deadline,settings:r.settings,revision:r.revision,me:publicParticipant(r,r.participants[id],now)};
+ if(r.link)view.link={status:r.link.status,page:r.link.page,code:r.link.code||null,count:r.link.count||0};
+ if(r.link&&r.link.status!=='failed')return view;
  if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
  if(r.game==='reaction')view.reaction={trial:r.trial,trials:r.trials,signal:r.signal};
- if(r.tables)view.tables=r.tables.map(t=>({id:t.id,members:t.members.map(id=>({id,name:room.players[id]?.name||'بوت',connected:room.players[id]?.connected??true})),finished:t.finished,turn:t.state.turn,turnDeadline:t.turnDeadline,pendingRoll:t.pendingRoll,players:t.state.players,jumps:t.state.jumps,bonusCells:t.state.bonusCells,lastRoll:t.state.lastRoll,lastEvent:t.state.lastEvent,winner:t.state.winner,winnerTeam:t.state.winnerTeam,turnTotal:t.state.turnTotal,target:t.state.target}));
+ if(r.tables)view.tables=r.tables.map(t=>({id:t.id,members:t.members.map(id=>({id,name:room.players[id]?.name||'بوت',connected:room.players[id]?.connected??true})),finished:t.finished,turn:t.state.turn,turnDeadline:t.turnDeadline,pendingRoll:t.pendingRoll,players:t.state.players,jumps:t.state.jumps,bonusCells:t.state.bonusCells,lastRoll:t.state.lastRoll,lastEvent:t.state.lastEvent,winner:t.state.winner,winnerTeam:t.state.winnerTeam,turnTotal:t.state.turnTotal,target:t.state.target,actions:t.actions||0,moveCount:t.state.moveCount,history:r.game==='dice'?(t.state.history||[]).slice(-8):undefined}));
  if(r.game==='serpent')view.arena=serpentSnapshot(r.arena);
  return view;
 }
 export function partySnapshot(room,id=null,now=Date.now()){
- return{format:PARTY_VERSION,code:room.code,capacity:room.capacity,status:room.status,revision:room.revision,serverNow:now,sessionId:room.sessionId,playlist:room.playlist,playlistRevision:room.playlistRevision,cursor:room.cursor,startsAt:room.startsAt||0,nextAt:room.nextAt||0,players:partyRanking(room),round:partyRoundView(room,id,now),history:room.history,finishedAt:room.finishedAt||0};
+ return{format:PARTY_VERSION,code:room.code,capacity:room.capacity,status:room.status,revision:room.revision,serverNow:now,sessionId:room.sessionId,playlist:room.playlist,playlistRevision:room.playlistRevision,cursor:room.cursor,startsAt:room.startsAt||0,nextAt:room.nextAt||0,players:partyRanking(room),round:partyRoundView(room,id,now),history:room.history,finishedAt:room.finishedAt||0,returnWait:Boolean(room.returnWait&&room.status==='intermission')};
 }

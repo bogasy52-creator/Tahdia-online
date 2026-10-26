@@ -3,10 +3,14 @@
    here) and online (the BoardRoom runs the engine and sends this seat's view
    plus the events since the last update). Events are animated one by one:
    deal, bids, the contract, cards flying to the middle, the trick sweeping to
-   its winner, projects, Baloot and the hand result. */
-import { createBalootMatch, applyBalootAction, balootView, balootActions, teamOf, partnerOf } from './engines/baloot-engine.js?v=32.0.1';
-import { chooseBalootAction } from './engines/baloot-bot.js?v=32.0.1';
-import { BoardOnlineClient } from './board-online.js?v=32.0.1';
+   its winner, projects, Baloot and the hand result.
+   32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
+   Arabic voices for the calls, table talk (phrases and emoji) and effects. */
+import { createBalootMatch, applyBalootAction, balootView, balootActions, teamOf, partnerOf, legalCards, canClaim } from './engines/baloot-engine.js?v=32.1.0';
+import { chooseBalootAction } from './engines/baloot-bot.js?v=32.1.0';
+import { BoardOnlineClient } from './board-online.js?v=32.1.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=32.1.0';
+import { BalootVoice } from './baloot-voice.js?v=32.1.0';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -15,6 +19,10 @@ const POS = ['bottom', 'right', 'top', 'left'];
 const SUIT = { S: '♠', H: '♥', D: '♦', C: '♣' };
 const RED = { H: true, D: true };
 const PROJECT_NAME = { sira: 'سرا', fifty: 'خمسين', hundred: 'مية', fourHundred: 'أربعمية' };
+// the suits as they are called at a Saudi table
+const SUIT_SAY = { S: 'سبيت', H: 'هاص', D: 'ديمن', C: 'شريا' };
+// why a card was a cut: [about another player, about you]
+const CUT_WHY = { follow: ['وهو عنده من الشكل', 'وأنت عندك من الشكل'], trump: ['وعنده حكم وما دقّ', 'وعندك حكم وما دقّيت'], higher: ['وهو يقدر يكبّر بالحكم', 'وأنت تقدر تكبّر بالحكم'], lead: ['والحكم مقفول', 'والحكم مقفول'] };
 const BOT_NAMES = ['أبو فهد', 'سلطان', 'نايف', 'بندر', 'مشعل', 'تركي', 'فيصل', 'ريان'];
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, reduce() ? Math.min(ms, 120) : ms / ui.speed));
@@ -25,7 +33,11 @@ const ui = {
   mode: 'bots', me: 0, match: null, view: null, busy: false, picked: null, level: 'hard', target: 152,
   deck: 'deck-classic', speed: 1, receipt: '', rewarded: false, client: null, room: null, eventSeq: 0,
   pending: Promise.resolve(), lastHandShown: 0, botTimer: null, sending: false,
+  open: true, claimArmed: 0, talkTab: 'phrase', lastTalk: 0, botTalkAt: 0,
 };
+/* ---------- Voices ---------- */
+const relPos = (seat) => ((seat - ui.me) % 4 + 4) % 4;
+function speak(text, seat, opts) { if (seat === null || seat === undefined) seat = ui.me; return BalootVoice.say(text, relPos(seat), opts); }
 
 /* ---------- Cosmetics ---------- */
 function equipped(type) {
@@ -126,6 +138,11 @@ function legalSet(view) {
   if (view.phase !== 'playing' || view.turn !== ui.me || ui.busy) return null;
   return new Set(balootActions(view, ui.me).map((a) => a.card));
 }
+// The cards the rules allow (in open play the others are cuts).
+function ruleSet(view) {
+  if (view.phase !== 'playing' || view.turn !== ui.me) return null;
+  try { return new Set(legalCards(view, ui.me)); } catch { return null; }
+}
 
 function renderHand(view) {
   const hand = $('hand');
@@ -182,12 +199,16 @@ function onCardTap(card) {
   if (!legal) return;
   if (!legal.has(card)) { toast('لازم تلعب من الشكل المطلوب أو حسب القانون'); return; }
   const el = [...$('hand').children].find((x) => x.dataset.card === card);
+  const cut = view.open && !ruleSet(view)?.has(card);
   if (ui.picked !== card) {
-    for (const other of $('hand').children) other.classList.remove('picked');
+    for (const other of $('hand').children) other.classList.remove('picked', 'cut');
     el?.classList.add('picked');
+    el?.classList.toggle('cut', Boolean(cut));
     el && (el.style.transform = '');
     ui.picked = card;
     play('click', { volume: 0.4 });
+    if (cut) { toast('هذي الورقة قطع ✋ إذا صادوك يسجّلون عليك وتروح اليد لهم', 2800); play('error', { volume: 0.35 }); }
+    renderPrompt(view);
     return;
   }
   ui.picked = null;
@@ -299,7 +320,7 @@ function renderPrompt(view) {
     return;
   }
   if (view.phase === 'playing') {
-    if (mine) p.innerHTML = ui.picked ? 'اضغط الورقة مرة ثانية لتلعبها' : '<b>دورك</b> · اختر ورقة';
+    if (mine) p.innerHTML = ui.picked ? (view.open && !ruleSet(view)?.has(ui.picked) ? '<b class="cut-note">قطع!</b> اضغطها مرة ثانية إذا متأكد' : 'اضغط الورقة مرة ثانية لتلعبها') : '<b>دورك</b> · اختر ورقة';
     else p.textContent = `دور ${seatName(view, view.turn)}`;
   }
 }
@@ -313,6 +334,38 @@ function render(view = ui.view) {
   renderHand(view);
   renderActions(view);
   renderPrompt(view);
+  renderClaim(view);
+}
+
+/* ---------- Open play: claims ---------- */
+function claimable(view) { return Boolean(view?.open) && canClaim(view, ui.me) && !ui.sending; }
+function renderClaim(view) {
+  const b = $('claimBtn');
+  if (!b) return;
+  const on = claimable(view);
+  b.hidden = !on;
+  if (!on) { ui.claimArmed = 0; b.classList.remove('armed'); $('claimConfirm').hidden = true; }
+  $('openBadge').hidden = !view?.open;
+}
+function armClaim() {
+  if (!claimable(ui.view)) return;
+  ui.claimArmed = Date.now();
+  $('claimBtn').classList.add('armed');
+  $('claimConfirm').hidden = false;
+  BalootVoice.unlock();
+}
+function cancelClaim() { ui.claimArmed = 0; $('claimBtn').classList.remove('armed'); $('claimConfirm').hidden = true; }
+function sendClaim() {
+  if (!claimable(ui.view)) return cancelClaim();
+  cancelClaim();
+  act({ type: 'claim' });
+}
+function cutLine(proof, view) {
+  if (!proof) return '';
+  const mine = proof.seat === ui.me, who = mine ? 'أنت' : seatName(view, proof.seat);
+  const should = (proof.should || []).slice(0, 1).map((c) => cardName(c)).join('');
+  const why = (CUT_WHY[proof.reason] || ['وخالف القانون', 'وخالفت القانون'])[mine ? 1 : 0];
+  return `${esc(who)} ${mine ? 'لعبت' : 'لعب'} ${cardName(proof.card)} في الأكلة ${proof.trick + 1} ${why}${should ? ` (مثل ${should})` : ''}`;
 }
 
 /* ---------- Animation helpers ---------- */
@@ -508,6 +561,7 @@ async function playEvents(events, after) {
       const [text, cls] = bidText(e);
       bubble(e.seat, text, cls);
       play(e.bid === 'pass' ? 'click' : 'balootBid', { volume: e.bid === 'pass' ? 0.35 : 0.7 });
+      speak(e.bid === 'pass' ? 'بَسْ' : e.bid === 'sun' ? 'صن' : e.bid === 'ashkal' ? 'أشكل' : (e.round === 2 ? 'ثاني ' : 'حكم ') + SUIT_SAY[e.suit], e.seat);
       await wait(e.bid === 'pass' ? 520 : 820);
     } else if (e.type === 'second_round') {
       await banner('الجولة الثانية<small>ثاني بشكل آخر، أو صن</small>', 1100);
@@ -523,28 +577,179 @@ async function playEvents(events, after) {
     } else if (e.type === 'double') {
       const names = { double: 'دبل', triple: 'ثري', four: 'فور', gahwa: 'قهوة ☕', pass: 'بس' };
       bubble(e.seat, names[e.call] + (e.locked ? ' مقفول' : ''), e.call === 'pass' ? 'pass' : 'hot');
-      if (e.call !== 'pass') { play('balootDouble', { volume: 0.9 }); await banner(names[e.call] + (e.call === 'gahwa' ? '<small>الفائز بالجولة يربح الصكّة</small>' : ''), 900); } else await wait(480);
+      if (e.call !== 'pass') {
+        play('balootDouble', { volume: 0.9 });
+        speak({ double: 'دبل', triple: 'ثري', four: 'فور', gahwa: 'قهوة' }[e.call] + (e.locked ? ' مقفول' : ''), e.seat, { urgent: true });
+        flashFelt(e.call === 'gahwa' ? 'gahwa' : 'hot');
+        if (e.call === 'gahwa') steam();
+        await banner(names[e.call] + (e.call === 'gahwa' ? '<small>الفائز بالجولة يربح الصكّة</small>' : ''), 900);
+      } else { speak('بَسْ', e.seat); await wait(480); }
     } else if (e.type === 'declare') {
       bubble(e.seat, e.projects.map((p) => PROJECT_NAME[p]).join(' + '), 'hot', 1800);
       play('balootChime', { volume: 0.4 });
+      speak(e.projects.map((p) => PROJECT_NAME[p]).join(' و '), e.seat);
     } else if (e.type === 'play') {
       await animatePlay(e.seat, e.card);
     } else if (e.type === 'baloot') {
       bubble(e.seat, 'بلوت 👑', 'hot', 2000);
       play('balootChime', { volume: 0.8 });
+      speak('بلوت', e.seat, { urgent: true });
+      crown(e.seat);
       await wait(500);
     } else if (e.type === 'trick') {
       await animateTrick(e);
+      glow(e.winner);
+      if (ui.mode === 'bots' && e.points >= 20) botTalk(teamOf(e.winner) === teamOf(ui.me) ? 'lostTrick' : 'bigTrick', [1, 3]);
+    } else if (e.type === 'claim') {
+      await showClaim(e, after);
     } else if (e.type === 'projects') {
       await showProjects(e);
     } else if (e.type === 'hand_scored') {
       renderHud({ ...after, scores: e.scores });
+      if (e.result.kaboot !== null && e.result.kaboot !== undefined) await kaboot(e.result.kaboot);
+      if (ui.mode === 'bots') botTalk(e.result.winnerTeam === teamOf(ui.me) ? 'lostHand' : 'wonHand', [1, 3]);
       await showResult(e.result, e.scores, after);
     } else if (e.type === 'match_finished') {
       showMatchEnd(e.winner, e.scores);
     }
   }
 }
+
+/* ---------- Claims & effects ---------- */
+async function showClaim(e, view) {
+  const who = e.seat === ui.me ? 'أنت' : seatName(view, e.seat);
+  bubble(e.seat, 'سجّل! ⚖️', 'hot claim', 2400);
+  speak('سجّل', e.seat, { urgent: true });
+  play('balootDouble', { volume: 0.8 });
+  for (const slot of document.querySelectorAll('.bl-slot')) { slot.innerHTML = ''; slot.dataset.card = ''; delete slot.dataset.hold; }
+  await wait(900);
+  const ours = e.team === teamOf(ui.me);
+  if (e.correct) {
+    const p = e.proof;
+    seatEl(p.seat)?.classList.add('caught');
+    setTimeout(() => seatEl(p.seat)?.classList.remove('caught'), 2600);
+    stamp(`<b>قطع ✔</b><small>${cutLine(p, view)}</small>`, 'good', p.card);
+    speak('صح، قطع', e.seat, { urgent: true });
+    play(ours ? 'win' : 'wrong', { volume: 0.6 });
+    if (ui.mode === 'bots' && !ours) botTalk('caught', [e.seat]);
+  } else {
+    stamp(`<b>تسجيل غلط ✘</b><small>${e.seat === ui.me ? 'سجّلت' : esc(who) + ' سجّل'} وما فيه قطع، فراحت اليد للفريق الثاني</small>`, 'bad');
+    speak('غلط', e.seat, { urgent: true });
+    play(ours ? 'wrong' : 'win', { volume: 0.6 });
+  }
+  await wait(2000);
+  document.querySelector('.bl-stamp')?.remove();
+}
+function stamp(html, cls = '', card = '') {
+  document.querySelector('.bl-stamp')?.remove();
+  const el = document.createElement('div');
+  el.className = 'bl-stamp ' + cls;
+  el.innerHTML = (card ? `<img src="${cardUrl(card)}" alt="${cardName(card)}">` : '') + `<div>${html}</div>`;
+  $('felt').querySelector('.bl-center').appendChild(el);
+  return el;
+}
+function flashFelt(kind) {
+  if (reduce()) return;
+  const felt = $('felt');
+  felt.classList.remove('flash-hot', 'flash-gahwa'); void felt.offsetWidth; felt.classList.add('flash-' + kind);
+  setTimeout(() => felt.classList.remove('flash-' + kind), 900);
+}
+function steam() {
+  if (reduce()) return;
+  const layer = $('felt').querySelector('.bl-center');
+  const cup = document.createElement('div');
+  cup.className = 'bl-gahwa';
+  cup.innerHTML = '<span>☕</span><i></i><i></i><i></i>';
+  layer.appendChild(cup);
+  setTimeout(() => cup.remove(), 2600);
+}
+function crown(seat) {
+  const av = seatEl(seat)?.querySelector('.bl-avatar');
+  if (!av) return;
+  av.classList.remove('crowned'); void av.offsetWidth; av.classList.add('crowned');
+  setTimeout(() => av.classList.remove('crowned'), 2200);
+}
+function glow(seat) {
+  const av = seatEl(seat)?.querySelector('.bl-avatar');
+  if (!av || reduce()) return;
+  av.classList.remove('won'); void av.offsetWidth; av.classList.add('won');
+  setTimeout(() => av.classList.remove('won'), 900);
+}
+async function kaboot(team) {
+  const ours = team === teamOf(ui.me);
+  speak('كبوت', ours ? ui.me : (ui.me + 1) % 4, { urgent: true });
+  if (!reduce()) { const felt = $('felt'); felt.classList.remove('shake'); void felt.offsetWidth; felt.classList.add('shake'); setTimeout(() => felt.classList.remove('shake'), 700); }
+  if (ours) celebrate();
+  if (ui.mode === 'bots') botTalk(ours ? 'kabootThem' : 'kabootUs', [1, 3]);
+  await banner(ours ? 'كبوت! 🔥<small>كل الأكلات لكم</small>' : 'كبوت عليكم 😱<small>كل الأكلات لهم</small>', 1300);
+}
+
+/* ---------- Table talk: phrases & emoji ---------- */
+function showTalk(seat, kind, id) {
+  if (kind === 'phrase') {
+    const p = talkPhrase(id); if (!p) return;
+    bubble(seat, esc(p.text), 'talk', 2600);
+    speak(p.say, seat);
+  } else if (kind === 'emoji') {
+    const em = talkEmoji(id); if (!em) return;
+    floatEmoji(seat, em.glyph);
+    play('click', { volume: 0.3 });
+  }
+}
+function floatEmoji(seat, glyph) {
+  const av = seatEl(seat)?.querySelector('.bl-avatar');
+  if (!av) return;
+  const r = av.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'bl-emoji-float';
+  el.textContent = glyph;
+  el.style.left = (r.left + r.width / 2) + 'px';
+  el.style.top = (r.top + r.height / 2) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), reduce() ? 900 : 1900);
+}
+function sendTalk(kind, id) {
+  if (Date.now() - ui.lastTalk < 1500) { toast('شوي شوي 😄'); return; }
+  ui.lastTalk = Date.now();
+  closeTalk();
+  BalootVoice.unlock();
+  if (ui.mode === 'online') { if (!ui.client?.talk?.(kind, id)) toast('الاتصال غير جاهز'); return; }
+  showTalk(ui.me, kind, id);
+  if (Math.random() < 0.45) setTimeout(() => botTalk('reply', [1, 2, 3], true), 900 + Math.random() * 900);
+}
+// Bots (offline) answer at the table now and then, never too often.
+function botTalk(context, seats, force = false) {
+  if (ui.mode !== 'bots') return;
+  const now = Date.now();
+  if (!force && (now - ui.botTalkAt < 9000 || Math.random() > 0.35)) return;
+  const ids = BOT_TALK[context];
+  if (!ids?.length) return;
+  ui.botTalkAt = now;
+  const seat = seats[Math.floor(Math.random() * seats.length)];
+  const id = ids[Math.floor(Math.random() * ids.length)];
+  setTimeout(() => showTalk(seat, id.startsWith('e') ? 'emoji' : 'phrase', id), 350);
+}
+function renderTalk() {
+  const tab = ui.talkTab;
+  for (const b of document.querySelectorAll('.bl-talk-tab')) { const on = b.dataset.tab === tab; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); }
+  const grid = $('talkGrid');
+  grid.className = 'bl-talk-grid ' + tab;
+  grid.innerHTML = '';
+  for (const it of tab === 'phrase' ? BALOOT_PHRASES : BALOOT_EMOJI) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'bl-talk-item';
+    b.textContent = tab === 'phrase' ? it.text : it.glyph;
+    b.addEventListener('click', () => sendTalk(tab, it.id));
+    grid.appendChild(b);
+  }
+  const v = $('voiceToggle');
+  v.setAttribute('aria-pressed', String(BalootVoice.enabled));
+  v.textContent = BalootVoice.enabled ? '🗣️ الأصوات تعمل' : '🔇 الأصوات مطفأة';
+  $('voiceNote').hidden = !BalootVoice.enabled || BalootVoice.hasArabic();
+}
+function openTalk() { renderTalk(); $('talkSheet').hidden = false; BalootVoice.unlock(); }
+function closeTalk() { $('talkSheet').hidden = true; }
 
 /* ---------- Results ---------- */
 function showResult(result, scores, view) {
@@ -553,7 +758,8 @@ function showResult(result, scores, view) {
   const buyerTeam = teamOf(c.buyer);
   const ours = buyerTeam === us;
   let title;
-  if (result.kaboot !== null) title = result.kaboot === us ? 'كبوت لكم! 🔥' : 'كبوت عليكم';
+  if (result.claim) title = result.winnerTeam === us ? (result.claim.team === us ? 'صدناهم! اليد لنا ⚖️' : 'سجّلوا غلط، اليد لنا') : (result.claim.team === us ? 'تسجيل غلط، اليد لهم' : 'صادوا القطع، اليد لهم');
+  else if (result.kaboot !== null) title = result.kaboot === us ? 'كبوت لكم! 🔥' : 'كبوت عليكم';
   else title = result.declWins ? (ours ? 'نجحت شريتكم' : 'نجح الخصم') : (ours ? 'خسرتم الشرية — النقاط للخصم' : 'خسر الخصم الشرية — النقاط لكم');
   $('resultTitle').textContent = title;
   const who = c.buyer === ui.me ? 'أنت' : seatName(view, c.buyer);
@@ -567,6 +773,17 @@ function showResult(result, scores, view) {
     row('نقاط الجولة', result.score[us], result.score[them], 'total'),
   ];
   $('resultRows').innerHTML = rows.join('');
+  const note = $('resultClaim');
+  if (result.claim) {
+    const self = result.claim.seat === ui.me, by = self ? '' : esc(seatName(view, result.claim.seat)) + ' ';
+    note.innerHTML = result.claim.correct ? `⚖️ ${by}${self ? 'سجّلت وصدقت' : 'سجّل وصدق'}: ${cutLine(result.claim.proof, view)}` : `⚖️ ${by}${self ? 'سجّلت' : 'سجّل'} وما كان فيه قطع، فراحت اليد للفريق الثاني`;
+    note.className = 'bl-claim-note ' + (result.claim.team === us ? (result.claim.correct ? 'good' : 'bad') : (result.claim.correct ? 'bad' : 'good'));
+    note.hidden = false;
+  } else if (result.cuts?.length) {
+    note.innerHTML = '👀 ما أحد سجّل: ' + result.cuts.slice(0, 2).map((p) => cutLine(p, view)).join('، ');
+    note.className = 'bl-claim-note quiet';
+    note.hidden = false;
+  } else { note.hidden = true; note.textContent = ''; }
   $('resultTotals').textContent = `لنا ${scores[us]} · لهم ${scores[them]}`;
   const won = result.winnerTeam === us;
   play(won ? 'win' : 'wrong', { volume: 0.6 });
@@ -618,11 +835,13 @@ function startBots() {
   const names = [myName, pool[0], pool[1], pool[2]];
   ui.receipt = (window.BS_UUID?.() || (Date.now() + '-' + Math.random().toString(36).slice(2)));
   ui.rewarded = false;
-  ui.match = createBalootMatch({ names, target: ui.target });
+  ui.match = createBalootMatch({ names, target: ui.target, open: $('openBots').value !== 'strict' });
+  BalootVoice.unlock();
   showTable();
   const view = balootView(ui.match, ui.me);
   ui.view = view;
   queue(() => playEvents([{ type: 'deal', dealer: view.dealer, exposed: view.exposed }], view).then(() => render(view)).then(botsTurn));
+  setTimeout(() => botTalk('greet', [1, 2, 3], Math.random() < 0.6), 2600);
 }
 
 function queue(task) {
@@ -647,7 +866,8 @@ function botsTurn() {
   const delay = s.phase === 'playing' ? 520 + Math.random() * 420 : 700 + Math.random() * 500;
   ui.botTimer = setTimeout(() => {
     queue(async () => {
-      const action = chooseBalootAction(balootView(ui.match, seat), seat, { level: ui.level });
+      // your partner never cuts for you; the other team may
+      const action = chooseBalootAction(balootView(ui.match, seat), seat, { level: ui.level, honest: seat === partnerOf(ui.me) });
       if (action) await applyLocal(seat, action);
     }).then(botsTurn);
   }, delay / ui.speed);
@@ -655,6 +875,13 @@ function botsTurn() {
 
 /* ---------- Acting ---------- */
 function act(action) {
+  if (action?.type === 'claim') {
+    // a claim may come at any moment of the hand, even between the bots' cards
+    if (ui.mode === 'bots') { clearTimeout(ui.botTimer); queue(() => (canClaim(ui.match, ui.me) ? applyLocal(ui.me, action) : null)).then(botsTurn); return; }
+    if (!ui.client) return;
+    ui.client.send('baloot', { action });
+    return;
+  }
   if (ui.busy) return;
   if (ui.mode === 'bots') {
     if (ui.match.turn !== ui.me) return;
@@ -742,7 +969,7 @@ function paintLobbyRing() {
   c.clearRect(0, 0, css, css);
   c.lineWidth = 6; c.lineCap = 'round';
   c.strokeStyle = '#ffffff1c'; c.beginPath(); c.arc(css / 2, css / 2, css / 2 - 5, 0, Math.PI * 2); c.stroke();
-  c.strokeStyle = '#f1cf7e'; c.beginPath(); c.arc(css / 2, css / 2, css / 2 - 5, -Math.PI / 2, -Math.PI / 2 + Math.min(1, left / 15000) * Math.PI * 2); c.stroke();
+  c.strokeStyle = '#f1cf7e'; c.beginPath(); c.arc(css / 2, css / 2, css / 2 - 5, -Math.PI / 2, -Math.PI / 2 + Math.min(1, left / 10000) * Math.PI * 2); c.stroke();
   if (left > 0) requestAnimationFrame(paintLobbyRing);
 }
 
@@ -777,7 +1004,7 @@ async function startOnline(kind) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || 'تعذر إيجاد طاولة الآن');
       await ui.client.join(data.code, name);
-    } else if (kind === 'create') await ui.client.create(name, 4);
+    } else if (kind === 'create') await ui.client.create(name, 4, { open: $('openRoom').value !== 'strict' });
     else await ui.client.join($('joinCode').value, name);
   } catch (error) {
     message(error.message || 'تعذر الاتصال');
@@ -838,6 +1065,12 @@ function showLog() {
   const history = (ui.view?.history || []).filter((h) => !h.redeal);
   const us = teamOf(ui.me);
   $('logRows').innerHTML = history.length ? history.map((h, i) => `<tr><td>${i + 1} · ${h.contract.type === 'sun' ? 'صن' : 'حكم ' + suitHtml(h.contract.trump)}</td><td>${h.score[us]}</td><td>${h.score[1 - us]}</td></tr>`).join('') : '<tr><td colspan="3">ما في جولات بعد</td></tr>';
+  // the tricks of this hand, card by card: what you need to prove a cut
+  const view = ui.view, tricks = [...(view?.tricks || [])];
+  if (view?.phase === 'playing' && view.trick?.cards?.length) tricks.push({ ...view.trick, open: true });
+  const box = $('logTricks');
+  box.hidden = !tricks.length;
+  box.innerHTML = tricks.length ? '<h3>أكلات هذي الجولة</h3>' + tricks.map((t, i) => `<div class="bl-log-trick${t.open ? ' open' : ''}"><span>${i + 1}</span>${t.cards.map((x) => `<figure class="${x.seat === t.winner ? 'won' : ''}"><img src="${cardUrl(x.card)}" alt="${cardName(x.card)}"><figcaption>${esc(x.seat === ui.me ? 'أنت' : seatName(view, x.seat))}</figcaption></figure>`).join('')}</div>`).join('') : '';
   $('logSheet').hidden = false;
 }
 
@@ -860,8 +1093,17 @@ function init() {
   $('copyCode').addEventListener('click', async () => { try { await navigator.clipboard.writeText(ui.room?.code || ''); toast('نسخنا الرمز'); } catch { toast('الرمز: ' + (ui.room?.code || '')); } });
   $('leaveTable').addEventListener('click', () => { if (ui.mode === 'bots' && ui.match && ui.match.phase !== 'finished' && !confirmLeave()) return; showSetup(); });
   $('openLog').addEventListener('click', showLog);
+  $('claimBtn').addEventListener('click', () => (ui.claimArmed ? cancelClaim() : armClaim()));
+  $('claimYes').addEventListener('click', sendClaim);
+  $('claimNo').addEventListener('click', cancelClaim);
+  $('talkBtn').addEventListener('click', () => ($('talkSheet').hidden ? openTalk() : closeTalk()));
+  $('talkClose').addEventListener('click', closeTalk);
+  for (const b of document.querySelectorAll('.bl-talk-tab')) b.addEventListener('click', () => { ui.talkTab = b.dataset.tab; renderTalk(); });
+  $('voiceToggle').addEventListener('click', () => { BalootVoice.setEnabled(!BalootVoice.enabled); renderTalk(); if (BalootVoice.enabled) speak('هلا والله', ui.me, { urgent: true }); });
+  addEventListener('bs-board-talk', (event) => { const d = event.detail || {}; if (ui.mode === 'online' && Number.isInteger(d.seat)) showTalk(d.seat, d.kind, d.id); });
   $('closeLog').addEventListener('click', () => { $('logSheet').hidden = true; });
   $('playAgain').addEventListener('click', () => { $('matchEnd').hidden = true; if (ui.mode === 'bots') startBots(); else ui.client?.send('rematch'); });
+  for (const id of ['openBots', 'openRoom']) { try { const saved = localStorage.getItem('bs_baloot_style'); if (saved) $(id).value = saved; } catch {} $(id).addEventListener('change', (e) => { try { localStorage.setItem('bs_baloot_style', e.target.value); } catch {} for (const other of ['openBots', 'openRoom']) $(other).value = e.target.value; }); }
   $('endExit').addEventListener('click', showSetup);
   $('felt').addEventListener('click', (e) => { if (ui.picked && !e.target.closest('.bl-hand')) { const card = ui.picked; if (legalSet(ui.view)?.has(card)) { ui.picked = null; act({ type: 'play', card }); } } });
   addEventListener('resize', () => render());

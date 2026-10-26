@@ -7,14 +7,18 @@ export class BoardOnlineClient {
   constructor(game,{onState,onStatus,onError}={}){
     this.game=game;this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.onError=onError||(()=>{});
     this.ws=null;this.code='';this.name='';this.hostKey='';this.token='';this.closedByUser=false;this.retry=0;this.reconnectTimer=null;this.version=null;this.heartbeat=null;this.lastMessageAt=0;this.cancelOpening=null;this.bound=false;this.terminal=false;this.requestEpoch=0;
-    this.resume=()=>{if(!this.closedByUser&&!this.terminal&&this.code){if(this.ws?.readyState===1){if(Date.now()-this.lastMessageAt>45000)this.recoverSocket(this.ws);else this.send('ping');}else{clearTimeout(this.reconnectTimer);this.openSocket().catch(()=>{});}}};
+    // 32.1.0: a socket still opening is left alone. On a fresh page load «pageshow» fires
+    // after load; reopening then dropped the seat being taken and asked for a second one,
+    // which a full room refused ("الغرفة ممتلئة"). Only a page restored from history resumes.
+    this.resume=()=>{if(!this.closedByUser&&!this.terminal&&this.code){if(this.ws?.readyState===0)return;if(this.ws?.readyState===1){if(Date.now()-this.lastMessageAt>45000)this.recoverSocket(this.ws);else this.send('ping');}else{clearTimeout(this.reconnectTimer);this.openSocket().catch(()=>{});}}};
     this.visibility=()=>{if(!globalThis.document?.hidden)this.resume();};
+    this.pageShow=event=>{if(event?.persisted)this.resume();};
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
-  async create(name,playerLimit,{variant='classic',character=''}={}){
+  async create(name,playerLimit,{variant='classic',character='',open=true}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
     this.character=character;
-    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant})});
+    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant,open:open!==false})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
         const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
@@ -38,7 +42,7 @@ export class BoardOnlineClient {
   async connect(code,name){
     if(!/^\d{6}$/.test(code))throw new Error('رمز الغرفة يجب أن يكون 6 أرقام');
     this.closedByUser=false;this.terminal=false;this.code=code;if(this.hostCode!==code)this.hostKey='';
-    if(!this.bound&&globalThis.window?.addEventListener){window.addEventListener('online',this.resume);window.addEventListener('pageshow',this.resume);document.addEventListener('visibilitychange',this.visibility);this.bound=true;}
+    if(!this.bound&&globalThis.window?.addEventListener){window.addEventListener('online',this.resume);window.addEventListener('pageshow',this.pageShow);document.addEventListener('visibilitychange',this.visibility);this.bound=true;}
     this.name=String(name||'لاعب').trim().slice(0,20)||'لاعب';
     try{this.token=localStorage.getItem(this.tokenKey(code))||''}catch{}
     await this.openSocket();return code;
@@ -89,6 +93,8 @@ export class BoardOnlineClient {
           announce('bs-board-emote',{from:msg.from,name:msg.name,emote:msg.emote,at:msg.at});
         }else if(msg.type==='emote-locked'){
           announce('bs-board-emote-locked',{emote:msg.emote});
+        }else if(msg.type==='talk'){
+          announce('bs-board-talk',{from:msg.from,seat:msg.seat,kind:msg.kind,id:msg.id,at:msg.at});
         }else if(msg.type==='error'){
           const message=msg.message||'تعذر دخول الغرفة';this.onError(message);
           if(!settled){this.terminal=true;fail(message);this.stopTransport();this.onStatus({online:false,reconnecting:false,text:message});}
@@ -119,6 +125,11 @@ export class BoardOnlineClient {
     if((this.ws.bufferedAmount||0)>65536){this.onError('الاتصال بطيء؛ انتظر وصول آخر حركة');return false}
     try{this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}catch{this.onError('تعذر إرسال الحركة؛ نتصل مجددًا');this.recoverSocket(this.ws);return false}
   }
+  // Table talk (Baloot): a ready phrase or emoji by id; best effort like reactions.
+  talk(kind,id){
+    if(!this.ws||this.ws.readyState!==WebSocket.OPEN)return false;
+    try{this.ws.send(JSON.stringify({type:'talk',kind:String(kind),id:String(id)}));return true}catch{return false}
+  }
   // Quick reactions are best effort: never an error toast, never a resend.
   react(emote){
     if(!this.ws||this.ws.readyState!==WebSocket.OPEN)return false;
@@ -129,7 +140,7 @@ export class BoardOnlineClient {
     this.closedByUser=true;this.requestEpoch++;clearTimeout(this.reconnectTimer);this.reconnectTimer=null;
     try{if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify({type:'leave'}));}catch{}
     this.stopTransport();
-    if(this.bound){window.removeEventListener('online',this.resume);window.removeEventListener('pageshow',this.resume);document.removeEventListener('visibilitychange',this.visibility);this.bound=false;}
+    if(this.bound){window.removeEventListener('online',this.resume);window.removeEventListener('pageshow',this.pageShow);document.removeEventListener('visibilitychange',this.visibility);this.bound=false;}
   }
 }
 

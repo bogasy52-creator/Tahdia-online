@@ -170,6 +170,17 @@ body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-in
 @keyframes sudokuShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
 @keyframes sudokuPulse{50%{opacity:.55}}
 
+/* assets/css/sudoku-feedback-v29-1.css */
+/* Keep user Sudoku styles intact; expose errors even when optional effects are off. */
+.sudoku-page button.sudoku-cell[data-sudoku-error="true"],
+.party-app .sudoku button.party-cell[data-sudoku-error="true"]{
+  background:#a51f35!important;color:#fff4f4!important;
+  border-color:#ff7386!important;box-shadow:inset 0 0 0 2px #ff9aa6,0 0 18px #ff3a5550!important;
+}
+.sudoku-error-pulse{animation:sudoku-error-pulse-v29 .38s ease-out!important}
+@keyframes sudoku-error-pulse-v29{25%{transform:translateX(-3px)}55%{transform:translateX(3px)}80%{transform:translateX(-1px)}}
+@media(prefers-reduced-motion:reduce){.sudoku-error-pulse{animation:none!important}}
+
 /* assets/css/release-v31.css */
 /* Tahdia 31.0.0 — shared rules for every game page.
    `:is(html,#v31)` lifts these rules above the older layered themes without

@@ -16,3 +16,18 @@ test('room invitations preserve a direct path and discard secret query parameter
 });
 test('every game command opens the friend picker directly for its own game',async()=>{const h=await setup(),bar=h.doc.getElementById('bsGameCommand'),calls=[];assert.ok(bar);assert.equal(bar.querySelector('.bs-command-back').textContent.includes('رجوع'),true);h.context.BS_SOCIAL.openInvitePicker=async data=>calls.push(data);await bar.querySelector('[data-command-invite]').onclick();assert.equal(calls.length,1);assert.equal(calls[0].game,'sudoku');assert.equal(h.doc.getElementById('bsInvitePanel'),null);});
 test('winner celebration prints the winner name and duplicate state updates do not replay it',async()=>{const h=await setup();h.context.BS_GAME_FX.celebrate('البطل سالم',{key:'round-7'});const first=h.doc.getElementById('bsVictory');assert.ok(first.textContent.includes('البطل سالم'));assert.ok(h.doc.querySelectorAll('.bs-victory-confetti').length<=46);h.context.BS_GAME_FX.celebrate('البطل سالم',{key:'round-7'});assert.equal(h.doc.getElementById('bsVictory'),first);});
+test('32.1.0: feedback never reacts to its own badges (the freeze after a wrong move)',async()=>{
+ const {MiniElement}=await import('./dom-harness.mjs');let callback=null;class Observer{constructor(fn){callback=fn}observe(){}}
+ const h=await createDOM('sudoku.html',{MutationObserver:Observer,Element:MiniElement});await h.runFile('assets/js/play-feedback-v24-1.js');assert.ok(callback,'the page watches for marked cells');
+ const cell=h.doc.createElement('button');cell.className='is-wrong';cell.getBoundingClientRect=()=>({left:10,top:10,width:30,height:30});h.doc.body.appendChild(cell);
+ callback([{target:cell,addedNodes:[]}]);const layer=h.doc.querySelector('.bs-fx-layer');assert.ok(layer,'the wrong move shows its effect');
+ const size=()=>layer.querySelectorAll('*').length,before=size();
+ for(let i=0;i<40;i++)callback([{target:layer,addedNodes:[...layer.children]},...layer.querySelectorAll('*').map(node=>({target:node,addedNodes:[]}))]);
+ assert.equal(size(),before,'our own badges add nothing more');
+});
+test('32.1.0: inside a party round the game bar leads back to the party',async()=>{
+ const h=await createDOM('sudoku.html',{BS_PARTY_LINK:Object.freeze({party:'111111',room:'222222',back:'/party?room=111111',name:'نورة'})});await h.runFile('assets/js/play-feedback-v24-1.js');
+ const bar=h.doc.getElementById('bsGameCommand'),back=bar.querySelector('.bs-command-back');assert.match(back.textContent,/الجمعة/);assert.equal(back.getAttribute('aria-label'),'ارجع لغرفة الجمعة');
+ assert.equal(bar.querySelector('.bs-command-invite').hidden,true,'a party room is not shared with others');back.onclick();assert.equal(h.context.location.href,'/party?room=111111');
+ const plain=await setup();assert.match(plain.doc.getElementById('bsGameCommand').querySelector('.bs-command-back').textContent,/رجوع/);
+});

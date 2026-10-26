@@ -41,6 +41,13 @@ const PIECE_PROFILES=Object.freeze([
   Object.freeze({name:'المدار',symbol:'●',material:'sapphire'}),
   Object.freeze({name:'الرمح',symbol:'▲',material:'topaz'}),
   Object.freeze({name:'النجمة',symbol:'✦',material:'emerald'}),
+  // 32.1.0: up to ten players on one board
+  Object.freeze({name:'الياقوتة',symbol:'✚',material:'ruby'}),
+  Object.freeze({name:'الفيروزة',symbol:'⬢',material:'turquoise'}),
+  Object.freeze({name:'الكهرمان',symbol:'★',material:'amber'}),
+  Object.freeze({name:'الوردة',symbol:'❀',material:'rose'}),
+  Object.freeze({name:'الزبرجد',symbol:'✿',material:'peridot'}),
+  Object.freeze({name:'اللؤلؤة',symbol:'◎',material:'pearl'}),
 ]);
 
 export function createReactionPlan(kind,{reducedMotion=false}={}){
