@@ -2009,7 +2009,7 @@ export class BoardRoom extends DurableObject {
         try { applyBalootMove(this.room, player, msg.action, secureUnit, Date.now()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { wrong_turn: 'مو دورك الآن', illegal_card: 'هذي الورقة ما تنلعب الحين', illegal_bid: 'هذا الشراء غير متاح', illegal_double: 'هذا الدبل غير متاح', illegal_claim: 'التسجيل متاح أثناء اللعب فقط، مرة وحدة في الجولة', invalid_action: 'أمر غير معروف' };
+          const messages = { wrong_turn: 'مو دورك الآن', illegal_card: 'هذي الورقة ما تنلعب الحين', illegal_bid: 'هذا الشراء غير متاح', illegal_double: 'هذا الدبل غير متاح', illegal_claim: 'التسجيل متاح أثناء اللعب فقط، مرة وحدة في الجولة', invalid_action: 'أمر غير معروف', review_required:'اختر الأكلات واعرض التسجيل للمراجعة أولًا', review_in_progress:'اللعب متوقف حتى تنتهي المراجعة', review_unavailable:'المراجعة متاحة أثناء اللعب فقط', select_claim_tricks:'اختر الأكلات التي تريد كشفها', select_claim_card:'اختر ورقة اللاعب من الأكلات المحددة', stale_review:'هذه المراجعة انتهت أو لا يحق لك تأكيدها', review_limit:'وصلت لحد المراجعات لهذه اليد', project_show_closed:'وقت عرض المشروع انتهى', invalid_claim_target:'اختر لاعبًا من الفريق المقابل', invalid_claim_reason:'اختر سبب التسجيل', invalid_claim_project:'اختر المشروع محل التسجيل' };
           return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
         this.room.version++;

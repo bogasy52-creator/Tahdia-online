@@ -133,7 +133,7 @@ function avatarFor(view, seat) {
 
 /* ---------- Hand ---------- */
 function legalSet(view) {
-  if (view.phase !== 'playing' || view.turn !== ui.me || ui.busy) return null;
+  if (view.review || view.phase !== 'playing' || view.turn !== ui.me || ui.busy) return null;
   return new Set(balootActions(view, ui.me).map((a) => a.card));
 }
 // The cards the rules allow (in open play the others are cuts).
@@ -145,8 +145,8 @@ function ruleSet(view) {
 function renderHand(view) {
   const hand = $('hand');
   const cards = view.hands?.[ui.me] || [];
-  const legal = legalSet(view), rules = legal && view.open ? ruleSet(view) : null;
-  hand.classList.toggle('waiting', !legal);
+  const legal = legalSet(view);
+  hand.classList.toggle('waiting', !legal);hand.classList.toggle('open-play',Boolean(view.open));
   const width = hand.clientWidth || 360;
   const cw = parseFloat(getComputedStyle(document.body).getPropertyValue('--bl-card-w')) || Math.min(92, width * 0.175);
   const n = cards.length;
@@ -165,12 +165,8 @@ function renderHand(view) {
     el.style.zIndex = String(10 + i);
     el.style.setProperty('--fan', fan);
     if (!el.classList.contains('picked')) el.style.transform = fan;
-    // 33.0.0: in open play only the cards the rules allow light up; the others stay
-    // playable as a cut, behind a second tap
-    const fair = legal && (!view.open || rules?.has(card));
-    el.classList.toggle('legal', Boolean(fair));
-    el.classList.toggle('cuttable', Boolean(legal?.has(card) && !fair));
-    el.classList.toggle('dim', Boolean(legal && !fair));
+    el.classList.toggle('legal',Boolean(!view.open&&legal?.has(card)));
+    el.classList.remove('cuttable','dim','cut');
     if (!legal || !legal.has(card)) el.classList.remove('picked');
   });
   for (const [card, el] of existing) if (!keep.has(card)) el.remove();
@@ -215,36 +211,16 @@ function renderProjectPicker(view){
     projects.forEach((p,i)=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=projectChoices.includes(i);input.onchange=()=>{projectChoices=input.checked?[...new Set([...projectChoices,i])]:projectChoices.filter(x=>x!==i);};label.append(input,document.createTextNode(PROJECT_NAME[p.type]));box.append(label);});
     const note=document.createElement('small');note.textContent='بدون اختيار: تلعب بدون إعلان مشروع. أنزل المشروع في دورك بالأكلة الثانية.';box.append(note);
   }else if(view.tricks.length===1&&view.declared?.[ui.me]?.length&&!view.projectShows?.[ui.me]){
-    const b=document.createElement('button');b.className='bl-cta';b.textContent='أنزل مشروعي: '+view.declared[ui.me].map(p=>PROJECT_NAME[p.type]).join(' + ');b.onclick=()=>act({type:'show_projects'});b.disabled=ui.sending||ui.busy;box.append(b);
+    const b=document.createElement('button');b.className='bl-cta';b.textContent='اعرض مشروعي: '+view.declared[ui.me].map(p=>PROJECT_NAME[p.type]).join(' + ');b.onclick=()=>act({type:'review_projects'});b.disabled=ui.sending||ui.busy;box.append(b);
     const note=document.createElement('small');note.textContent='نزّل المشروع قبل ورقتك الثانية؛ تركه يسمح للخصم بالتسجيل.';box.append(note);
   }else box.hidden=true;
 }
 function onCardTap(card) {
-  const view = ui.view;
-  if (!view || view.phase !== 'playing') return;
-  if (view.turn !== ui.me) { toast('انتظر دورك'); return; }
-  // 33.0.0: a tap while the last cards are still landing is kept and played right after
-  if (ui.busy) { ui.queued = card; for (const other of $('hand').children) other.classList.toggle('picked', other.dataset.card === card); return; }
-  const legal = legalSet(view);
-  if (!legal) return;
-  if (!legal.has(card)) { toast('لازم تلعب من الشكل المطلوب أو حسب القانون'); return; }
-  const el = [...$('hand').children].find((x) => x.dataset.card === card);
-  const cut = view.open && !ruleSet(view)?.has(card);
-  // a card the rules allow is played with one tap; only a cut asks for a second one
-  if (!cut) { ui.picked = null; for (const other of $('hand').children) other.classList.remove('picked', 'cut'); playHumanCard(card); return; }
-  if (ui.picked !== card) {
-    for (const other of $('hand').children) other.classList.remove('picked', 'cut');
-    el?.classList.add('picked');
-    el?.classList.toggle('cut', Boolean(cut));
-    el && (el.style.transform = '');
-    ui.picked = card;
-    play('click', { volume: 0.4 });
-    if (cut) { toast('هذي الورقة قطع ✋ إذا صادوك يسجّلون عليك وتروح اليد لهم', 2800); play('error', { volume: 0.35 }); }
-    renderPrompt(view);
-    return;
-  }
-  ui.picked = null;
-  playHumanCard(card);
+  const view=ui.view;if(!view||view.phase!=='playing'||view.review)return;
+  if(view.turn!==ui.me){toast('انتظر دورك');return;}
+  if(ui.busy){ui.queued=card;return;}
+  const allowed=legalSet(view);if(!allowed?.has(card)){toast('الورقة غير مسموحة في اللعب المقيّد');return;}
+  ui.picked=null;playHumanCard(card);
 }
 
 /* ---------- Centre ---------- */
@@ -352,7 +328,7 @@ function renderPrompt(view) {
     return;
   }
   if (view.phase === 'playing') {
-    if (mine) p.innerHTML = ui.picked ? (view.open && !ruleSet(view)?.has(ui.picked) ? '<b class="cut-note">قطع!</b> اضغطها مرة ثانية إذا متأكد' : 'اضغط الورقة مرة ثانية لتلعبها') : '<b>دورك</b> · اختر ورقة';
+    if (mine) p.textContent = view.review?'اللعب متوقف للمراجعة':'دورك · اختر أي ورقة في اللعب المفتوح';
     else p.textContent = `دور ${seatName(view, view.turn)}`;
   }
 }
@@ -368,6 +344,7 @@ function render(view = ui.view) {
   renderPrompt(view);
   renderClaim(view);
   renderProjectPicker(view);
+  renderPublicReview(view);
 }
 
 /* ---------- Open play: claims ---------- */
@@ -387,15 +364,44 @@ function armClaim() {
   $('claimConfirm').hidden = false;
   $('claimTarget').replaceChildren();
   for(let seat=0;seat<4;seat++)if(teamOf(seat)!==teamOf(ui.me)){const o=document.createElement('option');o.value=String(seat);o.textContent=seatName(ui.view,seat);$('claimTarget').append(o);}
-  $('claimReason').value='cut';$('claimProjectLabel').hidden=true;
+  $('claimReason').value='cut';$('claimProjectLabel').hidden=true;renderClaimEvidence();
   BalootVoice.unlock();
 }
 function cancelClaim() { ui.claimArmed = 0; $('claimBtn').classList.remove('armed'); $('claimConfirm').hidden = true; }
 function sendClaim() {
   if (!claimable(ui.view)) return cancelClaim();
+  if(!selectedClaimTricks().length){toast('اختر أكلة واحدة على الأقل لعرضها للجميع');return;}
   cancelClaim();
-  act({ type: 'claim',target:Number($('claimTarget').value),reason:$('claimReason').value,...($('claimReason').value==='unshown_project'?{project:$('claimProject').value}:{}) });
+  act({ type: 'review_claim',tricks:selectedClaimTricks(),card:($('claimCard').value||'').split(':')[1]||'',target:Number($('claimTarget').value),reason:$('claimReason').value,...($('claimReason').value==='unshown_project'?{project:$('claimProject').value}:{}) });
 }
+function publicTricks(view){const rows=(view.tricks||[]).map((t,index)=>({...t,index}));if(view.trick?.cards?.length)rows.push({...view.trick,index:rows.length});return rows;}
+function selectedClaimTricks(){return [...$('claimEvidence').querySelectorAll('input:checked')].map(x=>Number(x.dataset.trick));}
+function refreshClaimCards(){
+ const ids=selectedClaimTricks(),target=Number($('claimTarget').value),select=$('claimCard');select.replaceChildren();
+ for(const t of publicTricks(ui.view).filter(t=>ids.includes(t.index)))for(const entry of t.cards)if(entry.seat===target){const o=document.createElement('option');o.value=t.index+':'+entry.card;o.textContent='الأكلة '+(t.index+1)+' · '+cardName(entry.card);select.append(o);}
+ $('claimCardLabel').hidden=$('claimReason').value!=='cut';
+}
+function renderClaimEvidence(){
+ const box=$('claimEvidence');box.replaceChildren();
+ for(const t of publicTricks(ui.view)){const row=document.createElement('label'),check=document.createElement('input'),title=document.createElement('span'),cards=document.createElement('div');row.className='bl-evidence-choice';check.type='checkbox';check.dataset.trick=t.index;check.onchange=refreshClaimCards;title.textContent='الأكلة '+(t.index+1)+(t.winner===undefined?' · جارية':'');cards.className='bl-evidence-mini';for(const entry of t.cards){const img=document.createElement('img');img.src=cardUrl(entry.card);img.alt=seatName(ui.view,entry.seat)+' · '+cardName(entry.card);cards.append(img);}row.append(check,title,cards);box.append(row);}
+ refreshClaimCards();
+}
+let publicReviewKey='';
+function renderPublicReview(view){
+ const sheet=$('reviewSheet'),review=view.review;if(!sheet)return;
+ if(!review){sheet.hidden=true;publicReviewKey='';return;}
+ sheet.hidden=false;if(publicReviewKey===review.id)return;publicReviewKey=review.id;
+ $('reviewTitle').textContent=(review.kind==='claim'?'مراجعة تسجيل':'مراجعة مشروع')+' · '+seatName(view,review.seat);
+ $('reviewDescription').textContent=review.kind==='claim'?'على '+seatName(view,review.target)+' · '+(review.reason==='cut'?'قطع / مخالفة لعب':'مشروع لم ينزل: '+PROJECT_NAME[review.project]):'أوراق المشروع معروضة للجميع قبل تثبيته.';
+ const body=$('reviewEvidence');body.replaceChildren();
+ if(review.kind==='claim')for(const t of review.tricks){const group=document.createElement('section'),title=document.createElement('h3');title.textContent='الأكلة '+(t.index+1);group.append(title);const row=document.createElement('div');row.className='bl-review-cards';for(const entry of t.cards){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src=cardUrl(entry.card);img.alt=cardName(entry.card);label.textContent=seatName(view,entry.seat);if(entry.seat===review.target&&(!review.card||entry.card===review.card))figure.className='accused';figure.append(img,label);row.append(figure);}group.append(row);body.append(group);}
+ else for(const project of review.projects){const group=document.createElement('section'),title=document.createElement('h3'),cards=document.createElement('div');title.textContent=PROJECT_NAME[project.type];cards.className='bl-review-cards';for(const card of project.cards){const img=document.createElement('img');img.src=cardUrl(card);img.alt=cardName(card);cards.append(img);}group.append(title,cards);body.append(group);}
+ const owner=review.seat===ui.me; $('reviewControls').hidden=!owner;$('reviewWaiting').hidden=owner;$('reviewWaiting').textContent='بانتظار '+seatName(view,review.seat)+' يؤكد أو يتراجع. اللعب متوقف مؤقتًا.';
+ $('reviewConfirm').textContent=review.kind==='claim'?'تأكيد التسجيل واحتساب النتيجة':'تأكيد إنزال المشروع';
+ $('reviewConfirm').onclick=()=>act({type:'confirm_review',reviewId:review.id});$('reviewCancel').onclick=()=>act({type:'cancel_review',reviewId:review.id});
+ speak(review.kind==='claim'?'review_claim':'review_projects',review.seat);
+}
+
 function cutLine(proof, view) {
   if (!proof) return '';
   if(proof.reason==='unshown_project')return esc(seatName(view,proof.seat))+' أعلن '+(proof.projects||[]).map(p=>PROJECT_NAME[p]).join(' + ')+' ولم ينزل المشروع قبل ورقته الثانية.';
@@ -666,7 +672,7 @@ async function showClaim(e, view) {
     seatEl(p.seat)?.classList.add('caught');
     setTimeout(() => seatEl(p.seat)?.classList.remove('caught'), 2600);
     stamp(`<b>${e.reason==='unshown_project'?'لم ينزل المشروع':'قطع'} ✔</b><small>${cutLine(p, view)}</small>`, 'good', p.card);
-    speak('صح، قطع', e.seat, { urgent: true });
+    speak(e.reason==='unshown_project'?'claim_ok':'صح، قطع', e.seat, { urgent: true });
     play(ours ? 'win' : 'wrong', { volume: 0.6 });
     if (!ours) botTalk('caught', [e.seat]);
   } else {
@@ -875,7 +881,7 @@ function queue(task) {
 
 /* ---------- Acting ---------- */
 function act(action) {
-  if (action?.type === 'claim') {
+  if (['review_claim','review_projects','confirm_review','cancel_review'].includes(action?.type)) {
     // a claim may come at any moment of the hand, even between the bots' cards
     if (!ui.client) return;
     ui.client.send('baloot', { action });
@@ -1073,7 +1079,7 @@ function init() {
   ui.menu = window.BS_GAME_MENU.mount($('gameMenu'), {
     game: 'baloot',
     modes: [
-      { id: 'open', label: 'مفتوح', hint: 'تقدر تقطع، والخصم يسجّل', note: 'اللعب المفتوح: تقدر تلعب أي ورقة، والفريق الثاني يسجّل عليك إذا قطعت. اللي يسمح فيها القانون تضوي، والقطع يحتاج ضغطتين.' },
+      { id: 'open', label: 'مفتوح', hint: 'تقدر تقطع، والخصم يسجّل', note: 'اللعب المفتوح: تقدر تلعب أي ورقة، والفريق الثاني يسجّل عليك إذا قطعت. كل الأوراق ظاهرة بدون تلميح للقطع. اختر الورقة التي تريد، والتسجيل يبدأ بعرض الأكلات ثم التأكيد.' },
       { id: 'strict', label: 'مقيّد', hint: 'القانون يمنع الغلط', note: 'المقيّد: ما تقدر تلعب إلا الورقة اللي يسمح فيها القانون، فما فيه قطع ولا تسجيل.' },
     ],
     modesLabel: 'طريقة اللعب',
@@ -1093,7 +1099,8 @@ function init() {
   $('leaveTable').addEventListener('click', () => { if (ui.room?.status === 'playing' && !confirmLeave()) return; showSetup(); });
   $('openLog').addEventListener('click', showLog);
   $('claimBtn').addEventListener('click', () => (ui.claimArmed ? cancelClaim() : armClaim()));
-  $('claimReason').addEventListener('change',()=>{$('claimProjectLabel').hidden=$('claimReason').value!=='unshown_project';});
+  $('claimReason').addEventListener('change',()=>{$('claimProjectLabel').hidden=$('claimReason').value!=='unshown_project';refreshClaimCards();});
+  $('claimTarget').addEventListener('change',refreshClaimCards);
   $('claimYes').addEventListener('click', sendClaim);
   $('claimNo').addEventListener('click', cancelClaim);
   $('talkBtn').addEventListener('click', () => ($('talkSheet').hidden ? openTalk() : closeTalk()));

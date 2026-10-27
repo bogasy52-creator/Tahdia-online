@@ -46,6 +46,7 @@ test('humans act on their turn, bots answer at once, timeouts and new hands run 
   for (let step = 0; step < 3000 && h.board.room?.status === 'playing'; step++) {
     const room = h.board.room;
     const s = room.state;
+    if(s.review){assert.equal(s.review.automatic,true);room.reviewUntil=Date.now()-1;room.turnDeadline=Date.now()-1;await h.board.alarm();continue;}
     if (s.phase === 'scored') {
       room.nextHandAt = Date.now() - 1;
       await h.board.alarm();
@@ -61,7 +62,7 @@ test('humans act on their turn, bots answer at once, timeouts and new hands run 
       continue;
     }
     const view = h.board.publicState(player.id);
-    const action = chooseBalootAction(view.state, s.turn, { level: 'hard' });
+    let action = chooseBalootAction(view.state, s.turn, { level: 'hard' });if(action?.type==='claim')action=balootActions(view.state,s.turn)[0];
     // open play: a player may also claim (يسجّل) a cut it can prove; that is not a turn action
     assert.ok(action.type === 'claim' || balootActions(view.state, s.turn).some((a) => JSON.stringify(a) === JSON.stringify(action)));
     const before = room.version;
@@ -142,12 +143,15 @@ test('32.1.0: a Baloot room plays open by default; a claim comes from any seat d
   const guest = h.board.addPlayer('ماجد', 'guest');
   await h.board.webSocketMessage(h.socket(h.host), JSON.stringify({ type: 'start' }));
   assert.equal(h.board.room.state.open, true);
-  const claimFrom = async (player) => h.board.webSocketMessage(h.socket(player), JSON.stringify({ type: 'baloot', action: { type: 'claim' }, expectedVersion: h.board.room.version }));
+  const claimFrom=async(player)=>{
+    const st=h.board.room.state,tricks=[...(st.tricks||[]),...(st.trick?.cards?.length?[st.trick]:[])];const index=tricks.findIndex(t=>t.cards.some(p=>p.seat%2!==player.seat%2)),entry=tricks[index]?.cards.find(p=>p.seat%2!==player.seat%2);
+    await h.board.webSocketMessage(h.socket(player),JSON.stringify({type:'baloot',action:{type:'review_claim',reason:'cut',target:entry?.seat??1,card:entry?.card,tricks:index>=0?[index]:[]},expectedVersion:h.board.room.version}));
+  };
   // during the bidding a claim is refused with a clear reason
   const v0 = h.board.room.version;
   await claimFrom(guest);
   assert.equal(h.board.room.version, v0);
-  assert.match(h.sent.get(guest.id).at(-1).message, /التسجيل/);
+  assert.match(h.sent.get(guest.id).at(-1).message, /أثناء اللعب/);
   // play on until a card is on the table, then the player who is not on turn claims
   const humans = { 0: h.host, 2: guest };
   for (let step = 0; step < 60 && !(h.board.room.state.phase === 'playing' && h.board.room.state.played?.length); step++) {
@@ -160,10 +164,12 @@ test('32.1.0: a Baloot room plays open by default; a claim comes from any seat d
   const notOnTurn = s.turn === 0 ? guest : h.host;
   const handNo = s.handNo;
   await claimFrom(notOnTurn);
+  const pending=h.board.room.state.review;assert.ok(pending,'selected evidence is reviewed first');assert.equal(h.board.room.state.phase,'playing');
+  await h.board.webSocketMessage(h.socket(notOnTurn),JSON.stringify({type:'baloot',action:{type:'confirm_review',reviewId:pending.id},expectedVersion:h.board.room.version}));
   const result = h.board.room.state.history.find((x) => x.handNo === handNo && x.claim);
   assert.ok(result, 'the claim ended the hand');
   // the humans played by the rules; a bot may have cut, and then the claim is right
-  const caught = (s.violations || []).some((v) => v.seat % 2 !== notOnTurn.seat % 2);
+  const caught=(s.violations||[]).some(v=>v.seat===pending.target&&v.card===pending.card&&pending.tricks.some(t=>t.index===v.trick));
   assert.equal(result.claim.correct, caught);
   assert.equal(result.winnerTeam, caught ? notOnTurn.seat % 2 : 1 - (notOnTurn.seat % 2), 'a right claim wins the hand, a wrong one gives it away');
 });

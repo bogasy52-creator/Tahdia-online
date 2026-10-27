@@ -1,0 +1,12 @@
+{
+  "release": "33.0.0",
+  "engine": "Workerd / SQLite / four real WebSockets",
+  "checks": [
+    "selected played evidence broadcasts to every seat before scoring",
+    "all other hands remain masked during public review",
+    "another player cannot confirm the request",
+    "cancel preserves scores and resumes play",
+    "owner confirmation scores only selected evidence and broadcasts the result"
+  ],
+  "physical_phone_tested": false
+}

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { environment, api } from './worker-harness.mjs';
+import {VOICE_RECORDINGS} from '../public/assets/js/baloot-voice-clips-v33.js';
 import { voiceLines } from '../public/assets/js/baloot-voice.js';
 import { BALOOT_PHRASES } from '../public/assets/js/engines/baloot-talk.js';
 
@@ -17,7 +18,7 @@ test('every call, project, claim and phrase the table says has its recording', a
   for (const text of said) assert.ok(voiceLines(text).length > 0, text);
   for (const phrase of BALOOT_PHRASES) assert.deepEqual(voiceLines(phrase.id), [phrase.id], phrase.id);
   // projects come joined, with «و» between them
-  assert.deepEqual(voiceLines('سرا و خمسين و مية'), ['sira', 'and', 'fifty', 'and', 'hundred']);
+  assert.deepEqual(voiceLines('سرا و خمسين'), ['projects_sira_fifty']);
   assert.deepEqual(voiceLines('حكم شريا'), ['hokom_C']);
   assert.deepEqual(voiceLines('ثاني هاص'), ['thani_H']);
   assert.deepEqual(voiceLines('قهوة ☕'), ['gahwa'], 'emoji and vowel marks do not matter');
@@ -27,27 +28,14 @@ test('every call, project, claim and phrase the table says has its recording', a
   assert.match(table, /const PROJECT_NAME = \{ sira: 'سرا', fifty: 'خمسين', hundred: 'مية', fourHundred: 'أربعمية' \}/);
 });
 
-test('Saudi neural phrases use complete measured segments instead of device speech', async () => {
-  const voice = await read('public/assets/js/baloot-voice.js');
-  assert.doesNotMatch(voice, /speechSynthesis|SpeechSynthesisUtterance/);
-  assert.match(voice, /const SPRITE = '\/assets\/audio\/baloot-voice-v33\.mp3\?r=saudi1'/);
-  const size = (await stat(new URL('../public/assets/audio/baloot-voice-v33.mp3', import.meta.url))).size;
-  assert.ok(size > 100_000 && size < 1_500_000, 'one small file: ' + size);
-  // every recording sits inside the file, one after the other
-  const lines = JSON.parse(voice.match(/const LINES = Object\.freeze\((\{[\s\S]*?\})\);/)[1]);
-  let end = 0;
-  for (const [id, [start, length]] of Object.entries(lines).sort((a, b) => a[1][0] - b[1][0])) {
-    assert.ok(start >= end && length > 0.1 && length < 5, id);
-    end = start + length;
-  }
-  assert.ok(end < 120, 'all phrases fit the measured voice file');
+test('Gulf calls are independent full speech files without sprite timing or pitch shifts',async()=>{
+ const voice=await read('public/assets/js/baloot-voice.js');assert.doesNotMatch(voice,/speechSynthesis|SpeechSynthesisUtterance|src\.start\(at|playbackRate/);assert.match(voice,/src\.start\(\)/);assert.match(voice,/ar-KW-FahedNeural/);
+ assert.ok(Object.keys(VOICE_RECORDINGS).length>=50);for(const [id,clip]of Object.entries(VOICE_RECORDINGS)){const size=(await stat(new URL('../public'+clip.src,import.meta.url))).size;assert.ok(size>1000,id);assert.ok(clip.seconds>.3&&clip.seconds<9,id);assert.ok(clip.text.length>2);}
 });
 
-test('a tap plays a card the rules allow at once; a cut needs a second tap', async () => {
-  const table = await read('public/assets/js/baloot-table.js');
-  assert.match(table, /انتظر دورك/, 'a tap out of turn says so');
-  assert.match(table, /ui\.queued = card/, 'a tap while the table moves is kept and played after');
-  assert.match(table, /cuttable/, 'cuts are marked apart from the cards the rules allow');
+test('open play permits a chosen cut without highlighting, warning or an extra tap',async()=>{
+ const table=await read('public/assets/js/baloot-table.js');const tap=table.slice(table.indexOf('function onCardTap'),table.indexOf('/* ---------- Centre'));
+ assert.match(tap,/ui\.queued\s*=\s*card/);assert.match(tap,/playHumanCard\(card\)/);assert.doesNotMatch(tap,/ruleSet|cut-note|اضغطها مرة ثانية/);assert.match(table,/!view\.open&&legal/);
 });
 
 test('«العب الحين» keeps open and strict tables apart', async () => {

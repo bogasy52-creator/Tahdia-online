@@ -188,6 +188,7 @@ export function startHand(state, rng = Math.random) {
   state.leadTop = false;
   state.violations = [];
   state.claim = null;
+  state.review = null;state.reviewCounts=[0,0,0,0];state.reviewHistory=[];
   return state;
 }
 
@@ -431,7 +432,7 @@ function applyPlay(state, seat, action, events, rng) {
     if(found.length){state.declared[seat]=found;events.push({type:'declare',seat,projects:found.map(p=>p.type)});}
   }
   if(!first&&state.declared[seat].length&&state.manualProjects?.[seat]&&!state.projectShows?.[seat]&&!state.violations.some(v=>v.seat===seat&&v.reason==='unshown_project')){
-    state.violations.push({seat,reason:'unshown_project',projects:state.declared[seat].map(p=>p.type),trick:state.tricks.length});
+    state.violations.push({seat,card,reason:'unshown_project',projects:state.declared[seat].map(p=>p.type),trick:state.tricks.length});
   }
   state.hands[seat] = state.hands[seat].filter((x) => x !== card);
   state.trick.cards.push({ seat, card });
@@ -577,7 +578,7 @@ export function nextHand(state, rng = Math.random) {
 /* ---------- Claims (open play) ---------- */
 
 export function canClaim(state, seat) {
-  return Boolean(state?.open) && state.phase === 'playing' && !state.claim && Number.isInteger(seat) && seat >= 0 && seat < 4 && (state.played?.length || 0) > 0;
+  return Boolean(state?.open) && state.phase === 'playing' && !state.claim && !state.review && Number.isInteger(seat) && seat >= 0 && seat < 4 && (state.played?.length || 0) > 0;
 }
 
 function applyClaim(state, seat, events, rng, action={}) {
@@ -589,7 +590,7 @@ function applyClaim(state, seat, events, rng, action={}) {
   if(target!==undefined&&(!Number.isInteger(target)||target<0||target>3||teamOf(target)!==accused))throw new Error('invalid_claim_target');
   const project=action.project;
   if(project!==undefined&&!['sira','fifty','hundred','fourHundred'].includes(project))throw new Error('invalid_claim_project');
-  const proof = (state.violations || []).find(v=>teamOf(v.seat)===accused&&(target===undefined||v.seat===target)&&(reason==='cut'?v.reason!=='unshown_project':v.reason==='unshown_project'&&(!project||v.projects?.includes(project)))) || null;
+  const proof = (state.violations || []).find(v=>teamOf(v.seat)===accused&&(target===undefined||v.seat===target)&&(!action.strictEvidence||(action.tricks.includes(v.trick)&&(reason!=='cut'||v.card===action.card)))&&(reason==='cut'?v.reason!=='unshown_project':v.reason==='unshown_project'&&(!project||v.projects?.includes(project)))) || null;
   state.claim = { seat, team, accused, reason, target, project, correct: Boolean(proof), proof: proof ? clone(proof) : null, trick: state.tricks.length };
   events.push({ type: 'claim', seat, team, reason, target, project, correct: Boolean(proof), proof: proof ? clone(proof) : null });
   if (state.trick?.cards?.length) state.trick = { ...state.trick, cards: [] };
@@ -617,11 +618,47 @@ export function provenCuts(view, accusedTeam) {
   return found;
 }
 
+// Only already played cards may be selected for a public claim review.
+export function balootPublicTricks(state){const rows=(state.tricks||[]).map((t,index)=>({...clone(t),index}));if(state.trick?.cards?.length)rows.push({...clone(state.trick),index:rows.length});return rows;}
+function reviewRequest(state,seat,action,events){
+ if(state.review)throw new Error('review_in_progress');
+ if(state.phase!=='playing'||!Number.isInteger(seat)||seat<0||seat>3)throw new Error('review_unavailable');
+ if((state.reviewCounts?.[seat]||0)>=3)throw new Error('review_limit');
+ let review;
+ if(action.type==='review_claim'){
+  if(!canClaim(state,seat))throw new Error('illegal_claim');
+  const target=action.target,reason=action.reason,project=action.project;
+  if(!Number.isInteger(target)||target<0||target>3||teamOf(target)===teamOf(seat))throw new Error('invalid_claim_target');
+  if(!['cut','unshown_project'].includes(reason))throw new Error('invalid_claim_reason');
+  if(reason==='unshown_project'&&!['sira','fifty','hundred','fourHundred'].includes(project))throw new Error('invalid_claim_project');
+  const all=balootPublicTricks(state),ids=action.tricks;
+  if(!Array.isArray(ids)||!ids.length||ids.length>8||new Set(ids).size!==ids.length||ids.some(i=>!Number.isInteger(i)||!all[i]))throw new Error('select_claim_tricks');
+  const tricks=ids.map(i=>all[i]);
+  if(!tricks.some(t=>t.cards.some(p=>p.seat===target&&(reason!=='cut'||p.card===action.card))))throw new Error('select_claim_card');
+  review={kind:'claim',seat,target,reason,project:reason==='unshown_project'?project:null,card:reason==='cut'?action.card:null,tricks,request:{target,reason,project:reason==='unshown_project'?project:undefined,card:action.card,tricks:[...ids],strictEvidence:true}};
+ }else{
+  if(seat!==state.turn||state.tricks.length!==1||!state.declared[seat]?.length||state.projectShows?.[seat]||state.violations.some(v=>v.seat===seat&&v.reason==='unshown_project'))throw new Error('project_show_closed');
+  review={kind:'projects',seat,projects:clone(state.declared[seat])};
+ }
+ review.id=crypto.randomUUID();state.review=review;(state.reviewCounts||=[0,0,0,0])[seat]++;events.push({type:'review_open',seat,kind:review.kind});
+}
+function reviewDecision(state,seat,action,events,rng){
+ const review=state.review;if(!review||review.id!==action.reviewId||review.seat!==seat)throw new Error('stale_review');
+ state.review=null;const confirmed=action.type==='confirm_review';
+ (state.reviewHistory||=[]).push({...clone(review),request:undefined,status:confirmed?'confirmed':'cancelled'});state.reviewHistory=state.reviewHistory.slice(-6);
+ if(!confirmed){events.push({type:'review_cancelled',seat,kind:review.kind});return;}
+ if(review.kind==='claim'){applyClaim(state,seat,events,rng,review.request);}
+ else{(state.projectShows||=[false,false,false,false])[seat]=true;resolveProjects(state,events);events.push({type:'review_confirmed',seat,kind:'projects'});}
+}
+
 /* ---------- Actions ---------- */
 
 export function applyBalootAction(input, seat, action, rng = Math.random) {
   const state = clone(input);
   const events = [];
+  if(['confirm_review','cancel_review'].includes(action?.type)){reviewDecision(state,seat,action,events,rng);return {state,events};}
+  if(state.review)throw new Error('review_in_progress');
+  if(['review_claim','review_projects'].includes(action?.type)){reviewRequest(state,seat,action,events);return {state,events};}
   if (state.phase === 'finished') throw new Error('match_finished');
   if (action?.type === 'next') {
     events.push(...nextHand(state, rng));
@@ -642,6 +679,7 @@ export function applyBalootAction(input, seat, action, rng = Math.random) {
 
 // Who acts now and what they may do (for UI and timeouts).
 export function balootActions(state, seat = state.turn) {
+  if(state.review)return [];
   if (state.phase === 'bidding') return biddingOptions(state, seat).map((o) => ({ type: 'bid', ...o }));
   if (state.phase === 'doubling') return doublingOptions(state, seat).map((o) => ({ type: 'double', ...o }));
   if (state.phase === 'playing') return playableCards(state, seat).map((card) => ({ type: 'play', card }));

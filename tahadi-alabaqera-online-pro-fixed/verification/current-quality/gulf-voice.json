@@ -1,0 +1,287 @@
+{
+  "voice": "ar-KW-FahedNeural",
+  "synthetic": true,
+  "playback": "complete independent clips; no sprite offsets, pitch shifts or interrupted urgent lines",
+  "clips": {
+    "pass": {
+      "text": "بَس، ما أشتري.",
+      "src": "/assets/audio/baloot-gulf-v33/pass.mp3",
+      "seconds": 2.544
+    },
+    "sun": {
+      "text": "أشتري صَن.",
+      "src": "/assets/audio/baloot-gulf-v33/sun.mp3",
+      "seconds": 1.92
+    },
+    "ashkal": {
+      "text": "أَشْكَل، لشريكي.",
+      "src": "/assets/audio/baloot-gulf-v33/ashkal.mp3",
+      "seconds": 2.784
+    },
+    "double": {
+      "text": "دَبَل.",
+      "src": "/assets/audio/baloot-gulf-v33/double.mp3",
+      "seconds": 1.92
+    },
+    "double_locked": {
+      "text": "دبل، واللعب مقفّل.",
+      "src": "/assets/audio/baloot-gulf-v33/double_locked.mp3",
+      "seconds": 2.952
+    },
+    "triple": {
+      "text": "ثْري، ثلاث مرات.",
+      "src": "/assets/audio/baloot-gulf-v33/triple.mp3",
+      "seconds": 2.88
+    },
+    "four": {
+      "text": "فور، أربع مرات.",
+      "src": "/assets/audio/baloot-gulf-v33/four.mp3",
+      "seconds": 2.736
+    },
+    "four_locked": {
+      "text": "فور، واللعب مقفّل.",
+      "src": "/assets/audio/baloot-gulf-v33/four_locked.mp3",
+      "seconds": 2.808
+    },
+    "gahwa": {
+      "text": "قهوة يا شباب.",
+      "src": "/assets/audio/baloot-gulf-v33/gahwa.mp3",
+      "seconds": 2.304
+    },
+    "baloot": {
+      "text": "عندي بلوت.",
+      "src": "/assets/audio/baloot-gulf-v33/baloot.mp3",
+      "seconds": 1.992
+    },
+    "claim": {
+      "text": "بطلب التسجيل، شوفوا الأكلة.",
+      "src": "/assets/audio/baloot-gulf-v33/claim.mp3",
+      "seconds": 3.36
+    },
+    "caught": {
+      "text": "صحيح، هذا قطع.",
+      "src": "/assets/audio/baloot-gulf-v33/caught.mp3",
+      "seconds": 2.88
+    },
+    "wrong": {
+      "text": "التسجيل غلط.",
+      "src": "/assets/audio/baloot-gulf-v33/wrong.mp3",
+      "seconds": 2.04
+    },
+    "claim_ok": {
+      "text": "التسجيل صحيح.",
+      "src": "/assets/audio/baloot-gulf-v33/claim_ok.mp3",
+      "seconds": 2.328
+    },
+    "kaboot": {
+      "text": "كبوت، كل الأكلات لنا.",
+      "src": "/assets/audio/baloot-gulf-v33/kaboot.mp3",
+      "seconds": 3.024
+    },
+    "review_claim": {
+      "text": "خلونا نراجع التسجيل.",
+      "src": "/assets/audio/baloot-gulf-v33/review_claim.mp3",
+      "seconds": 2.76
+    },
+    "review_projects": {
+      "text": "هذا مشروعي، شوفوا الورق.",
+      "src": "/assets/audio/baloot-gulf-v33/review_projects.mp3",
+      "seconds": 3.24
+    },
+    "and": {
+      "text": "وعندي كمان.",
+      "src": "/assets/audio/baloot-gulf-v33/and.mp3",
+      "seconds": 2.136
+    },
+    "hokom_S": {
+      "text": "أشتري حُكم سبيت.",
+      "src": "/assets/audio/baloot-gulf-v33/hokom_S.mp3",
+      "seconds": 2.448
+    },
+    "thani_S": {
+      "text": "ثاني، حُكم سبيت.",
+      "src": "/assets/audio/baloot-gulf-v33/thani_S.mp3",
+      "seconds": 2.856
+    },
+    "hokom_H": {
+      "text": "أشتري حُكم هاص.",
+      "src": "/assets/audio/baloot-gulf-v33/hokom_H.mp3",
+      "seconds": 2.184
+    },
+    "thani_H": {
+      "text": "ثاني، حُكم هاص.",
+      "src": "/assets/audio/baloot-gulf-v33/thani_H.mp3",
+      "seconds": 2.736
+    },
+    "hokom_D": {
+      "text": "أشتري حُكم ديمن.",
+      "src": "/assets/audio/baloot-gulf-v33/hokom_D.mp3",
+      "seconds": 2.304
+    },
+    "thani_D": {
+      "text": "ثاني، حُكم ديمن.",
+      "src": "/assets/audio/baloot-gulf-v33/thani_D.mp3",
+      "seconds": 2.664
+    },
+    "hokom_C": {
+      "text": "أشتري حُكم شريا.",
+      "src": "/assets/audio/baloot-gulf-v33/hokom_C.mp3",
+      "seconds": 2.544
+    },
+    "thani_C": {
+      "text": "ثاني، حُكم شريا.",
+      "src": "/assets/audio/baloot-gulf-v33/thani_C.mp3",
+      "seconds": 2.808
+    },
+    "sira": {
+      "text": "عندي سِرا.",
+      "src": "/assets/audio/baloot-gulf-v33/sira.mp3",
+      "seconds": 2.04
+    },
+    "fifty": {
+      "text": "عندي خمسين.",
+      "src": "/assets/audio/baloot-gulf-v33/fifty.mp3",
+      "seconds": 2.184
+    },
+    "hundred": {
+      "text": "عندي مِيّة.",
+      "src": "/assets/audio/baloot-gulf-v33/hundred.mp3",
+      "seconds": 1.8
+    },
+    "fourHundred": {
+      "text": "عندي أربعمية.",
+      "src": "/assets/audio/baloot-gulf-v33/fourHundred.mp3",
+      "seconds": 2.256
+    },
+    "projects_sira_sira": {
+      "text": "عندي سِرا، وعندي سِرا.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_sira_sira.mp3",
+      "seconds": 3.312
+    },
+    "projects_sira_fifty": {
+      "text": "عندي سِرا، وعندي خمسين.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_sira_fifty.mp3",
+      "seconds": 3.456
+    },
+    "projects_sira_hundred": {
+      "text": "عندي سِرا، وعندي مِيّة.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_sira_hundred.mp3",
+      "seconds": 3.096
+    },
+    "projects_sira_fourHundred": {
+      "text": "عندي سِرا، وعندي أربعمية.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_sira_fourHundred.mp3",
+      "seconds": 3.48
+    },
+    "projects_fifty_fifty": {
+      "text": "عندي خمسين، وعندي خمسين.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_fifty_fifty.mp3",
+      "seconds": 3.6
+    },
+    "projects_fifty_hundred": {
+      "text": "عندي خمسين، وعندي مِيّة.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_fifty_hundred.mp3",
+      "seconds": 3.24
+    },
+    "projects_fifty_fourHundred": {
+      "text": "عندي خمسين، وعندي أربعمية.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_fifty_fourHundred.mp3",
+      "seconds": 3.648
+    },
+    "projects_hundred_hundred": {
+      "text": "عندي مِيّة، وعندي مِيّة.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_hundred_hundred.mp3",
+      "seconds": 2.808
+    },
+    "projects_hundred_fourHundred": {
+      "text": "عندي مِيّة، وعندي أربعمية.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_hundred_fourHundred.mp3",
+      "seconds": 3.264
+    },
+    "projects_fourHundred_fourHundred": {
+      "text": "عندي أربعمية، وعندي أربعمية.",
+      "src": "/assets/audio/baloot-gulf-v33/projects_fourHundred_fourHundred.mp3",
+      "seconds": 3.744
+    },
+    "p1": {
+      "text": "هلا والله، حيّاكم.",
+      "src": "/assets/audio/baloot-gulf-v33/p1.mp3",
+      "seconds": 2.928
+    },
+    "p2": {
+      "text": "بالتوفيق يا شباب.",
+      "src": "/assets/audio/baloot-gulf-v33/p2.mp3",
+      "seconds": 2.544
+    },
+    "p3": {
+      "text": "يا حلو اللعب.",
+      "src": "/assets/audio/baloot-gulf-v33/p3.mp3",
+      "seconds": 2.208
+    },
+    "p4": {
+      "text": "شريكي ذيب.",
+      "src": "/assets/audio/baloot-gulf-v33/p4.mp3",
+      "seconds": 1.968
+    },
+    "p5": {
+      "text": "ركّز يا شريك.",
+      "src": "/assets/audio/baloot-gulf-v33/p5.mp3",
+      "seconds": 2.184
+    },
+    "p6": {
+      "text": "لا تطوّل علينا.",
+      "src": "/assets/audio/baloot-gulf-v33/p6.mp3",
+      "seconds": 2.328
+    },
+    "p7": {
+      "text": "وش ذا الحظ!",
+      "src": "/assets/audio/baloot-gulf-v33/p7.mp3",
+      "seconds": 1.92
+    },
+    "p8": {
+      "text": "صكّة ولا أحلى.",
+      "src": "/assets/audio/baloot-gulf-v33/p8.mp3",
+      "seconds": 2.328
+    },
+    "p9": {
+      "text": "قهوة يا شباب؟",
+      "src": "/assets/audio/baloot-gulf-v33/p9.mp3",
+      "seconds": 2.232
+    },
+    "p10": {
+      "text": "خلها علينا.",
+      "src": "/assets/audio/baloot-gulf-v33/p10.mp3",
+      "seconds": 1.968
+    },
+    "p11": {
+      "text": "أنت قطعت؟",
+      "src": "/assets/audio/baloot-gulf-v33/p11.mp3",
+      "seconds": 1.92
+    },
+    "p12": {
+      "text": "حلال عليكم.",
+      "src": "/assets/audio/baloot-gulf-v33/p12.mp3",
+      "seconds": 2.16
+    },
+    "p13": {
+      "text": "يا ساتر!",
+      "src": "/assets/audio/baloot-gulf-v33/p13.mp3",
+      "seconds": 1.8
+    },
+    "p14": {
+      "text": "كبوت يا حبيبي.",
+      "src": "/assets/audio/baloot-gulf-v33/p14.mp3",
+      "seconds": 2.328
+    },
+    "p15": {
+      "text": "أبشر بالخير.",
+      "src": "/assets/audio/baloot-gulf-v33/p15.mp3",
+      "seconds": 2.064
+    },
+    "p16": {
+      "text": "معليش، الجاية لنا.",
+      "src": "/assets/audio/baloot-gulf-v33/p16.mp3",
+      "seconds": 2.904
+    }
+  }
+}

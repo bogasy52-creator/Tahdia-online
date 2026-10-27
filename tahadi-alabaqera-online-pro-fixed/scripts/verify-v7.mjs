@@ -33,7 +33,7 @@ const config=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
 assert.ok(config.durable_objects.bindings.some(b=>b.name==='QUICK_ARENA'&&b.class_name==='QuickArena'));
 assert.equal(config.migrations.at(-1).tag,'v6-authoritative-quick-arena');
 const sw=await readFile(join(publicDir,'service-worker.js'),'utf8'),shell=sw.match(/const\s+APP_SHELL\s*=\s*\[([\s\S]*?)\];/)[1],paths=[...shell.matchAll(/['"]([^'"]+)['"]/g)].map(m=>m[1]);
-assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.ok(sw.includes("const CACHE_NAME = 'busraj-games-v65-release-"+pkg.version.replaceAll('.','-')+"'"));
+assert.equal(paths.length,new Set(paths).size,'duplicate offline cache paths');assert.ok(sw.includes("const CACHE_NAME = 'busraj-games-v66-release-"+pkg.version.replaceAll('.','-')+"'"));
 const demand=JSON.parse(sw.match(/const ON_DEMAND = (\[[\s\S]*?\]);/)[1]);
 for(const asset of ['serpent-ui.js','serpent-renderer.js','engines/serpent-engine.js','cosmetic-art.js','profile-core.js','career-client.js','pro-dice.js','atelier-shop-v30.js','memory-art-v30.js','board-petals-v29.js','arcade-games.js','pro-experience.js','engines/snakes-adventure.js','engines/bot-strategy.js'])assert.ok(demand.includes('/assets/js/'+asset),'on-demand dependency absent: '+asset);
 for(const asset of ['memory-objects.webp','collection-hero.webp'])assert.ok(demand.includes('/assets/atelier-v30/'+asset),'new collection art absent: '+asset);

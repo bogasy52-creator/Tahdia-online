@@ -5,7 +5,7 @@
 // deal…) go out as one batch that each table animates in order. Only human
 // turns, the lobby countdown of a public table and the pause between hands
 // need an alarm, which keeps Durable Object requests low.
-import { createBalootMatch, applyBalootAction, balootView, teamOf, partnerOf } from '../../public/assets/js/engines/baloot-engine.js';
+import { createBalootMatch, applyBalootAction, balootView, teamOf, partnerOf, provenCuts, balootPublicTricks } from '../../public/assets/js/engines/baloot-engine.js';
 import { chooseBalootAction } from '../../public/assets/js/engines/baloot-bot.js';
 import { pickBotLevel } from './board-tables.js';
 
@@ -68,13 +68,20 @@ export function startBalootRoom(room, rng, now) {
 // Let bots (and absent players, after their grace) act until a human must.
 export function runBalootBots(room, rng, now, events, { level = null } = {}) {
   let guard = 0;
-  while (room.state && ['bidding', 'doubling', 'playing'].includes(room.state.phase) && autoSeat(room, room.state.turn) && guard++ < 200) {
+  while (room.state && !room.state.review && ['bidding', 'doubling', 'playing'].includes(room.state.phase) && autoSeat(room, room.state.turn) && guard++ < 200) {
     const seat = room.state.turn;
     // a bot never cuts for a team that has a human in it
     const action = chooseBalootAction(balootView(room.state, seat), seat, { level: level || room.botLevels?.[seat] || 'hard', rng, honest: !autoSeat(room, partnerOf(seat)) });
     if (!action) break;
+    if(action.type==='claim'){
+      const proof=provenCuts(balootView(room.state,seat),1-teamOf(seat))[0];
+      if(!proof)break;
+      const follow=balootPublicTricks(room.state).find(t=>t.cards.some(p=>p.seat===proof.seat&&p.card===proof.shown));
+      Object.assign(action,{type:'review_claim',target:proof.seat,reason:'cut',card:proof.card,tricks:[...new Set([proof.trick,...(follow?[follow.index]:[])])]});
+    }
     const result = applyBalootAction(room.state, seat, action, rng);
     room.state = result.state;
+    if(room.state.review)room.state.review.automatic=true;
     events.push(...result.events);
   }
   return events;
@@ -86,6 +93,8 @@ export function scheduleBalootTurn(room, now, events) {
   room.turnTotal = null;
   room.nextHandAt = null;
   if (!s) return;
+  if(s.review){if(room.reviewId!==s.review.id){room.reviewId=s.review.id;room.reviewUntil=now+(s.review.automatic?4500:30000);}s.review.deadline=room.reviewUntil;room.turnDeadline=room.reviewUntil;room.turnTotal=30000;return;}
+  room.reviewId=null;room.reviewUntil=null;
   const showing = showTime(events);
   if (s.phase === 'scored') { room.nextHandAt = now + showing + BALOOT_NEXT_HAND_MS; return; }
   if (s.phase === 'finished') { room.status = 'finished'; room.expiresAt = now + 24 * 60 * 60 * 1000; return; }
@@ -99,7 +108,7 @@ export function applyBalootMove(room, player, action, rng, now) {
   if (!room.state || room.status !== 'playing') throw new Error('match_not_playing');
   const clean = sanitizeAction(action);
   // a claim (open play) may come from anyone at any moment of the hand
-  if (clean.type !== 'claim' && room.state.turn !== player.seat) throw new Error('wrong_turn');
+  if (!['review_claim','confirm_review','cancel_review'].includes(clean.type) && room.state.turn !== player.seat) throw new Error('wrong_turn');
   const result = applyBalootAction(room.state, player.seat, clean, rng);
   room.state = result.state;
   const events = [...result.events];
@@ -114,8 +123,11 @@ function sanitizeAction(action) {
   if (type === 'bid') return { type, bid: String(action.bid || ''), suit: action.suit ? String(action.suit).slice(0, 1) : undefined };
   if (type === 'double') return { type, call: String(action.call || ''), locked: Boolean(action.locked) };
   if (type === 'play') return { type, card: String(action.card || '').slice(0, 2), projects: Array.isArray(action.projects)?action.projects.slice(0,3):[] };
-  if(type==='show_projects')return {type};
-  if (type === 'claim') return { type, reason:String(action.reason||'cut'), target:action.target, project:action.project };
+  if(type==='review_projects')return {type};
+  if(type==='review_claim')return {type,target:action.target,reason:action.reason,project:action.project,card:String(action.card||'').slice(0,2),tricks:Array.isArray(action.tricks)?action.tricks.slice(0,9):null};
+  if(['confirm_review','cancel_review'].includes(type))return {type,reviewId:String(action.reviewId||'').slice(0,80)};
+  if(type==='show_projects'||type==='claim')throw new Error('review_required');
+
   throw new Error('invalid_action');
 }
 
@@ -136,6 +148,10 @@ export function balootAlarm(room, rng, now) {
     pushBatch(room, events, now);
     scheduleBalootTurn(room, now, events);
     return 'dealt';
+  }
+  if(room.state.review){
+    if(now<(room.reviewUntil||Infinity))return null;
+    const pending=room.state.review,result=applyBalootAction(room.state,pending.seat,{type:pending.automatic?'confirm_review':'cancel_review',reviewId:pending.id},rng);room.state=result.state;const events=[...result.events];runBalootBots(room,rng,now,events);pushBatch(room,events,now);scheduleBalootTurn(room,now,events);return 'review_timeout';
   }
   if (room.turnDeadline && now >= room.turnDeadline && ['bidding', 'doubling', 'playing'].includes(room.state.phase)) {
     const seat = room.state.turn;

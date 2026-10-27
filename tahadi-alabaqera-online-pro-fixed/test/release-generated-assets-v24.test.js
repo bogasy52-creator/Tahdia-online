@@ -63,7 +63,7 @@ test('npm release verification rebuilds stale artifacts before the verifier read
  }
  await writeFile(join(f.root,'scripts/style-bundles.json'),JSON.stringify(manifest));
  for(const name of ['build-offline.mjs','apply-premium.mjs','service-worker-runtime.txt','refresh-checksums.mjs'])await copyFile(fileURLToPath(new URL('../scripts/'+name,import.meta.url)),join(f.root,'scripts',name));
- await writeFile(join(f.root,'scripts/check-generated.mjs'),`import assert from 'node:assert/strict';import {readFile}from'node:fs/promises';for(const p of ['serpent','journey','paths-online'])assert.match(await readFile('public/assets/css/app-'+p+'.css','utf8'),/color:green/);assert.match(await readFile('public/service-worker.js','utf8'),/busraj-games-v65-release-30-1-0/);`);
+ await writeFile(join(f.root,'scripts/check-generated.mjs'),`import assert from 'node:assert/strict';import {readFile}from'node:fs/promises';for(const p of ['serpent','journey','paths-online'])assert.match(await readFile('public/assets/css/app-'+p+'.css','utf8'),/color:green/);assert.match(await readFile('public/service-worker.js','utf8'),/busraj-games-v66-release-30-1-0/);`);
  await writeFile(join(f.root,'package.json'),JSON.stringify({name:'generated-release-fixture',version:'30.1.0',private:true,scripts:{'preverify:release':sourcePackage.scripts['preverify:release'],'verify:release':'node scripts/check-generated.mjs'}}));
  const sudoku=await readFile(join(f.root,'public/assets/css/app-sudoku.css'));
  const result=spawnSync('npm',['run','verify:release'],{cwd:f.root,encoding:'utf8'});

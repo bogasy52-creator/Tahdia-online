@@ -22,5 +22,5 @@ test('hotfix assets bust the previous mobile cache',async()=>{
  const html=await src('public/serpent.html'),sw=await src('public/service-worker.js');
  assert.match(html,/app-serpent\.css\?v=v?33\.0\.0/);
  assert.match(html,/serpent-ui\.js\?v=v?33\.0\.0/);
- assert.match(sw,/busraj-games-v65-release-33-0-0/);
+ assert.match(sw,/busraj-games-v66-release-33-0-0/);
 });

@@ -1,0 +1,20 @@
+// Isolated local Workerd/SQLite with four actual WebSockets; no production test routes.
+import assert from 'node:assert/strict';import{createRuntime}from'./local-runtime-v26.mjs';import{balootActions,balootPublicTricks}from'../public/assets/js/engines/baloot-engine.js';import{writeFile}from'node:fs/promises';
+const runtime=await createRuntime(),peers=[];const pause=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn,label){const end=Date.now()+10000;while(Date.now()<end){if(fn())return;await pause(15);}throw Error('timeout: '+label);}
+try{
+ const res=await runtime.mf.dispatchFetch(new URL('/api/board/rooms',runtime.url),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:'baloot'})}),room=await res.json();assert.equal(res.status,200);
+ for(let i=0;i<4;i++){
+  const response=await runtime.mf.dispatchFetch(new URL('/api/board/rooms/'+room.code+'/ws?game=baloot&name=Review'+i,runtime.url),{headers:{upgrade:'websocket','sec-websocket-protocol':['busraj-v1',...(i===0?['hk.'+room.hostKey]:[])].join(',')}});assert.equal(response.status,101);const p={socket:response.webSocket,state:null,errors:[]};p.socket.accept();p.socket.addEventListener('message',e=>{const m=JSON.parse(e.data);if(m.state)p.state=m.state;if(m.type==='error')p.errors.push(m.message);});peers.push(p);await until(()=>p.state,'welcome');
+ }
+ peers[0].socket.send(JSON.stringify({type:'start'}));await until(()=>peers.every(p=>p.state.status==='playing'),'start');
+ async function move(p,action){const version=p.state.version;p.socket.send(JSON.stringify({type:'baloot',action,expectedVersion:version}));await until(()=>peers.every(x=>x.state.version>version),'broadcast action '+action.type);}
+ while(!peers[0].state.state.played.length){const state=peers[0].state.state,p=peers.find(x=>x.state.me.index===state.turn),options=balootActions(p.state.state,state.turn);await move(p,options.find(x=>x.bid==='sun')||options.find(x=>x.call==='pass')||options[0]);}
+ const first=peers[0].state.state,entry=balootPublicTricks(first)[0].cards[0],owner=peers.find(p=>p.state.me.index%2!==entry.seat%2),action={type:'review_claim',target:entry.seat,reason:'cut',card:entry.card,tricks:[0]},scores=structuredClone(first.scores);
+ await move(owner,action);const id=owner.state.state.review.id;
+ for(const p of peers){const view=p.state.state;assert.equal(view.review.id,id);assert.equal(view.review.tricks[0].cards[0].card,entry.card);assert.equal(view.claim,null);assert.deepEqual(view.scores,scores);assert.ok(view.hands.filter((_,seat)=>seat!==p.state.me.index).flat().every(c=>c==='??'));}
+ const stranger=peers.find(p=>p!==owner),version=stranger.state.version;stranger.socket.send(JSON.stringify({type:'baloot',action:{type:'confirm_review',reviewId:id},expectedVersion:version}));await until(()=>stranger.errors.length,'unauthorized confirmation');assert.equal(stranger.state.version,version);
+ await move(owner,{type:'cancel_review',reviewId:id});assert.ok(peers.every(p=>p.state.state.review===null));assert.deepEqual(owner.state.state.scores,scores);
+ await move(owner,action);await move(owner,{type:'confirm_review',reviewId:owner.state.state.review.id});assert.ok(peers.every(p=>p.state.state.claim?.correct===false));assert.ok(peers.every(p=>['scored','finished'].includes(p.state.state.phase)));
+ const result={release:'33.0.0',engine:'Workerd / SQLite / four real WebSockets',checks:['selected played evidence broadcasts to every seat before scoring','all other hands remain masked during public review','another player cannot confirm the request','cancel preserves scores and resumes play','owner confirmation scores only selected evidence and broadcasts the result'],physical_phone_tested:false};await writeFile(new URL('../verification/current-quality/baloot-review-runtime.json',import.meta.url),JSON.stringify(result,null,2)+'\n');console.log('PASS',result.checks.length,'native public review checks');
+}finally{for(const p of peers)try{p.socket.close(1000,'done');}catch{}await runtime.dispose();}

@@ -9,7 +9,7 @@ shell.push('/assets/css/play-experience-v25.css?v=29.1.0','/assets/fonts/tajawal
 for(let i=0;i<shell.length;i++)shell[i]=shell[i].replace(/\?v=[0-9.]+/,'?v='+release);
 const demand=[...new Set([...(await walk(root)),'/service-worker.js'])].filter(file=>/\.(?:css|js|json|html|webp|png|svg|wav|mp3|woff2)$/.test(file)).sort();
 const runtime=await readFile(new URL('./service-worker-runtime.txt',import.meta.url),'utf8');
-const cacheName='busraj-games-v65-release-'+release.replaceAll('.','-');
+const cacheName='busraj-games-v66-release-'+release.replaceAll('.','-');
 const value="// Small offline core. Other games and media are cached after the first visit.\nconst CACHE_NAME = '"+cacheName+"';\nconst RUNTIME_CACHE = CACHE_NAME + '-visited';\nconst MEDIA_CACHE = 'busraj-quiz-media-v4';\nconst APP_SHELL = "+JSON.stringify(shell,null,2)+";\nconst ON_DEMAND = "+JSON.stringify(demand,null,2)+";\n"+runtime;
 const out=path.join(root,'service-worker.js');if(process.argv.includes('--check')){if(await readFile(out,'utf8')!==value)throw Error('Rebuild offline manifest');}else await writeFile(out,value);
 console.log('Offline core: '+shell.length+' resources; other assets stay on demand.');
