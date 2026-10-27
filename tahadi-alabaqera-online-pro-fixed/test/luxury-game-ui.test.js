@@ -21,7 +21,7 @@ test('service worker caches luxury presentation assets', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
   assert.ok(sw.includes('/assets/css/luxury-game-ui.css'));
   assert.ok(sw.includes('/assets/js/luxury-game-ui.js'));
-  assert.match(sw,/busraj-games-v60-release-33-0-0/);
+  assert.match(sw,/busraj-games-v65-release-33-0-0/);
 });
 
 

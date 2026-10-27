@@ -1,11 +1,12 @@
+import {memoryTheme} from './memory-themes-v34.js';
 export const MEMORY_FACES=Object.freeze(['خوذة سباق','كاميرا','صاروخ','زمردة','سماعات','مفتاح ذهبي','صدفة بحرية','حصان شطرنج','سيارة كلاسيكية','ساعة منبّه','طائر ورقي','ورقة نبات','فنجان قهوة','تلسكوب','زجاجة عطر','كرة قدم']);
 export const memoryVariant=value=>[...String(value||'')].reduce((n,c)=>(n*31+c.charCodeAt(0))>>>0,0)%16;
 export function memoryFaceIndex(value,variant=0){return Number.isInteger(value)&&value>=0?(value+variant)%MEMORY_FACES.length:null;}
-export function updateMemoryTile(tile,value,{open=false,matched=false,disabled=false,variant=0,index=0}={}){
- const face=memoryFaceIndex(value,variant),wasMatched=tile.classList.contains('matched');
+export function updateMemoryTile(tile,value,{open=false,matched=false,disabled=false,variant=0,index=0,theme='classic'}={}){
+ const atlas=memoryTheme(theme);tile.dataset.memoryTheme=Object.hasOwn({classic:1,wildlife:1,space:1,vehicles:1,ocean:1},theme)?theme:'classic';const face=memoryFaceIndex(value,variant),wasMatched=tile.classList.contains('matched');
  tile.classList.toggle('open',open);tile.classList.toggle('matched',matched);tile.disabled=disabled||matched||open;
- tile.setAttribute('aria-pressed',String(open||matched));tile.setAttribute('aria-label',open||matched?(matched?'زوج مطابق: ':'بطاقة: ')+(MEMORY_FACES[face]||'صورة'):'بطاقة '+(index+1)+' مخفية');
- if(face!==null&&(open||matched)){const front=tile.querySelector('.memory-front-v30');front.style.backgroundPosition=(face%4)/3*100+'% '+Math.floor(face/4)/3*100+'%';front.dataset.face=String(face);}
+ tile.setAttribute('aria-pressed',String(open||matched));tile.setAttribute('aria-label',open||matched?(matched?'زوج مطابق: ':'بطاقة: ')+(atlas.faces[face]||'صورة'):'بطاقة '+(index+1)+' مخفية');
+ if(face!==null&&(open||matched)){const front=tile.querySelector('.memory-front-v30');front.style.backgroundImage='url("'+atlas.src+'")';const zoom=theme==='classic'?1:1.12,size=4*zoom;front.style.backgroundSize=size*100+'% '+size*100+'%';front.style.backgroundPosition=((face%4+.5)*zoom-.5)/(size-1)*100+'% '+((Math.floor(face/4)+.5)*zoom-.5)/(size-1)*100+'%';front.dataset.face=String(face);}
  if(matched&&!wasMatched){tile.classList.add('new-match');setTimeout(()=>tile.classList.remove('new-match'),650);}
  return tile;
 }

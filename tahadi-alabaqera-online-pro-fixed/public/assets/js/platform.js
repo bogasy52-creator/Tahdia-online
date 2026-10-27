@@ -1,5 +1,16 @@
 window.BS_UUID=()=>{if(typeof crypto.randomUUID==='function')return crypto.randomUUID();const b=crypto.getRandomValues(new Uint8Array(16));b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=Array.from(b,v=>v.toString(16).padStart(2,'0')).join('');return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;};
 (() => {
+  // Prevent accidental long-press/drag selection on game labels. Do not cancel
+  // pointer/touch starts: game drags, scrolling, native inputs and zoom need them.
+  const gamePages=new Set(['online','local','baloot','quiz','snakes','jackaroo','zahra','dice','serpent','sudoku','jewels','journey','paths','paths-online','picture','memory','reaction','logic','puzzle','accuracy','party']);
+  const gamePath=location.pathname.replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');
+  {
+    document.body.classList.add('bs-game-interaction-v34');
+    const editable=target=>target?.closest?.('input,textarea,[contenteditable]:not([contenteditable="false"]),[data-selectable]');
+    document.addEventListener('selectstart',event=>{if(!editable(event.target))event.preventDefault();});
+    document.addEventListener('contextmenu',event=>{if(!editable(event.target)&&event.pointerType==='touch')event.preventDefault();});
+  }
+
   let deferredInstall=null;
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
   const toast=(text)=>{let el=document.querySelector('.bs-toast');if(!el){el=document.createElement('div');el.className='bs-toast';document.body.appendChild(el)}el.textContent=text;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2200)};

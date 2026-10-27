@@ -65,6 +65,7 @@
  window.BS_PRO={get paused(){return paused},setPaused,waitForPlay:()=>paused?new Promise(resolve=>listeners.add(resolve)):Promise.resolve(),record,onlineResult,confetti,mountDaily,reduced:reduce};
  for(const target of document.querySelectorAll('[data-daily-gift]'))mountDaily(target);
  document.addEventListener('keydown',e=>{
+  if(e.defaultPrevented)return;
   const extraOverlay=['boardHelpDialog','boardHistoryDialog'].some(id=>{const element=document.getElementById(id);return element&&!element.classList.contains('hidden')});
   if(e.key==='Escape'&&!e.repeat&&!extraOverlay&&game&&!game.classList.contains('hidden')&&(paused||document.getElementById('pauseMatch'))){e.preventDefault();paused?setPaused(false):document.getElementById('pauseMatch').click()}
   if(paused&&e.key==='Tab'){const buttons=[...overlay.querySelectorAll('button')];if(!buttons.includes(document.activeElement)){e.preventDefault();buttons[0].focus()}else if(e.shiftKey&&document.activeElement===buttons[0]){e.preventDefault();buttons[1].focus()}else if(!e.shiftKey&&document.activeElement===buttons[1]){e.preventDefault();buttons[0].focus()}}

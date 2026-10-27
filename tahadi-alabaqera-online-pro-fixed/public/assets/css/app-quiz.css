@@ -95,3 +95,10 @@ body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-in
 .relay-mode-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.relay-mode-links a{display:inline-flex;align-items:center;min-height:44px;border:1px solid #638d80;border-radius:12px;padding:9px 13px;color:#d7ffed;font-weight:750;text-decoration:none;background:#194236}.relay-mode-links a:focus-visible{outline:3px solid #ebc57d;outline-offset:3px}
 
 .quiz-v19 #modal .qcard{display:flex;flex-direction:column;overflow-y:auto}.quiz-v19 #modal .qcard>*{flex-shrink:0}.quiz-v19 #modal .qcard .mediaArea{max-height:none;min-height:0;overflow:visible;flex:0 0 auto}.quiz-v19 #modal .qcard:has(.quiz-relay) .question,.quiz-v19 #modal .qcard:has(.quiz-relay) #modalAssists{display:none!important}.quiz-v19 #modal .qcard:has(.quiz-relay) .relay-note{margin-bottom:0}.quiz-v19 .relay-choices .choice{border-radius:14px}
+
+/* assets/css/game-interaction-v34.css */
+/* Game labels are controls, not editable prose. Keep native text fields usable. */
+body.bs-game-interaction-v34,body.bs-game-interaction-v34 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.bs-game-interaction-v34 input,body.bs-game-interaction-v34 textarea,body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]),body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]) *,body.bs-game-interaction-v34 [data-selectable],body.bs-game-interaction-v34 [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body.bs-game-interaction-v34 button,body.bs-game-interaction-v34 [role=button]{touch-action:manipulation}
+body.bs-game-interaction-v34 img{-webkit-user-drag:none}

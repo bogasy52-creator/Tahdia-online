@@ -1,0 +1,16 @@
+{
+  "version": "33.0.0",
+  "checks": [
+    "quiz: 20 real peers join; extra seat refused",
+    "sudoku: 20 real peers join; extra seat refused",
+    "paths: 20 real peers join; extra seat refused",
+    "picture: 20 real peers join; extra seat refused",
+    "serpent: 20 real peers join; extra seat refused",
+    "snakes: 10 real peers join; extra seat refused",
+    "zahra: 6 real peers join; extra seat refused",
+    "jackaroo: 6 real peers join; extra seat refused",
+    "All 72 original/new sound-question WAVs are served successfully through the Worker"
+  ],
+  "questionClips": 72,
+  "questionAudioBytes": 15552744
+}

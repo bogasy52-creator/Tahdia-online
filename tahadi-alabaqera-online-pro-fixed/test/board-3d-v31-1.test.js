@@ -1,3 +1,4 @@
+import {drawNeonBody,drawNeonHead} from '../public/assets/js/neon-snakes-v33.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -66,11 +67,11 @@ test('pro-dice hands rolls and faces to the GPU die when it is available',async(
 
 async function board({withArt=true,snake='snake-gold'}={}){
  const art={ready:[],bodies:[],heads:[]},frames=[];let wall=0;
- const ctx={setTransform(){},clearRect(){},save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},arc(){},ellipse(){},closePath(){},fill(){},stroke(){},createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})};
+ const ctx={quadraticCurveTo(){},bezierCurveTo(){},fillRect(){},setTransform(){},clearRect(){},save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},arc(){},ellipse(){},closePath(){},fill(){},stroke(){},createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})};
  const canvas={dataset:{},style:{props:{},setProperty(k,v,p){this.props[k]=[v,p]}},setAttribute(){},getContext:()=>ctx};
  const board={getBoundingClientRect:()=>({width:400,height:400}),offsetLeft:14,offsetTop:15},wrap={appendChild(){}},game={classList:{contains:()=>false}};
  const document={hidden:false,documentElement:{dataset:{snake}},getElementById:id=>({board,game,boardWrap:wrap}[id]),createElement:()=>canvas,querySelector:()=>null};
- const context=vm.createContext({snakeGeometry,document,Image:class{addEventListener(){}},devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:()=>1,clearTimeout(){}});
+ const context=vm.createContext({drawNeonBody:(c,pts,id,r,active)=>{art.bodies.push({id,r,opts:{patternScale:r/16},n:pts.length});drawNeonBody(c,pts,id,r,active);},drawNeonHead:(c,id,size)=>{art.heads.push({id,size});drawNeonHead(c,id,size);},snakeGeometry,document,Image:class{addEventListener(){}},devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:()=>1,clearTimeout(){}});
  context.window=context;context.BS_PRO={paused:false};context.addEventListener=()=>{};context.removeEventListener=()=>{};
  if(withArt)context.BS_SERPENT_ART={get ready(){art.ready.push(1);return Promise.resolve(true);},body:(c,pts,id,r,boost,variant,budget,opts)=>art.bodies.push({id,r,opts,n:pts.length}),head:(c,id,size)=>art.heads.push({id,size})};
  vm.runInContext((await read('assets/js/neon-arena.js')).replace(/^import .*?;\n/gm,''),context);
@@ -79,9 +80,9 @@ async function board({withArt=true,snake='snake-gold'}={}){
  return {context,art,canvas,routes,step(ms){wall=ms;frames.shift()?.(ms)}};
 }
 
-test('board snakes are the arena species, with the equipped one first, and the head sheet loads once',async()=>{
+test('neon board snakes keep equipped species first without requesting a head image',async()=>{
  const h=await board();h.context.BS_ARENA.layout(h.routes);
- assert.equal(h.art.ready.length,1,'one request for the painted heads');
+ assert.equal(h.art.ready.length,0,'procedural heads require no image sheet');
  h.step(100);
  assert.deepEqual(h.art.heads.map(x=>x.id),['snake-gold','snake-wild']);
  assert.ok(h.art.bodies.every(b=>b.opts.patternScale>0&&b.opts.patternScale<1),'scales shrink to the board');
@@ -126,8 +127,8 @@ test('the shop shows each board as it plays',async()=>{
  const shop=await read('assets/js/shop-v31.js');
  // 32.0.0: the boards on sale have new pictures, the retired ones keep theirs
  const photos=Object.fromEntries([...shop.matchAll(/'(board-[a-z]+)':'(board-v3[0-9]+-[a-z]+)'/g)].map(m=>[m[1],m[2]]));
- for(const item of Career.CATALOG.filter(i=>i.type==='board')){assert.ok(photos[item.id],item.id);assert.ok(await exists('assets/previews/'+photos[item.id]+'.webp'),item.id);}
- for(const id of Career.STOREFRONT.filter(id=>id.startsWith('board-')))assert.match(photos[id],/^board-v32-/,id);
+ for(const item of Career.CATALOG.filter(i=>i.type==='board')){if(item.id==='board-forest'){assert.equal(photos[item.id],undefined,'new default uses a live vector preview');assert.match(shop,/'board-forest':\{cell:'#18323e',alt:'#213f4a'/);assert.match(shop,/if\(!BOARD_PHOTOS\[item.id\]\)return vectorBoard/);}else{assert.ok(photos[item.id],item.id);assert.ok(await exists('assets/previews/'+photos[item.id]+'.webp'),item.id);}}
+ for(const id of Career.STOREFRONT.filter(id=>id.startsWith('board-')&&id!=='board-forest'))assert.match(photos[id],/^board-v32-/,id);
  assert.match(shop,/'\/assets\/previews\/'\+BOARD_PHOTOS\[item\.id\]\+'\.webp'/);
  assert.match(shop,/stage\.dataset\.diceSkin=item\.id/);
 });

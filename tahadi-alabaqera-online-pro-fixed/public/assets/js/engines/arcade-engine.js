@@ -1,3 +1,4 @@
+import {cognitiveQuestion} from './cognitive-v34.js';
 export const PUZZLE_GOAL=Object.freeze([1,2,3,4,5,6,7,8,0]);
 export function adjacent(a,b){return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a<9&&b<9&&Math.abs(Math.floor(a/3)-Math.floor(b/3))+Math.abs(a%3-b%3)===1}
 export const puzzleSolved=tiles=>tiles.length===9&&tiles.every((x,i)=>x===PUZZLE_GOAL[i]);
@@ -7,7 +8,7 @@ export function movePuzzle(tiles,index){const blank=tiles.indexOf(0);if(!adjacen
 export function shuffled(items,rng=Math.random){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.min(i,Math.floor(rng()*(i+1)));[a[i],a[j]]=[a[j],a[i]]}return a}
 export function accuracyHit(state,now){if(!state.active||now>=state.deadline)return {...state,active:state.active&&now<state.deadline,accepted:false};return {...state,score:state.score+1,accepted:true}}
 export function memoryPair(state,index){if(!state.active||state.locked||state.open.includes(index)||state.matched.includes(index)||index<0||index>=state.deck.length)return {...state,accepted:false};const open=[...state.open,index];if(open.length<2)return {...state,open,accepted:true};const moves=state.moves+1;if(state.deck[open[0]]===state.deck[open[1]]){const matched=[...state.matched,...open];return {...state,open:[],matched,moves,active:matched.length<state.deck.length,won:matched.length===state.deck.length,accepted:true}}return {...state,open,moves,locked:true,accepted:true}}
-export function logicQuestion(index,rng=Math.random){const a=2+Math.floor(rng()*6),b=1+Math.floor(rng()*8),kind=index%3;let sequence,answer,explanation;if(kind===0){sequence=[b,b+a,b+2*a,b+3*a];answer=b+4*a;explanation='نضيف '+a+' في كل خطوة'}else if(kind===1){sequence=[a,a*2,a*4,a*8];answer=a*16;explanation='نضرب كل عدد في 2'}else{sequence=[b+1,b+4,b+9,b+16];answer=b+25;explanation='العدد '+b+' مضاف إليه مربعات 1، 2، 3، 4 ثم 5'}const options=shuffled([answer,answer+a,answer-a,answer+2*a],rng);return {sequence,answer,options,explanation}}
+export const logicQuestion=cognitiveQuestion;
 export function arcadeRules(game,level='standard'){
  const index=Math.max(0,['casual','standard','expert'].indexOf(level));
  const values={memory:{pairs:[6,8,12],seconds:[100,90,75]},accuracy:{target:[80,64,46],seconds:[40,30,30],goal:[8,10,15]},reaction:{trials:[3,5,7]},logic:{questions:[6,10,15],seconds:[180,120,90]},puzzle:{shuffle:[30,160,320]}};

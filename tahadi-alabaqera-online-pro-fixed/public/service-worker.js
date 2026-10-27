@@ -1,5 +1,5 @@
 // Small offline core. Other games and media are cached after the first visit.
-const CACHE_NAME = 'busraj-games-v60-release-33-0-0';
+const CACHE_NAME = 'busraj-games-v65-release-33-0-0';
 const RUNTIME_CACHE = CACHE_NAME + '-visited';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
@@ -55,7 +55,6 @@ const APP_SHELL = [
   "/assets/brand/logic-cover.svg",
   "/assets/brand/puzzle-cover.svg",
   "/assets/css/play-experience-v25.css?v=33.0.0",
-  "/assets/fonts/tajawal-arabic-400.woff2",
   "/assets/fonts/tajawal-arabic-700.woff2"
 ];
 const ON_DEMAND = [
@@ -80,6 +79,7 @@ const ON_DEMAND = [
   "/assets/arena/v16/serpent-heads.webp",
   "/assets/atelier-v30/collection-hero.webp",
   "/assets/atelier-v30/memory-objects.webp",
+  "/assets/audio/baloot-voice-v33.mp3",
   "/assets/brand/accuracy-cover.svg",
   "/assets/brand/app-identity-v29.json",
   "/assets/brand/baloot-cover-v32.webp",
@@ -148,11 +148,13 @@ const ON_DEMAND = [
   "/assets/css/dice-v31.css",
   "/assets/css/experience-v15.css",
   "/assets/css/fullscreen-board.css",
+  "/assets/css/game-interaction-v34.css",
   "/assets/css/game-kit.css",
   "/assets/css/game-menu-v33.css",
   "/assets/css/gameplay-v133.css",
   "/assets/css/gameplay-v134.css",
   "/assets/css/gameplay-v135.css",
+  "/assets/css/gameplay-v34.css",
   "/assets/css/home-pro.css",
   "/assets/css/home-v19.css",
   "/assets/css/home-v33.css",
@@ -262,11 +264,13 @@ const ON_DEMAND = [
   "/assets/js/board-online.js",
   "/assets/js/board-petals-v29.js",
   "/assets/js/board-piece-motion.js",
+  "/assets/js/board-preview-v34.js",
   "/assets/js/board-reactions-v30-1.js",
   "/assets/js/board-table-v33.js",
   "/assets/js/card-courts.js",
   "/assets/js/career-client.js",
   "/assets/js/client-health.js",
+  "/assets/js/cognitive-ui-v34.js",
   "/assets/js/commercial-upgrade-engine.js",
   "/assets/js/cosmetic-art.js",
   "/assets/js/dice-3d-v31-1.js",
@@ -278,6 +282,7 @@ const ON_DEMAND = [
   "/assets/js/engines/baloot-talk.js",
   "/assets/js/engines/board-geometry-v29.js",
   "/assets/js/engines/bot-strategy.js",
+  "/assets/js/engines/cognitive-v34.js",
   "/assets/js/engines/dice-engine.js",
   "/assets/js/engines/image-puzzle.js",
   "/assets/js/engines/jackaroo-engine.js",
@@ -310,7 +315,10 @@ const ON_DEMAND = [
   "/assets/js/match3-renderer.js",
   "/assets/js/matchmaking.js",
   "/assets/js/memory-art-v30.js",
+  "/assets/js/memory-themes-v34.js",
+  "/assets/js/native-play-v33.js",
   "/assets/js/neon-arena.js",
+  "/assets/js/neon-snakes-v33.js",
   "/assets/js/online/connection-utils.js",
   "/assets/js/online/room-client.js",
   "/assets/js/online/room-lobby.js",
@@ -354,6 +362,10 @@ const ON_DEMAND = [
   "/assets/js/tahdia-premium-v25.js",
   "/assets/js/ui-icons.js",
   "/assets/js/v5-ultimate-expansion.js",
+  "/assets/memory-v34/memory-ocean-v34.webp",
+  "/assets/memory-v34/memory-space-v34.webp",
+  "/assets/memory-v34/memory-vehicles-v34.webp",
+  "/assets/memory-v34/memory-wildlife-v34.webp",
   "/assets/pieces-3d/die-hero.webp",
   "/assets/pieces-3d/marble-galaxy-0.webp",
   "/assets/pieces-3d/marble-galaxy-1.webp",
@@ -896,7 +908,7 @@ self.addEventListener('fetch', event => {
     })()); return;
   }
   if (!allowed.has(url.pathname)) return;
-  const media = url.pathname.startsWith('/assets/quiz_photos/') || url.pathname.startsWith('/assets/sounds_pro/') || /\.(?:webp|png|wav)$/.test(url.pathname);
+  const media = url.pathname.startsWith('/assets/quiz_photos/') || url.pathname.startsWith('/assets/sounds_pro/') || /\.(?:webp|png|wav|mp3)$/.test(url.pathname);
   event.respondWith((async () => {
     const found = await caches.match(event.request); if (found) return found;
     try { const response = await fetch(event.request); if (response.ok && response.type !== 'opaque') event.waitUntil(remember(media?MEDIA_CACHE:RUNTIME_CACHE,event.request,response.clone(),media?64:144).catch(() => {})); return response; }

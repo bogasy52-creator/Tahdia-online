@@ -22,7 +22,7 @@
 :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #startBtn{width:100%!important;min-height:56px!important;margin-top:14px!important;border-radius:16px!important;font-size:18px!important;font-weight:900!important;background:linear-gradient(180deg,#ffd877,#e9a92e)!important;color:#2b1a02!important;border:0!important;box-shadow:0 10px 24px #e9a92e55,inset 0 1px 0 #fff8!important}
 
 /* ---------- Game shell ---------- */
-:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31{display:block!important;max-width:1100px!important;margin:0 auto!important;padding:0 8px 20px!important;background:none!important;border:0!important;box-shadow:none!important}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31:not(.hidden){display:block!important;max-width:1100px!important;margin:0 auto!important;padding:0 8px 20px!important;background:none!important;border:0!important;box-shadow:none!important}
 :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .game-toolbar{display:flex!important;align-items:center!important;gap:6px!important;margin:0 0 8px!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-height:0!important;position:static!important}
 :is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .toolbar-title h1,:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .toolbar-title p{display:none!important}
 :is(html,#v31) body.game-jackaroo #game.tbl31 .toolbar-title{display:flex!important;gap:6px;flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}

@@ -27,20 +27,20 @@ test('every call, project, claim and phrase the table says has its recording', a
   assert.match(table, /const PROJECT_NAME = \{ sira: 'سرا', fifty: 'خمسين', hundred: 'مية', fourHundred: 'أربعمية' \}/);
 });
 
-test('the voices are one recorded sound file, not the device speech', async () => {
+test('Saudi neural phrases use complete measured segments instead of device speech', async () => {
   const voice = await read('public/assets/js/baloot-voice.js');
   assert.doesNotMatch(voice, /speechSynthesis|SpeechSynthesisUtterance/);
-  assert.match(voice, /const SPRITE = '\/assets\/audio\/baloot-voice-v33\.mp3'/);
+  assert.match(voice, /const SPRITE = '\/assets\/audio\/baloot-voice-v33\.mp3\?r=saudi1'/);
   const size = (await stat(new URL('../public/assets/audio/baloot-voice-v33.mp3', import.meta.url))).size;
-  assert.ok(size > 100_000 && size < 600_000, 'one small file: ' + size);
+  assert.ok(size > 100_000 && size < 1_500_000, 'one small file: ' + size);
   // every recording sits inside the file, one after the other
   const lines = JSON.parse(voice.match(/const LINES = Object\.freeze\((\{[\s\S]*?\})\);/)[1]);
   let end = 0;
   for (const [id, [start, length]] of Object.entries(lines).sort((a, b) => a[1][0] - b[1][0])) {
-    assert.ok(start >= end && length > 0.1 && length < 2.5, id);
+    assert.ok(start >= end && length > 0.1 && length < 5, id);
     end = start + length;
   }
-  assert.ok(end < 50, 'the file is under a minute');
+  assert.ok(end < 120, 'all phrases fit the measured voice file');
 });
 
 test('a tap plays a card the rules allow at once; a cut needs a second tap', async () => {

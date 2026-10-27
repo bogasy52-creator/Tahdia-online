@@ -113,8 +113,9 @@ function sanitizeAction(action) {
   const type = String(action?.type || '');
   if (type === 'bid') return { type, bid: String(action.bid || ''), suit: action.suit ? String(action.suit).slice(0, 1) : undefined };
   if (type === 'double') return { type, call: String(action.call || ''), locked: Boolean(action.locked) };
-  if (type === 'play') return { type, card: String(action.card || '').slice(0, 2) };
-  if (type === 'claim') return { type };
+  if (type === 'play') return { type, card: String(action.card || '').slice(0, 2), projects: Array.isArray(action.projects)?action.projects.slice(0,3):[] };
+  if(type==='show_projects')return {type};
+  if (type === 'claim') return { type, reason:String(action.reason||'cut'), target:action.target, project:action.project };
   throw new Error('invalid_action');
 }
 
@@ -139,6 +140,7 @@ export function balootAlarm(room, rng, now) {
   if (room.turnDeadline && now >= room.turnDeadline && ['bidding', 'doubling', 'playing'].includes(room.state.phase)) {
     const seat = room.state.turn;
     const action = chooseBalootAction(balootView(room.state, seat), seat, { level: 'medium', rng, honest: true });
+    if(action.type==='play'&&!(room.bots||[]).includes(seat))action.projects=[];
     const result = applyBalootAction(room.state, seat, action, rng);
     room.state = result.state;
     const events = [...result.events];

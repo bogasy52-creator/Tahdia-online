@@ -576,6 +576,9 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 .bl-lobby-friends{margin:10px 0}
 .bl-lobby-friends[hidden]{display:none!important}
 
+/* Explicit project declarations and reasoned claims. */
+.bl-project-picker{display:flex;flex-wrap:wrap;gap:10px;padding:12px;border:1px solid #70d8bd66;background:#0a292de8;border-radius:14px;max-width:430px}.bl-project-picker[hidden]{display:none}.bl-project-picker b,.bl-project-picker small{flex-basis:100%}.bl-project-picker label{display:flex;gap:7px;align-items:center;padding:8px;border:1px solid #bfe8de44;border-radius:9px}.bl-project-picker input{accent-color:#71f1cb;width:18px;height:18px}.bl-claim-confirm label{display:grid;gap:5px;margin:10px 0}.bl-claim-confirm select{padding:10px;border-radius:9px;background:#10292b;color:white;border:1px solid #74bfab}.bl-claim-confirm{max-height:75vh;overflow:auto}.bl-claim-confirm [hidden]{display:none!important}
+
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,
    «غرفة مع أصحابك», the room lobby and your online friends. */
@@ -714,3 +717,10 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 .quiz-lobby-friends-v33[hidden]{display:none}
 /* on a phone the menu comes first: the big brain picture waits for a wider screen */
 @media (max-width:640px){.quizOnlineHero .onlineHeroOrb{display:none}}
+
+/* assets/css/game-interaction-v34.css */
+/* Game labels are controls, not editable prose. Keep native text fields usable. */
+body.bs-game-interaction-v34,body.bs-game-interaction-v34 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.bs-game-interaction-v34 input,body.bs-game-interaction-v34 textarea,body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]),body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]) *,body.bs-game-interaction-v34 [data-selectable],body.bs-game-interaction-v34 [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body.bs-game-interaction-v34 button,body.bs-game-interaction-v34 [role=button]{touch-action:manipulation}
+body.bs-game-interaction-v34 img{-webkit-user-drag:none}

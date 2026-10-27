@@ -83,19 +83,18 @@ test('Baloot decks are sold in the shop and equipped on their own slot', async (
   for (const b of bundles) for (const id of b.items) assert.ok(Core.CATALOG.some((item) => item.id === id), id);
 });
 
-test('the free snakes board is the dark jewel board; lava and galaxy join the shop', async () => {
+test('the free snakes board has calm neon tiles; paid lava and galaxy boards stay available', async () => {
   const forest = Core.CATALOG.find((item) => item.id === 'board-forest');
   assert.equal(forest.price, 0);
-  assert.equal(forest.name, 'لوحة الجواهر');
+  assert.equal(forest.name, 'لوحة النيون');
   for (const id of ['board-lava', 'board-galaxy']) {
     const item = Core.CATALOG.find((x) => x.id === id);
     assert.ok(item && item.price > 0 && Core.STOREFRONT.includes(id), id);
   }
   const css = await read('assets/css/snakes-board-v32.css');
-  // ten rows, each with its own stone, from emerald at the start to ruby at the top
-  assert.equal((css.match(/#board>\.snake-cell:nth-child\(/g) || []).length >= 10, true);
-  assert.match(css, /nth-child\(n\+91\)\{--snl-tile:#0f5e4f/);
-  assert.match(css, /nth-child\(-n\+10\)\{--snl-tile:#8a2347/);
+  // The default has two muted colours, without row-by-row rainbow overrides.
+  assert.match(css,/--snl-tile:#18323e;--snl-tile-alt:#213f4a/);
+  assert.doesNotMatch(css,/#board>\.snake-cell:nth-child\(n\+91\)/);
   for (const theme of ['board-royal', 'board-lava', 'board-galaxy']) assert.match(css, new RegExp('html\\[data-board=' + theme + '\\]\\{'));
   // the light cream tiles of 31.x are gone from the default board
   assert.doesNotMatch(css.split('/* ---------- palace')[0], /#f8ecd4|#ecd3a4|#eedcb6/);

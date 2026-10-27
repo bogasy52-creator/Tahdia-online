@@ -1,19 +1,12 @@
-/* Tahdia 33.0.0 — the Baloot table speaks with recorded voices.
-   Every call (بس، صن، أشكل، حكم سبيت، دبل، ثري، فور، قهوة…), project (سرا،
-   خمسين، مية، أربعمية، بلوت), claim and table phrase is a short recording in
-   one sound file, spoken with full vowels the way the table says it. The
-   device's own speech voice is no longer used: it read the words wrongly and
-   sounded robotic. Each seat speaks a little higher or lower so you can tell
-   who called. Silent when the sound is muted, when the player turns the
-   voices off, or before the file arrives (the bubbles still show). */
+/* Saudi Arabic neural speech: generated phrases, normalized volume, and whole-word boundaries. No borrowed commercial game recordings. */
 import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.0.0';
 
 const KEY = 'bs_baloot_voice';
-const SPRITE = '/assets/audio/baloot-voice-v33.mp3';
+const SPRITE = '/assets/audio/baloot-voice-v33.mp3?r=saudi1';
 // [start, length] in seconds inside the sound file
-const LINES = Object.freeze({"pass":[0.3,0.342],"sun":[0.942,0.388],"ashkal":[1.63,0.469],"hokom_S":[2.399,0.741],"hokom_H":[3.44,1.034],"hokom_D":[4.774,1.003],"hokom_C":[6.077,1.206],"thani_S":[7.583,0.857],"thani_H":[8.74,0.951],"thani_D":[9.991,1.113],"thani_C":[11.404,1.151],"double":[12.855,0.473],"double_locked":[13.628,1.11],"triple":[15.038,0.406],"four":[15.744,0.32],"four_locked":[16.364,0.705],"gahwa":[17.37,0.319],"sira":[17.988,0.304],"fifty":[18.593,0.654],"hundred":[19.547,0.542],"fourHundred":[20.389,0.736],"and":[21.425,0.186],"baloot":[21.911,0.425],"claim":[22.636,0.314],"caught":[23.25,0.826],"wrong":[24.376,0.488],"kaboot":[25.164,0.645],"p1":[26.11,0.837],"p2":[27.246,0.493],"p3":[28.039,1.164],"p4":[29.504,0.96],"p5":[30.763,1.149],"p6":[32.212,0.764],"p7":[33.277,0.946],"p8":[34.523,1.282],"p9":[36.105,0.352],"p10":[36.756,1.278],"p11":[38.334,0.486],"p12":[39.12,1.097],"p13":[40.517,0.87],"p14":[41.687,1.422],"p15":[43.409,1.169],"p16":[44.878,2.023]});
+const LINES = Object.freeze({"pass":[0.25,1.872],"sun":[2.372,1.872],"ashkal":[4.494,1.872],"hokom_S":[6.616,2.16],"hokom_H":[9.026,1.944],"hokom_D":[11.22,2.112],"hokom_C":[13.582,2.136],"thani_S":[15.968,2.232],"thani_H":[18.45,2.208],"thani_D":[20.908,2.256],"thani_C":[23.414,2.136],"double":[25.8,1.872],"double_locked":[27.922,2.352],"triple":[30.524,1.872],"four":[32.646,1.872],"four_locked":[34.768,2.304],"gahwa":[37.322,1.872],"sira":[39.444,1.872],"fifty":[41.566,1.992],"hundred":[43.808,1.872],"fourHundred":[45.93,1.944],"and":[48.124,1.872],"baloot":[50.246,1.872],"claim":[52.368,1.896],"caught":[54.514,2.352],"wrong":[57.116,1.872],"kaboot":[59.238,1.872],"p1":[61.36,2.208],"p2":[63.818,2.064],"p3":[66.132,2.472],"p4":[68.854,2.16],"p5":[71.264,2.448],"p6":[73.962,2.16],"p7":[76.372,2.16],"p8":[78.782,2.4],"p9":[81.432,1.872],"p10":[83.554,2.328],"p11":[86.132,1.872],"p12":[88.254,2.4],"p13":[90.904,2.136],"p14":[93.29,2.616],"p15":[96.156,2.28],"p16":[98.686,3.168]});
 // relative to you: you, the player on your right, your partner, the player on your left
-const RATE = [1, 0.93, 1.06, 0.97];
+const RATE = [1, 1, 1, 1];
 const SUITS = { 'سبيت': 'S', 'هاص': 'H', 'ديمن': 'D', 'شريا': 'C' };
 const WORDS = {
   'بس': 'pass', 'صن': 'sun', 'أشكل': 'ashkal', 'اشكل': 'ashkal',
@@ -69,7 +62,7 @@ function playIds(ids, position) {
   if (!ac || !buffer || !ids.length) return false;
   const opts = settings();
   const gain = ac.createGain();
-  gain.gain.value = Math.max(0.25, Math.min(1, Number(opts.volume ?? 0.85) || 0.85));
+  gain.gain.value = Math.max(0, Math.min(1, Number(opts.volume ?? 0.85)));
   gain.connect(ac.destination);
   const rate = RATE[((position % 4) + 4) % 4];
   let at = ac.currentTime + 0.02, last = null;

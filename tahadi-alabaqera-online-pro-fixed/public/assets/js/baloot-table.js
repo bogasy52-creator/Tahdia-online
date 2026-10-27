@@ -6,7 +6,7 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim } from './engines/baloot-engine.js?v=33.0.0';
+import { balootActions, teamOf, legalCards, canClaim, findProjects } from './engines/baloot-engine.js?v=33.0.0';
 import { BoardOnlineClient } from './board-online.js?v=33.0.0';
 import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.0.0';
 import { BalootVoice } from './baloot-voice.js?v=33.0.0';
@@ -195,6 +195,30 @@ function closeHandGap() {
   });
 }
 
+let projectChoiceKey='', projectChoices=[];
+function playHumanCard(card){
+  const first=ui.view?.tricks?.length===0;
+  const projects=first?[...projectChoices]:[];
+  act({type:'play',card,projects});
+}
+function renderProjectPicker(view){
+  const box=$('projectPicker');if(!box)return;
+  const mine=view?.phase==='playing'&&view.turn===ui.me;
+  const key=String(view?.handNo)+':'+ui.me+':'+(view?.hands?.[ui.me]||[]).join(',');
+  if(key!==projectChoiceKey){projectChoiceKey=key;projectChoices=[];}
+  box.replaceChildren();box.hidden=!mine;
+  if(!mine)return;
+  if(view.tricks.length===0){
+    const projects=findProjects(view.hands[ui.me],view.contract.type);
+    if(!projects.length){box.hidden=true;return;}
+    const title=document.createElement('b');title.textContent='مشروعك: اختر ما تعلنه قبل ورقتك الأولى';box.append(title);
+    projects.forEach((p,i)=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=projectChoices.includes(i);input.onchange=()=>{projectChoices=input.checked?[...new Set([...projectChoices,i])]:projectChoices.filter(x=>x!==i);};label.append(input,document.createTextNode(PROJECT_NAME[p.type]));box.append(label);});
+    const note=document.createElement('small');note.textContent='بدون اختيار: تلعب بدون إعلان مشروع. أنزل المشروع في دورك بالأكلة الثانية.';box.append(note);
+  }else if(view.tricks.length===1&&view.declared?.[ui.me]?.length&&!view.projectShows?.[ui.me]){
+    const b=document.createElement('button');b.className='bl-cta';b.textContent='أنزل مشروعي: '+view.declared[ui.me].map(p=>PROJECT_NAME[p.type]).join(' + ');b.onclick=()=>act({type:'show_projects'});b.disabled=ui.sending||ui.busy;box.append(b);
+    const note=document.createElement('small');note.textContent='نزّل المشروع قبل ورقتك الثانية؛ تركه يسمح للخصم بالتسجيل.';box.append(note);
+  }else box.hidden=true;
+}
 function onCardTap(card) {
   const view = ui.view;
   if (!view || view.phase !== 'playing') return;
@@ -207,7 +231,7 @@ function onCardTap(card) {
   const el = [...$('hand').children].find((x) => x.dataset.card === card);
   const cut = view.open && !ruleSet(view)?.has(card);
   // a card the rules allow is played with one tap; only a cut asks for a second one
-  if (!cut) { ui.picked = null; for (const other of $('hand').children) other.classList.remove('picked', 'cut'); act({ type: 'play', card }); return; }
+  if (!cut) { ui.picked = null; for (const other of $('hand').children) other.classList.remove('picked', 'cut'); playHumanCard(card); return; }
   if (ui.picked !== card) {
     for (const other of $('hand').children) other.classList.remove('picked', 'cut');
     el?.classList.add('picked');
@@ -220,7 +244,7 @@ function onCardTap(card) {
     return;
   }
   ui.picked = null;
-  act({ type: 'play', card });
+  playHumanCard(card);
 }
 
 /* ---------- Centre ---------- */
@@ -343,6 +367,7 @@ function render(view = ui.view) {
   renderActions(view);
   renderPrompt(view);
   renderClaim(view);
+  renderProjectPicker(view);
 }
 
 /* ---------- Open play: claims ---------- */
@@ -360,16 +385,20 @@ function armClaim() {
   ui.claimArmed = Date.now();
   $('claimBtn').classList.add('armed');
   $('claimConfirm').hidden = false;
+  $('claimTarget').replaceChildren();
+  for(let seat=0;seat<4;seat++)if(teamOf(seat)!==teamOf(ui.me)){const o=document.createElement('option');o.value=String(seat);o.textContent=seatName(ui.view,seat);$('claimTarget').append(o);}
+  $('claimReason').value='cut';$('claimProjectLabel').hidden=true;
   BalootVoice.unlock();
 }
 function cancelClaim() { ui.claimArmed = 0; $('claimBtn').classList.remove('armed'); $('claimConfirm').hidden = true; }
 function sendClaim() {
   if (!claimable(ui.view)) return cancelClaim();
   cancelClaim();
-  act({ type: 'claim' });
+  act({ type: 'claim',target:Number($('claimTarget').value),reason:$('claimReason').value,...($('claimReason').value==='unshown_project'?{project:$('claimProject').value}:{}) });
 }
 function cutLine(proof, view) {
   if (!proof) return '';
+  if(proof.reason==='unshown_project')return esc(seatName(view,proof.seat))+' أعلن '+(proof.projects||[]).map(p=>PROJECT_NAME[p]).join(' + ')+' ولم ينزل المشروع قبل ورقته الثانية.';
   const mine = proof.seat === ui.me, who = mine ? 'أنت' : seatName(view, proof.seat);
   const should = (proof.should || []).slice(0, 1).map((c) => cardName(c)).join('');
   const why = (CUT_WHY[proof.reason] || ['وخالف القانون', 'وخالفت القانون'])[mine ? 1 : 0];
@@ -636,12 +665,12 @@ async function showClaim(e, view) {
     const p = e.proof;
     seatEl(p.seat)?.classList.add('caught');
     setTimeout(() => seatEl(p.seat)?.classList.remove('caught'), 2600);
-    stamp(`<b>قطع ✔</b><small>${cutLine(p, view)}</small>`, 'good', p.card);
+    stamp(`<b>${e.reason==='unshown_project'?'لم ينزل المشروع':'قطع'} ✔</b><small>${cutLine(p, view)}</small>`, 'good', p.card);
     speak('صح، قطع', e.seat, { urgent: true });
     play(ours ? 'win' : 'wrong', { volume: 0.6 });
     if (!ours) botTalk('caught', [e.seat]);
   } else {
-    stamp(`<b>تسجيل غلط ✘</b><small>${e.seat === ui.me ? 'سجّلت' : esc(who) + ' سجّل'} وما فيه قطع، فراحت اليد للفريق الثاني</small>`, 'bad');
+    stamp(`<b>تسجيل غلط ✘</b><small>${e.seat === ui.me ? 'سجّلت' : esc(who) + ' سجّل'} وما ثبت السبب المختار، فراحت اليد للفريق الثاني</small>`, 'bad');
     speak('غلط', e.seat, { urgent: true });
     play(ours ? 'wrong' : 'win', { volume: 0.6 });
   }
@@ -785,7 +814,7 @@ function showResult(result, scores, view) {
   const note = $('resultClaim');
   if (result.claim) {
     const self = result.claim.seat === ui.me, by = self ? '' : esc(seatName(view, result.claim.seat)) + ' ';
-    note.innerHTML = result.claim.correct ? `⚖️ ${by}${self ? 'سجّلت وصدقت' : 'سجّل وصدق'}: ${cutLine(result.claim.proof, view)}` : `⚖️ ${by}${self ? 'سجّلت' : 'سجّل'} وما كان فيه قطع، فراحت اليد للفريق الثاني`;
+    note.innerHTML = result.claim.correct ? `⚖️ ${by}${self ? 'سجّلت وصدقت' : 'سجّل وصدق'}: ${cutLine(result.claim.proof, view)}` : `⚖️ ${by}${self ? 'سجّلت' : 'سجّل'} وما ثبت السبب المختار، فراحت اليد للفريق الثاني`;
     note.className = 'bl-claim-note ' + (result.claim.team === us ? (result.claim.correct ? 'good' : 'bad') : (result.claim.correct ? 'bad' : 'good'));
     note.hidden = false;
   } else if (result.cuts?.length) {
@@ -1064,6 +1093,7 @@ function init() {
   $('leaveTable').addEventListener('click', () => { if (ui.room?.status === 'playing' && !confirmLeave()) return; showSetup(); });
   $('openLog').addEventListener('click', showLog);
   $('claimBtn').addEventListener('click', () => (ui.claimArmed ? cancelClaim() : armClaim()));
+  $('claimReason').addEventListener('change',()=>{$('claimProjectLabel').hidden=$('claimReason').value!=='unshown_project';});
   $('claimYes').addEventListener('click', sendClaim);
   $('claimNo').addEventListener('click', cancelClaim);
   $('talkBtn').addEventListener('click', () => ($('talkSheet').hidden ? openTalk() : closeTalk()));
@@ -1079,7 +1109,7 @@ function init() {
     else ui.client?.send('rematch');
   });
   $('endExit').addEventListener('click', showSetup);
-  $('felt').addEventListener('click', (e) => { if (ui.picked && !e.target.closest('.bl-hand')) { const card = ui.picked; if (legalSet(ui.view)?.has(card)) { ui.picked = null; act({ type: 'play', card }); } } });
+  $('felt').addEventListener('click', (e) => { if (ui.picked && !e.target.closest('.bl-hand')) { const card = ui.picked; if (legalSet(ui.view)?.has(card)) { ui.picked = null; playHumanCard(card); } } });
   addEventListener('resize', () => render());
   addEventListener('bs-career-change', () => { applyCosmetics(); heroFan(); });
   const params = new URLSearchParams(location.search);

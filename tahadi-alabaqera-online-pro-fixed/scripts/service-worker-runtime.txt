@@ -22,7 +22,7 @@ self.addEventListener('fetch', event => {
     })()); return;
   }
   if (!allowed.has(url.pathname)) return;
-  const media = url.pathname.startsWith('/assets/quiz_photos/') || url.pathname.startsWith('/assets/sounds_pro/') || /\.(?:webp|png|wav)$/.test(url.pathname);
+  const media = url.pathname.startsWith('/assets/quiz_photos/') || url.pathname.startsWith('/assets/sounds_pro/') || /\.(?:webp|png|wav|mp3)$/.test(url.pathname);
   event.respondWith((async () => {
     const found = await caches.match(event.request); if (found) return found;
     try { const response = await fetch(event.request); if (response.ok && response.type !== 'opaque') event.waitUntil(remember(media?MEDIA_CACHE:RUNTIME_CACHE,event.request,response.clone(),media?64:144).catch(() => {})); return response; }

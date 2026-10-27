@@ -179,6 +179,8 @@ export function startHand(state, rng = Math.random) {
   state.tricks = [];
   state.played = [];
   state.declared = [[], [], [], []];
+  state.manualProjects = [false,false,false,false];
+  state.projectShows = [false,false,false,false];
   state.projects = null;
   state.baloot = null;
   state.startHands = null;
@@ -419,11 +421,17 @@ function applyPlay(state, seat, action, events, rng) {
     state.trick.top = state.leadTop;
   }
   if (first && action.declare !== false) {
-    const found = findProjects(state.startHands[seat], c.type);
-    if (found.length) {
-      state.declared[seat] = found;
-      events.push({ type: 'declare', seat, projects: found.map((p) => p.type) });
-    }
+    const available=findProjects(state.startHands[seat],c.type);
+    const explicit=Array.isArray(action.projects);
+    const ids=explicit?action.projects:available.map((_,i)=>i);
+    if(ids.length>2||new Set(ids).size!==ids.length||ids.some(i=>!Number.isInteger(i)||!available[i]))throw new Error('invalid_projects');
+    const found=ids.map(i=>available[i]);
+    (state.manualProjects ||= [false,false,false,false])[seat]=explicit;
+    (state.projectShows ||= [false,false,false,false])[seat]=!explicit;
+    if(found.length){state.declared[seat]=found;events.push({type:'declare',seat,projects:found.map(p=>p.type)});}
+  }
+  if(!first&&state.declared[seat].length&&state.manualProjects?.[seat]&&!state.projectShows?.[seat]&&!state.violations.some(v=>v.seat===seat&&v.reason==='unshown_project')){
+    state.violations.push({seat,reason:'unshown_project',projects:state.declared[seat].map(p=>p.type),trick:state.tricks.length});
   }
   state.hands[seat] = state.hands[seat].filter((x) => x !== card);
   state.trick.cards.push({ seat, card });
@@ -458,14 +466,14 @@ function resolveProjects(state, events) {
   let best = null;
   for (let i = 0; i < 4; i++) {
     const seat = (state.bidding.first + i) % 4; // earlier seats win ties
-    for (const p of state.declared[seat]) {
+    for (const p of state.declared[seat].filter(()=>!state.manualProjects?.[seat]||state.projectShows?.[seat])) {
       if (!best || compareProject(p, best) > 0) { best = p; bestSeat = seat; }
     }
   }
   if (!best) { state.projects = { team: null, shown: [] }; return; }
   const team = teamOf(bestSeat);
   const shown = [];
-  for (const seat of [0, 1, 2, 3]) if (teamOf(seat) === team) for (const p of state.declared[seat]) shown.push({ seat, ...p });
+  for (const seat of [0, 1, 2, 3]) if (teamOf(seat) === team) for (const p of state.declared[seat].filter(()=>!state.manualProjects?.[seat]||state.projectShows?.[seat])) shown.push({ seat, ...p });
   state.projects = { team, shown };
   events.push({ type: 'projects', team, shown: clone(shown) });
 }
@@ -572,12 +580,18 @@ export function canClaim(state, seat) {
   return Boolean(state?.open) && state.phase === 'playing' && !state.claim && Number.isInteger(seat) && seat >= 0 && seat < 4 && (state.played?.length || 0) > 0;
 }
 
-function applyClaim(state, seat, events, rng) {
+function applyClaim(state, seat, events, rng, action={}) {
   if (!canClaim(state, seat)) throw new Error('illegal_claim');
   const team = teamOf(seat), accused = 1 - team;
-  const proof = (state.violations || []).find((v) => teamOf(v.seat) === accused) || null;
-  state.claim = { seat, team, accused, correct: Boolean(proof), proof: proof ? clone(proof) : null, trick: state.tricks.length };
-  events.push({ type: 'claim', seat, team, correct: Boolean(proof), proof: proof ? clone(proof) : null });
+  const reason=action.reason||'cut';
+  if(!['cut','unshown_project'].includes(reason))throw new Error('invalid_claim_reason');
+  const target=action.target;
+  if(target!==undefined&&(!Number.isInteger(target)||target<0||target>3||teamOf(target)!==accused))throw new Error('invalid_claim_target');
+  const project=action.project;
+  if(project!==undefined&&!['sira','fifty','hundred','fourHundred'].includes(project))throw new Error('invalid_claim_project');
+  const proof = (state.violations || []).find(v=>teamOf(v.seat)===accused&&(target===undefined||v.seat===target)&&(reason==='cut'?v.reason!=='unshown_project':v.reason==='unshown_project'&&(!project||v.projects?.includes(project)))) || null;
+  state.claim = { seat, team, accused, reason, target, project, correct: Boolean(proof), proof: proof ? clone(proof) : null, trick: state.tricks.length };
+  events.push({ type: 'claim', seat, team, reason, target, project, correct: Boolean(proof), proof: proof ? clone(proof) : null });
   if (state.trick?.cards?.length) state.trick = { ...state.trick, cards: [] };
   scoreHand(state, events, rng, { winner: proof ? team : accused });
 }
@@ -613,9 +627,13 @@ export function applyBalootAction(input, seat, action, rng = Math.random) {
     events.push(...nextHand(state, rng));
     return { state, events };
   }
-  if (action?.type === 'claim') { applyClaim(state, seat, events, rng); return { state, events }; }
+  if (action?.type === 'claim') { applyClaim(state, seat, events, rng, action); return { state, events }; }
   if (seat !== state.turn) throw new Error('wrong_turn');
-  if (action?.type === 'bid') applyBid(state, seat, action, events, rng);
+  if(action?.type==='show_projects'){
+    if(state.phase!=='playing'||state.tricks.length!==1||!state.declared[seat]?.length||state.projectShows?.[seat]||state.violations.some(v=>v.seat===seat&&v.reason==='unshown_project'))throw new Error('project_show_closed');
+    (state.projectShows ||= [false,false,false,false])[seat]=true;resolveProjects(state,events);
+  }
+  else if (action?.type === 'bid') applyBid(state, seat, action, events, rng);
   else if (action?.type === 'double') applyDouble(state, seat, action, events);
   else if (action?.type === 'play') applyPlay(state, seat, action, events, rng);
   else throw new Error('invalid_action');
@@ -638,7 +656,7 @@ export function balootView(state, seat) {
   view.stock = state.stock?.map(() => '??') || [];
   view.startHands = null;
   const reveal = state.tricks?.length >= 1;
-  view.declared = state.declared.map((list, i) => list.map((p) => (i === seat || (reveal && state.projects?.team === teamOf(i)) ? p : { type: p.type })));
+  view.declared = state.declared.map((list, i) => list.map((p) => (i === seat || (reveal && state.projectShows?.[i] && state.projects?.team === teamOf(i)) ? p : { type: p.type })));
   if (view.baloot && !view.baloot.announced) view.baloot = null;
   // cuts stay secret until a claim or the end of the hand
   view.violations = null;

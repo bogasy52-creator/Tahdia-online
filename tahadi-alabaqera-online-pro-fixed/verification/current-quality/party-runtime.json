@@ -1,0 +1,37 @@
+{
+  "version": "33.0.0",
+  "engine": "native workerd / SQLite / real WebSockets",
+  "environment": "local shared-round fallback with links disabled only by test controls; real online table handoff tested separately; no public Internet or physical phone measurements",
+  "checks": [
+    "10 real WebSockets: 120 accepted server-checked moves, heartbeat isolation, stable playlist, full rankings and resume",
+    "20 real WebSockets: 240 accepted server-checked moves, heartbeat isolation, stable playlist, full rankings and resume",
+    "Cold SQLite restart restores all 20 participants, tokens, scores, playlist and current round",
+    "20 players finish a three-game series: automatic transitions, exact summed points, final ranks and rematch retain every seat",
+    "jackaroo: 20 actual peers, four tables, private hand separation",
+    "zahra: 20 actual peers, four tables, private hand separation",
+    "20-player authoritative serpent physics emits compact live frames without disconnecting participants",
+    "20 simultaneous quiz players: old and new sound questions, per-player listen quotas, synchronized answers/reveals and full rankings",
+    "v34: twenty sequence-memory peers, synchronized preview alarm, masked order and deck, complete server-validated results",
+    "v34: twenty logic peers answer all ten categories, private answer timing, synchronized explanations and complete ranking"
+  ],
+  "metrics": [
+    {
+      "players": 10,
+      "acceptedActions": 120,
+      "p50AckMs": 18.3,
+      "p95AckMs": 19.7,
+      "maxAckMs": 20.813319999999976,
+      "broadcastBytesPerPlayer": 58639,
+      "unexpectedDisconnects": 0
+    },
+    {
+      "players": 20,
+      "acceptedActions": 240,
+      "p50AckMs": 19.3,
+      "p95AckMs": 22.36,
+      "maxAckMs": 22.645290999999816,
+      "broadcastBytesPerPlayer": 92823,
+      "unexpectedDisconnects": 0
+    }
+  ]
+}

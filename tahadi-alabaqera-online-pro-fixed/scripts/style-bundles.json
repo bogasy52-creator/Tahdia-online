@@ -6,7 +6,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "admin.html": [
     "assets/css/platform.css",
@@ -17,7 +18,8 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/admin-live-v32.css"
+    "assets/css/admin-live-v32.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "dice.html": [
     "assets/css/platform.css",
@@ -35,7 +37,8 @@
     "assets/css/release-v31.css",
     "assets/css/dice-v31.css",
     "assets/css/game-menu-v33.css",
-    "assets/css/tables-v33.css"
+    "assets/css/tables-v33.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -48,7 +51,8 @@
     "assets/css/studio-v16.css",
     "assets/css/home-v19.css",
     "assets/css/mobile-v21.css",
-    "assets/css/home-v33.css"
+    "assets/css/home-v33.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -69,17 +73,21 @@
     "assets/css/tables-v31.css",
     "assets/css/reactions-v31.css",
     "assets/css/game-menu-v33.css",
-    "assets/css/tables-v33.css"
+    "assets/css/tables-v33.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/gameplay-v34.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
     "assets/css/journey.css",
     "assets/css/brain-v20.css",
     "assets/css/mobile-v21.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "local.html": [
-    "assets/css/platform.css"
+    "assets/css/platform.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "logic.html": [
     "assets/css/platform.css",
@@ -89,7 +97,9 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/gameplay-v34.css"
   ],
   "memory.html": [
     "assets/css/platform.css",
@@ -100,7 +110,9 @@
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
     "assets/css/memory-v30.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/gameplay-v34.css"
   ],
   "online.html": [
     "assets/css/platform.css",
@@ -114,7 +126,8 @@
     "assets/css/quiz-v21.css",
     "assets/css/mobile-v21.css",
     "assets/css/quiz-v28.css",
-    "assets/css/game-menu-v33.css"
+    "assets/css/game-menu-v33.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "puzzle.html": [
     "assets/css/platform.css",
@@ -124,7 +137,8 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "reaction.html": [
     "assets/css/platform.css",
@@ -134,7 +148,8 @@
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
     "assets/css/mobile-v21.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "serpent.html": [
     "assets/css/platform.css",
@@ -155,7 +170,8 @@
     "assets/css/release-v31.css",
     "assets/css/serpent-v32.css",
     "assets/css/game-menu-v33.css",
-    "assets/css/serpent-v33.css"
+    "assets/css/serpent-v33.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
@@ -164,7 +180,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/shop-v31.css",
     "assets/css/shop-v31-1.css",
-    "assets/css/shop-v32.css"
+    "assets/css/shop-v32.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -190,7 +207,8 @@
     "assets/css/snakes-board-v32.css",
     "assets/css/reactions-v31.css",
     "assets/css/game-menu-v33.css",
-    "assets/css/tables-v33.css"
+    "assets/css/tables-v33.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -199,7 +217,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "v5.html": [
     "assets/css/platform.css",
@@ -208,7 +227,8 @@
     "assets/css/cosmetics.css",
     "assets/css/professional-v14.css",
     "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "zahra.html": [
     "assets/css/platform.css",
@@ -229,14 +249,17 @@
     "assets/css/tables-v31.css",
     "assets/css/reactions-v31.css",
     "assets/css/game-menu-v33.css",
-    "assets/css/tables-v33.css"
+    "assets/css/tables-v33.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/gameplay-v34.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/picture-v21.css",
     "assets/css/mobile-v21.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "quiz.html": [
     "assets/css/platform.css",
@@ -244,7 +267,8 @@
     "assets/css/quiz-v19.css",
     "assets/css/quiz-v21.css",
     "assets/css/mobile-v21.css",
-    "assets/css/quiz-v28.css"
+    "assets/css/quiz-v28.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "sudoku.html": [
     "assets/css/platform.css",
@@ -253,12 +277,14 @@
     "assets/css/mobile-v21.css",
     "assets/css/sudoku-v22.css",
     "assets/css/sudoku-feedback-v29-1.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "paths-online.html": [
     "assets/css/platform.css",
     "assets/css/paths-online-v24.css",
-    "assets/css/release-v31.css"
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "party.html": [
     "assets/css/party-v29.css",
@@ -267,11 +293,14 @@
     "assets/css/memory-v30.css",
     "assets/css/dice-v31.css",
     "assets/css/party-v32.css",
-    "assets/css/sudoku-feedback-v29-1.css"
+    "assets/css/sudoku-feedback-v29-1.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/gameplay-v34.css"
   ],
   "leaderboard.html": [
     "assets/css/platform.css",
-    "assets/css/leaderboard-v30-1.css"
+    "assets/css/leaderboard-v30-1.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "baloot.html": [
     "assets/css/platform.css",
@@ -280,6 +309,7 @@
     "assets/css/play-experience-v25.css",
     "assets/css/reactions-v31.css",
     "assets/css/baloot-v32.css",
-    "assets/css/game-menu-v33.css"
+    "assets/css/game-menu-v33.css",
+    "assets/css/game-interaction-v34.css"
   ]
 }

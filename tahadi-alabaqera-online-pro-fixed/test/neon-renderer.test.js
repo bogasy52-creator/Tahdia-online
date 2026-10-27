@@ -1,3 +1,4 @@
+import {drawNeonBody,drawNeonHead,sampleNeonSpine} from '../public/assets/js/neon-snakes-v33.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -8,14 +9,14 @@ import {readFile} from 'node:fs/promises';
 async function renderer(){
  const frames=[],timers=new Map(),events=new Map(),calls=[],proxy={dataset:{}},canvas={dataset:{},setAttribute(){}};
  let wall=0,nextTimer=0;
- const ctx={setTransform(){},clearRect(){calls.push('clear')},save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},bezierCurveTo(){},quadraticCurveTo(){},arc(){},ellipse(){},closePath(){},clip(){},fill(){},fillText(){},stroke(){calls.push('body')},createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}}),drawImage(...args){assert.ok(args.slice(1).every(Number.isFinite));assert.ok(args[3]>0&&args[4]>0&&args[7]>0&&args[8]>0);calls.push('raster')}};
+ const ctx={quadraticCurveTo(){},bezierCurveTo(){},fillRect(){},setTransform(){},clearRect(){calls.push('clear')},save(){},restore(){},translate(){},rotate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},bezierCurveTo(){},quadraticCurveTo(){},arc(){},ellipse(){},closePath(){},clip(){},fill(){},fillText(){},stroke(){calls.push('body')},createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}}),drawImage(...args){assert.ok(args.slice(1).every(Number.isFinite));assert.ok(args[3]>0&&args[4]>0&&args[7]>0&&args[8]>0);calls.push('raster')}};
  ctx.getImageData=()=>({data:new Uint8ClampedArray([0,100,255,255])});ctx.putImageData=()=>{};
  canvas.getContext=()=>ctx;
  const board={getBoundingClientRect:()=>({width:390,height:490})},game={classList:{contains:()=>false}},wrap={appendChild(){}};
  let made=0;
  const document={hidden:false,documentElement:{dataset:{}},getElementById:id=>({board,game,boardWrap:wrap}[id]),createElement:tag=>tag!=='canvas'?{setAttribute(){}}:++made===1?canvas:{width:0,height:0,setAttribute(){},getContext:()=>ctx},querySelector:()=>proxy,addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
  class Image{constructor(){this.complete=true;this.naturalWidth=1024;this.naturalHeight=1536;}addEventListener(){}set src(value){this.url=value;if(value.includes('objects')){this.naturalWidth=2048;this.naturalHeight=768}}}
- const context=vm.createContext({snakeGeometry,recolorBluePixels,ARENA_HUES,cosmeticSnakeHue,document,Image,devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:(fn,ms)=>{timers.set(++nextTimer,{fn,ms});return nextTimer},clearTimeout:id=>timers.delete(id)});
+ const context=vm.createContext({drawNeonBody,drawNeonHead,snakeGeometry,recolorBluePixels,ARENA_HUES,cosmeticSnakeHue,document,Image,devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:(fn,ms)=>{timers.set(++nextTimer,{fn,ms});return nextTimer},clearTimeout:id=>timers.delete(id)});
  context.window=context;context.BS_PRO={paused:false};context.addEventListener=(name,fn)=>events.set(name,fn);context.removeEventListener=name=>events.delete(name);
  vm.runInContext((await readFile(new URL('../public/assets/js/neon-arena.js',import.meta.url),'utf8')).replace(/^import .*?;\n/gm,''),context);
  context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}},{from:4,to:14,index:1,a:{x:200,y:900},b:{x:500,y:800}}]);
@@ -44,3 +45,5 @@ test('every shop stone becomes its 3D piece in the player colour, and characters
  h.context.document.documentElement.dataset.pieceArt='characters';h.context.BS_STONES={draw:()=>true};const c=h.context.BS_ARENA.crystal({appendChild(){}},0);assert.equal(c.width,144);assert.equal(c.height,180);
  assert.equal(h.calls.filter(c=>c==='raster').length,0);
 });
+
+test('scale sampling follows arc length through uneven and repeated knots and preserves endpoints',()=>{const points=[{x:0,y:0},{x:1,y:0},{x:1,y:0},{x:10,y:0},{x:10,y:7}],out=sampleNeonSpine(points,2);assert.deepEqual(out[0],points[0]);assert.deepEqual(out.at(-1),points.at(-1));assert.deepEqual(out.slice(0,6),[0,2,4,6,8,10].map(x=>({x,y:0})));assert.deepEqual(out.slice(6),[2,4,6,7].map(y=>({x:10,y})));for(const spacing of [0,-1,NaN,Infinity])assert.throws(()=>sampleNeonSpine(points,spacing),RangeError);});

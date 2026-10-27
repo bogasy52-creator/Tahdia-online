@@ -310,7 +310,7 @@ export function renderPetalBoard(target,state,options={}){
     piece.classList.add('petal-stone-v29','atelier-piece-v30');if(can)piece.classList.add('legal');
     piece.append(n('circle',{r:game==='jackaroo'?4.6:6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
     if(can)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?4.2:cellSize*.42,ry:game==='jackaroo'?4.2:cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
-    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat]));piece.append(bob);
+    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat]));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?1:0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none'},String(index+1)));
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);
     const old=previous?.positions.get(key),oldValue=previous?.values.get(key),moved=old&&(Math.abs(old.x-p.x)>.01||Math.abs(old.y-p.y)>.01);
@@ -333,7 +333,25 @@ export function renderPetalBoard(target,state,options={}){
   for(const fx of traces)trace(svg,fx.points,fx.color,fx.duration);
   for(const fx of effects)flourish(svg,fx.p,fx.color,fx.kind);
   motionHistory.set(target,{positions,values,signature});
-  target.atelierMotion=Promise.all(motions);
+  target.atelierMotion=Promise.all(motions);target.dispatchEvent(new Event('bs-board-render'));
   return svg;
 }
 globalThis.addEventListener?.('bs-career-change',()=>{for(const [target,{state,options}] of surfaces){if(target.isConnected)renderPetalBoard(target,state,options);else surfaces.delete(target);}});
+
+export function clearBoardPreview(target){target?.querySelectorAll('[data-move-preview]').forEach(el=>el.remove());}
+export function paintBoardPreview(target,before,after,{game='jackaroo',action={}}={}){
+ clearBoardPreview(target);const svg=target.querySelector('svg');if(!svg)return;
+ const layer=n('g',{'data-move-preview':true,'aria-hidden':'true','pointer-events':'none'}),g=boardGeometry(before),key=game==='jackaroo'?'marbles':'tokens';
+ before.players.forEach((player,seat)=>player[key].forEach((from,index)=>{
+  const to=after.players[seat][key][index];if(from===to)return;const first=petalStonePoint(before,seat,index,game),last=petalStonePoint(after,seat,index,game);
+  if(to<0){layer.append(n('circle',{cx:first.x,cy:first.y,r:5,fill:'#ef6d6d28',stroke:'#ff9393','stroke-width':.9}));return;}
+  const points=[first];
+  if(from>=0&&action.type!=='swap'){
+   const steps=action.backward?(from-to+g.track)%g.track:to-from;
+   if(steps>=0&&steps<=14)for(let i=1;i<steps;i++){const p=action.backward?(from-i+g.track)%g.track:from+i;points.push(rawPoint(before,seat,index,p,game));}
+  }
+  points.push(last);layer.append(n('path',{d:points.map((p,i)=>(i?'L':'M')+xy(p)).join(' '),'data-preview-route':true}));
+  layer.append(n('circle',{cx:last.x,cy:last.y,r:game==='jackaroo'?5:6,'data-preview-destination':true}));
+  layer.append(n('text',{x:last.x,y:last.y+1.3,'text-anchor':'middle','font-size':3.6,fill:'#fff5da','paint-order':'stroke',stroke:'#142632','stroke-width':.7},String(index+1)));
+ }));svg.append(layer);return layer;
+}

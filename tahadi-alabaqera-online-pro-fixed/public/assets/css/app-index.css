@@ -468,3 +468,10 @@ body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-in
 .home-resume-card>i{grid-column:3;font-size:inherit}
 .home-resume-card>b{font-size:14px}
 .home-resume-card>small{grid-column:2;font-size:12px;color:#a9cfc1}
+
+/* assets/css/game-interaction-v34.css */
+/* Game labels are controls, not editable prose. Keep native text fields usable. */
+body.bs-game-interaction-v34,body.bs-game-interaction-v34 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.bs-game-interaction-v34 input,body.bs-game-interaction-v34 textarea,body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]),body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]) *,body.bs-game-interaction-v34 [data-selectable],body.bs-game-interaction-v34 [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body.bs-game-interaction-v34 button,body.bs-game-interaction-v34 [role=button]{touch-action:manipulation}
+body.bs-game-interaction-v34 img{-webkit-user-drag:none}

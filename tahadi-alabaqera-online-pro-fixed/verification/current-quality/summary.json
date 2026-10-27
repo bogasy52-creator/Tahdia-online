@@ -1,0 +1,20 @@
+{
+  "release": "33.0.0",
+  "source": "Tahdia-online-main 14.zip",
+  "tests": 932,
+  "pass": 932,
+  "fail": 0,
+  "skip": 0,
+  "party_runtime_checks": 10,
+  "room_audio_checks": 9,
+  "production_deployed": false,
+  "physical_phone_tested": false,
+  "human_voice_review": false,
+  "browser_qa": [
+    "home footer33",
+    "real online Baloot room",
+    "claim target/reason/project selectors",
+    "real snakes room and neon rendering"
+  ],
+  "worker_config_preserved": true
+}

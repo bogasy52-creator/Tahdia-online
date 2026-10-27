@@ -1,3 +1,4 @@
+import {drawNeonBody,drawNeonHead} from './neon-snakes-v33.js?v=33.0.0';
 import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
 /* Tahdia 31.1.0 — the living snakes and ladders of the snakes & ladders board.
    The snakes are the arena's own species (serpent-art-v16.js): painted heads
@@ -35,7 +36,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     cosmic:{dark:'#1b1638',mid:'#6c5fb8',light:'#cdc4ff',hi:'#f5f2ff',peg:'#100c26',glow:'#d9ccff'}
   };
   // 32.0.0: the jewel board (the free one) climbs on gold ladders too
-  const boardTheme=()=>{const id=document.documentElement?.dataset?.board||'board-forest';return /lava/.test(id)?'ember':/galaxy/.test(id)?'cosmic':/royal|sand|forest/.test(id)?'royal':/cyber|twilight/.test(id)?'cyber':'classic';};
+  const boardTheme=()=>{const id=document.documentElement?.dataset?.board||'board-forest';return /lava/.test(id)?'ember':/galaxy/.test(id)?'cosmic':/royal|sand/.test(id)?'royal':/cyber|twilight|forest/.test(id)?'cyber':'classic';};
 
   function layout(entries){
     const board=document.getElementById('board');if(!board)return;
@@ -46,7 +47,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     // 32.1.0: a new board (the group games build one per round) takes the canvas over
     if(canvas.parentNode!==document.getElementById('boardWrap'))document.getElementById('boardWrap').appendChild(canvas);
     // the painted heads come from the arena sheet, fetched once when the board first appears
-    if(!artRequested&&art()){artRequested=true;try{void art().ready;}catch{}}
+    // Procedural neon heads need no image sheet.
     const dpr=Math.min(devicePixelRatio||1,2),r=board.getBoundingClientRect();
     width=r.width;height=r.height;canvas.width=Math.ceil(width*dpr);canvas.height=Math.ceil(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
     // lie exactly over the tiles, whatever the frame padding is
@@ -76,7 +77,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   }
   function drawLadder(r){
     const t=LADDERS[boardTheme()],cell=width/10,dx=r.b.x-r.a.x,dy=r.b.y-r.a.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
-    const half=cell*.21,rail=Math.max(2.6,cell*.12),rungW=Math.max(2,cell*.078),s=ladders.get(r.from),active=s&&s.phase!=='idle';
+    const half=cell*.18,rail=Math.max(2.3,cell*.085),rungW=Math.max(1.6,cell*.055),s=ladders.get(r.from),active=s&&s.phase!=='idle';
     const ext=cell*.14,ax=r.a.x-ux*ext,ay=r.a.y-uy*ext,bx=r.b.x+ux*ext,by=r.b.y+uy*ext;
     const count=Math.max(3,Math.round(len/(cell*.42))),travel=active?((clock-s.at)/1100)%1:-1;
     ctx.save();ctx.lineCap='round';
@@ -141,11 +142,9 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     const length=Math.hypot(r.a.x-r.b.x,r.a.y-r.b.y);
     const R=cell*clamp(.1+length/(cell*70),.105,.145)*grownBy*swell;
     ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
-    // contact shadow
-    ctx.save();ctx.translate(cell*.06,cell*.11);ctx.globalAlpha=.3;trace(pts);ctx.lineWidth=R*2.1;ctx.strokeStyle='#160b03';ctx.stroke();ctx.restore();
+    // The tapered silhouette supplies its own dark edge, without a blunt tail shadow.
     // body: the arena species, its scales shrunk to the board
-    if(A?.body)A.body(ctx,pts,species,R,ph==='digesting',0,80,{patternScale:Math.round(R/16*50)/50});
-    else fallbackBody(pts,species,R);
+    drawNeonBody(ctx,pts,species,R,ph!=='idle');
     // the swallowed stone runs down the body as a lump
     if(ph==='swallowing'){
       const s=Math.min(1,elapsed/900),i=Math.min(n-2,Math.max(1,Math.round(s*(n-1)))),p=pts[i],lump=R*(1.55-.35*s);
@@ -164,7 +163,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     if(track>0){ctx.save();ctx.globalAlpha=.3*track+.25*strike;const g=ctx.createRadialGradient(size*.5,0,0,size*.5,0,size*2.2);g.addColorStop(0,'#ff3b4e');g.addColorStop(1,'rgba(255,59,78,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(size*.5,0,size*2.2,0,Math.PI*2);ctx.fill();ctx.restore();}
     const flick=still?0:ph==='tracking'?1:((clock+r.index*613)%2900<260?1:0);
     if(flick&&strike<.2)tongue(size,flick);
-    if(A?.head)A.head(ctx,species,size);else fallbackHead(species,size);
+    drawNeonHead(ctx,species,size);
     ctx.restore();
     // the bite: a white flash and a ring at the head
     if(ph==='attacking'&&!still){

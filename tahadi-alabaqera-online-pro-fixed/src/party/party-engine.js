@@ -1,3 +1,4 @@
+import {createMemorySequence,stepMemorySequence} from '../../public/assets/js/engines/cognitive-v34.js';
 import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,partyGame,normalizePlaylist,playlistCapacity,capacityMessage,playersLabel,tableSize,tablesFor} from '../../public/assets/js/engines/party-catalog-v29.js';
 import {CATEGORIES} from '../questions.js';
 import {createSudoku,moveSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
@@ -44,8 +45,8 @@ export function partyRanking(room){
  return rows.map((p,i)=>{const key=p.score+':'+p.wins;if(last!==key)rank=i+1;last=key;return{id:p.id,name:p.name,role:p.role,ready:p.ready,connected:p.connected,score:p.score,wins:p.wins,rank,rounds:room.history.filter(h=>h.rows.some(r=>r.id===p.id)).length};});
 }
 function choices(q,category,random){const wrong=[...new Set([...(q.distractors||[]),...shuffled(category.questions,random).map(x=>x.a)].filter(a=>a!==q.a))].slice(0,3);const options=shuffled([q.a,...wrong],random);return{...q,options,correctIndex:options.indexOf(q.a)};}
-function quizPack(game,seed){const random=seeded(seed);
- if(game==='logic')return Array.from({length:8},(_,i)=>{const q=logicQuestion(i,random);return{id:'logic:'+i,q:'ما العدد التالي؟ '+q.sequence.join('، '),a:String(q.answer),options:q.options.map(String),correctIndex:q.options.indexOf(q.answer),explanation:q.explanation};});
+function quizPack(game,seed,difficulty=2){const random=seeded(seed);
+ if(game==='logic')return Array.from({length:10},(_,i)=>{const q=logicQuestion(i,random,difficulty);return{id:'logic:'+i,q:q.question,category:q.category,visual:q.visual,sequence:q.sequence,a:String(q.answer),options:q.options.map(String),correctIndex:q.options.indexOf(q.answer),explanation:q.explanation};});
  const categories=shuffled(CATEGORIES,random),out=[];for(let i=0;i<8;i++){const cat=categories[i%categories.length],q=shuffled(cat.questions,random)[0];out.push({...choices(q,cat,random),category:cat.name});}return out;
 }
 function resetQuizQuestion(r,now){r.questionStartedAt=now;r.answerOpensAt=now+(r.questions[r.questionIndex]?.media==='memory'?Math.min(8000,Math.max(2500,r.questions[r.questionIndex].memory?.previewMs||4500)):0);r.questionDeadline=Math.min(r.deadline,r.answerOpensAt+Math.max(7000,Math.floor(r.settings.duration*1000/r.questions.length)-2500));r.revealUntil=0;for(const p of Object.values(r.participants)){p.choice=null;p.listenCount=0;}}
@@ -75,9 +76,16 @@ export function setupRoundGame(room,r,now=Date.now()){
  else if(['paths','paths-online'].includes(game)){const board=createStrictPaths(Math.min(120,level));for(const p of Object.values(r.participants))p.state=clone(board);}
  else if(game==='jewels'){const board=createMatch3(Math.min(60,1+(settings.difficulty-1)*12+seed%6));for(const p of Object.values(r.participants))p.state=clone(board);}
  else if(game==='picture'){r.size=settings.difficulty<=2?3:settings.difficulty===3?4:5;r.image=PICTURE_THEMES[seed%PICTURE_THEMES.length].src;const board=createImageAssembly(r.size,seed);for(const p of Object.values(r.participants))Object.assign(p,{board:[...board.board],tray:[...board.tray]});}
- else if(game==='memory'){const pairs=settings.difficulty>=4?12:8;r.columns=pairs===12?6:4;const deck=shuffled(Array.from({length:pairs*2},(_,i)=>Math.floor(i/2)),random);for(const p of Object.values(r.participants))p.state={deck:[...deck],open:[],matched:[],moves:0,active:true,locked:false};}
+ else if(game==='memory'){
+  r.memoryMode=settings.memoryMode||'pairs';r.memoryTheme=settings.memoryTheme||['wildlife','space','vehicles','ocean'][seed%4];
+  const pairs=settings.difficulty>=4?12:8,sequence=r.memoryMode==='sequence';r.columns=sequence?3:pairs===12?6:4;
+  const faces=shuffled(Array.from({length:16},(_,i)=>i),random).slice(0,sequence?9:pairs),deck=sequence?faces:shuffled([...faces,...faces],random);
+  r.memoryPreviewUntil=sequence?now+(Math.min(8,3+settings.difficulty)*800+400):0;
+  const order=sequence?createMemorySequence(Math.min(8,3+settings.difficulty),random):null;
+  for(const p of Object.values(r.participants))p.state={deck:[...deck],sequence:order?[...order]:null,cursor:0,mistakes:0,open:[],matched:[],moves:0,active:true,locked:false};
+ }
  else if(game==='puzzle'){const tiles=generatePuzzle(random,30+settings.difficulty*40);for(const p of Object.values(r.participants))p.tiles=[...tiles];}
- else if(['quiz','logic'].includes(game)){r.questions=quizPack(game,seed);r.questionIndex=0;resetQuizQuestion(r,now);}
+ else if(['quiz','logic'].includes(game)){r.questions=quizPack(game,seed,settings.difficulty);r.questionIndex=0;resetQuizQuestion(r,now);}
  else if(game==='reaction'){r.trial=0;r.trials=5;r.signal='wait';r.signalAt=now+1500+Math.floor(random()*2200);r.signalDeadline=r.signalAt+5000;for(const p of Object.values(r.participants)){p.times=[];p.trialChoice=null;}}
  else if(partyGame(game).kind==='board'){r.tables=tableGroups(room,r,random);}
  else if(game==='serpent'){r.arena=createSerpentGame(room.roster.map(id=>({id,name:room.players[id].name,skin:room.players[id].skin||'snake-wild'})),{seed,worldId:settings.worldId,collisionMode:'arena-v23',duration:settings.duration,difficulty:'medium'});r.lastSimulationAt=now;r.stepCarry=0;}
@@ -142,7 +150,12 @@ export function applyPartyAction(room,id,message,now=Date.now()){
  }else if(game==='picture'){
   const next=placeImageTile(p.board,action.piece,action.cell);p.board=next;p.progress=imageProgress(next)/next.length;p.score=Math.floor(p.progress*10000);if(p.progress===1)completed(p,now);feedback='correct';
  }else if(game==='memory'){
-  const previousMatches=p.state.matched.length,result=memoryPair(p.state,requireActionIndex(action.cell,p.state.deck.length));if(!result.accepted)throw Error('انتظر إغلاق البطاقتين أو اختر بطاقة أخرى');p.state=result;p.progress=result.matched.length/result.deck.length;p.score=Math.floor(p.progress*10000);if(result.locked){p.unlockAt=now+900;feedback='wrong';}else feedback=result.matched.length>previousMatches?'correct':'flip';if(result.won)completed(p,now);
+  if(r.memoryMode==='sequence'){
+   if(now<r.memoryPreviewUntil||p.state.locked)throw Error('احفظ الترتيب وانتظر وقت الضغط');
+   const result=stepMemorySequence(p.state,requireActionIndex(action.cell,p.state.deck.length));if(!result.accepted)throw Error('اختر صورة متاحة');p.state=result;p.mistakes=result.mistakes;p.state.matched=result.sequence.slice(0,result.cursor);p.progress=result.cursor/result.sequence.length;p.score=Math.floor(p.progress*10000);feedback=result.correct?'correct':'wrong';
+   if(result.over)completed(p,now,result.won);else if(!result.correct){p.state.open=[action.cell];p.state.locked=true;p.unlockAt=now+650;}
+  }else{const previousMatches=p.state.matched.length,result=memoryPair(p.state,requireActionIndex(action.cell,p.state.deck.length));if(!result.accepted)throw Error('انتظر إغلاق البطاقتين أو اختر بطاقة أخرى');p.state=result;p.progress=result.matched.length/result.deck.length;p.score=Math.floor(p.progress*10000);if(result.locked){p.unlockAt=now+900;feedback='wrong';}else feedback=result.matched.length>previousMatches?'correct':'flip';if(result.won)completed(p,now);}
+
  }else if(game==='puzzle'){
   const result=movePuzzle(p.tiles,requireActionIndex(action.cell,9));if(!result.moved)throw Error('حرّك رقمًا بجانب الفراغ');p.tiles=result.tiles;p.progress=p.tiles.filter((v,i)=>v&&v===i+1).length/8;p.score=Math.floor(p.progress*10000);if(result.solved)completed(p,now);feedback='move';
  }else if(['quiz','logic'].includes(game)){
@@ -225,7 +238,7 @@ export function advanceParty(room,now=Date.now()){
    r.trial++;if(r.trial>=r.trials){for(const p of Object.values(r.participants)){p.score=Math.floor(sum(p.times.map(t=>Math.max(0,6000-t)))/r.trials);completed(p,now,p.score>0);}finishPartyRound(room,now);}else{r.signal='wait';r.signalAt=now+1500+Math.floor(secureRandom()*2200);r.signalDeadline=r.signalAt+5000;for(const p of Object.values(r.participants))p.trialChoice=null;}full=changed=true;
   }
  }else if(r.tables){for(const t of r.tables)if(!t.finished){if(t.members[t.state.turn].startsWith('bot:')&&now<(t.botAt||0))continue;if(automaticTable(room,r,t,now)){t.botAt=now+650;full=changed=true;}}}
- else if(r.game==='memory')for(const p of Object.values(r.participants))if(p.unlockAt&&now>=p.unlockAt){p.state.open=[];p.state.locked=false;p.unlockAt=0;privateIds.add(p.id);changed=true;}
+ else if(r.game==='memory'){if(r.memoryPreviewUntil&&!r.memoryPreviewEnded&&now>=r.memoryPreviewUntil){r.memoryPreviewEnded=true;full=changed=true;}for(const p of Object.values(r.participants))if(p.unlockAt&&now>=p.unlockAt){p.state.open=[];p.state.locked=false;p.unlockAt=0;privateIds.add(p.id);changed=true;}}
  if(room.status==='playing'&&(now>=r.deadline||Object.values(r.participants).every(p=>p.done))){finishPartyRound(room,now);full=changed=true;}
  return{changed,full,privateIds:[...privateIds]};
 }
@@ -265,7 +278,7 @@ function publicParticipant(r,p,now){
  if(['paths','paths-online'].includes(r.game)){const s=p.state;return{...base,paths:s.paths,size:s.size,pairs:s.pairs,walls:s.walls,gates:s.gates};}
  if(r.game==='jewels'){const {log,history,seed,...state}=p.state;return{...base,state};}
  if(r.game==='picture')return{...base,board:p.board,tray:p.tray,size:r.size,image:r.image};
- if(r.game==='memory')return{...base,deck:p.state.deck.map((v,i)=>p.state.open.includes(i)||p.state.matched.includes(i)?v:null),matched:p.state.matched,open:p.state.open,locked:p.state.locked,columns:r.columns};
+ if(r.game==='memory'){const preview=r.memoryMode==='sequence'&&now<r.memoryPreviewUntil;return{...base,mode:r.memoryMode||'pairs',theme:r.memoryTheme||'classic',previewStartedAt:r.startedAt,previewUntil:r.memoryPreviewUntil||0,sequence:preview?p.state.sequence:null,sequenceLength:p.state.sequence?.length||0,cursor:p.state.cursor||0,deck:p.state.deck.map((v,i)=>preview||p.state.open.includes(i)||p.state.matched.includes(i)?v:null),matched:p.state.matched,open:p.state.open,locked:p.state.locked,columns:r.columns};}
  if(r.game==='puzzle')return{...base,tiles:p.tiles};
  if(['quiz','logic'].includes(r.game))return{...base,choice:p.choice,listenCount:p.listenCount||0};
  if(r.game==='reaction')return{...base,times:p.times,pressed:p.trialChoice!==null};
@@ -278,7 +291,7 @@ export function partyRoundView(room,id=null,now=Date.now()){
  const r=room.round;if(!r)return null;const view={id:r.id,game:r.game,name:partyGame(r.game).name,startedAt:r.startedAt,deadline:r.deadline,settings:r.settings,revision:r.revision,me:publicParticipant(r,r.participants[id],now)};
  if(r.link){const tables=r.link.tables||[],mine=tables.find(t=>t.players.includes(id))||[...tables].filter(t=>t.code).sort((a,b)=>a.players.length-b.players.length)[0];view.link={status:r.link.status,page:r.link.page,code:mine?.code||r.link.code||null,count:r.link.count||0,tables:tables.length,table:mine?mine.id:null,list:tables.map(t=>({id:t.id,code:t.code||null,players:[...(t.players||[])]}))};}
  if(r.link&&r.link.status!=='failed')return view;
- if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
+ if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,category:q.category||null,visual:Boolean(q.visual),sequence:q.sequence||null,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
  if(r.game==='reaction')view.reaction={trial:r.trial,trials:r.trials,signal:r.signal};
  if(r.tables)view.tables=r.tables.map(t=>({id:t.id,members:t.members.map(id=>({id,name:room.players[id]?.name||'بوت',connected:room.players[id]?.connected??true})),finished:t.finished,turn:t.state.turn,turnDeadline:t.turnDeadline,pendingRoll:t.pendingRoll,players:t.state.players,jumps:t.state.jumps,bonusCells:t.state.bonusCells,lastRoll:t.state.lastRoll,lastEvent:t.state.lastEvent,winner:t.state.winner,winnerTeam:t.state.winnerTeam,turnTotal:t.state.turnTotal,target:t.state.target,actions:t.actions||0,moveCount:t.state.moveCount,history:r.game==='dice'?(t.state.history||[]).slice(-8):undefined}));
  if(r.game==='serpent')view.arena=serpentSnapshot(r.arena);

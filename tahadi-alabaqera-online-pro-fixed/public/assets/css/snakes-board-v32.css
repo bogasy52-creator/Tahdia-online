@@ -14,17 +14,9 @@ html{--snl-grout:#05070d;--snl-tile:#173f85;--snl-tile-alt:#133571;--snl-tile-nu
 html[data-board=board-forest]{--snl-grout:#05070d;--snl-tile-num:rgba(255,255,255,.88);--snl-num-glow:rgba(0,0,0,.45);--snl-tile-hi:rgba(255,255,255,.2);--snl-tile-lo:rgba(0,0,0,.38);--snl-glow:rgba(160,200,255,.1);
  --snl-frame-a:#454b6d;--snl-frame-b:#171b2e;--snl-frame-c:#07080f;--snl-inlay:#d9b46a}
 
-/* each row of ten has its own stone; the alternate tile is a shade deeper */
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(-n+10){--snl-tile:#8a2347;--snl-tile-alt:#761d3c}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+11):nth-child(-n+20){--snl-tile:#7c2163;--snl-tile-alt:#6a1c54}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+21):nth-child(-n+30){--snl-tile:#6a2478;--snl-tile-alt:#5a1e66}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+31):nth-child(-n+40){--snl-tile:#552985;--snl-tile-alt:#482271}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+41):nth-child(-n+50){--snl-tile:#3f2f8a;--snl-tile-alt:#352776}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+51):nth-child(-n+60){--snl-tile:#2a368c;--snl-tile-alt:#232d77}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+61):nth-child(-n+70){--snl-tile:#173f85;--snl-tile-alt:#133571}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+71):nth-child(-n+80){--snl-tile:#10537a;--snl-tile-alt:#0d4567}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+81):nth-child(-n+90){--snl-tile:#0e5c66;--snl-tile-alt:#0b4d56}
-:is(html:not([data-board]),html[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell:nth-child(n+91){--snl-tile:#0f5e4f;--snl-tile-alt:#0c4f43}
+/* Default board: calm alternating slate, no rainbow progression by row. */
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 #board>.snake-cell{--snl-tile:#18323e;--snl-tile-alt:#213f4a;--snl-sheen:none;--snl-veil:none;--snl-tile-hi:rgba(170,219,230,.08);--snl-tile-lo:rgba(0,0,0,.12);border-radius:3px!important}
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 #boardWrap{--snl-frame-a:#45606c;--snl-frame-b:#1b303e;--snl-frame-c:#0c1d28;--snl-inlay:#728f96}
 
 /* glass tiles: a lit corner, a darker foot and a hairline rim */
 /* (the alternate, lit and bonus tiles need the same weight as their 31.0 colours) */
@@ -90,3 +82,13 @@ html[data-board=board-cyber]{--snl-veil:linear-gradient(160deg,rgba(110,230,255,
 :is(html,#v31) body.game-snakes #game.snl31 :is(#mobileStartLane,#startLane):has(.start-token:nth-child(6)) .start-token{width:21px!important;height:33px!important;flex:0 0 21px!important;margin:0 -4px!important}
 /* the four extra seat colours tint the studio pawn (the v31 board removes filters otherwise) */
 :is(html,#v31) body.game-snakes :is(#game.snl31,#v31) :is(.snake-token,.snake-travel-pawn,.start-token) .crystal-sprite.piece-svg.piece-tinted,:is(html,#v31) body.game-snakes :is(.snake-token,.snake-travel-pawn,.start-token) .crystal-sprite.piece-svg.piece-tinted{filter:var(--piece-tint)!important}
+
+/* Refined default board, including online tables and linked party rooms. */
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 #board{gap:2px!important;background:#0c202b!important;border-radius:7px!important}
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 #boardWrap{border-radius:20px!important}
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell>b{color:#e0edf0!important;text-shadow:0 1px 2px #06141b!important;letter-spacing:.02em;z-index:4}
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell[data-n="1"]{background:#205447!important;box-shadow:inset 0 0 0 1.5px #7ad8b1!important}
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell[data-n="100"]{background:#5b4c30!important;box-shadow:inset 0 0 0 1.5px #dfc18c!important}
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell:is([data-n="1"],[data-n="100"])>b{color:#fff1ca!important;text-shadow:none!important}
+
+:is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell:is(.snake-head-cell,.ladder-foot-cell){--t:var(--snl-tile)}
