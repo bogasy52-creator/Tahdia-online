@@ -26,7 +26,6 @@
   document.querySelectorAll('a.bs-icon-btn').forEach(b=>{const h=b.getAttribute('href');if(h==='/shop')b.innerHTML=icon('shop');else if(h==='./'||h==='/')b.innerHTML=icon('home');else if(h?.startsWith('/social'))b.innerHTML=icon('users')});
   document.querySelectorAll('.home-game .game-symbol').forEach(el=>{const key=el.closest('a').getAttribute('href').slice(1);el.innerHTML=icon({snakes:'snake',jackaroo:'jack',zahra:'flower',dice:'dice',memory:'memory',reaction:'reaction',logic:'logic',puzzle:'puzzle',accuracy:'accuracy'}[key]||'logic')});
   const hero=document.querySelector('.premium-hero h1'),kind=document.body.classList.contains('game-snakes')?'snake':document.body.classList.contains('game-jackaroo')?'jack':document.body.classList.contains('game-zahra')?'flower':'dice';if(hero)hero.innerHTML=icon(kind)+' '+hero.textContent.replace(/[🐍🎯🎲🃏]/gu,'').trim();
-  document.querySelectorAll('#modeLocal').forEach(b=>b.innerHTML=icon('users')+' نفس الجهاز');
   const roll=document.getElementById('roll');if(roll)roll.innerHTML=icon('dice')+' '+roll.textContent.replace(/🎲/g,'').trim();
  }
  window.addEventListener('bs-audio-change',()=>document.querySelectorAll('[data-audio-toggle]').forEach(b=>b.innerHTML=icon(window.BS_AUDIO.getSettings().muted?'mute':'volume')));apply();

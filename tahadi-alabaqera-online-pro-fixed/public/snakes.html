@@ -3,254 +3,959 @@
 <title>الثعبان — بوسراج</title>
 
 
-<link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-snakes.css?v=32.1.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=32.1.0"></head><body class="release-v26 bs-page board-game game-snakes release-v14 suite-v16 suite-v17 board-v14 board-v15"><main class="bs-shell">
+<link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-snakes.css?v=33.0.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.0.0"></head><body class="release-v26 bs-page board-game game-snakes release-v14 suite-v16 suite-v17 board-v14 board-v15"><main class="bs-shell">
 <header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الثعبان</b><span>الثعبان والسلالم · تحدي العباقرة</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop" aria-label="المتجر">◈</a><a class="bs-icon-btn" href="./" aria-label="الرئيسية" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap snl-setup"><div class="snl-hero"><div class="snl-hero-copy"><span class="snl-kicker">سلم وثعبان</span><h1>رمية تغيّر كل شيء.</h1><p>ابدأ برمية 6 وتسابق إلى الخانة 100. السلالم ترفعك، والثعابين ترجعك لذيلها.</p></div><div id="snlHeroArt" class="snl-hero-art" aria-hidden="true"></div></div>
-<div class="snake-presets-v15 snl-presets" aria-label="ابدأ بطريقتك"><button id="snakePresetPractice" class="snake-preset-v15" type="button"><i aria-hidden="true">🤖</i><b>تدريب فردي</b><small>أنت ضد البوت</small></button><button id="snakePresetFriends" class="snake-preset-v15" type="button"><i aria-hidden="true">👥</i><b>تحدّي الأصدقاء</b><small>لاعبان على جهاز واحد</small></button><button id="snakePresetAdventure" class="snake-preset-v15" type="button"><i aria-hidden="true">🎁</i><b>جولة المكافآت</b><small>نرد الرموز والمفاجآت</small></button></div><div class="play-mode"><button id="modeLocal" class="active" aria-pressed="true">نفس الجهاز</button><button id="modeOnline" aria-pressed="false">غرفة أونلاين</button></div>
-<div id="localSetup"><div class="setup-grid"><label class="bs-field"><span>المنافسة</span><select id="opponents"><option value="friends">لاعبون على نفس الجهاز</option><option value="bot">أنت ضد البوت</option><option value="duobot">لاعبان مع بوت</option></select></label><label class="bs-field"><span>أسلوب اللعب</span><select id="variant"><option value="classic">كلاسيك · ثعابين وسلالم</option><option value="adventure">مطوّرة · نرد مكافآت</option></select></label><label class="bs-field"><span>مستوى البوت</span><select id="difficulty"><option value="easy">سهل</option><option value="medium" selected>متوسط</option><option value="hard">صعب</option></select></label><label class="bs-field"><span>الأحجار</span><select id="pieceStyle"><option value="glossy" selected>أحجار لامعة</option><option value="characters">شخصيات مرسومة</option><option value="royal">بلورية مجسّمة</option></select></label><label class="bs-field"><span>عدد اللاعبين</span><select id="playerCount"><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label><div></div><label class="bs-field"><span>اللاعب الأول</span><input id="n0" value="اللاعب الأول" maxlength="20"></label><label class="bs-field"><span>اللاعب الثاني</span><input id="n1" value="اللاعب الثاني" maxlength="20"></label><label class="bs-field"><span>اللاعب الثالث</span><input id="n2" value="اللاعب الثالث" maxlength="20"></label><label class="bs-field"><span>اللاعب الرابع</span><input id="n3" value="اللاعب الرابع" maxlength="20"></label><label class="bs-field"><span>اللاعب الخامس</span><input id="n4" value="اللاعب الخامس" maxlength="20"></label><label class="bs-field"><span>اللاعب السادس</span><input id="n5" value="اللاعب السادس" maxlength="20"></label><label class="bs-field"><span>اللاعب السابع</span><input id="n6" value="اللاعب السابع" maxlength="20"></label><label class="bs-field"><span>اللاعب الثامن</span><input id="n7" value="اللاعب الثامن" maxlength="20"></label><label class="bs-field"><span>اللاعب التاسع</span><input id="n8" value="اللاعب التاسع" maxlength="20"></label><label class="bs-field"><span>اللاعب العاشر</span><input id="n9" value="اللاعب العاشر" maxlength="20"></label></div><div class="equipped-character-card snl-loadout"><span id="snlStonePreview" class="snl-stone-preview" aria-hidden="true"></span><img id="equippedCharacterPreview" alt=""><div><b>أحجارك ونردك</b><p>شكل الحجر والنرد واللوحة يتغير من المتجر.</p><a href="/shop?filter=pawn">افتح المتجر ←</a></div></div><details class="snl-more"><summary>خيارات إضافية</summary><label class="bs-field dice-audio-field"><span>صوت النرد</span><select id="diceSound"><option value="varied">أصوات متنوعة وهادئة</option><option value="soft">خفيف وناعم</option><option value="wood">نرد خشبي</option><option value="crystal">نرد بلوري</option></select></label><div class="round-controls-v15"><label>إيقاع الحركة<select id="boardTempo"><option value="normal">سينمائي</option><option value="fast">سريع</option></select></label><button id="boardContrast" type="button" aria-pressed="false">وضوح اللوحة</button></div><div class="setup-note">الدخول في النمطين برمية 6 إلى الخانة 1، مع رمية إضافية. المطوّرة: توقف على 12 أو 46 أو 82 وارمِ نرد المكافآت؛ حماية واحدة تلقائية، أو دوران إضافيان، أو نردان، أو تقدّم 3 أو 5 خانات، أو تجميد دور الخصم. كل وجه له الاحتمال نفسه.</div></details><div class="setup-actions"><button id="startBtn" class="bs-btn gold">ابدأ الجولة</button></div></div>
-<div id="onlineSetup" class="online-box hidden"><div class="equipped-character-card"><img id="onlineCharacterPreview" alt=""><div><b>شخصيتك من المتجر</b><p>سجّل الدخول لاستخدام شخصيات حسابك أونلاين. الملثّم مجاني للجميع.</p><a href="/shop?filter=character">متجر الشخصيات ←</a></div><input id="onlineCharacter" type="hidden" value="fox"></div><label class="bs-field"><span>اسمك</span><input id="onlineName" data-account-name value="لاعب" maxlength="20"></label><label class="bs-field"><span>عدد اللاعبين في الغرفة</span><select id="onlineCount"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label><label class="bs-field"><span>أسلوب لعب الغرفة</span><select id="onlineVariant"><option value="classic">كلاسيك · ثعابين وسلالم</option><option value="adventure">مطوّرة · نرد مكافآت</option></select></label><div class="online-actions"><button id="createRoom" class="bs-btn gold">＋ إنشاء غرفة</button><div class="join-line"><input id="joinCode" class="room-code-input" inputmode="numeric" maxlength="6" placeholder="000000"><button id="joinRoom" class="bs-btn cyan">دخول</button></div></div><div class="mini-note">المضيف يختار الكلاسيك أو المطوّرة عند إنشاء الغرفة. الجميع يلعب بالقوانين نفسها، وإعادة الاتصال تلقائية.</div></div>
-<section id="roomLobby" class="bs-panel room-lobby hidden"><div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="copyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="netBadge" class="net-badge"><i></i><span>اتصال…</span></span></div><div id="roomVariant" class="room-variant" role="status"></div><div id="roomPlayers" class="room-players"></div><div class="lobby-controls"><button id="readyBtn" class="bs-btn primary">✓ أنا جاهز</button><button id="inviteFriends" class="bs-btn cyan">👥 دعوة صديق</button><button id="hostStart" class="bs-btn gold" disabled>ابدأ المباراة</button></div></section>
-</section>
-<section id="game" class="hidden snake-stage snl31"><div class="stage-orb one"></div><div class="stage-orb two"></div><div id="actionFlash" class="action-flash"></div><div class="game-toolbar"><div class="toolbar-title"><h1>الثعبان</h1><p>اصعد بالسلالم واهرب من الثعابين حتى الخانة 100</p></div><div class="toolbar-actions"><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button><button id="boardHelp" class="bs-btn" type="button">كيف ألعب؟</button><button id="boardHistoryOpen" class="bs-btn" type="button">سجل الجولة</button><button id="restart" class="bs-btn">إعادة</button></div></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span>الغرفة <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="game-layout"><section class="bs-panel game-main"><div id="boardWrap" class="snake-board-wrap"><div id="board" class="snake-board"></div><svg id="paths" class="board-paths" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg><div class="board-hud"><div id="actionBanner" class="action-banner"></div></div></div><div class="snake-legend"><span>↑ صعود سريع</span><span>↓ انزلاق للخلف</span><span>◎ الوصول الدقيق إلى 100</span><span>6 · رمية إضافية</span></div><div><b class="mini-note">منطقة الانطلاق</b><div id="startLane" class="start-lane"></div></div></section><aside class="bs-panel game-side snake-side"><div id="mobileStartLane" class="mobile-start-lane" aria-label="منطقة الانطلاق"></div><div id="players" class="player-list"></div><div id="status" class="game-status">جاهزين؟</div><div class="dice-stage"><div id="die" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="die2" class="die dice-second hidden" data-value="1"></div></div><button id="roll" class="bs-btn primary primary-action">🎲 ارْمِ النرد</button><div id="powerStrip" class="power-strip hidden"><button id="shieldPower" class="power-btn" aria-pressed="false">◈ درع <strong id="shieldCount">1</strong></button><button id="doublePower" class="power-btn" aria-pressed="false">⚄ نردان <strong id="doubleCount">1</strong></button></div><div id="powerHelp" class="power-help hidden">الحماية تعمل تلقائيًا مرة واحدة. استخدم قدرة النردين بعد الدخول.</div><div id="eventLog" class="arena-event" role="status">تحتاج رمية 6 للدخول إلى الخانة 1.</div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد</summary><ul><li>الدخول برمية 6 إلى الخانة 1، ثم رمية إضافية.</li><li>بعد الدخول تحرّك بعدد النرد.</li><li>الوقوف على سلم يصعدك فورًا.</li><li>الوقوف على رأس ثعبان ينزلك لذيله.</li><li>الرقم 6 يمنح رمية إضافية.</li><li>يجب الوصول إلى 100 بالرقم الدقيق.</li></ul></details></aside></div></section>
-</main><div id="boardHelpDialog" class="play-sheet-v15 hidden" role="dialog" aria-modal="true" aria-labelledby="boardHelpTitle"><section class="play-sheet-card-v15"><header class="play-sheet-head-v15"><div><span class="eyebrow">YOUR FIRST MOVE</span><h2 id="boardHelpTitle">من أول رمية إلى الخانة 100</h2></div><button id="boardHelpClose" type="button" aria-label="إغلاق شرح اللعب">×</button></header><ol><li>تحتاج <b>رمية 6</b> لدخول اللوحة. بعدها تتحرك بعدد النرد.</li><li>الوقوف على سلم يصعدك، وعلى رأس ثعبان يرجعك لذيله.</li><li>رمية 6 تعطيك دورًا إضافيًا. الوصول إلى 100 يحتاج رقمًا دقيقًا.</li></ol><div class="guide-bonus-v15">في المطوّرة، الخانات 12 و46 و82 تفتح نرد المكافآت. الحماية تلقائية لمرة واحدة، وقد تحصل على نردين أو أدوار إضافية أو قفزة أو تجميد دور الخصم.</div><p id="boardHelpNote" class="play-scope-v15"></p><button id="boardHelpDone" class="bs-btn primary" type="button">فهمت · تابع الجولة</button></section></div><div id="boardHistoryDialog" class="play-sheet-v15 hidden" role="dialog" aria-modal="true" aria-labelledby="boardHistoryTitle"><section class="play-sheet-card-v15"><header class="play-sheet-head-v15"><div><span class="eyebrow">THE STORY SO FAR</span><h2 id="boardHistoryTitle">حكاية الجولة</h2></div><button id="boardHistoryClose" type="button" aria-label="إغلاق سجل الجولة">×</button></header><p id="boardHistoryNote" class="play-scope-v15">ابدأ الجولة لتظهر الرميات والحركات هنا.</p><ol id="boardHistory" class="board-history-v15"></ol><button id="boardHistoryDone" class="bs-btn primary" type="button">الرجوع للعب</button></section></div><div id="bonusOverlay" class="bonus-overlay hidden" role="dialog" aria-modal="true" aria-label="نرد المكافآت" tabindex="-1"><section class="bonus-card"><small>خانة مكافآت</small><h2>نرد الرموز</h2><div id="bonusDie" class="die bonus-die" data-value="1"></div><h3 id="bonusName">مكافأة واحدة من ست مكافآت</h3><p id="bonusText">ارمِ النرد لاكتشاف مكافأتك</p><button id="bonusRoll" class="bs-btn primary">ارمِ نرد المكافأة</button></section></div><div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🐍</div><h2 id="winnerName"></h2><p>وصل إلى الخانة 100 أولًا.</p><div id="boardRoundStats" class="round-stats-v15"></div><button id="again" class="bs-btn gold">جولة جديدة</button></div></div><div class="bs-toast"></div>
-<script src="assets/js/party-link-v32.js?v=32.1.0"></script><script src="assets/js/audio-manager.js?v=32.1.0"></script><script src="assets/js/platform.js?v=32.1.0"></script><script src="assets/js/social-client.js?v=32.1.0"></script><script src="assets/js/profile-core.js?v=32.1.0"></script><script src="assets/js/career-client.js?v=32.1.0"></script><script src="assets/js/pieces-v31.js?v=32.1.0"></script><script src="assets/js/royal-stones.js?v=32.1.0"></script><script src="assets/js/serpent-art-v16.js?v=32.1.0"></script><script src="assets/js/cosmetic-art.js?v=32.1.0"></script><script src="assets/js/play-insights-v15.js?v=32.1.0"></script><script src="assets/js/dice-3d-v31-1.js?v=32.1.0"></script><script src="assets/js/pro-dice.js?v=32.1.0"></script><script src="assets/js/snakes-v31.js?v=32.1.0"></script><script type="module" src="assets/js/neon-arena.js?v=32.1.0"></script><script type="module">
-import {createSnakesGame,playSnakesRoll,DEFAULT_SNAKES_JUMPS} from './assets/js/engines/snakes-engine.js?v=29.1.0';
-import {createAdventureGame,playAdventureTurn,ADVENTURE_EVENTS,createEnhancedGame,playEnhancedTurn,enhancedLanding,BONUS_CELLS,BONUS_FACES} from './assets/js/engines/snakes-adventure.js?v=29.1.0';
-import {chooseSnakePower} from './assets/js/engines/bot-strategy.js?v=29.1.0';
-import {BoardOnlineClient,renderRoomPlayers,bindRoomCountdown} from './assets/js/board-online.js?v=32.1.0';
-import {createBoardMovePlan,createReactionPlan,createSmoothMotionFrames,createSnakeBodyProgress,getPieceProfile} from './assets/js/snakes-v4-fx.js?v=32.1.0';
-function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const colors=['#2f86e8','#8b5cf6','#f0b429','#22a565','#e5484d','#14b8a6','#f97316','#ec4899','#84cc16','#94a3b8'],$=s=>document.querySelector(s),wait=ms=>new Promise(r=>setTimeout(r,ms)),snakeMeals=new Map(),reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;let state=null,busy=false,mode='local',client=null,room=null,lastVersion=-1,onlineQueue=Promise.resolve(),queuedOnline=null,onlineDraining=false,confettiShown=false,matchReceipt=(window.BS_UUID?.()||String(Date.now())+Math.random()),remoteTimeout=null,bots=[],difficulty='medium',selectedPower=null,localConfig=null,pendingLocal=null,visualPositions=null,visualTurn=null;
-const journal=window.BS_PLAY_INSIGHTS?.board();
-$('#roll')?.setAttribute('aria-label','ارمِ النرد');const soundChoice=$('#diceSound');soundChoice.value=BS_AUDIO.getSettings?.().diceSound||'varied';soundChoice.addEventListener('change',()=>BS_AUDIO.update?.({diceSound:soundChoice.value}));
-if($('#playerCount')&&!$('#playerCount option[data-solo]')){const o=document.createElement('option');o.value='1';o.dataset.solo='true';o.textContent='تدريب فردي ضد الذكاء الاصطناعي';$('#playerCount').prepend(o)}
-bindRoomCountdown($('#turnTimer'),()=>room);
-function names(){const c=Number($('#playerCount').value),kind=c===1?'bot':$('#opponents').value;bots=kind==='bot'?[1]:kind==='duobot'?[2]:[];const count=kind==='bot'?2:kind==='duobot'?3:c;return Array.from({length:count},(_,i)=>bots.includes(i)?'البوت':$('#n'+i).value.trim()||`لاعب ${i+1}`)}
-function buildBoard(){const b=$('#board');b.innerHTML='';for(let r=9;r>=0;r--){const row=Array.from({length:10},(_,i)=>r*10+i+1);if(r%2===1)row.reverse();for(const n of row){const d=document.createElement('div');d.className='snake-cell'+((r+(row.indexOf(n)))%2?' tile-alt':'');d.dataset.n=n;d.innerHTML=`<b>${n}</b><div class="token-stack"></div>`;const j=(state?.jumps||DEFAULT_SNAKES_JUMPS)[n];if(j)d.classList.add(j>n?'ladder-foot-cell':'snake-head-cell');if(state?.rulesVersion===2&&BONUS_CELLS.includes(n)){d.classList.add('bonus-cell');d.insertAdjacentHTML('beforeend','<span class=bonus-marker aria-hidden=true>✦</span>');}d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label',`الخانة ${n}${j?`، ${j>n?'سلم':'ثعبان'} إلى ${j}`:''}${state?.rulesVersion===2&&BONUS_CELLS.includes(n)?'، نرد مكافآت':''}`);const inspect=()=>{if(j<n){BS_AUDIO.play('snakeHiss');const parts=snakeVisualParts(n);parts.forEach(p=>p.classList.add('inspected'));window.BS_ARENA?.phase(n,'inspect');setTimeout(()=>parts.forEach(p=>p.classList.remove('inspected')),700)}document.querySelectorAll('.route-highlight').forEach(c=>c.classList.remove('route-highlight'));d.classList.add('route-highlight');if(j)document.querySelector(`.snake-cell[data-n="${j}"]`)?.classList.add('route-highlight');BS_PLATFORM.toast(j?`${j>n?'سلم يصعد':'ثعبان ينزل'} من ${n} إلى ${j}`:`الخانة ${n}`)};d.onclick=inspect;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.stopPropagation();e.preventDefault();inspect()}};if(j)d.insertAdjacentHTML('beforeend',`<span class="jump-mark">${j>n?'🪜':'🐍'}</span>`);b.appendChild(d)}}requestAnimationFrame(drawPaths)}
-function center(n){const el=document.querySelector(`.snake-cell[data-n="${n}"]`),b=$('#board');if(!el)return{x:0,y:0};return{x:(el.offsetLeft+el.offsetWidth/2)/b.clientWidth*1000,y:(el.offsetTop+el.offsetHeight/2)/b.clientHeight*1000}}
-function snakeCurve(from,to,seed=0){const dx=to.x-from.x,dy=to.y-from.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,amp=Math.min(72,Math.max(27,len*.12)),parts=5,pts=[];for(let i=0;i<=parts;i++){const t=i/parts,fade=Math.sin(Math.PI*t),wave=Math.sin((t*3.4+seed*.41)*Math.PI)*amp*fade;pts.push({x:from.x+dx*t+nx*wave,y:from.y+dy*t+ny*wave})}let d=`M ${pts[0].x} ${pts[0].y}`;for(let i=1;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2,my=(pts[i].y+pts[i+1].y)/2;d+=` Q ${pts[i].x} ${pts[i].y}, ${mx} ${my}`}d+=` Q ${pts.at(-2).x} ${pts.at(-2).y}, ${pts.at(-1).x} ${pts.at(-1).y}`;return d}
-function drawPaths(){
-  const svg=$('#paths');
-  svg.innerHTML='<defs><filter id="snakeGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="snakeFood" cx="32%" cy="25%"><stop offset="0" stop-color="#fff"/><stop offset=".24" stop-color="#ffe89b"/><stop offset=".7" stop-color="#ff784d"/><stop offset="1" stop-color="#7c183f"/></radialGradient></defs>';
-  let si=0;const snakeHeads=[];
-  for(const [a,b] of Object.entries(state?.jumps||DEFAULT_SNAKES_JUMPS)){
-    const from=center(Number(a)),to=center(b);
-    if(b>Number(a)){
-      const dx=to.x-from.x,dy=to.y-from.y,len=Math.hypot(dx,dy)||1,px=-dy/len*15,py=dx/len*15;
-      svg.insertAdjacentHTML('beforeend',`<g class="ladder-creature" data-from="${a}" data-to="${b}"><line class="ladder-aura" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"/><line class="ladder-shadow" x1="${from.x+px}" y1="${from.y+py+5}" x2="${to.x+px}" y2="${to.y+py+5}"/><line class="ladder-shadow" x1="${from.x-px}" y1="${from.y-py+5}" x2="${to.x-px}" y2="${to.y-py+5}"/><line class="ladder-rail" x1="${from.x+px}" y1="${from.y+py}" x2="${to.x+px}" y2="${to.y+py}"/><line class="ladder-rail-hi" x1="${from.x+px-2}" y1="${from.y+py-2}" x2="${to.x+px-2}" y2="${to.y+py-2}"/><line class="ladder-rail" x1="${from.x-px}" y1="${from.y-py}" x2="${to.x-px}" y2="${to.y-py}"/><line class="ladder-rail-hi" x1="${from.x-px-2}" y1="${from.y-py-2}" x2="${to.x-px-2}" y2="${to.y-py-2}"/><circle class="ladder-cap" cx="${from.x}" cy="${from.y}" r="9"/><circle class="ladder-cap top" cx="${to.x}" cy="${to.y}" r="9"/></g>`);
-      const g=svg.lastElementChild;
-      let rung=0;for(let t=.12;t<.92;t+=.14){const x=from.x+dx*t,y=from.y+dy*t;g.insertAdjacentHTML('beforeend',`<line class="ladder-rung" style="--rung-index:${rung}" x1="${x+px}" y1="${y+py}" x2="${x-px}" y2="${y-py}"/><line class="ladder-rung-hi" style="--rung-index:${rung++}" x1="${x+px}" y1="${y+py-2}" x2="${x-px}" y2="${y-py-2}"/>`)}
-    }else{
-      const hue=[352,148,205,35,276,94,329,188][si%8],path=snakeCurve(from,to,si),dx=to.x-from.x,dy=to.y-from.y,angle=Math.atan2(dy,dx)*180/Math.PI,tail=to,meals=snakeMeals.get(Number(a))||0;si++;
-      const growth=25+meals*1.35,headScale=1+meals*.012;
-      svg.insertAdjacentHTML('beforeend',`<g class="snake-creature idle" data-from="${a}" data-to="${b}" data-meals="${meals}" style="--snake-hue:${hue};--snake-meals:${meals};--snake-growth:${growth}px;--snake-head-scale:${headScale}"><path class="snake-path-shadow" d="${path}"/><path class="snake-path-outline" d="${path}"/><path class="snake-path" stroke="hsl(${hue} 72% 39%)" d="${path}"/><path class="snake-spine-line" d="${path}"/><path class="snake-scale-line" d="${path}"/><path class="snake-belly-line" d="${path}"/><ellipse class="snake-tail-fin" cx="${tail.x}" cy="${tail.y}" rx="13" ry="8" fill="hsl(${hue} 64% 30%)"/><circle class="snake-tail-tip" cx="${tail.x}" cy="${tail.y}" r="7" fill="hsl(${hue} 70% 45%)"/></g>`);
-      snakeHeads.push(`<g class="snake-head-creature idle" data-from="${a}" data-to="${b}" data-meals="${meals}" style="--snake-hue:${hue};--snake-meals:${meals};--snake-growth:${growth}px;--snake-head-scale:${headScale}"><g class="snake-head-group" transform="rotate(${angle} ${from.x} ${from.y})"><ellipse class="snake-head-halo" cx="${from.x}" cy="${from.y}" rx="48" ry="38"/><ellipse class="snake-neck" cx="${from.x+15}" cy="${from.y}" rx="29" ry="19" fill="hsl(${hue} 68% 30%)"/><ellipse class="snake-head-shell" cx="${from.x}" cy="${from.y}" rx="37" ry="27" fill="hsl(${hue} 70% 34%)"/><ellipse class="snake-head-shine" cx="${from.x-8}" cy="${from.y-8}" rx="17" ry="9" fill="rgba(255,255,255,.14)"/><circle class="snake-eye-socket" cx="${from.x-12}" cy="${from.y-10}" r="7.6"/><circle class="snake-eye-socket" cx="${from.x-12}" cy="${from.y+10}" r="7.6"/><circle class="snake-eye-glow" cx="${from.x-13}" cy="${from.y-10}" r="5.5"/><circle class="snake-eye-glow" cx="${from.x-13}" cy="${from.y+10}" r="5.5"/><ellipse class="snake-eye-core" cx="${from.x-14.5}" cy="${from.y-10}" rx="1.8" ry="3.7"/><ellipse class="snake-eye-core" cx="${from.x-14.5}" cy="${from.y+10}" rx="1.8" ry="3.7"/><path class="snake-brow" d="M ${from.x-21} ${from.y-17} Q ${from.x-13} ${from.y-20}, ${from.x-6} ${from.y-16} M ${from.x-21} ${from.y+17} Q ${from.x-13} ${from.y+20}, ${from.x-6} ${from.y+16}"/><path class="snake-mouth-cavity" d="M ${from.x-36} ${from.y+1} Q ${from.x-20} ${from.y+13}, ${from.x-3} ${from.y+7} Q ${from.x-18} ${from.y+25}, ${from.x-34} ${from.y+10} Z"/><path class="snake-lower-jaw" d="M ${from.x-34} ${from.y+8} Q ${from.x-18} ${from.y+22}, ${from.x-3} ${from.y+8} Q ${from.x-19} ${from.y+31}, ${from.x-35} ${from.y+13} Z" fill="hsl(${hue} 68% 27%)"/><path class="snake-fang" d="M ${from.x-25} ${from.y+6} l 5 11 M ${from.x-12} ${from.y+8} l 3 10"/><circle class="snake-nostril" cx="${from.x-29}" cy="${from.y-7}" r="1.7"/><circle class="snake-nostril" cx="${from.x-30}" cy="${from.y+5}" r="1.7"/><path class="snake-mouth" d="M ${from.x-35} ${from.y+3} Q ${from.x-19} ${from.y+10}, ${from.x-4} ${from.y+6}"/><path class="snake-tongue" d="M ${from.x-34} ${from.y+2} L ${from.x-51} ${from.y+2} M ${from.x-51} ${from.y+2} l -9 -6 M ${from.x-51} ${from.y+2} l -9 6"/></g></g>`);
+<div id="gameMenu" class="snl-menu-v33"></div></section>
+<section id="game" class="hidden snake-stage snl31"><div class="stage-orb one"></div><div class="stage-orb two"></div><div id="actionFlash" class="action-flash"></div><div class="game-toolbar"><div class="toolbar-title"><h1>الثعبان</h1><p>اصعد بالسلالم واهرب من الثعابين حتى الخانة 100</p></div><div class="toolbar-actions"><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button><button id="boardHelp" class="bs-btn" type="button">كيف ألعب؟</button><button id="boardHistoryOpen" class="bs-btn" type="button">سجل الجولة</button><button id="leaveGame" class="bs-btn">خروج</button></div></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="game-layout"><section class="bs-panel game-main"><div id="boardWrap" class="snake-board-wrap"><div id="board" class="snake-board"></div><svg id="paths" class="board-paths" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg><div class="board-hud"><div id="actionBanner" class="action-banner"></div></div></div><div class="snake-legend"><span>↑ صعود سريع</span><span>↓ انزلاق للخلف</span><span>◎ الوصول الدقيق إلى 100</span><span>6 · رمية إضافية</span></div><div><b class="mini-note">منطقة الانطلاق</b><div id="startLane" class="start-lane"></div></div></section><aside class="bs-panel game-side snake-side"><div id="mobileStartLane" class="mobile-start-lane" aria-label="منطقة الانطلاق"></div><div id="players" class="player-list"></div><div id="status" class="game-status">جاهزين؟</div><div class="dice-stage dice-duel-v33" aria-label="النرد"><div id="myDieBox" class="duel-die mine"><div class="duel-pair"><div id="die" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="die2" class="die dice-second hidden" data-value="1"></div></div><small>نردك</small></div><div id="oppDieBox" class="duel-die theirs"><div class="duel-pair"><div id="dieOpp" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="dieOpp2" class="die dice-second hidden" data-value="1"></div></div><small id="dieOppName">نرد خصمك</small></div></div><button id="roll" class="bs-btn primary primary-action">🎲 ارْمِ النرد</button><div id="powerStrip" class="power-strip hidden"><button id="shieldPower" class="power-btn" aria-pressed="false">◈ درع <strong id="shieldCount">1</strong></button><button id="doublePower" class="power-btn" aria-pressed="false">⚄ نردان <strong id="doubleCount">1</strong></button></div><div id="powerHelp" class="power-help hidden">الحماية تعمل تلقائيًا مرة واحدة. استخدم قدرة النردين بعد الدخول.</div><div id="eventLog" class="arena-event" role="status">تحتاج رمية 6 للدخول إلى الخانة 1.</div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد</summary><ul><li>الدخول برمية 6 إلى الخانة 1، ثم رمية إضافية.</li><li>بعد الدخول تحرّك بعدد النرد.</li><li>الوقوف على سلم يصعدك فورًا.</li><li>الوقوف على رأس ثعبان ينزلك لذيله.</li><li>الرقم 6 يمنح رمية إضافية.</li><li>يجب الوصول إلى 100 بالرقم الدقيق.</li></ul></details><details class="rules bs-panel snl-more" style="padding:11px;margin-top:10px"><summary>إعدادات اللوحة</summary><label class="bs-field dice-audio-field"><span>صوت النرد</span><select id="diceSound"><option value="varied">أصوات متنوعة وهادئة</option><option value="soft">خفيف وناعم</option><option value="wood">نرد خشبي</option><option value="crystal">نرد بلوري</option></select></label><div class="round-controls-v15"><label>إيقاع الحركة<select id="boardTempo"><option value="normal">سينمائي</option><option value="fast">سريع</option></select></label><button id="boardContrast" type="button" aria-pressed="false">وضوح اللوحة</button></div><div class="setup-note">الدخول في النمطين برمية 6 إلى الخانة 1، مع رمية إضافية. المطوّرة: توقف على 12 أو 46 أو 82 وارمِ نرد المكافآت؛ حماية واحدة تلقائية، أو دوران إضافيان، أو نردان، أو تقدّم 3 أو 5 خانات، أو تجميد دور الخصم. كل وجه له الاحتمال نفسه.</div></details></aside></div></section>
+</main><div id="boardHelpDialog" class="play-sheet-v15 hidden" role="dialog" aria-modal="true" aria-labelledby="boardHelpTitle"><section class="play-sheet-card-v15"><header class="play-sheet-head-v15"><div><span class="eyebrow">YOUR FIRST MOVE</span><h2 id="boardHelpTitle">من أول رمية إلى الخانة 100</h2></div><button id="boardHelpClose" type="button" aria-label="إغلاق شرح اللعب">×</button></header><ol><li>تحتاج <b>رمية 6</b> لدخول اللوحة. بعدها تتحرك بعدد النرد.</li><li>الوقوف على سلم يصعدك، وعلى رأس ثعبان يرجعك لذيله.</li><li>رمية 6 تعطيك دورًا إضافيًا. الوصول إلى 100 يحتاج رقمًا دقيقًا.</li></ol><div class="guide-bonus-v15">في المطوّرة، الخانات 12 و46 و82 تفتح نرد المكافآت. الحماية تلقائية لمرة واحدة، وقد تحصل على نردين أو أدوار إضافية أو قفزة أو تجميد دور الخصم.</div><p id="boardHelpNote" class="play-scope-v15"></p><button id="boardHelpDone" class="bs-btn primary" type="button">فهمت · تابع الجولة</button></section></div><div id="boardHistoryDialog" class="play-sheet-v15 hidden" role="dialog" aria-modal="true" aria-labelledby="boardHistoryTitle"><section class="play-sheet-card-v15"><header class="play-sheet-head-v15"><div><span class="eyebrow">THE STORY SO FAR</span><h2 id="boardHistoryTitle">حكاية الجولة</h2></div><button id="boardHistoryClose" type="button" aria-label="إغلاق سجل الجولة">×</button></header><p id="boardHistoryNote" class="play-scope-v15">ابدأ الجولة لتظهر الرميات والحركات هنا.</p><ol id="boardHistory" class="board-history-v15"></ol><button id="boardHistoryDone" class="bs-btn primary" type="button">الرجوع للعب</button></section></div><div id="bonusOverlay" class="bonus-overlay hidden" role="dialog" aria-modal="true" aria-label="نرد المكافآت" tabindex="-1"><section class="bonus-card"><small>خانة مكافآت</small><h2>نرد الرموز</h2><div id="bonusDie" class="die bonus-die" data-value="1"></div><h3 id="bonusName">مكافأة واحدة من ست مكافآت</h3><p id="bonusText">ارمِ النرد لاكتشاف مكافأتك</p><button id="bonusRoll" class="bs-btn primary">ارمِ نرد المكافأة</button></section></div><div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🐍</div><h2 id="winnerName"></h2><p>وصل إلى الخانة 100 أولًا.</p><div id="boardRoundStats" class="round-stats-v15"></div><div class="winner-actions-v33"><button id="again" class="bs-btn gold">جولة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div>
+<script src="assets/js/party-link-v32.js?v=33.0.0"></script><script src="assets/js/audio-manager.js?v=33.0.0"></script><script src="assets/js/platform.js?v=33.0.0"></script><script src="assets/js/social-client.js?v=33.0.0"></script><script src="assets/js/profile-core.js?v=33.0.0"></script><script src="assets/js/career-client.js?v=33.0.0"></script><script src="assets/js/pieces-v31.js?v=33.0.0"></script><script src="assets/js/royal-stones.js?v=33.0.0"></script><script src="assets/js/serpent-art-v16.js?v=33.0.0"></script><script src="assets/js/cosmetic-art.js?v=33.0.0"></script><script src="assets/js/play-insights-v15.js?v=33.0.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.0.0"></script><script src="assets/js/pro-dice.js?v=33.0.0"></script><script src="assets/js/snakes-v31.js?v=33.0.0"></script><script src="assets/js/game-menu-v33.js?v=33.0.0"></script><script type="module" src="assets/js/neon-arena.js?v=33.0.0"></script><script type="module">import { DEFAULT_SNAKES_JUMPS } from "./assets/js/engines/snakes-engine.js?v=29.1.0";
+import { ADVENTURE_EVENTS, BONUS_CELLS, BONUS_FACES } from "./assets/js/engines/snakes-adventure.js?v=29.1.0";
+import { createTable, seatLook, botTag, skinDie } from "./assets/js/board-table-v33.js?v=33.0.0";
+import { createBoardMovePlan, createReactionPlan, createSmoothMotionFrames, createSnakeBodyProgress, getPieceProfile } from "./assets/js/snakes-v4-fx.js?v=33.0.0";
+// 33.0.0: every match is online. «العب الحين» or a friends' room; bots of every
+// strength take the empty seats and play on the server; their moves arrive as
+// steps that this page plays one by one. Each player's stone (or hero) and die
+// come from what they equipped in the shop.
+function escHtml(v) {
+  return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+const colors = ["#2f86e8", "#8b5cf6", "#f0b429", "#22a565", "#e5484d", "#14b8a6", "#f97316", "#ec4899", "#84cc16", "#94a3b8"],
+  $ = (s) => document.querySelector(s),
+  wait = (ms) => new Promise((r) => setTimeout(r, ms)),
+  snakeMeals = new Map(),
+  reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+let state = null,
+  room = null,
+  busy = false,
+  confettiShown = false,
+  matchReceipt = "",
+  remoteTimeout = null,
+  selectedPower = null,
+  visualPositions = null,
+  visualTurn = null,
+  lastOpponent = null;
+const journal = window.BS_PLAY_INSIGHTS?.board();
+$("#roll")?.setAttribute("aria-label", "ارمِ النرد");
+const soundChoice = $("#diceSound");
+if (soundChoice) {
+  soundChoice.value = BS_AUDIO.getSettings?.().diceSound || "varied";
+  soundChoice.addEventListener("change", () => BS_AUDIO.update?.({ diceSound: soundChoice.value }));
+}
+const me = () => room?.me?.index ?? -1;
+const playerAt = (seat) => (room?.players || []).find((p) => p.index === seat) || null;
+function buildBoard() {
+  const b = $("#board");
+  b.innerHTML = "";
+  for (let r = 9; r >= 0; r--) {
+    const row = Array.from({ length: 10 }, (_, i) => r * 10 + i + 1);
+    if (r % 2 === 1) row.reverse();
+    for (const n of row) {
+      const d = document.createElement("div");
+      d.className = "snake-cell" + ((r + row.indexOf(n)) % 2 ? " tile-alt" : "");
+      d.dataset.n = n;
+      d.innerHTML = `<b>${n}</b><div class="token-stack"></div>`;
+      const j = (state?.jumps || DEFAULT_SNAKES_JUMPS)[n];
+      if (j) d.classList.add(j > n ? "ladder-foot-cell" : "snake-head-cell");
+      if (state?.rulesVersion === 2 && BONUS_CELLS.includes(n)) {
+        d.classList.add("bonus-cell");
+        d.insertAdjacentHTML("beforeend", "<span class=bonus-marker aria-hidden=true>✦</span>");
+      }
+      d.tabIndex = 0;
+      d.setAttribute("role", "button");
+      d.setAttribute("aria-label", `الخانة ${n}${j ? `، ${j > n ? "سلم" : "ثعبان"} إلى ${j}` : ""}${state?.rulesVersion === 2 && BONUS_CELLS.includes(n) ? "، نرد مكافآت" : ""}`);
+      const inspect = () => {
+        if (j < n) {
+          BS_AUDIO.play("snakeHiss");
+          const parts = snakeVisualParts(n);
+          parts.forEach((p) => p.classList.add("inspected"));
+          window.BS_ARENA?.phase(n, "inspect");
+          setTimeout(() => parts.forEach((p) => p.classList.remove("inspected")), 700);
+        }
+        document.querySelectorAll(".route-highlight").forEach((c) => c.classList.remove("route-highlight"));
+        d.classList.add("route-highlight");
+        if (j) document.querySelector(`.snake-cell[data-n="${j}"]`)?.classList.add("route-highlight");
+        BS_PLATFORM.toast(j ? `${j > n ? "سلم يصعد" : "ثعبان ينزل"} من ${n} إلى ${j}` : `الخانة ${n}`);
+      };
+      d.onclick = inspect;
+      d.onkeydown = (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.stopPropagation();
+          e.preventDefault();
+          inspect();
+        }
+      };
+      if (j) d.insertAdjacentHTML("beforeend", `<span class="jump-mark">${j > n ? "🪜" : "🐍"}</span>`);
+      b.appendChild(d);
     }
   }
-  svg.insertAdjacentHTML('beforeend',`<g class="snake-head-layer">${snakeHeads.join('')}</g>`);
-  window.BS_ARENA?.layout(Object.entries(state?.jumps||DEFAULT_SNAKES_JUMPS).map(([from,to])=>({from:Number(from),to,a:center(Number(from)),b:center(to)})));
+  requestAnimationFrame(drawPaths);
 }
-function snakeVisualParts(from){return [...document.querySelectorAll(`.snake-creature[data-from="${from}"],.snake-head-creature[data-from="${from}"]`)]}
-function renderPlayers(){const p=$('#players');p.innerHTML='';state.players.forEach((x,i)=>{const row=document.createElement('div');row.className='player-row '+(state.turn===i&&state.winner===null?'turn turn-glow':'');row.style.setProperty('--pc',colors[i]);row.style.setProperty('--progress',`${x.position}%`);row.innerHTML=`<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(x.name)}</b><div class="mini-note">${x.position?`الخانة ${x.position} — ${x.position}%`:'عند البداية'}</div><div class="player-progress"><i style="--pc:${colors[i]};width:${x.position}%"></i></div></div><span class="score">${x.position}</span>`;const jewel=document.createElement('i');jewel.className='roster-crystal';row.appendChild(jewel);if(state.rulesVersion===2){const inv=document.createElement('small');inv.className='arena-inventory';inv.textContent=`◈ ${x.shield||0} · ⚄ ${x.double||0}${x.bonusTurns?' · ↻ '+x.bonusTurns:''}`;row.appendChild(inv);}window.BS_ARENA?.crystal(jewel,i);p.appendChild(row)})}
-function launchConfetti(){
-  if(confettiShown)return;
-  confettiShown=true;
-  if(mode==='online'&&window.BS_SOCIAL?.isLoggedIn())(window.BS_PRO?.onlineResult?window.BS_PRO.onlineResult(state.winner===room?.me?.index):window.BS_CAREER?.refresh?.())?.catch(()=>{});
-  else (window.BS_PRO?.record||window.BS_CAREER?.record)?.({id:matchReceipt,game:'snakes',win:state.winner===(mode==='online'?room?.me?.index:0)});
-  try{localStorage.removeItem('busraj-snakes-resume-v6')}catch{}
+function center(n) {
+  const el = document.querySelector(`.snake-cell[data-n="${n}"]`),
+    b = $("#board");
+  if (!el) return { x: 0, y: 0 };
+  return { x: ((el.offsetLeft + el.offsetWidth / 2) / b.clientWidth) * 1000, y: ((el.offsetTop + el.offsetHeight / 2) / b.clientHeight) * 1000 };
 }
-function decoratePawn(element,player){const profile={...getPieceProfile(player),...(document.documentElement.dataset.pieceArt==='characters'?{name:window.BS_STONES?.characterName(player)||'شخصية'}:{})},ring=document.createElement('i'),emblem=document.createElement('b'),label=document.createElement('span');element.dataset.material=profile.material;ring.className='pawn-energy-ring';emblem.className='pawn-emblem';emblem.textContent=profile.symbol;label.className='pawn-label';label.textContent=state.players[player].name.slice(0,1);element.append(ring,emblem,label);window.BS_ARENA?.crystal(element,player);return profile}
-function renderTokens(positions=visualPositions||state.players.map(p=>p.position)){document.querySelectorAll('.token-stack').forEach(x=>x.innerHTML='');document.querySelectorAll('.snake-cell.active-cell,.snake-cell.occupied-cell').forEach(x=>{x.classList.remove('active-cell','occupied-cell');x.style.removeProperty('--active-color')});$('#startLane').innerHTML='';$('#mobileStartLane').innerHTML='';const startTarget=document.body.classList.contains('game-running')?$('#mobileStartLane'):$('#startLane');positions.forEach((pos,i)=>{const t=document.createElement('span');t.className=pos?'snake-token'+(state.turn===i&&state.winner===null?' active':''):'start-token';t.dataset.player=i;t.style.setProperty('--pc',colors[i]);const profile=decoratePawn(t,i);t.title=`${state.players[i].name} — ${profile.name}`;t.setAttribute('aria-label',t.title);if(pos){const cell=document.querySelector(`.snake-cell[data-n="${pos}"]`);cell?.classList.add('occupied-cell');cell?.querySelector('.token-stack')?.appendChild(t);if(state.turn===i&&state.winner===null){cell?.classList.add('active-cell');cell?.style.setProperty('--active-color',colors[i])}}else startTarget.appendChild(t)})}
-function canAct(){return mode==='local'?(!bots.includes(state?.turn)&&!window.BS_PRO?.paused):(room?.me?.index===state?.turn&&room?.status==='playing')}
-function render(){if(!state)return;if(!busy){journal?.observe(state);window.BS_PLAY_INSIGHTS?.boardRender(journal,state);}renderPowers();renderPlayers();renderTokens();$('#restart').disabled=busy;$('#roll').disabled=busy||state.winner!==null||!canAct();if(!busy){const rolls=state.lastEvent?.rolls||[state.lastRoll||1];window.BS_DICE.set($('#die'),rolls[0]);$('#die2').classList.toggle('hidden',rolls.length<2);$('#die').parentElement.classList.toggle('has-double',rolls.length>1);if(rolls.length>1)window.BS_DICE.set($('#die2'),rolls[1]);if(state.lastRoll)$('#game').classList.add('has-rolled')}if(state.winner!==null&&!busy){$('#winnerName').textContent=state.players[state.winner].name;$('#winnerOverlay').classList.add('show');launchConfetti();return}const p=state.players[visualTurn??state.turn];$('#status').textContent=canAct()?`دور ${p.name}${p.position===0?' · 6 للدخول':''}`:`بانتظار ${p.name}…`}
-function fx(sym){const r=$('#die').getBoundingClientRect(),e=document.createElement('div');e.className='fx-pop';e.textContent=sym;e.style.left=(r.left+r.width/2)+'px';e.style.top=(r.top+r.height/2)+'px';document.body.appendChild(e);setTimeout(()=>e.remove(),900)}
-function actionFx(type,text){const wrap=$('#boardWrap'),banner=$('#actionBanner'),flash=$('#actionFlash'),linger=type==='snake'?1650:type==='ladder'?1050:760;banner.className=`action-banner ${type}`;banner.textContent=text;void banner.offsetWidth;banner.classList.add('show');wrap.classList.remove('ladder-hit','snake-hit','six-hit');void wrap.offsetWidth;wrap.classList.add(type==='ladder'?'ladder-hit':type==='snake'?'snake-hit':'six-hit');flash.className=`action-flash ${type}`;void flash.offsetWidth;flash.classList.add('go');setTimeout(()=>banner.classList.remove('show'),linger);setTimeout(()=>wrap.classList.remove('ladder-hit','snake-hit','six-hit'),linger)}
-function hitCell(n,cls='step-hit'){const cell=document.querySelector(`.snake-cell[data-n="${n}"]`);if(!cell)return;cell.classList.remove(cls);void cell.offsetWidth;cell.classList.add(cls);setTimeout(()=>cell.classList.remove(cls),650)}
-function cellCenterRect(pos){
-  const wrap=$('#boardWrap').getBoundingClientRect();
-  const el=pos?document.querySelector(`.snake-cell[data-n="${pos}"]`):$('#mobileStartLane');
-  if(!el)return{x:wrap.width/2,y:wrap.height-18};
-  const r=el.getBoundingClientRect();
-  return{x:r.left+r.width/2-wrap.left,y:r.top+r.height/2-wrap.top};
+function snakeCurve(from, to, seed = 0) {
+  const dx = to.x - from.x,
+    dy = to.y - from.y,
+    len = Math.hypot(dx, dy) || 1,
+    nx = -dy / len,
+    ny = dx / len,
+    amp = Math.min(72, Math.max(27, len * 0.12)),
+    parts = 5,
+    pts = [];
+  for (let i = 0; i <= parts; i++) {
+    const t = i / parts,
+      fade = Math.sin(Math.PI * t),
+      wave = Math.sin((t * 3.4 + seed * 0.41) * Math.PI) * amp * fade;
+    pts.push({ x: from.x + dx * t + nx * wave, y: from.y + dy * t + ny * wave });
+  }
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i].x + pts[i + 1].x) / 2,
+      my = (pts[i].y + pts[i + 1].y) / 2;
+    d += ` Q ${pts[i].x} ${pts[i].y}, ${mx} ${my}`;
+  }
+  d += ` Q ${pts.at(-2).x} ${pts.at(-2).y}, ${pts.at(-1).x} ${pts.at(-1).y}`;
+  return d;
 }
-function makeTravelPawn(player,fromPos){
-  const wrap=$('#boardWrap'),p=state.players[player],source=document.querySelector(`.snake-token[data-player="${player}"]`)||document.querySelector(`.start-token[data-player="${player}"]`),ghost=document.createElement('span');
-  source?.classList.add('motion-hidden');
-  const profile=getPieceProfile(player);ghost.className='snake-travel-pawn';ghost.style.setProperty('--pc',colors[player]);ghost.dataset.player=player;ghost.dataset.material=profile.material;ghost.setAttribute('aria-hidden','true');
-  const head=document.createElement('i'),body=document.createElement('b'),emblem=document.createElement('span'),ring=document.createElement('span');head.className='pawn-head';body.className='pawn-body';emblem.className='pawn-emblem';emblem.textContent=profile.symbol;ring.className='pawn-energy-ring';ghost.append(head,body,ring,emblem);window.BS_ARENA?.crystal(ghost,player);wrap.appendChild(ghost);
-  const pt=cellCenterRect(fromPos);ghost.style.left=(pt.x/wrap.clientWidth*100)+'%';ghost.style.top=(pt.y/wrap.clientHeight*100)+'%';ghost.title=p?.name||'';return ghost;
+function drawPaths() {
+  const svg = $("#paths");
+  svg.innerHTML =
+    '<defs><filter id="snakeGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="snakeFood" cx="32%" cy="25%"><stop offset="0" stop-color="#fff"/><stop offset=".24" stop-color="#ffe89b"/><stop offset=".7" stop-color="#ff784d"/><stop offset="1" stop-color="#7c183f"/></radialGradient></defs>';
+  let si = 0;
+  const snakeHeads = [];
+  for (const [a, b] of Object.entries(state?.jumps || DEFAULT_SNAKES_JUMPS)) {
+    const from = center(Number(a)),
+      to = center(b);
+    if (b > Number(a)) {
+      const dx = to.x - from.x,
+        dy = to.y - from.y,
+        len = Math.hypot(dx, dy) || 1,
+        px = (-dy / len) * 15,
+        py = (dx / len) * 15;
+      svg.insertAdjacentHTML(
+        "beforeend",
+        `<g class="ladder-creature" data-from="${a}" data-to="${b}"><line class="ladder-aura" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"/><line class="ladder-shadow" x1="${from.x + px}" y1="${from.y + py + 5}" x2="${to.x + px}" y2="${to.y + py + 5}"/><line class="ladder-shadow" x1="${from.x - px}" y1="${from.y - py + 5}" x2="${to.x - px}" y2="${to.y - py + 5}"/><line class="ladder-rail" x1="${from.x + px}" y1="${from.y + py}" x2="${to.x + px}" y2="${to.y + py}"/><line class="ladder-rail-hi" x1="${from.x + px - 2}" y1="${from.y + py - 2}" x2="${to.x + px - 2}" y2="${to.y + py - 2}"/><line class="ladder-rail" x1="${from.x - px}" y1="${from.y - py}" x2="${to.x - px}" y2="${to.y - py}"/><line class="ladder-rail-hi" x1="${from.x - px - 2}" y1="${from.y - py - 2}" x2="${to.x - px - 2}" y2="${to.y - py - 2}"/><circle class="ladder-cap" cx="${from.x}" cy="${from.y}" r="9"/><circle class="ladder-cap top" cx="${to.x}" cy="${to.y}" r="9"/></g>`,
+      );
+      const g = svg.lastElementChild;
+      let rung = 0;
+      for (let t = 0.12; t < 0.92; t += 0.14) {
+        const x = from.x + dx * t,
+          y = from.y + dy * t;
+        g.insertAdjacentHTML(
+          "beforeend",
+          `<line class="ladder-rung" style="--rung-index:${rung}" x1="${x + px}" y1="${y + py}" x2="${x - px}" y2="${y - py}"/><line class="ladder-rung-hi" style="--rung-index:${rung++}" x1="${x + px}" y1="${y + py - 2}" x2="${x - px}" y2="${y - py - 2}"/>`,
+        );
+      }
+    } else {
+      const hue = [352, 148, 205, 35, 276, 94, 329, 188][si % 8],
+        path = snakeCurve(from, to, si),
+        dx = to.x - from.x,
+        dy = to.y - from.y,
+        angle = (Math.atan2(dy, dx) * 180) / Math.PI,
+        tail = to,
+        meals = snakeMeals.get(Number(a)) || 0;
+      si++;
+      const growth = 25 + meals * 1.35,
+        headScale = 1 + meals * 0.012;
+      svg.insertAdjacentHTML(
+        "beforeend",
+        `<g class="snake-creature idle" data-from="${a}" data-to="${b}" data-meals="${meals}" style="--snake-hue:${hue};--snake-meals:${meals};--snake-growth:${growth}px;--snake-head-scale:${headScale}"><path class="snake-path-shadow" d="${path}"/><path class="snake-path-outline" d="${path}"/><path class="snake-path" stroke="hsl(${hue} 72% 39%)" d="${path}"/><path class="snake-spine-line" d="${path}"/><path class="snake-scale-line" d="${path}"/><path class="snake-belly-line" d="${path}"/><ellipse class="snake-tail-fin" cx="${tail.x}" cy="${tail.y}" rx="13" ry="8" fill="hsl(${hue} 64% 30%)"/><circle class="snake-tail-tip" cx="${tail.x}" cy="${tail.y}" r="7" fill="hsl(${hue} 70% 45%)"/></g>`,
+      );
+      snakeHeads.push(
+        `<g class="snake-head-creature idle" data-from="${a}" data-to="${b}" data-meals="${meals}" style="--snake-hue:${hue};--snake-meals:${meals};--snake-growth:${growth}px;--snake-head-scale:${headScale}"><g class="snake-head-group" transform="rotate(${angle} ${from.x} ${from.y})"><ellipse class="snake-head-halo" cx="${from.x}" cy="${from.y}" rx="48" ry="38"/><ellipse class="snake-neck" cx="${from.x + 15}" cy="${from.y}" rx="29" ry="19" fill="hsl(${hue} 68% 30%)"/><ellipse class="snake-head-shell" cx="${from.x}" cy="${from.y}" rx="37" ry="27" fill="hsl(${hue} 70% 34%)"/><ellipse class="snake-head-shine" cx="${from.x - 8}" cy="${from.y - 8}" rx="17" ry="9" fill="rgba(255,255,255,.14)"/><circle class="snake-eye-socket" cx="${from.x - 12}" cy="${from.y - 10}" r="7.6"/><circle class="snake-eye-socket" cx="${from.x - 12}" cy="${from.y + 10}" r="7.6"/><circle class="snake-eye-glow" cx="${from.x - 13}" cy="${from.y - 10}" r="5.5"/><circle class="snake-eye-glow" cx="${from.x - 13}" cy="${from.y + 10}" r="5.5"/><ellipse class="snake-eye-core" cx="${from.x - 14.5}" cy="${from.y - 10}" rx="1.8" ry="3.7"/><ellipse class="snake-eye-core" cx="${from.x - 14.5}" cy="${from.y + 10}" rx="1.8" ry="3.7"/><path class="snake-brow" d="M ${from.x - 21} ${from.y - 17} Q ${from.x - 13} ${from.y - 20}, ${from.x - 6} ${from.y - 16} M ${from.x - 21} ${from.y + 17} Q ${from.x - 13} ${from.y + 20}, ${from.x - 6} ${from.y + 16}"/><path class="snake-mouth-cavity" d="M ${from.x - 36} ${from.y + 1} Q ${from.x - 20} ${from.y + 13}, ${from.x - 3} ${from.y + 7} Q ${from.x - 18} ${from.y + 25}, ${from.x - 34} ${from.y + 10} Z"/><path class="snake-lower-jaw" d="M ${from.x - 34} ${from.y + 8} Q ${from.x - 18} ${from.y + 22}, ${from.x - 3} ${from.y + 8} Q ${from.x - 19} ${from.y + 31}, ${from.x - 35} ${from.y + 13} Z" fill="hsl(${hue} 68% 27%)"/><path class="snake-fang" d="M ${from.x - 25} ${from.y + 6} l 5 11 M ${from.x - 12} ${from.y + 8} l 3 10"/><circle class="snake-nostril" cx="${from.x - 29}" cy="${from.y - 7}" r="1.7"/><circle class="snake-nostril" cx="${from.x - 30}" cy="${from.y + 5}" r="1.7"/><path class="snake-mouth" d="M ${from.x - 35} ${from.y + 3} Q ${from.x - 19} ${from.y + 10}, ${from.x - 4} ${from.y + 6}"/><path class="snake-tongue" d="M ${from.x - 34} ${from.y + 2} L ${from.x - 51} ${from.y + 2} M ${from.x - 51} ${from.y + 2} l -9 -6 M ${from.x - 51} ${from.y + 2} l -9 6"/></g></g>`,
+      );
+    }
+  }
+  svg.insertAdjacentHTML("beforeend", `<g class="snake-head-layer">${snakeHeads.join("")}</g>`);
+  window.BS_ARENA?.layout(Object.entries(state?.jumps || DEFAULT_SNAKES_JUMPS).map(([from, to]) => ({ from: Number(from), to, a: center(Number(from)), b: center(to) })));
 }
-async function runAnimation(element,frames,options){if(window.BS_PRO?.paused)await window.BS_PRO.waitForPlay();const duration=Math.max(0,(Number(options?.duration)||0)*(window.BS_PLAY_INSIGHTS?.motionScale?.()||1));if(!element?.animate){await wait(duration);return}try{await element.animate(frames,{...options,duration}).finished}catch{await wait(Math.min(duration,80))}}
-function cuePhase(phase){if(phase?.sound)BS_AUDIO.play(phase.sound);if(phase?.haptic)BS_AUDIO.vibrate(phase.haptic)}
-function setSnakePhase(parts,phase){if(parts[0])window.BS_ARENA?.phase(parts[0].dataset.from,phase);for(const part of parts){part.classList.remove('tracking','attacking','swallowing','digesting','releasing');if(phase)part.classList.add(phase)}}
-async function animatePawnPath(player,fromPos,toPos,positions){
-  if(toPos===fromPos)return;
-  const plan=createBoardMovePlan(fromPos,toPos,{reducedMotion:reducedMotion()}),ghost=makeTravelPawn(player,fromPos),points=[cellCenterRect(fromPos),...plan.cells.map(cellCenterRect)],wrap=$('#boardWrap');
-  const frames=createSmoothMotionFrames(points,{lift:Math.max(10,Math.min(19,wrap.clientWidth*.024))}).map(frame=>({left:`${frame.x/wrap.clientWidth*100}%`,top:`${frame.y/wrap.clientHeight*100}%`,offset:frame.offset,transform:`translate(-50%,-74%) rotate(${frame.rotate}deg) scale(${frame.scale})`}));
-  wrap.classList.add('board-moving');
-  const moving=runAnimation(ghost,frames,{duration:plan.duration,easing:'linear',fill:'forwards'}),animation=ghost.getAnimations?.()[0];let nextPulse=0,trailFrame=null;
-  const trail=()=>{if(!ghost.isConnected)return;const time=Number(animation?.currentTime)||0;while(nextPulse<plan.pulses.length&&time>=plan.pulses[nextPulse].at){const pulse=plan.pulses[nextPulse++],cell=document.querySelector(`.snake-cell[data-n="${pulse.cell}"]`);cell?.classList.add('trail-lit');setTimeout(()=>cell?.classList.remove('trail-lit'),650);window.BS_STONES?.step(wrap,cellCenterRect(pulse.cell),colors[player]);hitCell(pulse.cell);BS_AUDIO.play('boardStep',{volume:.32})}trailFrame=requestAnimationFrame(trail)};
-  if(animation&&!reducedMotion())trailFrame=requestAnimationFrame(trail);await moving;cancelAnimationFrame(trailFrame);
-  window.BS_STONES?.step(wrap,cellCenterRect(toPos),colors[player],{landing:true});
-  wrap.classList.remove('board-moving');ghost.remove();positions[player]=toPos;renderTokens(positions);hitCell(toPos,'landing-hit');BS_AUDIO.play('boardLand');BS_AUDIO.vibrate(22);
+function snakeVisualParts(from) {
+  return [...document.querySelectorAll(`.snake-creature[data-from="${from}"],.snake-head-creature[data-from="${from}"]`)];
 }
-async function animateLadderRide(player,fromPos,toPos,positions){
-  const plan=createReactionPlan('ladder',{reducedMotion:reducedMotion()}),[wake,climb,land]=plan.phases,ladder=document.querySelector(`.ladder-creature[data-from="${fromPos}"]`),ghost=makeTravelPawn(player,fromPos),wrap=$('#boardWrap'),a=cellCenterRect(fromPos),b=cellCenterRect(toPos),initialWidth=wrap.clientWidth,initialHeight=wrap.clientHeight;
-  window.BS_ARENA?.ladder(fromPos,'wake');ladder?.classList.add('activating');wrap.classList.add('ladder-active');cuePhase(wake);
-  await runAnimation(ghost,[{transform:'translate(-50%,-74%) scale(1)'},{transform:'translate(-50%,-86%) scale(1.1)'},{transform:'translate(-50%,-74%) scale(1)'}],{duration:wake.duration,easing:'ease-in-out'});
-  window.BS_ARENA?.ladder(fromPos,'climbing');ladder?.classList.remove('activating');ladder?.classList.add('climbing');cuePhase(climb);
-  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,points=Array.from({length:9},(_,index)=>{const t=index/8,wave=Math.sin(t*Math.PI*8)*4;return{x:a.x+dx*t+nx*wave,y:a.y+dy*t+ny*wave}});
-  const frames=createSmoothMotionFrames(points,{lift:4}).map(frame=>({left:`${frame.x/initialWidth*100}%`,top:`${frame.y/initialHeight*100}%`,offset:frame.offset,transform:`translate(-50%,-74%) rotate(${frame.rotate}deg) scale(${frame.scale})`}));
-  const rungs=[...(ladder?.querySelectorAll('.ladder-rung')||[])];rungs.forEach((rung,index)=>setTimeout(()=>{rung.classList.add('is-lit');if(index%2===0)BS_AUDIO.play('ladderStep',{volume:.34});setTimeout(()=>rung.classList.remove('is-lit'),420)},index/Math.max(1,rungs.length)*climb.duration));
-  await runAnimation(ghost,frames,{duration:climb.duration,easing:'linear',fill:'forwards'});
-  ladder?.classList.remove('climbing');ladder?.classList.add('landing');cuePhase(land);
-  await runAnimation(ghost,[{left:`${b.x/initialWidth*100}%`,top:`${b.y/initialHeight*100}%`,transform:'translate(-50%,-82%) scale(1.12)'},{left:`${b.x/initialWidth*100}%`,top:`${b.y/initialHeight*100}%`,transform:'translate(-50%,-74%) scale(.96)',offset:.62},{left:`${b.x/initialWidth*100}%`,top:`${b.y/initialHeight*100}%`,transform:'translate(-50%,-74%) scale(1)'}],{duration:land.duration,easing:'cubic-bezier(.2,.8,.25,1)',fill:'forwards'});
-  window.BS_ARENA?.ladder(fromPos,null);ghost.remove();ladder?.classList.remove('landing');wrap.classList.remove('ladder-active');positions[player]=toPos;renderTokens(positions);hitCell(toPos,'landing-hit');window.BS_STONES?.step(wrap,cellCenterRect(toPos),colors[player],{landing:true});
+/* Each seat walks with its owner's shop stone, or the hero itself with «شخصيتي». */
+function drawSeatPiece(el, seat) {
+  const look = seatLook(room, seat);
+  if (look.pawn === "pawn-character" && window.BS_STONES?.draw) {
+    const c = document.createElement("canvas");
+    c.className = "crystal-sprite hero-piece";
+    c.width = 144;
+    c.height = 180;
+    c.setAttribute("aria-hidden", "true");
+    if (window.BS_STONES.draw(c, look.pawn, seat, { style: "characters", preview: true, character: look.character })) {
+      el.appendChild(c);
+      return c;
+    }
+  }
+  if (window.BS_PIECES) {
+    const item = look.pawn === "pawn-character" ? "pawn-classic" : look.pawn;
+    const svg = window.BS_PIECES.icon(document, { design: window.BS_PIECES.designFor(item), item, color: colors[seat % colors.length], className: "crystal-sprite piece-svg" });
+    el.appendChild(svg);
+    return svg;
+  }
+  return window.BS_ARENA?.crystal(el, seat);
 }
-function createSnakeBulge(snake,path,player){if(!snake||!path?.getTotalLength)return null;const bulge=document.createElementNS('http://www.w3.org/2000/svg','circle');bulge.classList.add('snake-food-bulge');bulge.setAttribute('cx','0');bulge.setAttribute('cy','0');bulge.setAttribute('r','14');bulge.style.setProperty('--food-color',colors[player]);snake.appendChild(bulge);const length=path.getTotalLength(),frames=createSnakeBodyProgress(22).map(point=>{const pos=path.getPointAtLength(length*point.distance);return{transform:`translate(${pos.x}px,${pos.y}px) scale(${point.scale})`,opacity:point.opacity,offset:point.distance}});return{bulge,frames}}
-async function animateSnakeEat(player,fromPos,toPos,positions){
-  const parts=snakeVisualParts(fromPos),snake=parts.find(part=>part.classList.contains('snake-creature')),head=parts.find(part=>part.classList.contains('snake-head-creature')),path=snake?.querySelector('.snake-path'),plan=createReactionPlan('snake',{reducedMotion:reducedMotion()}),[track,strike,swallow,grow,release]=plan.phases.map((phase,i)=>({...phase,duration:reducedMotion()?phase.duration:[380,360,900,900,550][i]})),ghost=makeTravelPawn(player,fromPos),wrap=$('#boardWrap'),a=cellCenterRect(fromPos),b=cellCenterRect(toPos),initialWidth=wrap.clientWidth,initialHeight=wrap.clientHeight;
-  wrap.classList.add('snake-active');setSnakePhase(parts,'tracking');cuePhase(track);
-  await runAnimation(ghost,[{transform:'translate(-50%,-74%) rotate(0)'},{transform:'translate(-56%,-78%) rotate(-7deg)'},{transform:'translate(-44%,-76%) rotate(7deg)'},{transform:'translate(-50%,-74%) rotate(0)'}],{duration:track.duration,easing:'ease-in-out'});
-  setSnakePhase(parts,'attacking');void head?.getBBox?.();cuePhase(strike);BS_AUDIO.play('snakeEat',{volume:.95});
-  await runAnimation(ghost,[{left:`${a.x/initialWidth*100}%`,top:`${a.y/initialHeight*100}%`,transform:'translate(-50%,-74%) scale(1)',opacity:1},{left:`${(a.x-4)/initialWidth*100}%`,top:`${(a.y+2)/initialHeight*100}%`,transform:'translate(-50%,-72%) scale(.48) rotate(-12deg)',opacity:.94,offset:.58},{left:`${a.x/initialWidth*100}%`,top:`${a.y/initialHeight*100}%`,transform:'translate(-50%,-70%) scale(.04) rotate(25deg)',opacity:0}],{duration:strike.duration,easing:'cubic-bezier(.3,.02,.48,1)',fill:'forwards'});
-  setSnakePhase(parts,'swallowing');cuePhase(swallow);const bodyFx=createSnakeBulge(snake,path,player);
-  if(bodyFx)await runAnimation(bodyFx.bulge,bodyFx.frames,{duration:swallow.duration,easing:'linear',fill:'forwards'});else await wait(swallow.duration);await window.BS_PRO?.waitForPlay?.();
-  bodyFx?.bulge.remove();setSnakePhase(parts,'digesting');const meals=Math.min(5,(snakeMeals.get(Number(fromPos))||0)+1);snakeMeals.set(Number(fromPos),meals);window.BS_ARENA?.meal?.(fromPos,meals);for(const part of parts){part.dataset.meals=meals;part.style.setProperty('--snake-meals',meals);part.style.setProperty('--snake-growth',`${25+meals*1.35}px`);part.style.setProperty('--snake-head-scale',1+meals*.012)}cuePhase(grow);await (window.BS_ARENA?.wait(grow.duration)||wait(grow.duration));
-  setSnakePhase(parts,'releasing');cuePhase(release);ghost.style.left=`${b.x/initialWidth*100}%`;ghost.style.top=`${(b.y-34)/initialHeight*100}%`;ghost.style.opacity='0';
-  await runAnimation(ghost,[{left:`${b.x/initialWidth*100}%`,top:`${(b.y-35)/initialHeight*100}%`,transform:'translate(-50%,-74%) scale(.22)',opacity:0},{left:`${b.x/initialWidth*100}%`,top:`${(b.y-10)/initialHeight*100}%`,transform:'translate(-50%,-82%) scale(1.16)',opacity:1,offset:.62},{left:`${b.x/initialWidth*100}%`,top:`${b.y/initialHeight*100}%`,transform:'translate(-50%,-74%) scale(1)',opacity:1}],{duration:release.duration,easing:'cubic-bezier(.16,.8,.22,1)',fill:'forwards'});
-  ghost.remove();setSnakePhase(parts,null);wrap.classList.remove('snake-active');positions[player]=toPos;renderTokens(positions);hitCell(toPos,'landing-hit');window.BS_STONES?.step(wrap,cellCenterRect(toPos),colors[player],{landing:true});
+function heroName(seat) {
+  const look = seatLook(room, seat);
+  return look.pawn === "pawn-character" ? window.BS_STONES?.characters?.find((c) => c.id === look.character)?.name || "شخصية" : "";
 }
-async function animateEvent(prev,next){
-  const e=next.lastEvent;if(!e)return;const positions=prev.players.map(p=>p.position);visualPositions=positions;
-  await animatePawnPath(e.player,e.from,e.landed,positions);
-  if(e.to!==e.landed){
+function renderPlayers() {
+  const p = $("#players");
+  p.innerHTML = "";
+  state.players.forEach((x, i) => {
+    const row = document.createElement("div");
+    row.className = "player-row " + (state.turn === i && state.winner === null ? "turn turn-glow" : "") + (i === me() ? " is-me" : "");
+    row.style.setProperty("--pc", colors[i]);
+    row.style.setProperty("--progress", `${x.position}%`);
+    row.innerHTML = `<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(x.name)}</b><div class="mini-note">${x.position ? `الخانة ${x.position} — ${x.position}%` : "عند البداية"}</div><div class="player-progress"><i style="--pc:${colors[i]};width:${x.position}%"></i></div></div><span class="score">${x.position}</span>`;
+    const tag = botTag(playerAt(i));
+    if (tag) row.appendChild(tag);
+    if (i === me()) row.setAttribute("aria-label", x.name + " (أنت)");
+    const jewel = document.createElement("i");
+    jewel.className = "roster-crystal";
+    row.appendChild(jewel);
+    if (state.rulesVersion === 2) {
+      const inv = document.createElement("small");
+      inv.className = "arena-inventory";
+      inv.textContent = `◈ ${x.shield || 0} · ⚄ ${x.double || 0}${x.bonusTurns ? " · ↻ " + x.bonusTurns : ""}`;
+      row.appendChild(inv);
+    }
+    drawSeatPiece(jewel, i);
+    p.appendChild(row);
+  });
+}
+function launchConfetti() {
+  if (confettiShown) return;
+  confettiShown = true;
+  if (window.BS_SOCIAL?.isLoggedIn()) (window.BS_PRO?.onlineResult ? window.BS_PRO.onlineResult(state.winner === me()) : window.BS_CAREER?.refresh?.())?.catch(() => {});
+  else (window.BS_PRO?.record || window.BS_CAREER?.record)?.({ id: matchReceipt, game: "snakes", win: state.winner === me() });
+}
+function decoratePawn(element, player) {
+  const profile = getPieceProfile(player),
+    ring = document.createElement("i"),
+    emblem = document.createElement("b"),
+    label = document.createElement("span");
+  element.dataset.material = profile.material;
+  ring.className = "pawn-energy-ring";
+  emblem.className = "pawn-emblem";
+  emblem.textContent = profile.symbol;
+  label.className = "pawn-label";
+  label.textContent = state.players[player].name.slice(0, 1);
+  element.append(ring, emblem, label);
+  drawSeatPiece(element, player);
+  return { ...profile, name: heroName(player) || profile.name };
+}
+function renderTokens(positions = visualPositions || state.players.map((p) => p.position)) {
+  document.querySelectorAll(".token-stack").forEach((x) => (x.innerHTML = ""));
+  document.querySelectorAll(".snake-cell.active-cell,.snake-cell.occupied-cell").forEach((x) => {
+    x.classList.remove("active-cell", "occupied-cell");
+    x.style.removeProperty("--active-color");
+  });
+  $("#startLane").innerHTML = "";
+  $("#mobileStartLane").innerHTML = "";
+  const startTarget = document.body.classList.contains("game-running") ? $("#mobileStartLane") : $("#startLane");
+  positions.forEach((pos, i) => {
+    const t = document.createElement("span");
+    t.className = pos ? "snake-token" + (state.turn === i && state.winner === null ? " active" : "") : "start-token";
+    t.dataset.player = i;
+    t.style.setProperty("--pc", colors[i]);
+    if (seatLook(room, i).pawn === "pawn-character") t.classList.add("hero-token");
+    const profile = decoratePawn(t, i);
+    t.title = `${state.players[i].name} — ${profile.name}`;
+    t.setAttribute("aria-label", t.title);
+    if (pos) {
+      const cell = document.querySelector(`.snake-cell[data-n="${pos}"]`);
+      cell?.classList.add("occupied-cell");
+      cell?.querySelector(".token-stack")?.appendChild(t);
+      if (state.turn === i && state.winner === null) {
+        cell?.classList.add("active-cell");
+        cell?.style.setProperty("--active-color", colors[i]);
+      }
+    } else startTarget.appendChild(t);
+  });
+}
+function canAct() {
+  return room?.status === "playing" && me() === state?.turn;
+}
+/* ---------- the two dice: yours, and the one of the player on turn ---------- */
+const diceOf = (seat) => (seat === me() ? [$("#die"), $("#die2")] : [$("#dieOpp"), $("#dieOpp2")]);
+function opponentSeat() {
+  if (!state) return null;
+  const turn = visualTurn ?? state.turn;
+  if (turn !== me()) return turn;
+  if (lastOpponent !== null && lastOpponent < state.players.length) return lastOpponent;
+  return state.players.findIndex((_, i) => i !== me());
+}
+function paintDice() {
+  if (!state) return;
+  const mine = me(),
+    opp = opponentSeat(),
+    turn = visualTurn ?? state.turn;
+  for (const el of [$("#die"), $("#die2")]) skinDie(el, seatLook(room, mine).dice);
+  for (const el of [$("#dieOpp"), $("#dieOpp2")]) skinDie(el, seatLook(room, opp).dice);
+  const name = state.players[opp]?.name || "الخصم";
+  $("#dieOppName").textContent = state.players.length > 2 ? "نرد " + name : "نرد خصمك " + name;
+  $("#myDieBox").classList.toggle("is-turn", turn === mine && state.winner === null);
+  $("#oppDieBox").classList.toggle("is-turn", turn !== mine && state.winner === null);
+  $("#myDieBox").classList.toggle("is-idle", turn !== mine);
+  $("#oppDieBox").classList.toggle("is-idle", turn === mine);
+}
+async function spinDice(rolls, seat) {
+  if (seat !== me()) lastOpponent = seat;
+  paintDice();
+  const [a, b] = diceOf(seat);
+  b.classList.toggle("hidden", rolls.length < 2);
+  a.parentElement?.parentElement?.classList.toggle("has-double", rolls.length > 1);
+  await Promise.all(rolls.map((roll, i) => window.BS_DICE.roll(i ? b : a, roll, { quiet: i > 0 })));
+}
+function render() {
+  if (!state) return;
+  if (!busy) {
+    journal?.observe(state);
+    window.BS_PLAY_INSIGHTS?.boardRender(journal, state);
+  }
+  renderPowers();
+  renderPlayers();
+  renderTokens();
+  paintDice();
+  $("#roll").disabled = busy || state.winner !== null || !canAct();
+  if (!busy && state.lastEvent) {
+    const rolls = state.lastEvent.rolls || [state.lastRoll || 1],
+      [a, b] = diceOf(state.lastEvent.player);
+    window.BS_DICE.set(a, rolls[0]);
+    b.classList.toggle("hidden", rolls.length < 2);
+    if (rolls.length > 1) window.BS_DICE.set(b, rolls[1]);
+    if (state.lastRoll) $("#game").classList.add("has-rolled");
+  }
+  if (state.winner !== null && !busy) {
+    $("#winnerName").textContent = state.players[state.winner].name + (state.winner === me() ? " (أنت)" : "");
+    $("#winnerOverlay").classList.add("show");
+    $("#again").textContent = room?.publicMatch ? "مباراة جديدة" : room?.me?.role === "host" ? "جولة جديدة" : "بانتظار المضيف";
+    $("#again").disabled = !room?.publicMatch && room?.me?.role !== "host";
+    launchConfetti();
+    return;
+  }
+  const p = state.players[visualTurn ?? state.turn];
+  const mine = (visualTurn ?? state.turn) === me();
+  $("#status").textContent = mine ? `دورك${p.position === 0 ? " · تحتاج 6 للدخول" : ""}` : `دور ${p.name}…`;
+}
+function fx(sym) {
+  const r = $("#die").getBoundingClientRect(),
+    e = document.createElement("div");
+  e.className = "fx-pop";
+  e.textContent = sym;
+  e.style.left = r.left + r.width / 2 + "px";
+  e.style.top = r.top + r.height / 2 + "px";
+  document.body.appendChild(e);
+  setTimeout(() => e.remove(), 900);
+}
+function actionFx(type, text) {
+  const wrap = $("#boardWrap"),
+    banner = $("#actionBanner"),
+    flash = $("#actionFlash"),
+    linger = type === "snake" ? 1650 : type === "ladder" ? 1050 : 760;
+  banner.className = `action-banner ${type}`;
+  banner.textContent = text;
+  void banner.offsetWidth;
+  banner.classList.add("show");
+  wrap.classList.remove("ladder-hit", "snake-hit", "six-hit");
+  void wrap.offsetWidth;
+  wrap.classList.add(type === "ladder" ? "ladder-hit" : type === "snake" ? "snake-hit" : "six-hit");
+  flash.className = `action-flash ${type}`;
+  void flash.offsetWidth;
+  flash.classList.add("go");
+  setTimeout(() => banner.classList.remove("show"), linger);
+  setTimeout(() => wrap.classList.remove("ladder-hit", "snake-hit", "six-hit"), linger);
+}
+function hitCell(n, cls = "step-hit") {
+  const cell = document.querySelector(`.snake-cell[data-n="${n}"]`);
+  if (!cell) return;
+  cell.classList.remove(cls);
+  void cell.offsetWidth;
+  cell.classList.add(cls);
+  setTimeout(() => cell.classList.remove(cls), 650);
+}
+function cellCenterRect(pos) {
+  const wrap = $("#boardWrap").getBoundingClientRect();
+  const el = pos ? document.querySelector(`.snake-cell[data-n="${pos}"]`) : $("#mobileStartLane");
+  if (!el) return { x: wrap.width / 2, y: wrap.height - 18 };
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width / 2 - wrap.left, y: r.top + r.height / 2 - wrap.top };
+}
+function makeTravelPawn(player, fromPos) {
+  const wrap = $("#boardWrap"),
+    p = state.players[player],
+    source = document.querySelector(`.snake-token[data-player="${player}"]`) || document.querySelector(`.start-token[data-player="${player}"]`),
+    ghost = document.createElement("span");
+  source?.classList.add("motion-hidden");
+  const profile = getPieceProfile(player);
+  ghost.className = "snake-travel-pawn";
+  ghost.style.setProperty("--pc", colors[player]);
+  ghost.dataset.player = player;
+  ghost.dataset.material = profile.material;
+  ghost.setAttribute("aria-hidden", "true");
+  const head = document.createElement("i"),
+    body = document.createElement("b"),
+    emblem = document.createElement("span"),
+    ring = document.createElement("span");
+  head.className = "pawn-head";
+  body.className = "pawn-body";
+  emblem.className = "pawn-emblem";
+  emblem.textContent = profile.symbol;
+  ring.className = "pawn-energy-ring";
+  ghost.append(head, body, ring, emblem);
+  drawSeatPiece(ghost, player);
+  wrap.appendChild(ghost);
+  const pt = cellCenterRect(fromPos);
+  ghost.style.left = (pt.x / wrap.clientWidth) * 100 + "%";
+  ghost.style.top = (pt.y / wrap.clientHeight) * 100 + "%";
+  ghost.title = p?.name || "";
+  return ghost;
+}
+async function runAnimation(element, frames, options) {
+  if (window.BS_PRO?.paused) await window.BS_PRO.waitForPlay();
+  const duration = Math.max(0, (Number(options?.duration) || 0) * (window.BS_PLAY_INSIGHTS?.motionScale?.() || 1));
+  if (!element?.animate) {
+    await wait(duration);
+    return;
+  }
+  try {
+    await element.animate(frames, { ...options, duration }).finished;
+  } catch {
+    await wait(Math.min(duration, 80));
+  }
+}
+function cuePhase(phase) {
+  if (phase?.sound) BS_AUDIO.play(phase.sound);
+  if (phase?.haptic) BS_AUDIO.vibrate(phase.haptic);
+}
+function setSnakePhase(parts, phase) {
+  if (parts[0]) window.BS_ARENA?.phase(parts[0].dataset.from, phase);
+  for (const part of parts) {
+    part.classList.remove("tracking", "attacking", "swallowing", "digesting", "releasing");
+    if (phase) part.classList.add(phase);
+  }
+}
+async function animatePawnPath(player, fromPos, toPos, positions) {
+  if (toPos === fromPos) return;
+  const plan = createBoardMovePlan(fromPos, toPos, { reducedMotion: reducedMotion() }),
+    ghost = makeTravelPawn(player, fromPos),
+    points = [cellCenterRect(fromPos), ...plan.cells.map(cellCenterRect)],
+    wrap = $("#boardWrap");
+  const frames = createSmoothMotionFrames(points, { lift: Math.max(10, Math.min(19, wrap.clientWidth * 0.024)) }).map((frame) => ({
+    left: `${(frame.x / wrap.clientWidth) * 100}%`,
+    top: `${(frame.y / wrap.clientHeight) * 100}%`,
+    offset: frame.offset,
+    transform: `translate(-50%,-74%) rotate(${frame.rotate}deg) scale(${frame.scale})`,
+  }));
+  wrap.classList.add("board-moving");
+  const moving = runAnimation(ghost, frames, { duration: plan.duration, easing: "linear", fill: "forwards" }),
+    animation = ghost.getAnimations?.()[0];
+  let nextPulse = 0,
+    trailFrame = null;
+  const trail = () => {
+    if (!ghost.isConnected) return;
+    const time = Number(animation?.currentTime) || 0;
+    while (nextPulse < plan.pulses.length && time >= plan.pulses[nextPulse].at) {
+      const pulse = plan.pulses[nextPulse++],
+        cell = document.querySelector(`.snake-cell[data-n="${pulse.cell}"]`);
+      cell?.classList.add("trail-lit");
+      setTimeout(() => cell?.classList.remove("trail-lit"), 650);
+      window.BS_STONES?.step(wrap, cellCenterRect(pulse.cell), colors[player]);
+      hitCell(pulse.cell);
+      BS_AUDIO.play("boardStep", { volume: 0.32 });
+    }
+    trailFrame = requestAnimationFrame(trail);
+  };
+  if (animation && !reducedMotion()) trailFrame = requestAnimationFrame(trail);
+  await moving;
+  cancelAnimationFrame(trailFrame);
+  window.BS_STONES?.step(wrap, cellCenterRect(toPos), colors[player], { landing: true });
+  wrap.classList.remove("board-moving");
+  ghost.remove();
+  positions[player] = toPos;
+  renderTokens(positions);
+  hitCell(toPos, "landing-hit");
+  BS_AUDIO.play("boardLand");
+  BS_AUDIO.vibrate(22);
+}
+async function animateLadderRide(player, fromPos, toPos, positions) {
+  const plan = createReactionPlan("ladder", { reducedMotion: reducedMotion() }),
+    [wake, climb, land] = plan.phases,
+    ladder = document.querySelector(`.ladder-creature[data-from="${fromPos}"]`),
+    ghost = makeTravelPawn(player, fromPos),
+    wrap = $("#boardWrap"),
+    a = cellCenterRect(fromPos),
+    b = cellCenterRect(toPos),
+    initialWidth = wrap.clientWidth,
+    initialHeight = wrap.clientHeight;
+  window.BS_ARENA?.ladder(fromPos, "wake");
+  ladder?.classList.add("activating");
+  wrap.classList.add("ladder-active");
+  cuePhase(wake);
+  await runAnimation(ghost, [{ transform: "translate(-50%,-74%) scale(1)" }, { transform: "translate(-50%,-86%) scale(1.1)" }, { transform: "translate(-50%,-74%) scale(1)" }], {
+    duration: wake.duration,
+    easing: "ease-in-out",
+  });
+  window.BS_ARENA?.ladder(fromPos, "climbing");
+  ladder?.classList.remove("activating");
+  ladder?.classList.add("climbing");
+  cuePhase(climb);
+  const dx = b.x - a.x,
+    dy = b.y - a.y,
+    len = Math.hypot(dx, dy) || 1,
+    nx = -dy / len,
+    ny = dx / len,
+    points = Array.from({ length: 9 }, (_, index) => {
+      const t = index / 8,
+        wave = Math.sin(t * Math.PI * 8) * 4;
+      return { x: a.x + dx * t + nx * wave, y: a.y + dy * t + ny * wave };
+    });
+  const frames = createSmoothMotionFrames(points, { lift: 4 }).map((frame) => ({
+    left: `${(frame.x / initialWidth) * 100}%`,
+    top: `${(frame.y / initialHeight) * 100}%`,
+    offset: frame.offset,
+    transform: `translate(-50%,-74%) rotate(${frame.rotate}deg) scale(${frame.scale})`,
+  }));
+  const rungs = [...(ladder?.querySelectorAll(".ladder-rung") || [])];
+  rungs.forEach((rung, index) =>
+    setTimeout(
+      () => {
+        rung.classList.add("is-lit");
+        if (index % 2 === 0) BS_AUDIO.play("ladderStep", { volume: 0.34 });
+        setTimeout(() => rung.classList.remove("is-lit"), 420);
+      },
+      (index / Math.max(1, rungs.length)) * climb.duration,
+    ),
+  );
+  await runAnimation(ghost, frames, { duration: climb.duration, easing: "linear", fill: "forwards" });
+  ladder?.classList.remove("climbing");
+  ladder?.classList.add("landing");
+  cuePhase(land);
+  await runAnimation(
+    ghost,
+    [
+      { left: `${(b.x / initialWidth) * 100}%`, top: `${(b.y / initialHeight) * 100}%`, transform: "translate(-50%,-82%) scale(1.12)" },
+      { left: `${(b.x / initialWidth) * 100}%`, top: `${(b.y / initialHeight) * 100}%`, transform: "translate(-50%,-74%) scale(.96)", offset: 0.62 },
+      { left: `${(b.x / initialWidth) * 100}%`, top: `${(b.y / initialHeight) * 100}%`, transform: "translate(-50%,-74%) scale(1)" },
+    ],
+    { duration: land.duration, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards" },
+  );
+  window.BS_ARENA?.ladder(fromPos, null);
+  ghost.remove();
+  ladder?.classList.remove("landing");
+  wrap.classList.remove("ladder-active");
+  positions[player] = toPos;
+  renderTokens(positions);
+  hitCell(toPos, "landing-hit");
+  window.BS_STONES?.step(wrap, cellCenterRect(toPos), colors[player], { landing: true });
+}
+function createSnakeBulge(snake, path, player) {
+  if (!snake || !path?.getTotalLength) return null;
+  const bulge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bulge.classList.add("snake-food-bulge");
+  bulge.setAttribute("cx", "0");
+  bulge.setAttribute("cy", "0");
+  bulge.setAttribute("r", "14");
+  bulge.style.setProperty("--food-color", colors[player]);
+  snake.appendChild(bulge);
+  const length = path.getTotalLength(),
+    frames = createSnakeBodyProgress(22).map((point) => {
+      const pos = path.getPointAtLength(length * point.distance);
+      return { transform: `translate(${pos.x}px,${pos.y}px) scale(${point.scale})`, opacity: point.opacity, offset: point.distance };
+    });
+  return { bulge, frames };
+}
+async function animateSnakeEat(player, fromPos, toPos, positions) {
+  const parts = snakeVisualParts(fromPos),
+    snake = parts.find((part) => part.classList.contains("snake-creature")),
+    head = parts.find((part) => part.classList.contains("snake-head-creature")),
+    path = snake?.querySelector(".snake-path"),
+    plan = createReactionPlan("snake", { reducedMotion: reducedMotion() }),
+    [track, strike, swallow, grow, release] = plan.phases.map((phase, i) => ({ ...phase, duration: reducedMotion() ? phase.duration : [380, 360, 900, 900, 550][i] })),
+    ghost = makeTravelPawn(player, fromPos),
+    wrap = $("#boardWrap"),
+    a = cellCenterRect(fromPos),
+    b = cellCenterRect(toPos),
+    initialWidth = wrap.clientWidth,
+    initialHeight = wrap.clientHeight;
+  wrap.classList.add("snake-active");
+  setSnakePhase(parts, "tracking");
+  cuePhase(track);
+  await runAnimation(
+    ghost,
+    [
+      { transform: "translate(-50%,-74%) rotate(0)" },
+      { transform: "translate(-56%,-78%) rotate(-7deg)" },
+      { transform: "translate(-44%,-76%) rotate(7deg)" },
+      { transform: "translate(-50%,-74%) rotate(0)" },
+    ],
+    { duration: track.duration, easing: "ease-in-out" },
+  );
+  setSnakePhase(parts, "attacking");
+  void head?.getBBox?.();
+  cuePhase(strike);
+  BS_AUDIO.play("snakeEat", { volume: 0.95 });
+  await runAnimation(
+    ghost,
+    [
+      { left: `${(a.x / initialWidth) * 100}%`, top: `${(a.y / initialHeight) * 100}%`, transform: "translate(-50%,-74%) scale(1)", opacity: 1 },
+      { left: `${((a.x - 4) / initialWidth) * 100}%`, top: `${((a.y + 2) / initialHeight) * 100}%`, transform: "translate(-50%,-72%) scale(.48) rotate(-12deg)", opacity: 0.94, offset: 0.58 },
+      { left: `${(a.x / initialWidth) * 100}%`, top: `${(a.y / initialHeight) * 100}%`, transform: "translate(-50%,-70%) scale(.04) rotate(25deg)", opacity: 0 },
+    ],
+    { duration: strike.duration, easing: "cubic-bezier(.3,.02,.48,1)", fill: "forwards" },
+  );
+  setSnakePhase(parts, "swallowing");
+  cuePhase(swallow);
+  const bodyFx = createSnakeBulge(snake, path, player);
+  if (bodyFx) await runAnimation(bodyFx.bulge, bodyFx.frames, { duration: swallow.duration, easing: "linear", fill: "forwards" });
+  else await wait(swallow.duration);
+  bodyFx?.bulge.remove();
+  setSnakePhase(parts, "digesting");
+  const meals = Math.min(5, (snakeMeals.get(Number(fromPos)) || 0) + 1);
+  snakeMeals.set(Number(fromPos), meals);
+  window.BS_ARENA?.meal?.(fromPos, meals);
+  for (const part of parts) {
+    part.dataset.meals = meals;
+    part.style.setProperty("--snake-meals", meals);
+    part.style.setProperty("--snake-growth", `${25 + meals * 1.35}px`);
+    part.style.setProperty("--snake-head-scale", 1 + meals * 0.012);
+  }
+  cuePhase(grow);
+  await (window.BS_ARENA?.wait(grow.duration) || wait(grow.duration));
+  setSnakePhase(parts, "releasing");
+  cuePhase(release);
+  ghost.style.left = `${(b.x / initialWidth) * 100}%`;
+  ghost.style.top = `${((b.y - 34) / initialHeight) * 100}%`;
+  ghost.style.opacity = "0";
+  await runAnimation(
+    ghost,
+    [
+      { left: `${(b.x / initialWidth) * 100}%`, top: `${((b.y - 35) / initialHeight) * 100}%`, transform: "translate(-50%,-74%) scale(.22)", opacity: 0 },
+      { left: `${(b.x / initialWidth) * 100}%`, top: `${((b.y - 10) / initialHeight) * 100}%`, transform: "translate(-50%,-82%) scale(1.16)", opacity: 1, offset: 0.62 },
+      { left: `${(b.x / initialWidth) * 100}%`, top: `${(b.y / initialHeight) * 100}%`, transform: "translate(-50%,-74%) scale(1)", opacity: 1 },
+    ],
+    { duration: release.duration, easing: "cubic-bezier(.16,.8,.22,1)", fill: "forwards" },
+  );
+  ghost.remove();
+  setSnakePhase(parts, null);
+  wrap.classList.remove("snake-active");
+  positions[player] = toPos;
+  renderTokens(positions);
+  hitCell(toPos, "landing-hit");
+  window.BS_STONES?.step(wrap, cellCenterRect(toPos), colors[player], { landing: true });
+}
+async function animateEvent(prev, next) {
+  const e = next.lastEvent;
+  if (!e) return;
+  const positions = prev.players.map((p) => p.position);
+  visualPositions = positions;
+  await animatePawnPath(e.player, e.from, e.landed, positions);
+  if (e.to !== e.landed) {
     await wait(70);
-    if(e.jumpType==='ladder'){actionFx('ladder','🪜 صعود!');fx('✨');await animateLadderRide(e.player,e.landed,e.to,positions)}
-    else{actionFx('snake',`🐍 نزول من ${e.landed} إلى ${e.to}`);fx('💥');await animateSnakeEat(e.player,e.landed,e.to,positions)}
-    await wait(90)
-  }
-  if(e.protected){actionFx('ladder','◈ الدرع أنقذك!');BS_AUDIO.play('finish')}
-  if(e.bonusRoll)await showBonusDie(e.bonusRoll,e.player);
-  if(e.event){const info=e.bonusRoll?BONUS_FACES[e.bonusRoll-1]:ADVENTURE_EVENTS[e.event];if(e.eventTo!==e.eventFrom){const target=e.eventLanding??e.eventTo;await animatePawnPath(e.player,e.eventFrom,target,positions);if(e.bonusJumpType==='snake')await animateSnakeEat(e.player,target,e.eventTo,positions);if(e.bonusJumpType==='ladder')await animateLadderRide(e.player,target,e.eventTo,positions);}actionFx(e.event==='challenge'?'snake':'ladder',(info.icon||'✦')+' '+info.name);BS_AUDIO.play(e.event==='challenge'?'wrong':'finish');$('#eventLog').textContent=(info.icon||'✦')+' '+info.name+' · '+info.text}
-  else $('#eventLog').textContent=`${next.players[e.player].name} · رمية ${e.total||next.lastRoll}${e.jumpType==='snake'?' · سقوط!':e.jumpType==='ladder'?' · صعود!':''}${e.skipped?.length?' · تم تجاوز دور اللاعب المجمّد':''}`;
-  if(e.blocked){actionFx('snake','🎯 تحتاج رقمًا دقيقًا');BS_PLATFORM.toast('تحتاج رقمًا دقيقًا للوصول إلى 100')}
-  if(e.waitingEntry){$('#eventLog').textContent=next.players[e.player].name+' · تحتاج رمية 6 للدخول';BS_PLATFORM.toast('تحتاج 6 لدخول اللوحة')}
-  if(e.entered){$('#eventLog').textContent='6! دخلت الخانة 1 ولك رمية إضافية';BS_AUDIO.play('entry')}
-  if(e.extraTurn){const six=(e.rolls||[next.lastRoll]).includes(6);actionFx('six',six?'6! رمية إضافية':'↻ دور إضافي');BS_PLATFORM.toast(six?'6! رمية إضافية':'لك دور إضافي')}
-}
-async function showBonusDie(value,actor){
- const overlay=$('#bonusOverlay'),button=$('#bonusRoll'),info=BONUS_FACES[value-1];
- const previousFocus=document.activeElement;overlay.classList.remove('hidden');window.BS_DICE.mountBonus($('#bonusDie'));$('#bonusName').textContent='نرد المكافآت';$('#bonusText').textContent='وجه واحد من ستة أوجه متساوية';button.disabled=false;button.textContent='ارمِ نرد المكافأة';
- const auto=mode==='online'||bots.includes(actor);button.classList.toggle('hidden',mode==='online');if(mode==='online')$('#bonusName').textContent=state.players[actor].name+' · نرد المكافآت';const clicked=()=>new Promise(resolve=>{button.onclick=()=>{button.onclick=null;resolve()}});
- if(!auto){button.focus();await clicked();}else await wait(350);await window.BS_PRO?.waitForPlay?.();
- button.disabled=true;await window.BS_DICE.roll($('#bonusDie'),value);$('#bonusName').textContent=info.name;$('#bonusText').textContent=info.text;BS_AUDIO.play('reward');
- button.textContent='متابعة اللعب';button.disabled=false;if(!auto){button.focus();await clicked();}else await wait(850);await window.BS_PRO?.waitForPlay?.();
- overlay.classList.add('hidden');button.onclick=null;if(previousFocus?.isConnected)previousFocus.focus();else $('#roll')?.focus();
-}
-async function spinDie(value=null){if(value)await window.BS_DICE.roll($('#die'),value)}
-async function spinDice(rolls){$('#die2').classList.toggle('hidden',rolls.length<2);$('#die').parentElement.classList.toggle('has-double',rolls.length>1);await Promise.all(rolls.map((roll,i)=>window.BS_DICE.roll(i?$('#die2'):$('#die'),roll,{quiet:i>0})))}
-async function settleDie(value,{quiet=false}={}){await window.BS_DICE.roll($('#die'),value,{quiet})}
-function renderPowers(){const adventure=state?.variant==='adventure',p=state?.players[mode==='online'?(room?.me?.index??state.turn):state.turn];$('#powerStrip').classList.toggle('hidden',!adventure);$('#powerHelp').classList.toggle('hidden',!adventure);if(!adventure)return;for(const key of ['shield','double']){const btn=$('#'+key+'Power');$('#'+key+'Count').textContent=p[key]||0;btn.disabled=busy||!canAct()||!(p[key]>0)||(state.rulesVersion===2&&(key==='shield'||p.position===0));if(state.rulesVersion===2&&key==='shield')btn.title='تعمل الحماية تلقائيًا عند الوقوف على ثعبان';btn.setAttribute('aria-pressed',selectedPower===key?'true':'false')}}
-for(const key of ['shield','double'])$('#'+key+'Power').onclick=()=>{if(busy||!canAct()||(state.rulesVersion===2&&key==='shield'))return;selectedPower=selectedPower===key?null:key;BS_AUDIO.play('select');renderPowers()};
-async function localTurn(power=null){
- if(pendingLocal&&state.rulesVersion===2){
-  const p=state.players[state.turn];
-  if(pendingLocal.power==='shield')pendingLocal.power=null;
-  if(pendingLocal.power==='double'&&(p.position===0||!(p.double>0))){pendingLocal.power=null;pendingLocal.rolls=pendingLocal.rolls.slice(0,1)}
-  const tile=enhancedLanding(state,pendingLocal.rolls);
-  if(p.position>0&&tile!==p.position&&BONUS_CELLS.includes(tile)&&!(pendingLocal.bonusRoll>=1&&pendingLocal.bonusRoll<=6))pendingLocal.bonusRoll=window.BS_DICE.random();
-  saveSession();
- }
- if(!pendingLocal){const rolls=[window.BS_DICE.random()];if(power==='double')rolls.push(window.BS_DICE.random());const tile=state.rulesVersion===2?enhancedLanding(state,rolls):null;pendingLocal={rolls,power,bonusRoll:state.rulesVersion===2&&state.players[state.turn].position>0&&tile!==state.players[state.turn].position&&BONUS_CELLS.includes(tile)?window.BS_DICE.random():null,event:null};saveSession()}
- const {rolls,event,bonusRoll}=pendingLocal;power=pendingLocal.power;
- await spinDice(rolls);
- await window.BS_PRO?.waitForPlay?.();const prev=structuredClone(state);state=state.rulesVersion===2?playEnhancedTurn(state,rolls,{power,bonusRoll}):state.variant==='adventure'?playAdventureTurn(state,rolls,{power,event}):playSnakesRoll(state,rolls[0]);pendingLocal=null;selectedPower=null;saveSession();try{await animateEvent(prev,state)}finally{visualPositions=null;visualTurn=null;}render();
- if(state.winner!==null){BS_AUDIO.play('win');BS_AUDIO.vibrate([100,60,160])}
-}
-async function runSoloAi(){
- if(mode!=='local'||state?.winner!==null||!bots.includes(state?.turn))return;
- busy=true;render();
- try{while(mode==='local'&&state.winner===null&&bots.includes(state.turn)){
-   await window.BS_PRO?.waitForPlay?.();await wait(620);await window.BS_PRO?.waitForPlay?.();
-   const power=state.rulesVersion===2?(state.players[state.turn].position>0&&state.players[state.turn].double>0?'double':null):state.variant==='adventure'?chooseSnakePower(state,difficulty,window.BS_DICE.unit||Math.random):null;
-   await localTurn(power);
- }}catch(error){console.error('Solo AI turn failed',error);window.BS_PLATFORM?.toast?.('تعذر إكمال دور البوت')}finally{busy=false;render()}
-}
-async function rollTurn(){
-  if(busy||!state||state.winner!==null||!canAct())return;
-  busy=true;let waitingForRemote=false;$('#roll').disabled=true;$('#game').classList.add('has-rolled');
-  try{
-    if(mode==='online'){
-      waitingForRemote=Boolean(client?.send('roll',{power:selectedPower}));if(waitingForRemote){clearTimeout(remoteTimeout);remoteTimeout=setTimeout(()=>{busy=false;render();BS_PLATFORM.toast('تأخر الاتصال — انتظر تحديث السيرفر قبل إعادة المحاولة')},9000)}
-      if(!waitingForRemote){busy=false;render()}
-      return;
+    if (e.jumpType === "ladder") {
+      actionFx("ladder", "🪜 صعود!");
+      fx("✨");
+      await animateLadderRide(e.player, e.landed, e.to, positions);
+    } else {
+      actionFx("snake", `🐍 نزول من ${e.landed} إلى ${e.to}`);
+      fx("💥");
+      await animateSnakeEat(e.player, e.landed, e.to, positions);
     }
-    await localTurn(selectedPower);
-    if(state.winner===null&&bots.includes(state.turn))await runSoloAi();
-  }catch(error){
-    console.error('Snake turn failed',error);
-    window.BS_PLATFORM?.toast?.('حدث خطأ بسيط — أعد الرمية');
-  }finally{
-    if(!waitingForRemote){busy=false;render()}
+    await wait(90);
+  }
+  if (e.protected) {
+    actionFx("ladder", "◈ الدرع أنقذك!");
+    BS_AUDIO.play("finish");
+  }
+  if (e.bonusRoll) await showBonusDie(e.bonusRoll, e.player);
+  if (e.event) {
+    const info = e.bonusRoll ? BONUS_FACES[e.bonusRoll - 1] : ADVENTURE_EVENTS[e.event];
+    if (e.eventTo !== e.eventFrom) {
+      const target = e.eventLanding ?? e.eventTo;
+      await animatePawnPath(e.player, e.eventFrom, target, positions);
+      if (e.bonusJumpType === "snake") await animateSnakeEat(e.player, target, e.eventTo, positions);
+      if (e.bonusJumpType === "ladder") await animateLadderRide(e.player, target, e.eventTo, positions);
+    }
+    actionFx(e.event === "challenge" ? "snake" : "ladder", (info.icon || "✦") + " " + info.name);
+    BS_AUDIO.play(e.event === "challenge" ? "wrong" : "finish");
+    $("#eventLog").textContent = (info.icon || "✦") + " " + info.name + " · " + info.text;
+  } else
+    $("#eventLog").textContent = `${next.players[e.player].name} · رمية ${e.total || next.lastRoll}${e.jumpType === "snake" ? " · سقوط!" : e.jumpType === "ladder" ? " · صعود!" : ""}${e.skipped?.length ? " · تم تجاوز دور اللاعب المجمّد" : ""}`;
+  if (e.blocked) {
+    actionFx("snake", "🎯 تحتاج رقمًا دقيقًا");
+    if (e.player === me()) BS_PLATFORM.toast("تحتاج رقمًا دقيقًا للوصول إلى 100");
+  }
+  if (e.waitingEntry) {
+    $("#eventLog").textContent = next.players[e.player].name + " · تحتاج رمية 6 للدخول";
+    if (e.player === me()) BS_PLATFORM.toast("تحتاج 6 لدخول اللوحة");
+  }
+  if (e.entered) {
+    $("#eventLog").textContent = next.players[e.player].name + " · 6! دخل الخانة 1 وله رمية إضافية";
+    BS_AUDIO.play("entry");
+  }
+  if (e.extraTurn) {
+    const six = (e.rolls || [next.lastRoll]).includes(6);
+    actionFx("six", six ? "6! رمية إضافية" : "↻ دور إضافي");
   }
 }
-$('#roll').onclick=rollTurn;
-function saveSession(){if(mode!=='local'||!state||state.winner!==null)return;try{localStorage.setItem('busraj-snakes-resume-v6',JSON.stringify({state,receipt:matchReceipt,count:Number($('#playerCount').value),bots,difficulty,pendingLocal,config:localConfig,insights:journal?.snapshot()}))}catch{}}
-const saved=(()=>{try{return JSON.parse(localStorage.getItem('busraj-snakes-resume-v6')||'null')}catch{return null}})();
-if(saved?.state?.players?.length>=2&&saved.state.winner===null&&Number.isInteger(saved.state.turn)&&saved.state.turn>=0&&saved.state.turn<saved.state.players.length&&Number.isInteger(saved.state.moveCount)&&saved.state.moveCount>=0&&JSON.stringify(saved.state.jumps)===JSON.stringify(DEFAULT_SNAKES_JUMPS)&&saved.state.players.every(p=>Number.isInteger(p.position)&&p.position>=0&&p.position<100)){
- const resume=document.createElement('button');resume.className='bs-btn resume-btn';resume.textContent='متابعة الجولة السابقة';$('#startBtn').after(resume);resume.onclick=()=>{if(busy)return;mode='local';state=saved.state;journal?.reset(state);journal?.restore(saved.insights);if(state.variant==='adventure'&&state.rulesVersion!==2){state.rulesVersion=2;state.entrySix=true;state.bonusCells=[...BONUS_CELLS];state.players=state.players.map(p=>({...p,shield:Math.min(1,p.shield||0),double:Math.min(2,p.double||0),bonusTurns:0,frozen:0}));}matchReceipt=saved.receipt||(window.BS_UUID?.()||String(Date.now())+Math.random());$('#playerCount').value=saved.count||2;bots=saved.bots||(saved.count===1?[1]:[]);difficulty=saved.difficulty||'medium';localConfig=saved.config||null;pendingLocal=saved.pendingLocal?.rolls?.length&&saved.pendingLocal.rolls.length<=2&&saved.pendingLocal.rolls.every(r=>Number.isInteger(r)&&r>=1&&r<=6)?saved.pendingLocal:null;applyLocalConfig();enterGame();if(bots.includes(state.turn))runSoloAi();else if(pendingLocal)rollTurn()};
+async function showBonusDie(value, actor) {
+  const overlay = $("#bonusOverlay"),
+    button = $("#bonusRoll"),
+    info = BONUS_FACES[value - 1];
+  overlay.classList.remove("hidden");
+  window.BS_DICE.mountBonus($("#bonusDie"));
+  $("#bonusName").textContent = state.players[actor].name + " · نرد المكافآت";
+  $("#bonusText").textContent = "وجه واحد من ستة أوجه متساوية";
+  button.classList.add("hidden");
+  await wait(350);
+  await window.BS_DICE.roll($("#bonusDie"), value);
+  $("#bonusName").textContent = info.name;
+  $("#bonusText").textContent = info.text;
+  BS_AUDIO.play("reward");
+  await wait(950);
+  overlay.classList.add("hidden");
 }
-window.addEventListener('bs-match-pause',()=>{if(state&&!busy)render()});window.addEventListener('bs-piece-art-change',()=>{if(state&&!busy)render()});window.addEventListener('bs-online-character-change',e=>{if(mode==='online'&&client&&room?.status==='lobby'){client.character=e.detail.id;client.send('character',{character:e.detail.id})}});
-window.addEventListener('pagehide',()=>{saveSession();clearTimeout(remoteTimeout);client?.close()});
-document.querySelector('[data-game-fullscreen]')?.addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#game').requestFullscreen()}catch{BS_PLATFORM.toast('ملء الشاشة غير مدعوم على هذا الجهاز')}});
-
-function applyLocalConfig(){if(!localConfig)return;for(const [id,value]of Object.entries(localConfig)){const el=$('#'+id);if(el)el.value=value}}
-function startLocal(){if(busy)return;window.BS_STONES?.setOnlineCharacters?.(null);document.documentElement.dataset.pieceArt=$('#pieceStyle').value;matchReceipt=(window.BS_UUID?.()||String(Date.now())+Math.random());mode='local';journal?.reset();snakeMeals.clear();window.BS_ARENA?.meal?.();BS_AUDIO.prime?.(['snakeEat','snakeHiss','snakeBite','snakeSwallow','snakeGrow','snakeRelease','ladderStep','boardLand']);confettiShown=false;selectedPower=null;pendingLocal=null;difficulty=$('#difficulty').value;localConfig=Object.fromEntries(['opponents','variant','difficulty','playerCount','n0','n1','n2','n3'].map(id=>[id,$('#'+id).value]));const list=names();state=$('#variant').value==='adventure'?createEnhancedGame(list):createSnakesGame(list);saveSession();enterGame();BS_AUDIO.play('launch')}
-function enterGame(){document.body.classList.add('game-running');buildBoard();$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#game').classList.add('pro-arena','neon-arena');$('#game').classList.toggle('has-rolled',Boolean(state?.lastRoll));$('#winnerOverlay').classList.remove('show');$('#livebar').classList.toggle('hidden',mode!=='online');if(mode==='online')$('#gameRoomCode').textContent=room.code;$('#die').dataset.value=state?.lastRoll||1;$('#status')?.setAttribute('aria-live','polite');render();window.BS_GAME_FULLSCREEN?.fit?.()}
-function setMode(next){mode=next;window.BS_STONES?.setOnlineCharacters?.(null);document.documentElement.dataset.pieceArt=$('#pieceStyle').value;bots=[];selectedPower=null;$('#modeLocal').classList.toggle('active',next==='local');$('#modeOnline').classList.toggle('active',next==='online');$('#modeLocal').setAttribute('aria-pressed',String(next==='local'));$('#modeOnline').setAttribute('aria-pressed',String(next==='online'));$('#localSetup').classList.toggle('hidden',next!=='local');$('#onlineSetup').classList.toggle('hidden',next!=='online');$('#roomLobby').classList.add('hidden');client?.close();client=null;room=null;lastVersion=-1;$('#onlineVariant').disabled=false;$('#onlineCount').disabled=false}
-function net(s){for(const id of ['#netBadge','#liveNet']){const e=$(id);if(!e)continue;e.classList.toggle('online',!!s.online);e.classList.toggle('reconnecting',!!s.reconnecting);e.querySelector('span').textContent=s.text||''}if(s.online)BS_AUDIO.play('connect',{volume:.35})}
-function setupClient(){client?.close();state=null;lastVersion=-1;queuedOnline=null;onlineDraining=false;onlineQueue=Promise.resolve();client=new BoardOnlineClient('snakes',{onStatus:net,onError:m=>{clearTimeout(remoteTimeout);busy=false;render();BS_AUDIO.play('error');BS_PLATFORM.toast(m)},onState:onRoomState})}
-function onRoomState(next){
-  clearTimeout(remoteTimeout);if(next.version<lastVersion||queuedOnline&&next.version<queuedOnline.version)return;
-  queuedOnline=next;if(onlineDraining)return;onlineDraining=true;
-  onlineQueue=(async()=>{while(queuedOnline){const update=queuedOnline;queuedOnline=null;await applyRoomState(update);}})().catch(error=>{busy=false;console.error('Online state update failed',error);render()}).finally(()=>{onlineDraining=false;});
+function renderPowers() {
+  const adventure = state?.variant === "adventure",
+    p = state?.players[me() >= 0 ? me() : state.turn];
+  $("#powerStrip").classList.toggle("hidden", !adventure);
+  $("#powerHelp").classList.toggle("hidden", !adventure);
+  if (!adventure || !p) return;
+  for (const key of ["shield", "double"]) {
+    const btn = $("#" + key + "Power");
+    $("#" + key + "Count").textContent = p[key] || 0;
+    btn.disabled = busy || !canAct() || !(p[key] > 0) || (state.rulesVersion === 2 && (key === "shield" || p.position === 0));
+    if (state.rulesVersion === 2 && key === "shield") btn.title = "تعمل الحماية تلقائيًا عند الوقوف على ثعبان";
+    btn.setAttribute("aria-pressed", selectedPower === key ? "true" : "false");
+  }
 }
-async function applyRoomState(next){
-    if(next.version<lastVersion)return;
-    room=next;window.BS_STONES?.setOnlineCharacters?.(next.players||[]);
-    if(next.status==='lobby'){if(document.fullscreenElement===$('#game'))Promise.resolve(document.exitFullscreen?.()).catch(()=>{});busy=false;state=null;lastVersion=next.version;$('#game').classList.add('hidden');$('#setup').classList.remove('hidden');$('#winnerOverlay').classList.remove('show');document.body.classList.remove('game-running');renderLobby();return}
-    if(!next.state)return;
-    const prev=state?structuredClone(state):null;const moving=prev&&next.version!==lastVersion&&next.state.moveCount===prev.moveCount+1;visualPositions=moving?prev.players.map(p=>p.position):null;visualTurn=moving?prev.turn:null;state=next.state;
-    if(!prev||prev.moveCount>state.moveCount){journal?.reset(state);snakeMeals.clear();window.BS_ARENA?.meal?.();BS_AUDIO.prime?.(['snakeEat','snakeHiss','snakeBite','snakeSwallow','snakeGrow','snakeRelease','ladderStep','boardLand']);confettiShown=false;matchReceipt='board:'+next.code+':'+(next.startedAt||next.version)+':'+(next.me?.id||'guest');requestAnimationFrame(drawPaths)}
-    if($('#game').classList.contains('hidden'))enterGame();
-    if(moving){busy=true;render();try{await spinDice(state.lastEvent?.rolls||[state.lastRoll||1]);await animateEvent(prev,state)}finally{visualPositions=null;visualTurn=null;}}
-    lastVersion=next.version;selectedPower=null;visualPositions=null;visualTurn=null;busy=false;render();
-    if(state.winner!==null&&prev?.winner===null)BS_AUDIO.play('win');
-
+for (const key of ["shield", "double"])
+  $("#" + key + "Power").onclick = () => {
+    if (busy || !canAct() || (state.rulesVersion === 2 && key === "shield")) return;
+    selectedPower = selectedPower === key ? null : key;
+    BS_AUDIO.play("select");
+    renderPowers();
+  };
+function rollTurn() {
+  if (busy || !state || state.winner !== null || !canAct()) return;
+  busy = true;
+  $("#roll").disabled = true;
+  $("#game").classList.add("has-rolled");
+  const sent = table.send("roll", { power: selectedPower });
+  if (!sent) {
+    busy = false;
+    render();
+    return;
+  }
+  clearTimeout(remoteTimeout);
+  remoteTimeout = setTimeout(() => {
+    busy = false;
+    render();
+    BS_PLATFORM.toast("تأخر الاتصال — انتظر تحديث الغرفة قبل إعادة المحاولة");
+  }, 9000);
 }
-
-function renderLobby(){if(!room)return;$('#roomLobby').classList.remove('hidden');$('#copyCode').textContent=room.code;const enhanced=room.variant==='adventure';$('#onlineVariant').value=room.variant||'classic';$('#onlineVariant').disabled=true;$('#onlineCount').value=room.playerLimit;$('#onlineCount').disabled=true;$('#roomVariant').textContent=enhanced?'✦ المطوّرة · مكافآت في 12 و46 و82 · حماية ونردان وأدوار إضافية':'الكلاسيك · الدخول برمية 6 · الوصول الدقيق إلى 100';renderRoomPlayers($('#roomPlayers'),room,colors);const me=room.players.find(p=>p.id===room.me?.id);$('#readyBtn').textContent=me?.ready?'✓ جاهز — إلغاء':'✓ أنا جاهز';const all=room.players.length===room.playerLimit&&room.players.every(p=>p.ready&&p.connected);$('#hostStart').classList.toggle('hidden',room.me?.role!=='host');$('#hostStart').disabled=!all}
-let roomRequestPending=false;
-function setRoomRequestPending(value){roomRequestPending=value;$('#createRoom').disabled=value;$('#joinRoom').disabled=value;}
-async function createRoom(){if(roomRequestPending)return;setRoomRequestPending(true);setupClient();try{await client.create($('#onlineName').value,Number($('#onlineCount').value),{variant:$('#onlineVariant').value,character:$('#onlineCharacter').value});BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}finally{setRoomRequestPending(false)}}
-async function joinRoom(){if(roomRequestPending)return;setRoomRequestPending(true);setupClient();try{await client.join($('#joinCode').value,$('#onlineName').value,{character:$('#onlineCharacter').value});BS_AUDIO.play('join');$('#roomLobby').classList.remove('hidden')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}finally{setRoomRequestPending(false)}}
-let boardSheet=null,sheetFocus=null,sheetPaused=false;
-function openBoardSheet(id){sheetFocus=document.activeElement;sheetPaused=Boolean(window.BS_PRO?.paused);if(mode==='local'&&!sheetPaused)window.BS_PRO?.setPaused(true);boardSheet=$('#'+id);boardSheet.classList.remove('hidden');boardSheet.querySelector('button')?.focus();if($('#boardHelpNote'))$('#boardHelpNote').textContent=mode==='online'?'المباراة الأونلاين تستمر أثناء مشاهدة الشرح.':'تتوقف الجولة المحلية أثناء مشاهدة الشرح أو السجل.';}
-function closeBoardSheet(){if(!boardSheet)return;boardSheet.classList.add('hidden');boardSheet=null;if(mode==='local'&&!sheetPaused)window.BS_PRO?.setPaused(false);if(sheetFocus?.isConnected&&!sheetFocus.disabled)sheetFocus.focus();else $('#boardHelp')?.focus();}
-$('#boardHelp').onclick=()=>openBoardSheet('boardHelpDialog');$('#boardHistoryOpen').onclick=()=>openBoardSheet('boardHistoryDialog');for(const id of ['boardHelpClose','boardHelpDone','boardHistoryClose','boardHistoryDone'])$('#'+id).onclick=closeBoardSheet;
-for(const id of ['boardHelpDialog','boardHistoryDialog'])$('#'+id).addEventListener('click',event=>{if(event.target===$('#'+id))closeBoardSheet();});
-document.addEventListener('keydown',event=>{if(!boardSheet)return;if(event.key==='Escape'){event.preventDefault();closeBoardSheet();}else if(event.key==='Tab'){const buttons=[...boardSheet.querySelectorAll('button')],first=buttons[0],last=buttons.at(-1);if(!buttons.includes(document.activeElement)||event.shiftKey&&document.activeElement===first){event.preventDefault();(event.shiftKey?last:first)?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
-$('#boardTempo').addEventListener('change',event=>window.BS_PLAY_INSIGHTS?.setTempo(event.target.value));try{$('#boardTempo').value=localStorage.getItem('tahdia-board-tempo-v15')||'normal'}catch{}
-$('#boardContrast').onclick=()=>{const next=document.body.dataset.boardContrast!=='true';document.body.dataset.boardContrast=String(next);$('#boardContrast').setAttribute('aria-pressed',String(next));};
-function presetSnake(kind){if(busy)return;setMode('local');$('#opponents').value=kind==='friends'?'friends':'bot';$('#playerCount').value=kind==='friends'?'2':'1';$('#variant').value=kind==='adventure'?'adventure':'classic';$('#difficulty').value='medium';const ownName=window.BS_SOCIAL?.accountName?.()||window.BS_CAREER?.get?.().name;if(ownName)$('#n0').value=ownName;startLocal();}
-$('#snakePresetPractice').onclick=()=>presetSnake('practice');$('#snakePresetFriends').onclick=()=>presetSnake('friends');$('#snakePresetAdventure').onclick=()=>presetSnake('adventure');
-$('#modeLocal').onclick=()=>setMode('local');$('#modeOnline').onclick=()=>setMode('online');$('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;$('#readyBtn').onclick=()=>{const me=room?.players.find(p=>p.id===room.me?.id);client?.send('ready',{ready:!me?.ready})};$('#hostStart').onclick=()=>client?.send('start');$('#copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);BS_PLATFORM.toast('تم نسخ رمز الغرفة')}catch{BS_PLATFORM.toast(room.code)}};$('#inviteFriends').onclick=()=>{if(!room?.code)return BS_PLATFORM.toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'snakes',roomCode:room.code})};
-const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)$('#onlineName').value=socialProfile.displayName;else if(window.BS_PARTY_LINK?.name)$('#onlineName').value=window.BS_PARTY_LINK.name.slice(0,20);
-const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;joinRoom()}
-
-$('#startBtn').onclick=startLocal;$('#restart').onclick=()=>mode==='online'?(room?.me?.role==='host'&&room?.status==='finished'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>{if(mode==='online'){if(room?.me?.role==='host')client.send('rematch');else BS_PLATFORM.toast('المضيف يبدأ الجولة الجديدة')}else startLocal()};
-function updateLocalSetup(){const kind=$('#opponents').value,c=kind==='bot'?1:kind==='duobot'?2:Number($('#playerCount').value);for(let i=0;i<10;i++)$('#n'+i)?.closest('label').classList.toggle('hidden',i>=c);$('#playerCount').closest('label').classList.toggle('hidden',kind!=='friends');$('#difficulty').closest('label').classList.toggle('hidden',kind==='friends'&&c!==1)}$('#opponents').onchange=updateLocalSetup;$('#playerCount').onchange=updateLocalSetup;;$('#playerCount').dispatchEvent(new Event('change'));document.addEventListener('keydown',event=>{if(!document.body.classList.contains('game-running')||event.defaultPrevented)return;if((event.key===' '||event.key==='Enter')&&document.activeElement?.tagName!=='BUTTON'&&document.activeElement?.getAttribute('role')!=='button'&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='SELECT'&&document.activeElement?.tagName!=='TEXTAREA'){event.preventDefault();rollTurn()}});let resizeFrame=null;window.addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>state&&drawPaths())},{passive:true});window.addEventListener('busraj:game-layout',()=>state&&requestAnimationFrame(drawPaths));
-;window.BS_TABLE=Object.freeze({get active(){return Boolean(state)},get mode(){return mode},get bots(){return [...(bots||[])]},get players(){return (state?.players||[]).map((p,i)=>({index:i,name:String(p?.name||'لاعب '+(i+1))}))}});
+$("#roll").onclick = rollTurn;
+function enterGame() {
+  document.body.classList.add("game-running");
+  buildBoard();
+  $("#setup").classList.add("hidden");
+  $("#game").classList.remove("hidden");
+  $("#game").classList.add("pro-arena", "neon-arena");
+  $("#game").classList.toggle("has-rolled", Boolean(state?.lastRoll));
+  $("#winnerOverlay").classList.remove("show");
+  $("#livebar").classList.remove("hidden");
+  $("#gameRoomCode").textContent = room?.publicMatch ? "مباراة سريعة" : room?.code || "";
+  $("#status")?.setAttribute("aria-live", "polite");
+  render();
+  window.BS_GAME_FULLSCREEN?.fit?.();
+}
+function showMenu() {
+  if (document.fullscreenElement === $("#game")) Promise.resolve(document.exitFullscreen?.()).catch(() => {});
+  busy = false;
+  state = null;
+  visualPositions = null;
+  visualTurn = null;
+  $("#game").classList.add("hidden");
+  $("#setup").classList.remove("hidden");
+  $("#winnerOverlay").classList.remove("show");
+  document.body.classList.remove("game-running");
+}
+function net(s) {
+  const e = $("#liveNet");
+  if (!e) return;
+  e.classList.toggle("online", !!s.online);
+  e.classList.toggle("reconnecting", !!s.reconnecting);
+  e.querySelector("span").textContent = s.text || "";
+}
+/* One room state (or one step of it): animate the move it carries, then show it. */
+async function apply(next, { animate }) {
+  clearTimeout(remoteTimeout);
+  room = next;
+  if (!next.state) return;
+  const prev = state ? structuredClone(state) : null;
+  const moving = animate && prev && next.state.moveCount === prev.moveCount + 1 && next.state.lastEvent;
+  visualPositions = moving ? prev.players.map((p) => p.position) : null;
+  visualTurn = moving ? prev.turn : null;
+  state = next.state;
+  if (!prev || prev.moveCount > state.moveCount) {
+    journal?.reset(state);
+    snakeMeals.clear();
+    window.BS_ARENA?.meal?.();
+    BS_AUDIO.prime?.(["snakeEat", "snakeHiss", "snakeBite", "snakeSwallow", "snakeGrow", "snakeRelease", "ladderStep", "boardLand"]);
+    confettiShown = false;
+    lastOpponent = null;
+    matchReceipt = "board:" + next.code + ":" + (next.startedAt || next.version) + ":" + (next.me?.id || "guest");
+    requestAnimationFrame(drawPaths);
+  }
+  if ($("#game").classList.contains("hidden")) enterGame();
+  $("#gameRoomCode").textContent = next.publicMatch ? "مباراة سريعة" : next.code;
+  $("#roomLabel")?.classList.toggle("hidden", Boolean(next.publicMatch));
+  if (moving) {
+    busy = true;
+    render();
+    try {
+      await spinDice(state.lastEvent.rolls || [state.lastRoll || 1], state.lastEvent.player);
+      await animateEvent(prev, state);
+    } finally {
+      visualPositions = null;
+      visualTurn = null;
+    }
+  }
+  selectedPower = null;
+  busy = false;
+  render();
+  if (state.winner !== null && prev?.winner === null) BS_AUDIO.play(state.winner === me() ? "win" : "finish");
+}
+const table = createTable({
+  game: "snakes",
+  modes: [
+    { id: "classic", label: "عادي", hint: "ثعابين وسلالم", note: "الكلاسيك: ادخل برمية 6، السلالم ترفعك والثعابين ترجعك، والوصول إلى 100 بالرقم الدقيق." },
+    { id: "adventure", label: "مطوّر", hint: "نرد المكافآت", note: "المطوّر: الخانات 12 و46 و82 تفتح نرد المكافآت؛ حماية ونردان وأدوار إضافية وقفزات." },
+  ],
+  apply,
+  onLobby: showMenu,
+  onMenu: showMenu,
+  onStatus: net,
+  onError: (m) => {
+    clearTimeout(remoteTimeout);
+    busy = false;
+    render();
+    BS_AUDIO.play("error");
+    BS_PLATFORM.toast(m);
+  },
+});
+let boardSheet = null,
+  sheetFocus = null;
+function openBoardSheet(id) {
+  sheetFocus = document.activeElement;
+  boardSheet = $("#" + id);
+  boardSheet.classList.remove("hidden");
+  boardSheet.querySelector("button")?.focus();
+  if ($("#boardHelpNote")) $("#boardHelpNote").textContent = "المباراة تستمر أثناء قراءة الشرح.";
+}
+function closeBoardSheet() {
+  if (!boardSheet) return;
+  boardSheet.classList.add("hidden");
+  boardSheet = null;
+  if (sheetFocus?.isConnected && !sheetFocus.disabled) sheetFocus.focus();
+  else $("#boardHelp")?.focus();
+}
+$("#boardHelp").onclick = () => openBoardSheet("boardHelpDialog");
+$("#boardHistoryOpen").onclick = () => openBoardSheet("boardHistoryDialog");
+for (const id of ["boardHelpClose", "boardHelpDone", "boardHistoryClose", "boardHistoryDone"]) $("#" + id).onclick = closeBoardSheet;
+for (const id of ["boardHelpDialog", "boardHistoryDialog"])
+  $("#" + id).addEventListener("click", (event) => {
+    if (event.target === $("#" + id)) closeBoardSheet();
+  });
+document.addEventListener("keydown", (event) => {
+  if (!boardSheet) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeBoardSheet();
+  } else if (event.key === "Tab") {
+    const buttons = [...boardSheet.querySelectorAll("button")],
+      first = buttons[0],
+      last = buttons.at(-1);
+    if (!buttons.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first)?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  }
+});
+$("#boardTempo")?.addEventListener("change", (event) => window.BS_PLAY_INSIGHTS?.setTempo(event.target.value));
+try {
+  if ($("#boardTempo")) $("#boardTempo").value = localStorage.getItem("tahdia-board-tempo-v15") || "normal";
+} catch {}
+if ($("#boardContrast"))
+  $("#boardContrast").onclick = () => {
+    const next = document.body.dataset.boardContrast !== "true";
+    document.body.dataset.boardContrast = String(next);
+    $("#boardContrast").setAttribute("aria-pressed", String(next));
+  };
+let leaveArmed = 0;
+$("#leaveGame").onclick = () => {
+  if (room?.status === "playing" && Date.now() - leaveArmed > 2500) {
+    leaveArmed = Date.now();
+    BS_PLATFORM.toast("اضغط «خروج» مرة ثانية لترك المباراة");
+    return;
+  }
+  table.leave();
+};
+$("#again").onclick = () => table.again();
+$("#toMenu").onclick = () => table.leave();
+window.addEventListener("pagehide", () => clearTimeout(remoteTimeout));
+document.querySelector("[data-game-fullscreen]")?.addEventListener("click", async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await $("#game").requestFullscreen();
+  } catch {
+    BS_PLATFORM.toast("ملء الشاشة غير مدعوم على هذا الجهاز");
+  }
+});
+window.addEventListener("bs-career-change", () => {
+  if (state && !busy) render();
+});
+document.addEventListener("keydown", (event) => {
+  if (!document.body.classList.contains("game-running") || event.defaultPrevented) return;
+  if (
+    (event.key === " " || event.key === "Enter") &&
+    !["BUTTON", "INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName) &&
+    document.activeElement?.getAttribute("role") !== "button"
+  ) {
+    event.preventDefault();
+    rollTurn();
+  }
+});
+let resizeFrame = null;
+window.addEventListener(
+  "resize",
+  () => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => state && drawPaths());
+  },
+  { passive: true },
+);
+window.addEventListener("busraj:game-layout", () => state && requestAnimationFrame(drawPaths));
+window.BS_TABLE = Object.freeze({
+  get active() {
+    return Boolean(state);
+  },
+  get mode() {
+    return "online";
+  },
+  get bots() {
+    return (room?.players || []).filter((p) => p.bot).map((p) => p.index);
+  },
+  get players() {
+    return (state?.players || []).map((p, i) => ({ index: i, name: String(p?.name || "لاعب " + (i + 1)) }));
+  },
+});
 </script>
 
-<script src="assets/js/ui-icons.js?v=32.1.0"></script><script src="assets/js/pro-experience.js?v=32.1.0"></script><script defer src="assets/js/client-health.js?v=32.1.0"></script><script src="assets/js/play-feedback-v24-1.js?v=32.1.0"></script><script src="assets/js/reactions-v31.js?v=32.1.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=32.1.0"></script></body></html>
+<script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>

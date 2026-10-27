@@ -1,5 +1,8 @@
 import {CATEGORIES} from '../questions.js';
-import {createMatch,submitAnswer,advanceMatch,publicMatch} from './core.js';
+import {createMatch,submitAnswer,advanceMatch,publicMatch,botsAct} from './core.js';
+import {makeQuizBots} from '../quiz/quiz-bots.js';
+// nobody to meet after this long: play a bot of its own strength
+export const QUICK_BOT_AFTER_MS=8000;
 import {getSocialStub} from '../social/social-api.js';
 import {SerpentMatchmaker} from '../serpent/serpent-matchmaker.js';
 
@@ -21,9 +24,9 @@ export function createQuickArenaClass(DurableObject){return class QuickArena ext
       const secretHash=await hash(String(body.secret||'')),player=this.match.players.find(p=>p.id===body.id&&p.secretHash===secretHash);
       if(!player)return json({ok:false,error:'غير مصرح'},403);
       return this.ctx.blockConcurrencyWhile(async()=>{
-        advanceMatch(this.match);
+        const now=Date.now();botsAct(this.match,now);advanceMatch(this.match,now);botsAct(this.match,now);
         let failure=null;
-        if(url.pathname==='/answer')try{submitAnswer(this.match,player.id,body.index,body.choice)}catch(e){failure=e.message}
+        if(url.pathname==='/answer'){try{submitAnswer(this.match,player.id,body.index,body.choice)}catch(e){failure=e.message}botsAct(this.match,Date.now());}
         await this.saveMatch();try{await this.rewardPlayers()}catch{await this.ctx.storage.setAlarm(Date.now()+10000)}
         return json({ok:!failure,error:failure,state:publicMatch(this.match,player.id)},failure?409:200);
       });
@@ -56,21 +59,28 @@ export function createQuickArenaClass(DurableObject){return class QuickArena ext
     const result=await this.ctx.storage.transaction(async tx=>{
       const t=await tx.get('ticket:'+id);if(!t||t.secretHash!==secretHash||t.expiresAt<=Date.now())return json({ok:false,error:'انتهت مهلة البحث، ابدأ من جديد'},404);
       if(leave&&!t.matchId){await tx.delete('ticket:'+id);await tx.delete('waiting:'+String(t.createdAt).padStart(14,'0')+':'+id);return json({ok:true,status:'cancelled'})}
-      if(!t.matchId){t.expiresAt=Date.now()+90000;await tx.put('ticket:'+id,t)}
+      if(!t.matchId&&Date.now()-t.createdAt>=QUICK_BOT_AFTER_MS){
+        const [bot]=makeQuizBots(1,[t.name]),matchId=crypto.randomUUID();
+        await tx.delete('waiting:'+String(t.createdAt).padStart(14,'0')+':'+id);
+        t.matchId=matchId;t.expiresAt=Date.now()+30*60000;
+        await tx.put('pending:'+matchId,{players:[t,{...bot,username:null,secretHash:'bot'}],expiresAt:t.expiresAt});
+      }
+      if(!t.matchId)t.expiresAt=Date.now()+90000;
+      await tx.put('ticket:'+id,t);
       return t;
     });
     if(result instanceof Response)return result;
     const ready=!result.matchId||await this.ensureMatch(result.matchId);
     return json({ok:true,status:result.matchId&&ready?'matched':'waiting',preparing:!!result.matchId&&!ready,matchId:result.matchId});
   }
-  async saveMatch(){await this.ctx.storage.put('match',this.match);await this.ctx.storage.setAlarm(this.match.phase==='question'?this.match.deadline:this.match.phase==='reveal'?this.match.revealUntil:Date.now()+3600000)}
+  async saveMatch(){await this.ctx.storage.put('match',this.match);await this.ctx.storage.setAlarm(this.match.phase==='question'?Math.min(this.match.deadline,botsAct(this.match,0)):this.match.phase==='reveal'?this.match.revealUntil:Date.now()+3600000)}
   async rewardPlayers(){
     if(this.match.phase!=='finished'||this.match.rewarded)return;
     for(const p of this.match.players){if(!p.username)continue;const stub=getSocialStub(this.env,p.username);if(!stub)continue;const response=await stub.fetch('https://social.internal/career/verified',{method:'POST',body:JSON.stringify({id:'quick:'+this.ctx.id.toString()+':'+p.id,game:'quiz',win:this.match.winners.length===1&&this.match.winners.includes(p.id)})});if(!response.ok)throw new Error('career_reward_failed')}
     this.match.rewarded=true;await this.ctx.storage.put('match',this.match);
   }
   async alarm(){
-    if(this.match){if(this.match.phase==='finished'&&Date.now()-(this.match.finishedAt||0)>=3600000){await this.ctx.storage.deleteAll();await this.ctx.storage.deleteAlarm();this.match=null;return}advanceMatch(this.match);await this.saveMatch();try{await this.rewardPlayers()}catch{await this.ctx.storage.setAlarm(Date.now()+10000)}return}
+    if(this.match){if(this.match.phase==='finished'&&Date.now()-(this.match.finishedAt||0)>=3600000){await this.ctx.storage.deleteAll();await this.ctx.storage.deleteAlarm();this.match=null;return}const now=Date.now();botsAct(this.match,now);advanceMatch(this.match,now);botsAct(this.match,now);await this.saveMatch();try{await this.rewardPlayers()}catch{await this.ctx.storage.setAlarm(Date.now()+10000)}return}
     const now=Date.now();let next=Infinity,startAfter;
     for(;;){const tickets=await this.ctx.storage.list({prefix:'ticket:',limit:1000,...(startAfter?{startAfter}:{})});
       for(const [key,t] of tickets){if(t.expiresAt<=now){await this.ctx.storage.delete(key);if(!t.matchId)await this.ctx.storage.delete('waiting:'+String(t.createdAt).padStart(14,'0')+':'+t.id);else await this.ctx.storage.delete('pending:'+t.matchId)}else next=Math.min(next,t.expiresAt);startAfter=key}

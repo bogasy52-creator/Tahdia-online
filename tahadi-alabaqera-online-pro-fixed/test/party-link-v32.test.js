@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LINKED_GAMES, linkable, cleanPartyLink, standings, createLinkedRoom, reportPartyLink, settlePartyLink, PARTY_LINK_WAIT_MS, PARTY_RETURN_MS } from '../src/party/party-link.js';
+import { LINKED_GAMES, linkable, linkTables, cleanPartyLink, standings, createLinkedRoom, reportPartyLink, settlePartyLink, PARTY_LINK_WAIT_MS, PARTY_RETURN_MS } from '../src/party/party-link.js';
 import { createParty, addPartyPlayer, startPartyRound, applyPartyAction, advanceParty, openPartyLink, failPartyLink, applyLinkResult, partySnapshot, nameKey, PARTY_BACK_MS } from '../src/party/party-engine.js';
 import { PartyRoom } from '../src/party/party-room.js';
 import { SudokuRoom } from '../src/sudoku/sudoku-room.js';
@@ -36,12 +36,16 @@ test('every linked game exists in the party catalog and opens its own page', () 
   for (const g of PARTY_GAMES) if (!LINKED_GAMES[g.id]) assert.notEqual(g.real, true, g.id + ' has no room of its own');
 });
 
-test('a game links only with players it can seat: board tables need their exact counts', () => {
+test('a game links with whoever is here: table games fill with bots and split a big party into tables', () => {
   for (let n = 1; n <= 20; n++) { assert.equal(linkable('quiz', n), true); assert.equal(linkable('sudoku', n), true); }
   assert.equal(linkable('quiz', 21), false);
-  assert.equal(linkable('snakes', 1), false); assert.equal(linkable('snakes', 2), true); assert.equal(linkable('snakes', 10), true); assert.equal(linkable('snakes', 11), false);
-  assert.equal(linkable('zahra', 6), true); assert.equal(linkable('zahra', 7), false);
-  assert.deepEqual([3, 4, 5, 6, 7].map((n) => linkable('jackaroo', n)), [false, true, false, true, false]);
+  // 33.0.0: bots fill a table, and more players than one table seats play on several
+  for (const n of [1, 2, 10, 11, 20]) assert.equal(linkable('snakes', n), true, 'snakes ' + n);
+  for (const n of [1, 3, 5, 7, 20]) { assert.equal(linkable('zahra', n), true); assert.equal(linkable('jackaroo', n), true); }
+  assert.deepEqual(linkTables('snakes', Array.from({ length: 20 }, (_, i) => i)).map((t) => t.length), [10, 10]);
+  assert.deepEqual(linkTables('jackaroo', Array.from({ length: 20 }, (_, i) => i)).map((t) => t.length), [5, 5, 5, 5]);
+  assert.deepEqual(linkTables('zahra', Array.from({ length: 7 }, (_, i) => i)).map((t) => t.length), [4, 3]);
+  assert.deepEqual(linkTables('quiz', Array.from({ length: 20 }, (_, i) => i)).map((t) => t.length), [20]);
   assert.equal(linkable('memory', 5), false);
   assert.equal(linkable('quiz', 2.5), false);
 });
@@ -102,7 +106,10 @@ test('opening a room retries a taken code and gives up cleanly on anything else'
   assert.equal(res.code, busy.calls[2].body.code);
   assert.deepEqual(await createLinkedRoom({ ROOMS: recorder([500]) }, 'sudoku', { count: 2, link: LINK }), { ok: false, error: 'init_failed' });
   assert.deepEqual(await createLinkedRoom({}, 'sudoku', { count: 2, link: LINK }), { ok: false, error: 'binding_missing' });
-  assert.deepEqual(await createLinkedRoom({ ROOMS: recorder() }, 'jackaroo', { count: 5, link: LINK }), { ok: false, error: 'not_linkable' });
+  assert.deepEqual(await createLinkedRoom({ ROOMS: recorder() }, 'jackaroo', { count: 5, link: LINK }), { ok: false, error: 'binding_missing' }, 'five play jackaroo at a table of six (a bot fills it)');
+  const six = recorder([201]);
+  assert.equal((await createLinkedRoom({ BOARD_ROOMS: six }, 'jackaroo', { count: 5, link: LINK })).ok, true);
+  assert.equal(six.calls[0].body.playerLimit, 6);
   assert.deepEqual(await createLinkedRoom({ ROOMS: recorder() }, 'memory', { count: 5, link: LINK }), { ok: false, error: 'not_linkable' });
 });
 
@@ -148,19 +155,52 @@ test('a linked round waits for the real room; actions inside the party are refus
   assert.equal(r.deadline, 5000 + PARTY_LINK_WAIT_MS);
   assert.equal(r.solution, undefined, 'no party copy of the game is prepared');
   const view = partySnapshot(room, room.order[0], 5100).round;
-  assert.deepEqual(view.link, { status: 'creating', page: '/sudoku', code: null, count: 3 });
-  assert.equal(JSON.stringify(partySnapshot(room, room.order[0], 5100)).includes(r.link.token), false, 'the report token never reaches a page');
+  assert.deepEqual(view.link, { status: 'creating', page: '/sudoku', code: null, count: 3, tables: 1, table: 0, list: [{ id: 0, code: null, players: r.link.tables[0].players }] });
+  assert.equal(JSON.stringify(partySnapshot(room, room.order[0], 5100)).includes(r.link.tables[0].token), false, 'the report token never reaches a page');
   assert.throws(() => applyPartyAction(room, room.order[0], { sessionId: room.sessionId, roundId: r.id, seq: 1, action: { cell: 0, value: 1 } }, 5200), /صفحتها الأصلية/);
   assert.equal(openPartyLink(room, { code: '777777', page: '/sudoku' }, 6000), true);
   assert.equal(openPartyLink(room, { code: '888888', page: '/sudoku' }, 6001), false, 'opens once');
-  assert.deepEqual(partySnapshot(room, room.order[0], 6100).round.link, { status: 'open', page: '/sudoku', code: '777777', count: 3 });
+  assert.deepEqual(partySnapshot(room, room.order[0], 6100).round.link, { status: 'open', page: '/sudoku', code: '777777', count: 3, tables: 1, table: 0, list: [{ id: 0, code: '777777', players: r.link.tables[0].players }] });
+  assert.equal(partySnapshot(room, room.order[3], 6100).round.link.code, '777777', 'a player who was away is sent to a table too');
 });
 
-test('games without a room, tables that cannot be filled, and parties without links stay inside', () => {
+test('games without a room and parties without links stay inside; table games link with whoever is here', () => {
   const memory = party({ playlist: ['memory', 'quiz'] }); startPartyRound(memory, 5000, 1); assert.equal(memory.round.link, undefined);
-  const jackaroo = party({ playlist: ['jackaroo', 'quiz'], players: 3 }); startPartyRound(jackaroo, 5000, 1); assert.equal(jackaroo.round.link, undefined); assert.ok(jackaroo.round.tables);
-  const snakesAlone = party({ playlist: ['snakes', 'quiz'], players: 2 }); snakesAlone.players[snakesAlone.order[1]].connected = false; startPartyRound(snakesAlone, 5000, 1); assert.equal(snakesAlone.round.link, undefined);
+  const jackaroo = party({ playlist: ['jackaroo', 'quiz'], players: 3 }); startPartyRound(jackaroo, 5000, 1); assert.equal(jackaroo.round.link.tables.length, 1, 'three play at one table; a bot takes the fourth seat');
+  const snakesAlone = party({ playlist: ['snakes', 'quiz'], players: 2 }); snakesAlone.players[snakesAlone.order[1]].connected = false; startPartyRound(snakesAlone, 5000, 1); assert.equal(snakesAlone.round.link.count, 1);
   const old = party({ links: false }); startPartyRound(old, 5000, 1); assert.equal(old.round.link, undefined); assert.ok(old.round.solution);
+  const inside = party({ playlist: ['jackaroo', 'quiz'], players: 20, links: false }); startPartyRound(inside, 5000, 1); assert.equal(inside.round.tables.length, 4, 'twenty play jackaroo inside the party on four tables');
+});
+
+test('twenty players and a table game: several real rooms, one result', () => {
+  const room = party({ playlist: ['snakes', 'quiz'], players: 20 });
+  startPartyRound(room, 5000, 2);
+  const r = room.round;
+  assert.equal(room.capacity, 20);
+  assert.equal(r.link.tables.length, 2);
+  assert.deepEqual(r.link.tables.map((t) => t.players.length), [10, 10]);
+  assert.equal(new Set(r.link.tables.flatMap((t) => t.players)).size, 20, 'everyone sits at exactly one table');
+  assert.equal(openPartyLink(room, { code: '400001', page: '/snakes' }, 5100, 0), true);
+  assert.equal(r.link.status, 'creating', 'the round opens when every table has its room');
+  assert.equal(openPartyLink(room, { code: '400002', page: '/snakes' }, 5200, 1), true);
+  assert.equal(r.link.status, 'open');
+  // each player is sent to the room of their own table
+  for (const t of r.link.tables) for (const id of t.players) assert.equal(partySnapshot(room, id, 5300).round.link.code, t.id ? '400002' : '400001');
+  // 33.0.0: the state the room sends to everyone lists each table with its players, so every
+  // page finds its own table (and never the report tokens)
+  const shared = partySnapshot(room, null, 5300).round.link;
+  assert.equal(shared.list.length, 2);
+  for (const t of r.link.tables) for (const id of t.players) assert.equal(shared.list.find((x) => x.players.includes(id)).code, t.id ? '400002' : '400001');
+  assert.equal(JSON.stringify(shared).includes(r.link.tables[0].token) || JSON.stringify(shared).includes(r.link.tables[1].token), false);
+  const report = (t) => applyLinkResult(room, { round: r.id, token: t.token, standings: t.players.map((id, i) => ({ name: room.players[id].name, rank: i + 1 })) }, 9000);
+  const [first, second] = r.link.tables, winners = [first.players[0], second.players[0]];
+  assert.equal(report(first), true);
+  assert.equal(room.status, 'playing', 'the round waits for the other table');
+  assert.equal(applyLinkResult(room, { round: r.id, token: 'T'.repeat(64), standings: [] }, 9100), false);
+  assert.equal(report(second), true);
+  assert.equal(room.status, 'intermission');
+  const rows = room.history.at(-1).rows;
+  assert.deepEqual(rows.filter((row) => row.rank === 1).map((row) => row.id).sort(), [...winners].sort(), 'both table winners share first place');
 });
 
 test('when the real room cannot open, the same round is played inside the party', () => {
@@ -181,7 +221,7 @@ test('the real room ranking becomes the round result: accounts by username, gues
   const guest = addPartyPlayer(room, { name: 'سعد' }), account = addPartyPlayer(room, { name: 'سعد', username: 'saad_1' }), longName = addPartyPlayer(room, { name: 'عبدالرحمن بن عبدالله الطويل' }), absent = addPartyPlayer(room, { name: 'نورة' });
   assert.equal(account.name, 'سعد 2');
   room.roster = [...room.order]; startPartyRound(room, 5000, 9); openPartyLink(room, { code: '777777', page: '/online' }, 5100);
-  const r = room.round, token = r.link.token;
+  const r = room.round, token = r.link.tables[0].token;
   assert.equal(applyLinkResult(room, { round: r.id, token: 'x'.repeat(64), standings: [] }, 6000), false, 'a wrong token is refused');
   assert.equal(applyLinkResult(room, { round: 'other', token, standings: [] }, 6000), false, 'another round is refused');
   const rows = [
@@ -206,7 +246,7 @@ test('the real room ranking becomes the round result: accounts by username, gues
 });
 
 test('a shared first place is a draw unless the game named a winner', () => {
-  const play = (standingsOf) => { const room = party({ playlist: ['paths-online', 'memory'], players: 2 }); startPartyRound(room, 5000, 1); openPartyLink(room, { code: '777777' }, 5100); applyLinkResult(room, { round: room.round.id, token: room.round.link.token, standings: standingsOf }, 6000); return room.history.at(-1).rows.map((row) => [row.name, row.rank, row.won]); };
+  const play = (standingsOf) => { const room = party({ playlist: ['paths-online', 'memory'], players: 2 }); startPartyRound(room, 5000, 1); openPartyLink(room, { code: '777777' }, 5100); applyLinkResult(room, { round: room.round.id, token: room.round.link.tables[0].token, standings: standingsOf }, 6000); return room.history.at(-1).rows.map((row) => [row.name, row.rank, row.won]); };
   assert.deepEqual(play([{ name: 'لاعب 1', rank: 1 }, { name: 'لاعب 2', rank: 1 }]), [['لاعب 1', 1, false], ['لاعب 2', 1, false]]);
   assert.deepEqual(play([{ name: 'لاعب 1', rank: 1 }, { name: 'لاعب 2', rank: 1, won: true }]), [['لاعب 2', 1, true], ['لاعب 1', 2, false]]);
   assert.deepEqual(play([{ name: 'لاعب 2', rank: 1 }, { name: 'لاعب 1', rank: 2 }]), [['لاعب 2', 1, true], ['لاعب 1', 2, false]]);
@@ -215,7 +255,7 @@ test('a shared first place is a draw unless the game named a winner', () => {
 test('after a linked game the break waits for everyone, then shows the standings briefly', () => {
   const room = party({ players: 3 }); startPartyRound(room, 5000, 1); openPartyLink(room, { code: '777777' }, 5100);
   const t = 60000;
-  applyLinkResult(room, { round: room.round.id, token: room.round.link.token, standings: room.order.map((id, i) => ({ name: room.players[id].name, rank: i + 1 })) }, t);
+  applyLinkResult(room, { round: room.round.id, token: room.round.link.tables[0].token, standings: room.order.map((id, i) => ({ name: room.players[id].name, rank: i + 1 })) }, t);
   for (const id of room.order) room.players[id].connected = false; // everyone is on the game page
   advanceParty(room, t + 9000); assert.equal(room.status, 'intermission'); assert.equal(room.returnWait, true);
   room.players[room.order[0]].connected = true; room.players[room.order[1]].connected = true;
@@ -228,7 +268,7 @@ test('after a linked game the break waits for everyone, then shows the standings
   advanceParty(room, t + 15000 + PARTY_BACK_MS); assert.equal(room.status, 'playing'); assert.equal(room.round.game, 'memory');
   // nobody comes back: the party moves on by itself
   const lonely = party({ players: 2 }); startPartyRound(lonely, 5000, 1); openPartyLink(lonely, { code: '777777' }, 5100);
-  applyLinkResult(lonely, { round: lonely.round.id, token: lonely.round.link.token, standings: [] }, t);
+  applyLinkResult(lonely, { round: lonely.round.id, token: lonely.round.link.tables[0].token, standings: [] }, t);
   for (const id of lonely.order) lonely.players[id].connected = false;
   advanceParty(lonely, t + PARTY_RETURN_MS - 1); assert.equal(lonely.status, 'intermission');
   advanceParty(lonely, t + PARTY_RETURN_MS); assert.equal(lonely.status, 'playing');
@@ -249,10 +289,10 @@ test('the party object opens the real room, then the room result ends the round'
   const r = object.room.round;
   assert.equal(r.link.status, 'open');
   assert.equal(rooms.calls[0].name, 'sudoku:' + r.link.code);
-  assert.deepEqual(rooms.calls[0].body.party, { code: '654321', round: r.id, token: r.link.token });
+  assert.deepEqual(rooms.calls[0].body.party, { code: '654321', round: r.id, token: r.link.tables[0].token });
   const post = (body) => object.fetch(new Request('https://party.internal/link-result', { method: 'POST', body: JSON.stringify(body) }));
   assert.equal((await post({ round: r.id, token: 'bad'.repeat(20), standings: [] })).status, 409);
-  const ok = await post({ round: r.id, token: r.link.token, game: 'sudoku', standings: [{ name: 'لاعب 2', rank: 1, won: true }, { name: 'لاعب 1', rank: 2 }] });
+  const ok = await post({ round: r.id, token: r.link.tables[0].token, game: 'sudoku', standings: [{ name: 'لاعب 2', rank: 1, won: true }, { name: 'لاعب 1', rank: 2 }] });
   assert.equal(ok.status, 200);
   assert.equal(object.room.status, 'intermission');
   assert.equal(object.room.history.at(-1).rows[0].name, 'لاعب 2');

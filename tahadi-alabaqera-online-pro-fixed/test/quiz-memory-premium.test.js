@@ -15,10 +15,11 @@ test('memory pack is balanced and contains multiple memory challenge types',()=>
   assert.ok(memory.questions.every(q=>q.media==='memory'&&q.memory?.previewMs>=2500));
 });
 
-test('local quiz has separated premium hero and random category picker',async()=>{
-  const html=await read('public/local.html');
-  assert.match(html,/quizHero/);assert.match(html,/quizConsole/);assert.match(html,/randomCatsLocal/);
-  assert.match(html,/mountMemoryChallenge/);assert.doesNotMatch(html,/class="hero"[\s\S]*<svg viewBox="0 0 1200 420"/);
+test('33.0.0: the same-device quiz moved online; its random category pick lives in the room',async()=>{
+  const local=await read('public/local.html');
+  assert.match(local,/location\.replace\(target\)/);assert.doesNotMatch(local,/mountMemoryChallenge|quizConsole/);
+  const online=await read('public/online.html');
+  assert.match(online,/id="randomCats"/);assert.match(online,/mountMemoryChallenge/);
 });
 
 test('online quiz protects memory preview before answers open',async()=>{
@@ -28,5 +29,5 @@ test('online quiz protects memory preview before answers open',async()=>{
 });
 
 test('quiz luxury stylesheet is cached by the PWA',async()=>{
-  const sw=await read('public/service-worker.js');assert.match(sw,/busraj-games-v60-release-32-1-0/);assert.match(sw,/quiz-luxury\.css/);
+  const sw=await read('public/service-worker.js');assert.match(sw,/busraj-games-v60-release-33-0-0/);assert.match(sw,/quiz-luxury\.css/);
 });

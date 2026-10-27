@@ -1,3 +1,4 @@
+import {planBotAnswers,dueBotAnswers,nextBotAnswer,hurryBotAnswers} from '../quiz/quiz-bots.js';
 export const QUESTION_MS=15000,REVEAL_MS=2200;
 export function createMatch(players,questions,now=Date.now()){
   if(players.length!==2||players[0].id===players[1].id||!questions.length)throw new Error('invalid_match');
@@ -31,5 +32,16 @@ export function advanceMatch(match,now=Date.now()){
 export function publicMatch(match,viewer,now=Date.now()){
   if(!match.players.some(p=>p.id===viewer))throw new Error('forbidden');
   const q=match.questions[match.index];
-  return {phase:match.phase,index:match.index,total:match.questions.length,updatedAt:match.updatedAt,serverNow:now,deadline:match.deadline,revealUntil:match.revealUntil,players:match.players.map(p=>({id:p.id,name:p.name})),scores:match.scores,correctCounts:match.correctCounts,question:match.phase==='finished'?null:{text:q.text,category:q.category,value:q.value,options:q.options},answered:Boolean(match.answers[viewer]),result:match.phase==='question'?null:match.result,winners:match.winners,rewarded:match.rewarded};
+  return {phase:match.phase,index:match.index,total:match.questions.length,updatedAt:match.updatedAt,serverNow:now,deadline:match.deadline,revealUntil:match.revealUntil,players:match.players.map(p=>({id:p.id,name:p.name,...(p.bot?{bot:true,level:p.level}:{})})),scores:match.scores,correctCounts:match.correctCounts,question:match.phase==='finished'?null:{text:q.text,category:q.category,value:q.value,options:q.options},answered:Boolean(match.answers[viewer]),result:match.phase==='question'?null:match.result,winners:match.winners,rewarded:match.rewarded};
+}
+
+// 33.0.0: a quick match against a bot (nobody else was looking for one). The bot answers
+// each question at its own moment, right or wrong by its strength. Returns when it next answers.
+export function botsAct(match,now=Date.now()){
+  if(match.phase!=='question')return Infinity;
+  const bots=match.players.filter(p=>p.bot);if(!bots.length)return Infinity;
+  if(match.botPlanFor!==match.index){const q=match.questions[match.index];match.botPlan=planBotAnswers({opensAt:match.startedAt,deadline:match.deadline,options:q.options.length,correct:q.correct},bots);match.botPlanFor=match.index;}
+  for(const a of dueBotAnswers(match.botPlan,match.answers,now)){if(match.phase!=='question')break;try{submitAnswer(match,a.id,match.index,a.choice,Math.min(a.at,match.deadline-1))}catch{}}
+  if(match.phase==='question'&&match.players.every(p=>p.bot||match.answers[p.id]))hurryBotAnswers(match.botPlan,match.answers,now>0?now:Date.now());
+  return match.phase==='question'?nextBotAnswer(match.botPlan,match.answers):Infinity;
 }

@@ -6,11 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { createBalootMatch, applyBalootAction, balootView, balootActions, teamOf, partnerOf, legalCards, canClaim } from './engines/baloot-engine.js?v=32.1.0';
-import { chooseBalootAction } from './engines/baloot-bot.js?v=32.1.0';
-import { BoardOnlineClient } from './board-online.js?v=32.1.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=32.1.0';
-import { BalootVoice } from './baloot-voice.js?v=32.1.0';
+import { balootActions, teamOf, legalCards, canClaim } from './engines/baloot-engine.js?v=33.0.0';
+import { BoardOnlineClient } from './board-online.js?v=33.0.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.0.0';
+import { BalootVoice } from './baloot-voice.js?v=33.0.0';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -30,7 +29,7 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const play = (name, opts) => { try { window.BS_AUDIO?.play?.(name, opts); } catch {} };
 
 const ui = {
-  mode: 'bots', me: 0, match: null, view: null, busy: false, picked: null, level: 'hard', target: 152,
+  mode: 'online', me: 0, match: null, view: null, busy: false, picked: null, level: 'hard', target: 152,
   deck: 'deck-classic', speed: 1, receipt: '', rewarded: false, client: null, room: null, eventSeq: 0,
   pending: Promise.resolve(), lastHandShown: 0, botTimer: null, sending: false,
   open: true, claimArmed: 0, talkTab: 'phrase', lastTalk: 0, botTalkAt: 0,
@@ -75,7 +74,6 @@ const slotEl = (seat) => document.querySelector(`.bl-slot[data-pos="${posOf(seat
 function seatName(view, seat) { return view?.names?.[seat] || 'لاعب'; }
 const playerAt = (seat) => ui.room?.players?.find((p) => p.index === seat) || null;
 function isBot(seat) {
-  if (ui.mode === 'bots') return seat !== ui.me;
   return Boolean(playerAt(seat)?.bot);
 }
 
@@ -87,7 +85,7 @@ function renderSeats(view) {
     const tags = [];
     if (view.dealer === seat) tags.push('الموزّع');
     if (view.contract && view.contract.buyer === seat) tags.push(view.contract.ashkal ? 'أشكل' : 'المشتري');
-    const online = ui.mode !== 'bots' ? playerAt(seat) : null;
+    const online = playerAt(seat);
     if (online && !online.bot && !online.connected) tags.push('منقطع');
     el.querySelector('.bl-name small').textContent = tags.join(' · ');
     const face = el.querySelector('.bl-face');
@@ -147,7 +145,7 @@ function ruleSet(view) {
 function renderHand(view) {
   const hand = $('hand');
   const cards = view.hands?.[ui.me] || [];
-  const legal = legalSet(view);
+  const legal = legalSet(view), rules = legal && view.open ? ruleSet(view) : null;
   hand.classList.toggle('waiting', !legal);
   const width = hand.clientWidth || 360;
   const cw = parseFloat(getComputedStyle(document.body).getPropertyValue('--bl-card-w')) || Math.min(92, width * 0.175);
@@ -167,8 +165,12 @@ function renderHand(view) {
     el.style.zIndex = String(10 + i);
     el.style.setProperty('--fan', fan);
     if (!el.classList.contains('picked')) el.style.transform = fan;
-    el.classList.toggle('legal', Boolean(legal?.has(card)));
-    el.classList.toggle('dim', Boolean(legal && !legal.has(card)));
+    // 33.0.0: in open play only the cards the rules allow light up; the others stay
+    // playable as a cut, behind a second tap
+    const fair = legal && (!view.open || rules?.has(card));
+    el.classList.toggle('legal', Boolean(fair));
+    el.classList.toggle('cuttable', Boolean(legal?.has(card) && !fair));
+    el.classList.toggle('dim', Boolean(legal && !fair));
     if (!legal || !legal.has(card)) el.classList.remove('picked');
   });
   for (const [card, el] of existing) if (!keep.has(card)) el.remove();
@@ -195,11 +197,17 @@ function closeHandGap() {
 
 function onCardTap(card) {
   const view = ui.view;
-  const legal = view && legalSet(view);
+  if (!view || view.phase !== 'playing') return;
+  if (view.turn !== ui.me) { toast('انتظر دورك'); return; }
+  // 33.0.0: a tap while the last cards are still landing is kept and played right after
+  if (ui.busy) { ui.queued = card; for (const other of $('hand').children) other.classList.toggle('picked', other.dataset.card === card); return; }
+  const legal = legalSet(view);
   if (!legal) return;
   if (!legal.has(card)) { toast('لازم تلعب من الشكل المطلوب أو حسب القانون'); return; }
   const el = [...$('hand').children].find((x) => x.dataset.card === card);
   const cut = view.open && !ruleSet(view)?.has(card);
+  // a card the rules allow is played with one tap; only a cut asks for a second one
+  if (!cut) { ui.picked = null; for (const other of $('hand').children) other.classList.remove('picked', 'cut'); act({ type: 'play', card }); return; }
   if (ui.picked !== card) {
     for (const other of $('hand').children) other.classList.remove('picked', 'cut');
     el?.classList.add('picked');
@@ -599,7 +607,7 @@ async function playEvents(events, after) {
     } else if (e.type === 'trick') {
       await animateTrick(e);
       glow(e.winner);
-      if (ui.mode === 'bots' && e.points >= 20) botTalk(teamOf(e.winner) === teamOf(ui.me) ? 'lostTrick' : 'bigTrick', [1, 3]);
+      if (e.points >= 20) botTalk(teamOf(e.winner) === teamOf(ui.me) ? 'lostTrick' : 'bigTrick', [1, 3]);
     } else if (e.type === 'claim') {
       await showClaim(e, after);
     } else if (e.type === 'projects') {
@@ -607,7 +615,7 @@ async function playEvents(events, after) {
     } else if (e.type === 'hand_scored') {
       renderHud({ ...after, scores: e.scores });
       if (e.result.kaboot !== null && e.result.kaboot !== undefined) await kaboot(e.result.kaboot);
-      if (ui.mode === 'bots') botTalk(e.result.winnerTeam === teamOf(ui.me) ? 'lostHand' : 'wonHand', [1, 3]);
+      botTalk(e.result.winnerTeam === teamOf(ui.me) ? 'lostHand' : 'wonHand', [1, 3]);
       await showResult(e.result, e.scores, after);
     } else if (e.type === 'match_finished') {
       showMatchEnd(e.winner, e.scores);
@@ -631,7 +639,7 @@ async function showClaim(e, view) {
     stamp(`<b>قطع ✔</b><small>${cutLine(p, view)}</small>`, 'good', p.card);
     speak('صح، قطع', e.seat, { urgent: true });
     play(ours ? 'win' : 'wrong', { volume: 0.6 });
-    if (ui.mode === 'bots' && !ours) botTalk('caught', [e.seat]);
+    if (!ours) botTalk('caught', [e.seat]);
   } else {
     stamp(`<b>تسجيل غلط ✘</b><small>${e.seat === ui.me ? 'سجّلت' : esc(who) + ' سجّل'} وما فيه قطع، فراحت اليد للفريق الثاني</small>`, 'bad');
     speak('غلط', e.seat, { urgent: true });
@@ -680,7 +688,7 @@ async function kaboot(team) {
   speak('كبوت', ours ? ui.me : (ui.me + 1) % 4, { urgent: true });
   if (!reduce()) { const felt = $('felt'); felt.classList.remove('shake'); void felt.offsetWidth; felt.classList.add('shake'); setTimeout(() => felt.classList.remove('shake'), 700); }
   if (ours) celebrate();
-  if (ui.mode === 'bots') botTalk(ours ? 'kabootThem' : 'kabootUs', [1, 3]);
+  botTalk(ours ? 'kabootThem' : 'kabootUs', [1, 3]);
   await banner(ours ? 'كبوت! 🔥<small>كل الأكلات لكم</small>' : 'كبوت عليكم 😱<small>كل الأكلات لهم</small>', 1300);
 }
 
@@ -689,7 +697,7 @@ function showTalk(seat, kind, id) {
   if (kind === 'phrase') {
     const p = talkPhrase(id); if (!p) return;
     bubble(seat, esc(p.text), 'talk', 2600);
-    speak(p.say, seat);
+    speak(p.id, seat);
   } else if (kind === 'emoji') {
     const em = talkEmoji(id); if (!em) return;
     floatEmoji(seat, em.glyph);
@@ -719,7 +727,8 @@ function sendTalk(kind, id) {
 }
 // Bots (offline) answer at the table now and then, never too often.
 function botTalk(context, seats, force = false) {
-  if (ui.mode !== 'bots') return;
+  seats = seats.filter((seat) => isBot(seat));
+  if (!seats.length) return;
   const now = Date.now();
   if (!force && (now - ui.botTalkAt < 9000 || Math.random() > 0.35)) return;
   const ids = BOT_TALK[context];
@@ -791,14 +800,14 @@ function showResult(result, scores, view) {
   const sheet = $('resultSheet');
   const finished = view.phase === 'finished';
   $('nextHand').textContent = finished ? 'النتيجة النهائية' : 'الجولة التالية';
-  $('nextHand').disabled = ui.mode !== 'bots' && !finished;
+  $('nextHand').disabled = !finished;
   sheet.hidden = false;
   return new Promise((resolve) => {
     let done = false;
     const close = () => { if (done) return; done = true; sheet.hidden = true; resolve(); };
     $('nextHand').onclick = close;
     // Online the room deals the next hand by itself.
-    if (ui.mode !== 'bots' && !finished) setTimeout(close, 5200);
+    if (!finished) setTimeout(close, 5200);
   });
 }
 
@@ -813,82 +822,37 @@ function showMatchEnd(winner, scores) {
   $('matchEnd').hidden = false;
   play(won ? 'win' : 'wrong');
   if (won) celebrate();
-  if (ui.mode === 'bots' && !ui.rewarded) {
+  if (!ui.rewarded) {
     ui.rewarded = true;
-    try { window.BS_CAREER?.record?.({ id: ui.receipt, game: 'baloot', win: won }); } catch {}
+    // an account's result is kept by the room; a guest keeps it on this device
+    try { if (window.BS_SOCIAL?.isLoggedIn?.()) window.BS_CAREER?.refresh?.(); else window.BS_CAREER?.record?.({ id: 'baloot:' + (ui.room?.code || '') + ':' + (ui.room?.startedAt || ''), game: 'baloot', win: won }); } catch {}
   }
-  $('playAgain').textContent = ui.mode === 'bots' ? 'صكّة جديدة' : 'إعادة';
-  $('playAgain').hidden = ui.mode !== 'bots' && ui.room?.me?.role !== 'host';
-}
-
-/* ---------- Offline game ---------- */
-function startBots() {
-  applyCosmetics();
-  ui.mode = 'bots';
-  ui.me = 0;
-  ui.level = $('botLevel').value;
-  ui.target = Number($('target').value) || 152;
-  const account = accountName();
-  const myName = account || ($('nameBots').value || '').trim().slice(0, 20) || 'أنت';
-  if (!account) try { localStorage.setItem('bs_baloot_name', myName); } catch {}
-  const pool = [...BOT_NAMES].sort(() => Math.random() - 0.5);
-  const names = [myName, pool[0], pool[1], pool[2]];
-  ui.receipt = (window.BS_UUID?.() || (Date.now() + '-' + Math.random().toString(36).slice(2)));
-  ui.rewarded = false;
-  ui.match = createBalootMatch({ names, target: ui.target, open: $('openBots').value !== 'strict' });
-  BalootVoice.unlock();
-  showTable();
-  const view = balootView(ui.match, ui.me);
-  ui.view = view;
-  queue(() => playEvents([{ type: 'deal', dealer: view.dealer, exposed: view.exposed }], view).then(() => render(view)).then(botsTurn));
-  setTimeout(() => botTalk('greet', [1, 2, 3], Math.random() < 0.6), 2600);
+  $('playAgain').textContent = ui.room?.publicMatch ? 'صكّة جديدة' : 'إعادة';
+  $('playAgain').hidden = !ui.room?.publicMatch && ui.room?.me?.role !== 'host';
 }
 
 function queue(task) {
-  ui.pending = ui.pending.then(async () => { ui.busy = true; try { await task(); } catch (error) { console.error(error); } finally { ui.busy = false; render(); } });
+  ui.pending = ui.pending.then(async () => {
+    ui.busy = true;
+    try { await task(); } catch (error) { console.error(error); }
+    finally {
+      ui.busy = false; render();
+      const card = ui.queued; ui.queued = null;
+      if (card && ui.view?.phase === 'playing' && ui.view.turn === ui.me && ui.view.hands?.[ui.me]?.includes(card)) onCardTap(card);
+    }
+  });
   return ui.pending;
-}
-
-function applyLocal(seat, action) {
-  const { state, events } = applyBalootAction(ui.match, seat, action, Math.random);
-  ui.match = state;
-  const view = balootView(state, ui.me);
-  return playEvents(events, view).then(() => { ui.view = view; render(view); });
-}
-
-function botsTurn() {
-  clearTimeout(ui.botTimer);
-  const s = ui.match;
-  if (!s || ui.mode !== 'bots') return;
-  if (s.phase === 'scored') { queue(() => applyLocal(null, { type: 'next' })).then(botsTurn); return; }
-  if (!['bidding', 'doubling', 'playing'].includes(s.phase) || s.turn === ui.me) return;
-  const seat = s.turn;
-  const delay = s.phase === 'playing' ? 520 + Math.random() * 420 : 700 + Math.random() * 500;
-  ui.botTimer = setTimeout(() => {
-    queue(async () => {
-      // your partner never cuts for you; the other team may
-      const action = chooseBalootAction(balootView(ui.match, seat), seat, { level: ui.level, honest: seat === partnerOf(ui.me) });
-      if (action) await applyLocal(seat, action);
-    }).then(botsTurn);
-  }, delay / ui.speed);
 }
 
 /* ---------- Acting ---------- */
 function act(action) {
   if (action?.type === 'claim') {
     // a claim may come at any moment of the hand, even between the bots' cards
-    if (ui.mode === 'bots') { clearTimeout(ui.botTimer); queue(() => (canClaim(ui.match, ui.me) ? applyLocal(ui.me, action) : null)).then(botsTurn); return; }
     if (!ui.client) return;
     ui.client.send('baloot', { action });
     return;
   }
   if (ui.busy) return;
-  if (ui.mode === 'bots') {
-    if (ui.match.turn !== ui.me) return;
-    $('actions').innerHTML = '';
-    queue(() => applyLocal(ui.me, action)).then(botsTurn);
-    return;
-  }
   if (!ui.client || ui.sending) return;
   ui.sending = true;
   $('actions').innerHTML = '';
@@ -902,7 +866,8 @@ function onRoomState(room) {
   ui.room = room;
   ui.sending = false;
   ui.me = room.me?.index ?? 0;
-  if (room.status === 'lobby') { ui.batchId = 0; ui.matchStart = null; showLobby(room); return; }
+  window.BS_GAME_MENU?.remember('baloot', room.code, { status: room.status === 'finished' ? 'finished' : room.status });
+  if (room.status === 'lobby') { ui.batchId = 0; ui.matchStart = null; ui.rewarded = false; showLobby(room); return; }
   const view = room.state;
   if (!view) return;
   if (ui.matchStart !== room.startedAt) { ui.matchStart = room.startedAt; ui.batchId = 0; ui.seenBatch = false; }
@@ -928,8 +893,12 @@ function showLobby(room) {
   $('setup').hidden = false;
   $('table').hidden = true;
   document.body.classList.remove('bl-playing');
-  for (const p of document.querySelectorAll('.bl-panel')) p.hidden = true;
+  $('gameMenu').hidden = true;
   $('lobby').hidden = false;
+  // your friends who are online, one tap to invite (a friends' room)
+  const friends = $('lobbyFriends');
+  if (room.publicMatch) { friends.hidden = true; friends.replaceChildren(); friends.dataset.code = ''; }
+  else if (friends.dataset.code !== room.code && window.BS_GAME_MENU?.onlineFriends) { friends.dataset.code = room.code; friends.replaceChildren(window.BS_GAME_MENU.onlineFriends('baloot', room.code)); friends.hidden = false; }
   $('lobbyKind').textContent = room.publicMatch ? 'لعب سريع' : 'غرفة خاصة';
   $('lobbyTitle').textContent = room.publicMatch ? 'نجمع اللاعبين…' : 'بانتظار أصحابك';
   $('lobbyCode').textContent = room.code || '——————';
@@ -944,14 +913,14 @@ function showLobby(room) {
     card.className = 'bl-seat-card' + (p ? '' : ' empty');
     card.dataset.team = String(seat % 2);
     const face = p ? (window.BS_CAREER_CORE?.heroFace?.(p.character) || '') : '';
-    card.innerHTML = p ? `<span class="bl-mini-face">${face ? `<img src="${esc(face)}" alt="">` : esc((p.name || '؟').slice(0, 1))}</span><span><b>${esc(p.name)}${p.id === room.me?.id ? ' (أنت)' : ''}</b><small>${seat % 2 === 0 ? 'الفريق الأول' : 'الفريق الثاني'} · ${p.ready ? 'جاهز' : p.connected ? 'متصل' : 'يعيد الاتصال'}</small></span>` : `<span class="bl-mini-face">🤖</span><span><b>مقعد فاضي</b><small>البوت يكمله عند البداية</small></span>`;
+    card.innerHTML = p ? `<span class="bl-mini-face">${face ? `<img src="${esc(face)}" alt="">` : esc((p.name || '؟').slice(0, 1))}</span><span><b>${esc(p.name)}${p.id === room.me?.id ? ' (أنت)' : ''}</b><small>${seat % 2 === 0 ? 'الفريق الأول' : 'الفريق الثاني'} · ${p.connected ? 'متصل' : 'يعيد الاتصال'}</small></span>` : `<span class="bl-mini-face">🤖</span><span><b>مقعد فاضي</b><small>لاعب أو بوت يكمله عند البداية</small></span>`;
     seats.appendChild(card);
   }
   const me = room.players.find((p) => p.id === room.me?.id);
-  $('readyBtn').hidden = Boolean(room.publicMatch);
-  $('readyBtn').textContent = me?.ready ? 'إلغاء الجاهزية' : 'أنا جاهز';
+  $('readyBtn').hidden = true;
   $('hostStart').hidden = room.publicMatch || room.me?.role !== 'host';
-  $('lobbyNote').textContent = room.publicMatch ? 'تبدأ الطاولة تلقائيًا، والمقاعد الفاضية يكملها البوت.' : 'أرسل الرمز لأصحابك. أول لاعبين شركاء. المضيف يبدأ، والبوت يكمل الناقص.';
+  $('hostStart').textContent = room.players.length > 1 ? 'ابدأ الآن' : 'ابدأ مع البوتات';
+  $('lobbyNote').textContent = room.publicMatch ? 'تبدأ الطاولة تلقائيًا، والمقاعد الفاضية تكملها بوتات بمستويات مختلفة.' : room.me?.role === 'host' ? 'أرسل الرمز لأصحابك. أول لاعبين شركاء، وابدأ متى ما بغيت؛ البوتات تكمل الناقص.' : 'أول لاعبين شركاء. بانتظار المضيف يبدأ.';
   $('lobbyCountdown').hidden = !room.publicMatch || !room.lobbyDeadline;
   paintLobbyRing();
 }
@@ -985,12 +954,11 @@ function paintTimer() {
   if (left > 0 && ui.room === room) requestAnimationFrame(paintTimer);
 }
 
-async function startOnline(kind) {
+async function startOnline(kind, code = '') {
   applyCosmetics();
   ui.mode = 'online';
-  const account = accountName();
-  const name = account || (($(kind === 'quick' ? 'nameQuick' : 'nameRoom').value) || '').trim().slice(0, 20) || 'لاعب';
-  if (!account) try { localStorage.setItem('bs_baloot_name', name); } catch {}
+  const name = window.BS_GAME_MENU?.playerName?.() || accountName() || 'لاعب';
+  const open = (ui.menu?.mode || 'open') !== 'strict';
   message('');
   ui.client?.close?.();
   ui.client = new BoardOnlineClient('baloot', {
@@ -998,18 +966,19 @@ async function startOnline(kind) {
     onStatus: (s) => { const n = $('netState'); n.hidden = s.online; n.className = 'bl-net' + (s.online ? '' : ' off'); n.textContent = s.text || ''; },
     onError: (text) => { toast(text); ui.sending = false; },
   });
+  BalootVoice.unlock();
   try {
     if (kind === 'quick') {
-      const res = await fetch('/api/baloot/quick', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) });
+      const res = await fetch('/api/baloot/quick', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, open }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || 'تعذر إيجاد طاولة الآن');
       await ui.client.join(data.code, name);
-    } else if (kind === 'create') await ui.client.create(name, 4, { open: $('openRoom').value !== 'strict' });
-    else await ui.client.join($('joinCode').value, name);
+    } else if (kind === 'create') await ui.client.create(name, 4, { open });
+    else await ui.client.join(code, name);
   } catch (error) {
-    message(error.message || 'تعذر الاتصال');
     ui.client?.close?.();
     ui.client = null;
+    throw error;
   }
 }
 
@@ -1026,8 +995,7 @@ function showTable() {
   try { window.scrollTo(0, 0); } catch {}
 }
 function showSetup() {
-  clearTimeout(ui.botTimer);
-  ui.match = null;
+  if (ui.room?.code) window.BS_GAME_MENU?.forget('baloot', ui.room.code);
   ui.view = null;
   ui.client?.close?.();
   ui.client = null;
@@ -1039,15 +1007,10 @@ function showSetup() {
   $('matchEnd').hidden = true;
   $('resultSheet').hidden = true;
   document.body.classList.remove('bl-playing');
-  selectMode(ui.lastMode || 'bots');
+  $('gameMenu').hidden = false;
+  ui.menu?.menu();
 }
 function message(text) { $('setupMessage').textContent = text; }
-function selectMode(mode) {
-  ui.lastMode = mode;
-  for (const b of document.querySelectorAll('.bl-mode')) { const on = b.dataset.mode === mode; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); }
-  for (const p of document.querySelectorAll('.bl-panel')) p.hidden = p.dataset.panel !== mode;
-  $('lobby').hidden = true;
-}
 function heroFan() {
   const fan = $('heroFan');
   fan.innerHTML = '';
@@ -1077,21 +1040,28 @@ function showLog() {
 function init() {
   applyCosmetics();
   heroFan();
-  try {
-    const saved = accountName() || localStorage.getItem('bs_baloot_name');
-    if (saved) for (const id of ['nameBots', 'nameQuick', 'nameRoom']) $(id).value = saved;
-  } catch {}
-  for (const b of document.querySelectorAll('.bl-mode')) b.addEventListener('click', () => selectMode(b.dataset.mode));
-  $('startBots').addEventListener('click', startBots);
-  $('startQuick').addEventListener('click', () => startOnline('quick'));
-  $('createRoom').addEventListener('click', () => startOnline('create'));
-  $('joinRoom').addEventListener('click', () => startOnline('join'));
-  $('readyBtn').addEventListener('click', () => { const me = ui.room?.players?.find((p) => p.id === ui.room?.me?.id); ui.client?.send('ready', { ready: !me?.ready }); });
+  // 33.0.0: one menu like every game: open or strict, «العب الحين», or a room with friends
+  ui.menu = window.BS_GAME_MENU.mount($('gameMenu'), {
+    game: 'baloot',
+    modes: [
+      { id: 'open', label: 'مفتوح', hint: 'تقدر تقطع، والخصم يسجّل', note: 'اللعب المفتوح: تقدر تلعب أي ورقة، والفريق الثاني يسجّل عليك إذا قطعت. اللي يسمح فيها القانون تضوي، والقطع يحتاج ضغطتين.' },
+      { id: 'strict', label: 'مقيّد', hint: 'القانون يمنع الغلط', note: 'المقيّد: ما تقدر تلعب إلا الورقة اللي يسمح فيها القانون، فما فيه قطع ولا تسجيل.' },
+    ],
+    modesLabel: 'طريقة اللعب',
+    quickNote: 'نجمع لاعبين خلال 10 ثوانٍ، والبوتات تكمل الطاولة',
+    roomNote: 'أول لاعبين يدخلون شركاء. تبدأ متى ما بغيت، والبوتات تكمل المقاعد.',
+    loadout: 'cards', loadoutHref: '/shop?filter=deck', loadoutLabel: 'ورقك من المتجر',
+    onQuick: () => startOnline('quick'),
+    onCreate: () => startOnline('create'),
+    onJoin: ({ code }) => startOnline('join', code),
+    onResume: ({ code }) => startOnline('join', code),
+  });
   $('hostStart').addEventListener('click', () => ui.client?.send('start'));
   $('leaveLobby').addEventListener('click', showSetup);
+  addEventListener('pointerdown', () => BalootVoice.unlock(), { once: true, passive: true });
   $('inviteFriends').addEventListener('click', () => { if (window.BS_INVITES?.open) window.BS_INVITES.open(); else $('copyCode').click(); });
   $('copyCode').addEventListener('click', async () => { try { await navigator.clipboard.writeText(ui.room?.code || ''); toast('نسخنا الرمز'); } catch { toast('الرمز: ' + (ui.room?.code || '')); } });
-  $('leaveTable').addEventListener('click', () => { if (ui.mode === 'bots' && ui.match && ui.match.phase !== 'finished' && !confirmLeave()) return; showSetup(); });
+  $('leaveTable').addEventListener('click', () => { if (ui.room?.status === 'playing' && !confirmLeave()) return; showSetup(); });
   $('openLog').addEventListener('click', showLog);
   $('claimBtn').addEventListener('click', () => (ui.claimArmed ? cancelClaim() : armClaim()));
   $('claimYes').addEventListener('click', sendClaim);
@@ -1102,22 +1072,19 @@ function init() {
   $('voiceToggle').addEventListener('click', () => { BalootVoice.setEnabled(!BalootVoice.enabled); renderTalk(); if (BalootVoice.enabled) speak('هلا والله', ui.me, { urgent: true }); });
   addEventListener('bs-board-talk', (event) => { const d = event.detail || {}; if (ui.mode === 'online' && Number.isInteger(d.seat)) showTalk(d.seat, d.kind, d.id); });
   $('closeLog').addEventListener('click', () => { $('logSheet').hidden = true; });
-  $('playAgain').addEventListener('click', () => { $('matchEnd').hidden = true; if (ui.mode === 'bots') startBots(); else ui.client?.send('rematch'); });
-  for (const id of ['openBots', 'openRoom']) { try { const saved = localStorage.getItem('bs_baloot_style'); if (saved) $(id).value = saved; } catch {} $(id).addEventListener('change', (e) => { try { localStorage.setItem('bs_baloot_style', e.target.value); } catch {} for (const other of ['openBots', 'openRoom']) $(other).value = e.target.value; }); }
+  $('playAgain').addEventListener('click', () => {
+    $('matchEnd').hidden = true;
+    // a public table is over after its match: the next one is a new table
+    if (ui.room?.publicMatch) { const was = ui.room; showSetup(); ui.menu?.setMode(was.open === false ? 'strict' : 'open'); startOnline('quick').catch((error) => toast(error.message)); }
+    else ui.client?.send('rematch');
+  });
   $('endExit').addEventListener('click', showSetup);
   $('felt').addEventListener('click', (e) => { if (ui.picked && !e.target.closest('.bl-hand')) { const card = ui.picked; if (legalSet(ui.view)?.has(card)) { ui.picked = null; act({ type: 'play', card }); } } });
   addEventListener('resize', () => render());
   addEventListener('bs-career-change', () => { applyCosmetics(); heroFan(); });
   const params = new URLSearchParams(location.search);
   const code = params.get('room') || params.get('code');
-  if (code && /^\d{6}$/.test(code)) {
-    selectMode('room');
-    $('joinCode').value = code;
-    let saved = accountName();
-    try { saved = saved || localStorage.getItem('bs_baloot_name') || ''; } catch {}
-    if (saved) startOnline('join'); else $('nameRoom').focus();
-  }
-  else selectMode('bots');
+  if (code && /^\d{6}$/.test(code)) startOnline('join', code).catch((error) => { message(error.message || 'تعذر الاتصال'); toast(error.message || 'تعذر الاتصال'); });
   window.BS_AUDIO?.prime?.(['balootDeal', 'balootPlay', 'balootTrick', 'balootShuffle', 'balootBid', 'balootBuy', 'balootDouble', 'balootChime', 'balootFlip']);
 }
 let leaveArmed = 0;
@@ -1128,5 +1095,5 @@ function confirmLeave() {
   return false;
 }
 
-window.BS_BALOOT = { ui, startBots, render, act };
+window.BS_BALOOT = { ui, render, act, startOnline };
 init();

@@ -45,7 +45,8 @@ test('game invites support direct challenges and restrict room codes to online g
   assert.equal(normalizeGame('dice'), 'dice');
   assert.equal(normalizeRoomCode('12-34 56'), '123456');
   assert.equal(gameJoinPath('dice', ''), '/dice');
-  assert.equal(gameJoinPath('dice', '123456'), '');
+  assert.equal(gameJoinPath('dice', '123456'), '/dice?room=123456', '33.0: dice rooms take invites');
+  assert.equal(gameJoinPath('local', ''), '/online', 'the same-device quiz moved online');
   assert.equal(gameJoinPath('quiz', '123456'), '/online?room=123456');
   assert.equal(gameJoinPath('snakes', '654321'), '/snakes?room=654321');
   assert.equal(gameJoinPath('serpent', '654321'), '/serpent?room=654321');

@@ -18,12 +18,13 @@ test('initialization rejects malformed settings and duplicate rooms',async()=>{
  const h=setup();let r=await h.room.fetch(new Request('https://serpent.internal/init',{method:'POST',body:JSON.stringify({code:'123456',hostKey:'h'.repeat(43),playerLimit:99})}));assert.equal(r.status,400);assert.equal(h.values.has('serpent'),false);
  assert.equal((await init(h.room)).status,201);assert.equal((await init(h.room)).status,409);assert.ok(h.ctx.storage.alarm>Date.now()+60000);
 });
-test('only a connected ready host can start with all real players',async()=>{
+test('33.0: only the connected host starts, with whoever is here', async()=>{
  const h=setup();await init(h.room);const a=peer(h,'a','host'),b=peer(h,'b');
- await h.room.webSocketMessage(b.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby');
- await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby');
- await h.room.webSocketMessage(a.ws,JSON.stringify({type:'ready',ready:true}));await h.room.webSocketMessage(b.ws,JSON.stringify({type:'ready',ready:true}));
- await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'playing');assert.equal(h.room.room.game.snakes.length,2);assert.equal(h.room.room.game.snakes.some(s=>s.bot),false);h.room.stop();
+ await h.room.webSocketMessage(b.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby','a guest cannot start');
+ b.ws.closed=true;await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby','wait for a player who is reconnecting');
+ assert.match(a.messages.at(-1).message,/اتصال/);
+ b.ws.closed=false;await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));
+ assert.equal(h.room.room.status,'playing','no full room and no ready step needed');assert.equal(h.room.room.game.snakes.length,2);assert.equal(h.room.room.game.snakes.some(s=>s.bot),false);h.room.stop();
 });
 test('steering never accepts client position, mass or score',async()=>{
  const h=setup();await init(h.room);const a=peer(h,'a','host'),b=peer(h,'b');a.player.ready=b.player.ready=true;await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));h.room.stop();
@@ -58,11 +59,21 @@ test('the host can configure server bots alongside human friends before a round'
  assert.equal(h.room.room.game.snakes.filter(s=>s.bot).length,4);assert.equal(h.room.room.players.length,2);assert.equal(h.room.room.game.difficulty,'hard');
  await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:0,difficulty:'easy'}));assert.equal(h.room.room.botCount,4);
 });
-test('invalid bot counts cannot overfill the arena or bypass ready checks',async()=>{
+test('invalid bot counts are refused and the arena never passes twenty snakes', async()=>{
  const h=setup();await init(h.room);const a=peer(h,'a','host');
  for(const botCount of [-1,9,2.5,'4'])await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount,difficulty:'medium'}));
- assert.equal(h.room.room.botCount||0,0);await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:4,difficulty:'medium'}));a.player.ready=true;
- await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));assert.equal(h.room.room.status,'lobby');h.room.stop();
+ assert.equal(h.room.room.botCount||0,0);
+ await h.room.webSocketMessage(a.ws,JSON.stringify({type:'configure',botCount:4,difficulty:'mixed'}));assert.equal(h.room.room.botCount,4);
+ await h.room.webSocketMessage(a.ws,JSON.stringify({type:'start'}));
+ assert.equal(h.room.room.status,'playing');const bots=h.room.room.game.snakes.filter(s=>s.bot);
+ assert.equal(bots.length,4);assert.ok(bots.every(s=>['easy','medium','hard'].includes(s.level)),'a mixed room gives each bot its own strength');h.room.stop();
+ // alone with no bots: one bot joins so there is someone to play against
+ const lone=setup();await init(lone.room);const host=peer(lone,'x','host');
+ await lone.room.webSocketMessage(host.ws,JSON.stringify({type:'start'}));assert.equal(lone.room.room.game.snakes.length,2);lone.room.stop();
+ // a full room of twenty keeps the bots out
+ const full=setup();await full.room.fetch(new Request('https://serpent.internal/init',{method:'POST',body:JSON.stringify({code:'123456',hostKey:'h'.repeat(43),playerLimit:20,duration:120,botCount:6})}));
+ const first=peer(full,'p0','host');for(let i=1;i<20;i++)peer(full,'p'+i);
+ await full.room.webSocketMessage(first.ws,JSON.stringify({type:'start'}));assert.equal(full.room.room.game.snakes.length,20);full.room.stop();
 });
 
 test('a delayed arena timer catches up fixed simulation steps with a bounded recovery budget',async()=>{

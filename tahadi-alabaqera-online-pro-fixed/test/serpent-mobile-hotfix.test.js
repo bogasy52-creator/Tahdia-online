@@ -14,13 +14,13 @@ test('mobile boost and floating joystick no longer overlap on the right',async()
  const css=await src('public/assets/css/app-serpent.css');
  assert.match(css,/#arenaPlay\[data-duo=false\] #boost1\{[^}]*left:[^}]*!important;right:auto!important/);
  const js=await src('public/assets/js/serpent-ui.js');
- assert.doesNotMatch(js,/originX\?\?e\.clientX\)-rect\.left-34/);
- assert.match(js,/const diameter=ring\.getBoundingClientRect\(\)\.width\|\|112/);
+ assert.doesNotMatch(js,/originX\s*\?\?\s*e\.clientX\)\s*-\s*rect\.left\s*-\s*34/);
+ assert.match(js,/(?:const )?diameter\s*=\s*ring\.getBoundingClientRect\(\)\.width\s*\|\|\s*112/);
  assert.match(js,/pointer\?\.knobX/);
 });
 test('hotfix assets bust the previous mobile cache',async()=>{
  const html=await src('public/serpent.html'),sw=await src('public/service-worker.js');
- assert.match(html,/app-serpent\.css\?v=v?32\.1\.0/);
- assert.match(html,/serpent-ui\.js\?v=v?32\.1\.0/);
- assert.match(sw,/busraj-games-v60-release-32-1-0/);
+ assert.match(html,/app-serpent\.css\?v=v?33\.0\.0/);
+ assert.match(html,/serpent-ui\.js\?v=v?33\.0\.0/);
+ assert.match(sw,/busraj-games-v60-release-33-0-0/);
 });

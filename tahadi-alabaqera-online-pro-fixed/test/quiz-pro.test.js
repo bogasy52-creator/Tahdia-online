@@ -54,14 +54,10 @@ test('zoom mixes real photographs, studio renders and four identified AI challen
   }
 });
 
-test('local quiz consumes the shared expanded bank and removes old external media', async()=>{
-  const html=await readFile(join(pub,'local.html'),'utf8');
+test('the shared expanded bank keeps its own media and no old external links (33.0.0: played online)', async()=>{
   const data=await readFile(join(pub,'assets/js/questions-data.js'),'utf8');
-  assert.match(html,/assets\/js\/questions-data\.js/);
-  assert.match(html,/window\.BS_QUIZ_CATEGORIES/);
-  assert.doesNotMatch(html,/sounds_guess\//);
-  assert.doesNotMatch(html,/upload\.wikimedia\.org/);
-  assert.match(html,/Fisher|function shuffled\(a\)\{const b=\[\.\.\.a\]/);
+  const online=await readFile(join(pub,'online.html'),'utf8');
+  for(const page of [data,online]){assert.doesNotMatch(page,/sounds_guess\//);assert.doesNotMatch(page,/upload\.wikimedia\.org/);}
   assert.ok(data.includes('sounds_pro/'));assert.ok(data.includes('quiz_photos/'));
   assert.match(data,/\*\/\nwindow\.BS_QUIZ_CATEGORIES=/);assert.doesNotMatch(data,/\\nwindow\.BS_QUIZ_CATEGORIES=/);
 });
@@ -75,7 +71,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v60-release-32-1-0/);assert.match(sw,/busraj-quiz-media-v4/);
+  assert.match(sw,/busraj-games-v60-release-33-0-0/);assert.match(sw,/busraj-quiz-media-v4/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });

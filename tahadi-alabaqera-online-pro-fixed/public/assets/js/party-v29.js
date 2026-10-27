@@ -1,10 +1,10 @@
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,partyGame,playlistCapacity,gameCapacity,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
-import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=32.1.0';
-import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=32.1.0';
+import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=33.0.0';
+import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.0.0';
 let boardSurface=null,boardSurfaceRound='';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeCode=value=>String(value||'').replace(/[٠-٩]/g,n=>'٠١٢٣٤٥٦٧٨٩'.indexOf(n)).replace(/[۰-۹]/g,n=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(n)).replace(/\D/g,'').slice(0,6);
@@ -22,7 +22,7 @@ function feedback(kind,text,cell=selected){$('feedback').className='party-feedba
 function celebrate(){const box=$('celebration');box.replaceChildren();if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;for(let i=0;i<55;i++){const piece=document.createElement('i');piece.className='party-confetti';piece.style.left=Math.random()*100+'%';piece.style.setProperty('--drift',(Math.random()-.5)*300+'px');piece.style.setProperty('--c',BOARD_COLORS[i%6]);piece.style.animationDelay=Math.random()*.7+'s';box.append(piece);}setTimeout(()=>box.replaceChildren(),4000);cue('win');}
 // 32.1.0: every game shows its own seat limit; the room follows the smallest one in the list
 const KIND_NAMES={all:'الكل',board:'ألعاب طاولة',arena:'حلبة',quiz:'أسئلة',puzzle:'ألغاز',reaction:'سرعة'};let libraryKind='all';
-const capLabel=id=>'حتى '+playersLabel(gameCapacity(id));
+const capLabel=id=>tableSize(id)<gameCapacity(id)?'حتى '+gameCapacity(id)+' · كل طاولة '+tableSize(id):'حتى '+playersLabel(gameCapacity(id));
 function updateCapacity(){const max=playlistCapacity(playlist),old=Number($('capacity').value)||max;$('capacity').innerHTML=Array.from({length:max},(_,i)=>`<option value="${i+1}">${playersLabel(i+1)}</option>`).join('');$('capacity').value=String(Math.min(max,old));const limit=limitingGame(playlist);$('capacityNote').textContent=limit?`«${partyGame(limit).name}» في قائمتكم، فحد الغرفة ${playersLabel(gameCapacity(limit))}.`:'كل ألعاب قائمتكم تقبل حتى 20 لاعبًا.';}
 function renderLibrary(){const picked=new Map();playlist.forEach((r,i)=>{if(!picked.has(r.game))picked.set(r.game,[]);picked.get(r.game).push(i+1);});$('libraryFilters').innerHTML=Object.entries(KIND_NAMES).filter(([k])=>k==='all'||PARTY_GAMES.some(g=>g.kind===k)).map(([k,n])=>`<button type="button" class="party-filter${k===libraryKind?' on':''}" data-kind="${k}" aria-pressed="${k===libraryKind}">${n}</button>`).join('');$('gameLibrary').innerHTML=PARTY_GAMES.filter(g=>libraryKind==='all'||g.kind===libraryKind).map(g=>{const order=picked.get(g.id)||[];return `<button type="button" class="party-game-card${order.length?' picked':''}" data-game="${g.id}" aria-pressed="${order.length>0}"><span class="party-card-art"><img src="${art(g.id)}" alt="" loading="lazy">${order.length?`<span class="party-card-order">${order.join(' · ')}</span>`:''}</span><span class="party-card-body"><b>${g.name}</b><span class="party-card-meta"><span class="party-cap">${capLabel(g.id)}</span><span>${KIND_NAMES[g.kind]||''}</span>${g.real?'<span class="party-real">اللعبة الأصلية</span>':''}</span><small>${esc(g.hint)}</small></span><span class="party-card-toggle" aria-hidden="true">${order.length?'✓':'＋'}</span></button>`;}).join('');}
 function renderEntry(){updateCapacity();$('entryPlaylist').innerHTML=playlist.map((r,i)=>`<div class="party-preview-item"><img src="${art(r.game)}" alt=""><span><small>${i+1}</small>${esc(partyGame(r.game).name)}<em>${capLabel(r.game)}</em></span><button type="button" class="party-preview-remove" data-remove-game="${i}" aria-label="إزالة ${esc(partyGame(r.game).name)}" ${playlist.length<2?'disabled':''}>×</button></div>`).join('');renderLibrary();}
@@ -94,14 +94,20 @@ function button(text,fn,cls='party-secondary'){const b=document.createElement('b
 function stats(html){const d=document.createElement('div');d.className='party-game-stats';d.innerHTML=html;return d;}
 // 32.1.0: a round played in the real game: a card that takes everyone to its own page
 let linkKey='';
-function linkUrl(r){return `${r.link.page}?room=${r.link.code}&party=${state.code}`;}
-function enterLink(r){if(r?.link?.status!=='open'||!r.link.code)return;const own=state.players.find(p=>p.id===myId);try{sessionStorage.setItem('bs_party_link',JSON.stringify({party:state.code,room:r.link.code,game:r.game,round:r.id,name:String(own?.name||$('name').value||'').trim().slice(0,24),at:Date.now()}));sessionStorage.setItem('bs_link_go:'+r.id,'1');}catch{}location.href=linkUrl(r);}
+// 33.0.0: a big group plays on several tables. Everyone gets the same state, which lists
+// each table with its players: go to your own (someone who was away takes the smallest).
+function ownLink(l){const list=Array.isArray(l?.list)?l.list:[];const mine=list.find(t=>t.players?.includes(myId))||list.filter(t=>t.code).sort((a,b)=>(a.players?.length||0)-(b.players?.length||0))[0];return mine?{...l,code:mine.code||null,table:mine.id}:l;}
+function linkUrl(r){const l=ownLink(r.link);return `${l.page}?room=${l.code}&party=${state.code}`;}
+function enterLink(r){const l=ownLink(r?.link);if(l?.status!=='open'||!l.code)return;const own=state.players.find(p=>p.id===myId);try{sessionStorage.setItem('bs_party_link',JSON.stringify({party:state.code,room:l.code,game:r.game,round:r.id,name:String(own?.name||$('name').value||'').trim().slice(0,24),at:Date.now()}));sessionStorage.setItem('bs_link_go:'+r.id,'1');}catch{}location.href=linkUrl(r);}
 function renderLink(r){
- const stage=$('gameStage'),controls=$('stageControls'),l=r.link,key=r.id+':'+l.status+':'+(l.code||'');if(linkKey===key)return;linkKey=key;lastViewKey='';
+ const stage=$('gameStage'),controls=$('stageControls'),l=ownLink(r.link),key=r.id+':'+l.status+':'+(l.code||'');if(linkKey===key)return;linkKey=key;lastViewKey='';
  stopArena();stopAudio();controls.replaceChildren();stage.classList.remove('party-quiz');const g=partyGame(r.game),open=l.status==='open';let went='';try{went=sessionStorage.getItem('bs_link_go:'+r.id)||'';}catch{}
  const head=open?(went?'اللعبة شغالة في صفحتها':'اللعبة الأصلية جاهزة'):l.status==='creating'?'نفتح غرفة اللعبة…':'انتهت هذي اللعبة';
- const text=open?(went?'رجعت قبل نهاية اللعبة. النتيجة توصل هنا أول ما تخلص، وتقدر ترجع لها من الزر.':'ننقلكم لصفحة اللعبة نفسها، بنفس قواعدها وشكلها. أول واحد يدخل يصير المضيف ويبدأ لما يكتمل الكل، والنتيجة ترجع هنا تلقائيًا.'):l.status==='creating'?'لحظات ونجهّز الغرفة لكم.':'رجعت النتيجة لترتيب الجمعة.';
- stage.innerHTML=`<div class="party-link-card" data-status="${esc(l.status)}"><img src="${art(r.game)}" alt=""><div><small>${head}</small><h3>${esc(g.name)}</h3><p>${text}</p>${l.code?`<span class="party-link-code">رمز الغرفة <b dir="ltr">${esc(l.code)}</b></span>`:''}</div></div>`;
+ // 33.0.0: a table game starts by itself, and a big group is split over several tables
+ const several=(l.tables||0)>1,board=['snakes','zahra','jackaroo'].includes(r.game);
+ const go=board?(several?'كثرتم على طاولة وحدة، فقسمناكم على '+(l.tables===2?'طاولتين':l.tables+' طاولات')+'، وكل واحد ينتقل لطاولته. ':'ننقلكم لطاولة اللعبة نفسها. ')+'الطاولة تبدأ لحالها أول ما يوصل أصحابها، واللي يتأخر ياخذ مكانه بوت، والنتيجة ترجع هنا تلقائيًا.':'ننقلكم لصفحة اللعبة نفسها، بنفس قواعدها وشكلها. أول واحد يدخل يصير المضيف ويبدأ لما يكتمل الكل، والنتيجة ترجع هنا تلقائيًا.';
+ const text=open?(went?'رجعت قبل نهاية اللعبة. النتيجة توصل هنا أول ما تخلص، وتقدر ترجع لها من الزر.':go):l.status==='creating'?'لحظات ونجهّز الغرفة لكم.':'رجعت النتيجة لترتيب الجمعة.';
+ stage.innerHTML=`<div class="party-link-card" data-status="${esc(l.status)}"><img src="${art(r.game)}" alt=""><div><small>${head}</small><h3>${esc(g.name)}</h3><p>${text}</p>${l.code?`<span class="party-link-code">${several?'رمز طاولتك':'رمز الغرفة'} <b dir="ltr">${esc(l.code)}</b></span>`:''}</div></div>`;
  if(open){controls.append(button(went?'ارجع للعبة':'ادخل اللعبة',()=>enterLink(state.round),'party-primary party-link-go'));if(!went){clearTimeout(renderLink.timer);renderLink.timer=setTimeout(()=>{if(state?.round?.id===r.id&&state.round.link?.status==='open')enterLink(state.round);},2200);}}
 }
 function renderGame(){const r=state?.round;if(state?.status!=='playing'||!r)return;if(r.link&&r.link.status!=='failed'){renderLink(r);return;}linkKey='';me=r.me||me;if(!me)return;const viewKey=r.id+':'+JSON.stringify(me)+':'+JSON.stringify(r.quiz||r.reaction||r.tables||'');if(lastViewKey===viewKey)return;lastViewKey=viewKey;const stage=$('gameStage'),controls=$('stageControls');if(r.game==='serpent'){renderArena(r);return;}if(r.game==='memory'){stage.classList.remove('party-quiz');controls.replaceChildren();renderPartyMemory(stage,me,me.done||!roomReady,r.id);return;}stage.classList.remove('party-quiz');stage.replaceChildren();controls.replaceChildren();if(me.done){stage.innerHTML=`<div class="party-complete">${me.won?'أكملت التحدّي ✦':'انتهت محاولاتك'} · نتيجتك ${me.score}. تابع ترتيب أصحابك؛ الانتقال تلقائي بعد نهاية الجولة.</div>`;}

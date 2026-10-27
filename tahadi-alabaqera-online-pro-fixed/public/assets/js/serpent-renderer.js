@@ -232,7 +232,7 @@ export class SerpentRenderer {
    if(powerActive(s,'ghost',g.elapsed)&&s.id!==id)continue;
    const royal=s.skin==='snake-sovereign';ctx.fillStyle=royal?'#f3d27a':s.id===id?'#f0f4d5':'#b7d0c9';ctx.textAlign='center';ctx.font=(royal?'800 ':'600 ')+11/zoom+'px Tahoma,Arial';
    if(royal){ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=4;}
-   ctx.fillText((royal?'👑 ':'')+s.name+(g.collisionMode==='arena-v23'?' · '+Math.round(s.mass):'')+(s.bot?' · BOT':''),s.x,s.y-radius*2.9);ctx.shadowBlur=0;
+   ctx.fillText((royal?'👑 ':'')+s.name+(g.collisionMode==='arena-v23'?' · '+Math.round(s.mass):'')+(s.bot?' · بوت':''),s.x,s.y-radius*2.9);ctx.shadowBlur=0;
   }
   for(const effect of this.effects){
    if(split&&effect.id!==id)continue;

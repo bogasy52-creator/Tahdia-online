@@ -294,3 +294,13 @@ body.game-baloot[data-felt="majlis"]{--bl-felt-a:#5a1a24;--bl-felt-b:#3a0f17;--b
 @media (prefers-reduced-motion:reduce){.bl-stamp,.bl-claim-confirm,.bl-talk,.bl-emoji-float,.bl-gahwa{animation:none!important}.bl-avatar.crowned::before{animation:none}}
 /* the toast must not cover your cards while you play */
 body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))}
+
+/* 33.0.0 — the menu and lobby of every game, the cards you may play, and a cut */
+.bl-menu-v33{margin-top:6px}
+.bl-menu-v33[hidden]{display:none!important}
+.bl-hand .bl-card.legal{cursor:pointer}
+.bl-hand .bl-card.legal::after{content:'';position:absolute;inset:-3px;border-radius:12px;box-shadow:0 0 0 2px #f7d27b88,0 0 14px #f7d27b44;pointer-events:none}
+.bl-hand .bl-card.cuttable{filter:brightness(.6) saturate(.65);cursor:pointer}
+.bl-hand .bl-card.cuttable.picked{filter:none}
+.bl-lobby-friends{margin:10px 0}
+.bl-lobby-friends[hidden]{display:none!important}

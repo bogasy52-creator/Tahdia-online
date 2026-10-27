@@ -71,12 +71,14 @@ test('room creation rejects unknown survival rules instead of silently changing 
  const h=await api(roomApiEnv(),'/api/serpent/rooms',{matchMode:'forged',playerLimit:2,duration:120});assert.equal(h.response.status,400);
 });
 test('an online pawn stays on its original cell until the die finishes',async()=>{
+ // 33.0.0: the table (board-table-v33.js) hands the page each move to animate
  const h=await createDOM('snakes.html',{...Snakes,...Enhanced,...FX});
- await h.runInline(`window.TEST={set(s){mode='online';room={code:'123456',status:'playing',me:{index:0},players:[]};state=s;enterGame()},onRoomState,flush:()=>onlineQueue};`);
- const before=Snakes.createSnakesGame(['A','B']);before.players[0].position=22;h.context.TEST.set(before);
+ await h.runInline('');const table=h.context.tables.at(-1);
+ const room=(state,version)=>({code:'401234',status:'playing',variant:'classic',me:{id:'a',index:0},players:[{id:'a',index:0,name:'A'},{id:'b',index:1,name:'B'}],version,state});
+ const before=Snakes.createSnakesGame(['A','B']);before.players[0].position=22;await table.apply(room(before,1));
  let release;h.context.BS_DICE.roll=()=>new Promise(resolve=>release=resolve);
  const next=Snakes.playSnakesRoll(before,3);
- h.context.TEST.onRoomState({code:'123456',status:'playing',me:{index:0},version:2,state:next});
+ const moving=table.apply(room(next,2),{animate:true});await new Promise(r=>setImmediate(r));
  const jumped=Boolean(h.doc.querySelector('.snake-cell[data-n="25"] .snake-token')),held=Boolean(h.doc.querySelector('.snake-cell[data-n="22"] .snake-token'));
- release();await h.context.TEST.flush();assert.equal(jumped,false,'the final cell must not show a pawn while the die is still rolling');assert.equal(held,true);assert.ok(h.doc.querySelector('.snake-cell[data-n="25"] .snake-token'));
+ release();await moving;assert.equal(jumped,false,'the final cell must not show a pawn while the die is still rolling');assert.equal(held,true);assert.ok(h.doc.querySelector('.snake-cell[data-n="25"] .snake-token'));
 });

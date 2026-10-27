@@ -28,7 +28,7 @@ for(const file of files){
  }
 }
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8')),lock=JSON.parse(await readFile(join(root,'package-lock.json'),'utf8'));
-assert.equal(pkg.version,'32.1.0');assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version);
+assert.equal(pkg.version,'33.0.0');assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version);
 const config=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
 assert.ok(config.durable_objects.bindings.some(b=>b.name==='QUICK_ARENA'&&b.class_name==='QuickArena'));
 assert.equal(config.migrations.at(-1).tag,'v6-authoritative-quick-arena');

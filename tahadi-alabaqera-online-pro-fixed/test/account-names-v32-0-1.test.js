@@ -83,14 +83,23 @@ test('32.0.1: the account career always carries the account display name', () =>
 });
 
 test('32.0.1: every game name field shows the account name and is locked while signed in', async () => {
+  // 33.0.0: the online games share one menu; its name is the account's, then the party's,
+  // then the guest's own — and only a guest can change it
   const fields = {
-    'public/online.html': ['createName', 'joinName'], 'public/snakes.html': ['onlineName'], 'public/zahra.html': ['onlineName'], 'public/jackaroo.html': ['onlineName'],
-    'public/baloot.html': ['nameBots', 'nameQuick', 'nameRoom'], 'public/party.html': ['name'], 'public/paths-online.html': ['pathName'],
-    'public/sudoku.html': ['soName'], 'public/picture.html': ['playerName'], 'public/serpent.html': ['arenaName'],
+    'public/party.html': ['name'], 'public/paths-online.html': ['pathName'],
+    'public/sudoku.html': ['soName'], 'public/picture.html': ['playerName'],
   };
   for (const [file, ids] of Object.entries(fields)) {
     const html = await read(file);
     for (const id of ids) assert.match(html, new RegExp('<input id="' + id + '" data-account-name'), file + '#' + id);
+  }
+  const menu = await read('public/assets/js/game-menu-v33.js');
+  assert.match(menu, /const name=accountName\(\)\|\|root\.BS_PARTY_LINK\?\.name\|\|store\.get\(NAME_KEY\)/);
+  assert.match(menu, /if\(!account&&!root\.BS_PARTY_LINK\?\.name\)\{/, 'only a guest outside a party edits the name');
+  for (const file of ['public/online.html', 'public/snakes.html', 'public/zahra.html', 'public/jackaroo.html', 'public/dice.html', 'public/baloot.html', 'public/serpent.html']) {
+    const html = await read(file);
+    assert.match(html, /game-menu-v33\.js/, file + ' uses the shared menu');
+    assert.doesNotMatch(html, /id="(?:createName|joinName|onlineName|nameBots|nameQuick|nameRoom|arenaName)"/, file + ' has no name field of its own');
   }
   const social = await read('public/assets/js/social-client.js');
   assert.match(social, /function bindAccountNames\(profile\)/);
@@ -99,8 +108,7 @@ test('32.0.1: every game name field shows the account name and is locked while s
   assert.match(social, /signedOutElsewhere\(session\)/);
   // pages prefer the account name and never save it as their guest name
   const baloot = await read('public/assets/js/baloot-table.js');
-  assert.match(baloot, /const saved = accountName\(\) \|\| localStorage\.getItem\('bs_baloot_name'\)/);
-  assert.match(baloot, /if \(!account\) try \{ localStorage\.setItem\('bs_baloot_name'/);
+  assert.match(baloot, /const name = window\.BS_GAME_MENU\?\.playerName\?\.\(\) \|\| accountName\(\)/);
   assert.match(await read('public/assets/js/party-v29.js'), /\$\('name'\)\.value=window\.BS_SOCIAL\?\.accountName\?\.\(\)\|\|localStorage\.getItem\('bs_party_name'\)/);
   // 32.1.0: inside a party round a guest plays under the party name; the account name still comes first
   assert.match(await read('public/assets/js/picture-ui.js'), /url\.searchParams\.set\('name',accountName\(\)\|\|(?:window\.BS_PARTY_LINK\?\.name\?\.slice\(0,20\)\|\|)?read\('bs-picture-name'\)/);

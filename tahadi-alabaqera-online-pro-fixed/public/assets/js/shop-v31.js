@@ -3,7 +3,7 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=32.1.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.0.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
@@ -116,6 +116,9 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame='
   stage.dataset.diceSkin=item.id;for(const [name,value]of Object.entries(core.COSMETIC_STYLES[item.id]||{}))stage.style.setProperty(name,value);
   if(DIE_ONE[item.id])stage.style.setProperty('--die-one',DIE_ONE[item.id]);
   const die=make('div','die');stage.append(die);window.BS_DICE?.mount?.(die);window.BS_DICE?.set?.(die,5);stage.roll=()=>window.BS_DICE?.roll?.(die,window.BS_DICE.random(),{quiet:false});
+ }else if(item.type==='pawn'&&item.id==='pawn-character'){
+  // 33.0.0: «شخصيتي» shows the hero you equipped, the one that walks the board
+  const img=make('img','sx-character-art');img.src=core.heroArt?.(api()?.get?.()?.equipped?.character||'character-fox')||'/assets/heroes/desert.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
  }else if(item.type==='pawn'){
   const svg=window.BS_PIECES?.icon?.(document,{design:window.BS_PIECES.designFor(item.id),item:item.id,color:playerColor||pawnColor(item),className:'sx-pawn-art',label:'',size:'l'});if(svg)stage.append(svg);
  }else if(item.type==='character'){
@@ -289,12 +292,12 @@ function openPreview(item){
  const t=tier(item);$('previewType').textContent=TYPE_LABEL[item.type]+' · '+TIER[t];$('previewType').className='sx-chip tier-'+t;$('previewName').textContent=item.name;$('previewMaterial').textContent=item.type==='emote'?item.glyph+' إيموجي متحرك':item.type==='phrase'?'عبارة جاهزة':item.type==='move'?item.glyph+' حركة على اللوحة':subtitle(item);$('previewDescription').textContent=item.description;
  const art=$('previewArt'),options=$('previewOptions');art.replaceChildren();art.className='sx-preview-stage tier-'+t;options.replaceChildren();let mounted=mountCollectible(art,item,{live:true}),boardGame='jackaroo',seats=4;
  const replace=extra=>{mounted.dispose();art.replaceChildren();mounted=mountCollectible(art,item,{live:true,...extra});};
- if(item.type==='pawn')(window.BS_PIECES?.COLORS||[]).forEach((color,i)=>{const button=make('button','sx-swatch');button.type='button';button.style.setProperty('--swatch',color);button.setAttribute('aria-label','معاينة بلون اللاعب '+(i+1));button.onclick=()=>{options.querySelectorAll('.sx-swatch').forEach(b=>b.classList.toggle('active',b===button));replace({playerColor:color});};options.append(button);});
+ if(item.type==='pawn'&&item.id!=='pawn-character')(window.BS_PIECES?.COLORS||[]).forEach((color,i)=>{const button=make('button','sx-swatch');button.type='button';button.style.setProperty('--swatch',color);button.setAttribute('aria-label','معاينة بلون اللاعب '+(i+1));button.onclick=()=>{options.querySelectorAll('.sx-swatch').forEach(b=>b.classList.toggle('active',b===button));replace({playerColor:color});};options.append(button);});
  if(item.type==='table'){for(const [label,game]of [['جاكارو','jackaroo'],['الزهرة','zahra']]){const button=make('button',game===boardGame?'active':'',label);button.type='button';button.onclick=()=>{boardGame=game;options.querySelectorAll('[data-board-game]').forEach(b=>b.classList.toggle('active',b.dataset.boardGame===game));replace({boardGame,seats});};button.dataset.boardGame=game;options.append(button);}const count=make('button',null,'6 لاعبين');count.type='button';count.onclick=()=>{seats=seats===4?6:4;count.textContent=seats===6?'4 لاعبين':'6 لاعبين';replace({boardGame,seats});};options.append(count);}
  if(item.type==='dice'){const roll=make('button','sx-try-button','ارمِ النرد للتجربة');roll.type='button';roll.onclick=async()=>{roll.disabled=true;try{await mounted.roll?.();}finally{roll.disabled=false;}};options.append(roll);}
  if(REACTION.has(item.type)){const play=make('button','sx-try-button',item.type==='move'?'شغّل الحركة':'جرّب على الشاشة');play.type='button';play.onclick=()=>window.BS_REACTIONS?.preview?.(item.id,$('previewDialog'));options.append(play);if(!window.BS_REACTIONS?.preview)play.hidden=true;}
  if(item.type==='victory'){const play=make('button','sx-try-button','أعد الاحتفال');play.type='button';play.onclick=()=>replace({});options.append(play);}
- const [href,label]=TRY[item.type]||TRY.pawn;$('previewTry').href=href;$('previewTry').textContent=label;
+ const [href,label]=item.id==='pawn-character'?TRY.character:TRY[item.type]||TRY.pawn;$('previewTry').href=href;$('previewTry').textContent=label;
  updatePreviewControls();previewCleanup=()=>mounted.dispose();if(!$('previewDialog').open)$('previewDialog').showModal();
 }
 

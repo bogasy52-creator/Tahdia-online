@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 
-test('snake gameplay does not load the retired portrait skin or overlapping effect layers',async()=>{const html=await readFile(join(root,'public/snakes.html'),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/snake-reference-skin\.png|snake-pro-upgrade\.js|v5-ultimate-expansion\.js/);assert.match(html,/await runSoloAi\(\)/)});
+test('snake gameplay does not load the retired portrait skin or overlapping effect layers',async()=>{const html=await readFile(join(root,'public/snakes.html'),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.match(html,/pro-dice\.js/);assert.doesNotMatch(html,/snake-reference-skin\.png|snake-pro-upgrade\.js|v5-ultimate-expansion\.js/);/* 33.0.0: online only — bots play on the server, not in the page */assert.doesNotMatch(html,/runSoloAi|id="playerCount"/);assert.match(html,/createTable\(\{/)});
 
 test('current arena images are valid lossless WebP with their original dimensions', async () => {
   for(const [name,width,height] of [['neon-cobra',1024,1536],['objects',2048,768],['arena-plate',853,1844],['jackaroo-table',1254,1254]]){
@@ -25,7 +25,8 @@ test('current arena images are valid lossless WebP with their original dimension
 test('snake turn has a keyboard-safe action path and no stale overlay badge', async () => {
   const html = await readFile(join(root, 'public', 'snakes.html'), 'utf8');
   assert.match(html, /function rollTurn\(\)/);
-  assert.match(html, /document\.addEventListener\('keydown'/);
-  assert.match(html, /classList\.add\('has-rolled'\)/);
-  assert.match(html, /console\.error\('Snake turn failed'/);
+  assert.match(html, /document\.addEventListener\(["']keydown["'],\s*\(event\)\s*=>\s*\{\s*if \(!document\.body\.classList\.contains\(["']game-running["']\)/);
+  assert.match(html, /classList\.add\(["']has-rolled["']\)/);
+  // a failed move comes back from the room as an error the page shows (onError), not a console log
+  assert.match(html, /onError: \(m\) => \{/);
 });

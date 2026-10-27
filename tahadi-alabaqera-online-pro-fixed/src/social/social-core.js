@@ -6,7 +6,8 @@ export const SOCIAL_MAX_FRIENDS = 100;
 export const SOCIAL_MAX_REQUESTS = 100;
 export const SOCIAL_MAX_NOTIFICATIONS = 60;
 export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
-export const SOCIAL_ONLINE_GAMES = new Set(["party", "quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths", "baloot"]);
+// 33.0.0: تحدي النرد has rooms too
+export const SOCIAL_ONLINE_GAMES = new Set(["party", "quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths", "baloot", "dice"]);
 export const SOCIAL_CHALLENGE_GAMES = new Set([
   ...SOCIAL_ONLINE_GAMES,
   "dice", "journey", "local", "logic", "memory", "puzzle", "reaction",
@@ -75,7 +76,8 @@ export function gameJoinPath(game, roomCode, variant) {
     if (normalizedGame === "quiz") return `/online?room=${encodeURIComponent(code)}`;
     return `/${normalizedGame}?room=${encodeURIComponent(code)}`;
   }
-  const direct = {paths:"/paths-online",quiz:"/online"};
+  // the same-device quiz moved online in 33.0.0
+  const direct = {paths:"/paths-online",quiz:"/online",local:"/online"};
   if(normalizedGame==='journey'&&['paths','jewels'].includes(variant))return '/journey?game='+variant;
   return direct[normalizedGame] || `/${normalizedGame}`;
 }

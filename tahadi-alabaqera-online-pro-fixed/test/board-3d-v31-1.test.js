@@ -18,7 +18,8 @@ async function pieces(){
 
 test('every stone in the shop is a 3D render in all six player colours, in two sizes',async()=>{
  const c=await pieces(),P=c.BS_PIECES;
- const stones=Career.CATALOG.filter(i=>i.type==='pawn').map(i=>i.id);
+ // «شخصيتي» (33.0.0) is drawn as the player's hero, not a stone render
+ const stones=Career.CATALOG.filter(i=>i.type==='pawn'&&i.id!=='pawn-character').map(i=>i.id);
  assert.deepEqual([...P.ITEMS].sort(),[...stones].sort(),'one model per shop stone');
  for(const id of stones)for(const color of P.COLORS)for(const size of ['s','l']){
   const url=P.src('pawn',{item:id,color,size});assert.ok(await exists(url.slice(1)),url);
@@ -99,11 +100,13 @@ test('a snake that eats stays bigger for the rest of the match',async()=>{
 test('the snakes page plays a clear eating sound, keeps the growth and resets it for a new match',async()=>{
  const page=await read('snakes.html'),audio=await read('assets/js/audio-manager.js');
  assert.match(audio,/samples\.snakeEat='assets\/sounds\/board-v31-1\/snake-eat\.wav'/);assert.ok(await exists('assets/sounds/board-v31-1/snake-eat.wav'));
- assert.match(page,/cuePhase\(strike\);BS_AUDIO\.play\('snakeEat'/);
- assert.match(page,/snakeMeals\.set\(Number\(fromPos\),meals\);window\.BS_ARENA\?\.meal\?\.\(fromPos,meals\)/);
+ assert.match(page,/cuePhase\(strike\);\s*BS_AUDIO\.play\(["']snakeEat["']/);
+ assert.match(page,/snakeMeals\.set\(Number\(fromPos\),\s*meals\);\s*window\.BS_ARENA\?\.meal\?\.\(fromPos,\s*meals\)/);
  assert.doesNotMatch(page,/snakeMeals\.delete\(/,'growth is kept after the stone is released');
- assert.equal(page.match(/snakeMeals\.clear\(\);window\.BS_ARENA\?\.meal\?\.\(\);BS_AUDIO\.prime/g).length,2);
- assert.match(page,/classList\.add\(j>n\?'ladder-foot-cell':'snake-head-cell'\)/);
+ // 33.0.0: one place resets it — the first state of every match (a new one or a rematch)
+ assert.equal(page.match(/snakeMeals\.clear\(\);\s*window\.BS_ARENA\?\.meal\?\.\(\);\s*BS_AUDIO\.prime/g).length,1);
+ assert.match(page,/if \(!prev \|\| prev\.moveCount > state\.moveCount\) \{\s*journal\?\.reset\(state\);\s*snakeMeals\.clear\(\)/);
+ assert.match(page,/classList\.add\(j\s*>\s*n\s*\?\s*["']ladder-foot-cell["']\s*:\s*["']snake-head-cell["']\)/);
  for(const p of ['dice.html','snakes.html','zahra.html','jackaroo.html','shop.html'])assert.match(await read(p),/dice-3d-v31-1\.js\?v=[\d.]+"><\/script><script[^>]*pro-dice\.js/,p+' loads the GPU die before pro-dice');
 });
 

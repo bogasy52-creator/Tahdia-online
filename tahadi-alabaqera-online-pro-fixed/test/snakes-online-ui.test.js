@@ -4,46 +4,57 @@ import {createDOM} from './dom-harness.mjs';
 import * as Snakes from '../public/assets/js/engines/snakes-engine.js';
 import * as Enhanced from '../public/assets/js/engines/snakes-adventure.js';
 import * as FX from '../public/assets/js/snakes-v4-fx.js';
+import {createStepPlayer} from '../public/assets/js/board-online.js';
 
+// 33.0.0: the snakes page is online only. board-table-v33.js owns the room and hands
+// the page each state to draw (apply); the page sends its moves through the table.
 async function ui(){
  const h=await createDOM('snakes.html',{...Snakes,...Enhanced,...FX});
  h.context.BS_DICE.mountBonus=()=>{};
- await h.runInline(`window.TEST={setOnline(s){mode='online';room={code:'123456',variant:'adventure',status:'playing',me:{index:0},players:[]};state=s;enterGame()},rollTurn,flush:()=>onlineQueue,onRoomState,client(c){client=c},get:()=>state};`);
- return h;
+ await h.runInline('window.TEST={get:()=>state,rollTurn};');
+ const table=h.context.tables.at(-1);
+ const room=(state,extra={})=>({code:'401234',variant:'adventure',status:'playing',version:2,me:{id:'a',index:0,role:'host'},players:[{id:'a',index:0,name:'A'},{id:'b',index:1,name:'B',bot:true,level:'hard'}],state,...extra});
+ return {...h,table,room};
 }
 
 test('enhanced online players see reward cells and can spend their earned double',async()=>{
  const h=await ui(),s=Enhanced.createEnhancedGame(['A','B']);Object.assign(s.players[0],{position:13,double:1});
- h.context.TEST.setOnline(s);
+ await h.table.apply(h.room(s));
  assert.equal(h.doc.querySelectorAll('.bonus-cell').length,3);
  assert.equal(h.doc.getElementById('powerStrip').classList.contains('hidden'),false);
  const button=h.doc.getElementById('doublePower');assert.equal(button.disabled,false);
- button.onclick();const sent=[];h.context.TEST.client({send:(type,payload)=>{sent.push({type,payload});return true}});
- await h.context.TEST.rollTurn();
- assert.equal(sent[0].payload.power,'double');
-});
-test('a burst of online moves keeps only the latest pending state and never replays duplicates',async()=>{
- const h=await ui(),before=Enhanced.createEnhancedGame(['A','B']);before.players.forEach(p=>p.position=1);h.context.TEST.setOnline(before);
- let release,calls=0;h.context.BS_DICE.roll=()=>{calls++;return calls===1?new Promise(r=>release=r):Promise.resolve();};
- let state=before;for(const version of [2,3,4]){state=Enhanced.playEnhancedTurn(state,[1]);h.context.TEST.onRoomState({code:'123456',status:'playing',variant:'adventure',me:{index:0},version,state});}
- release();await h.context.TEST.flush();assert.equal(h.context.TEST.get().moveCount,state.moveCount);assert.equal(calls,1,'obsolete pending moves must not add more animation delay');
- h.context.TEST.onRoomState({code:'123456',status:'playing',version:4,state});await h.context.TEST.flush();assert.equal(calls,1);
+ button.onclick();await h.context.TEST.rollTurn();
+ assert.deepEqual(h.table.sent.at(-1),{type:'roll',power:'double'});
 });
 
-test('online viewers automatically finish the reward animation and show both server dice',{timeout:1000},async()=>{
- const h=await ui(),before=Enhanced.createEnhancedGame(['A','B']);before.players[0].position=10;before.players[0].double=1;
- h.context.TEST.setOnline(before);
- const next=Enhanced.playEnhancedTurn(before,[1,1],{power:'double',bonusRoll:3});
- h.context.TEST.onRoomState({code:'123456',status:'playing',variant:'adventure',me:{index:1},version:2,state:next});
- await h.context.TEST.flush();
- assert.equal(h.doc.getElementById('bonusOverlay').classList.contains('hidden'),true);
- assert.equal(h.doc.getElementById('die2').classList.contains('hidden'),false);
- assert.equal(h.doc.getElementById('die2').dataset.value,'1');
- assert.equal(h.doc.getElementById('roll').disabled,false);
+test('the moves of a batch (yours and the bots\') play one after another, each once',async()=>{
+ const played=[];let release;
+ const player=createStepPlayer(async(next)=>{played.push(next.version);if(next.version===2)await new Promise(r=>release=r);});
+ player.push({version:2,status:'playing',state:{n:2}});
+ // while the first step animates, the server sends the bots' turns as steps of one update
+ player.push({version:5,status:'playing',state:{n:5},steps:[{version:3,state:{n:3}},{version:4,state:{n:4}}]});
+ player.push({version:5,status:'playing',state:{n:5}});
+ release();for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));
+ assert.deepEqual(played,[2,3,4,5,5],'every step in order; a repeated state is drawn again but never replays the moves');
+ player.push({version:4,status:'playing',state:{n:4}});for(let i=0;i<5;i++)await new Promise(r=>setImmediate(r));
+ assert.equal(played.length,5,'an older state is ignored');
 });
-test('same-version lobby updates still reveal newly joined friends',async()=>{
- const h=await ui();h.context.renderRoomPlayers=(el,room)=>{el.dataset.count=room.players.length};
- const lobby={code:'123456',status:'lobby',variant:'classic',version:3,playerLimit:2,me:{id:'a',role:'host'},players:[{id:'a',role:'host',ready:false,connected:true}]};
- h.context.TEST.onRoomState(lobby);await h.context.TEST.flush();assert.equal(h.doc.getElementById('roomPlayers').dataset.count,'1');
- h.context.TEST.onRoomState({...lobby,players:[...lobby.players,{id:'b',role:'guest',ready:false,connected:true}]});await h.context.TEST.flush();assert.equal(h.doc.getElementById('roomPlayers').dataset.count,'2');
+
+test('an opponent\'s turn plays out by itself and shows both server dice',{timeout:2000},async()=>{
+ const h=await ui(),before=Enhanced.createEnhancedGame(['A','B']);before.players[1].position=10;before.players[1].double=1;before.turn=1;
+ await h.table.apply(h.room(before));
+ const next=Enhanced.playEnhancedTurn(before,[1,1],{power:'double',bonusRoll:3});
+ await h.table.apply(h.room(next,{version:3}),{animate:true});
+ assert.equal(h.doc.getElementById('bonusOverlay').classList.contains('hidden'),true);
+ assert.equal(h.doc.getElementById('dieOpp2').classList.contains('hidden'),false,'the second die shows on the opponent\'s side');
+ assert.equal(h.doc.getElementById('dieOpp2').dataset.value,'1');
+});
+
+test('a lobby state goes to the shared menu and a match goes to the board',async()=>{
+ const h=await ui();let lobbies=0;h.table.options.onLobby=()=>{lobbies++};
+ await h.table.apply({code:'401234',status:'lobby',version:1,players:[{id:'a'}],me:{id:'a',role:'host'}});
+ assert.equal(lobbies,1);assert.equal(h.doc.getElementById('game').classList.contains('hidden'),true);
+ await h.table.apply(h.room(Enhanced.createEnhancedGame(['A','B'])));
+ assert.equal(h.doc.getElementById('game').classList.contains('hidden'),false);
+ assert.match(h.doc.getElementById('players').textContent,/بوت/,'a bot is tagged in the player list');
 });

@@ -15,7 +15,8 @@ test('the snake is the only current user-facing name and legacy race labels are 
 test('snake animation uses one floating pawn and a creature attack/eat/drop sequence', async()=>{
   const html=await read('public/snakes.html');
   const css=await read('public/assets/css/snakes-premium.css');
-  for(const marker of ['makeTravelPawn(','animatePawnPath(','animateSnakeEat(',"classList.add('motion-hidden')",'.snake-creature[data-from=']) assert.ok(html.includes(marker),`missing ${marker}`);
+  for(const marker of ['makeTravelPawn(','animatePawnPath(','animateSnakeEat(','.snake-creature[data-from=']) assert.ok(html.includes(marker),`missing ${marker}`);
+  assert.match(html,/classList\.add\(["']motion-hidden["']\)/);
   for(const marker of ['.snake-travel-pawn','.motion-hidden','.snake-creature.attacking','.snake-creature.digesting','@keyframes snakeLunge','@keyframes snakeDigest']) assert.ok(css.includes(marker),`missing ${marker}`);
 });
 
@@ -31,18 +32,18 @@ test('mobile snake stage is edge-to-edge and keeps the cockpit directly under th
 test('jackaroo ships a complete responsive petal board and legal move selection',async()=>{const jack=await read('public/jackaroo.html'),css=await read('public/assets/css/pro-games.css');for(const marker of ['app-jackaroo.css','renderPetalBoard','chooseMarble','highlightMoves','legalActions'])assert.ok(jack.includes(marker));assert.match(css,/\.jack-board/);assert.match(css,/\.track-hole/);assert.match(css,/\.safe-hole/)});
 
 test('genius question-selection board is a compact category-card grid with no score or point overlap', async()=>{
-  const local=await read('public/local.html'), online=await read('public/online.html'), css=await read('public/assets/css/quiz-board-v2.css');
-  assert.match(local,/assets\/css\/app-local\.css/); assert.match(online,/assets\/css\/app-online\.css/);
+  // 33.0.0: the quiz board lives online only (local.html now sends you there)
+  const online=await read('public/online.html'), css=await read('public/assets/css/quiz-board-v2.css');
+  assert.match(online,/assets\/css\/app-online\.css/);
   assert.match(css,/#game \.gameTop\{position:relative!important;top:auto!important;inset:auto!important/);
   assert.match(css,/#game \.boardWrap\{[\s\S]*overflow:visible!important/);
   assert.match(css,/#game \.board\{[\s\S]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
   assert.match(css,/#game \.pointPair\{[\s\S]*grid-template-columns:1fr 1fr!important/);
   assert.match(css,/@media\(max-width:760px\)\{[\s\S]*#game \.board\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
-  assert.match(local,/سؤال \$\{q===deck\[i\*2\]\?'أ':'ب'\}/);
 });
 
 test('3.2 PWA cache includes every new presentation layer', async()=>{
   const sw=await read('public/service-worker.js');
-  assert.match(sw,/busraj-games-v60-release-32-1-0/);
+  assert.match(sw,/busraj-games-v60-release-33-0-0/);
   for(const asset of ['/assets/css/snakes-premium.css','/assets/css/zahra-premium.css','/assets/css/jackaroo-next.css','/assets/css/quiz-board-v2.css']) assert.ok(sw.includes(asset),`missing ${asset}`);
 });

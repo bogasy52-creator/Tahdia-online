@@ -24,22 +24,22 @@ async function ui(){
  h.context.WebSocket=class{static OPEN=1;constructor(){this.readyState=0;peers.push(this)}close(code,reason){this.readyState=3;queueMicrotask(()=>this.onclose?.({code,reason}))}send(){}};
  h.context.fetch=async()=>Response.json({ok:true,status:'playing'});h.context.BS_CAREER={get:()=>({name:'A'}),account:()=>null};
  const source=(await readFile(new URL('../public/assets/js/serpent-ui.js',import.meta.url),'utf8')).replace(/^import .*?;\n/gm,'');
- vm.runInContext(source+'\nglobalThis.hooks={connectRoom,quickJoin,createRoom,quit,scheduleReconnect,acceptRoom,selectMode,applyInputs,keys,init:()=>{online=true;selfId="a";mode="online";networkActive=true;},duo:()=>{online=false;mode="duo";selfId="local-1";game=createSerpentGame([{id:"local-1",name:"A"},{id:"local-2",name:"B"}]);show("arenaPlay");},network:()=>networkActive};',vm.createContext(h.context));return {...h,peers,inputs};
+ vm.runInContext(source+'\nglobalThis.hooks={connectRoom,quickJoin,createRoom,quit,scheduleReconnect,acceptRoom,applyInputs,keys,init:()=>{online=true;selfId="a";mode="online";networkActive=true;},trial:()=>{online=false;mode="trial";selfId="local-1";game=createSerpentGame([{id:"local-1",name:"A"}]);show("arenaPlay");},network:()=>networkActive};',vm.createContext(h.context));return {...h,peers,inputs};
 }
 function room(round=1,rewardsComplete=true){const game=serpent.createSerpentGame([{id:'a',name:'A'},{id:'b',name:'B'}]);game.elapsed=35;game.status='finished';game.winners=['a'];return {code:'123456',round,status:'finished',rewardsComplete,players:[{id:'a',role:'host'},{id:'b',role:'guest'}],game:serpent.serpentSnapshot(game)}}
-test('duo boost keys control exactly one player and release on keyup',async()=>{
- const h=await ui();h.context.hooks.duo();for(const [key,expected] of [['Space',[true,false]],['ShiftLeft',[false,true]],['ShiftRight',[false,true]]]){
-  h.context.dispatchEvent({type:'keydown',code:key,preventDefault(){}});h.context.hooks.applyInputs(100);assert.deepEqual(h.inputs.slice(-2).map(input=>input.boost),expected);
-  h.context.dispatchEvent({type:'keyup',code:key});h.context.hooks.applyInputs(150);assert.deepEqual(h.inputs.slice(-2).map(input=>input.boost),[false,false]);
+test('33.0: Space and Shift boost your snake and release on keyup (one player per screen)',async()=>{
+ const h=await ui();h.context.hooks.trial();for(const key of ['Space','ShiftLeft','ShiftRight']){
+  h.context.dispatchEvent({type:'keydown',code:key,preventDefault(){}});h.context.hooks.applyInputs(100);assert.deepEqual(h.inputs.slice(-1).map(input=>[input.id,input.boost]),[['local-1',true]]);
+  h.context.dispatchEvent({type:'keyup',code:key});h.context.hooks.applyInputs(150);assert.deepEqual(h.inputs.slice(-1).map(input=>input.boost),[false]);
  }
 });
 test('quitting during a pending room status request cannot resurrect a websocket',async()=>{
  const h=await ui();let resolve;h.context.fetch=()=>new Promise(done=>{resolve=done});const operation=h.context.hooks.connectRoom('123456'),rejected=assert.rejects(operation,/connection_cancelled/);
  h.context.hooks.quit();resolve(Response.json({ok:true}));await rejected;assert.equal(h.peers.length,0);assert.equal(h.context.hooks.network(),false);assert.equal(h.doc.getElementById('arenaMenu').classList.contains('hidden'),false);
 });
-test('cancelled create and quick tickets do not remember or join a room after mode change',async()=>{
- for(const action of ['createRoom','quickJoin']){const h=await ui();let resolve;h.context.fetch=()=>new Promise(done=>{resolve=done});const operation=h.context.hooks[action]();h.context.hooks.selectMode('duo');resolve(Response.json({ok:true,code:'123456',hostKey:'secret',token:'secret'}));await operation;
-  assert.equal(h.peers.length,0);assert.equal(h.storage.has('busraj-serpent-room-v12'),false);assert.equal(h.doc.getElementById('arenaStart').disabled,false);
+test('cancelled create and quick tickets do not remember or join a room after leaving',async()=>{
+ for(const action of ['createRoom','quickJoin']){const h=await ui();let resolve;h.context.fetch=()=>new Promise(done=>{resolve=done});const operation=h.context.hooks[action]();h.context.hooks.quit();resolve(Response.json({ok:true,code:'123456',hostKey:'secret',token:'secret'}));await operation;
+  assert.equal(h.peers.length,0);assert.equal(h.storage.has('busraj-serpent-room-v12'),false);assert.equal(h.doc.getElementById('arenaMenu').classList.contains('hidden'),false);
  }
 });
 test('a superseded connection opens only the latest socket',async()=>{
@@ -58,15 +58,17 @@ test('finished snapshots refresh rewards once after completion and once again fo
  h.context.hooks.acceptRoom(room(2,true));await flush();assert.equal(refreshed,2);
 });
 test('arena quit exits stage fullscreen and does not steal Space from pause dialog buttons',async()=>{
- const h=await ui();h.context.hooks.duo();let exits=0;h.doc.fullscreenElement=h.doc.getElementById('arenaPlay');h.doc.exitFullscreen=async()=>{exits++;h.doc.fullscreenElement=null};h.doc.getElementById('arenaPause').onclick();
+ const h=await ui();h.context.hooks.trial();let exits=0;h.doc.fullscreenElement=h.doc.getElementById('arenaPlay');h.doc.exitFullscreen=async()=>{exits++;h.doc.fullscreenElement=null};h.doc.getElementById('arenaPause').onclick();
  assert.equal(h.doc.activeElement.id,'arenaContinue');let prevented=false;h.context.dispatchEvent({type:'keydown',code:'Space',preventDefault(){prevented=true}});assert.equal(prevented,false);
  h.context.hooks.quit();assert.equal(exits,1);assert.equal(h.doc.getElementById('arenaPlay').classList.contains('hidden'),true);
 });
-test('the enhanced bonus remains interactive in fullscreen and returns to body on exit',async()=>{
+test('the bonus die plays inside the fullscreen stage and returns to the page after (33.0: it rolls by itself)',async()=>{
  const h=await createDOM('snakes.html');Object.assign(h.context,snakes,adventure,movement,{chooseSnakePower});h.context.requestAnimationFrame=()=>0;h.context.BS_DICE.mountBonus=()=>{};
- await h.runInline('globalThis.testBonus=showBonusDie;');await h.runFile('assets/js/pro-experience.js');const stage=h.doc.getElementById('game'),overlay=h.doc.getElementById('bonusOverlay'),button=h.doc.getElementById('bonusRoll');
+ await h.runInline('globalThis.testBonus=showBonusDie;globalThis.testState=value=>{state=value};');await h.runFile('assets/js/pro-experience.js');const stage=h.doc.getElementById('game'),overlay=h.doc.getElementById('bonusOverlay'),button=h.doc.getElementById('bonusRoll');
  h.doc.fullscreenElement=stage;h.doc.dispatchEvent({type:'fullscreenchange'});assert.equal(overlay.parentElement,stage);
- const bonus=h.context.testBonus(3,0);assert.equal(overlay.classList.contains('hidden'),false);button.click();await flush();assert.equal(button.textContent,'متابعة اللعب');button.click();await bonus;assert.equal(overlay.classList.contains('hidden'),true);
+ h.context.testState({players:[{name:'سعد'}]});
+ const bonus=h.context.testBonus(3,0);assert.equal(overlay.classList.contains('hidden'),false);assert.equal(button.classList.contains('hidden'),true,'no button to press: the server already rolled it');
+ await bonus;assert.equal(overlay.classList.contains('hidden'),true);
  h.doc.fullscreenElement=null;h.doc.dispatchEvent({type:'fullscreenchange'});assert.equal(overlay.parentElement,h.doc.body);
 });
 test('board animation waits for an active pause before starting a new phase',async()=>{

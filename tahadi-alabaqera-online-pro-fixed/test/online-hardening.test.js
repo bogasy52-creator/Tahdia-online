@@ -39,7 +39,8 @@ test('board rooms have disconnect grace, turn deadlines, and safe rematch lobby 
   assert.match(worker, /handleTurnTimeout\(\)/);
   assert.match(worker, /cleanupStaleLobbyGuests\(\)/);
   assert.match(worker, /msg\.type === "rematch"[\s\S]*?if \(!this\.room\.rewardsComplete\)[\s\S]*?resetForRematch\(\)/);
-  assert.match(worker, /resetForRematch\(\)[\s\S]{0,320}ready = false/);
+  // 33.0.0: the quiz room first sends its bots away, then resets the people
+  assert.match(worker, /resetForRematch\(\) \{\s*for \(const id of this\.room\.order\) if \(this\.room\.players\[id\]\?\.bot\) delete[\s\S]{0,520}ready = false/);
 });
 
 test('room creation and probing are protected by request throttles', async () => {

@@ -1,17 +1,45 @@
-import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {createDOM} from './dom-harness.mjs';import {CATEGORIES} from '../src/questions.js';
-const Audio=class{play(){return Promise.resolve()}pause(){}};
-async function local(saved){let clock=1000000;const d=await createDOM('local.html',{Audio,BS_QUIZ_CATEGORIES:CATEGORIES,Date:class extends Date{static now(){return clock}},requestAnimationFrame:()=>1});d.context.BS_AUDIO.timerTick=()=>{};if(saved)for(const [k,v]of saved)d.storage.set(k,v);const code=[...d.html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(x=>x[1]).find(x=>x.includes('function openQuestion('));assert.ok(code);vm.runInContext(code.replace(/\}\)\(\);\s*$/,"window.__quiz={start:()=>$('#start').onclick(),get:()=>({teams,turn,current,left,deadline,completedIds,careerReceipt,questionVersion}),setSelected:ids=>{selected=ids},open:(id,index=0)=>{const cat=DATA.find(c=>c.id===id);openQuestion(cat,formed[id][index],document.querySelectorAll('.tile')[index])},assist:useAssist,tick,awardTo,readCheckpoint,goHome,showResults,formed:()=>formed};})();"),d.context);return {...d,quiz:d.context.__quiz,setClock:x=>clock=x};}
-function start(d){d.quiz.setSelected(CATEGORIES.slice(0,6).map(c=>c.id));d.quiz.start();}
-test('local quiz exposes helpers inside its modal and passing cannot transfer double points',async()=>{const d=await local();start(d);assert.equal(d.doc.querySelectorAll('.tile').length,36);d.quiz.open(CATEGORIES[0].id);assert.equal(d.doc.querySelector('#modalAssists').children.length,3);assert.equal(d.doc.querySelector('#game').inert,true);d.quiz.assist(0,'double');d.quiz.assist(0,'pass');assert.equal(d.quiz.get().turn,1);d.doc.querySelector('#revealBtn').click();d.quiz.awardTo(1);assert.equal(d.quiz.get().teams[1].score,100);assert.equal(d.quiz.get().completedIds.size,1);assert.equal(d.doc.querySelector('#game').inert,false);});
-test('local timer catches up after a background delay and freezes while paused',async()=>{const d=await local();start(d);d.quiz.open(CATEGORIES[0].id);d.setClock(1020000);d.quiz.tick();assert.equal(d.quiz.get().left,25);d.doc.querySelector('#pauseBtn').click();d.setClock(1050000);d.quiz.tick();assert.equal(d.quiz.get().left,25);d.doc.querySelector('#pauseBtn').click();d.setClock(1055000);d.quiz.tick();assert.equal(d.quiz.get().left,20);});
-test('undo restores points and assist state, and reset closes an open question with a new receipt',async()=>{const d=await local();start(d);const receipt=d.quiz.get().careerReceipt;d.quiz.open(CATEGORIES[0].id);d.quiz.assist(0,'double');d.doc.querySelector('#revealBtn').click();d.quiz.awardTo(0);assert.equal(d.quiz.get().teams[0].score,200);d.doc.querySelector('#undoResult').click();assert.equal(d.quiz.get().teams[0].score,0);assert.equal(d.quiz.get().teams[0].double,true);assert.equal(d.quiz.get().completedIds.size,0);d.quiz.open(CATEGORIES[0].id);d.doc.querySelector('#resetBtn').click();assert.equal(d.quiz.get().current,null);assert.ok(d.doc.querySelector('#modal').classList.contains('hidden'));assert.notEqual(d.quiz.get().careerReceipt,receipt);});
-test('between-question checkpoint resumes exact question IDs and refuses corrupt boards',async()=>{const d=await local();start(d);d.quiz.open(CATEGORIES[0].id);d.doc.querySelector('#revealBtn').click();d.quiz.awardTo(0);const checkpoint=d.quiz.readCheckpoint();assert.equal(checkpoint.completed.length,1);const copy=await local(d.storage);copy.doc.querySelector('#resumeQuiz').click();assert.equal(copy.quiz.get().completedIds.size,1);assert.equal(copy.quiz.get().teams[0].score,100);assert.equal(copy.doc.querySelectorAll('.tile').filter(x=>x.disabled).length,1);const key=[...copy.storage.keys()].find(x=>x.startsWith('bs-quiz-checkpoint-v19:'));checkpoint.formed[checkpoint.selected[0]][0]='forged-question';copy.storage.set(key,JSON.stringify(checkpoint));assert.equal(copy.quiz.readCheckpoint(),null);});
-test('revealed and timed out questions cannot consume more assists',async()=>{const d=await local();start(d);d.quiz.open(CATEGORIES[0].id);d.setClock(1100000);d.quiz.assist(0,'extra');assert.equal(d.quiz.get().teams[0].extra,true);d.quiz.tick();d.quiz.assist(0,'extra');assert.equal(d.quiz.get().teams[0].extra,true);d.doc.querySelector('#revealBtn').click();d.quiz.assist(0,'double');assert.equal(d.quiz.get().teams[0].double,true);});
-test('active quiz resumes paused time, spent assists and the same question, then undo restores the original turn',async()=>{const d=await local();start(d);d.quiz.open(CATEGORIES[0].id);d.setClock(1005000);d.quiz.tick();d.quiz.assist(0,'double');d.quiz.assist(0,'extra');d.doc.getElementById('pauseBtn').click();const saved=d.quiz.readCheckpoint();assert.equal(saved.active.paused,true);assert.equal(saved.active.left,55);const copy=await local(d.storage);copy.setClock(1015000);copy.doc.getElementById('resumeQuiz').click();assert.equal(copy.quiz.get().current.q.id,saved.active.qid);assert.equal(copy.quiz.get().left,55);assert.equal(copy.quiz.get().teams[0].double,false);assert.equal(copy.quiz.get().teams[0].extra,false);copy.doc.getElementById('revealBtn').click();copy.quiz.awardTo(0);assert.equal(copy.quiz.get().teams[0].score,200);copy.doc.getElementById('undoResult').click();assert.equal(copy.quiz.get().teams[0].double,true);assert.equal(copy.quiz.get().teams[0].extra,true);assert.equal(copy.quiz.get().teams[0].score,0);});
-test('active quiz resume uses the saved deadline rather than granting a new timer',async()=>{const d=await local();start(d);d.quiz.open(CATEGORIES[0].id);const id=d.quiz.get().current.q.id,copy=await local(d.storage);copy.setClock(1030000);copy.doc.getElementById('resumeQuiz').click();assert.equal(copy.quiz.get().current.q.id,id);assert.equal(copy.quiz.get().left,15);copy.setClock(1046000);copy.quiz.tick();assert.equal(copy.quiz.get().left,0);});
-test('quiz board filters each team and completed categories without deleting any questions',async()=>{const d=await local();start(d);d.doc.getElementById('boardB').click();const cols=d.doc.querySelectorAll('#board .col');assert.equal(cols.filter(col=>!col.hidden).length,3);assert.ok(cols.filter(col=>!col.hidden).every(col=>col.dataset.team==='1'));d.doc.getElementById('boardAll').click();for(let index=0;index<6;index++){d.quiz.open(CATEGORIES[0].id,index);d.doc.getElementById('revealBtn').click();d.quiz.awardTo(0);}d.doc.getElementById('boardRemaining').click();assert.equal(cols[0].hidden,true);assert.equal(d.doc.querySelectorAll('.tile').length,36);assert.equal(d.doc.getElementById('quizProgressFill').style.width,(6/36*100)+'%');});
-test('new quiz match closes previous results, and repeated result rendering records only one receipt',async()=>{const d=await local();start(d);d.quiz.showResults();d.quiz.showResults();assert.equal(d.records.length,1);assert.equal(d.doc.getElementById('resultOverlay').classList.contains('hidden'),false);d.quiz.goHome();assert.equal(d.doc.getElementById('resultOverlay').classList.contains('hidden'),true);d.quiz.start();assert.equal(d.doc.getElementById('resultOverlay').classList.contains('hidden'),true);assert.equal(d.quiz.get().current,null);});
-test('opening the setup page and switching accounts cannot overwrite a saved match',async()=>{const d=await local();start(d);d.quiz.open(CATEGORIES[0].id);const key=[...d.storage.keys()].find(k=>k.startsWith('bs-quiz-checkpoint-v19:')),saved=d.storage.get(key),copy=await local(d.storage);copy.doc.hidden=true;copy.doc.dispatchEvent({type:'visibilitychange'});assert.equal(copy.storage.get(key),saved);d.storage.set('bs_social_session','different-account.private');d.context.dispatchEvent({type:'bs-social-session'});assert.equal(d.storage.has('bs-quiz-checkpoint-v19:different-account'),false);assert.equal(d.storage.get(key),saved);assert.equal(d.quiz.get().current,null);});
-test('a resumed memory question does not show its hidden content a second time',async()=>{const d=await local(),category=CATEGORIES.find(c=>c.id==='memory');assert.ok(category);d.quiz.setSelected([category.id,...CATEGORIES.filter(c=>c.id!==category.id).slice(0,5).map(c=>c.id)]);d.quiz.start();d.quiz.open(category.id);assert.equal(d.quiz.get().current.previewing,true);const timer=[...d.timers.values()].find(t=>t.ms>=2500&&t.ms<=8080);assert.ok(timer);d.setClock(1000000+timer.ms);timer.fn();assert.equal(d.quiz.get().current.previewing,false);const copy=await local(d.storage);copy.setClock(1000000+timer.ms+1000);copy.doc.getElementById('resumeQuiz').click();assert.equal(copy.quiz.get().current.previewing,false);assert.match(copy.doc.getElementById('mediaArea').textContent,/انتهى عرض الذاكرة/);assert.equal(copy.doc.querySelector('.memoryStage'),null);});
-test('a visual hint remains consumed when its question is resumed',async()=>{const d=await local(),category=CATEGORIES.find(c=>c.id==='zoom');assert.ok(category);d.quiz.setSelected([category.id,...CATEGORIES.filter(c=>c.id!==category.id).slice(0,5).map(c=>c.id)]);d.quiz.start();d.quiz.open(category.id);d.doc.querySelector('.zoomTools button').click();assert.equal(d.quiz.get().current.zoomHint,true);const copy=await local(d.storage);copy.doc.getElementById('resumeQuiz').click();assert.equal(copy.quiz.get().current.zoomHint,true);assert.equal(copy.doc.querySelector('.zoomTools button').disabled,true);});
-test('resuming after a memory preview and its answer deadline expire cannot grant a new timer',async()=>{const d=await local(),category=CATEGORIES.find(c=>c.id==='memory');d.quiz.setSelected([category.id,...CATEGORIES.filter(c=>c.id!==category.id).slice(0,5).map(c=>c.id)]);d.quiz.start();d.quiz.open(category.id);assert.equal(d.quiz.readCheckpoint().active.previewing,true);const copy=await local(d.storage);copy.setClock(1060000);copy.doc.getElementById('resumeQuiz').click();assert.equal(copy.quiz.get().left,0);assert.equal(copy.quiz.get().current.previewing,false);copy.quiz.assist(0,'extra');assert.equal(copy.quiz.get().teams[0].extra,true);});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import { readFile } from 'node:fs/promises';
+
+// 33.0.0: the same-device quiz (local.html) moved online: everyone plays from their own
+// device, and someone alone plays bots. These tests used to drive its board; now the
+// page only sends an old link or shortcut on to the online quiz, keeping what it carried.
+const read = (file) => readFile(new URL('../public/' + file, import.meta.url), 'utf8');
+async function visit(search) {
+  const html = await read('local.html');
+  const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const went = [], link = { href: '' };
+  vm.runInNewContext(script, { location: { search, replace: (url) => went.push(url) }, document: { getElementById: () => link }, URLSearchParams, encodeURIComponent });
+  return { went, link };
+}
+
+test('an old same-device link goes on to the online quiz', async () => {
+  const { went, link } = await visit('');
+  assert.deepEqual(went, ['/online']);
+  assert.equal(link.href, '/online', 'the button says the same, for a browser that stops the redirect');
+  const html = await read('local.html');
+  assert.match(html, /<meta http-equiv="refresh" content="1;url=\/online">/, 'works without JavaScript too');
+  assert.match(html, /<meta name="robots" content="noindex">/);
+});
+
+test('the categories an old link carried come along to the room', async () => {
+  const { went } = await visit('?categories=science,sports,history,geo,cars,memory');
+  assert.deepEqual(went, ['/online?categories=science%2Csports%2Chistory%2Cgeo%2Ccars%2Cmemory']);
+});
+
+test('the old team relay link opens a room for two teams', async () => {
+  const { went } = await visit('?relay=1');
+  assert.deepEqual(went, ['/online?teams=4']);
+});
+
+test('the quiz hub opens an online room with the six categories you picked', async () => {
+  const hub = await read('assets/js/quiz-hub.js'), page = await read('quiz.html'), online = await read('online.html');
+  assert.match(hub, /location\.assign\('\/online\?categories='\+encodeURIComponent\(selected\.join\(','\)\)\)/);
+  assert.doesNotMatch(page, /href="\/local/);
+  assert.match(page, /href="\/online"/);
+  // the room takes them once, as soon as its host is in the lobby
+  assert.match(online, /sessionStorage\.setItem\('bs-quiz-categories-v33'/);
+  assert.match(online, /send\('set_categories',\{categories:picked\}\)/);
+});

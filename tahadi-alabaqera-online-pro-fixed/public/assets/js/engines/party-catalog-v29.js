@@ -1,9 +1,9 @@
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=10000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',real:true,image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة نفسها، بقواعد الرأس والذيل والقدرات.'},
- {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، حتى عشرة لاعبين.'},
- {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة؛ وبعدد آخر تنلعب هنا.'},
- {id:'zahra',name:'الزهرة',kind:'board',maxPlayers:6,real:true,image:'assets/game-cards-v27/zahra.svg',hint:'ستة ألوان، وأربعة أحجار لكل لاعب، على الطاولة نفسها.'},
+ {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
+ {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، والبوتات تكمل الناقص.'},
+ {id:'zahra',name:'الزهرة',kind:'board',maxPlayers:6,real:true,image:'assets/game-cards-v27/zahra.svg',hint:'ستة ألوان، وأربعة أحجار لكل لاعب، ستة في كل طاولة.'},
  {id:'dice',name:'تحدي النرد',kind:'board',maxPlayers:10,image:'assets/brand/dice-studio-v26.webp',hint:'ارمِ أو ثبّت رصيدك؛ الحظ والخطة يصنعان الفارق.'},
  {id:'quiz',name:'تحدي العباقرة',kind:'quiz',real:true,image:'assets/game-cards-v27/quiz.svg',hint:'نفس الأسئلة والوقت للجميع، مع الصور والصوت والذاكرة.'},
  {id:'sudoku',name:'سودوكو',kind:'puzzle',real:true,image:'assets/game-cards-v27/sudoku.svg',hint:'نفس اللوحة للجميع، وخمس محاولات خطأ لكل لاعب.'},
@@ -18,13 +18,18 @@ export const PARTY_GAMES=Object.freeze([
 ]);
 export const partyGame=id=>PARTY_GAMES.find(game=>game.id===id)||null;
 // 32.1.0: every game has its own seat limit; turn games stay small enough to play.
-export const gameCapacity=id=>partyGame(id)?.maxPlayers||PARTY_CAPACITY;
+// 33.0.0: every game takes the whole room (20). A table game seats `maxPlayers` per
+// table, so a bigger room plays it on several tables at once.
+export const tableSize=id=>partyGame(id)?.maxPlayers||PARTY_CAPACITY;
+export const gameCapacity=()=>PARTY_CAPACITY;
+/** How many tables (and how many on each) a game needs for this many players. */
+export function tablesFor(id,players){const size=tableSize(id),count=Math.max(1,Math.ceil(Math.max(1,players)/size));return Array.from({length:count},(_,i)=>Math.floor(players/count)+(i<players%count?1:0));}
 export function playersLabel(n){n=Number(n)||0;return n===1?'لاعب واحد':n===2?'لاعبان':n<=10?n+' لاعبين':n+' لاعبًا';}
-export function limitingGame(rows){let pick=null;for(const row of rows||[]){const id=typeof row==='string'?row:row?.game,cap=gameCapacity(id);if(partyGame(id)&&cap<PARTY_CAPACITY&&(!pick||cap<gameCapacity(pick)))pick=id;}return pick;}
+export function limitingGame(){return null;}
 export function capacityMessage(rows){const id=limitingGame(rows);return id?`«${partyGame(id).name}» حدها ${playersLabel(gameCapacity(id))}؛ عدد الغرفة الحالي أكبر`:'الغرفة ممتلئة';}
 export function normalizePlaylist(value){
  if(!Array.isArray(value)||value.length<1||value.length>20)throw Error('اختر من لعبة إلى 20 لعبة في القائمة');
  return value.map(row=>{const game=typeof row==='string'?row:row?.game;if(!partyGame(game))throw Error('لعبة غير معروفة');const difficulty=row?.difficulty??2,duration=row?.duration??180;if(!Number.isInteger(difficulty)||difficulty<1||difficulty>5||!Number.isInteger(duration)||duration<60||duration>900)throw Error('اختر صعوبة من 1 إلى 5 ومدة من دقيقة إلى 15 دقيقة');const worldId=row?.worldId??'classic';if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))throw Error('خريطة غير معروفة');return{game,difficulty,duration,worldId};});
 }
 
-export const playlistCapacity=rows=>Math.min(PARTY_CAPACITY,...rows.map(row=>gameCapacity(typeof row==='string'?row:row.game)));
+export const playlistCapacity=()=>PARTY_CAPACITY;

@@ -1232,3 +1232,207 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
  .rx-emote-glyph{animation:none!important}
  .rx-fab.is-cooling .rx-fab-ring{animation:none;--rx-p:1}
 }
+
+/* assets/css/game-menu-v33.css */
+/* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,
+   «غرفة مع أصحابك», the room lobby and your online friends. */
+.gm33{--gm-surface:#111b2a;--gm-surface-2:#172538;--gm-deep:#0c1524;--gm-line:#29394d;--gm-text:#f4f3ef;--gm-muted:#a7b4c6;--gm-gold:#f7ba55;--gm-mint:#8bd7bd;display:grid;gap:14px;margin-top:16px;color:var(--gm-text);font-family:inherit}
+.gm33 [hidden]{display:none!important}
+.gm33 button,.gm33 input{font:inherit}
+.gm33-menu{display:grid;gap:12px}
+.gm33.is-pending .gm33-quick,.gm33.is-pending .gm33-create,.gm33.is-pending .gm33-join-btn{opacity:.6;cursor:progress}
+
+/* how to play */
+.gm33-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;padding:5px;border:1px solid var(--gm-line);border-radius:16px;background:var(--gm-deep)}
+.gm33-mode{display:grid;gap:1px;align-content:center;text-align:start;min-height:58px;padding:10px 14px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--gm-muted);cursor:pointer;transition:background .18s,border-color .18s}
+.gm33-mode b{font-size:15px;font-weight:800;color:var(--gm-text)}
+.gm33-mode small{font-size:12px;line-height:1.5}
+.gm33-mode:hover{background:#142235}
+.gm33-mode.is-on{background:var(--gm-surface-2);border-color:#f7ba5570}
+.gm33-mode.is-on b{color:#ffd48a}
+.gm33-mode-note{margin:-2px 6px 0;font-size:12.5px;line-height:1.75;color:var(--gm-muted)}
+
+/* العب الحين — the one bold thing on the page */
+.gm33-quick{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center;width:100%;min-height:80px;padding:14px 18px;text-align:start;border:1px solid #ffdca1;border-radius:18px;background:linear-gradient(135deg,#ffdc91 0%,#f7ba55 52%,#e79c3a 100%);color:#2a1904;cursor:pointer;box-shadow:0 12px 30px #f7ba5524,inset 0 1px 0 #fff6}
+.gm33-quick-icon{grid-row:1/3;display:grid;place-items:center;width:50px;height:50px;border-radius:15px;background:#2a1904;color:#ffd98a;font-size:24px;line-height:1}
+.gm33-quick b{font-size:21px;font-weight:900;line-height:1.3}
+.gm33-quick small{font-size:12.5px;font-weight:600;line-height:1.6;color:#523a12}
+.gm33-quick:hover{filter:brightness(1.04)}
+.gm33-quick:active{transform:translateY(1px)}
+
+/* غرفة مع أصحابك */
+.gm33-friends{border:1px solid var(--gm-line);border-radius:18px;background:var(--gm-surface)}
+.gm33-friends>summary{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:12px;align-items:center;min-height:66px;padding:10px 16px;cursor:pointer;list-style:none}
+.gm33-friends>summary::-webkit-details-marker{display:none}
+.gm33-friends>summary::after{content:'';grid-row:1/3;grid-column:3;width:9px;height:9px;border-inline-start:2px solid var(--gm-muted);border-bottom:2px solid var(--gm-muted);transform:rotate(-45deg);transition:transform .2s;margin-inline-end:4px}
+.gm33-friends[open]>summary::after{transform:rotate(135deg)}
+.gm33-friends-icon{grid-row:1/3;display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--gm-surface-2);font-size:20px}
+.gm33-friends>summary b{font-size:16px;font-weight:800}
+.gm33-friends>summary small{grid-column:2;font-size:12px;color:var(--gm-muted)}
+.gm33-friends-body{display:grid;gap:10px;padding:2px 16px 16px}
+.gm33-create{min-height:50px;border:1px solid #8bd7bd88;border-radius:14px;background:#173a35;color:#d8f5e9;font-size:15px;font-weight:800;cursor:pointer}
+.gm33-create:hover{background:#1c4740}
+.gm33-join{display:grid;grid-template-columns:1fr auto;gap:8px}
+.gm33-join input{min-width:0;min-height:50px;padding:8px 14px;border:1px solid #3a4f66;border-radius:14px;background:var(--gm-deep);color:var(--gm-text);font-size:20px;font-weight:800;letter-spacing:4px;text-align:center}
+.gm33-join input::placeholder{font-size:14px;font-weight:500;letter-spacing:0;color:#7f91a6}
+.gm33-join-btn{min-width:84px;min-height:50px;border:1px solid #3a4f66;border-radius:14px;background:var(--gm-surface-2);color:var(--gm-text);font-size:15px;font-weight:800;cursor:pointer}
+.gm33-friends-note{font-size:12px;line-height:1.7;color:var(--gm-muted)}
+
+/* name and loadout */
+.gm33-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;padding:2px 4px}
+.gm33-who{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--gm-muted)}
+.gm33-name{color:var(--gm-text);font-weight:800}
+.gm33-account{padding:1px 8px;border-radius:999px;background:#183329;color:#9fe0c2;font-size:11px}
+.gm33-edit{min-height:32px;padding:2px 10px;border:1px solid #3a4f66;border-radius:10px;background:transparent;color:#ffd48a;font-size:12px;cursor:pointer}
+.gm33-name-input{min-height:34px;max-width:180px;padding:4px 10px;border:1px solid #5a6f86;border-radius:10px;background:var(--gm-deep);color:var(--gm-text);font-size:14px}
+.gm33-loadout{display:grid;gap:0;padding:6px 12px;border:1px solid var(--gm-line);border-radius:12px;background:var(--gm-deep);text-align:start}
+.gm33-loadout small{font-size:10.5px;color:var(--gm-muted)}
+.gm33-loadout b{font-size:12.5px;color:#ffd48a}
+.gm33-status{margin:0;min-height:0;font-size:13px;color:var(--gm-muted);text-align:center}
+.gm33-status:empty{display:none}
+.gm33-status.is-error{color:#ffb4a8}
+
+/* your open match */
+.gm33-resume-card{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:10px 14px;border:1px solid #8bd7bd66;border-radius:16px;background:#12302b}
+.gm33-resume-card>span{grid-row:1/3;font-size:22px;color:var(--gm-mint)}
+.gm33-resume-card>b{font-size:14px}
+.gm33-resume-card>small{grid-column:2;font-size:12px;color:#a9cfc1}
+.gm33-resume-btn{grid-row:1/3;grid-column:3;min-height:42px;padding:4px 16px;border:0;border-radius:12px;background:var(--gm-mint);color:#0b2a22;font-weight:900;cursor:pointer}
+.gm33-resume-drop{grid-row:1/3;grid-column:4;min-height:42px;padding:4px 10px;border:0;background:transparent;color:#a9cfc1;font-size:12px;cursor:pointer}
+
+/* the lobby */
+.gm33-lobby{display:grid;gap:14px;padding:16px;border:1px solid var(--gm-line);border-radius:20px;background:var(--gm-surface)}
+.gm33-lobby-head{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:14px}
+.gm33-lobby-head h2{margin:0;font-size:20px;line-height:1.4}
+.gm33-lobby-head p{margin:2px 0 0;font-size:13px;line-height:1.7;color:var(--gm-muted)}
+.gm33-ring{--left:1;position:relative;display:grid;place-items:center;width:74px;height:74px;border-radius:50%;background:conic-gradient(var(--gm-gold) calc(var(--left)*360deg),#223349 0)}
+.gm33-ring::before{content:'';position:absolute;inset:7px;border-radius:50%;background:var(--gm-surface)}
+.gm33-ring b{position:relative;font-size:26px;font-weight:900;color:#ffd48a;font-variant-numeric:tabular-nums}
+.gm33-ring.is-done b{color:var(--gm-mint)}
+.gm33-lobby-title{grid-column:1/-1}
+.gm33-code-box{display:grid;gap:0}
+.gm33-code-box small{font-size:11px;color:var(--gm-muted)}
+.gm33-code{padding:0;border:0;background:transparent;color:#ffd48a;font-size:34px;font-weight:900;letter-spacing:5px;cursor:pointer;font-variant-numeric:tabular-nums;text-align:start}
+.gm33-share{justify-self:end;min-height:44px;padding:4px 16px;border:1px solid #3a4f66;border-radius:12px;background:var(--gm-surface-2);color:var(--gm-text);font-weight:800;cursor:pointer}
+.gm33-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.gm33-player{display:flex;align-items:center;gap:10px;min-height:54px;padding:8px 10px;border:1px solid var(--gm-line);border-radius:14px;background:var(--gm-deep)}
+.gm33-player.is-me{border-color:#f7ba5577}
+.gm33-player.is-away{opacity:.6}
+.gm33-player.is-open{border-style:dashed;opacity:.7}
+.gm33-avatar{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:#22344b;color:#ffd48a;font-weight:900}
+.gm33-player-name{display:grid;min-width:0}
+.gm33-player-name b{overflow:hidden;font-size:14px;white-space:nowrap;text-overflow:ellipsis}
+.gm33-player-name small{font-size:11px;color:var(--gm-muted)}
+.gm33-online-friends{display:grid;gap:8px;padding:12px;border:1px solid var(--gm-line);border-radius:16px;background:var(--gm-deep)}
+.gm33-online-friends>b{font-size:13.5px}
+.gm33-friend-list{display:grid;gap:6px}
+.gm33-friend{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;min-height:40px}
+.gm33-dot{width:9px;height:9px;border-radius:50%;background:#5fd38f;box-shadow:0 0 0 3px #5fd38f2b}
+.gm33-friend b{overflow:hidden;font-size:13.5px;white-space:nowrap;text-overflow:ellipsis}
+.gm33-invite{min-height:36px;padding:2px 14px;border:1px solid #8bd7bd88;border-radius:10px;background:#173a35;color:#d8f5e9;font-weight:800;cursor:pointer}
+.gm33-all-friends{justify-self:start;min-height:34px;padding:2px 10px;border:0;background:transparent;color:#ffd48a;font-size:12.5px;cursor:pointer}
+.gm33-muted{font-size:12.5px;color:var(--gm-muted)}
+.gm33-friends-login{font-size:13px;color:#ffd48a}
+.gm33-lobby-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.gm33-start{flex:1 1 200px;min-height:54px;border:1px solid #ffdca1;border-radius:16px;background:linear-gradient(135deg,#ffdc91,#f7ba55);color:#2a1904;font-size:17px;font-weight:900;cursor:pointer}
+.gm33-start:disabled{opacity:.55;cursor:not-allowed}
+.gm33-wait{flex:1 1 200px;margin:0;font-size:13.5px;color:var(--gm-muted)}
+.gm33-leave{min-height:54px;padding:4px 18px;border:1px solid #3a4f66;border-radius:16px;background:transparent;color:var(--gm-muted);font-weight:800;cursor:pointer}
+
+@media (max-width:560px){
+  .gm33-quick{min-height:74px;padding:12px 14px}
+  .gm33-quick b{font-size:19px}
+  .gm33-lobby{padding:14px 12px}
+  .gm33-lobby-head{grid-template-columns:1fr auto}
+  .gm33-lobby-head:has(.gm33-ring){grid-template-columns:auto 1fr}
+  .gm33-code{font-size:30px}
+  .gm33-players{grid-template-columns:1fr 1fr}
+  .gm33-resume-card{grid-template-columns:auto 1fr auto}
+  .gm33-resume-drop{grid-row:auto;grid-column:2/4;justify-self:start;min-height:30px;padding:0}
+}
+@media (prefers-reduced-motion:reduce){.gm33 *{transition:none!important}}
+
+/* a bot in a player list (tables, the quiz, the arena): its strength is the dot */
+.bot-tag-v33{display:inline-flex;align-items:center;gap:4px;margin-inline-start:6px;padding:0 7px;border-radius:999px;background:#22344b;color:#c3cfdd;font-size:10.5px;font-weight:700;line-height:1.6;vertical-align:middle;white-space:nowrap}
+.bot-tag-v33::before{content:'';width:6px;height:6px;border-radius:50%;background:#e8c46a}
+.bot-tag-v33[data-level=hard]::before{background:#ff7d6b}
+.bot-tag-v33[data-level=easy]::before{background:#6fdcab}
+/* the quiz room: how you play, picked by the host */
+.quiz-mode-picker-v33{flex-wrap:wrap}
+.quiz-mode-picker-v33>div{flex-wrap:wrap}
+.quiz-mode-picker-v33 .modeOpt{min-height:40px;padding:6px 12px;border:1px solid var(--line,#2a3550);border-radius:11px;background:#0e1322;color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.quiz-mode-picker-v33 .modeOpt.active{border-color:#f0b94a;background:rgba(240,185,74,.14);color:#ffd884}
+.quiz-mode-picker-v33 .modeOpt:disabled{cursor:default}
+.quiz-mode-picker-v33>small{flex:1 0 100%;font-size:11.5px;color:#aab4c8}
+.quiz-lobby-wait-v33{margin:10px 0 0;text-align:center}
+.entry.entry-v33{display:block}
+.quiz-menu-v33{max-width:640px;margin:0 auto}
+.quiz-lobby-friends-v33{margin-top:10px}
+.quiz-lobby-friends-v33[hidden]{display:none}
+/* on a phone the menu comes first: the big brain picture waits for a wider screen */
+@media (max-width:640px){.quizOnlineHero .onlineHeroOrb{display:none}}
+
+/* assets/css/tables-v33.css */
+/* Tahdia 33.0.0 — the table games online: two dice (yours and the player on turn),
+   bots in the player list, and the snakes layout for them. */
+/* the two dice: yours and the player on turn */
+.dice-duel-v33{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.dice-duel-v33 .duel-die{position:relative;display:grid;justify-items:center;gap:6px;padding:10px 6px 8px;border:1px solid #29394d;border-radius:16px;background:#0c1524;transition:border-color .2s,box-shadow .2s,opacity .2s}
+.dice-duel-v33 .duel-die.is-turn{border-color:#f7ba55aa;box-shadow:0 0 0 3px #f7ba5522}
+.dice-duel-v33 .duel-die.is-idle{opacity:.72}
+.dice-duel-v33 .duel-die small{max-width:100%;overflow:hidden;font-size:11.5px;font-weight:700;color:#a7b4c6;white-space:nowrap;text-overflow:ellipsis}
+.dice-duel-v33 .duel-die b.duel-skin{font-size:10px;font-weight:600;color:#7f91a6}
+.dice-duel-v33 .duel-pair{display:flex;align-items:center;justify-content:center;gap:6px}
+.dice-duel-v33 .duel-pair .die.hidden{display:none!important}
+
+/* bots in the player list */
+
+
+/* a section hidden by the page stays hidden (an older rule forced the snakes game open) */
+:is(html,#v31) body.game-snakes #game.snl31.hidden{display:none!important}
+
+/* snakes: the two dice beside the roll button, the start lane under them */
+:is(html,#v31) body.game-snakes #game.snl31 .game-layout{grid-template-columns:minmax(0,1fr) minmax(128px,.9fr)!important;grid-template-areas:'board board' 'status status' 'dice roll' 'start start' 'power power' 'help help' 'log log' 'rules rules' 'more more'!important}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-stage.dice-duel-v33{width:auto!important;height:auto!important;padding:0!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;place-items:stretch!important}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-die{min-width:0;padding:8px 4px 6px}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .die.pro-die{--die-size:40px}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-pair{min-height:52px}
+:is(html,#v31) body.game-snakes #game.snl31 #roll{align-self:stretch!important;min-height:64px!important}
+:is(html,#v31) body.game-snakes #game.snl31 details.snl-more{grid-area:more!important}
+@media (min-width:900px){
+ :is(html,#v31) body.game-snakes #game.snl31 .game-layout{grid-template-columns:minmax(0,1fr) 330px!important;grid-template-areas:'board status' 'board dice' 'board roll' 'board start' 'board power' 'board help' 'board log' 'board rules' 'board more'!important}
+ :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .die.pro-die{--die-size:52px}
+}
+/* the players: you are outlined; a bot carries a small tag with its strength */
+:is(html,#v31) body.game-snakes #game.snl31 .player-row.is-me{box-shadow:inset 0 0 0 2px #f7ba5566!important}
+:is(html,#v31) body.game-snakes #game.snl31 .player-row>.bot-tag-v33{position:absolute;bottom:6px;inset-inline-end:10px;margin:0;z-index:2}
+.player-row>.bot-tag-v33{margin-inline-start:0}
+.winner-actions-v33{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.winner-actions-v33 .bs-btn{min-width:130px}
+
+/* zahra: the two dice beside the roll button */
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game.hidden{display:none!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .game-layout{grid-template-columns:minmax(0,1fr) minmax(128px,.9fr)!important;grid-template-areas:'board board' 'status status' 'dice roll' 'help help' 'rules rules'!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-stage.dice-duel-v33{width:auto!important;height:auto!important;padding:0!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;place-items:stretch!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .duel-die{min-width:0;padding:8px 4px 6px}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .die.pro-die{--die-size:40px}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .duel-pair{min-height:52px}
+:is(html,#v31) body.game-zahra #game.tbl31 #roll{align-self:stretch!important;min-height:64px!important}
+@media (min-width:900px){
+ :is(html,#v31) body.game-zahra #game.tbl31 .game-layout{grid-template-columns:minmax(0,1fr) 300px!important;grid-template-areas:'board status' 'board dice' 'board roll' 'board help' 'board rules'!important}
+ :is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .die.pro-die{--die-size:52px}
+}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .player-row.is-me{box-shadow:inset 0 0 0 2px #f7ba5566!important}
+
+/* the dice race: two big dice, and each player's way to 50 */
+.game-dice .dice-hero.dice-duel-v33{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;padding:16px!important;min-height:0!important}
+.game-dice .dice-duel-v33 .duel-die{padding:16px 8px 12px}
+.game-dice .dice-duel-v33 .die.pro-die{--die-size:72px}
+.game-dice .dice-duel-v33 .duel-pair{min-height:96px}
+.game-dice .dice-duel-v33 small{font-size:13px}
+.game-dice .player-row{position:relative;overflow:hidden}
+/* the row clips its progress line, so the «الدور» tag hangs inside its top edge */
+.game-dice .player-row.turn::after{top:0;right:auto;left:10px;padding:0 7px 1px;border-radius:0 0 7px 7px;font-size:8.5px;line-height:1.35;background:#3b3166;color:#efe6ff}
+.game-dice .player-row.is-me{box-shadow:inset 0 0 0 2px #f7ba5566}
+.dice-progress-v33{position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--c,#f7ba55) var(--p,0%),transparent var(--p,0%))}
+.game-dice .game-livebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;font-size:12px;color:#a7b4c6}

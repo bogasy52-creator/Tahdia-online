@@ -10,7 +10,8 @@ import {environment,api,signup} from './worker-harness.mjs';
 const now=Date.parse('2026-10-23T12:00:00Z');
 const state=seats=>({turn:0,players:Array.from({length:seats},(_,i)=>({name:'لاعب '+(i+1),tokens:[-1,-1,-1,-1]}))});
 test('the store shows every storefront design once, without retired or duplicate pieces or the manager items',async()=>{
- assert.equal(Career.COLLECTION.length,24);assert.equal(new Set(Career.COLLECTION.map(i=>i.id)).size,24);assert.equal(Career.COLLECTION.filter(i=>i.price===0).length,5);
+ // 33.0.0 adds «شخصيتي», a free stone that is the player's own hero
+ assert.equal(Career.COLLECTION.length,25);assert.equal(new Set(Career.COLLECTION.map(i=>i.id)).size,25);assert.equal(Career.COLLECTION.filter(i=>i.price===0).length,6);
  const h=await createDOM('shop.html');h.context.BS_CAREER={get:()=>Career.normalize({coins:5000}),now:()=>now};await loadAtelier(h);
  const shelf=Career.STOREFRONT.filter(id=>Career.CATALOG.find(i=>i.id===id).source!=='owner');
  assert.equal(h.doc.querySelectorAll('.atelier-product').length,shelf.length);assert.equal(new Set(Career.STOREFRONT).size,Career.STOREFRONT.length);

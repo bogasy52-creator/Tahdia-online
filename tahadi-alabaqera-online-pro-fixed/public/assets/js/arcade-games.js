@@ -1,5 +1,5 @@
 import {generatePuzzle,movePuzzle,memoryPair,shuffled,logicQuestion,arcadeRules} from './engines/arcade-engine.js?v=29.1.0';
-import {createMemoryTile,updateMemoryTile,MEMORY_FACES} from './memory-art-v30.js?v=32.1.0';
+import {createMemoryTile,updateMemoryTile,MEMORY_FACES} from './memory-art-v30.js?v=33.0.0';
 const game=document.body.dataset.arcade,$=id=>document.getElementById(id),now=()=>performance.now();
 const names={casual:'مريح',standard:'متوازن',expert:'محترف'};
 let active=false,paused=false,generation=0,receipt='',clock=null,delay=null,round=null,level='standard',rules={},pauseAt=0,pauseOffset=0,started=0,returnFocus=null;

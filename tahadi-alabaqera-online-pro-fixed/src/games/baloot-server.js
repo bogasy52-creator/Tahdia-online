@@ -7,6 +7,7 @@
 // need an alarm, which keeps Durable Object requests low.
 import { createBalootMatch, applyBalootAction, balootView, teamOf, partnerOf } from '../../public/assets/js/engines/baloot-engine.js';
 import { chooseBalootAction } from '../../public/assets/js/engines/baloot-bot.js';
+import { pickBotLevel } from './board-tables.js';
 
 export const BALOOT_SEATS = [0, 2, 1, 3]; // the first two players are partners
 export const BALOOT_LOBBY_MS = 10_000;
@@ -16,7 +17,7 @@ const TURN_MS = { bidding: 20_000, doubling: 15_000, playing: 25_000 };
 const BOT_NAMES = ['سلطان', 'نايف', 'بندر', 'مشعل', 'تركي', 'فيصل', 'ريان', 'فهد', 'عبدالله', 'خالد'];
 // How long a table needs to show each event, so a human is never timed out
 // while the moves before their turn are still on screen.
-const SHOW_MS = { deal: 1900, bid: 800, second_round: 1200, redeal: 1300, contract: 2700, double: 1000, declare: 0, play: 420, baloot: 500, trick: 1150, projects: 2700, play_started: 0, claim: 2900 };
+const SHOW_MS = { deal: 2300, bid: 1000, second_round: 1300, redeal: 1500, contract: 3000, double: 1300, declare: 0, play: 650, baloot: 600, trick: 1500, projects: 3000, play_started: 0, claim: 3300 };
 
 export function freeBalootSeat(room) {
   const taken = new Set(Object.values(room.players).map((p) => p.seat));
@@ -47,7 +48,9 @@ export function startBalootRoom(room, rng, now) {
   const pool = BOT_NAMES.filter((n) => !names.includes(n)).sort(() => rng() - 0.5);
   room.bots = [0, 1, 2, 3].filter((seat) => !names[seat]);
   room.botNames = {};
-  for (const seat of room.bots) { names[seat] = pool.shift() || 'بوت'; room.botNames[seat] = names[seat]; }
+  // 33.0.0: bots of every strength — sometimes easy, sometimes hard
+  room.botLevels = {};
+  for (const seat of room.bots) { names[seat] = pool.shift() || 'بوت'; room.botNames[seat] = names[seat]; room.botLevels[seat] = pickBotLevel(rng); }
   // 32.1.0: open play unless the room was made with strict rules
   room.state = createBalootMatch({ names, target: 152, rng, open: room.open !== false });
   room.status = 'playing';
@@ -63,12 +66,12 @@ export function startBalootRoom(room, rng, now) {
 }
 
 // Let bots (and absent players, after their grace) act until a human must.
-export function runBalootBots(room, rng, now, events, { level = 'hard' } = {}) {
+export function runBalootBots(room, rng, now, events, { level = null } = {}) {
   let guard = 0;
   while (room.state && ['bidding', 'doubling', 'playing'].includes(room.state.phase) && autoSeat(room, room.state.turn) && guard++ < 200) {
     const seat = room.state.turn;
     // a bot never cuts for a team that has a human in it
-    const action = chooseBalootAction(balootView(room.state, seat), seat, { level, rng, honest: !autoSeat(room, partnerOf(seat)) });
+    const action = chooseBalootAction(balootView(room.state, seat), seat, { level: level || room.botLevels?.[seat] || 'hard', rng, honest: !autoSeat(room, partnerOf(seat)) });
     if (!action) break;
     const result = applyBalootAction(room.state, seat, action, rng);
     room.state = result.state;
@@ -150,7 +153,7 @@ export function balootAlarm(room, rng, now) {
 export function balootPlayers(room) {
   const list = [];
   for (const p of Object.values(room.players)) list.push({ id: p.id, index: p.seat, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: false, character: p.character || '' });
-  for (const seat of room.bots || []) list.push({ id: 'bot-' + seat, index: seat, name: room.botNames?.[seat] || 'بوت', role: 'bot', ready: true, connected: true, bot: true, character: '' });
+  for (const seat of room.bots || []) list.push({ id: 'bot-' + seat, index: seat, name: room.botNames?.[seat] || 'بوت', role: 'bot', ready: true, connected: true, bot: true, level: room.botLevels?.[seat] || 'hard', character: '' });
   return list.sort((a, b) => a.index - b.index);
 }
 
@@ -160,6 +163,7 @@ export function balootRoomView(room, player) {
     state: room.state ? balootView(room.state, seat) : null,
     batch: room.batch || null,
     publicMatch: Boolean(room.publicMatch),
+    open: room.open !== false,
     lobbyDeadline: room.lobbyDeadline || null,
     turnTotal: room.turnTotal || null,
     nextHandAt: room.nextHandAt || null,

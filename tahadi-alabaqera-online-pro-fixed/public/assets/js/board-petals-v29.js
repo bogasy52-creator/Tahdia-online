@@ -247,8 +247,9 @@ export function createAtelierPiece({prefix='piece',color='#2f86e8',kind='classic
   if(number!=='')g.append(n('text',{x:0,y:.4,'text-anchor':'middle','font-size':1.7,'font-weight':800,fill:'#ffffff','paint-order':'stroke',stroke:'#102127','stroke-width':.3},number));
   return g;
 }
-function stoneGraphic(game,defs,prefix,seat,c){
-  const P=pieces(),color=BOARD_COLORS[seat],pawn=equipped('pawn');
+// 33.0.0: `own` is the seat's own stone from the shop (online tables); «شخصيتي» is a snakes piece
+function stoneGraphic(game,defs,prefix,seat,c,own){
+  const P=pieces(),color=BOARD_COLORS[seat],chosen=own||equipped('pawn'),pawn=chosen==='pawn-character'?'pawn-classic':chosen;
   if(game==='jackaroo'){
     const g=n('g',{transform:'scale(.66)'});
     if(P)g.append(P.marble(document,defs,{style:P.marbleFor(pawn),color,scope:prefix+'-m'+seat}));
@@ -288,9 +289,9 @@ function trace(svg,points,color,duration){
 
 /* ---------- Render ---------- */
 export function renderPetalBoard(target,state,options={}){
-  const {game='zahra',legal=[],legalStones=[],onPick=()=>{},onSelect=null,active=state.turn,material,pawn,preview=false}=options;
+  const {game='zahra',legal=[],legalStones=[],onPick=()=>{},onSelect=null,active=state.turn,material,pawn,preview=false,looks=null}=options;
   const g=boardGeometry(state),themeKey=material&&THEMES[material]?material:MATERIALS[material]||MATERIALS[equipped('table')]||'walnut',theme=THEMES[themeKey],pawnId=pawn?Object.keys(KINDS).find(k=>KINDS[k]===(LEGACY_KINDS[pawn]||pawn))||'pawn-classic':equipped('pawn');
-  const signature=JSON.stringify([game,active,themeKey,pawnId,legal,legalStones,state.players.map(p=>[p.name,p.tokens||p.marbles])]),existing=target.querySelector('.petal-board-v30'),previous=existing?motionHistory.get(target):null;
+  const signature=JSON.stringify([game,active,themeKey,pawnId,legal,legalStones,looks,state.players.map(p=>[p.name,p.tokens||p.marbles])]),existing=target.querySelector('.petal-board-v30'),previous=existing?motionHistory.get(target):null;
   if(!preview)surfaces.set(target,{state,options});
   if(existing&&previous?.signature===signature)return existing;
   const prefix='tbl-'+(++sequence),L=layoutFor(game,g.seats);
@@ -309,7 +310,7 @@ export function renderPetalBoard(target,state,options={}){
     piece.classList.add('petal-stone-v29','atelier-piece-v30');if(can)piece.classList.add('legal');
     piece.append(n('circle',{r:game==='jackaroo'?4.6:6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
     if(can)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?4.2:cellSize*.42,ry:game==='jackaroo'?4.2:cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
-    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize));piece.append(bob);
+    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat]));piece.append(bob);
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);
     const old=previous?.positions.get(key),oldValue=previous?.values.get(key),moved=old&&(Math.abs(old.x-p.x)>.01||Math.abs(old.y-p.y)>.01);

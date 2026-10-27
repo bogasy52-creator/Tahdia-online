@@ -26,9 +26,11 @@ function random(g){let x=g.randomState|0;x^=x<<13;x^=x>>>17;x^=x<<5;g.randomStat
 const FOOD_TYPES=[['apple',1,0],['berry',1,4],['citrus',2,1],['grapes',2,2],['star',3,1],['gem',5,3]];
 function food(g,x,y,value=1,kind='remains',hue=Math.floor(random(g)*5)){return {id:'f'+g.nextFood++,x:clamp(x,18,g.width-18),y:clamp(y,18,g.height-18),value,kind,radius:5+Math.sqrt(value),hue};}
 function replenish(g){while(g.food.length<g.foodCount){const roll=random(g),index=roll<.25?0:roll<.5?1:roll<.73?2:roll<.91?3:roll<.98?4:5,[kind,value,hue]=FOOD_TYPES[index];g.food.push(food(g,25+random(g)*(g.width-50),25+random(g)*(g.height-50),value,kind,hue));}}
+// 33.0.0: a bot may have its own strength (a mixed table); otherwise the room's
+const BOT_LEVELS=['easy','medium','hard'];
 function makeSnake(g,player,index,count){
  const a=TAU*index/Math.max(1,count),x=g.width/2+Math.cos(a)*g.width*.29,y=g.height/2+Math.sin(a)*g.height*.29,angle=a+Math.PI;
- return {id:String(player.id),name:String(player.name||'لاعب').replace(/[<>\u0000-\u001f]/g,'').slice(0,24),skin:String(player.skin||'snake-wild'),color:player.color||['#5ce9bb','#d8a3ff','#ffc778','#71cfff','#ff92b1','#c4e779','#f6b695','#8babff'][index%8],bot:player.bot===true,x,y,angle,targetAngle:angle,boost:false,alive:true,mass:28,score:0,kills:0,segments:Array.from({length:28},(_,i)=>({x:x-Math.cos(angle)*i*SPACING,y:y-Math.sin(angle)*i*SPACING})),respawnAt:null};
+ return {id:String(player.id),name:String(player.name||'لاعب').replace(/[<>\u0000-\u001f]/g,'').slice(0,24),skin:String(player.skin||'snake-wild'),color:player.color||['#5ce9bb','#d8a3ff','#ffc778','#71cfff','#ff92b1','#c4e779','#f6b695','#8babff'][index%8],bot:player.bot===true,...(player.bot===true&&BOT_LEVELS.includes(player.level)?{level:player.level}:{}),x,y,angle,targetAngle:angle,boost:false,alive:true,mass:28,score:0,kills:0,segments:Array.from({length:28},(_,i)=>({x:x-Math.cos(angle)*i*SPACING,y:y-Math.sin(angle)*i*SPACING})),respawnAt:null};
 }
 export function createSerpentGame(players,options={}){
  if(!Array.isArray(players)||players.length<1||players.length>20||new Set(players.map(p=>p.id)).size!==players.length)throw new Error('invalid_players');
@@ -36,9 +38,9 @@ export function createSerpentGame(players,options={}){
  const g={version:1,width:clamp(Number(options.width)||1800,800,2400),height:clamp(Number(options.height)||1800,800,2400),collisionMode:['tail-guard','predator',ARENA_RULES].includes(options.collisionMode)?options.collisionMode:'classic',nextTreasureAt:15,matchMode:options.matchMode==='survival'?'survival':'timed',duration:clamp(Number(options.duration)||120,.1,900),difficulty:['easy','medium','hard'].includes(options.difficulty)?options.difficulty:'medium',foodCount:clamp(Math.floor(options.foodCount??220),0,350),randomState:(Number(options.seed)>>>0)||41,nextFood:0,elapsed:0,tick:0,status:'playing',winners:[],events:[],snakes:[],food:[]};
  g.snakes=players.map((p,i)=>makeSnake(g,p,i,players.length));replenish(g);if(g.collisionMode===ARENA_RULES){g.powerDrops=options.powerDrops!==false;g.drops=[];g.nextDropAt=3;g.nextDropId=0;}if(options.worldId)initializeArenaWorld(g,options.worldId,{training:options.training,difficulty:options.trainingDifficulty});return g;
 }
-export function addSerpentBots(g,count){
+export function addSerpentBots(g,count,{levels=null}={}){
  const add=clamp(Math.floor(Number(count)||0),0,20-g.snakes.length),total=g.snakes.length+add;
- for(let i=0;i<add;i++){const index=g.snakes.length;g.snakes.push(makeSnake(g,{id:'bot-'+index,skin:['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma'][i%6],name:['فهد','وميض','كوبرا','برق','طيف','شهاب','مرجان','صقر'][i%8],bot:true},index,total));}
+ for(let i=0;i<add;i++){const index=g.snakes.length;g.snakes.push(makeSnake(g,{id:'bot-'+index,skin:['snake-wild','snake-aurora','snake-gold','snake-ice','snake-toxic','snake-plasma'][i%6],name:['فهد','وميض','كوبرا','برق','طيف','شهاب','مرجان','صقر'][i%8],bot:true,level:Array.isArray(levels)?levels[i]:undefined},index,total));}
  if(g.tick===0)g.snakes=g.snakes.map((s,i)=>makeSnake(g,s,i,total));
  if(g.world?.version===27&&g.tick===0)initializeArenaWorld(g,g.world.id,{training:g.world.training,difficulty:g.world.difficulty});
  return g;
@@ -78,17 +80,17 @@ function botSteering(g,s){
  }
  if(forgiving(g)){
   if(g.elapsed<(s.nextThinkAt||0))return;
-  s.nextThinkAt=g.elapsed+(g.difficulty==='hard'?.16:g.difficulty==='easy'?.38:.28);s.botThinkCount=(s.botThinkCount||0)+1;
+  const lv=s.level||g.difficulty;s.nextThinkAt=g.elapsed+(lv==='hard'?.16:lv==='easy'?.38:.28);s.botThinkCount=(s.botThinkCount||0)+1;
   let best=null,bestValue=Infinity;const hx=Math.cos(s.angle),hy=Math.sin(s.angle);
   for(const f of g.food){const dx=f.x-s.x,dy=f.y-s.y,d2=dx*dx+dy*dy;if(d2<1600||dx*hx+dy*hy<Math.sqrt(d2)*.4)continue;const score=d2/Math.max(1,f.value);if(score<bestValue){best=f;bestValue=score;}}
   let x=best?.x??s.x+hx*240,y=best?.y??s.y+hy*240;
   x=clamp(x,90,g.width-90);y=clamp(y,90,g.height-90);
   let ax=x-s.x,ay=y-s.y,length=Math.hypot(ax,ay)||1;ax/=length;ay/=length;
   for(const other of g.snakes){if(!other.alive||other.id===s.id)continue;const p=other.segments.at(-1);if(!p)continue;const dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy);if(d>1&&d<65){ax+=dx/d*(1-d/65);ay+=dy/d*(1-d/65);}}
-  if(g.difficulty==='hard')[ax,ay]=avoidHazards(g,s,ax,ay);
+  if(lv==='hard')[ax,ay]=avoidHazards(g,s,ax,ay);
   s.targetAngle=Math.atan2(ay,ax);s.boost=false;return;
  }
- const ahead=g.difficulty==='easy'?80:g.difficulty==='hard'?175:125;
+ const lv=s.level||g.difficulty,ahead=lv==='easy'?80:lv==='hard'?175:125;
  let best=null,bestDistance=Infinity;
  for(const f of g.food){const d=distance(s,f)/Math.sqrt(f.value);if(d<bestDistance){best=f;bestDistance=d;}}
  let ax=(best?.x??g.width/2)-s.x,ay=(best?.y??g.height/2)-s.y;
@@ -107,11 +109,11 @@ function kill(g,s,by=null,reason='collision'){
 }
 function move(g,s,dt){
  if(s.bot)botSteering(g,s);
- const turn=g.collisionMode===ARENA_RULES?arenaTurnRate(s):s.bot&&forgiving(g)?(g.difficulty==='hard'?4.6:3.2):SERPENT_TURN_RATE,desired=serpentSteeringAngle(g,s,s.targetAngle),delta=angleDelta(desired,s.angle);s.angle+=clamp(delta,-turn*dt,turn*dt);if(desired!==s.targetAngle)s.targetAngle=desired;
+ const turn=g.collisionMode===ARENA_RULES?arenaTurnRate(s):s.bot&&forgiving(g)?((s.level||g.difficulty)==='hard'?4.6:3.2):SERPENT_TURN_RATE,desired=serpentSteeringAngle(g,s,s.targetAngle),delta=angleDelta(desired,s.angle);s.angle+=clamp(delta,-turn*dt,turn*dt);if(desired!==s.targetAngle)s.targetAngle=desired;
  if(s.mass<=MIN_MASS)s.boost=false;
  let speed=g.collisionMode===ARENA_RULES?arenaSpeed(s,s.boost,g.elapsed):s.boost?SERPENT_BOOST_SPEED:SERPENT_SPEED;
  speed*=clamp(s.worldSpeed||1,.7,1.3);
- if(s.bot)speed*=forgiving(g)?(g.difficulty==='easy'?.62:g.difficulty==='hard'?.92:.72):(g.difficulty==='easy'?.8:g.difficulty==='hard'?1:.93);
+ if(s.bot){const lv=s.level||g.difficulty;speed*=forgiving(g)?(lv==='easy'?.62:lv==='hard'?.92:.72):(lv==='easy'?.8:lv==='hard'?1:.93);}
  if(s.boost){s.mass=Math.max(MIN_MASS,s.mass-4*dt);s.boostFoodTime=(s.boostFoodTime||0)+dt;if(s.boostFoodTime>=.25-1e-9){s.boostFoodTime=Math.max(0,s.boostFoodTime-.25);const tail=s.segments.at(-1)||s;g.food.push(food(g,tail.x,tail.y,1));}}else s.boostFoodTime=0;
  s.x+=Math.cos(s.angle)*speed*dt;s.y+=Math.sin(s.angle)*speed*dt;
  if(s.x<radius(s)||s.x>g.width-radius(s)||s.y<radius(s)||s.y>g.height-radius(s)){
@@ -180,5 +182,5 @@ export function stepSerpent(g,delta){
  g.tick=tick;g.events=events.map(e=>e.type==='treasure'?{...e,tick}:e);return g;
 }
 export function serpentSnapshot(g){
- return {...(g.world?.version===27?{world:arenaWorldSnapshot(g.world)}:{}),...(g.powerDrops?{powerDrops:true,drops:(g.drops||[]).map(d=>({...d}))}:{}),version:1,tick:g.tick,width:g.width,height:g.height,collisionMode:g.collisionMode||'classic',matchMode:g.matchMode||'timed',elapsed:g.elapsed,duration:g.duration,status:g.status,winners:[...g.winners],events:g.events.map(e=>({...e})),snakes:g.snakes.map(({id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments,deathReason,killedBy,powers,worldStats,worldSpeed,portalReadyAt})=>({...(g.world?.version===27?{worldStats:{...worldStats},worldSpeed:worldSpeed||1,portalReadyAt:portalReadyAt||0}:{}),...(g.collisionMode===ARENA_RULES?{deathReason:deathReason||null,killedBy:killedBy||null,powers:{...powers}}:{}),id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments:segments.map(p=>({...p}))})),food:g.food.map(f=>({...f}))};
+ return {...(g.world?.version===27?{world:arenaWorldSnapshot(g.world)}:{}),...(g.powerDrops?{powerDrops:true,drops:(g.drops||[]).map(d=>({...d}))}:{}),version:1,tick:g.tick,width:g.width,height:g.height,collisionMode:g.collisionMode||'classic',matchMode:g.matchMode||'timed',elapsed:g.elapsed,duration:g.duration,status:g.status,winners:[...g.winners],events:g.events.map(e=>({...e})),snakes:g.snakes.map(({id,name,color,skin,bot,level,x,y,angle,boost,alive,mass,score,kills,segments,deathReason,killedBy,powers,worldStats,worldSpeed,portalReadyAt})=>({...(bot&&level?{level}:{}),...(g.world?.version===27?{worldStats:{...worldStats},worldSpeed:worldSpeed||1,portalReadyAt:portalReadyAt||0}:{}),...(g.collisionMode===ARENA_RULES?{deathReason:deathReason||null,killedBy:killedBy||null,powers:{...powers}}:{}),id,name,color,skin,bot,x,y,angle,boost,alive,mass,score,kills,segments:segments.map(p=>({...p}))})),food:g.food.map(f=>({...f}))};
 }

@@ -3,6 +3,8 @@
 // screens players know), everyone plays it there, and when the match ends the
 // game's own room reports the final standings back to the party, which turns
 // them into round points. Games with no online room stay inside the party.
+import { roomCodeFor } from '../rooms/room-codes.js';
+
 export const PARTY_LINK_WAIT_MS = 45 * 60_000;   // the longest a party waits for a linked game
 export const PARTY_RETURN_MS = 60_000;           // after a linked game, time for everyone to come back
 
@@ -12,17 +14,25 @@ export const LINKED_GAMES = Object.freeze({
   'paths-online': { page: '/paths-online', min: 1, max: 20 },
   picture: { page: '/picture', min: 1, max: 20 },
   serpent: { page: '/serpent', min: 1, max: 20 },
-  snakes: { page: '/snakes', min: 2, max: 10 },
-  zahra: { page: '/zahra', min: 2, max: 6 },
-  jackaroo: { page: '/jackaroo', min: 4, max: 6, exact: [4, 6] },
+  // 33.0.0: the table games start with whoever is there (bots fill the table) and a
+  // bigger party plays them on several tables, each its own real room
+  snakes: { page: '/snakes', min: 1, max: 10, tables: true },
+  zahra: { page: '/zahra', min: 1, max: 6, tables: true },
+  jackaroo: { page: '/jackaroo', min: 1, max: 6, tables: true },
 });
 
 export function linkedGame(game) { return LINKED_GAMES[game] || null; }
 /** Can this many players start the real game? (board games need their table full) */
 export function linkable(game, count) {
   const g = linkedGame(game);
-  if (!g || !Number.isInteger(count) || count < g.min || count > g.max) return false;
-  return !g.exact || g.exact.includes(count);
+  return Boolean(g) && Number.isInteger(count) && count >= g.min && (count <= g.max || Boolean(g.tables));
+}
+/** The players of a linked round, split into tables no bigger than the game's (balanced). */
+export function linkTables(game, players) {
+  const g = linkedGame(game), size = g?.tables ? g.max : Infinity, count = Math.max(1, Math.ceil(players.length / size));
+  const tables = Array.from({ length: count }, () => []);
+  players.forEach((id, i) => tables[i % count].push(id));
+  return tables;
 }
 
 export function cleanPartyLink(value) {
@@ -31,7 +41,9 @@ export function cleanPartyLink(value) {
   return /^\d{6}$/.test(code) && /^[0-9a-f-]{36}$/i.test(round) && /^[A-Za-z0-9_-]{24,96}$/.test(token) ? { code, round, token } : null;
 }
 
-const roomCode = () => String(100000 + crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
+// 33.0.0: the code carries the game (see rooms/room-codes.js)
+const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo' };
+const roomCode = (game) => roomCodeFor(FAMILY[game] || game);
 const secret = () => crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
 
 // The init body of each game's room, the same as its own "create room" button sends.
@@ -43,7 +55,7 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   if (game === 'quiz') {
     // 4 and 6 open a team match; a party plays everyone against everyone
     const playerLimit = Math.min(20, Math.max(2, [4, 6].includes(room) ? room + 1 : room));
-    return { ns: 'ROOMS', name: code, url: 'https://room.internal/init', body: { code, hostKey, name: 'party', playerLimit, party } };
+    return { ns: 'ROOMS', name: code, url: 'https://room.internal/init', body: { code, hostKey, name: 'party', playerLimit, expected: count, party } };
   }
   if (game === 'sudoku') return { ns: 'ROOMS', name: 'sudoku:' + code, url: 'https://sudoku.internal/init', body: { code, hostKey, difficulty, capacity: room, party } };
   if (game === 'paths-online') return { ns: 'ROOMS', name: 'paths:' + code, url: 'https://paths.internal/init', body: { code, hostKey, difficulty, capacity: room, party } };
@@ -51,10 +63,10 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   if (game === 'serpent') {
     const duration = [60, 120, 180].includes(Number(settings?.duration)) ? Number(settings.duration) : 120;
     const playerLimit = Math.max(2, room), botCount = count < 2 ? 1 : 0;
-    return { ns: 'ROOMS', name: '__serpent__:' + code, url: 'https://serpent.internal/init', body: { code, hostKey, playerLimit, duration, botCount, difficulty: 'medium', matchMode: 'timed', worldId: settings?.worldId || 'classic', party } };
+    return { ns: 'ROOMS', name: '__serpent__:' + code, url: 'https://serpent.internal/init', body: { code, hostKey, playerLimit, duration, botCount, difficulty: 'mixed', matchMode: 'timed', worldId: settings?.worldId || 'classic', expected: count, party } };
   }
-  // snakes, zahra, jackaroo: a board room sized for exactly the players who play
-  return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game, playerLimit: count, name: '', variant: 'classic', party } };
+  // snakes, zahra, jackaroo: a board room for the players of this table (bots fill the rest)
+  return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game, playerLimit: game === 'jackaroo' ? (count > 4 ? 6 : 4) : count, expected: count, name: '', variant: 'classic', party } };
 }
 
 /** Opens the real room. Returns { ok, code, page } or { ok: false }. */
@@ -62,7 +74,7 @@ export async function createLinkedRoom(env, game, { settings, count, seats = cou
   const g = linkedGame(game);
   if (!g || !linkable(game, count)) return { ok: false, error: 'not_linkable' };
   for (let attempt = 0; attempt < 6; attempt++) {
-    const code = roomCode(), hostKey = secret(), spec = initFor(game, settings, count, code, hostKey, link, seats);
+    const code = roomCode(game), hostKey = secret(), spec = initFor(game, settings, count, code, hostKey, link, seats);
     const namespace = env?.[spec.ns];
     if (!namespace?.idFromName) return { ok: false, error: 'binding_missing' };
     const res = await namespace.get(namespace.idFromName(spec.name)).fetch(spec.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(spec.body) });

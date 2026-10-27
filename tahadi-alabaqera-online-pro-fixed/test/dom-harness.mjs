@@ -31,8 +31,16 @@ export async function createDOM(file,globals={}){
  const clean=source=>source.replace(/import[\s\S]*?from\s*['"][^'"]+['"];?/g,'').replace(/\bexport /g,'');
  const vmContext=vm.createContext(context);
  if(['jackaroo.html','zahra.html','party.html','shop.html','snakes.html'].includes(file))vm.runInContext(await readFile(new URL('../public/assets/js/pieces-v31.js',import.meta.url),'utf8'),vmContext);
+ // 33.0.0: the table games run their room through board-table-v33.js. The page helpers
+ // (seat looks, bot tags, dice skins) run here as they are; createTable is a stand-in that
+ // keeps the page's options, so a test can hand the page a room with tables.at(-1).apply().
+ if(['snakes.html','zahra.html','jackaroo.html','dice.html'].includes(file)){
+  vm.runInContext(clean(await readFile(new URL('../public/assets/js/board-table-v33.js',import.meta.url),'utf8')),vmContext);
+  const tables=[];context.tables=tables;
+  context.createTable=options=>{const table={options,room:null,client:null,me:undefined,isPublic:false,busy:false,sent:[],againCalls:0,left:false,send(type,payload={}){this.sent.push({type,...payload});return true},again(){this.againCalls++},leave(){this.left=true;options.onMenu?.()},menu:{say(){},menu(){},lobby(){},setMode(){},busy(){},name:()=>'A',mode:'classic',view:'menu'},destroy(){},apply:(room,flags={animate:false})=>{table.room=room;return room.status==='lobby'?options.onLobby?.(room):options.apply(room,flags)}};tables.push(table);return table;};
+ }
  if(['jackaroo.html','zahra.html','party.html','shop.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/board-petals-v29.js',import.meta.url),'utf8')),vmContext);
  if(['memory.html','party.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/memory-art-v30.js',import.meta.url),'utf8')),vmContext);
  if(file==='party.html')vm.runInContext('(()=>{'+clean(await readFile(new URL('../public/assets/js/party-boards-v32.js',import.meta.url),'utf8'))+'\nObject.assign(window,{SEAT_COLORS,renderPartySnakes,renderPartyDice});})();',vmContext);
- return {html,doc,context,records,timers,storage,setTime:t=>{clock=t},async runInline(hooks=''){const script=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];if(!script)throw new Error('missing inline module');const cleaned=clean(script).replace('wait=ms=>new Promise(r=>setTimeout(r,ms))','wait=ms=>Promise.resolve()');vm.runInContext(cleaned+'\n'+hooks,vmContext);await Promise.resolve();return context},async runFile(path,imports={}){Object.assign(context,imports);const source=await readFile(new URL('../public/'+path,import.meta.url),'utf8');vm.runInContext(clean(source),vmContext)}};
+ return {html,doc,context,records,timers,storage,setTime:t=>{clock=t},async runInline(hooks=''){const script=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];if(!script)throw new Error('missing inline module');const cleaned=clean(script).replace(/wait\s*=\s*\(?ms\)?\s*=>\s*new Promise\(\(?r\)?\s*=>\s*setTimeout\(r,\s*ms\)\)/,'wait=ms=>Promise.resolve()');vm.runInContext(cleaned+'\n'+hooks,vmContext);await Promise.resolve();return context},async runFile(path,imports={}){Object.assign(context,imports);const source=await readFile(new URL('../public/'+path,import.meta.url),'utf8');vm.runInContext(clean(source),vmContext)}};
 }

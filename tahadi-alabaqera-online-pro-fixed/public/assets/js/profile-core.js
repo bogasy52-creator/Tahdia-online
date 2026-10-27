@@ -80,6 +80,8 @@
   // game clients. The new storefront exposes COLLECTION only.
   const COLLECTION=Object.freeze([
     {id:'pawn-atlas',type:'pawn',name:'أطلس',subtitle:'تيتانيوم مصقول',design:'spire',price:0,color:'#a5b5bb',collection:'atelier-30'},
+    // 33.0.0: your hero walks the snakes & ladders board instead of a stone
+    {id:'pawn-character',type:'pawn',name:'شخصيتي',subtitle:'شخصيتك المفعّلة',design:'character',price:0,color:'#d9b45a',collection:'atelier-30'},
     {id:'pawn-rook',type:'pawn',name:'الحصن',subtitle:'هندسة معمارية',design:'rook',price:240,color:'#cc9d68',collection:'atelier-30'},
     {id:'pawn-orbit',type:'pawn',name:'المدار',subtitle:'نواة داخل حلقة',design:'orbit',price:380,color:'#d4ad68',collection:'atelier-30'},
     {id:'pawn-lance',type:'pawn',name:'الرمح',subtitle:'كربون ومعدن',design:'lance',price:320,color:'#7e969c',collection:'atelier-30'},
@@ -103,7 +105,7 @@
     {id:'victory-orbit',type:'victory',name:'احتفال المدار',subtitle:'حلقات متقاطعة',design:'orbit',price:480,color:'#8dd8c5',collection:'atelier-30'},
     {id:'title-tactician',type:'title',name:'صانع الخطط',subtitle:'توقيعك على الطاولة',design:'signature',price:180,color:'#c9b38e',collection:'atelier-30'},
     {id:'title-virtuoso',type:'title',name:'مايسترو',subtitle:'هوية المجموعات',design:'signature',price:420,color:'#e5b7a4',collection:'atelier-30'}
-  ].map(item=>Object.freeze({...item,description:item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'مادة '+item.subtitle+' للوحتي الجاكارو والزهرة، مع مسارات ونهايات واضحة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+  ].map(item=>Object.freeze({...item,description:item.id==='pawn-character'?'في السلم والثعبان تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'مادة '+item.subtitle+' للوحتي الجاكارو والزهرة، مع مسارات ونهايات واضحة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
   // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
   // phrases and board-wide moves. They are owned, never equipped, and the
   // first eight keep the ids older rooms already relay (`legacy`).
@@ -161,7 +163,7 @@
   // What the 31.0.0 storefront shows: every design with its own look, no
   // retired pieces and no second copy of an identical shape or material.
   const STOREFRONT=Object.freeze([
-    'pawn-classic','pawn-atlas','pawn-rook','pawn-lance','pawn-amethyst','pawn-orb','pawn-orbit','pawn-lotus','pawn-crown','pawn-monolith',
+    'pawn-classic','pawn-character','pawn-atlas','pawn-rook','pawn-lance','pawn-amethyst','pawn-orb','pawn-orbit','pawn-lotus','pawn-crown','pawn-monolith',
     'character-fox','character-cat','character-racer','character-robot','character-diver','character-princess','character-viking','character-gladiator','character-fairy','character-astronaut','character-cyber','character-samurai',
     'deck-classic','deck-four','deck-night','deck-emerald','deck-royal',
     'dice-studio','dice-porcelain','dice-smoke','dice-nebula','dice-oxblood','dice-milled','dice-crystal','dice-obsidian','dice-gold',

@@ -47,16 +47,16 @@ test('legendary bots still pursue players',()=>{
 test('renderer overlay safely exits when no camera is provided',()=>{
  const g=game();setupSerpentWorld(g,'classic');assert.doesNotThrow(()=>drawSerpentWorld({game:g}));
 });
-test('UI retains authenticated owner entitlement and uses shared online maps',async()=>{
+test('33.0: the arena is online — rooms open on the map you chose last, the lobby lists every map',async()=>{
  const s=await readFile(new URL('../public/assets/js/serpent-ui.js',import.meta.url),'utf8');
- assert.match(s,/ownerAllowed\(accountAccess/);
- assert.match(s,/source==='owner'/);
- assert.match(s,/worldId:world.id/);assert.match(s,/worldId:\$\('arenaWorld'\).value/);
- assert.match(s,/mode==='online'\?Math\.min\(6,20-Number/);
- assert.match(s,/difficulty==='legendary'\?'hard':difficulty/);
+ assert.match(s,/worldId: savedWorld\(\)/);
+ assert.match(s,/difficulty: "mixed"/);
+ assert.match(s,/BS_GAME_MENU\?\.mount/);
+ assert.doesNotMatch(s,/mode === "duo"|data-mode="solo"|localStart/,'no same-device or offline modes');
  const html=await readFile(new URL('../public/serpent.html',import.meta.url),'utf8');
- for(const token of ['value="classic"','value="neon"','value="forest"','value="crystals"','value="9"','value="legendary"','value="treasure"','arenaWorldStatus'])assert.ok(html.includes(token),token);
+ for(const token of ['value="classic"','value="neon"','value="forest"','value="crystals"','value="volcano"','value="ruins"','value="storm"','value="glacier"','value="mirage"','value="mixed"','arenaWorldStatus','id="gameMenu"'])assert.ok(html.includes(token),token);
  assert.doesNotMatch(html,/value="caves"|مغارات/);
+ assert.doesNotMatch(html,/نفس الجهاز|data-mode="duo"/);
 });
 
 

@@ -131,4 +131,4 @@ test('fullscreen controller applies adaptive landscape metrics to the live stage
   assert.equal(result.layoutEvent?.detail?.mode,'landscape');
 });
 
-test('snake board has one responsive CSS owner and bounded resizing',async()=>{const html=await readFile(new URL('../public/snakes.html',import.meta.url),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.doesNotMatch(html,/snake-reference-skin\.css|adaptive-board-layout\.js/);assert.match(html,/cancelAnimationFrame\(resizeFrame\)/);assert.match(html,/requestAnimationFrame\(\(\)=>state&&drawPaths\(\)\)/)});
+test('snake board has one responsive CSS owner and bounded resizing',async()=>{const html=await readFile(new URL('../public/snakes.html',import.meta.url),'utf8');assert.match(html,/app-(?:snakes|jackaroo)\.css/);assert.doesNotMatch(html,/snake-reference-skin\.css|adaptive-board-layout\.js/);assert.match(html,/cancelAnimationFrame\(resizeFrame\)/);assert.match(html,/requestAnimationFrame\(\(\)\s*=>\s*state\s*&&\s*drawPaths\(\)\)/)});

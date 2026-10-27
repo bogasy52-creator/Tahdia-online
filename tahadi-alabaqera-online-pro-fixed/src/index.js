@@ -7,12 +7,14 @@ import {imageGenerationConfig} from './images/generate.js';
 import {clientErrorReport} from './diagnostics/client-errors.js';
 import {PresenceRegistry,PRESENCE_OBJECT,cleanBeat} from './presence/presence-registry.js';
 import {cleanPartyLink,settlePartyLink,standings as partyStandings} from './party/party-link.js';
+import {roomCodeFor,resolveRoomCode} from './rooms/room-codes.js';
 
 import { DurableObject } from "cloudflare:workers";
 import { CATEGORIES } from "./questions.js";
 import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from "./games/snakes-server.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
+import { TABLE_GAMES, MAX_SEATS, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, DEFAULT_LOOK, FREE_LOOK_ITEMS } from "./games/board-tables.js";
 import { BALOOT_LOBBY_MS, freeBalootSeat, startBalootRoom, applyBalootMove, balootAlarm, balootPlayers, balootRoomView, balootWinFor } from "./games/baloot-server.js";
 import { validTalk } from "../public/assets/js/engines/baloot-talk.js";
 import { handleSocialRequest, authenticate, getSocialStub } from "./social/social-api.js";
@@ -26,6 +28,7 @@ import { LeaderboardStore, LEADERBOARD_OBJECT } from './leaderboard/leaderboard.
 import { Career } from './career/core.js';
 import { QuizImageBank, QUIZ_AI_OBJECT } from './quiz/ai-bank.js';
 import { aiCategory } from './quiz/ai-subjects.js';
+import { makeQuizBots, planBotAnswers, dueBotAnswers, nextBotAnswer, hurryBotAnswers } from './quiz/quiz-bots.js';
 import { isOwner } from './social/account-policy.js';
 
 class SocialDelegateBase {
@@ -34,7 +37,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='32.1.0';
+const RELEASE='33.0.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -406,7 +409,7 @@ export default {
       if(url.pathname==='/api/party/rooms'&&request.method==='POST'){
         const text=await request.text();if(text.length>6000)return json({ok:false,error:'طلب كبير'},413);
         let body;try{body=JSON.parse(text);normalizePlaylist(body.playlist);if(!Number.isInteger(body.capacity)||body.capacity<1||body.capacity>20)throw Error('اختر عددًا من 1 إلى 20');}catch(e){return json({ok:false,error:e.message||'إعدادات غير صالحة'},400);}
-        for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('party:'+code)),res=await stub.fetch('https://party.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:body.capacity,playlist:body.playlist})});if(res.status===201){const data=await res.json();return json({ok:true,code,hostKey,capacity:data.capacity});}if(res.status===400)return res;}
+        for(let i=0;i<8;i++){const code=roomCodeFor('party'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('party:'+code)),res=await stub.fetch('https://party.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:body.capacity,playlist:body.playlist})});if(res.status===201){const data=await res.json();return json({ok:true,code,hostKey,capacity:data.capacity});}if(res.status===400)return res;}
         return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
       const m=url.pathname.match(/^\/api\/party\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
@@ -423,7 +426,7 @@ export default {
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let settings;try{settings=JSON.parse(text);}catch{return json({ok:false,error:'إعدادات غير صالحة'},400);}
         if(!pathsSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 20'},400);
-        for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('paths:'+code));const res=await stub.fetch('https://paths.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
+        for(let i=0;i<8;i++){const code=roomCodeFor('paths'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('paths:'+code));const res=await stub.fetch('https://paths.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
       const m=url.pathname.match(/^\/api\/paths\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);
@@ -446,7 +449,7 @@ export default {
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let settings;try{settings=JSON.parse(text);}catch{return json({ok:false,error:'إعدادات غير صالحة'},400);}
         if(!sudokuSettings(settings))return json({ok:false,error:'اختر الصعوبة من 1 إلى 5 وعدد اللاعبين من 1 إلى 20'},400);
-        for(let i=0;i<8;i++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+code));const res=await stub.fetch('https://sudoku.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
+        for(let i=0;i<8;i++){const code=roomCodeFor('sudoku'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+code));const res=await stub.fetch('https://sudoku.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,difficulty:settings.difficulty,capacity:settings.capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
       const m=url.pathname.match(/^\/api\/sudoku\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);
@@ -466,7 +469,7 @@ export default {
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
       const limited=await rateLimit(request,env,'picture:'+ (url.pathname.endsWith('/generate')?'generate':'api'),url.pathname.endsWith('/generate')?12:120,60000);if(limited)return limited;
       if(url.pathname==='/api/picture/rooms'&&request.method==='POST'){
-        const body=await request.json().catch(()=>({})),capacity=body.capacity??2;if(!Number.isInteger(capacity)||capacity<1||capacity>20)return json({ok:false,error:'اختر عدد اللاعبين من 1 إلى 20'},400);for(let attempt=0;attempt<8;attempt++){const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+code));const res=await stub.fetch('https://picture.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity})});if(res.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
+        const body=await request.json().catch(()=>({})),capacity=body.capacity??2;if(!Number.isInteger(capacity)||capacity<1||capacity>20)return json({ok:false,error:'اختر عدد اللاعبين من 1 إلى 20'},400);for(let attempt=0;attempt<8;attempt++){const code=roomCodeFor('picture'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+code));const res=await stub.fetch('https://picture.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity})});if(res.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر إنشاء غرفة الآن'},503);
       }
       const m=url.pathname.match(/^\/api\/picture\/rooms\/(\d{6})\/(ws|status|generate|art\/[a-f0-9-]{36})$/);if(!m)return json({ok:false,error:'not_found'},404);
       if(request.method!==(m[2]==='generate'?'POST':'GET'))return json({ok:false,error:'method_not_allowed'},405);
@@ -522,14 +525,14 @@ export default {
         try { body = await request.json(); } catch {}
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 10; attempt++) {
-          const code = roomCode();
+          const code = roomCodeFor('quiz');
           const id = env.ROOMS.idFromName(code);
           const stub = env.ROOMS.get(id);
           const hostKey = token();
           const res = await stub.fetch("https://room.internal/init", {
             method: "POST",
             headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code, hostKey, name, playerLimit: body.playerLimit }),
+          body: JSON.stringify({ code, hostKey, name, playerLimit: body.playerLimit, teams: body.teams === true }),
           });
           if (res.status === 201) return json({ ok: true, code, hostKey });
         }
@@ -541,6 +544,14 @@ export default {
       }
     }
 
+    // 33.0.0: one box takes any room code: which game is it, and where is its page?
+    const resolveMatch = url.pathname.match(/^\/api\/rooms\/resolve\/(\d{6})$/);
+    if (resolveMatch) {
+      if (request.method !== 'GET') return json({ ok: false, error: 'method_not_allowed' }, 405);
+      const limited = await rateLimit(request, env, 'room-resolve', 40, 60_000); if (limited) return limited;
+      const found = await resolveRoomCode(env, resolveMatch[1]);
+      return json(found ? { ok: true, code: resolveMatch[1], ...found } : { ok: false, found: false, error: 'ما لقينا غرفة مفتوحة بهذا الرمز' }, found ? 200 : 404);
+    }
     const match = url.pathname.match(/^\/api\/rooms\/(\d{6})(\/ws|\/status)?$/);
     if (match) {
       const limited = await rateLimit(request, env, match[2] === "/ws" ? "quiz-ws" : "quiz-status", match[2] === "/ws" ? 80 : 180, 60_000);
@@ -577,11 +588,11 @@ export default {
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
-      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??2,duration=body.duration??120,botCount=body.botCount??0,difficulty=body.difficulty??'medium',matchMode=body.matchMode??'timed',worldId=body.worldId??'classic';
+      const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??20,duration=body.duration??120,botCount=body.botCount??3,difficulty=body.difficulty??'mixed',matchMode=body.matchMode??'timed',worldId=body.worldId??'classic';
       if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
-      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>20||!Number.isInteger(botCount)||botCount<0||botCount>Math.min(6,20-playerLimit)||!['easy','medium','hard'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'اختر من لاعبين إلى ثمانية؛ مجموع اللاعبين والبوتات لا يتجاوز عشرة'},400);
+      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>20||!Number.isInteger(botCount)||botCount<0||botCount>6||!['easy','medium','hard','mixed'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'إعدادات الحلبة غير صالحة: حتى 20 لاعبًا و6 بوتات'},400);
       for(let attempt=0;attempt<5;attempt++){
-        const code=roomCode(),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
+        const code=roomCodeFor('serpent'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
         const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration,botCount,difficulty,matchMode,worldId})});
         if(response.status===201)return json({ok:true,code,hostKey,playerLimit,duration,botCount,difficulty,matchMode,worldId});
         if(response.status!==409)return json({ok:false,error:'تعذر تشغيل الحلبة؛ تأكد من نشر السيرفر الجديد'},503);
@@ -612,11 +623,32 @@ export default {
       if (limited) return limited;
       if (!env.BOARD_ROOMS || typeof env.BOARD_ROOMS.idFromName !== "function") return json({ ok: false, code: "BOARD_BINDING_MISSING", error: "محرك الغرف غير مربوط بالسيرفر" }, 503);
       try {
-        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:baloot:v32"));
-        return await stub.fetch("https://balootquick.internal/assign", { method: "POST" });
+        // 33.0.0: open and strict play each have their own public tables
+        const body = await request.json().catch(() => ({}));
+        const open = body?.open !== false;
+        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(open ? "quick:baloot:v32" : "quick:baloot:strict:v33"));
+        return await stub.fetch("https://balootquick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ open }) });
       } catch (err) {
         if (isDurableRequestQuotaError(err)) throw err;
         console.error("baloot quick failed", err);
+        return json({ ok: false, error: "تعذر إيجاد طاولة الآن" }, 503);
+      }
+    }
+
+    // 33.0.0 «العب الحين» for the board tables: a seat on an open public table.
+    if (request.method === "POST" && url.pathname === "/api/board/quick") {
+      const limited = await rateLimit(request, env, "board-quick", 24, 60_000);
+      if (limited) return limited;
+      if (!env.BOARD_ROOMS || typeof env.BOARD_ROOMS.idFromName !== "function") return json({ ok: false, code: "BOARD_BINDING_MISSING", error: "محرك الغرف غير مربوط بالسيرفر" }, 503);
+      const body = await request.json().catch(() => ({}));
+      const game = String(body.game || ""), variant = game === 'snakes' && body.variant === 'adventure' ? 'adventure' : 'classic';
+      if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+      try {
+        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:" + game + ":" + variant + ":v33"));
+        return await stub.fetch("https://tablequick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ game, variant }) });
+      } catch (err) {
+        if (isDurableRequestQuotaError(err)) throw err;
+        console.error("board quick failed", err);
         return json({ ok: false, error: "تعذر إيجاد طاولة الآن" }, 503);
       }
     }
@@ -629,17 +661,17 @@ export default {
         let body = {};
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
-        if (!["snakes", "zahra", "jackaroo", "baloot"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        if (!["snakes", "zahra", "jackaroo", "dice", "baloot"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
         let variant = 'classic';
         if (game === 'snakes') {
           try { variant = normalizeSnakesVariant(body.variant); }
           catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
         }
-        // 32.1.0: Snakes & Ladders rooms take up to ten players
-        const playerLimit = game === "baloot" ? 4 : game === "jackaroo" ? (Number(body.playerLimit)===6?6:4) : Math.min(game==="zahra"?6:10, Math.max(2, Number(body.playerLimit) || 2));
+        // 33.0.0: a room takes whoever comes, up to the game's table; nobody picks a count
+        const playerLimit = game === "baloot" ? 4 : MAX_SEATS[game];
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
-          const code = roomCode();
+          const code = roomCodeFor(game);
           const id = env.BOARD_ROOMS.idFromName(code);
           const stub = env.BOARD_ROOMS.get(id);
           const hostKey = token();
@@ -669,10 +701,10 @@ export default {
         const id = env.BOARD_ROOMS.idFromName(code);
         const stub = env.BOARD_ROOMS.get(id);
         if (suffix === "/ws") {
-          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');headers.delete('x-bs-reactions');
+          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');headers.delete('x-bs-reactions');headers.delete('x-bs-dice');headers.delete('x-bs-pawn');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
           let named=null;
-          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);named=new URL(request.url);named.searchParams.set('name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));}}}
+          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);named=new URL(request.url);named.searchParams.set('name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));headers.set('x-bs-dice',String(data.career?.equipped?.dice||''));headers.set('x-bs-pawn',String(data.career?.equipped?.pawn||''));}}}
           return await stub.fetch(named?new Request(named,{method:request.method,headers}):new Request(request,{headers}));
         }
         return await stub.fetch("https://board.internal/status");
@@ -735,7 +767,7 @@ export class GameRoom extends DurableObject {
         if (a?.playerId&&(!this.room.players[a.playerId]?.connection||this.room.players[a.playerId].connection===a.connection)) online.add(a.playerId);
       } catch {}
     }
-    for (const p of Object.values(this.room.players)) p.connected = online.has(p.id);
+    for (const p of Object.values(this.room.players)) p.connected = p.bot ? true : online.has(p.id);
   }
 
   async persist() {
@@ -796,12 +828,15 @@ export class GameRoom extends DurableObject {
         lastReveal: null,
         recentQids: [],
         winnerId: null,
-        mode: [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
-        relayEnabled: [4,6].includes(Number(body.playerLimit)),
-        playerLimit: Number.isInteger(body.playerLimit)&&body.playerLimit>=2&&body.playerLimit<=20 ? body.playerLimit : 8,
+        // 33.0.0: «فريقين» opens a room for two teams (2 against 2 or 3 against 3, set by who
+        // came); otherwise everyone plays for themselves, up to twenty
+        mode: body.teams === true ? 'teams-6' : [4,6].includes(Number(body.playerLimit)) ? `teams-${Number(body.playerLimit)}` : 'free',
+        relayEnabled: body.teams === true || [4,6].includes(Number(body.playerLimit)),
+        playerLimit: body.teams === true ? 6 : Number.isInteger(body.playerLimit)&&body.playerLimit>=2&&body.playerLimit<=20 ? body.playerLimit : 20,
         expiresAt: now + 24 * 60 * 60 * 1000,
         // 32.1.0: opened by a group room, which gets the final ranking back
         partyLink: cleanPartyLink(body.party),
+        partyExpected: cleanPartyLink(body.party) ? Math.max(1, Math.min(20, Number(body.expected) || 2)) : undefined,
       };
       await this.loadAiPack();
       await this.persist();
@@ -876,6 +911,7 @@ export class GameRoom extends DurableObject {
         state: this.publicState(player.id),
       }));
       this.broadcastState();
+      await this.partyQuizArrival();
 
       return webSocketResponse(client, protocol);
     }
@@ -950,6 +986,21 @@ export class GameRoom extends DurableObject {
           }
           break;
 
+        case "set_mode":
+          // 33.0.0: the host picks in the room: everyone for themselves, or two teams
+          if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
+          {
+            const teams = msg.mode === 'teams', humans = this.room.order.filter((id) => !this.room.players[id]?.bot);
+            if (teams && humans.length > 6) return this.sendError(ws, "الفريقين حتى 6 لاعبين");
+            if (teams === String(this.room.mode || '').startsWith('teams-')) break;
+            this.room.mode = teams ? 'teams-6' : 'free';
+            this.room.playerLimit = teams ? 6 : 20;
+            this.room.relayEnabled = teams;
+            for (const [index, id] of humans.entries()) this.room.players[id].team = teams ? (index % 2 ? 'B' : 'A') : null;
+            await this.persistAndBroadcast();
+          }
+          break;
+
         case "set_relay":
           if(player.role!=='host'||this.room.status!=='lobby')return this.sendError(ws,'للمضيف فقط');
           if(!['teams-4','teams-6'].includes(this.room.mode)||typeof msg.enabled!=='boolean')return this.sendError(ws,'سلسلة الفريق متاحة لفريقين من 4 أو 6 لاعبين');
@@ -979,12 +1030,13 @@ export class GameRoom extends DurableObject {
         case "start":
           if (player.role !== "host") return this.sendError(ws, "للمضيف فقط");
           if (this.room.status !== "lobby") return;
-          if (this.room.order.length < 2) return this.sendError(ws, "يلزم لاعبان على الأقل");
-          if(this.room.mode!=='free'&&this.room.order.length!==this.room.playerLimit)return this.sendError(ws,"انتظر اكتمال الفريقين");
-          if(this.room.mode!=='free'&&['A','B'].some(team=>this.room.order.filter(id=>this.room.players[id].team===team).length!==this.room.playerLimit/2)){for(const [index,id]of this.room.order.entries()){this.room.players[id].team=index%2?'B':'A';this.room.players[id].ready=false;}await this.persistAndBroadcast();return this.sendError(ws,'أعدنا توازن الفريقين؛ أكدوا الاستعداد مجددًا');}
           if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال اللاعبين");
-          if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "يجب أن يكون جميع اللاعبين جاهزين");
           if (this.room.selectedCategories.length !== 6) return this.sendError(ws, "اختر 6 فئات");
+          if (this.room.partyLink && !this.room.matchId) return this.sendError(ws, "تبدأ الجولة لحالها أول ما يوصل أصحاب الجمعة");
+          {
+            const problem = this.seatForMatch();
+            if (problem) return this.sendError(ws, problem);
+          }
           await this.startMatch();
           break;
 
@@ -1066,7 +1118,7 @@ export class GameRoom extends DurableObject {
     const hostId = this.room.order.find((id) => this.room.players[id]?.role === "host");
     const host = hostId ? this.room.players[hostId] : null;
     if (host && !host.connected && host.disconnectedAt && now - host.disconnectedAt >= DISCONNECT_GRACE_MS) {
-      const successorId = this.room.order.find((id) => id !== hostId && this.room.players[id]?.connected);
+      const successorId = this.room.order.find((id) => id !== hostId && this.room.players[id]?.connected && !this.room.players[id]?.bot);
       if (successorId) {
         delete this.room.players[hostId];
         this.room.order = this.room.order.filter((id) => id !== hostId);
@@ -1086,6 +1138,7 @@ export class GameRoom extends DurableObject {
     const now = Date.now();
     const candidates = [this.room.expiresAt];
     if(this.room.status==='finished'&&this.room.rewardsComplete===false)candidates.push(this.room.rewardRetryAt||now+10000);
+    if(this.room.status==='lobby'&&this.room.partyLink&&this.room.lobbyDeadline)candidates.push(Math.max(this.room.lobbyDeadline,now+50));
     for (const id of this.room.order) {
       const p = this.room.players[id];
       if (!p?.connected && p?.disconnectedAt) candidates.push(p.disconnectedAt + DISCONNECT_GRACE_MS);
@@ -1116,7 +1169,7 @@ export class GameRoom extends DurableObject {
       const p = this.room.players[id];
       return {
         id: p.id, name: p.name, role: p.role, team:p.team, score: p.score,
-        ready: p.ready, connected: Boolean(p.connected),
+        ready: p.ready, connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined,
         powers: p.id === playerId ? p.powers : {
           double: p.powers.double, time: p.powers.time, block: p.powers.block
         },
@@ -1135,6 +1188,8 @@ export class GameRoom extends DurableObject {
       roundCount: this.room.roundCount,
       winnerId: this.room.winnerId,
       lastReveal: this.room.lastReveal,
+      party: this.room.partyLink ? { expected: this.room.partyExpected || 2, first: !this.room.matchId } : undefined,
+      lobbyDeadline: this.room.lobbyDeadline || null,
       current: null,
     };
 
@@ -1164,6 +1219,37 @@ export class GameRoom extends DurableObject {
     return out;
   }
 
+  // 33.0.0: a room plays with whoever came — no player count to pick and no «جاهز» step.
+  // Returns what stops the match, or null when it is set (bots added for someone alone).
+  seatForMatch() {
+    const humans = this.room.order.filter((id) => !this.room.players[id]?.bot);
+    if (this.room.mode !== 'free') {
+      // two teams of the people here: 2 against 2, or 3 against 3
+      if (![4, 6].includes(humans.length)) return "الفريقين يحتاجون 4 أو 6 لاعبين — الحين " + humans.length;
+      this.room.mode = 'teams-' + humans.length;
+      if (['A', 'B'].some((team) => humans.filter((id) => this.room.players[id].team === team).length !== humans.length / 2))
+        for (const [index, id] of humans.entries()) this.room.players[id].team = index % 2 ? 'B' : 'A';
+    } else if (humans.length < 2) {
+      // alone: two bots, each with its own strength, play with you
+      for (const bot of makeQuizBots(2, humans.map((id) => this.room.players[id].name))) {
+        this.room.players[bot.id] = { ...bot, role: 'guest', score: 0, ready: true, connected: true, disconnectedAt: null, powers: { double: false, time: false, block: false } };
+        this.room.order.push(bot.id);
+      }
+    }
+    return null;
+  }
+
+  // A quiz the group room opened starts by itself: once everyone it sent is in, or 30 seconds
+  // after the first came (with whoever is here).
+  async partyQuizArrival() {
+    const r = this.room;
+    if (!r?.partyLink || r.status !== 'lobby' || r.matchId) return;
+    this.syncConnectedFlags();
+    const here = r.order.filter((id) => r.players[id]?.connected && !r.players[id]?.bot).length;
+    if (here >= (r.partyExpected || r.playerLimit || 2)) { r.lobbyDeadline = null; if (!this.seatForMatch()) await this.startMatch(); return; }
+    if (here && !r.lobbyDeadline) { r.lobbyDeadline = Date.now() + PARTY_TABLE_WAIT_MS; await this.persistAndBroadcast(); await this.scheduleLobbyAlarm(); }
+  }
+
   async startMatch() {
     this.room.status = "playing";
     this.room.matchId=crypto.randomUUID();this.room.startedAt=Date.now();this.room.rewardsComplete=false;
@@ -1180,7 +1266,7 @@ export class GameRoom extends DurableObject {
       const p = this.room.players[id];
       p.score = 0;
       p.ready = true;
-      p.powers = { double: true, time: true, block: true };
+      p.powers = p.bot ? { double: false, time: false, block: false } : { double: true, time: true, block: true };
     }
     await this.startNextRound();
   }
@@ -1239,8 +1325,10 @@ export class GameRoom extends DurableObject {
       double: {},
       blocked: {},
     };
+    const bots = this.room.order.map((id) => this.room.players[id]).filter((p) => p?.bot);
+    if (bots.length) this.room.current.botPlan = planBotAnswers({ opensAt: answerOpensAt, deadline: answerOpensAt + responseMs, options: options.length, correct: correctIndex }, bots);
     await this.persistAndBroadcast();
-    await this.ctx.storage.setAlarm(this.room.current.deadline);
+    await this.ctx.storage.setAlarm(Math.min(this.room.current.deadline, nextBotAnswer(this.room.current.botPlan, {})));
   }
 
   opponentId(playerId){const player=this.room.players[playerId];return this.room.order.find(id=>id!==playerId&&this.room.players[id]?.connected&&(!player?.team||this.room.players[id].team!==player.team))||null;}
@@ -1279,7 +1367,11 @@ export class GameRoom extends DurableObject {
     c.answers[player.id] = { choice, at: now, bonus: speedBonus(c.deadline, now) };
 
     if (Object.keys(c.answers).length >= this.room.order.length) await this.finalizeSecret();
-    else await this.persistAndBroadcast();
+    else {
+      // every person has answered: the bots do not keep them waiting
+      if (c.botPlan && this.room.order.every((id) => this.room.players[id]?.bot || c.answers[id])) await this.ctx.storage.setAlarm(Math.min(c.deadline, hurryBotAnswers(c.botPlan, c.answers, now)));
+      await this.persistAndBroadcast();
+    }
   }
 
   async usePower(player, power) {
@@ -1361,7 +1453,7 @@ export class GameRoom extends DurableObject {
     }else{const list=this.room.order.map(id=>this.room.players[id]).sort((a,b)=>b.score-a.score);this.room.winnerId=list.length>1&&list[0].score===list[1].score?null:list[0]?.id||null;}
     this.room.expiresAt=Date.now()+86400000;
     await this.persistAndBroadcast();await this.saveQuizRewards();
-    if(this.room.partyLink&&!this.room.partyReported){const rows=this.room.order.map(id=>this.room.players[id]).filter(Boolean).sort((a,b)=>(b.score||0)-(a.score||0)).map(p=>({name:p.name,username:p.username,score:p.score||0,won:this.room.winnerId===p.id}));await settlePartyLink(this.env,this.room,'quiz',partyStandings(rows,(a,b)=>a.score===b.score));await this.persist();}
+    if(this.room.partyLink&&!this.room.partyReported){const rows=this.room.order.map(id=>this.room.players[id]).filter(p=>p&&!p.bot).sort((a,b)=>(b.score||0)-(a.score||0)).map(p=>({name:p.name,username:p.username,score:p.score||0,won:this.room.winnerId===p.id}));await settlePartyLink(this.env,this.room,'quiz',partyStandings(rows,(a,b)=>a.score===b.score));await this.persist();}
     this.broadcastState();await this.scheduleLobbyAlarm();
   }
   async saveQuizRewards(){
@@ -1370,6 +1462,8 @@ export class GameRoom extends DurableObject {
   }
 
   async resetForRematch() {
+    for (const id of this.room.order) if (this.room.players[id]?.bot) delete this.room.players[id];
+    this.room.order = this.room.order.filter((id) => this.room.players[id]);
     this.room.status = "lobby";
     this.room.roundIndex = -1;
     this.room.roundPlan = [];
@@ -1414,6 +1508,19 @@ export class GameRoom extends DurableObject {
     }
 
     if (["lobby", "finished"].includes(this.room.status)) {
+      if (this.room.status === 'lobby' && this.room.partyLink && !this.room.matchId && this.room.lobbyDeadline && now >= this.room.lobbyDeadline) {
+        this.syncConnectedFlags();
+        this.room.lobbyDeadline = null;
+        const away = this.room.order.filter((id) => !this.room.players[id]?.connected);
+        if (away.length < this.room.order.length) {
+          // those who left before it started give up their seats; someone here hosts it
+          for (const id of away) delete this.room.players[id];
+          this.room.order = this.room.order.filter((id) => this.room.players[id]);
+          if (!this.room.order.some((id) => this.room.players[id].role === 'host')) this.room.players[this.room.order[0]].role = 'host';
+          if (!this.seatForMatch()) { await this.startMatch(); return; }
+        }
+        await this.persistAndBroadcast();
+      }
       if(this.room.status==='finished'&&this.room.rewardsComplete===false&&now>=(this.room.rewardRetryAt||0)){await this.saveQuizRewards();this.broadcastState();}
       if (this.cleanupLobbySeats()) await this.persistAndBroadcast();
       await this.scheduleLobbyAlarm();
@@ -1426,8 +1533,19 @@ export class GameRoom extends DurableObject {
     }
 
     const c = this.room.current;
+    if (c?.mode === "secret" && c.phase === "secret" && c.botPlan && now < c.deadline) {
+      const due = dueBotAnswers(c.botPlan, c.answers, now);
+      for (const a of due) {
+        if (c.blocked?.[a.id]) { delete c.botPlan[a.id]; continue; }
+        c.answers[a.id] = { choice: a.choice, at: a.at, bonus: speedBonus(c.deadline, a.at) };
+      }
+      if (due.length) {
+        if (Object.keys(c.answers).length >= this.room.order.length) { await this.finalizeSecret(); return; }
+        await this.persistAndBroadcast();
+      }
+    }
     if (!c || now + 300 < c.deadline) {
-      if (c) await this.ctx.storage.setAlarm(c.deadline);
+      if (c) await this.ctx.storage.setAlarm(Math.min(c.deadline, c.mode === "secret" ? nextBotAnswer(c.botPlan, c.answers) : Infinity));
       return;
     }
 
@@ -1465,12 +1583,19 @@ export class BoardRoom extends DurableObject {
 
   async initializeRoom(body){
     if(this.room)return json({ok:false,error:'room_exists'},409);
-    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','baloot'].includes(game))return json({ok:false,error:'invalid_game'},400);
+    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
-    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:game==='baloot'?4:game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(game==='zahra'?6:20,Math.max(2,Number(body.playerLimit)||2)),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
-    // Baloot: a public table starts by itself after the lobby countdown.
-    if(game==='baloot'){room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch?now+BALOOT_LOBBY_MS:null;room.bots=[];room.batch=null;room.nextHandAt=null;room.open=body.open!==false;}
-    else room.partyLink=cleanPartyLink(body.party);
+    const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
+    // 33.0.0: a room takes as many as come (up to the game's table); a group room
+    // still opens a table sized for exactly its players.
+    const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,Number(body.playerLimit)||2))):MAX_SEATS[game];
+    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit,createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
+    // A public table (Baloot quick, or «العب الحين») starts by itself after the lobby countdown.
+    room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch?now+(game==='baloot'?BALOOT_LOBBY_MS:TABLE_LOBBY_MS):null;
+    if(game==='baloot'){room.bots=[];room.batch=null;room.nextHandAt=null;room.open=body.open!==false;}
+    else{room.partyLink=partyLink;
+      // 33.0.0: the players the group room sent to this table; it starts as soon as they are all in
+      if(partyLink)room.partyExpected=Math.max(1,Math.min(playerLimit,Number(body.expected)||playerLimit));}
     try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.publicMatch?room.lobbyDeadline:room.expiresAt);this.room=room;return json({ok:true},201)}
     catch(error){const requestId=crypto.randomUUID();this.room=null;try{await this.ctx.storage.delete('room');await this.ctx.storage.deleteAlarm()}catch(rollback){console.error('board initialization rollback failed',{requestId,error:rollback.message})}console.error('board initialization failed',{requestId,error:error.message});return json({ok:false,code:'ROOM_INITIALIZATION_FAILED',error:'تعذر حفظ الغرفة على السيرفر. حاول مرة أخرى.',requestId},503)}
   }
@@ -1481,7 +1606,7 @@ export class BoardRoom extends DurableObject {
     for (const ws of this.ctx.getWebSockets()) {
       try { const a = ws.deserializeAttachment(); if (a?.playerId) ids.add(a.playerId); } catch {}
     }
-    for (const p of Object.values(this.room.players)) p.connected = ids.has(p.id);
+    for (const p of Object.values(this.room.players)) p.connected = p.bot ? true : ids.has(p.id);
   }
 
   async persist() {
@@ -1505,10 +1630,7 @@ export class BoardRoom extends DurableObject {
   }
   // 32.1.0: the final ranking of a board match, for the group room that opened it
   boardStandings(){
-    const r=this.room,s=r.state,rows=r.order.map((id,i)=>{const p=r.players[id]||{},sp=s.players?.[i]||{};
-      const progress=r.game==='snakes'?Number(sp.position)||0:r.game==='zahra'?(sp.tokens||[]).reduce((n,t)=>n+Math.max(0,t+1),0):(sp.marbles||[]).reduce((n,t)=>n+Math.max(0,t+1),0);
-      const won=r.game==='jackaroo'?s.winnerTeam!==null&&s.winnerTeam!==undefined&&i%2===s.winnerTeam:s.winner===i;
-      return {name:p.name,username:p.username,score:progress,won};});
+    const r=this.room,winners=new Set(winnerSeats(r)),rows=r.order.map((id,i)=>({p:r.players[id]||{},i})).filter(({p})=>!p.bot).map(({p,i})=>({name:p.name,username:p.username,score:seatProgress(r,i),won:winners.has(i)}));
     rows.sort((a,b)=>Number(b.won)-Number(a.won)||b.score-a.score);
     return partyStandings(rows,(a,b)=>a.won===b.won&&(a.won||a.score===b.score));
   }
@@ -1559,7 +1681,11 @@ export class BoardRoom extends DurableObject {
 
   publicGameState(playerId) {
     if (!this.room?.state) return null;
-    const state = structuredClone(this.room.state);
+    return this.maskGameState(this.room.state, playerId);
+  }
+  // Jackaroo hands and deck stay private: each player sees only their own cards.
+  maskGameState(source, playerId) {
+    const state = structuredClone(source);
     if (this.room.game === "jackaroo") {
       const me = this.playerIndex(playerId);
       state.deck = Array(state.deck?.length || 0).fill("?");
@@ -1569,7 +1695,7 @@ export class BoardRoom extends DurableObject {
     return state;
   }
 
-  publicState(playerId) {
+  publicState(playerId, steps = null) {
     if (!this.room) return null;
     const me = this.room.players[playerId];
     if (this.room.game === 'baloot') {
@@ -1593,24 +1719,31 @@ export class BoardRoom extends DurableObject {
       startedAt: this.room.startedAt || null,
       players: this.room.order.map((id, index) => {
         const p = this.room.players[id];
-        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected),...(this.room.game==='snakes'?{character:p.character||DEFAULT_BOARD_CHARACTERS[index]}:{}) };
+        const look = p.look || { ...DEFAULT_LOOK, character: p.character || DEFAULT_LOOK.character };
+        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined, look, character: look.character };
       }),
       me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
+      publicMatch: Boolean(this.room.publicMatch),
+      party: this.room.partyLink ? { expected: this.room.partyExpected || this.room.playerLimit, first: !this.room.startedAt } : undefined,
+      lobbyDeadline: this.room.lobbyDeadline || null,
       pendingRoll: this.room.pendingRoll,
       turnDeadline: this.room.turnDeadline || null,
+      turnTotal: this.room.turnTotal || null,
       state: this.publicGameState(playerId),
+      // 33.0.0: the moves since the last update (the player's and the bots'), to animate in order
+      steps: steps?.list?.length ? steps.list.map((step) => ({ version: step.version, pendingRoll: step.pendingRoll, state: this.maskGameState(step.state, playerId) })) : undefined,
     };
   }
 
   sendError(ws, message) { try { ws.send(JSON.stringify({ type: "error", message })); } catch {} }
 
-  broadcast() {
+  broadcast(steps = null) {
     if (!this.room) return;
     this.syncConnected();
     for (const ws of this.ctx.getWebSockets()) {
       const p = this.playerForSocket(ws);
       if (!p) continue;
-      try { ws.send(JSON.stringify({ type: "state", state: this.publicState(p.id) })); } catch {}
+      try { ws.send(JSON.stringify({ type: "state", state: this.publicState(p.id, steps) })); } catch {}
     }
   }
 
@@ -1634,7 +1767,7 @@ export class BoardRoom extends DurableObject {
     const hostId = this.room.order.find((id) => this.room.players[id]?.role === "host");
     const host = hostId ? this.room.players[hostId] : null;
     if (host && !host.connected && host.disconnectedAt && now - host.disconnectedAt >= DISCONNECT_GRACE_MS) {
-      const successorId = this.room.order.find((id) => id !== hostId && this.room.players[id]?.connected);
+      const successorId = this.room.order.find((id) => id !== hostId && this.room.players[id]?.connected && !this.room.players[id]?.bot);
       if (successorId) {
         delete this.room.players[hostId];
         this.room.order = this.room.order.filter((id) => id !== hostId);
@@ -1651,10 +1784,8 @@ export class BoardRoom extends DurableObject {
     if (!this.room) return;
     const now = Date.now();
     const candidates = [this.room.expiresAt];
-    if (this.room.game === 'baloot') {
-      if (this.room.status === 'lobby' && this.room.publicMatch && this.room.lobbyDeadline) candidates.push(this.room.lobbyDeadline);
-      if (this.room.status === 'playing' && this.room.nextHandAt) candidates.push(this.room.nextHandAt);
-    }
+    if (this.room.status === 'lobby' && (this.room.publicMatch || this.room.partyLink) && this.room.lobbyDeadline) candidates.push(this.room.lobbyDeadline);
+    if (this.room.game === 'baloot' && this.room.status === 'playing' && this.room.nextHandAt) candidates.push(this.room.nextHandAt);
     if (this.room.status === 'finished' && !this.room.rewardsComplete) candidates.push(this.room.rewardRetryAt || now + 10000);
     if (this.room.status === "playing" && this.room.turnDeadline) candidates.push(this.room.turnDeadline);
     if (["lobby", "finished"].includes(this.room.status)) {
@@ -1670,10 +1801,22 @@ export class BoardRoom extends DurableObject {
     if (Number.isFinite(next)) await this.ctx.storage.setAlarm(Math.max(now + 50, next));
   }
 
-  async saveAndBroadcast() {
+  async saveAndBroadcast(steps = null) {
     await this.persist();
-    this.broadcast();
+    this.broadcast(steps);
     await this.scheduleNextAlarm();
+  }
+
+  // 33.0.0: after any move on a board table: the clock for the next person, or the end.
+  async settleTable(steps) {
+    if (tableOver(this.room)) this.finishGame();
+    else {
+      const seat = this.room.state.turn, id = this.room.order[seat], person = this.room.players[id];
+      const ms = person && !person.connected ? TABLE_TURN_MS.away : this.room.publicMatch ? TABLE_TURN_MS.quick : TABLE_TURN_MS.room;
+      this.room.turnTotal = ms;
+      this.room.turnDeadline = Date.now() + stepsTime(this.room, steps) + ms;
+    }
+    await this.saveAndBroadcast(steps);
   }
 
   async fetch(request) {
@@ -1682,8 +1825,9 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
     if (url.hostname === "presence.internal") { this.presence ??= new PresenceRegistry(this.ctx); return this.presence.fetch(request); }
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
-    if (url.hostname === "balootquick.internal") return this.ctx.blockConcurrencyWhile(() => this.balootQuick());
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','baloot'],snakesVariants:['classic','adventure']});
+    if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
+    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'))); }
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','adventure']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -1719,11 +1863,18 @@ export class BoardRoom extends DurableObject {
         player = this.addPlayer(name, this.room.order.length === 0 && this.room.partyLink ? "host" : "guest");
       } else if (name) player.name = name;
 
-      if(this.room.game==='snakes'||this.room.game==='baloot'){
+      {
         let owned=[];try{owned=JSON.parse(request.headers.get('x-bs-characters')||'[]')}catch{}
         player.allowedCharacters=['fox',...(Array.isArray(owned)?owned:[])].filter((id,index,list)=>BOARD_CHARACTERS.includes(id)&&list.indexOf(id)===index);
         const requested=url.searchParams.get('character'),equipped=request.headers.get('x-bs-character');
         if(this.room.status==='lobby')player.character=player.allowedCharacters.includes(equipped)?equipped:player.allowedCharacters.includes(requested)?requested:'fox';
+        // 33.0.0: the dice and stone a player equipped. An account's come from its career
+        // (set by the Worker); a guest shows the free ones it picked.
+        if(this.room.status==='lobby'){
+          const account=Boolean(request.headers.get('x-bs-account')),free=new Set(FREE_LOOK_ITEMS);
+          const want=(header,param)=>account?request.headers.get(header):(free.has(url.searchParams.get(param))?url.searchParams.get(param):'');
+          player.look=cleanLook({dice:want('x-bs-dice','dice'),pawn:want('x-bs-pawn','pawn'),character:player.character});
+        }
       }
       if(request.headers.get('x-bs-account'))player.username=request.headers.get('x-bs-account');
       {let bought=[];try{bought=JSON.parse(request.headers.get('x-bs-reactions')||'[]')}catch{}player.reactions=(Array.isArray(bought)?bought:[]).filter((id,index,list)=>PAID_REACTIONS.has(id)&&list.indexOf(id)===index);}
@@ -1738,6 +1889,7 @@ export class BoardRoom extends DurableObject {
       await this.persist();
       server.send(JSON.stringify({ type: "welcome", playerId: player.id, token: player.token, state: this.publicState(player.id) }));
       this.broadcast();
+      await this.partyTableArrival();
       return webSocketResponse(client, protocol);
     }
     return json({ ok: false, error: "not_found" }, 404);
@@ -1745,15 +1897,15 @@ export class BoardRoom extends DurableObject {
 
   // Quick Baloot: one Durable Object hands out seats on an open public table
   // and opens a new one when it is full or about to start.
-  async balootQuick() {
+  async balootQuick(openPlay = true) {
     const now = Date.now();
     let open = (await this.ctx.storage.get('balootQuick')) || null;
     if (open && (open.assigned >= 4 || now >= open.closesAt)) open = null;
     if (!open) {
       for (let attempt = 0; attempt < 8 && !open; attempt++) {
-        const code = roomCode();
+        const code = roomCodeFor('baloot');
         const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
-        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game: 'baloot', playerLimit: 4, publicMatch: true }) });
+        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game: 'baloot', playerLimit: 4, publicMatch: true, open: openPlay }) });
         if (res.status === 201) open = { code, createdAt: now, closesAt: now + BALOOT_LOBBY_MS - 3000, assigned: 0 };
         else if (res.status !== 409) break;
       }
@@ -1762,6 +1914,30 @@ export class BoardRoom extends DurableObject {
     open.assigned += 1;
     await this.ctx.storage.put('balootQuick', open);
     return json({ ok: true, code: open.code });
+  }
+
+  // 33.0.0 «العب الحين»: one Durable Object per game hands out seats on an open
+  // public table; the table starts by itself after its 10-second lobby and bots
+  // take the seats nobody took.
+  async tableQuick(game, variant) {
+    if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: 'اللعبة غير مدعومة' }, 400);
+    if (game === 'snakes') try { variant = normalizeSnakesVariant(variant); } catch { variant = 'classic'; } else variant = 'classic';
+    const now = Date.now(), key = 'tableQuick';
+    let open = (await this.ctx.storage.get(key)) || null;
+    if (open && (open.assigned >= MAX_SEATS[game] || now >= open.closesAt)) open = null;
+    if (!open) {
+      for (let attempt = 0; attempt < 8 && !open; attempt++) {
+        const code = roomCodeFor(game);
+        const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
+        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game, variant, publicMatch: true }) });
+        if (res.status === 201) open = { code, createdAt: now, closesAt: now + TABLE_LOBBY_MS - 2500, assigned: 0 };
+        else if (res.status !== 409) break;
+      }
+      if (!open) return json({ ok: false, error: 'تعذر فتح طاولة الآن، حاول بعد لحظة' }, 503);
+    }
+    open.assigned += 1;
+    await this.ctx.storage.put(key, open);
+    return json({ ok: true, code: open.code, game, variant });
   }
 
   // Reactions are relayed to everyone in the room and never touch the game
@@ -1841,11 +2017,11 @@ export class BoardRoom extends DurableObject {
         return await this.saveAndBroadcast();
       }
       if (msg.type === "start") {
-        if (player.role !== "host") return this.sendError(ws, "بدء المباراة للمضيف فقط");
+        if (player.role !== "host" || this.room.publicMatch) return this.sendError(ws, "بدء المباراة للمضيف فقط");
         if (this.room.status !== "lobby") return;
-        if (this.room.order.length !== this.room.playerLimit) return this.sendError(ws, `يلزم ${this.room.playerLimit} لاعبين`);
+        if (this.room.partyLink && TABLE_GAMES.includes(this.room.game) && !this.room.startedAt) return this.sendError(ws, "تبدأ الطاولة لحالها أول ما يوصل أصحابها");
+        // 33.0.0: the table starts with whoever is here; bots take the missing seats
         if (!this.room.order.every((id) => this.room.players[id]?.connected)) return this.sendError(ws, "انتظر اتصال جميع اللاعبين");
-        if (!this.room.order.every((id) => this.room.players[id]?.ready)) return this.sendError(ws, "كل اللاعبين لازم يضغطون جاهز");
         return await this.startGame();
       }
       if (msg.type === "rematch") {
@@ -1855,57 +2031,16 @@ export class BoardRoom extends DurableObject {
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
-      if(['roll','jackaroo_play','ludo_move'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
-      const actor = this.playerIndex(player.id);
-      if (actor !== this.room.state.turn && this.room.game !== "jackaroo") return this.sendError(ws, "مو دورك الآن");
-      if (this.room.game === "snakes" && msg.type === "roll") {
-        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
-        const power = msg.power ?? null;
-        const p = this.room.state.players[actor];
-        if (power !== null && (power !== 'double' || this.room.state.rulesVersion !== 2 || !(p.double > 0) || p.position === 0))
-          return this.sendError(ws, 'قدرة النردين غير متاحة الآن');
-        this.room.state = rollSnakesServer(this.room.state, actor, () => (this.randomDie() - 1) / 6, { power }).state;
-        this.room.version++;
-        if (this.room.state.winner !== null) this.finishGame();
-        else this.setTurnDeadline();
-        return await this.saveAndBroadcast();
-      }
-      if (this.room.game === "zahra") {
-        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
-        if (msg.type === "roll") {
-          if (this.room.pendingRoll !== null) return this.sendError(ws, "اختر الحجر أولًا");
-          const roll = this.randomDie();
-          const legal = getLegalLudoMoves(this.room.state, roll);
-          if (!legal.length) {
-            this.room.state = passLudoTurn(this.room.state, roll);
-            this.room.pendingRoll = null;
-          } else this.room.pendingRoll = roll;
-          this.room.version++;
-          this.setTurnDeadline(this.room.pendingRoll !== null ? MOVE_TIMEOUT_MS : TURN_TIMEOUT_MS);
-          return await this.saveAndBroadcast();
+      if(['roll','jackaroo_play','ludo_move','dice_roll','dice_bank'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
+      if (TABLE_GAMES.includes(this.room.game)) {
+        let steps;
+        try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }
+        catch (error) {
+          const code = String(error?.message || error);
+          const messages = { wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'قدرة النردين غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
+          return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
-        if (msg.type === "ludo_move") {
-          if (this.room.pendingRoll === null) return this.sendError(ws, "ارمِ الزهرة أولًا");
-          this.room.state = applyLudoMove(this.room.state, Number(msg.token), this.room.pendingRoll);
-          this.room.pendingRoll = null;
-          this.room.version++;
-          if (this.room.state.winner !== null) this.finishGame();
-          else this.setTurnDeadline();
-          return await this.saveAndBroadcast();
-        }
-      }
-      if (this.room.game === "jackaroo" && msg.type === "jackaroo_play") {
-        if (actor !== this.room.state.turn) return this.sendError(ws, "مو دورك الآن");
-        const cardIndex = Number(msg.cardIndex);
-        const action = msg.action;
-        const legal = getJackarooActions(this.room.state, cardIndex, actor);
-        const sig = JSON.stringify(action);
-        if (!legal.some((a) => JSON.stringify(a) === sig)) return this.sendError(ws, "الحركة غير صالحة");
-        this.room.state = playJackarooAction(this.room.state, cardIndex, action, actor);
-        this.room.version++;
-        if (this.room.state.winnerTeam !== null) this.finishGame();
-        else this.setTurnDeadline();
-        return await this.saveAndBroadcast();
+        return await this.settleTable(steps);
       }
       this.sendError(ws, "أمر غير معروف");
     } catch (err) {
@@ -1914,21 +2049,24 @@ export class BoardRoom extends DurableObject {
     }
   }
 
-  async startGame() {
-    this.room.startedAt=Date.now();this.room.rewardsComplete=false;
-    const names = this.room.order.map((id) => this.room.players[id].name);
-    if (this.room.game === "snakes") this.room.state = createSnakesServerGame(names, { variant: this.room.variant || 'classic' });
-    else if (this.room.game === "zahra") this.room.state = createLudoGame(names);
-    else this.room.state = createJackarooGame(names);
-    this.room.status = "playing";
-    this.room.pendingRoll = null;
-    this.room.version++;
-    this.setTurnDeadline();
-    for (const id of this.room.order) this.room.players[id].ready = true;
-    await this.saveAndBroadcast();
+  // 33.0.0: a table the group room opened starts by itself: the moment all its players
+  // are in, or 30 seconds after the first one came (bots take the seats of the missing).
+  async partyTableArrival() {
+    const r = this.room;
+    if (!r?.partyLink || r.status !== 'lobby' || r.startedAt || !TABLE_GAMES.includes(r.game)) return;
+    this.syncConnected();
+    const here = r.order.filter((id) => r.players[id] && !r.players[id].bot && r.players[id].connected).length;
+    if (here >= (r.partyExpected || r.playerLimit)) { await this.startGame(); return; }
+    if (here && !r.lobbyDeadline) { r.lobbyDeadline = Date.now() + PARTY_TABLE_WAIT_MS; await this.saveAndBroadcast(); }
+  }
+
+  async startGame(quick = false) {
+    const steps = startTable(this.room, { quick, rng: secureUnit, roll: () => this.randomDie(), now: Date.now() });
+    return await this.settleTable(steps);
   }
 
   async resetForRematch() {
+    if (TABLE_GAMES.includes(this.room.game)) resetTable(this.room);
     this.room.status = "lobby";
     this.room.state = null;
     if (this.room.game === 'baloot') { this.room.bots = []; this.room.batch = null; this.room.nextHandAt = null; this.room.turnTotal = null; }
@@ -1941,48 +2079,19 @@ export class BoardRoom extends DurableObject {
 
   async handleTurnTimeout() {
     if (!this.room || this.room.status !== "playing" || !this.room.state) return;
-    const actor = this.room.state.turn;
-    if (this.room.game === "snakes") {
-      this.room.state = rollSnakesServer(this.room.state, actor, () => (this.randomDie() - 1) / 6).state;
-      this.room.version++;
-      if (this.room.state.winner !== null) this.finishGame();
-      else this.setTurnDeadline();
-      return await this.saveAndBroadcast();
-    }
-    if (this.room.game === "zahra") {
-      let roll = this.room.pendingRoll;
-      if (roll === null) roll = this.randomDie();
-      const legal = getLegalLudoMoves(this.room.state, roll);
-      if (legal.length) {
-        const choice = pick(legal);
-        this.room.state = applyLudoMove(this.room.state, choice, roll);
-      } else {
-        this.room.state = passLudoTurn(this.room.state, roll);
-      }
-      this.room.pendingRoll = null;
-      this.room.version++;
-      if (this.room.state.winner !== null) this.finishGame();
-      else this.setTurnDeadline();
-      return await this.saveAndBroadcast();
-    }
-    if (this.room.game === "jackaroo") {
-      const candidates = [];
-      const hand = this.room.state.hands?.[actor] || [];
-      for (let cardIndex = 0; cardIndex < hand.length; cardIndex++) {
-        for (const action of getJackarooActions(this.room.state, cardIndex, actor)) candidates.push({ cardIndex, action });
-      }
-      if (candidates.length) {
-        const preferred = candidates.filter((x) => x.action.type !== "discard");
-        const chosen = pick(preferred.length ? preferred : candidates);
-        this.room.state = playJackarooAction(this.room.state, chosen.cardIndex, chosen.action, actor);
-        this.room.version++;
-        if (this.room.state.winnerTeam !== null) this.finishGame();
-        else this.setTurnDeadline();
-      } else {
-        this.setTurnDeadline();
-      }
-      return await this.saveAndBroadcast();
-    }
+    if (this.abandonIfEmpty()) return await this.saveAndBroadcast();
+    const steps = timeoutMove(this.room, secureUnit, () => this.randomDie());
+    if (!steps) { this.room.turnDeadline = Date.now() + TABLE_TURN_MS.room; return await this.saveAndBroadcast(); }
+    return await this.settleTable(steps);
+  }
+
+  // A table whose people have all gone for a while stops instead of bots playing on alone.
+  abandonIfEmpty(now = Date.now()) {
+    const people = this.room.order.map((id) => this.room.players[id]).filter((p) => p && !p.bot);
+    if (!people.length || people.some((p) => p.connected || !p.disconnectedAt || now - p.disconnectedAt < 90_000)) return false;
+    this.finishGame();
+    this.room.abandoned = true;
+    return true;
   }
 
   finishGame() {
@@ -2000,6 +2109,8 @@ export class BoardRoom extends DurableObject {
     if (!p || !this.room) return;
     p.connected = false;
     p.disconnectedAt = Date.now();
+    // a player who left during their turn: the table does not wait the whole minute
+    if (TABLE_GAMES.includes(this.room.game) && this.room.status === 'playing' && this.room.state && this.room.order[this.room.state.turn] === p.id && this.room.turnDeadline) this.room.turnDeadline = Math.min(this.room.turnDeadline, Date.now() + TABLE_TURN_MS.away);
     await this.persist();
     this.broadcast();
     await this.scheduleNextAlarm();
@@ -2028,6 +2139,18 @@ export class BoardRoom extends DurableObject {
         await this.saveAndBroadcast();
         return;
       }
+    }
+    // 33.0.0: a public board table starts after its lobby with whoever is here, bots in the other seats
+    if (TABLE_GAMES.includes(this.room.game) && this.room.status === 'lobby' && (this.room.publicMatch || this.room.partyLink) && this.room.lobbyDeadline && now >= this.room.lobbyDeadline) {
+      this.syncConnected();
+      const away = this.room.order.filter((id) => !this.room.players[id]?.connected);
+      // a group table nobody is in right now waits for the next one to come back
+      if (this.room.partyLink && away.length === this.room.order.length) { this.room.lobbyDeadline = null; await this.saveAndBroadcast(); return; }
+      for (const id of away) { delete this.room.players[id]; this.room.order = this.room.order.filter((x) => x !== id); }
+      if (!this.room.order.length) { await this.ctx.storage.deleteAll(); this.room = null; return; }
+      if (this.room.partyLink && !this.room.order.some((id) => this.room.players[id]?.role === 'host')) this.room.players[this.room.order[0]].role = 'host';
+      await this.startGame(Boolean(this.room.publicMatch));
+      return;
     }
     if (this.room.status === "playing" && this.room.turnDeadline && now >= this.room.turnDeadline && this.room.game !== 'baloot') {
       await this.handleTurnTimeout();

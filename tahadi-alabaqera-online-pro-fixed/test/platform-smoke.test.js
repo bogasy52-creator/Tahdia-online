@@ -22,15 +22,16 @@ test('expanded platform assets exist', async () => {
   for (const rel of requiredAssets) await access(join(publicDir, rel));
 });
 
-test('home links every game and both quiz modes', async () => {
+test('home links every game and the online quiz (33.0.0: every game is online)', async () => {
   const html = await readFile(join(publicDir, 'index.html'), 'utf8');
-  for (const href of ['/local', '/online', '/snakes', '/dice', '/zahra', '/jackaroo']) {
+  assert.doesNotMatch(html, /href=["']\/local/, 'the same-device quiz moved online');
+  for (const href of ['/quiz', '/online', '/snakes', '/dice', '/zahra', '/jackaroo', '/baloot', '/serpent']) {
     assert.match(html, new RegExp(`href=["']${href.replace('.', '\\.')}`));
   }
 });
 
 test('quiz pages load shared audio manager', async () => {
-  for (const file of ['local.html', 'online.html']) {
+  for (const file of ['quiz.html', 'online.html']) {
     const html = await readFile(join(publicDir, file), 'utf8');
     assert.match(html, /assets\/js\/audio-manager\.js/);
   }
@@ -69,12 +70,18 @@ test('wrangler deploys to the existing tahdia-online worker', async () => {
 });
 
 test('board games expose shared online room client', async () => {
-  for (const file of ['snakes.html', 'zahra.html', 'jackaroo.html']) {
+  // 33.0.0: the four table games run their rooms through one module on top of board-online.js
+  for (const file of ['snakes.html', 'zahra.html', 'jackaroo.html', 'dice.html']) {
     const html = await readFile(join(publicDir, file), 'utf8');
-    assert.match(html, /assets\/js\/board-online\.js/);
-    assert.match(html, /createRoom/);
-    assert.match(html, /joinRoom/);
+    assert.match(html, /assets\/js\/board-table-v33\.js/);
+    assert.match(html, /createTable\(\{/);
+    assert.match(html, /game-menu-v33\.js/);
   }
+  const table = await readFile(join(publicDir, 'assets/js/board-table-v33.js'), 'utf8');
+  assert.match(table, /from '\.\/board-online\.js\?v=[\d.]+'/);
+  assert.match(table, /client\.create\(/);
+  assert.match(table, /client\.join\(/);
+  assert.match(table, /client\.quick\(/);
 });
 
 test('worker binds a dedicated durable object for online board games', async () => {

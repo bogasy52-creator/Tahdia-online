@@ -1,81 +1,402 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080b17"><title>جاكارو — بوسراج</title><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-jackaroo.css?v=32.1.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=32.1.0"></head><body class="release-v26 bs-page board-game game-jackaroo release-v14 suite-v16 suite-v17"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>جاكارو</b><span>فريقان · أربعة لاعبين</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop" aria-label="المتجر">◈</a><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap tbl-setup"><div class="tbl-hero"><div><span class="tbl-kicker">طاولة بوسراج</span><h1>جاكارو</h1><p>أنت وشريكك ضد الفريق الثاني. العب ورقتك بذكاء، بدّل الكرات، وأدخل كرات فريقك كلها إلى الأمان.</p></div><div id="tblHeroArt" class="tbl-hero-art" aria-hidden="true"></div></div><div class="play-mode"><button id="modeLocal" class="active">📱 نفس الجهاز</button><button id="modeOnline">🌐 أونلاين</button></div>
-<div id="localSetup"><div class="setup-grid"><label class="bs-field"><span>المنافسة</span><select id="opponents"><option value="friends">4 أو 6 لاعبين على نفس الجهاز</option><option value="bot">أنت مع بوت ضد بوتين</option><option value="duobot">أنت وشريكك ضد بوتين</option></select></label><label class="bs-field"><span>مستوى البوت</span><select id="difficulty"><option value="easy">سهل</option><option value="medium" selected>متوسط</option><option value="hard">صعب</option></select></label><label class="bs-field" data-seat="0" style="--seat:#e0474c"><span>اللاعب 1 · أحمر · الفريق 1</span><input id="n0" value="اللاعب الأول" maxlength="20"></label><label class="bs-field" data-seat="1" style="--seat:#2f86e8"><span>اللاعب 2 · أزرق · الفريق 2</span><input id="n1" value="اللاعب الثاني" maxlength="20"></label><label class="bs-field" data-seat="2" style="--seat:#f0b429"><span>اللاعب 3 · أصفر · الفريق 1</span><input id="n2" value="اللاعب الثالث" maxlength="20"></label><label class="bs-field" data-seat="3" style="--seat:#22a565"><span>اللاعب 4 · أخضر · الفريق 2</span><input id="n3" value="اللاعب الرابع" maxlength="20"></label><label class="bs-field"><span>عدد المقاعد</span><select id="playerCount"><option value="4">4 لاعبين · فريقان</option><option value="6">6 لاعبين · فريقان</option></select></label><label class="bs-field" data-seat="4" style="--seat:#8b5cf6"><span>اللاعب 5 · بنفسجي · الفريق 1</span><input id="n4" value="اللاعب الخامس" maxlength="20"></label><label class="bs-field" data-seat="5" style="--seat:#f2711c"><span>اللاعب 6 · برتقالي · الفريق 2</span><input id="n5" value="اللاعب السادس" maxlength="20"></label></div><div class="setup-actions"><button id="startBtn" class="bs-btn gold">ابدأ جاكارو</button></div></div>
-<div id="onlineSetup" class="online-box hidden"><label class="bs-field"><span>اسمك</span><input id="onlineName" data-account-name value="لاعب" maxlength="20"></label><label class="bs-field"><span>عدد مقاعد الغرفة</span><select id="onlineCount"><option value="4">4</option><option value="6">6</option></select></label><div class="online-actions"><button id="createRoom" class="bs-btn gold">＋ إنشاء غرفة لـ4</button><div class="join-line"><input id="joinCode" class="room-code-input" inputmode="numeric" maxlength="6" placeholder="000000"><button id="joinRoom" class="bs-btn cyan">دخول</button></div></div><div class="secure-note">غرفة خاصة لأربعة. كل لاعب يرى أوراقه فقط.</div></div>
-<section id="roomLobby" class="bs-panel room-lobby hidden"><div class="room-lobby-head"><div><div class="mini-note">رمز الغرفة</div><button id="copyCode" class="big-room-code" style="border:0;background:none;cursor:pointer"></button></div><span id="netBadge" class="net-badge"><i></i><span>اتصال…</span></span></div><div id="roomPlayers" class="room-players"></div><div class="lobby-controls"><button id="readyBtn" class="bs-btn primary">✓ أنا جاهز</button><button id="inviteFriends" class="bs-btn cyan">👥 دعوة صديق</button><button id="hostStart" class="bs-btn gold" disabled>ابدأ المباراة</button></div></section></section>
-<section id="game" class="hidden tbl31"><div class="game-toolbar"><div class="toolbar-title"><h1>جاكارو</h1><p id="modeHint">مرّر الجهاز بين اللاعبين — الأوراق مخفية بين الأدوار</p></div><button id="restart" class="bs-btn">إعادة</button></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span>الغرفة <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="jack-layout"><section class="bs-panel jack-main"><div class="jack-board-wrap"><div id="board" class="jack-board"><img class="table-art" src="assets/arena/jackaroo-table-v17.webp" alt="" aria-hidden="true"><div class="jack-center"><div><b class="live-table-title">جاكارو</b><span id="deckCount"></span><span id="dealText"></span></div></div></div></div></section><aside class="bs-panel jack-side"><div class="team-rail"><div id="team0" class="team-card"></div><div id="team1" class="team-card"></div></div><div id="players" class="player-list"></div><div id="status" class="game-status"></div><div class="hand-title"><b>أوراقك</b><span id="handHint" class="mini-note">اختر ورقة</span></div><div id="hand" class="hand"></div><div id="actions" class="action-list"></div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد المستخدمة</summary><ul><li>A: خروج أو 1/11.</li><li>K: خروج أو 13.</li><li>4: أربع خطوات للخلف.</li><li>5: أي حجر صالح +5.</li><li>7: سبع خطوات كاملة لحجر واحد أو تقسيمها على حجرين.</li><li>J: تبديل حجرين صالحين.</li><li>Q: 12 خطوة.</li><li>حجر البداية محمي.</li><li>الفريق الذي ينهي أحجاره كلها يفوز؛ 8 أحجار عند 4 لاعبين و12 حجرًا عند 6.</li></ul></details><div class="rules-note">قواعد رقمية ثابتة لتكون كل مباراة متسقة.</div></aside></div></section></main>
-<div id="privacy" class="privacy"><div class="bs-panel privacy-card"><div class="privacy-icon">🂠</div><h2 id="privacyName"></h2><p>مرّر الجهاز لصاحب الدور ثم افتح أوراقه.</p><button id="revealHand" class="bs-btn gold primary-action">عرض أوراقي</button></div></div><div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🃏</div><h2 id="winnerName"></h2><p>الفريق أدخل أحجاره الثمانية إلى الأمان.</p><button id="again" class="bs-btn gold">مباراة جديدة</button></div></div><div class="bs-toast"></div><script src="assets/js/party-link-v32.js?v=32.1.0"></script><script src="assets/js/audio-manager.js?v=32.1.0"></script><script src="assets/js/platform.js?v=32.1.0"></script><script src="assets/js/social-client.js?v=32.1.0"></script><script src="assets/js/profile-core.js?v=32.1.0"></script><script src="assets/js/career-client.js?v=32.1.0"></script><script src="assets/js/royal-stones.js?v=32.1.0"></script><script src="assets/js/serpent-art-v16.js?v=32.1.0"></script><script src="assets/js/cosmetic-art.js?v=32.1.0"></script><script src="assets/js/dice-3d-v31-1.js?v=32.1.0"></script><script src="assets/js/pro-dice.js?v=32.1.0"></script><script type="module" src="assets/js/neon-arena.js?v=32.1.0"></script><script src="assets/js/pieces-v31.js?v=32.1.0"></script><script type="module">
-import {renderPetalBoard,BOARD_COLORS} from './assets/js/board-petals-v29.js?v=32.1.0';
-import {boardGeometry} from './assets/js/engines/board-geometry-v29.js?v=29.1.0';
-import {createStonePathFrames} from './assets/js/board-piece-motion.js?v=32.1.0';
-import {createJackarooGame,getJackarooActions,playJackarooAction,globalJackarooPosition,cardRank} from './assets/js/engines/jackaroo-engine.js?v=29.1.0';import {chooseJackarooMove} from './assets/js/engines/bot-strategy.js?v=29.1.0';import {BoardOnlineClient,renderRoomPlayers,bindRoomCountdown} from './assets/js/board-online.js?v=32.1.0';
-function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const $=s=>document.querySelector(s),colors=BOARD_COLORS,suits={S:'♠',H:'♥',D:'♦',C:'♣'};let state=null,selectedCard=null,mode='local',client=null,room=null,lastVersion=-1,pendingAction=false,selectedMarble=null,actionTimer=null,matchReceipt=(window.BS_UUID?.()||String(Date.now())+Math.random()),rewarded=false,bots=[],difficulty='medium',botBusy=false,awaitingReveal=false,localConfig=null;const wait=ms=>new Promise(r=>setTimeout(r,ms));bindRoomCountdown($('#turnTimer'),()=>room);
-function getNames(){const kind=$('#opponents').value,count=kind==='friends'?Number($('#playerCount').value):4;bots=kind==='bot'?[1,2,3]:kind==='duobot'?[1,3]:[];return Array.from({length:count},(_,i)=>bots.includes(i)?'بوت '+(i+1):$('#n'+i).value.trim()||`لاعب ${i+1}`)}function posPct(global,radius=32.5){const angle=(-90+global*360/52)*Math.PI/180;return{x:50+radius*Math.cos(angle),y:47.4+radius*Math.sin(angle)}}
-function buildBoard(){const b=$('#board');for(const id of ['deckCount','dealText']){const el=$('#'+id);if(el&&b.contains(el))$('#game .toolbar-title').appendChild(el);}b.classList.add('petal-layout-v29');b.innerHTML='';}
-function piece(pi,mi){const p=document.createElement('button');p.type='button';p.className='jack-piece';p.dataset.player=pi;p.dataset.marble=mi;p.style.setProperty('--c',colors[pi]);p.setAttribute('aria-label',`${state.players[pi].name} — حجر ${mi+1}`);p.onclick=()=>chooseMarble(pi,mi);const lbl=document.createElement('span');lbl.className='pawn-label';lbl.textContent=mi+1;p.appendChild(lbl);window.BS_ARENA?.crystal(p,[1,3,2,0][pi]);return p}function renderPieces(){const keys=selectedCard===null||pendingAction?[]:legalActions().flatMap(a=>a.type==='enter'?[[a.owner,a.marble]]:jackMotionKeys(a)).map(([pi,mi])=>pi+':'+mi);renderPetalBoard($('#board'),state,{game:'jackaroo',active:state.turn,legalStones:keys,onSelect:(pi,mi)=>chooseMarble(pi,mi)});}
-function jackPieceRect(pi,mi){const el=document.querySelector(`.jack-piece[data-player="${pi}"][data-marble="${mi}"], [data-stone="${pi}:${mi}"]`);if(!el)return null;const r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
-function jackMotionKeys(action){if(!action)return[];if(action.type==='enter'||action.type==='move'||action.type==='moveAny5')return[[action.owner,action.marble]];if(action.type==='swap')return[[action.owner,action.marble],[action.otherOwner,action.otherMarble]];if(action.type==='split7')return[[action.owner,action.first.marble],[action.owner,action.second.marble]];return[]}
-function jackRoutePoint(player,progress){const target=progress<52?document.querySelector(`#board [data-track="${globalJackarooPosition(player,progress)}"]`):progress<56?document.querySelector(`#board [data-safe="${player}:${progress-52}"]`):document.querySelector(`.finish-pod[data-finish="${player}"]`);if(!target)return null;const r=target.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
-function captureJackMotions(action){return jackMotionKeys(action).map(([player,marble])=>{const start=state.players[player].marbles[marble],part=action.type==='split7'?(action.first.marble===marble?action.first:action.second):action,steps=action.type==='moveAny5'?5:part.steps||0,points=[];if(start>=0&&action.type!=='swap')for(let i=1;i<=steps;i++){const progress=action.backward?(start-i+52)%52:start+i;const point=jackRoutePoint(player,progress);if(point)points.push(point)}return{player,marble,from:jackPieceRect(player,marble),points}})}
-async function animateJackPiece(player,marble,from,duration=330,swap=false,waypoints=[]){if(document.querySelector('#board .petal-board-v30'))return $('#board').atelierMotion||Promise.resolve();if(!from)return;const el=document.querySelector(`.jack-piece[data-player="${player}"][data-marble="${marble}"], [data-stone="${player}:${marble}"]`);if(!el||typeof el.animate!=='function')return;const r=el.getBoundingClientRect(),dx=from.x-(r.left+r.width/2),dy=from.y-(r.top+r.height/2);el.classList.add('moving-piece');let frames=swap?[{translate:`${dx}px ${dy}px`,scale:'1'},{translate:`${dx*.5}px ${dy*.5-16}px`,scale:'1.18',offset:.5},{translate:'0 0',scale:'1'}]:[{translate:`${dx}px ${dy}px`,scale:'.96'},{translate:`${dx*.44}px ${dy*.44-10}px`,scale:'1.1',offset:.56},{translate:'0 0',scale:'1'}];if(!swap&&waypoints.length){frames=createStonePathFrames(from,waypoints,{x:r.left+r.width/2,y:r.top+r.height/2});duration=matchMedia('(prefers-reduced-motion: reduce)').matches?150:Math.min(1800,Math.max(380,waypoints.length*115));}try{await el.animate(frames,{duration,easing:waypoints.length?'linear':'cubic-bezier(.18,.78,.18,1)',fill:'both'}).finished}catch{}el.classList.remove('moving-piece')}
-async function runJackMotions(motions,type){if(!motions?.length)return;if(type==='split7'){for(const m of motions)await animateJackPiece(m.player,m.marble,m.from,300,false,m.points);return}await Promise.all(motions.map(m=>animateJackPiece(m.player,m.marble,m.from,type==='swap'?380:330,type==='swap',m.points)))}
-function renderTeams(){for(const t of[0,1]){const members=state.players.map((_,i)=>i).filter(i=>i%2===t),finish=boardGeometry(state).finish,done=members.flatMap(i=>state.players[i].marbles).filter(x=>x===finish).length;$('#team'+t).innerHTML=`<b>الفريق ${t+1}</b><span>${members.map(i=>escHtml(state.players[i].name)).join(' + ')}</span><span>${done}/${members.length*4} في الأمان</span>`}}function renderPlayers(){const box=$('#players');box.innerHTML='';state.players.forEach((p,i)=>{const home=p.marbles.filter(x=>x===-1).length,done=p.marbles.filter(x=>x===boardGeometry(state).finish).length,row=document.createElement('div');row.className='player-jack '+(state.turn===i&&state.winnerTeam===null?'turn':'');row.style.setProperty('--seat',colors[i]);row.innerHTML=`<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(p.name)}</b><div class="home-marbles" style="--c:${colors[i]}">${Array.from({length:home},()=>'<i></i>').join('')}</div><div class="mini-note">${done}/4 أمان</div></div><b>${p.marbles.filter(x=>x>=0&&x<boardGeometry(state).finish).length}</b>`;if(window.BS_PIECES)row.prepend(window.BS_PIECES.icon(document,{kind:'marble',style:window.BS_PIECES.marbleFor(window.BS_PIECES.equipped()),color:colors[i],className:'chip-piece'}));box.appendChild(row)})}
-function myIndex(){return mode==='online'?room?.me?.index:state?.turn}function isMyTurn(){return mode==='local'?(!bots.includes(state?.turn)&&!window.BS_PRO?.paused):myIndex()===state?.turn}function cardFace(card,index){if(card==='?'){const b=document.createElement('div');b.className='playing-card card-back';return b}const rank=cardRank(card),s=String(card).slice(-1),red=s==='H'||s==='D',b=document.createElement('button');b.className='playing-card '+(red?'red ':'')+(selectedCard===index?'selected':'');const face=['J','Q','K'].includes(rank);if(face)b.classList.add('face');b.setAttribute('aria-label',rank+' '+({S:'بستوني',H:'كبة',D:'ديناري',C:'سباتي'}[s]||''));b.innerHTML=`<span class="rank">${rank}</span><span class="suit-corner" aria-hidden="true">${suits[s]||'◆'}</span><span class="suit" data-face="${face?rank:''}">${suits[s]||'◆'}</span><span class="corner-flip" aria-hidden="true">${rank}</span>`;b.disabled=pendingAction||!isMyTurn();b.onclick=()=>selectCard(index);return b}
-function actionLabel(a){const owner=a.owner??state.turn,name=state.players[owner]?.name||'';if(a.type==='enter')return `⬆ إخراج حجر ${a.marble+1}${owner!==state.turn?' — '+name:''}`;if(a.type==='move')return `${a.backward?'↶':'→'} ${name} • حجر ${a.marble+1} ${a.backward?'−':'+'}${a.steps}`;if(a.type==='moveAny5')return `5️⃣ ${name} • حجر ${a.marble+1} +5`;if(a.type==='swap')return `⇄ حجر ${a.marble+1} مع ${state.players[a.otherOwner].name} • حجر ${a.otherMarble+1}`;if(a.type==='split7')return `7️⃣ ${name}: حجر ${a.first.marble+1} +${a.first.steps}، حجر ${a.second.marble+1} +${a.second.steps}`;return '🔥 حرق الورقة — لا توجد حركة'}
-function selectCard(index){if(!isMyTurn()||pendingAction)return;selectedMarble=null;selectedCard=index;BS_AUDIO.play('select');renderHand();renderActions();highlightMoves()}function handForView(){if(mode==='local')return bots.includes(state.turn)||awaitingReveal?state.hands[state.turn].map(()=>'?'):state.hands[state.turn];const me=myIndex();return state.hands[me]||[]}
-function renderHand(){const box=$('#hand');box.innerHTML='';const hand=handForView();hand.forEach((c,i)=>box.appendChild(cardFace(c,i)));$('#handHint').textContent=isMyTurn()?`${hand.length} ورقة — اختر للعب`:`${hand.length} ورقة — بانتظار دورك`}
-function legalActions(){if(selectedCard===null||!isMyTurn())return [];const all=getJackarooActions(state,selectedCard,state.turn);if(!selectedMarble)return all;return all.filter(a=>jackMotionKeys(a).some(([pi,mi])=>pi===selectedMarble[0]&&mi===selectedMarble[1])||a.type==='enter'&&a.owner===selectedMarble[0]&&a.marble===selectedMarble[1])}
-function chooseMarble(pi,mi){if(pendingAction||selectedCard===null||!isMyTurn())return;const actions=getJackarooActions(state,selectedCard,state.turn).filter(a=>jackMotionKeys(a).some(([p,m])=>p===pi&&m===mi)||a.type==='enter'&&a.owner===pi&&a.marble===mi);if(!actions.length)return;selectedMarble=[pi,mi];if(actions.length===1)play(actions[0]);else{renderActions();highlightMoves();BS_PLATFORM.toast('اختر الحركة المطلوبة من القائمة')}}
-function highlightMoves(){renderPieces();document.querySelectorAll('.legal-piece,.legal-destination').forEach(e=>e.classList.remove('legal-piece','legal-destination'));if(selectedCard===null||pendingAction)return;for(const a of legalActions()){const keys=a.type==='enter'?[[a.owner,a.marble]]:jackMotionKeys(a);for(const [pi,mi] of keys)document.querySelector(`.jack-piece[data-player="${pi}"][data-marble="${mi}"], [data-stone="${pi}:${mi}"]`)?.classList.add('legal-piece');if(a.type==='move'||a.type==='moveAny5'){const pos=state.players[a.owner].marbles[a.marble],end=a.backward?(pos-a.steps+52)%52:pos+a.steps;const target=end<=51?document.querySelector(`#board [data-track="${globalJackarooPosition(a.owner,end)}"]`):end<56?document.querySelector(`#board [data-safe="${a.owner}:${end-52}"]`):null;target?.classList.add('legal-destination')}}}
-function renderActions(){const box=$('#actions');box.innerHTML='';if(pendingAction){box.innerHTML='<div class="mini-note">الحركة جارية…</div>';return}if(!isMyTurn()){box.innerHTML='<div class="mini-note bot-thinking">البوت يفكّر بحركته…</div>';return}if(selectedCard===null){box.innerHTML='<div class="mini-note">اختر ورقة لعرض الحركات القانونية.</div>';return}legalActions().forEach(a=>{const b=document.createElement('button');b.className='action-btn';b.textContent=actionLabel(a);b.onclick=()=>play(a);box.appendChild(b)})}
-function render(){if(!state)return;$('#restart').disabled=pendingAction;renderPieces();renderTeams();renderPlayers();$('#deckCount').textContent=`المتبقي في الرزمة: ${state.deck.length}`;$('#dealText').textContent=`التوزيع التالي: ${['4','4','5'][state.dealIndex]}`;if(state.winnerTeam!==null){const members=state.players.map((_,i)=>i).filter(i=>i%2===state.winnerTeam);$('#winnerName').textContent=members.map(i=>state.players[i].name).join(' + ');$('#winnerOverlay').classList.add('show');if(!rewarded){rewarded=true;if(mode==='online'&&window.BS_SOCIAL?.isLoggedIn())(window.BS_PRO?.onlineResult?window.BS_PRO.onlineResult(state.winnerTeam===(room?.me?.index??0)%2):window.BS_CAREER?.refresh?.())?.catch(()=>{});else (window.BS_PRO?.record||window.BS_CAREER?.record)?.({id:matchReceipt,game:'jackaroo',win:state.winnerTeam===(mode==='online'?(room?.me?.index??0)%2:0)})}return}$('#status').textContent=isMyTurn()?`دورك: ${state.players[state.turn].name} — اختر ورقة ثم حركة`:`بانتظار ${state.players[state.turn].name}…`;renderHand();renderActions();highlightMoves()}
-function showPrivacy(){if(mode==='online'||state.winnerTeam!==null||bots.includes(state.turn)||state.players.length-bots.length===1){awaitingReveal=false;return}awaitingReveal=true;selectedCard=null;$('#privacyName').textContent=`دور ${state.players[state.turn].name}`;$('#privacy').classList.add('show')}
-async function play(a){
- if(!isMyTurn()||selectedCard===null||pendingAction)return;
- const actor=state.turn,index=selectedCard;pendingAction=true;selectedMarble=null;highlightMoves();
- if(mode==='online'){const sent=client.send('jackaroo_play',{cardIndex:index,action:a});if(!sent)pendingAction=false;else{clearTimeout(actionTimer);actionTimer=setTimeout(()=>{pendingAction=false;render();BS_PLATFORM.toast('تأخر الاتصال — انتظر تحديث الغرفة')},9000)}selectedCard=null;renderHand();renderActions();return}
- try{await executeLocalJack(index,a,actor)}
- catch(e){BS_PLATFORM.toast('تعذر تنفيذ الحركة: '+e.message)}
- finally{pendingAction=false;render();saveJack();runJackBots()}
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080b17"><title>جاكارو — بوسراج</title><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-jackaroo.css?v=33.0.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.0.0"></head><body class="release-v26 bs-page board-game game-jackaroo release-v14 suite-v16 suite-v17"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>جاكارو</b><span>فريقان · أربعة لاعبين</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop" aria-label="المتجر">◈</a><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap tbl-setup"><div class="tbl-hero"><div><span class="tbl-kicker">طاولة بوسراج</span><h1>جاكارو</h1><p>أنت وشريكك ضد الفريق الثاني. العب ورقتك بذكاء، بدّل الكرات، وأدخل كرات فريقك كلها إلى الأمان.</p></div><div id="tblHeroArt" class="tbl-hero-art" aria-hidden="true"></div></div><div id="gameMenu"></div></section>
+<section id="game" class="hidden tbl31"><div class="game-toolbar"><div class="toolbar-title"><h1>جاكارو</h1><p id="modeHint">أوراقك لك وحدك؛ أول لاعبين يدخلون شركاء</p></div><button id="leaveGame" class="bs-btn">خروج</button></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="jack-layout"><section class="bs-panel jack-main"><div class="jack-board-wrap"><div id="board" class="jack-board"><img class="table-art" src="assets/arena/jackaroo-table-v17.webp" alt="" aria-hidden="true"><div class="jack-center"><div><b class="live-table-title">جاكارو</b><span id="deckCount"></span><span id="dealText"></span></div></div></div></div></section><aside class="bs-panel jack-side"><div class="team-rail"><div id="team0" class="team-card"></div><div id="team1" class="team-card"></div></div><div id="players" class="player-list"></div><div id="status" class="game-status"></div><div class="hand-title"><b>أوراقك</b><span id="handHint" class="mini-note">اختر ورقة</span></div><div id="hand" class="hand"></div><div id="actions" class="action-list"></div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد المستخدمة</summary><ul><li>A: خروج أو 1/11.</li><li>K: خروج أو 13.</li><li>4: أربع خطوات للخلف.</li><li>5: أي حجر صالح +5.</li><li>7: سبع خطوات كاملة لحجر واحد أو تقسيمها على حجرين.</li><li>J: تبديل حجرين صالحين.</li><li>Q: 12 خطوة.</li><li>حجر البداية محمي.</li><li>الفريق الذي ينهي أحجاره كلها يفوز؛ 8 أحجار عند 4 لاعبين و12 حجرًا عند 6.</li></ul></details><div class="rules-note">قواعد رقمية ثابتة لتكون كل مباراة متسقة.</div></aside></div></section></main>
+<div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🃏</div><h2 id="winnerName"></h2><p>الفريق أدخل أحجاره كلها إلى الأمان.</p><div class="winner-actions-v33"><button id="again" class="bs-btn gold">مباراة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div><script src="assets/js/party-link-v32.js?v=33.0.0"></script><script src="assets/js/audio-manager.js?v=33.0.0"></script><script src="assets/js/platform.js?v=33.0.0"></script><script src="assets/js/social-client.js?v=33.0.0"></script><script src="assets/js/profile-core.js?v=33.0.0"></script><script src="assets/js/career-client.js?v=33.0.0"></script><script src="assets/js/royal-stones.js?v=33.0.0"></script><script src="assets/js/serpent-art-v16.js?v=33.0.0"></script><script src="assets/js/cosmetic-art.js?v=33.0.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.0.0"></script><script src="assets/js/pro-dice.js?v=33.0.0"></script><script src="assets/js/game-menu-v33.js?v=33.0.0"></script><script type="module" src="assets/js/neon-arena.js?v=33.0.0"></script><script src="assets/js/pieces-v31.js?v=33.0.0"></script><script type="module">import { renderPetalBoard, BOARD_COLORS } from "./assets/js/board-petals-v29.js?v=33.0.0";
+import { boardGeometry } from "./assets/js/engines/board-geometry-v29.js?v=29.1.0";
+import { getJackarooActions, globalJackarooPosition, cardRank } from "./assets/js/engines/jackaroo-engine.js?v=29.1.0";
+import { createTable, seatLook, botTag } from "./assets/js/board-table-v33.js?v=33.0.0";
+// 33.0.0: جاكارو is played online only. The first two people in sit as partners;
+// bots of every strength take the other seats (four, or six when five or six came).
+// Every card played (yours and the bots') is shown in turn.
+function escHtml(v) {
+  return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
-async function executeLocalJack(index,a,actor=state.turn){
- const before=state,motions=captureJackMotions(a),next=playJackarooAction(state,index,a,actor),captured=[];
- before.players.forEach((p,pi)=>p.marbles.forEach((m,mi)=>{if(m>=0&&next.players[pi].marbles[mi]===-1)captured.push({player:pi,marble:mi,from:jackPieceRect(pi,mi)})}));
- state=next;selectedCard=null;awaitingReveal=state.players.length-bots.length>1&&!bots.includes(state.turn);saveJack();render();
- await runJackMotions(motions,a.type);await Promise.all(captured.map(m=>animateJackPiece(m.player,m.marble,m.from,430,true)));
- if(captured.length){BS_AUDIO.play('capture');BS_AUDIO.vibrate([40,30,60]);$('#board').classList.add('capture-flash');setTimeout(()=>$('#board').classList.remove('capture-flash'),450);BS_PLATFORM.toast('تم أكل '+captured.length+' حجر!')}
- else BS_AUDIO.play(a.type==='discard'?'wrong':a.type==='swap'?'duel':'move');
- if(state.winnerTeam!==null)BS_AUDIO.play('win');showPrivacy();
+const $ = (s) => document.querySelector(s),
+  colors = BOARD_COLORS,
+  suits = { S: "♠", H: "♥", D: "♦", C: "♣" },
+  wait = (ms) => new Promise((r) => setTimeout(r, ms));
+let state = null,
+  room = null,
+  selectedCard = null,
+  selectedMarble = null,
+  pendingAction = false,
+  actionTimer = null,
+  matchReceipt = "",
+  rewarded = false,
+  stepping = false;
+const me = () => room?.me?.index ?? -1;
+const playerAt = (seat) => (room?.players || []).find((p) => p.index === seat) || null;
+function buildBoard() {
+  const b = $("#board");
+  for (const id of ["deckCount", "dealText"]) {
+    const el = $("#" + id);
+    if (el && b.contains(el)) $("#game .toolbar-title").appendChild(el);
+  }
+  b.classList.add("petal-layout-v29");
+  b.innerHTML = "";
 }
-async function runJackBots(){
- if(mode!=='local'||botBusy||state?.winnerTeam!==null||!bots.includes(state?.turn))return;
- botBusy=true;pendingAction=true;render();
- try{while(mode==='local'&&state.winnerTeam===null&&bots.includes(state.turn)){
-  await window.BS_PRO?.waitForPlay?.();await wait(680);await window.BS_PRO?.waitForPlay?.();
-  const move=chooseJackarooMove(state,difficulty,window.BS_DICE.unit||Math.random);
-  if(!move)throw new Error('لا توجد ورقة في يد البوت');
-  await executeLocalJack(move.cardIndex,move.action);render();
- }}catch(error){BS_PLATFORM.toast('تعذر إكمال دور البوت: '+error.message)}finally{botBusy=false;pendingAction=false;render();saveJack()}
+function renderPieces() {
+  const keys =
+    selectedCard === null || pendingAction
+      ? []
+      : legalActions()
+          .flatMap((a) => (a.type === "enter" ? [[a.owner, a.marble]] : jackMotionKeys(a)))
+          .map(([pi, mi]) => pi + ":" + mi);
+  renderPetalBoard($("#board"), state, {
+    game: "jackaroo",
+    active: state.turn,
+    legalStones: keys,
+    onSelect: (pi, mi) => chooseMarble(pi, mi),
+    looks: state.players.map((_, i) => seatLook(room, i).pawn),
+  });
 }
-function saveJack(){if(mode==='local'&&state&&state.winnerTeam===null)try{localStorage.setItem('busraj-jackaroo-v7',JSON.stringify({state,bots,difficulty,receipt:matchReceipt,config:localConfig}))}catch{}else if(state&&state.winnerTeam!==null)try{localStorage.removeItem('busraj-jackaroo-v7')}catch{}}
-function startLocal(){if(pendingAction||botBusy)return;matchReceipt=(window.BS_UUID?.()||String(Date.now())+Math.random());rewarded=false;mode='local';difficulty=$('#difficulty').value;localConfig=Object.fromEntries(['opponents','difficulty','n0','n1','n2','n3','n4','n5','playerCount'].map(id=>[id,$('#'+id).value]));state=createJackarooGame(getNames());selectedCard=null;awaitingReveal=state.players.length-bots.length>1;enterGame();BS_AUDIO.play('shuffle');BS_AUDIO.play('launch');showPrivacy();saveJack();runJackBots()}function enterGame(){document.body.classList.add('game-running');buildBoard();$('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#winnerOverlay').classList.remove('show');$('#privacy').classList.remove('show');$('#livebar').classList.toggle('hidden',mode!=='online');$('#modeHint').textContent=mode==='online'?'أوراقك خاصة ومزامنة مع السيرفر':'مرّر الجهاز بين اللاعبين — الأوراق مخفية بين الأدوار';if(mode==='online')$('#gameRoomCode').textContent=room.code;render()}
-function setMode(next){mode=next;bots=[];awaitingReveal=false;$('#modeLocal').classList.toggle('active',next==='local');$('#modeOnline').classList.toggle('active',next==='online');$('#localSetup').classList.toggle('hidden',next!=='local');$('#onlineSetup').classList.toggle('hidden',next!=='online');$('#roomLobby').classList.add('hidden');client?.close();client=null;room=null}
-function net(s){for(const id of ['#netBadge','#liveNet']){const e=$(id);if(!e)continue;e.classList.toggle('online',!!s.online);e.classList.toggle('reconnecting',!!s.reconnecting);e.querySelector('span').textContent=s.text||''}}function setupClient(){client?.close();client=new BoardOnlineClient('jackaroo',{onStatus:net,onError:m=>{clearTimeout(actionTimer);pendingAction=false;render();BS_AUDIO.play('error');BS_PLATFORM.toast(m)},onState:onRoomState})}
-function onRoomState(next){if(next.version<lastVersion)return;clearTimeout(actionTimer);const prev=state?structuredClone(state):null,event=next.state?.lastEvent,eventChanged=!!prev&&JSON.stringify(event)!==JSON.stringify(prev.lastEvent),motions=eventChanged?captureJackMotions(event?.action):[];room=next;if(next.status!=='lobby')pendingAction=false;if(next.status==='lobby'){state=null;selectedCard=null;selectedMarble=null;rewarded=false;lastVersion=next.version;$('#game').classList.add('hidden');$('#setup').classList.remove('hidden');$('#winnerOverlay').classList.remove('show');$('#privacy').classList.remove('show');document.body.classList.remove('game-running');renderLobby();return}if(!next.state)return;if(!prev){matchReceipt='board:'+next.code+':'+(next.startedAt||next.version)+':'+(next.me?.id||'guest');rewarded=false}state=next.state;selectedCard=null;if($('#game').classList.contains('hidden')){enterGame();BS_AUDIO.play('shuffle')}if(next.version!==lastVersion&&prev&&JSON.stringify(state.lastEvent)!==JSON.stringify(prev.lastEvent)){const t=state.lastEvent?.type;BS_AUDIO.play(t==='swap'?'duel':t==='discard'?'wrong':t?'move':'deal');if(state.winnerTeam!==null&&prev.winnerTeam===null)BS_AUDIO.play('win');else if(isMyTurn())BS_AUDIO.play('turn')}lastVersion=next.version;render();if(eventChanged&&motions.length)runJackMotions(motions,event?.type)}
-function renderLobby(){if(!room)return;$('#roomLobby').classList.remove('hidden');$('#copyCode').textContent=room.code;renderRoomPlayers($('#roomPlayers'),room,colors);const me=room.players.find(p=>p.id===room.me?.id);$('#readyBtn').textContent=me?.ready?'✓ جاهز — إلغاء':'✓ أنا جاهز';const all=room.players.length===4&&room.players.every(p=>p.ready&&p.connected);$('#hostStart').classList.toggle('hidden',room.me?.role!=='host');$('#hostStart').disabled=!all}
-let roomRequestPending=false;
-function setRoomRequestPending(value){roomRequestPending=value;$('#createRoom').disabled=value;$('#joinRoom').disabled=value;}
-async function createRoom(){if(roomRequestPending)return;setRoomRequestPending(true);setupClient();try{await client.create($('#onlineName').value,Number($('#onlineCount')?.value)||4);BS_AUDIO.play('join')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}finally{setRoomRequestPending(false)}}async function joinRoom(){if(roomRequestPending)return;setRoomRequestPending(true);setupClient();try{await client.join($('#joinCode').value,$('#onlineName').value);BS_AUDIO.play('join')}catch(e){BS_PLATFORM.toast(e.message);BS_AUDIO.play('error')}finally{setRoomRequestPending(false)}}
-$('#modeLocal').onclick=()=>setMode('local');$('#modeOnline').onclick=()=>setMode('online');$('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;$('#readyBtn').onclick=()=>{const me=room?.players.find(p=>p.id===room.me?.id);client?.send('ready',{ready:!me?.ready})};$('#hostStart').onclick=()=>client?.send('start');$('#copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);BS_PLATFORM.toast('تم نسخ الرمز')}catch{BS_PLATFORM.toast(room.code)}};$('#inviteFriends').onclick=()=>{if(!room?.code)return BS_PLATFORM.toast('أنشئ الغرفة أولًا');window.BS_SOCIAL?.openInvitePicker({game:'jackaroo',roomCode:room.code})};
-const socialProfile=window.BS_SOCIAL?.profile?.();if(socialProfile?.displayName)$('#onlineName').value=socialProfile.displayName;else if(window.BS_PARTY_LINK?.name)$('#onlineName').value=window.BS_PARTY_LINK.name.slice(0,20);
-const invitedRoom=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(invitedRoom||'')){setMode('online');$('#joinCode').value=invitedRoom;joinRoom()}
-
-window.addEventListener('bs-match-pause',()=>{if(state&&!pendingAction)render()});
-window.addEventListener('pagehide',()=>{saveJack();clearTimeout(actionTimer);client?.close()});
-const savedJack=(()=>{try{return JSON.parse(localStorage.getItem('busraj-jackaroo-v7')||'null')}catch{return null}})();
-if(savedJack?.state?.players?.length===4&&savedJack.state.winnerTeam===null&&Number.isInteger(savedJack.state.turn)&&savedJack.state.turn>=0&&savedJack.state.turn<4&&savedJack.state.players.every(p=>Array.isArray(p.marbles)&&p.marbles.length===4&&p.marbles.every(m=>Number.isInteger(m)&&m>=-1&&m<=56))&&savedJack.state.hands?.length===4){const resume=document.createElement('button');resume.className='bs-btn resume-btn';resume.textContent='متابعة طاولتك السابقة';$('#startBtn').after(resume);resume.onclick=()=>{state=savedJack.state;bots=savedJack.bots||[];difficulty=savedJack.difficulty||'medium';matchReceipt=savedJack.receipt||(window.BS_UUID?.()||String(Date.now())+Math.random());localConfig=savedJack.config;for(const [id,value]of Object.entries(localConfig||{}))if($('#'+id))$('#'+id).value=value;awaitingReveal=state.players.length-bots.length>1;enterGame();showPrivacy();runJackBots()}}
-function updateJackSetup(){const kind=$('#opponents').value;for(let i=0;i<4;i++)$('#n'+i).closest('label').classList.toggle('hidden',kind==='bot'?i!==0:kind==='duobot'?i%2===1:false);$('#difficulty').closest('label').classList.toggle('hidden',kind==='friends')}
-$('#opponents').onchange=updateJackSetup;updateJackSetup();
-$('#revealHand').onclick=()=>{awaitingReveal=false;$('#privacy').classList.remove('show');BS_AUDIO.play('card');render()};$('#startBtn').onclick=startLocal;$('#restart').onclick=()=>mode==='online'?(room?.status==='finished'&&room?.me?.role==='host'?client.send('rematch'):BS_PLATFORM.toast('الإعادة بعد نهاية المباراة من المضيف')):startLocal();$('#again').onclick=()=>mode==='online'?(room?.me?.role==='host'?client.send('rematch'):BS_PLATFORM.toast('المضيف يبدأ المباراة الجديدة')):startLocal();
-;(()=>{const art=$('#tblHeroArt');if(art){const names=['فهد','نورة','سارة','ماجد'];renderPetalBoard(art,{turn:0,players:names.map((name,k)=>({name,marbles:[[3,-1,-1,22],[-1,16,-1,-1],[9,-1,53,-1],[-1,-1,44,-1]][k]}))},{game:'jackaroo',preview:true,active:-1});}})();;window.BS_TABLE=Object.freeze({get active(){return Boolean(state)},get mode(){return mode},get bots(){return [...(bots||[])]},get players(){return (state?.players||[]).map((p,i)=>({index:i,name:String(p?.name||'لاعب '+(i+1))}))}});
-</script><script src="assets/js/ui-icons.js?v=32.1.0"></script><script src="assets/js/pro-experience.js?v=32.1.0"></script><script defer src="assets/js/client-health.js?v=32.1.0"></script><script src="assets/js/play-feedback-v24-1.js?v=32.1.0"></script><script src="assets/js/reactions-v31.js?v=32.1.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=32.1.0"></script></body></html>
+function jackMotionKeys(action) {
+  if (!action) return [];
+  if (action.type === "enter" || action.type === "move" || action.type === "moveAny5") return [[action.owner, action.marble]];
+  if (action.type === "swap")
+    return [
+      [action.owner, action.marble],
+      [action.otherOwner, action.otherMarble],
+    ];
+  if (action.type === "split7")
+    return [
+      [action.owner, action.first.marble],
+      [action.owner, action.second.marble],
+    ];
+  return [];
+}
+function renderTeams() {
+  for (const t of [0, 1]) {
+    const members = state.players.map((_, i) => i).filter((i) => i % 2 === t),
+      finish = boardGeometry(state).finish,
+      done = members.flatMap((i) => state.players[i].marbles).filter((x) => x === finish).length,
+      ours = me() >= 0 && me() % 2 === t;
+    $("#team" + t).innerHTML = `<b>${ours ? "فريقك" : "الفريق " + (t + 1)}</b><span>${members.map((i) => escHtml(state.players[i].name)).join(" + ")}</span><span>${done}/${members.length * 4} في الأمان</span>`;
+    $("#team" + t).classList.toggle("is-mine", ours);
+  }
+}
+function renderPlayers() {
+  const box = $("#players");
+  box.innerHTML = "";
+  state.players.forEach((p, i) => {
+    const home = p.marbles.filter((x) => x === -1).length,
+      done = p.marbles.filter((x) => x === boardGeometry(state).finish).length,
+      row = document.createElement("div");
+    row.className = "player-jack " + (state.turn === i && state.winnerTeam === null ? "turn" : "") + (i === me() ? " is-me" : "");
+    row.style.setProperty("--seat", colors[i]);
+    row.innerHTML = `<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(p.name)}${i === me() ? " · أنت" : ""}</b><div class="home-marbles" style="--c:${colors[i]}">${Array.from({ length: home }, () => "<i></i>").join("")}</div><div class="mini-note">${done}/4 أمان</div></div><b>${p.marbles.filter((x) => x >= 0 && x < boardGeometry(state).finish).length}</b>`;
+    const tag = botTag(playerAt(i));
+    if (tag) row.querySelector("div b")?.append(tag);
+    if (window.BS_PIECES) {
+      const pawn = seatLook(room, i).pawn;
+      row.prepend(window.BS_PIECES.icon(document, { kind: "marble", style: window.BS_PIECES.marbleFor(pawn === "pawn-character" ? "pawn-classic" : pawn), color: colors[i], className: "chip-piece" }));
+    }
+    box.appendChild(row);
+  });
+}
+function isMyTurn() {
+  return room?.status === "playing" && me() === state?.turn && !stepping;
+}
+function cardFace(card, index) {
+  if (card === "?") {
+    const b = document.createElement("div");
+    b.className = "playing-card card-back";
+    return b;
+  }
+  const rank = cardRank(card),
+    s = String(card).slice(-1),
+    red = s === "H" || s === "D",
+    b = document.createElement("button");
+  b.className = "playing-card " + (red ? "red " : "") + (selectedCard === index ? "selected" : "");
+  const face = ["J", "Q", "K"].includes(rank);
+  if (face) b.classList.add("face");
+  b.setAttribute("aria-label", rank + " " + ({ S: "بستوني", H: "كبة", D: "ديناري", C: "سباتي" }[s] || ""));
+  b.innerHTML = `<span class="rank">${rank}</span><span class="suit-corner" aria-hidden="true">${suits[s] || "◆"}</span><span class="suit" data-face="${face ? rank : ""}">${suits[s] || "◆"}</span><span class="corner-flip" aria-hidden="true">${rank}</span>`;
+  b.disabled = pendingAction || !isMyTurn();
+  b.onclick = () => selectCard(index);
+  return b;
+}
+function cardLabel(card) {
+  if (!card || card === "?") return "";
+  const s = String(card).slice(-1);
+  return cardRank(card) + (suits[s] || "");
+}
+function actionLabel(a) {
+  const owner = a.owner ?? state.turn,
+    name = state.players[owner]?.name || "";
+  if (a.type === "enter") return `⬆ إخراج حجر ${a.marble + 1}${owner !== state.turn ? " — " + name : ""}`;
+  if (a.type === "move") return `${a.backward ? "↶" : "→"} ${name} • حجر ${a.marble + 1} ${a.backward ? "−" : "+"}${a.steps}`;
+  if (a.type === "moveAny5") return `5️⃣ ${name} • حجر ${a.marble + 1} +5`;
+  if (a.type === "swap") return `⇄ حجر ${a.marble + 1} مع ${state.players[a.otherOwner].name} • حجر ${a.otherMarble + 1}`;
+  if (a.type === "split7") return `7️⃣ ${name}: حجر ${a.first.marble + 1} +${a.first.steps}، حجر ${a.second.marble + 1} +${a.second.steps}`;
+  return "🔥 حرق الورقة — لا توجد حركة";
+}
+function selectCard(index) {
+  if (!isMyTurn() || pendingAction) return;
+  selectedMarble = null;
+  selectedCard = index;
+  BS_AUDIO.play("select");
+  renderHand();
+  renderActions();
+  highlightMoves();
+  // a card with one move only is played at once
+  const only = getJackarooActions(state, index, state.turn);
+  if (only.length === 1 && only[0].type !== "discard") play(only[0]);
+}
+function myHand() {
+  return state?.hands?.[me()] || [];
+}
+function renderHand() {
+  const box = $("#hand");
+  box.innerHTML = "";
+  const hand = myHand();
+  hand.forEach((c, i) => box.appendChild(cardFace(c, i)));
+  $("#handHint").textContent = isMyTurn() ? `${hand.length} ورقة — اختر للعب` : `${hand.length} ورقة — بانتظار دورك`;
+}
+function legalActions() {
+  if (selectedCard === null || !isMyTurn()) return [];
+  const all = getJackarooActions(state, selectedCard, state.turn);
+  if (!selectedMarble) return all;
+  return all.filter(
+    (a) => jackMotionKeys(a).some(([pi, mi]) => pi === selectedMarble[0] && mi === selectedMarble[1]) || (a.type === "enter" && a.owner === selectedMarble[0] && a.marble === selectedMarble[1]),
+  );
+}
+function chooseMarble(pi, mi) {
+  if (pendingAction || selectedCard === null || !isMyTurn()) return;
+  const actions = getJackarooActions(state, selectedCard, state.turn).filter(
+    (a) => jackMotionKeys(a).some(([p, m]) => p === pi && m === mi) || (a.type === "enter" && a.owner === pi && a.marble === mi),
+  );
+  if (!actions.length) return;
+  selectedMarble = [pi, mi];
+  if (actions.length === 1) play(actions[0]);
+  else {
+    renderActions();
+    highlightMoves();
+    BS_PLATFORM.toast("اختر الحركة المطلوبة من القائمة");
+  }
+}
+function highlightMoves() {
+  renderPieces();
+  document.querySelectorAll(".legal-piece,.legal-destination").forEach((e) => e.classList.remove("legal-piece", "legal-destination"));
+  if (selectedCard === null || pendingAction) return;
+  for (const a of legalActions()) {
+    const keys = a.type === "enter" ? [[a.owner, a.marble]] : jackMotionKeys(a);
+    for (const [pi, mi] of keys) document.querySelector(`[data-stone="${pi}:${mi}"]`)?.classList.add("legal-piece");
+    if (a.type === "move" || a.type === "moveAny5") {
+      const pos = state.players[a.owner].marbles[a.marble],
+        end = a.backward ? (pos - a.steps + 52) % 52 : pos + a.steps;
+      const target =
+        end <= 51 ? document.querySelector(`#board [data-track="${globalJackarooPosition(a.owner, end)}"]`) : end < 56 ? document.querySelector(`#board [data-safe="${a.owner}:${end - 52}"]`) : null;
+      target?.classList.add("legal-destination");
+    }
+  }
+}
+function renderActions() {
+  const box = $("#actions");
+  box.innerHTML = "";
+  if (pendingAction) {
+    box.innerHTML = '<div class="mini-note">الحركة جارية…</div>';
+    return;
+  }
+  if (!isMyTurn()) {
+    const p = playerAt(state?.turn);
+    box.innerHTML = `<div class="mini-note bot-thinking">${p?.bot ? escHtml(p.name) + " يفكّر بحركته…" : "بانتظار " + escHtml(state?.players[state.turn]?.name || "") + "…"}</div>`;
+    return;
+  }
+  if (selectedCard === null) {
+    box.innerHTML = '<div class="mini-note">اختر ورقة لعرض الحركات القانونية.</div>';
+    return;
+  }
+  legalActions().forEach((a) => {
+    const b = document.createElement("button");
+    b.className = "action-btn";
+    b.textContent = actionLabel(a);
+    b.onclick = () => play(a);
+    box.appendChild(b);
+  });
+}
+function render() {
+  if (!state) return;
+  renderPieces();
+  renderTeams();
+  renderPlayers();
+  $("#deckCount").textContent = `المتبقي في الرزمة: ${state.deck?.length ?? 0}`;
+  $("#dealText").textContent = `التوزيع التالي: ${["4", "4", "5"][state.dealIndex] || "4"}`;
+  if (state.winnerTeam !== null && state.winnerTeam !== undefined && !stepping) {
+    const members = state.players.map((_, i) => i).filter((i) => i % 2 === state.winnerTeam);
+    $("#winnerName").textContent = members.map((i) => state.players[i].name).join(" + ");
+    $("#winnerOverlay").classList.add("show");
+    $("#again").textContent = room?.publicMatch ? "مباراة جديدة" : room?.me?.role === "host" ? "مباراة جديدة" : "بانتظار المضيف";
+    $("#again").disabled = !room?.publicMatch && room?.me?.role !== "host";
+    if (!rewarded) {
+      rewarded = true;
+      const won = state.winnerTeam === me() % 2;
+      if (window.BS_SOCIAL?.isLoggedIn()) (window.BS_PRO?.onlineResult ? window.BS_PRO.onlineResult(won) : window.BS_CAREER?.refresh?.())?.catch(() => {});
+      else (window.BS_PRO?.record || window.BS_CAREER?.record)?.({ id: matchReceipt, game: "jackaroo", win: won });
+    }
+    return;
+  }
+  $("#status").textContent = isMyTurn() ? "دورك — اختر ورقة ثم حركة" : `دور ${state.players[state.turn].name}…`;
+  renderHand();
+  renderActions();
+  highlightMoves();
+}
+function play(a) {
+  if (!isMyTurn() || selectedCard === null || pendingAction) return;
+  const index = selectedCard;
+  pendingAction = true;
+  selectedMarble = null;
+  highlightMoves();
+  const sent = table.send("jackaroo_play", { cardIndex: index, action: a });
+  if (!sent) pendingAction = false;
+  else {
+    clearTimeout(actionTimer);
+    actionTimer = setTimeout(() => {
+      pendingAction = false;
+      render();
+      BS_PLATFORM.toast("تأخر الاتصال — انتظر تحديث الغرفة");
+    }, 9000);
+  }
+  selectedCard = null;
+  renderHand();
+  renderActions();
+}
+function enterGame() {
+  document.body.classList.add("game-running");
+  buildBoard();
+  $("#setup").classList.add("hidden");
+  $("#game").classList.remove("hidden");
+  $("#winnerOverlay").classList.remove("show");
+  $("#privacy")?.classList.remove("show");
+  $("#livebar").classList.remove("hidden");
+  $("#modeHint").textContent = "أوراقك لك وحدك؛ أول لاعبين يدخلون شركاء";
+  render();
+}
+function showMenu() {
+  state = null;
+  selectedCard = null;
+  selectedMarble = null;
+  pendingAction = false;
+  $("#game").classList.add("hidden");
+  $("#setup").classList.remove("hidden");
+  $("#winnerOverlay").classList.remove("show");
+  document.body.classList.remove("game-running");
+}
+function net(s) {
+  const e = $("#liveNet");
+  if (!e) return;
+  e.classList.toggle("online", !!s.online);
+  e.classList.toggle("reconnecting", !!s.reconnecting);
+  e.querySelector("span").textContent = s.text || "";
+}
+/* One room state (or one card played): show the card, move the marbles, then draw. */
+async function apply(next, { animate }) {
+  clearTimeout(actionTimer);
+  room = next;
+  if (!next.state) return;
+  const prev = state;
+  if (!prev) {
+    matchReceipt = "board:" + next.code + ":" + (next.startedAt || next.version) + ":" + (next.me?.id || "guest");
+    rewarded = false;
+  }
+  state = next.state;
+  pendingAction = false;
+  selectedCard = null;
+  selectedMarble = null;
+  const first = $("#game").classList.contains("hidden");
+  if (first) {
+    enterGame();
+    BS_AUDIO.play("shuffle");
+  }
+  $("#gameRoomCode").textContent = next.publicMatch ? "مباراة سريعة" : next.code;
+  $("#roomLabel")?.classList.toggle("hidden", Boolean(next.publicMatch));
+  const event = state.lastEvent;
+  if (animate && prev && event && JSON.stringify(event) !== JSON.stringify(prev.lastEvent)) {
+    stepping = true;
+    try {
+      const t = event.action?.type;
+      const who = event.player === me() ? "أنت" : state.players[event.player]?.name || "";
+      $("#status").textContent = `${who} · ${cardLabel(event.card)}${t === "discard" ? " · حرق" : ""}`;
+      render();
+      BS_AUDIO.play(t === "swap" ? "duel" : t === "discard" ? "wrong" : "move");
+      if (event.captured?.length) {
+        BS_AUDIO.play("capture");
+        $("#board").classList.add("capture-flash");
+        setTimeout(() => $("#board").classList.remove("capture-flash"), 450);
+      }
+      await ($("#board").atelierMotion || Promise.resolve());
+      await wait(event.player === me() ? 200 : 520);
+    } finally {
+      stepping = false;
+    }
+  }
+  render();
+  if (state.winnerTeam !== null && state.winnerTeam !== undefined && (prev?.winnerTeam === null || prev?.winnerTeam === undefined)) BS_AUDIO.play(state.winnerTeam === me() % 2 ? "win" : "finish");
+  else if (isMyTurn() && prev && prev.turn !== state.turn) BS_AUDIO.play("turn");
+}
+const table = createTable({
+  game: "jackaroo",
+  apply,
+  onLobby: showMenu,
+  onMenu: showMenu,
+  onStatus: net,
+  lobbyNote: (room, quick) => (quick ? "تبدأ بعد العد. أول لاعبين يكونون شركاء، والبوتات تكمل الطاولة." : "أرسل الرمز لأصحابك. أول اثنين شركاء، والبوتات تكمل الطاولة لأربعة أو ستة."),
+  onError: (m) => {
+    clearTimeout(actionTimer);
+    pendingAction = false;
+    render();
+    BS_AUDIO.play("error");
+    BS_PLATFORM.toast(m);
+  },
+});
+let leaveArmed = 0;
+$("#leaveGame").onclick = () => {
+  if (room?.status === "playing" && Date.now() - leaveArmed > 2500) {
+    leaveArmed = Date.now();
+    BS_PLATFORM.toast("اضغط «خروج» مرة ثانية لترك المباراة");
+    return;
+  }
+  table.leave();
+};
+$("#again").onclick = () => table.again();
+$("#toMenu").onclick = () => table.leave();
+window.addEventListener("pagehide", () => clearTimeout(actionTimer));
+window.addEventListener("bs-career-change", () => {
+  if (state && !pendingAction) render();
+});
+(() => {
+  const art = $("#tblHeroArt");
+  if (art) {
+    const names = ["فهد", "نورة", "سارة", "ماجد"];
+    renderPetalBoard(
+      art,
+      {
+        turn: 0,
+        players: names.map((name, k) => ({
+          name,
+          marbles: [
+            [3, -1, -1, 22],
+            [-1, 16, -1, -1],
+            [9, -1, 53, -1],
+            [-1, -1, 44, -1],
+          ][k],
+        })),
+      },
+      { game: "jackaroo", preview: true, active: -1 },
+    );
+  }
+})();
+window.BS_TABLE = Object.freeze({
+  get active() {
+    return Boolean(state);
+  },
+  get mode() {
+    return "online";
+  },
+  get bots() {
+    return (room?.players || []).filter((p) => p.bot).map((p) => p.index);
+  },
+  get players() {
+    return (state?.players || []).map((p, i) => ({ index: i, name: String(p?.name || "لاعب " + (i + 1)) }));
+  },
+});
+</script><script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>

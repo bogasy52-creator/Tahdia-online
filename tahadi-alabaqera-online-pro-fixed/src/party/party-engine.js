@@ -1,4 +1,4 @@
-import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,partyGame,normalizePlaylist,playlistCapacity,capacityMessage,playersLabel} from '../../public/assets/js/engines/party-catalog-v29.js';
+import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,partyGame,normalizePlaylist,playlistCapacity,capacityMessage,playersLabel,tableSize,tablesFor} from '../../public/assets/js/engines/party-catalog-v29.js';
 import {CATEGORIES} from '../questions.js';
 import {createSudoku,moveSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
@@ -11,7 +11,7 @@ import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn} from '../..
 import {createJackarooGame,getJackarooActions,playJackarooAction} from '../../public/assets/js/engines/jackaroo-engine.js';
 import {createRaceDiceGame,rollRaceDice,bankRaceDice} from '../../public/assets/js/engines/dice-engine.js';
 import {createSerpentGame,steerSerpent,stepSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
-import {linkedGame,linkable,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
+import {linkedGame,linkable,linkTables,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
 
 export const PARTY_VERSION=29;
 export const PARTY_BACK_MS=6000; // everyone is back from a game's own page: the standings, briefly
@@ -21,7 +21,7 @@ const clone=value=>structuredClone(value),sum=rows=>rows.reduce((a,b)=>a+b,0);
 const uuid=()=>crypto.randomUUID();
 export function createParty({code,hostKey,capacity=20,playlist=['quiz','memory'],links=false,now=Date.now()}={}){
  if(!/^\d{6}$/.test(code||'')||typeof hostKey!=='string'||hostKey.length<32||!Number.isInteger(capacity)||capacity<1||capacity>PARTY_CAPACITY)throw Error('إعدادات الغرفة غير صالحة');
- return{format:PARTY_VERSION,links:links===true,id:uuid(),code,hostKey,capacity:Math.min(capacity,playlistCapacity(normalizePlaylist(playlist))),playlist:normalizePlaylist(playlist),playlistRevision:1,status:'lobby',order:[],players:{},cursor:-1,history:[],sessionId:uuid(),revision:0,round:null,createdAt:now,updatedAt:now,expiresAt:now+24*3600000};
+ return{format:PARTY_VERSION,links:links===true,id:uuid(),code,hostKey,capacity:Math.min(capacity,PARTY_CAPACITY),playlist:normalizePlaylist(playlist),playlistRevision:1,status:'lobby',order:[],players:{},cursor:-1,history:[],sessionId:uuid(),revision:0,round:null,createdAt:now,updatedAt:now,expiresAt:now+24*3600000};
 }
 // 32.1.0: names are compared the way every game room stores them (at most 20 characters),
 // so a round played in the real game finds each player again by name.
@@ -50,7 +50,8 @@ function quizPack(game,seed){const random=seeded(seed);
 }
 function resetQuizQuestion(r,now){r.questionStartedAt=now;r.answerOpensAt=now+(r.questions[r.questionIndex]?.media==='memory'?Math.min(8000,Math.max(2500,r.questions[r.questionIndex].memory?.previewMs||4500)):0);r.questionDeadline=Math.min(r.deadline,r.answerOpensAt+Math.max(7000,Math.floor(r.settings.duration*1000/r.questions.length)-2500));r.revealUntil=0;for(const p of Object.values(r.participants)){p.choice=null;p.listenCount=0;}}
 function tableGroups(room,r,random){
- const ids=shuffled(room.roster,random),count=1,groups=Array.from({length:count},()=>[]);ids.forEach((id,i)=>groups[i%count].push(id));
+ // 33.0.0: a full room plays a table game on several tables (snakes and dice 10, zahra and jackaroo 6 each)
+ const ids=shuffled(room.roster,random),count=tablesFor(r.game,ids.length).length,groups=Array.from({length:count},()=>[]);ids.forEach((id,i)=>groups[i%count].push(id));
  return groups.map((members,index)=>{const min=r.game==='jackaroo'?(members.length>4?6:4):2;while(members.length<min)members.push('bot:'+index+':'+members.length);const names=members.map((id,i)=>room.players[id]?.name||'بوت '+(i+1));let state;
   if(r.game==='jackaroo')state=createJackarooGame(names,{rng:random});else if(r.game==='zahra')state=createLudoGame(names);else if(r.game==='dice')state=createRaceDiceGame(names,40);else state=createSnakesServerGame(names,{variant:'adventure'});
   return{id:index,members,state,pendingRoll:null,turnDeadline:r.startedAt+20000,finished:false,actions:0};});
@@ -63,7 +64,7 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
  // 32.1.0: a game that has its own online room is played there, unchanged; the party
  // waits for its result. With too few players for that game, it stays in the party.
  const playing=room.roster.filter(id=>room.players[id]?.connected);
- if(room.links&&linkedGame(game)&&linkable(game,playing.length)){r.link={status:'creating',page:linkedGame(game).page,code:null,token:uuid().replaceAll('-','')+uuid().replaceAll('-',''),count:playing.length,seats:room.roster.length,players:playing,attempts:0,createdAt:now};r.deadline=now+PARTY_LINK_WAIT_MS;return;}
+ if(room.links&&linkedGame(game)&&linkable(game,playing.length)){const token=()=>uuid().replaceAll('-','')+uuid().replaceAll('-',''),groups=linkTables(game,shuffled(playing,random)),one=groups.length===1;r.link={status:'creating',page:linkedGame(game).page,code:null,count:playing.length,seats:room.roster.length,attempts:0,createdAt:now,tables:groups.map((players,id)=>({id,players,count:players.length,seats:one?room.roster.length:players.length,token:token(),code:null,done:false}))};r.deadline=now+PARTY_LINK_WAIT_MS;return;}
  setupRoundGame(room,r,now);
 }
 // The game itself inside the party (also the fallback when its real room cannot open).
@@ -82,9 +83,12 @@ export function setupRoundGame(room,r,now=Date.now()){
  else if(game==='serpent'){r.arena=createSerpentGame(room.roster.map(id=>({id,name:room.players[id].name,skin:room.players[id].skin||'snake-wild'})),{seed,worldId:settings.worldId,collisionMode:'arena-v23',duration:settings.duration,difficulty:'medium'});r.lastSimulationAt=now;r.stepCarry=0;}
 }
 /* ---------- 32.1.0: rounds played in the real game ---------- */
-export function openPartyLink(room,{code,page},now=Date.now()){
+export function openPartyLink(room,{code,page},now=Date.now(),table=0){
  const r=room.round;if(room.status!=='playing'||r?.link?.status!=='creating')return false;
- r.link={...r.link,status:'open',code,page:page||r.link.page,openedAt:now};r.revision++;return true;
+ const t=r.link.tables?.[table];if(t)t.code=code;
+ // every table has its room: the round opens for all
+ if((r.link.tables||[]).every(x=>x.code))r.link={...r.link,status:'open',code:r.link.tables?.[0]?.code||code,page:page||r.link.page,openedAt:now};
+ r.revision++;return true;
 }
 // The real room could not open: the round is played inside the party instead.
 export function failPartyLink(room,now=Date.now()){
@@ -94,8 +98,9 @@ export function failPartyLink(room,now=Date.now()){
 /** The real room's final ranking becomes this round's result. */
 export function applyLinkResult(room,body,now=Date.now()){
  const r=room.round;
- if(room.status!=='playing'||r?.link?.status!=='open'||body?.round!==r.id||body?.token!==r.link.token)return false;
- const rows=Array.isArray(body.standings)?body.standings.slice(0,40):[],used=new Set(),count=rows.length;
+ const table=(r?.link?.tables||[]).find(t=>t.token&&t.token===body?.token&&!t.done);
+ if(room.status!=='playing'||r?.link?.status!=='open'||body?.round!==r.id||!table)return false;
+ const rows=Array.isArray(body.standings)?body.standings.slice(0,40):[],used=new Set(),count=rows.length,several=r.link.tables.length>1;
  // an account is found by its username; a guest by name, guests first (an account keeps its own row)
  const open=id=>!used.has(id)&&room.players[id],match=row=>{
   if(row.username){const id=room.roster.find(id=>open(id)&&room.players[id].username===row.username);if(id)return id;}
@@ -104,8 +109,11 @@ export function applyLinkResult(room,body,now=Date.now()){
  // a shared first place is a draw, unless the game itself named a winner
  const soleFirst=rows.filter(row=>Number(row.rank)===1).length===1;
  for(const row of rows){const id=match(row);if(!id)continue;used.add(id);const p=r.participants[id];if(!p)continue;
-  const rank=Math.max(1,Math.min(count,Number(row.rank)||count));p.score=count-rank+1;p.won=Boolean(row.won)||rank===1&&soleFirst;p.progress=1;p.actions=Math.max(1,p.actions||0);p.done=true;p.finishedAt=now;p.gameScore=Math.max(0,Number(row.score)||0);}
- r.link={...r.link,status:'done',doneAt:now,token:undefined};
+  const rank=Math.max(1,Math.min(count,Number(row.rank)||count));p.score=several?Math.round(100*(count-rank+1)/Math.max(1,count)):count-rank+1;p.won=Boolean(row.won)||rank===1&&soleFirst;p.progress=1;p.actions=Math.max(1,p.actions||0);p.done=true;p.finishedAt=now;p.gameScore=Math.max(0,Number(row.score)||0);}
+ // with several tables a place counts by its table's size, so every table's winner ranks first
+ table.done=true;table.token=undefined;r.revision++;
+ if(r.link.tables.some(t=>!t.done))return true;
+ r.link={...r.link,status:'done',doneAt:now};
  finishPartyRound(room,now);return true;
 }
 const completed=(p,now,won=true)=>{p.done=true;p.won=won;p.finishedAt=now;};
@@ -188,7 +196,7 @@ export function finishPartyRound(room,now=Date.now(),aborted=false){
  for(const row of rows){const p=room.players[row.id];p.score+=row.points;if(!aborted&&row.rank===1&&row.points>0)p.wins++;}
  room.history.push({id:r.id,game:r.game,name:partyGame(r.game).name,rows,aborted,finishedAt:now,linked:Boolean(r.link&&r.link.status!=='failed')});room.status='intermission';r.finishedAt=now;
  // after a game played on its own page, everyone gets a minute to come back
- const away=Boolean(r.link&&r.link.status!=='failed');room.returnWait=away;room.nextAt=now+(away?PARTY_RETURN_MS:PARTY_BREAK_MS);if(r.link)r.link={...r.link,status:r.link.status==='open'||r.link.status==='creating'?'closed':r.link.status,token:undefined};return true;
+ const away=Boolean(r.link&&r.link.status!=='failed');room.returnWait=away;room.nextAt=now+(away?PARTY_RETURN_MS:PARTY_BREAK_MS);if(r.link)r.link={...r.link,status:r.link.status==='open'||r.link.status==='creating'?'closed':r.link.status,tables:(r.link.tables||[]).map(t=>({...t,token:undefined}))};return true;
 }
 export function advanceParty(room,now=Date.now()){
  let full=false,changed=false;const privateIds=new Set();
@@ -264,9 +272,11 @@ function publicParticipant(r,p,now){
  if(r.tables){const t=r.tables.find(t=>t.members.includes(p.id)),seat=t.members.indexOf(p.id),s=t.state;return{...base,tableId:t.id,seat,hand:r.game==='jackaroo'?s.hands[seat]:undefined,cardActions:r.game==='jackaroo'&&s.turn===seat?s.hands[seat].map((_,i)=>getJackarooActions(s,i)):undefined,legal:r.game==='zahra'&&s.turn===seat&&t.pendingRoll?getLegalLudoMoves(s,t.pendingRoll):[]};}
  return base;
 }
+// 33.0.0: the state the room sends to everyone lists every table and its players
+// (`link.list`), so each page finds its own table; `code` is the viewer's own table.
 export function partyRoundView(room,id=null,now=Date.now()){
  const r=room.round;if(!r)return null;const view={id:r.id,game:r.game,name:partyGame(r.game).name,startedAt:r.startedAt,deadline:r.deadline,settings:r.settings,revision:r.revision,me:publicParticipant(r,r.participants[id],now)};
- if(r.link)view.link={status:r.link.status,page:r.link.page,code:r.link.code||null,count:r.link.count||0};
+ if(r.link){const tables=r.link.tables||[],mine=tables.find(t=>t.players.includes(id))||[...tables].filter(t=>t.code).sort((a,b)=>a.players.length-b.players.length)[0];view.link={status:r.link.status,page:r.link.page,code:mine?.code||r.link.code||null,count:r.link.count||0,tables:tables.length,table:mine?mine.id:null,list:tables.map(t=>({id:t.id,code:t.code||null,players:[...(t.players||[])]}))};}
  if(r.link&&r.link.status!=='failed')return view;
  if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
  if(r.game==='reaction')view.reaction={trial:r.trial,trials:r.trials,signal:r.signal};

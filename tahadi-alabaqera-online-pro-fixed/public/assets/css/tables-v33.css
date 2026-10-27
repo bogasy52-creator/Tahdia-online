@@ -1,0 +1,63 @@
+/* Tahdia 33.0.0 — the table games online: two dice (yours and the player on turn),
+   bots in the player list, and the snakes layout for them. */
+/* the two dice: yours and the player on turn */
+.dice-duel-v33{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.dice-duel-v33 .duel-die{position:relative;display:grid;justify-items:center;gap:6px;padding:10px 6px 8px;border:1px solid #29394d;border-radius:16px;background:#0c1524;transition:border-color .2s,box-shadow .2s,opacity .2s}
+.dice-duel-v33 .duel-die.is-turn{border-color:#f7ba55aa;box-shadow:0 0 0 3px #f7ba5522}
+.dice-duel-v33 .duel-die.is-idle{opacity:.72}
+.dice-duel-v33 .duel-die small{max-width:100%;overflow:hidden;font-size:11.5px;font-weight:700;color:#a7b4c6;white-space:nowrap;text-overflow:ellipsis}
+.dice-duel-v33 .duel-die b.duel-skin{font-size:10px;font-weight:600;color:#7f91a6}
+.dice-duel-v33 .duel-pair{display:flex;align-items:center;justify-content:center;gap:6px}
+.dice-duel-v33 .duel-pair .die.hidden{display:none!important}
+
+/* bots in the player list */
+
+
+/* a section hidden by the page stays hidden (an older rule forced the snakes game open) */
+:is(html,#v31) body.game-snakes #game.snl31.hidden{display:none!important}
+
+/* snakes: the two dice beside the roll button, the start lane under them */
+:is(html,#v31) body.game-snakes #game.snl31 .game-layout{grid-template-columns:minmax(0,1fr) minmax(128px,.9fr)!important;grid-template-areas:'board board' 'status status' 'dice roll' 'start start' 'power power' 'help help' 'log log' 'rules rules' 'more more'!important}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-stage.dice-duel-v33{width:auto!important;height:auto!important;padding:0!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;place-items:stretch!important}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-die{min-width:0;padding:8px 4px 6px}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .die.pro-die{--die-size:40px}
+:is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-pair{min-height:52px}
+:is(html,#v31) body.game-snakes #game.snl31 #roll{align-self:stretch!important;min-height:64px!important}
+:is(html,#v31) body.game-snakes #game.snl31 details.snl-more{grid-area:more!important}
+@media (min-width:900px){
+ :is(html,#v31) body.game-snakes #game.snl31 .game-layout{grid-template-columns:minmax(0,1fr) 330px!important;grid-template-areas:'board status' 'board dice' 'board roll' 'board start' 'board power' 'board help' 'board log' 'board rules' 'board more'!important}
+ :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .die.pro-die{--die-size:52px}
+}
+/* the players: you are outlined; a bot carries a small tag with its strength */
+:is(html,#v31) body.game-snakes #game.snl31 .player-row.is-me{box-shadow:inset 0 0 0 2px #f7ba5566!important}
+:is(html,#v31) body.game-snakes #game.snl31 .player-row>.bot-tag-v33{position:absolute;bottom:6px;inset-inline-end:10px;margin:0;z-index:2}
+.player-row>.bot-tag-v33{margin-inline-start:0}
+.winner-actions-v33{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.winner-actions-v33 .bs-btn{min-width:130px}
+
+/* zahra: the two dice beside the roll button */
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game.hidden{display:none!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .game-layout{grid-template-columns:minmax(0,1fr) minmax(128px,.9fr)!important;grid-template-areas:'board board' 'status status' 'dice roll' 'help help' 'rules rules'!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-stage.dice-duel-v33{width:auto!important;height:auto!important;padding:0!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;place-items:stretch!important}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .duel-die{min-width:0;padding:8px 4px 6px}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .die.pro-die{--die-size:40px}
+:is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .duel-pair{min-height:52px}
+:is(html,#v31) body.game-zahra #game.tbl31 #roll{align-self:stretch!important;min-height:64px!important}
+@media (min-width:900px){
+ :is(html,#v31) body.game-zahra #game.tbl31 .game-layout{grid-template-columns:minmax(0,1fr) 300px!important;grid-template-areas:'board status' 'board dice' 'board roll' 'board help' 'board rules'!important}
+ :is(html,#v31) body.game-zahra #game.tbl31 .dice-duel-v33 .die.pro-die{--die-size:52px}
+}
+:is(html,#v31) body:is(.game-zahra,.game-jackaroo) #game.tbl31 .player-row.is-me{box-shadow:inset 0 0 0 2px #f7ba5566!important}
+
+/* the dice race: two big dice, and each player's way to 50 */
+.game-dice .dice-hero.dice-duel-v33{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;padding:16px!important;min-height:0!important}
+.game-dice .dice-duel-v33 .duel-die{padding:16px 8px 12px}
+.game-dice .dice-duel-v33 .die.pro-die{--die-size:72px}
+.game-dice .dice-duel-v33 .duel-pair{min-height:96px}
+.game-dice .dice-duel-v33 small{font-size:13px}
+.game-dice .player-row{position:relative;overflow:hidden}
+/* the row clips its progress line, so the «الدور» tag hangs inside its top edge */
+.game-dice .player-row.turn::after{top:0;right:auto;left:10px;padding:0 7px 1px;border-radius:0 0 7px 7px;font-size:8.5px;line-height:1.35;background:#3b3166;color:#efe6ff}
+.game-dice .player-row.is-me{box-shadow:inset 0 0 0 2px #f7ba5566}
+.dice-progress-v33{position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--c,#f7ba55) var(--p,0%),transparent var(--p,0%))}
+.game-dice .game-livebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;font-size:12px;color:#a7b4c6}

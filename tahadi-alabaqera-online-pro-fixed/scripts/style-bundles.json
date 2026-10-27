@@ -33,7 +33,9 @@
     "assets/css/mobile-v21.css",
     "assets/css/tabletop-v30.css",
     "assets/css/release-v31.css",
-    "assets/css/dice-v31.css"
+    "assets/css/dice-v31.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -45,7 +47,8 @@
     "assets/css/experience-v15.css",
     "assets/css/studio-v16.css",
     "assets/css/home-v19.css",
-    "assets/css/mobile-v21.css"
+    "assets/css/mobile-v21.css",
+    "assets/css/home-v33.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -64,7 +67,9 @@
     "assets/css/release-v31.css",
     "assets/css/dice-v31.css",
     "assets/css/tables-v31.css",
-    "assets/css/reactions-v31.css"
+    "assets/css/reactions-v31.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -74,17 +79,7 @@
     "assets/css/release-v31.css"
   ],
   "local.html": [
-    "assets/css/platform.css",
-    "assets/css/quiz-luxury.css",
-    "assets/css/quiz-board-v2.css",
-    "assets/css/pro-games.css",
-    "assets/css/cosmetics.css",
-    "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css",
-    "assets/css/quiz-v19.css",
-    "assets/css/quiz-v21.css",
-    "assets/css/mobile-v21.css",
-    "assets/css/quiz-v28.css"
+    "assets/css/platform.css"
   ],
   "logic.html": [
     "assets/css/platform.css",
@@ -118,7 +113,8 @@
     "assets/css/quiz-v19.css",
     "assets/css/quiz-v21.css",
     "assets/css/mobile-v21.css",
-    "assets/css/quiz-v28.css"
+    "assets/css/quiz-v28.css",
+    "assets/css/game-menu-v33.css"
   ],
   "puzzle.html": [
     "assets/css/platform.css",
@@ -157,7 +153,9 @@
     "assets/css/arena-v24.css",
     "assets/css/arena-v27.css",
     "assets/css/release-v31.css",
-    "assets/css/serpent-v32.css"
+    "assets/css/serpent-v32.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/serpent-v33.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
@@ -190,7 +188,9 @@
     "assets/css/snakes-v31.css",
     "assets/css/snakes-board-v31-1.css",
     "assets/css/snakes-board-v32.css",
-    "assets/css/reactions-v31.css"
+    "assets/css/reactions-v31.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -227,7 +227,9 @@
     "assets/css/release-v31.css",
     "assets/css/dice-v31.css",
     "assets/css/tables-v31.css",
-    "assets/css/reactions-v31.css"
+    "assets/css/reactions-v31.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
@@ -277,6 +279,7 @@
     "assets/css/release-v31.css",
     "assets/css/play-experience-v25.css",
     "assets/css/reactions-v31.css",
-    "assets/css/baloot-v32.css"
+    "assets/css/baloot-v32.css",
+    "assets/css/game-menu-v33.css"
   ]
 }

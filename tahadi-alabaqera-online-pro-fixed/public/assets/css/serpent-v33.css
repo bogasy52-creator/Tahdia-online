@@ -1,0 +1,19 @@
+/* Tahdia 33.0.0 — حلبة الثعابين uses the shared online menu. Display settings fold
+   away under it; the room lobby keeps the arena's own look. */
+.serpent-page .serpent-menu-v33{margin:6px 0 16px}
+.serpent-page .arena-settings-v33{margin:16px 0 6px;padding-top:12px;border-top:1px solid #3f576f}
+.serpent-page .arena-settings-v33>summary{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;min-height:44px;cursor:pointer;list-style:none;font-size:14px;font-weight:800;color:#d9eaf3}
+.serpent-page .arena-settings-v33>summary::-webkit-details-marker{display:none}
+.serpent-page .arena-settings-v33>summary::after{content:'';width:8px;height:8px;margin-inline-start:auto;border:solid #9ce5d0;border-width:0 2px 2px 0;transform:rotate(45deg);transition:transform .2s}
+.serpent-page .arena-settings-v33[open]>summary::after{transform:rotate(-135deg)}
+.serpent-page .arena-settings-v33>summary span{font-size:11px;font-weight:500;color:#9db4c5}
+.serpent-page .arena-settings-v33 .hunt-control{margin-top:6px;font-size:12px;line-height:1.9}
+.serpent-page .arena-trial{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 14px;padding:12px 14px;border:1px solid #947956;border-radius:14px;background:#362a243d;color:#ffe0a9}
+.serpent-page .arena-trial>span{flex:1 1 140px}
+.serpent-page .arena-trial-start{min-height:44px;padding:8px 18px;border-radius:12px;border:1px solid #f1d39a;background:#f1d39a;color:#2b2414;font:inherit;font-weight:800;cursor:pointer}
+.serpent-page .arena-trial-start:focus-visible{outline:3px solid #9ce5d0;outline-offset:2px}
+.serpent-page .arena-lobby-friends{margin:2px 0 14px}
+.serpent-page .arena-lobby-friends[hidden]{display:none}
+.serpent-page .arena-lobby-bots select:disabled{opacity:.7;cursor:default}
+.serpent-page .arena-lobby[data-kind=party] .lobby-heading .arena-eyebrow{color:#f1d39a}
+.serpent-page .arena-room-player[data-ready=false]{opacity:.65}

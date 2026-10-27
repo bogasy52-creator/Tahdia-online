@@ -28,9 +28,16 @@ export class PartyRoom{
  // 32.1.0: open the real game's room for a round that is played there
  async ensureLink(){
   const r=this.room?.round;if(this.room?.status!=='playing'||r?.link?.status!=='creating'||this.linkBusy===r.id)return false;
-  this.linkBusy=r.id;
-  try{const res=await createLinkedRoom(this.env,r.game,{settings:r.settings,count:r.link.count,seats:r.link.seats||r.link.count,link:{code:this.room.code,round:r.id,token:r.link.token}});if(this.room?.round!==r)return false;if(res.ok)return openPartyLink(this.room,res,Date.now());r.link.attempts=(r.link.attempts||0)+1;}
-  catch{if(this.room?.round!==r)return false;r.link.attempts=(r.link.attempts||0)+1;}
+  this.linkBusy=r.id;let failed=false;
+  try{
+   // 33.0.0: one real room per table, opened one after the other
+   for(const t of r.link.tables||[]){
+    if(t.code)continue;
+    try{const res=await createLinkedRoom(this.env,r.game,{settings:r.settings,count:t.count,seats:t.seats||t.count,link:{code:this.room.code,round:r.id,token:t.token}});if(this.room?.round!==r)return false;if(res.ok)openPartyLink(this.room,res,Date.now(),t.id);else{failed=true;break;}}
+    catch{if(this.room?.round!==r)return false;failed=true;break;}
+   }
+   if(failed)r.link.attempts=(r.link.attempts||0)+1;
+  }
   finally{if(this.linkBusy===r.id)this.linkBusy=null;}
   // two failures: the round is played inside the party instead
   return r.link.attempts>=2?failPartyLink(this.room,Date.now()):true;

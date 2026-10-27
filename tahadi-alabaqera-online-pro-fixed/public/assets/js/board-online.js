@@ -31,6 +31,19 @@ export class BoardOnlineClient {
     if(this.game==='snakes'&&variant==='adventure'&&data.variant!=='adventure')throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
     this.hostKey=data.hostKey;this.hostCode=data.code;return this.connect(data.code,name);
   }
+  // 33.0.0: «العب الحين» — the server seats you at the open public table of this game
+  // (and way of playing); it starts ten seconds after it opened, bots in the empty seats.
+  async quick(name,{variant='classic'}={}){
+    const epoch=++this.requestEpoch;this.closedByUser=false;
+    const res=await timedFetch('/api/board/quick',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,variant})});
+    const data=await res.json().catch(()=>({}));this.checkRequest(epoch);
+    if(!res.ok||!data.ok){
+      if(data.code==='DURABLE_REQUEST_LIMIT'){const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';throw error;}
+      throw new Error([404,405].includes(res.status)?'هذا السيرفر لا يحتوي اللعب السريع. انشر المشروع كاملًا.':data.error||'تعذر إيجاد طاولة الآن');
+    }
+    this.hostKey='';this.hostCode='';this.quickTable=true;
+    return this.connect(data.code,name);
+  }
   async join(code,name,{character=''}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
     this.character=character;
@@ -63,6 +76,7 @@ export class BoardOnlineClient {
       clearTimeout(this.reconnectTimer);this.reconnectTimer=null;
       const proto=location.protocol==='https:'?'wss:':'ws:',q=new URLSearchParams({name:this.name,game:this.game});
       if(this.game==='snakes'&&this.character)q.set('character',this.character);
+      try{const equipped=globalThis.BS_CAREER?.get?.()?.equipped||{};if(equipped.dice)q.set('dice',equipped.dice);if(equipped.pawn)q.set('pawn',equipped.pawn);}catch{}
       const protocols=['busraj-v1'];if(this.token)protocols.push(`rt.${this.token}`);if(this.hostKey)protocols.push(`hk.${this.hostKey}`);try{const account=localStorage.getItem('bs_social_session');if(account)protocols.push('st.'+account)}catch{}
       let ws,settled=false;
       const fail=message=>{if(settled)return;settled=true;clearTimeout(timer);this.cancelOpening=null;reject(new Error(message));};
@@ -142,6 +156,45 @@ export class BoardOnlineClient {
     this.stopTransport();
     if(this.bound){window.removeEventListener('online',this.resume);window.removeEventListener('pageshow',this.pageShow);document.removeEventListener('visibilitychange',this.visibility);this.bound=false;}
   }
+}
+
+/* 33.0.0: a move answered by bots arrives as one state carrying `steps`: every
+   position in between, in order. These are the room states to show one by one:
+   each step as the room at that version, then the room itself. */
+export function expandSteps(room,afterVersion=-1){
+  if(!room)return [];
+  const steps=Array.isArray(room.steps)?room.steps.filter(step=>step&&Number(step.version)>afterVersion&&Number(step.version)<room.version):[];
+  const {steps:_drop,...plain}=room;
+  return [...steps.map(step=>({...plain,version:step.version,state:step.state,pendingRoll:step.pendingRoll??null,status:'playing',turnDeadline:null,stepOf:room.version})),plain];
+}
+/* Plays room states in order, one at a time, never skipping a step unless a long
+   backlog piled up (a hidden tab, a slow phone): then it jumps to the newest. */
+export function createStepPlayer(apply,{maxBacklog=14,onError}={}){
+  let queue=[],running=false,last=-1;
+  async function drain(){
+    if(running)return;running=true;
+    try{
+      while(queue.length){
+        if(queue.length>maxBacklog||globalThis.document?.hidden&&queue.length>1)queue=queue.slice(-1);
+        const next=queue.shift();
+        try{await apply(next,{animate:!globalThis.document?.hidden&&queue.length<maxBacklog});}catch(error){onError?.(error);}
+      }
+    }finally{running=false;}
+  }
+  return {
+    push(room){
+      if(!room)return;
+      if(room.version<last)return;
+      // the steps newer than what was shown, then the room itself (also when only
+      // who is connected changed and the version stayed the same)
+      const list=expandSteps(room,last);
+      last=room.version;
+      queue.push(...list);drain();
+    },
+    reset(){queue=[];last=-1;},
+    get busy(){return running||queue.length>0;},
+    get version(){return last;}
+  };
 }
 
 export function renderRoomPlayers(container,roomState,colors=['#8b5cf6','#22d3ee','#f0b94a','#22c55e']){

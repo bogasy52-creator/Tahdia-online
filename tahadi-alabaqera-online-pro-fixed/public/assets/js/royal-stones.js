@@ -16,7 +16,7 @@
   function loadCharacters(){
     if(!characterReady)characterReady=Promise.all(characters.map(item=>new Promise(resolve=>{
       const image=new Image();characterImages.set(item.id,image);
-      image.onload=()=>{for(const canvas of document.querySelectorAll('.crystal-sprite[data-art="character"]'))drawCharacter(canvas,Number(canvas.dataset.player));resolve();};
+      image.onload=()=>{for(const canvas of document.querySelectorAll('.crystal-sprite[data-art="character"]'))drawCharacter(canvas,Number(canvas.dataset.player),canvas.dataset.preview||null);resolve();};
       image.onerror=resolve;image.src=artOf(item.id);
     })));
     return characterReady;
@@ -39,6 +39,8 @@
     loadCharacters();
     const index=Math.abs(Number(player)||0)%SEATS,id=characters.some(c=>c.id===preview)?preview:characterId(player),image=characterImages.get(id);
     canvas.width=288;canvas.height=360;canvas.dataset.art='character';canvas.dataset.character=id;canvas.dataset.player=String(player);
+    // 33.0.0: a seat drawn with its own hero (a bot, another player) keeps it when the art finishes loading
+    if(id===preview)canvas.dataset.preview=id;else delete canvas.dataset.preview;
     const ctx=canvas.getContext('2d');if(!ctx)return false;
     ctx.clearRect(0,0,288,360);
     if(image?.naturalWidth){const scale=Math.min(280/image.naturalWidth,354/image.naturalHeight),w=image.naturalWidth*scale,h=image.naturalHeight*scale;ctx.drawImage(image,(288-w)/2,356-h,w,h);}
