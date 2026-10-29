@@ -28,8 +28,8 @@ test('every call, project, claim and phrase the table says has its recording', a
   assert.match(table, /const PROJECT_NAME = \{ sira: 'سرا', fifty: 'خمسين', hundred: 'مية', fourHundred: 'أربعمية' \}/);
 });
 
-test('Gulf calls are independent full speech files without sprite timing or pitch shifts',async()=>{
- const voice=await read('public/assets/js/baloot-voice.js');assert.doesNotMatch(voice,/speechSynthesis|SpeechSynthesisUtterance|src\.start\(at|playbackRate/);assert.match(voice,/src\.start\(\)/);assert.match(voice,/ar-KW-FahedNeural/);
+test('archived Gulf calls remain intact and the new player starts complete recordings',async()=>{
+ const voice=await read('public/assets/js/baloot-voice.js'),player=await read('public/assets/js/baloot-voice-player.js');assert.doesNotMatch(voice+player,/speechSynthesis|SpeechSynthesisUtterance|source\.start\(at|playbackRate/);assert.match(player,/source\.start\(\)/);assert.doesNotMatch(voice,/baloot-gulf-v33|ar-KW-FahedNeural/);
  assert.ok(Object.keys(VOICE_RECORDINGS).length>=50);for(const [id,clip]of Object.entries(VOICE_RECORDINGS)){const size=(await stat(new URL('../public'+clip.src,import.meta.url))).size;assert.ok(size>1000,id);assert.ok(clip.seconds>.3&&clip.seconds<9,id);assert.ok(clip.text.length>2);}
 });
 

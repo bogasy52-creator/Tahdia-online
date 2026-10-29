@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-0-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-a08b1bbc6c8b';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.0.0",
@@ -317,6 +317,8 @@ const ON_DEMAND = [
   "/assets/js/baloot-cards.js",
   "/assets/js/baloot-table.js",
   "/assets/js/baloot-voice-clips-v33.js",
+  "/assets/js/baloot-voice-pack.js",
+  "/assets/js/baloot-voice-player.js",
   "/assets/js/baloot-voice.js",
   "/assets/js/board-online.js",
   "/assets/js/board-petals-v29.js",
@@ -347,6 +349,7 @@ const ON_DEMAND = [
   "/assets/js/engines/ludo-engine.js",
   "/assets/js/engines/match3-engine.js",
   "/assets/js/engines/party-catalog-v29.js",
+  "/assets/js/engines/paths-solo.js",
   "/assets/js/engines/paths-v20.js",
   "/assets/js/engines/quiz-relay-v28.js",
   "/assets/js/engines/serpent-combat-v23.js",

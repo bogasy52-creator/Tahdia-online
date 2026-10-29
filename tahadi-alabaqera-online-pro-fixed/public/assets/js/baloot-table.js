@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, findProjects } from './engines/baloot-engine.js?v=33.0.0';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.0.0-gameplay3';
 import { BoardOnlineClient } from './board-online.js?v=33.0.0';
 import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.0.0';
-import { BalootVoice } from './baloot-voice.js?v=33.0.0';
+import { BalootVoice } from './baloot-voice.js?v=33.0.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -32,11 +32,24 @@ const ui = {
   mode: 'online', me: 0, match: null, view: null, busy: false, picked: null, level: 'hard', target: 152,
   deck: 'deck-classic', speed: 1, receipt: '', rewarded: false, client: null, room: null, eventSeq: 0,
   pending: Promise.resolve(), lastHandShown: 0, botTimer: null, sending: false,
-  open: true, claimArmed: 0, talkTab: 'phrase', lastTalk: 0, botTalkAt: 0,
+  open: true, claimArmed: 0, talkTab: 'phrase', lastTalk: 0, botTalkAt: 0, session: 0, handClosed:false, botTalkTimers:new Set(),
 };
 /* ---------- Voices ---------- */
 const relPos = (seat) => ((seat - ui.me) % 4 + 4) % 4;
-function speak(text, seat, opts) { if (seat === null || seat === undefined) seat = ui.me; return BalootVoice.say(text, relPos(seat), opts); }
+function speak(text, seat, opts) { if ($('table').hidden || ui.handClosed || ['scored','finished'].includes(ui.room?.state?.phase)) return false; if (seat === null || seat === undefined) seat = ui.me; return BalootVoice.say(text, relPos(seat), opts); }
+function endHandAudio() {
+  ui.handClosed=true;
+  for(const timer of ui.botTalkTimers)clearTimeout(timer);
+  ui.botTalkTimers.clear();BalootVoice.stop();closeTalk();
+}
+function resetVoiceSession() {
+  ui.session++; ui.pending = Promise.resolve(); ui.busy = false; ui.queued = null;
+  publicReviewKey = '';
+  ui.handClosed=false;
+  for(const timer of ui.botTalkTimers)clearTimeout(timer);
+  ui.botTalkTimers.clear();projectChoiceKey='';projectChoices=[];projectDraft=null;
+  BalootVoice.stop();
+}
 
 /* ---------- Cosmetics ---------- */
 function equipped(type) {
@@ -167,6 +180,8 @@ function renderHand(view) {
     if (!el.classList.contains('picked')) el.style.transform = fan;
     el.classList.toggle('legal',Boolean(!view.open&&legal?.has(card)));
     el.classList.remove('cuttable','dim','cut');
+    el.classList.toggle('project-selected',Boolean(projectDraft?.cards.includes(card)));
+    el.setAttribute('aria-pressed',String(Boolean(projectDraft?.cards.includes(card))));
     if (!legal || !legal.has(card)) el.classList.remove('picked');
   });
   for (const [card, el] of existing) if (!keep.has(card)) el.remove();
@@ -191,33 +206,46 @@ function closeHandGap() {
   });
 }
 
-let projectChoiceKey='', projectChoices=[];
+let projectChoiceKey='', projectChoices=[], projectDraft=null;
 function playHumanCard(card){
   const first=ui.view?.tricks?.length===0;
-  const projects=first?[...projectChoices]:[];
-  act({type:'play',card,projects});
+  act({type:'play',card,projectCards:first?projectChoices.map(p=>({type:p.type,cards:[...p.cards]})):[]});
 }
 function renderProjectPicker(view){
   const box=$('projectPicker');if(!box)return;
-  const mine=view?.phase==='playing'&&view.turn===ui.me;
-  const key=String(view?.handNo)+':'+ui.me+':'+(view?.hands?.[ui.me]||[]).join(',');
-  if(key!==projectChoiceKey){projectChoiceKey=key;projectChoices=[];}
+  const mine=view?.phase==='playing'&&view.turn===ui.me&&!view.review;
+  const key=ui.session+':'+String(view?.handNo)+':'+ui.me;
+  if(key!==projectChoiceKey){projectChoiceKey=key;projectChoices=[];projectDraft=null;}
   box.replaceChildren();box.hidden=!mine;
   if(!mine)return;
-  if(view.tricks.length===0){
-    const projects=findProjects(view.hands[ui.me],view.contract.type);
-    if(!projects.length){box.hidden=true;return;}
-    const title=document.createElement('b');title.textContent='مشروعك: اختر ما تعلنه قبل ورقتك الأولى';box.append(title);
-    projects.forEach((p,i)=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=projectChoices.includes(i);input.onchange=()=>{projectChoices=input.checked?[...new Set([...projectChoices,i])]:projectChoices.filter(x=>x!==i);};label.append(input,document.createTextNode(PROJECT_NAME[p.type]));box.append(label);});
-    const note=document.createElement('small');note.textContent='بدون اختيار: تلعب بدون إعلان مشروع. أنزل المشروع في دورك بالأكلة الثانية.';box.append(note);
+  const button=(text,action,cls='')=>{const b=document.createElement('button');b.type='button';b.className='bl-project-button '+cls;b.textContent=text;b.onclick=action;b.disabled=ui.sending||ui.busy;box.append(b);return b;};
+  if(view.tricks.length===0&&view.hands[ui.me].length===8){
+    for(const [index,p]of projectChoices.entries())button(PROJECT_NAME[p.type]+' ×',()=>{projectChoices.splice(index,1);renderProjectPicker(view);},'chosen');
+    if(!projectDraft){
+      if(projectChoices.length<2)button(projectChoices.length?'مشروع ثانٍ':'مشروع',()=>{projectDraft={type:'sira',cards:[]};renderProjectPicker(view);renderHand(view);});
+    }else{
+      for(const type of ['sira','fifty','hundred',...(view.contract.type==='sun'?['fourHundred']:[])]){
+        const b=button(PROJECT_NAME[type],()=>{projectDraft={type,cards:[]};renderProjectPicker(view);renderHand(view);},projectDraft.type===type?'chosen':'');
+        b.setAttribute('aria-pressed',String(projectDraft.type===type));
+      }
+      const count=document.createElement('span');count.className='bl-project-count';count.textContent=projectDraft.cards.length+' / '+({sira:3,fifty:4,hundred:'4 أو 5',fourHundred:4}[projectDraft.type]);box.append(count);
+      let valid=false;try{selectProjects(view.hands[ui.me],view.contract.type,[...projectChoices,projectDraft]);valid=true;}catch{}
+      const commit=button('اعتمد',()=>{try{const selected=selectProjects(view.hands[ui.me],view.contract.type,[...projectChoices,projectDraft]);projectChoices=selected;projectDraft=null;renderProjectPicker(view);renderHand(view);}catch{toast('الأوراق ما تطابق المشروع');}},'confirm');commit.disabled ||= !valid;
+      button('إلغاء',()=>{projectDraft=null;renderProjectPicker(view);renderHand(view);});
+    }
   }else if(view.tricks.length===1&&view.declared?.[ui.me]?.length&&!view.projectShows?.[ui.me]){
-    const b=document.createElement('button');b.className='bl-cta';b.textContent='اعرض مشروعي: '+view.declared[ui.me].map(p=>PROJECT_NAME[p.type]).join(' + ');b.onclick=()=>act({type:'review_projects'});b.disabled=ui.sending||ui.busy;box.append(b);
-    const note=document.createElement('small');note.textContent='نزّل المشروع قبل ورقتك الثانية؛ تركه يسمح للخصم بالتسجيل.';box.append(note);
+    button('نزّل '+view.declared[ui.me].map(p=>PROJECT_NAME[p.type]).join(' + '),()=>act({type:'show_projects'}),'confirm');
   }else box.hidden=true;
+  $('hand').classList.toggle('choosing-project',Boolean(projectDraft));
 }
 function onCardTap(card) {
   const view=ui.view;if(!view||view.phase!=='playing'||view.review)return;
   if(view.turn!==ui.me){toast('انتظر دورك');return;}
+  if(projectDraft){
+    if(projectChoices.some(p=>p.cards.includes(card)))return;
+    projectDraft.cards=projectDraft.cards.includes(card)?projectDraft.cards.filter(c=>c!==card):[...projectDraft.cards,card];
+    renderProjectPicker(view);renderHand(view);return;
+  }
   if(ui.busy){ui.queued=card;return;}
   const allowed=legalSet(view);if(!allowed?.has(card)){toast('الورقة غير مسموحة في اللعب المقيّد');return;}
   ui.picked=null;playHumanCard(card);
@@ -399,7 +427,7 @@ function renderPublicReview(view){
  const owner=review.seat===ui.me; $('reviewControls').hidden=!owner;$('reviewWaiting').hidden=owner;$('reviewWaiting').textContent='بانتظار '+seatName(view,review.seat)+' يؤكد أو يتراجع. اللعب متوقف مؤقتًا.';
  $('reviewConfirm').textContent=review.kind==='claim'?'تأكيد التسجيل واحتساب النتيجة':'تأكيد إنزال المشروع';
  $('reviewConfirm').onclick=()=>act({type:'confirm_review',reviewId:review.id});$('reviewCancel').onclick=()=>act({type:'cancel_review',reviewId:review.id});
- speak(review.kind==='claim'?'review_claim':'review_projects',review.seat);
+ speak(review.kind==='claim'?'review_claim':'review_projects',review.seat,{urgent:true,key:`review:${ui.session}:${review.id}`});
 }
 
 function cutLine(proof, view) {
@@ -535,7 +563,7 @@ async function animateTrick(event) {
 }
 
 async function showProjects(event) {
-  play('balootChime', { volume: 0.6 });
+  document.querySelectorAll('.bl-projects').forEach(el=>el.remove());
   const shown = event.shown || [];
   const layer = $('felt').querySelector('.bl-center');
   const boxes = [];
@@ -544,15 +572,15 @@ async function showProjects(event) {
   for (const [seat, list] of bySeat) {
     const box = document.createElement('div');
     box.className = 'bl-projects';
-    box.innerHTML = `<b>${esc(seat === ui.me ? 'أنت' : seatName(ui.view, seat))}: ${list.map((p) => PROJECT_NAME[p.type]).join(' + ')}</b>` + list.flatMap((p) => p.cards).map((c) => `<img src="${cardUrl(c)}" alt="${cardName(c)}">`).join('');
+    box.setAttribute('aria-label',list.map(p=>PROJECT_NAME[p.type]).join(' + '));
+    box.innerHTML = list.flatMap((p) => p.cards).map((c) => `<img src="${cardUrl(c)}" alt="${cardName(c)}">`).join('');
     const spot = { bottom: 'left:50%;bottom:24%;transform:translateX(-50%)', top: 'left:50%;top:21%;transform:translateX(-50%)', left: 'left:4%;top:38%', right: 'right:4%;top:38%' }[posOf(seat)];
     box.setAttribute('style', spot);
     layer.appendChild(box);
     boxes.push(box);
   }
-  bubbleTeam(event.team);
-  await wait(2600);
-  boxes.forEach((b) => b.remove());
+  const session=ui.session;
+  setTimeout(()=>{if(session===ui.session)boxes.forEach(b=>b.remove());},1800);
 }
 function bubbleTeam(team) {
   for (let seat = 0; seat < 4; seat++) if (teamOf(seat) === team) bubble(seat, 'مشروعنا الأعلى ✨', 'hot', 1800);
@@ -591,9 +619,16 @@ function bidText(e) {
 }
 
 // Animate one batch of events; `after` is the view once the batch is done.
-async function playEvents(events, after) {
-  for (const e of events) {
+async function playEvents(events, after, session = ui.session, delivery = {}) {
+  for (const [index, e] of events.entries()) {
+    if (session !== ui.session) return;
+    // Catch up to the authoritative view after a slow animation or reconnect.
+    // Old calls must not be presented as if somebody just made them.
+    if (delivery.createdAt != null && Date.now() - delivery.createdAt > 4000) return;
+    const voiceOptions = { urgent:true, createdAt:delivery.createdAt,
+      key:delivery.key == null ? undefined : `${delivery.key}:${index}` };
     if (e.type === 'deal') {
+      ui.handClosed=false;BalootVoice.stop();
       render({ ...after, phase: 'dealing', hands: after.hands.map(() => []), trick: null, tricks: [], contract: null });
       $('exposed').hidden = true;
       await animateDeal(after);
@@ -604,7 +639,7 @@ async function playEvents(events, after) {
       const [text, cls] = bidText(e);
       bubble(e.seat, text, cls);
       play(e.bid === 'pass' ? 'click' : 'balootBid', { volume: e.bid === 'pass' ? 0.35 : 0.7 });
-      speak(e.bid === 'pass' ? 'بَسْ' : e.bid === 'sun' ? 'صن' : e.bid === 'ashkal' ? 'أشكل' : (e.round === 2 ? 'ثاني ' : 'حكم ') + SUIT_SAY[e.suit], e.seat);
+      speak(e.bid === 'pass' ? 'بَسْ' : e.bid === 'sun' ? 'صن' : e.bid === 'ashkal' ? 'أشكل' : (e.round === 2 ? 'ثاني ' : 'حكم ') + SUIT_SAY[e.suit], e.seat, voiceOptions);
       await wait(e.bid === 'pass' ? 520 : 820);
     } else if (e.type === 'second_round') {
       await banner('الجولة الثانية<small>ثاني بشكل آخر، أو صن</small>', 1100);
@@ -622,21 +657,21 @@ async function playEvents(events, after) {
       bubble(e.seat, names[e.call] + (e.locked ? ' مقفول' : ''), e.call === 'pass' ? 'pass' : 'hot');
       if (e.call !== 'pass') {
         play('balootDouble', { volume: 0.9 });
-        speak({ double: 'دبل', triple: 'ثري', four: 'فور', gahwa: 'قهوة' }[e.call] + (e.locked ? ' مقفول' : ''), e.seat, { urgent: true });
+        speak({ double: 'دبل', triple: 'ثري', four: 'فور', gahwa: 'قهوة' }[e.call] + (e.locked ? ' مقفول' : ''), e.seat, voiceOptions);
         flashFelt(e.call === 'gahwa' ? 'gahwa' : 'hot');
         if (e.call === 'gahwa') steam();
         await banner(names[e.call] + (e.call === 'gahwa' ? '<small>الفائز بالجولة يربح الصكّة</small>' : ''), 900);
-      } else { speak('بَسْ', e.seat); await wait(480); }
+      } else { speak('بَسْ', e.seat, voiceOptions); await wait(480); }
     } else if (e.type === 'declare') {
       bubble(e.seat, e.projects.map((p) => PROJECT_NAME[p]).join(' + '), 'hot', 1800);
       play('balootChime', { volume: 0.4 });
-      speak(e.projects.map((p) => PROJECT_NAME[p]).join(' و '), e.seat);
+      speak(e.projects.map((p) => PROJECT_NAME[p]).join(' و '), e.seat, voiceOptions);
     } else if (e.type === 'play') {
       await animatePlay(e.seat, e.card);
     } else if (e.type === 'baloot') {
       bubble(e.seat, 'بلوت 👑', 'hot', 2000);
       play('balootChime', { volume: 0.8 });
-      speak('بلوت', e.seat, { urgent: true });
+      speak('بلوت', e.seat, voiceOptions);
       crown(e.seat);
       await wait(500);
     } else if (e.type === 'trick') {
@@ -644,12 +679,13 @@ async function playEvents(events, after) {
       glow(e.winner);
       if (e.points >= 20) botTalk(teamOf(e.winner) === teamOf(ui.me) ? 'lostTrick' : 'bigTrick', [1, 3]);
     } else if (e.type === 'claim') {
-      await showClaim(e, after);
+      await showClaim(e, after, session, voiceOptions);
     } else if (e.type === 'projects') {
       await showProjects(e);
     } else if (e.type === 'hand_scored') {
+      endHandAudio();
       renderHud({ ...after, scores: e.scores });
-      if (e.result.kaboot !== null && e.result.kaboot !== undefined) await kaboot(e.result.kaboot);
+      if (e.result.kaboot !== null && e.result.kaboot !== undefined) await kaboot(e.result.kaboot, voiceOptions);
       botTalk(e.result.winnerTeam === teamOf(ui.me) ? 'lostHand' : 'wonHand', [1, 3]);
       await showResult(e.result, e.scores, after);
     } else if (e.type === 'match_finished') {
@@ -659,25 +695,26 @@ async function playEvents(events, after) {
 }
 
 /* ---------- Claims & effects ---------- */
-async function showClaim(e, view) {
+async function showClaim(e, view, session = ui.session, voiceOptions = { urgent:true }) {
   const who = e.seat === ui.me ? 'أنت' : seatName(view, e.seat);
   bubble(e.seat, 'سجّل! ⚖️', 'hot claim', 2400);
-  speak('سجّل', e.seat, { urgent: true });
+  speak('سجّل', e.seat, voiceOptions);
   play('balootDouble', { volume: 0.8 });
   for (const slot of document.querySelectorAll('.bl-slot')) { slot.innerHTML = ''; slot.dataset.card = ''; delete slot.dataset.hold; }
   await wait(900);
+  if (session !== ui.session) return;
   const ours = e.team === teamOf(ui.me);
   if (e.correct) {
     const p = e.proof;
     seatEl(p.seat)?.classList.add('caught');
     setTimeout(() => seatEl(p.seat)?.classList.remove('caught'), 2600);
     stamp(`<b>${e.reason==='unshown_project'?'لم ينزل المشروع':'قطع'} ✔</b><small>${cutLine(p, view)}</small>`, 'good', p.card);
-    speak(e.reason==='unshown_project'?'claim_ok':'صح، قطع', e.seat, { urgent: true });
+    speak(e.reason==='unshown_project'?'claim_ok':'صح، قطع', e.seat, voiceOptions);
     play(ours ? 'win' : 'wrong', { volume: 0.6 });
     if (!ours) botTalk('caught', [e.seat]);
   } else {
     stamp(`<b>تسجيل غلط ✘</b><small>${e.seat === ui.me ? 'سجّلت' : esc(who) + ' سجّل'} وما ثبت السبب المختار، فراحت اليد للفريق الثاني</small>`, 'bad');
-    speak('غلط', e.seat, { urgent: true });
+    speak('غلط', e.seat, voiceOptions);
     play(ours ? 'wrong' : 'win', { volume: 0.6 });
   }
   await wait(2000);
@@ -718,9 +755,9 @@ function glow(seat) {
   av.classList.remove('won'); void av.offsetWidth; av.classList.add('won');
   setTimeout(() => av.classList.remove('won'), 900);
 }
-async function kaboot(team) {
+async function kaboot(team, voiceOptions = { urgent:true }) {
   const ours = team === teamOf(ui.me);
-  speak('كبوت', ours ? ui.me : (ui.me + 1) % 4, { urgent: true });
+  speak('كبوت', ours ? ui.me : (ui.me + 1) % 4, voiceOptions);
   if (!reduce()) { const felt = $('felt'); felt.classList.remove('shake'); void felt.offsetWidth; felt.classList.add('shake'); setTimeout(() => felt.classList.remove('shake'), 700); }
   if (ours) celebrate();
   botTalk(ours ? 'kabootThem' : 'kabootUs', [1, 3]);
@@ -728,11 +765,11 @@ async function kaboot(team) {
 }
 
 /* ---------- Table talk: phrases & emoji ---------- */
-function showTalk(seat, kind, id) {
+function showTalk(seat, kind, id, options = {}) {
   if (kind === 'phrase') {
     const p = talkPhrase(id); if (!p) return;
     bubble(seat, esc(p.text), 'talk', 2600);
-    speak(p.id, seat);
+    speak(p.id, seat, { maxAge:1800, ...options });
   } else if (kind === 'emoji') {
     const em = talkEmoji(id); if (!em) return;
     floatEmoji(seat, em.glyph);
@@ -762,6 +799,7 @@ function sendTalk(kind, id) {
 }
 // Bots (offline) answer at the table now and then, never too often.
 function botTalk(context, seats, force = false) {
+  if(ui.handClosed||!['bidding','doubling','playing'].includes(ui.room?.state?.phase))return;
   seats = seats.filter((seat) => isBot(seat));
   if (!seats.length) return;
   const now = Date.now();
@@ -771,7 +809,12 @@ function botTalk(context, seats, force = false) {
   ui.botTalkAt = now;
   const seat = seats[Math.floor(Math.random() * seats.length)];
   const id = ids[Math.floor(Math.random() * ids.length)];
-  setTimeout(() => showTalk(seat, id.startsWith('e') ? 'emoji' : 'phrase', id), 350);
+  const session = ui.session, hand=ui.room.state.handNo;
+  const timer=setTimeout(() => {
+    ui.botTalkTimers.delete(timer);
+    if(session===ui.session&&!ui.handClosed&&ui.room?.state?.handNo===hand&&ui.room.state.phase==='playing')showTalk(seat,id.startsWith('e')?'emoji':'phrase',id,{key:`bot:${session}:${hand}:${now}:${seat}`,createdAt:now});
+  },350);
+  ui.botTalkTimers.add(timer);
 }
 function renderTalk() {
   const tab = ui.talkTab;
@@ -787,16 +830,34 @@ function renderTalk() {
     b.addEventListener('click', () => sendTalk(tab, it.id));
     grid.appendChild(b);
   }
-  const v = $('voiceToggle');
-  v.setAttribute('aria-pressed', String(BalootVoice.enabled));
-  v.textContent = BalootVoice.enabled ? '🗣️ الأصوات تعمل' : '🔇 الأصوات مطفأة';
-  $('voiceNote').hidden = !BalootVoice.enabled || BalootVoice.hasArabic();
+  renderVoiceStatus();
+}
+function renderVoiceStatus() {
+  const status = BalootVoice.getStatus(), toggle = $('voiceToggle');
+  toggle.disabled = !status.available;
+  toggle.setAttribute('aria-pressed', String(status.available && status.enabled));
+  toggle.textContent = !status.available ? 'النداءات مكتوبة' : status.enabled ? '🗣️ الأصوات تعمل' : '🔇 الأصوات مطفأة';
+  const messages = {
+    'awaiting-recordings':'التسجيلات البشرية الجديدة قيد التجهيز. تظل النداءات مكتوبة أثناء اللعب.',
+    unsupported:'متصفحك لا يدعم تشغيل النداءات. تظل العبارات مكتوبة.',
+    disabled:'النداءات الصوتية مطفأة.', muted:'الصوت مكتوم من إعدادات اللعبة.',
+    locked:'اضغط «جرّب النداء» لتشغيل الصوت.', loading:'جارٍ تحميل النداء…',
+    playing:'النداء يُشغّل كاملًا.', error:'تعذر تحميل النداء. تقدر تعيد المحاولة من «جرّب النداء».'
+  };
+  $('voiceNote').hidden = false;
+  $('voiceNote').textContent = messages[status.state] || 'الصوت جاهز.';
+  const canPlay = status.available && status.enabled && !['muted','loading','playing'].includes(status.state);
+  $('voicePreview').disabled = !canPlay;
+  $('voiceReplay').disabled = !canPlay || !status.last;
+  $('voiceLast').hidden = !status.lastText;
+  $('voiceLast').textContent = status.lastText ? 'آخر نداء: ' + status.lastText : '';
 }
 function openTalk() { renderTalk(); $('talkSheet').hidden = false; BalootVoice.unlock(); }
 function closeTalk() { $('talkSheet').hidden = true; }
 
 /* ---------- Results ---------- */
 function showResult(result, scores, view) {
+  endHandAudio();
   const us = teamOf(ui.me), them = 1 - us;
   const c = result.contract;
   const buyerTeam = teamOf(c.buyer);
@@ -867,10 +928,13 @@ function showMatchEnd(winner, scores) {
 }
 
 function queue(task) {
+  const session = ui.session;
   ui.pending = ui.pending.then(async () => {
+    if (session !== ui.session) return;
     ui.busy = true;
     try { await task(); } catch (error) { console.error(error); }
     finally {
+      if (session !== ui.session) return;
       ui.busy = false; render();
       const card = ui.queued; ui.queued = null;
       if (card && ui.view?.phase === 'playing' && ui.view.turn === ui.me && ui.view.hands?.[ui.me]?.includes(card)) onCardTap(card);
@@ -902,22 +966,27 @@ function onRoomState(room) {
   ui.sending = false;
   ui.me = room.me?.index ?? 0;
   window.BS_GAME_MENU?.remember('baloot', room.code, { status: room.status === 'finished' ? 'finished' : room.status });
-  if (room.status === 'lobby') { ui.batchId = 0; ui.matchStart = null; ui.rewarded = false; showLobby(room); return; }
+  if (room.status === 'lobby') { if (!$('table').hidden) resetVoiceSession(); ui.batchId = 0; ui.matchStart = null; ui.rewarded = false; showLobby(room); return; }
   const view = room.state;
   if (!view) return;
-  if (ui.matchStart !== room.startedAt) { ui.matchStart = room.startedAt; ui.batchId = 0; ui.seenBatch = false; }
+  if (ui.matchStart !== room.startedAt) { resetVoiceSession(); ui.matchStart = room.startedAt; ui.batchId = 0; ui.seenBatch = false; }
+  if(['scored','finished'].includes(view.phase))endHandAudio();
   if ($('table').hidden) showTable();
   // Animate a new batch; on (re)connect only a batch that just happened.
   let events = [];
   const batch = room.batch;
+  let createdAt = Date.now();
   if (batch && batch.id > (ui.batchId || 0)) {
-    const fresh = (room.serverNow || Date.now()) - batch.at < 4000;
-    if (ui.seenBatch || fresh) events = batch.events || [];
+    const age = Math.max(0, (room.serverNow || Date.now()) - batch.at);
+    const fresh = Number.isFinite(age) && age < 4000;
+    if (fresh) { events = batch.events || []; createdAt -= age; }
     ui.batchId = batch.id;
   }
   ui.seenBatch = true;
   queue(async () => {
-    if (events.length) await playEvents(events, view);
+    const session = ui.session;
+    if (events.length) await playEvents(events, view, session, { createdAt, key:`batch:${session}:${room.code}:${room.startedAt}:${batch.id}` });
+    if (session !== ui.session) return;
     ui.view = view;
     render(view);
     paintTimer();
@@ -990,6 +1059,7 @@ function paintTimer() {
 }
 
 async function startOnline(kind, code = '') {
+  resetVoiceSession();
   applyCosmetics();
   ui.mode = 'online';
   const name = window.BS_GAME_MENU?.playerName?.() || accountName() || 'لاعب';
@@ -1030,6 +1100,8 @@ function showTable() {
   try { window.scrollTo(0, 0); } catch {}
 }
 function showSetup() {
+  resetVoiceSession();
+  closeTalk();
   if (ui.room?.code) window.BS_GAME_MENU?.forget('baloot', ui.room.code);
   ui.view = null;
   ui.client?.close?.();
@@ -1107,7 +1179,12 @@ function init() {
   $('talkClose').addEventListener('click', closeTalk);
   for (const b of document.querySelectorAll('.bl-talk-tab')) b.addEventListener('click', () => { ui.talkTab = b.dataset.tab; renderTalk(); });
   $('voiceToggle').addEventListener('click', () => { BalootVoice.setEnabled(!BalootVoice.enabled); renderTalk(); if (BalootVoice.enabled) speak('هلا والله', ui.me, { urgent: true }); });
-  addEventListener('bs-board-talk', (event) => { const d = event.detail || {}; if (ui.mode === 'online' && Number.isInteger(d.seat)) showTalk(d.seat, d.kind, d.id); });
+  $('voicePreview').addEventListener('click', () => BalootVoice.preview());
+  $('voiceReplay').addEventListener('click', () => { void BalootVoice.unlock(); BalootVoice.replay(); });
+  addEventListener('bs-baloot-voice-change', renderVoiceStatus);
+  renderVoiceStatus();
+  addEventListener('bs-board-talk', (event) => { const d = event.detail || {}; if (ui.mode === 'online' && Number.isInteger(d.seat)) showTalk(d.seat, d.kind, d.id,
+    { key:d.at == null ? undefined : `talk:${ui.session}:${d.from}:${d.at}:${d.id}` }); });
   $('closeLog').addEventListener('click', () => { $('logSheet').hidden = true; });
   $('playAgain').addEventListener('click', () => {
     $('matchEnd').hidden = true;

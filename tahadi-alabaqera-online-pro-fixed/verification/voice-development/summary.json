@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-29",
+  "release": "33.0.0",
+  "human_recordings_included": false,
+  "human_recordings_approved": false,
+  "status": "awaiting-human-recordings",
+  "javascript_tests": {
+    "passed": 959,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_import_tests": {
+    "passed": 4,
+    "failed": 0
+  },
+  "static_references_checked": 701,
+  "worker_config_verified": true,
+  "workerd_sqlite_checks": "passed",
+  "cloudflare_dry_run": "passed",
+  "browser_test": "not_completed_browser_unavailable_download_not_completed",
+  "real_phone_tested": false,
+  "human_speech_listened_to": false,
+  "published": false,
+  "installer_tests": {
+    "passed": 6,
+    "failed": 0
+  }
+}

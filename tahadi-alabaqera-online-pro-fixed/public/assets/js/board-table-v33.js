@@ -5,7 +5,7 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.0.0';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.0.0-gameplay3';
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3};
 
@@ -13,7 +13,8 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
   const $=selector=>document.querySelector(selector);
   const menuHost=$('#gameMenu');
   let client=null,room=null,quickMode=null,leaving=false,retriedQuick=false;
-  const player=createStepPlayer(async(next,{animate})=>{
+  const player=createStepPlayer(async(next,{animate,signal})=>{
+    if(signal?.aborted)return;
     room=next;
     if(next.status==='lobby'){
       onLobby?.(next);
@@ -22,7 +23,7 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
       return;
     }
     window.BS_GAME_MENU?.remember(game,next.code,{status:next.status==='finished'?'finished':'playing'});
-    await apply(next,{animate});
+    await apply(next,{animate,signal});
   },{onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{

@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {spawnSync} from 'node:child_process';
+
+test('replacing a human voice manifest invalidates its runtime cache without changing the release',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'baloot-voice-cache-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'scripts'));await mkdir(join(root,'public/assets/js'),{recursive:true});
+  await writeFile(join(root,'package.json'),JSON.stringify({version:'33.0.0'}));
+  for(const name of ['build-offline.mjs','service-worker-runtime.txt'])await copyFile(new URL('../scripts/'+name,import.meta.url),join(root,'scripts',name));
+  const manifest=join(root,'public/assets/js/baloot-voice-pack.js');
+  const build=()=>{const result=spawnSync(process.execPath,['scripts/build-offline.mjs'],{cwd:root,encoding:'utf8'});assert.equal(result.status,0,result.stderr);};
+  await writeFile(manifest,'pending human recordings');build();
+  const before=await readFile(join(root,'public/service-worker.js'),'utf8');
+  await writeFile(manifest,'reviewed complete human recordings');build();
+  const after=await readFile(join(root,'public/service-worker.js'),'utf8');
+  assert.equal(before.match(/const CACHE_NAME = (.*);/)[1],after.match(/const CACHE_NAME = (.*);/)[1]);
+  assert.notEqual(before.match(/const RUNTIME_CACHE = (.*);/)[1],after.match(/const RUNTIME_CACHE = (.*);/)[1]);
+  build();assert.equal(await readFile(join(root,'public/service-worker.js'),'utf8'),after);
+  await writeFile(join(root,'public/assets/js/baloot-voice-player.js'),'updated scheduling');build();
+  const player=await readFile(join(root,'public/service-worker.js'),'utf8');
+  assert.notEqual(player.match(/const RUNTIME_CACHE = (.*);/)[1],after.match(/const RUNTIME_CACHE = (.*);/)[1]);
+  await mkdir(join(root,'public/assets/js/engines'));
+  await writeFile(join(root,'public/assets/js/engines/baloot-engine.js'),'updated cut rules');build();
+  const rules=await readFile(join(root,'public/service-worker.js'),'utf8');
+  assert.notEqual(rules.match(/const RUNTIME_CACHE = (.*);/)[1],player.match(/const RUNTIME_CACHE = (.*);/)[1]);
+});

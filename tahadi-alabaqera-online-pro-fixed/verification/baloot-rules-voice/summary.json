@@ -1,0 +1,28 @@
+{
+  "release": "33.0.0",
+  "date": "2026-10-29",
+  "javascript": {
+    "passed": 986,
+    "failed": 0,
+    "skipped": 0,
+    "command": "npm run verify"
+  },
+  "overtrump_cases_inside_one_test": 4096,
+  "python_voice_import": {
+    "passed": 4,
+    "failed": 0
+  },
+  "workerd_public_review_checks": 5,
+  "static_references": 701,
+  "cloudflare_dry_run": "passed",
+  "browser_test_completed": false,
+  "physical_phone_tested": false,
+  "human_recordings_received": false,
+  "human_recordings_approved": false,
+  "deployed": false,
+  "priorities": [
+    "correct Hokm discard without higher trump",
+    "avoid duplicate event speech without suppressing different players",
+    "preload pending clips and expire stale calls"
+  ]
+}

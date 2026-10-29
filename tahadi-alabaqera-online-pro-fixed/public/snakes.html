@@ -6,12 +6,12 @@
 <link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-snakes.css?v=33.0.0"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.0.0"></head><body class="release-v26 bs-page board-game game-snakes release-v14 suite-v16 suite-v17 board-v14 board-v15"><main class="bs-shell">
 <header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الثعبان</b><span>الثعبان والسلالم · تحدي العباقرة</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop" aria-label="المتجر">◈</a><a class="bs-icon-btn" href="./" aria-label="الرئيسية" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap snl-setup"><div class="snl-hero"><div class="snl-hero-copy"><span class="snl-kicker">سلم وثعبان</span><h1>رمية تغيّر كل شيء.</h1><p>ابدأ برمية 6 وتسابق إلى الخانة 100. السلالم ترفعك، والثعابين ترجعك لذيلها.</p></div><div id="snlHeroArt" class="snl-hero-art" aria-hidden="true"></div></div>
 <div id="gameMenu" class="snl-menu-v33"></div></section>
-<section id="game" class="hidden snake-stage snl31"><div class="stage-orb one"></div><div class="stage-orb two"></div><div id="actionFlash" class="action-flash"></div><div class="game-toolbar"><div class="toolbar-title"><h1>الثعبان</h1><p>اصعد بالسلالم واهرب من الثعابين حتى الخانة 100</p></div><div class="toolbar-actions"><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button><button id="boardHelp" class="bs-btn" type="button">كيف ألعب؟</button><button id="boardHistoryOpen" class="bs-btn" type="button">سجل الجولة</button><button id="leaveGame" class="bs-btn">خروج</button></div></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="game-layout"><section class="bs-panel game-main"><div id="boardWrap" class="snake-board-wrap"><div id="board" class="snake-board"></div><svg id="paths" class="board-paths" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg><div class="board-hud"><div id="actionBanner" class="action-banner"></div></div></div><div class="snake-legend"><span>↑ صعود سريع</span><span>↓ انزلاق للخلف</span><span>◎ الوصول الدقيق إلى 100</span><span>6 · رمية إضافية</span></div><div><b class="mini-note">منطقة الانطلاق</b><div id="startLane" class="start-lane"></div></div></section><aside class="bs-panel game-side snake-side"><div id="mobileStartLane" class="mobile-start-lane" aria-label="منطقة الانطلاق"></div><div id="players" class="player-list"></div><div id="status" class="game-status">جاهزين؟</div><div class="dice-stage dice-duel-v33" aria-label="النرد"><div id="myDieBox" class="duel-die mine"><div class="duel-pair"><div id="die" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="die2" class="die dice-second hidden" data-value="1"></div></div><small>نردك</small></div><div id="oppDieBox" class="duel-die theirs"><div class="duel-pair"><div id="dieOpp" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="dieOpp2" class="die dice-second hidden" data-value="1"></div></div><small id="dieOppName">نرد خصمك</small></div></div><button id="roll" class="bs-btn primary primary-action">🎲 ارْمِ النرد</button><div id="powerStrip" class="power-strip hidden"><button id="shieldPower" class="power-btn" aria-pressed="false">◈ درع <strong id="shieldCount">1</strong></button><button id="doublePower" class="power-btn" aria-pressed="false">⚄ نردان <strong id="doubleCount">1</strong></button></div><div id="powerHelp" class="power-help hidden">الحماية تعمل تلقائيًا مرة واحدة. استخدم قدرة النردين بعد الدخول.</div><div id="eventLog" class="arena-event" role="status">تحتاج رمية 6 للدخول إلى الخانة 1.</div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد</summary><ul><li>الدخول برمية 6 إلى الخانة 1، ثم رمية إضافية.</li><li>بعد الدخول تحرّك بعدد النرد.</li><li>الوقوف على سلم يصعدك فورًا.</li><li>الوقوف على رأس ثعبان ينزلك لذيله.</li><li>الرقم 6 يمنح رمية إضافية.</li><li>يجب الوصول إلى 100 بالرقم الدقيق.</li></ul></details><details class="rules bs-panel snl-more" style="padding:11px;margin-top:10px"><summary>إعدادات اللوحة</summary><label class="bs-field dice-audio-field"><span>صوت النرد</span><select id="diceSound"><option value="varied">أصوات متنوعة وهادئة</option><option value="soft">خفيف وناعم</option><option value="wood">نرد خشبي</option><option value="crystal">نرد بلوري</option></select></label><div class="round-controls-v15"><label>إيقاع الحركة<select id="boardTempo"><option value="normal">سينمائي</option><option value="fast">سريع</option></select></label><button id="boardContrast" type="button" aria-pressed="false">وضوح اللوحة</button></div><div class="setup-note">الدخول في النمطين برمية 6 إلى الخانة 1، مع رمية إضافية. المطوّرة: توقف على 12 أو 46 أو 82 وارمِ نرد المكافآت؛ حماية واحدة تلقائية، أو دوران إضافيان، أو نردان، أو تقدّم 3 أو 5 خانات، أو تجميد دور الخصم. كل وجه له الاحتمال نفسه.</div></details></aside></div></section>
+<section id="game" class="hidden snake-stage snl31"><div class="stage-orb one"></div><div class="stage-orb two"></div><div id="actionFlash" class="action-flash"></div><div class="game-toolbar"><div class="toolbar-title"><h1>الثعبان</h1><p>اصعد بالسلالم واهرب من الثعابين حتى الخانة 100</p></div><div class="toolbar-actions"><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button><button id="boardHelp" class="bs-btn" type="button">كيف ألعب؟</button><button id="boardHistoryOpen" class="bs-btn" type="button">سجل الجولة</button><button id="leaveGame" class="bs-btn">خروج</button></div></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="game-layout"><section class="bs-panel game-main"><div id="boardWrap" class="snake-board-wrap"><div id="board" class="snake-board"></div><svg id="paths" class="board-paths" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg><div class="board-hud"><div id="actionBanner" class="action-banner"></div></div></div><div class="snake-legend"><span>↑ صعود سريع</span><span>↓ انزلاق للخلف</span><span>◎ الوصول الدقيق إلى 100</span><span>6 · رمية إضافية</span></div><div><b class="mini-note">منطقة الانطلاق</b><div id="startLane" class="start-lane"></div></div></section><aside class="bs-panel game-side snake-side"><div id="mobileStartLane" class="mobile-start-lane" aria-label="منطقة الانطلاق"></div><div id="players" class="player-list"></div><div id="status" class="game-status">جاهزين؟</div><div class="dice-stage dice-duel-v33" aria-label="النرد"><div id="myDieBox" class="duel-die mine"><div class="duel-pair"><div id="die" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="die2" class="die dice-second hidden" data-value="1"></div></div><small>نردك</small></div><div id="oppDieBox" class="duel-die theirs"><div class="duel-pair"><div id="dieOpp" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div><div id="dieOpp2" class="die dice-second hidden" data-value="1"></div></div><small id="dieOppName">نرد خصمك</small></div></div><button id="roll" class="bs-btn primary primary-action">🎲 ارْمِ النرد</button><div id="powerStrip" class="power-strip hidden"><button id="shieldPower" class="power-btn" aria-pressed="false">◈ درع <strong id="shieldCount">1</strong></button><button id="doublePower" class="power-btn" aria-pressed="false">⚄ نردان <strong id="doubleCount">1</strong></button></div><div id="powerHelp" class="power-help hidden">الحماية تعمل تلقائيًا مرة واحدة. استخدم قدرة النردين بعد الدخول.</div><div id="eventLog" class="arena-event" role="status">تحتاج رمية 6 للدخول إلى الخانة 1.</div><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>القواعد</summary><ul><li>الدخول برمية 6 إلى الخانة 1، ثم رمية إضافية.</li><li>بعد الدخول تحرّك بعدد النرد.</li><li>الوقوف على سلم يصعدك فورًا.</li><li>الوقوف على رأس ثعبان ينزلك لذيله.</li><li>الرقم 6 يمنح رمية إضافية.</li><li>يجب الوصول إلى 100 بالرقم الدقيق.</li></ul></details><details class="rules bs-panel snl-more" style="padding:11px;margin-top:10px"><summary>إعدادات اللوحة</summary><label class="bs-field dice-audio-field"><span>صوت النرد</span><select id="diceSound"><option value="varied">أصوات متنوعة وهادئة</option><option value="soft">خفيف وناعم</option><option value="wood">نرد خشبي</option><option value="crystal">نرد بلوري</option></select></label><div class="round-controls-v15"><button id="boardContrast" type="button" aria-pressed="false">وضوح اللوحة</button></div><div class="setup-note">الدخول في النمطين برمية 6 إلى الخانة 1، مع رمية إضافية. المطوّرة: توقف على 12 أو 46 أو 82 وارمِ نرد المكافآت؛ حماية واحدة تلقائية، أو دوران إضافيان، أو نردان، أو تقدّم 3 أو 5 خانات، أو تجميد دور الخصم. كل وجه له الاحتمال نفسه.</div></details></aside></div></section>
 </main><div id="boardHelpDialog" class="play-sheet-v15 hidden" role="dialog" aria-modal="true" aria-labelledby="boardHelpTitle"><section class="play-sheet-card-v15"><header class="play-sheet-head-v15"><div><span class="eyebrow">YOUR FIRST MOVE</span><h2 id="boardHelpTitle">من أول رمية إلى الخانة 100</h2></div><button id="boardHelpClose" type="button" aria-label="إغلاق شرح اللعب">×</button></header><ol><li>تحتاج <b>رمية 6</b> لدخول اللوحة. بعدها تتحرك بعدد النرد.</li><li>الوقوف على سلم يصعدك، وعلى رأس ثعبان يرجعك لذيله.</li><li>رمية 6 تعطيك دورًا إضافيًا. الوصول إلى 100 يحتاج رقمًا دقيقًا.</li></ol><div class="guide-bonus-v15">في المطوّرة، الخانات 12 و46 و82 تفتح نرد المكافآت. الحماية تلقائية لمرة واحدة، وقد تحصل على نردين أو أدوار إضافية أو قفزة أو تجميد دور الخصم.</div><p id="boardHelpNote" class="play-scope-v15"></p><button id="boardHelpDone" class="bs-btn primary" type="button">فهمت · تابع الجولة</button></section></div><div id="boardHistoryDialog" class="play-sheet-v15 hidden" role="dialog" aria-modal="true" aria-labelledby="boardHistoryTitle"><section class="play-sheet-card-v15"><header class="play-sheet-head-v15"><div><span class="eyebrow">THE STORY SO FAR</span><h2 id="boardHistoryTitle">حكاية الجولة</h2></div><button id="boardHistoryClose" type="button" aria-label="إغلاق سجل الجولة">×</button></header><p id="boardHistoryNote" class="play-scope-v15">ابدأ الجولة لتظهر الرميات والحركات هنا.</p><ol id="boardHistory" class="board-history-v15"></ol><button id="boardHistoryDone" class="bs-btn primary" type="button">الرجوع للعب</button></section></div><div id="bonusOverlay" class="bonus-overlay hidden" role="dialog" aria-modal="true" aria-label="نرد المكافآت" tabindex="-1"><section class="bonus-card"><small>خانة مكافآت</small><h2>نرد الرموز</h2><div id="bonusDie" class="die bonus-die" data-value="1"></div><h3 id="bonusName">مكافأة واحدة من ست مكافآت</h3><p id="bonusText">ارمِ النرد لاكتشاف مكافأتك</p><button id="bonusRoll" class="bs-btn primary">ارمِ نرد المكافأة</button></section></div><div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🐍</div><h2 id="winnerName"></h2><p>وصل إلى الخانة 100 أولًا.</p><div id="boardRoundStats" class="round-stats-v15"></div><div class="winner-actions-v33"><button id="again" class="bs-btn gold">جولة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div>
-<script src="assets/js/party-link-v32.js?v=33.0.0"></script><script src="assets/js/audio-manager.js?v=33.0.0"></script><script src="assets/js/platform.js?v=33.0.0"></script><script src="assets/js/social-client.js?v=33.0.0"></script><script src="assets/js/profile-core.js?v=33.0.0"></script><script src="assets/js/career-client.js?v=33.0.0"></script><script src="assets/js/pieces-v31.js?v=33.0.0"></script><script src="assets/js/royal-stones.js?v=33.0.0"></script><script src="assets/js/serpent-art-v16.js?v=33.0.0"></script><script src="assets/js/cosmetic-art.js?v=33.0.0"></script><script src="assets/js/play-insights-v15.js?v=33.0.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.0.0"></script><script src="assets/js/pro-dice.js?v=33.0.0"></script><script src="assets/js/snakes-v31.js?v=33.0.0"></script><script src="assets/js/game-menu-v33.js?v=33.0.0"></script><script type="module" src="assets/js/neon-arena.js?v=33.0.0"></script><script type="module">import { DEFAULT_SNAKES_JUMPS } from "./assets/js/engines/snakes-engine.js?v=29.1.0";
+<script src="assets/js/party-link-v32.js?v=33.0.0"></script><script src="assets/js/audio-manager.js?v=33.0.0"></script><script src="assets/js/platform.js?v=33.0.0"></script><script src="assets/js/social-client.js?v=33.0.0"></script><script src="assets/js/profile-core.js?v=33.0.0"></script><script src="assets/js/career-client.js?v=33.0.0"></script><script src="assets/js/pieces-v31.js?v=33.0.0"></script><script src="assets/js/royal-stones.js?v=33.0.0"></script><script src="assets/js/serpent-art-v16.js?v=33.0.0"></script><script src="assets/js/cosmetic-art.js?v=33.0.0"></script><script src="assets/js/play-insights-v15.js?v=33.0.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.0.0"></script><script src="assets/js/pro-dice.js?v=33.0.0"></script><script src="assets/js/snakes-v31.js?v=33.0.0"></script><script src="assets/js/game-menu-v33.js?v=33.0.0"></script><script type="module" src="assets/js/neon-arena.js?v=33.0.0-gameplay3"></script><script type="module">import { DEFAULT_SNAKES_JUMPS } from "./assets/js/engines/snakes-engine.js?v=29.1.0";
 import { ADVENTURE_EVENTS, BONUS_CELLS, BONUS_FACES } from "./assets/js/engines/snakes-adventure.js?v=29.1.0";
-import { createTable, seatLook, botTag, skinDie } from "./assets/js/board-table-v33.js?v=33.0.0";
-import { createBoardMovePlan, createReactionPlan, createSmoothMotionFrames, createSnakeBodyProgress, getPieceProfile } from "./assets/js/snakes-v4-fx.js?v=33.0.0";
+import { createTable, seatLook, botTag, skinDie } from "./assets/js/board-table-v33.js?v=33.0.0-gameplay3";
+import { createBoardMovePlan, createReactionPlan, createSmoothMotionFrames, createSnakeBodyProgress, createPawnAnimationFrames, getPieceProfile } from "./assets/js/snakes-v4-fx.js?v=33.0.0-gameplay3";
 // 33.0.0: every match is online. «العب الحين» or a friends' room; bots of every
 // strength take the empty seats and play on the server; their moves arrive as
 // steps that this page plays one by one. Each player's stone (or hero) and die
@@ -34,6 +34,20 @@ let state = null,
   visualPositions = null,
   visualTurn = null,
   lastOpponent = null;
+let animationEpoch=0,animationSignal=null,rosterSignature='';
+const pawnNodes=new Map(),activeAnimations=new Set(),effectTimers=new Set();
+function assertMotion(epoch=animationEpoch){if(epoch!==animationEpoch||animationSignal?.aborted){const error=Error('animation_cancelled');error.name='AbortError';throw error;}}
+function laterEffect(fn,ms){const epoch=animationEpoch;const id=setTimeout(()=>{effectTimers.delete(id);if(epoch===animationEpoch&&state)fn();},ms);effectTimers.add(id);return id;}
+async function motionWait(ms){const epoch=animationEpoch;await wait(ms);assertMotion(epoch);}
+function cancelMotion(){
+ animationEpoch++;for(const animation of activeAnimations)animation.cancel();activeAnimations.clear();for(const id of effectTimers)clearTimeout(id);effectTimers.clear();
+ $('#game')?.getAnimations?.({subtree:true}).forEach(animation=>animation.cancel());
+ document.querySelectorAll('.snake-travel-pawn,.snake-food-bulge,.fx-pop').forEach(el=>el.remove());
+ document.querySelectorAll('.motion-hidden').forEach(el=>el.classList.remove('motion-hidden'));
+ document.querySelectorAll('.snake-creature,.snake-head-creature').forEach(el=>{el.classList.remove('tracking','attacking','swallowing','digesting','releasing');window.BS_ARENA?.phase(el.dataset.from,null);});
+ document.querySelectorAll('.ladder-creature').forEach(el=>{el.classList.remove('activating','climbing','landing');window.BS_ARENA?.ladder(el.dataset.from,null);});
+ $('#boardWrap')?.classList.remove('board-moving','ladder-active','snake-active','ladder-hit','snake-hit','six-hit');$('#actionBanner')?.classList.remove('show');$('#bonusOverlay')?.classList.add('hidden');
+}
 const journal = window.BS_PLAY_INSIGHTS?.board();
 $("#roll")?.setAttribute("aria-label", "ارمِ النرد");
 const soundChoice = $("#diceSound");
@@ -202,11 +216,13 @@ function heroName(seat) {
   return look.pawn === "pawn-character" ? window.BS_STONES?.characters?.find((c) => c.id === look.character)?.name || "شخصية" : "";
 }
 function renderPlayers() {
+  const signature=JSON.stringify([state.players,visualTurn??state.turn,state.winner,me(),room.players?.map(p=>[p.index,p.bot,p.level,p.look,p.cosmetics])]);
+  if(signature===rosterSignature)return;rosterSignature=signature;
   const p = $("#players");
   p.innerHTML = "";
   state.players.forEach((x, i) => {
     const row = document.createElement("div");
-    row.className = "player-row " + (state.turn === i && state.winner === null ? "turn turn-glow" : "") + (i === me() ? " is-me" : "");
+    row.className = "player-row " + ((visualTurn ?? state.turn) === i && state.winner === null ? "turn turn-glow" : "") + (i === me() ? " is-me" : "");
     row.style.setProperty("--pc", colors[i]);
     row.style.setProperty("--progress", `${x.position}%`);
     row.innerHTML = `<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(x.name)}</b><div class="mini-note">${x.position ? `الخانة ${x.position} — ${x.position}%` : "عند البداية"}</div><div class="player-progress"><i style="--pc:${colors[i]};width:${x.position}%"></i></div></div><span class="score">${x.position}</span>`;
@@ -248,28 +264,30 @@ function decoratePawn(element, player) {
   return { ...profile, name: heroName(player) || profile.name };
 }
 function renderTokens(positions = visualPositions || state.players.map((p) => p.position)) {
-  document.querySelectorAll(".token-stack").forEach((x) => (x.innerHTML = ""));
+  for(const [seat,cached] of pawnNodes)if(seat>=positions.length){cached.node.remove();pawnNodes.delete(seat);}
   document.querySelectorAll(".snake-cell.active-cell,.snake-cell.occupied-cell").forEach((x) => {
     x.classList.remove("active-cell", "occupied-cell");
     x.style.removeProperty("--active-color");
   });
-  $("#startLane").innerHTML = "";
-  $("#mobileStartLane").innerHTML = "";
+
   const startTarget = document.body.classList.contains("game-running") ? $("#mobileStartLane") : $("#startLane");
   positions.forEach((pos, i) => {
-    const t = document.createElement("span");
-    t.className = pos ? "snake-token" + (state.turn === i && state.winner === null ? " active" : "") : "start-token";
+    const signature=JSON.stringify([state.players[i].name,seatLook(room,i)]);
+    let cached=pawnNodes.get(i);
+    if(!cached||cached.signature!==signature){cached?.node.remove();const node=document.createElement('span');const profile=decoratePawn(node,i);cached={node,profile,signature};pawnNodes.set(i,cached);}
+    const t=cached.node;
+    t.className = pos ? "snake-token" + ((visualTurn ?? state.turn) === i && state.winner === null ? " active" : "") : "start-token";
     t.dataset.player = i;
     t.style.setProperty("--pc", colors[i]);
     if (seatLook(room, i).pawn === "pawn-character") t.classList.add("hero-token");
-    const profile = decoratePawn(t, i);
+    const profile = cached.profile;
     t.title = `${state.players[i].name} — ${profile.name}`;
     t.setAttribute("aria-label", t.title);
     if (pos) {
       const cell = document.querySelector(`.snake-cell[data-n="${pos}"]`);
       cell?.classList.add("occupied-cell");
       cell?.querySelector(".token-stack")?.appendChild(t);
-      if (state.turn === i && state.winner === null) {
+      if ((visualTurn ?? state.turn) === i && state.winner === null) {
         cell?.classList.add("active-cell");
         cell?.style.setProperty("--active-color", colors[i]);
       }
@@ -349,7 +367,7 @@ function fx(sym) {
   e.style.left = r.left + r.width / 2 + "px";
   e.style.top = r.top + r.height / 2 + "px";
   document.body.appendChild(e);
-  setTimeout(() => e.remove(), 900);
+  laterEffect(() => e.remove(), 900);
 }
 function actionFx(type, text) {
   const wrap = $("#boardWrap"),
@@ -366,8 +384,8 @@ function actionFx(type, text) {
   flash.className = `action-flash ${type}`;
   void flash.offsetWidth;
   flash.classList.add("go");
-  setTimeout(() => banner.classList.remove("show"), linger);
-  setTimeout(() => wrap.classList.remove("ladder-hit", "snake-hit", "six-hit"), linger);
+  laterEffect(() => banner.classList.remove("show"), linger);
+  laterEffect(() => wrap.classList.remove("ladder-hit", "snake-hit", "six-hit"), linger);
 }
 function hitCell(n, cls = "step-hit") {
   const cell = document.querySelector(`.snake-cell[data-n="${n}"]`);
@@ -375,7 +393,7 @@ function hitCell(n, cls = "step-hit") {
   cell.classList.remove(cls);
   void cell.offsetWidth;
   cell.classList.add(cls);
-  setTimeout(() => cell.classList.remove(cls), 650);
+  laterEffect(() => cell.classList.remove(cls), 650);
 }
 function cellCenterRect(pos) {
   const wrap = $("#boardWrap").getBoundingClientRect();
@@ -414,18 +432,20 @@ function makeTravelPawn(player, fromPos) {
   ghost.title = p?.name || "";
   return ghost;
 }
-async function runAnimation(element, frames, options) {
-  if (window.BS_PRO?.paused) await window.BS_PRO.waitForPlay();
-  const duration = Math.max(0, (Number(options?.duration) || 0) * (window.BS_PLAY_INSIGHTS?.motionScale?.() || 1));
-  if (!element?.animate) {
-    await wait(duration);
-    return;
-  }
-  try {
-    await element.animate(frames, { ...options, duration }).finished;
-  } catch {
-    await wait(Math.min(duration, 80));
-  }
+async function runAnimation(element,frames,options){
+ const epoch=animationEpoch;assertMotion(epoch);
+ if(window.BS_PRO?.paused)await window.BS_PRO.waitForPlay();assertMotion(epoch);
+ // Keep the board readable even when a global quick-play preference is saved.
+ const duration=Math.max(0,Number(options?.duration)||0);
+ if(!element?.animate){await motionWait(duration);return;}
+ if(frames.some(frame=>frame.left!==undefined||frame.top!==undefined)){
+  const wrap=$('#boardWrap');frames=createPawnAnimationFrames(frames,{width:wrap.clientWidth,height:wrap.clientHeight,left:element.style.left,top:element.style.top});
+ }
+ let animation;
+ try{animation=element.animate(frames,{...options,duration});activeAnimations.add(animation);await animation.finished;}
+ catch(error){assertMotion(epoch);await motionWait(Math.min(duration,80));}
+ finally{activeAnimations.delete(animation);}
+ assertMotion(epoch);
 }
 function cuePhase(phase) {
   if (phase?.sound) BS_AUDIO.play(phase.sound);
@@ -456,13 +476,13 @@ async function animatePawnPath(player, fromPos, toPos, positions) {
   let nextPulse = 0,
     trailFrame = null;
   const trail = () => {
-    if (!ghost.isConnected) return;
+    if (!ghost.isConnected || animationSignal?.aborted) return;
     const time = Number(animation?.currentTime) || 0;
     while (nextPulse < plan.pulses.length && time >= plan.pulses[nextPulse].at) {
       const pulse = plan.pulses[nextPulse++],
         cell = document.querySelector(`.snake-cell[data-n="${pulse.cell}"]`);
       cell?.classList.add("trail-lit");
-      setTimeout(() => cell?.classList.remove("trail-lit"), 650);
+      laterEffect(() => cell?.classList.remove("trail-lit"), 650);
       window.BS_STONES?.step(wrap, cellCenterRect(pulse.cell), colors[player]);
       hitCell(pulse.cell);
       BS_AUDIO.play("boardStep", { volume: 0.32 });
@@ -470,8 +490,7 @@ async function animatePawnPath(player, fromPos, toPos, positions) {
     trailFrame = requestAnimationFrame(trail);
   };
   if (animation && !reducedMotion()) trailFrame = requestAnimationFrame(trail);
-  await moving;
-  cancelAnimationFrame(trailFrame);
+  try{await moving;}finally{cancelAnimationFrame(trailFrame);}
   window.BS_STONES?.step(wrap, cellCenterRect(toPos), colors[player], { landing: true });
   wrap.classList.remove("board-moving");
   ghost.remove();
@@ -521,11 +540,11 @@ async function animateLadderRide(player, fromPos, toPos, positions) {
   }));
   const rungs = [...(ladder?.querySelectorAll(".ladder-rung") || [])];
   rungs.forEach((rung, index) =>
-    setTimeout(
+    laterEffect(
       () => {
         rung.classList.add("is-lit");
         if (index % 2 === 0) BS_AUDIO.play("ladderStep", { volume: 0.34 });
-        setTimeout(() => rung.classList.remove("is-lit"), 420);
+        laterEffect(() => rung.classList.remove("is-lit"), 420);
       },
       (index / Math.max(1, rungs.length)) * climb.duration,
     ),
@@ -574,7 +593,7 @@ async function animateSnakeEat(player, fromPos, toPos, positions) {
     head = parts.find((part) => part.classList.contains("snake-head-creature")),
     path = snake?.querySelector(".snake-path"),
     plan = createReactionPlan("snake", { reducedMotion: reducedMotion() }),
-    [track, strike, swallow, grow, release] = plan.phases.map((phase, i) => ({ ...phase, duration: reducedMotion() ? phase.duration : [380, 360, 900, 900, 550][i] })),
+    [track, strike, swallow, grow, release] = plan.phases,
     ghost = makeTravelPawn(player, fromPos),
     wrap = $("#boardWrap"),
     a = cellCenterRect(fromPos),
@@ -611,7 +630,7 @@ async function animateSnakeEat(player, fromPos, toPos, positions) {
   cuePhase(swallow);
   const bodyFx = createSnakeBulge(snake, path, player);
   if (bodyFx) await runAnimation(bodyFx.bulge, bodyFx.frames, { duration: swallow.duration, easing: "linear", fill: "forwards" });
-  else await wait(swallow.duration);
+  else await motionWait(swallow.duration);
   bodyFx?.bulge.remove();
   setSnakePhase(parts, "digesting");
   const meals = Math.min(5, (snakeMeals.get(Number(fromPos)) || 0) + 1);
@@ -624,7 +643,7 @@ async function animateSnakeEat(player, fromPos, toPos, positions) {
     part.style.setProperty("--snake-head-scale", 1 + meals * 0.012);
   }
   cuePhase(grow);
-  await (window.BS_ARENA?.wait(grow.duration) || wait(grow.duration));
+  await motionWait(grow.duration);
   setSnakePhase(parts, "releasing");
   cuePhase(release);
   ghost.style.left = `${(b.x / initialWidth) * 100}%`;
@@ -654,7 +673,7 @@ async function animateEvent(prev, next) {
   visualPositions = positions;
   await animatePawnPath(e.player, e.from, e.landed, positions);
   if (e.to !== e.landed) {
-    await wait(70);
+    await motionWait(reducedMotion()?30:180);
     if (e.jumpType === "ladder") {
       actionFx("ladder", "🪜 صعود!");
       fx("✨");
@@ -664,7 +683,7 @@ async function animateEvent(prev, next) {
       fx("💥");
       await animateSnakeEat(e.player, e.landed, e.to, positions);
     }
-    await wait(90);
+    await motionWait(reducedMotion()?30:180);
   }
   if (e.protected) {
     actionFx("ladder", "◈ الدرع أنقذك!");
@@ -710,12 +729,13 @@ async function showBonusDie(value, actor) {
   $("#bonusName").textContent = state.players[actor].name + " · نرد المكافآت";
   $("#bonusText").textContent = "وجه واحد من ستة أوجه متساوية";
   button.classList.add("hidden");
-  await wait(350);
+  await motionWait(350);
   await window.BS_DICE.roll($("#bonusDie"), value);
+  assertMotion();
   $("#bonusName").textContent = info.name;
   $("#bonusText").textContent = info.text;
   BS_AUDIO.play("reward");
-  await wait(950);
+  await motionWait(950);
   overlay.classList.add("hidden");
 }
 function renderPowers() {
@@ -773,6 +793,7 @@ function enterGame() {
   window.BS_GAME_FULLSCREEN?.fit?.();
 }
 function showMenu() {
+  cancelMotion();clearTimeout(remoteTimeout);pawnNodes.clear();rosterSignature="";
   if (document.fullscreenElement === $("#game")) Promise.resolve(document.exitFullscreen?.()).catch(() => {});
   busy = false;
   state = null;
@@ -791,7 +812,9 @@ function net(s) {
   e.querySelector("span").textContent = s.text || "";
 }
 /* One room state (or one step of it): animate the move it carries, then show it. */
-async function apply(next, { animate }) {
+async function apply(next, { animate,signal }={}) {
+  if(signal?.aborted)return;
+  const epoch=animationEpoch;animationSignal=signal;
   clearTimeout(remoteTimeout);
   room = next;
   if (!next.state) return;
@@ -816,14 +839,16 @@ async function apply(next, { animate }) {
   if (moving) {
     busy = true;
     render();
+    const onAbort=()=>cancelMotion();signal?.addEventListener('abort',onAbort,{once:true});
     try {
-      await spinDice(state.lastEvent.rolls || [state.lastRoll || 1], state.lastEvent.player);
-      await animateEvent(prev, state);
-    } finally {
-      visualPositions = null;
-      visualTurn = null;
-    }
+      await spinDice(state.lastEvent.rolls || [state.lastRoll || 1], state.lastEvent.player);assertMotion(epoch);
+      await motionWait(reducedMotion()?0:180);
+      await animateEvent(prev,state);assertMotion(epoch);
+      await motionWait(reducedMotion()?0:240);
+    } catch(error){if(error.name==='AbortError')return;throw error;}
+    finally{signal?.removeEventListener('abort',onAbort);if(epoch===animationEpoch){visualPositions=null;visualTurn=null;}}
   }
+  if(epoch!==animationEpoch||signal?.aborted||!state)return;
   selectedPower = null;
   busy = false;
   render();
@@ -888,10 +913,6 @@ document.addEventListener("keydown", (event) => {
     }
   }
 });
-$("#boardTempo")?.addEventListener("change", (event) => window.BS_PLAY_INSIGHTS?.setTempo(event.target.value));
-try {
-  if ($("#boardTempo")) $("#boardTempo").value = localStorage.getItem("tahdia-board-tempo-v15") || "normal";
-} catch {}
 if ($("#boardContrast"))
   $("#boardContrast").onclick = () => {
     const next = document.body.dataset.boardContrast !== "true";
@@ -956,6 +977,8 @@ window.BS_TABLE = Object.freeze({
     return (state?.players || []).map((p, i) => ({ index: i, name: String(p?.name || "لاعب " + (i + 1)) }));
   },
 });
+
+window.addEventListener('pagehide',cancelMotion);
 </script>
 
 <script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>

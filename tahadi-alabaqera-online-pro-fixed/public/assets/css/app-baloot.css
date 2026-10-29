@@ -581,8 +581,22 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 
 /* Open play gives no hint about a cut. */
 .bl-hand.open-play .bl-card{filter:none!important;opacity:1!important;cursor:pointer}.bl-hand.open-play .bl-card::after{display:none!important}.bl-hand.open-play .bl-card:hover{transform:var(--fan) translateY(-5px)}
+/* A small project control; the player selects the actual cards in their hand. */
+.bl-project-picker{padding:5px;gap:5px;max-width:min(100%,480px);background:#10252c;border-color:#59727b;border-radius:12px}
+.bl-project-button{font:inherit;font-size:13px;min-height:44px;padding:7px 11px;border:1px solid #617782;border-radius:9px;background:#17323c;color:#fff;cursor:pointer}
+.bl-project-button.chosen,.bl-project-button.confirm{background:#d6e9d3;color:#142831;border-color:#e7f4e4}
+.bl-project-button:disabled{opacity:.5;cursor:default}.bl-project-count{align-self:center;font-size:12px;color:#d4e2e9;padding-inline:5px}
+.bl-hand.choosing-project .bl-card.project-selected{transform:var(--fan) translateY(-20px)!important;box-shadow:0 0 0 3px #e9f5d7,0 10px 18px #0008}
+.bl-hand .bl-card img,.bl-exposed img,.bl-slot img{opacity:1;filter:none;color-scheme:light;background:#fffef8}
+.bl-card{outline:1px solid #dbe6ee66}
+.bl-projects{padding:5px;background:#10232c;border:1px solid #81939b;border-radius:9px;box-shadow:0 4px 12px #0005;animation:none;pointer-events:none}
+.bl-projects img{width:calc(var(--bl-card-w)*.43);margin-inline-start:calc(var(--bl-card-w)*-.12)}
+.bl-project-button:focus-visible{outline:2px solid #e9f5d7;outline-offset:2px}
 .bl-evidence-list{display:grid;gap:8px;max-height:210px;overflow:auto}.bl-evidence-choice{display:flex!important;align-items:center;gap:6px;border:1px solid #89a79c;padding:6px;border-radius:9px}.bl-evidence-choice input{width:18px;height:18px;accent-color:#46a185}.bl-evidence-mini{display:flex;gap:3px}.bl-evidence-mini img{width:32px;border-radius:3px}.bl-claim-confirm{width:min(390px,90vw)}
 .bl-public-review{z-index:180!important}.bl-public-review .bl-sheet-card{width:min(650px,94vw);max-height:90vh;overflow:auto}.bl-review-cards{display:flex;justify-content:center;flex-wrap:wrap;gap:9px;margin:10px 0}.bl-review-cards img{width:clamp(45px,12vw,90px);border-radius:7px}.bl-review-cards figure{margin:0;padding:7px;border:2px solid transparent;border-radius:12px;text-align:center}.bl-review-cards figure.accused{border-color:#e09882;background:#a14c2d22}.bl-review-cards figcaption{font-size:12px;margin-top:5px}.bl-public-review #reviewControls{display:flex;gap:10px;justify-content:center;margin:16px 0}.bl-public-review [hidden]{display:none!important}.bl-public-review small{display:block;opacity:.75;line-height:1.7}
+
+/* Voice controls remain usable on a narrow phone. */
+.bl-talk-foot.bl-voice-panel{display:grid;gap:.65rem;align-items:start}.bl-voice-controls{display:flex;flex-wrap:wrap;gap:.5rem}.bl-voice-controls .bl-btn{min-height:44px;flex:1 1 120px}.bl-voice-controls .bl-btn:disabled{opacity:.48;cursor:default}.bl-voice-panel small{display:block;line-height:1.7;text-align:start}.bl-voice-panel [hidden]{display:none!important}
 
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,

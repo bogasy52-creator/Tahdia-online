@@ -2,7 +2,8 @@ import {STAGE_COUNT,CHAPTERS,stageCount,totalStageCount,chaptersFor,restorePaths
 import {createMatch3,moveMatch3,restoreMatch3,legalSwaps,BOOST_COST,MATCH3_VERSION} from './engines/match3-engine.js?v=29.1.0';
 import * as progress from './journey-client.js?v=29.1.0';
 import {BoardRenderer} from './match3-renderer.js?v=29.1.0';
-const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),names={jewels:'ماستر الجواهر',paths:'مسارات الألوان'};
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),names={jewels:'ماستر الجواهر',paths:'توصيل الأرقام'};
+if(params.get('game')==='paths')location.replace?.('/paths-online?mode=solo'+(params.get('daily')==='1'?'&daily=1':'')+(params.get('level')?'&level='+encodeURIComponent(params.get('level')):''));
 const play=$('journeyPlay'),canvas=$('stageCanvas'),workspace=document.querySelector('.stage-workspace'),topbar=document.querySelector('.stage-topbar');
 let game=params.get('game')==='paths'?'paths':'jewels',chapter=Math.floor((nextStage(progress.get(),game)-1)/12),state=null,selected=[],pointer=null,cursor=0,saving=false,busy=false,boosting=false,lastDaily=progress.today(),initialAccount='',roundVersion=0,resumeTimer=0,hubDirty=false,dragStart=-1,lastCell=-1,dragMoved=false,pathGestureMoved=false,blocked=new Set(),endpoints=new Set();
 const now=()=>window.BS_CAREER?.now?.()||Date.now(),account=()=>window.BS_CAREER?.account?.()||'guest';
@@ -160,8 +161,8 @@ $('stageBoost').onclick=()=>{if(!canInput()||state.charge<BOOST_COST)return;boos
 $('stageHint').onclick=()=>{if(!canInput())return;if(game==='jewels'){selected=legalSwaps(state)[0]||[];cursor=-1;draw();message('القطعتان المحددتان تبديلة ممكنة. اسحب إحداهما إلى الثانية أو انقرهما.');}else{const result=hintPaths(state);if(!result.accepted)return;state=result.state;selected=[];scheduleResume();meters();draw();message('رسمنا مسارًا؛ قد تتغيّر المسارات المتقاطعة معه.');if(state.won)finish();}};
 $('resultNext').onclick=()=>openStage(Math.min(stageCount(game),state.level+1),'',false);$('resultRetry').onclick=()=>openStage(state.level,state.daily,false);
 $('journeyContinue').onclick=()=>openStage(nextStage(progress.get(),game));
-document.querySelectorAll('[data-game]').forEach(button=>button.onclick=()=>{game=button.dataset.game;chapter=Math.floor((nextStage(progress.get(),game)-1)/12);history.replaceState(null,'','/journey?game='+game);render();});
-document.querySelectorAll('[data-daily]').forEach(button=>button.onclick=()=>{game=button.dataset.daily;openStage(1,progress.today());});
+document.querySelectorAll('[data-game]').forEach(button=>button.onclick=()=>{if(button.dataset.game==='paths'){location.assign?.('/paths-online?mode=solo');return;}game=button.dataset.game;chapter=Math.floor((nextStage(progress.get(),game)-1)/12);history.replaceState(null,'','/journey?game='+game);render();});
+document.querySelectorAll('[data-daily]').forEach(button=>button.onclick=()=>{if(button.dataset.daily==='paths'){location.assign?.('/paths-online?mode=solo&daily=1');return;}game=button.dataset.daily;openStage(1,progress.today());});
 play.addEventListener('cancel',event=>{event.preventDefault();if(saving)return;if(!$('stageHelpPanel').classList.contains('hidden')){$('stageHelpPanel').classList.add('hidden');workspace.inert=false;topbar.inert=false;canvas.focus();}else closeStage();});
 window.addEventListener('tahdia-journey-change',render);window.addEventListener('bs-career-change',render);
 window.addEventListener('bs-social-session',()=>{if(play.open&&account()!==initialAccount){roundVersion++;clearTimeout(resumeTimer);renderer.cancel();saving=busy=false;state=null;play.close();}render();});

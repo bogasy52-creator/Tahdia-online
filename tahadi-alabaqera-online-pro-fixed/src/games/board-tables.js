@@ -8,6 +8,7 @@
 //   player action costs one Durable Object request however many bots answer.
 // - Each seat carries its owner's dice, stone and character from the shop.
 import { createSnakesServerGame, rollSnakesServer } from './snakes-server.js';
+import { snakesTurnDisplayMs } from '../../public/assets/js/snakes-v4-fx.js';
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from '../../public/assets/js/engines/ludo-engine.js';
 import { createJackarooGame, getJackarooActions, playJackarooAction } from '../../public/assets/js/engines/jackaroo-engine.js';
 import { createRaceDiceGame, rollRaceDice, bankRaceDice } from '../../public/assets/js/engines/dice-engine.js';
@@ -101,7 +102,9 @@ export function recordStep(room, steps) {
   steps.list.push({ version: room.version, state: structuredClone(room.state), pendingRoll: room.pendingRoll ?? null });
   if (steps.list.length > MAX_STEPS) steps.list.splice(0, steps.list.length - MAX_STEPS);
 }
-export const stepsTime = (room, steps) => (steps?.list?.length || 0) * (STEP_MS[room.game] || 1000);
+export const stepsTime = (room, steps) => room.game==='snakes'
+  ? (steps?.list||[]).reduce((total,step)=>total+snakesTurnDisplayMs(step.state?.lastEvent),0)
+  : (steps?.list?.length || 0) * (STEP_MS[room.game] || 1000);
 
 /* ---------- starting a table ---------- */
 export function startTable(room, { quick = false, rng = Math.random, roll = rollWith(rng), now = Date.now() } = {}) {

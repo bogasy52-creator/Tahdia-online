@@ -8,7 +8,6 @@ export const PARTY_GAMES=Object.freeze([
  {id:'quiz',name:'تحدي العباقرة',kind:'quiz',real:true,image:'assets/game-cards-v27/quiz.svg',hint:'نفس الأسئلة والوقت للجميع، مع الصور والصوت والذاكرة.'},
  {id:'sudoku',name:'سودوكو',kind:'puzzle',real:true,image:'assets/game-cards-v27/sudoku.svg',hint:'نفس اللوحة للجميع، وخمس محاولات خطأ لكل لاعب.'},
  {id:'jewels',name:'ماستر الجواهر',kind:'puzzle',image:'assets/game-cards-v27/jewels.svg',hint:'بدّل الجواهر واصنع السلاسل؛ يتساوى الجميع في البداية والحركات.'},
- {id:'paths',name:'مسارات الألوان',kind:'puzzle',image:'assets/game-cards-v27/paths.svg',hint:'صِل الأزواج وغطِّ اللوحة؛ المسار الخطأ يعيد التحدي.'},
  {id:'paths-online',name:'توصيل الأرقام',kind:'puzzle',real:true,image:'assets/game-cards-v27/paths-online.svg',hint:'صِل الأرقام المتطابقة على نفس اللوحة قبل أصحابك.'},
  {id:'picture',name:'سباق الصور',kind:'puzzle',real:true,image:'assets/ai-v19/garden.webp',hint:'ركّب الصورة قطعة قطعة قبل أصحابك.'},
  {id:'memory',name:'الذاكرة',kind:'puzzle',image:'assets/game-cards-v27/memory.svg',hint:'نفس الأزواج للجميع، ولا تُكشف إلا البطاقات التي تقلبها.'},
@@ -16,7 +15,7 @@ export const PARTY_GAMES=Object.freeze([
  {id:'logic',name:'المنطق',kind:'quiz',image:'assets/game-cards-v27/logic.svg',hint:'أنماط وحساب واستنتاج، بنفس الأسئلة والوقت للجميع.'},
  {id:'puzzle',name:'ترتيب الأرقام',kind:'puzzle',image:'assets/game-cards-v27/puzzle.svg',hint:'حرّك الأرقام إلى الفراغ حتى تكتمل اللوحة.'},
 ]);
-export const partyGame=id=>PARTY_GAMES.find(game=>game.id===id)||null;
+export const partyGame=id=>PARTY_GAMES.find(game=>game.id===(id==='paths'?'paths-online':id))||null;
 // 32.1.0: every game has its own seat limit; turn games stay small enough to play.
 // 33.0.0: every game takes the whole room (20). A table game seats `maxPlayers` per
 // table, so a bigger room plays it on several tables at once.
@@ -29,7 +28,7 @@ export function limitingGame(){return null;}
 export function capacityMessage(rows){const id=limitingGame(rows);return id?`«${partyGame(id).name}» حدها ${playersLabel(gameCapacity(id))}؛ عدد الغرفة الحالي أكبر`:'الغرفة ممتلئة';}
 export function normalizePlaylist(value){
  if(!Array.isArray(value)||value.length<1||value.length>20)throw Error('اختر من لعبة إلى 20 لعبة في القائمة');
- return value.map(row=>{const game=typeof row==='string'?row:row?.game;if(!partyGame(game))throw Error('لعبة غير معروفة');const difficulty=row?.difficulty??2,duration=row?.duration??180;if(!Number.isInteger(difficulty)||difficulty<1||difficulty>5||!Number.isInteger(duration)||duration<60||duration>900)throw Error('اختر صعوبة من 1 إلى 5 ومدة من دقيقة إلى 15 دقيقة');const worldId=row?.worldId??'classic';if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))throw Error('خريطة غير معروفة');const extra={};if(game==='memory'){if(row.memoryTheme!==undefined){if(!['classic','wildlife','space','vehicles','ocean'].includes(row.memoryTheme))throw Error('مجموعة صور غير معروفة');extra.memoryTheme=row.memoryTheme;}if(row.memoryMode!==undefined){if(!['pairs','sequence'].includes(row.memoryMode))throw Error('نمط ذاكرة غير معروف');extra.memoryMode=row.memoryMode;}}return{game,difficulty,duration,worldId,...extra};});
+ return value.map(row=>{const requested=typeof row==='string'?row:row?.game,game=requested==='paths'?'paths-online':requested;if(!partyGame(game))throw Error('لعبة غير معروفة');const difficulty=row?.difficulty??2,duration=row?.duration??180;if(!Number.isInteger(difficulty)||difficulty<1||difficulty>5||!Number.isInteger(duration)||duration<60||duration>900)throw Error('اختر صعوبة من 1 إلى 5 ومدة من دقيقة إلى 15 دقيقة');const worldId=row?.worldId??'classic';if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))throw Error('خريطة غير معروفة');const extra={};if(game==='memory'){if(row.memoryTheme!==undefined){if(!['classic','wildlife','space','vehicles','ocean'].includes(row.memoryTheme))throw Error('مجموعة صور غير معروفة');extra.memoryTheme=row.memoryTheme;}if(row.memoryMode!==undefined){if(!['pairs','sequence'].includes(row.memoryMode))throw Error('نمط ذاكرة غير معروف');extra.memoryMode=row.memoryMode;}}return{game,difficulty,duration,worldId,...extra};});
 }
 
 export const playlistCapacity=()=>PARTY_CAPACITY;

@@ -10,7 +10,7 @@
      or Sun. All pass twice: new deal.
    - Hokm doubling: double (opponents), triple (buyers), four (opponents),
      gahwa (buyers, wins the match). Sun can be doubled only when the buyers
-     are above 100 and the others below 100.
+     are above 100 and the others at or below 100.
    - Card points 162 (Hokm) / 130 (Sun) including 10 for the last trick.
      Projects: sira, fifty, hundred, four hundred; Baloot (K+Q of trumps).
    - First team to 152 wins.
@@ -119,8 +119,22 @@ function candidateProjects(hand, contractType) {
 // Compare two projects: positive when a is better.
 function compareProject(a, b) {
   if (PROJECT_RANK[a.type] !== PROJECT_RANK[b.type]) return PROJECT_RANK[a.type] - PROJECT_RANK[b.type];
-  if (a.kind !== b.kind) return a.kind === 'four' ? 1 : -1;
+  if (a.kind !== b.kind) return a.kind === 'sequence' ? 1 : -1;
   return a.top - b.top;
+}
+
+// Explicit human selection: validate the actual cards, not client-supplied values.
+export function selectProjects(hand, contractType, selections) {
+  if (!Array.isArray(selections) || selections.length > 2) throw new Error('invalid_projects');
+  const candidates = candidateProjects(hand, contractType), used = new Set();
+  return selections.map(selection => {
+    const cards = selection?.cards;
+    if (!Array.isArray(cards) || new Set(cards).size !== cards.length) throw new Error('invalid_projects');
+    const found = candidates.find(project => project.type === selection.type && project.cards.length === cards.length && project.cards.every(card => cards.includes(card)));
+    if (!found || cards.some(card => used.has(card))) throw new Error('invalid_projects');
+    cards.forEach(card => used.add(card));
+    return {...found, cards:[...found.cards]};
+  });
 }
 
 // The best set of at most two projects that share no card.
@@ -236,7 +250,7 @@ function setContract(state, events, { type, trump = null, buyer, ashkal = false 
     state.baloot = holder >= 0 ? { seat: holder, played: 0, announced: false } : null;
   }
   const opponents = 1 - teamOf(buyer);
-  const canDoubleSun = state.scores[teamOf(buyer)] > 100 && state.scores[opponents] < 100;
+  const canDoubleSun = state.scores[teamOf(buyer)] > 100 && state.scores[opponents] <= 100;
   if (type === 'hokm' || canDoubleSun) {
     state.phase = 'doubling';
     state.doubling = { stage: 'double', by: null, asked: [], stages: type === 'hokm' ? ['double', 'triple', 'four', 'gahwa'] : ['double'] };
@@ -380,6 +394,7 @@ export function legalCards(state, seat = state.turn) {
   const trumps = hand.filter((x) => suitOf(x) === trump);
   if (!trumps.length) return [...hand];
   if (partnerWinning) {
+    if (suitOf(winning.card) === trump) return [...hand];
     // The last player is free when the partner wins. The third player is free
     // only when the lead was the top card left in its suit (an Ace or "ekka").
     const position = cards.length;
@@ -390,7 +405,9 @@ export function legalCards(state, seat = state.turn) {
   }
   const best = cardPower(winning.card, c, led);
   const higher = trumps.filter((x) => cardPower(x, c, led) > best);
-  return higher.length ? higher : trumps;
+  // When a non-trump suit was led, an undertrump cannot win the trick.
+  // Without a higher trump there is no duty to waste a lower one.
+  return higher.length ? higher : [...hand];
 }
 
 // Why a card breaks the rules, for the claim explanation.
@@ -409,6 +426,13 @@ export function playableCards(state, seat = state.turn) {
   return state.open ? [...state.hands[seat]] : legalCards(state, seat);
 }
 
+function balootBlocked(state) {
+  const holder = state.baloot?.seat, trump = state.contract.trump;
+  return holder != null && state.projects?.team === teamOf(holder) && state.projects.shown.some(p =>
+    p.seat === holder && p.type === 'hundred' && p.kind === 'four' &&
+    (p.cards.includes('K' + trump) || p.cards.includes('Q' + trump)));
+}
+
 function applyPlay(state, seat, action, events, rng) {
   const card = String(action.card || '');
   const legal = legalCards(state, seat);
@@ -423,10 +447,11 @@ function applyPlay(state, seat, action, events, rng) {
   }
   if (first && action.declare !== false) {
     const available=findProjects(state.startHands[seat],c.type);
-    const explicit=Array.isArray(action.projects);
-    const ids=explicit?action.projects:available.map((_,i)=>i);
+    const selected=Object.hasOwn(action,'projectCards');
+    const explicit=selected||Array.isArray(action.projects);
+    const ids=Array.isArray(action.projects)?action.projects:available.map((_,i)=>i);
     if(ids.length>2||new Set(ids).size!==ids.length||ids.some(i=>!Number.isInteger(i)||!available[i]))throw new Error('invalid_projects');
-    const found=ids.map(i=>available[i]);
+    const found=selected?selectProjects(state.startHands[seat],c.type,action.projectCards):ids.map(i=>available[i]);
     (state.manualProjects ||= [false,false,false,false])[seat]=explicit;
     (state.projectShows ||= [false,false,false,false])[seat]=!explicit;
     if(found.length){state.declared[seat]=found;events.push({type:'declare',seat,projects:found.map(p=>p.type)});}
@@ -440,7 +465,7 @@ function applyPlay(state, seat, action, events, rng) {
   events.push({ type: 'play', seat, card });
   if (state.baloot && state.baloot.seat === seat && (card === 'K' + c.trump || card === 'Q' + c.trump)) {
     state.baloot.played += 1;
-    if (state.baloot.played === 2) {
+    if (state.baloot.played === 2 && !balootBlocked(state)) {
       state.baloot.announced = true;
       events.push({ type: 'baloot', seat });
     }
@@ -496,13 +521,12 @@ function scoreHand(state, events, rng, forced = null) {
   const mult = c.multiplier;
   const projectPts = [0, 0];
   if (state.projects?.team !== null && state.projects?.team !== undefined) {
-    projectPts[state.projects.team] = state.projects.shown.reduce((sum, p) => sum + p.value, 0) * (mult > 1 ? 2 : 1);
+    projectPts[state.projects.team] = state.projects.shown.reduce((sum, p) => sum + p.value, 0) * (mult === 2 ? 2 : 1);
   }
   const balootPts = [0, 0];
   if (state.baloot?.announced) {
     const holder = state.baloot.seat;
-    const blocked = state.projects?.team === teamOf(holder) && state.projects.shown.some((p) => p.seat === holder && p.type === 'hundred' && (p.cards.includes('K' + c.trump) || p.cards.includes('Q' + c.trump)));
-    if (!blocked) balootPts[teamOf(holder)] = 2;
+    if (!balootBlocked(state)) balootPts[teamOf(holder)] = 2;
   }
   const full = hokm ? 16 : 26;
   const score = [0, 0];
@@ -522,10 +546,12 @@ function scoreHand(state, events, rng, forced = null) {
   } else if (tricks[0] === 8 || tricks[1] === 8) {
     kaboot = tricks[0] === 8 ? 0 : 1;
     declWins = kaboot === decl;
-    const base = hokm ? [0, 25, 50, 75, 100][mult] : mult > 1 ? 88 : 44;
+    projectPts[1 - kaboot] = 0;
+    const base = hokm ? 25 : 44;
     score[kaboot] = base + projectPts[kaboot] + balootPts[kaboot];
   } else {
-    counting = mult === 2 || mult === 4 ? decl : opp;
+    const responsible = c.gahwa || mult % 2 === 1 ? decl : opp;
+    counting = 1 - responsible;
     const other = 1 - counting;
     cardGame[counting] = hokm ? hokmPoints(abnat[counting]) : sunPoints(abnat[counting]);
     cardGame[other] = full - cardGame[counting];
@@ -536,7 +562,7 @@ function scoreHand(state, events, rng, forced = null) {
       let countingWins;
       if (hokm) countingWins = units >= 2 && units <= 5 ? true : units === 1 ? null : false;
       else countingWins = units >= 1 && units <= 4 ? true : units === 0 || units === 5 ? null : false;
-      declWins = countingWins === null ? true : countingWins ? counting === decl : counting !== decl;
+      declWins = countingWins === null ? mult === 1 || responsible !== decl : countingWins ? counting === decl : counting !== decl;
     }
     if (mult === 1) {
       if (declWins) { score[0] = total[0]; score[1] = total[1]; }
@@ -590,11 +616,42 @@ function applyClaim(state, seat, events, rng, action={}) {
   if(target!==undefined&&(!Number.isInteger(target)||target<0||target>3||teamOf(target)!==accused))throw new Error('invalid_claim_target');
   const project=action.project;
   if(project!==undefined&&!['sira','fifty','hundred','fourHundred'].includes(project))throw new Error('invalid_claim_project');
+  // Recheck recorded cuts with the current rules. A room that survived an
+  // update may still contain a cut incorrectly recorded by the old engine.
+  state.violations = (state.violations || []).flatMap(recorded => {
+    if(recorded.reason === 'unshown_project') return [recorded];
+    const proof = recheckCut(state, recorded);
+    return proof ? [proof] : [];
+  });
   const proof = (state.violations || []).find(v=>teamOf(v.seat)===accused&&(target===undefined||v.seat===target)&&(!action.strictEvidence||(action.tricks.includes(v.trick)&&(reason!=='cut'||v.card===action.card)))&&(reason==='cut'?v.reason!=='unshown_project':v.reason==='unshown_project'&&(!project||v.projects?.includes(project)))) || null;
   state.claim = { seat, team, accused, reason, target, project, correct: Boolean(proof), proof: proof ? clone(proof) : null, trick: state.tricks.length };
   events.push({ type: 'claim', seat, team, reason, target, project, correct: Boolean(proof), proof: proof ? clone(proof) : null });
   if (state.trick?.cards?.length) state.trick = { ...state.trick, cards: [] };
   scoreHand(state, events, rng, { winner: proof ? team : accused });
+}
+
+function recheckCut(state, recorded) {
+  const hand = state.startHands?.[recorded.seat];
+  if(!Array.isArray(hand)) return null;
+  let remaining = [...hand];
+  const played = [];
+  for(const trick of balootPublicTricks(state)) {
+    for(let index=0;index<trick.cards.length;index++) {
+      const entry = trick.cards[index];
+      if(trick.index === recorded.trick && entry.seat === recorded.seat && entry.card === recorded.card) {
+        if(!remaining.includes(entry.card)) return null;
+        const probe = { phase:'playing', turn:entry.seat, contract:state.contract,
+          hands:[[],[],[],[]], trick:{cards:trick.cards.slice(0,index)}, played,
+          leadTop:Boolean(trick.top) };
+        probe.hands[entry.seat] = remaining;
+        const legal = legalCards(probe, entry.seat);
+        return legal.includes(entry.card) ? null : {...recorded,reason:cutReason(probe,entry.seat,entry.card),should:legal.slice(0,3)};
+      }
+      played.push(entry.card);
+      if(entry.seat === recorded.seat) remaining = remaining.filter(card=>card!==entry.card);
+    }
+  }
+  return null;
 }
 
 /* What one seat can prove from the table alone: a card it saw played that the

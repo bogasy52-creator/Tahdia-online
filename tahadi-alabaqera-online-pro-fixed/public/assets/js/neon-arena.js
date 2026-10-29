@@ -48,7 +48,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     if(canvas.parentNode!==document.getElementById('boardWrap'))document.getElementById('boardWrap').appendChild(canvas);
     // the painted heads come from the arena sheet, fetched once when the board first appears
     // Procedural neon heads need no image sheet.
-    const dpr=Math.min(devicePixelRatio||1,2),r=board.getBoundingClientRect();
+    const dpr=Math.min(devicePixelRatio||1,window.innerWidth<760?1.5:2),r=board.getBoundingClientRect();
     width=r.width;height=r.height;canvas.width=Math.ceil(width*dpr);canvas.height=Math.ceil(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
     // lie exactly over the tiles, whatever the frame padding is
     if(canvas.style?.setProperty&&Number.isFinite(board.offsetLeft)){
@@ -60,12 +60,13 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     if(!frame){last=performance.now();frame=requestAnimationFrame(tick);}
   }
   function phase(from,value){
+    paintedAt=-Infinity;
     const entry=snakes.get(Number(from))||{};entry.phase=value||'idle';entry.at=clock;snakes.set(Number(from),entry);
     if(canvas){if(value==='tracking'){canvas.dataset.history='';canvas.dataset.maxScale='1';}canvas.dataset.phase=entry.phase;canvas.dataset.activeSnake=from;canvas.dataset.history=(canvas.dataset.history?canvas.dataset.history+',':'')+entry.phase;}
   }
-  function ladder(from,value){ladders.set(Number(from),{phase:value||'idle',at:clock});}
+  function ladder(from,value){paintedAt=-Infinity;ladders.set(Number(from),{phase:value||'idle',at:clock});}
   // How many stones a snake has eaten this match (no argument clears the board).
-  function meal(from,count){if(from===null||from===undefined){meals.clear();return;}meals.set(Number(from),clamp(Number(count)||0,0,5));}
+  function meal(from,count){paintedAt=-Infinity;if(from===null||from===undefined){meals.clear();return;}meals.set(Number(from),clamp(Number(count)||0,0,5));}
 
   /* ---------- ladders ---------- */
   // A round beam lit from the top left: bright edge, highlight, base, shade.
@@ -182,7 +183,8 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     const delta=Math.min(100,now-last);last=now;
     if(document.hidden||window.BS_PRO?.paused||document.getElementById('game')?.classList.contains('hidden')){frame=requestAnimationFrame(tick);return;}
     clock+=delta;
-    if(clock-paintedAt<30){frame=requestAnimationFrame(tick);return;}
+    const active=[...snakes.values(),...ladders.values()].some(entry=>entry.phase!=='idle');
+    if(clock-paintedAt<(active?30:80)){frame=requestAnimationFrame(tick);return;}
     paintedAt=clock;ctx.clearRect(0,0,width,height);
     for(const r of routes)if(r.to>r.from)drawLadder(r);
     for(const r of routes)if(r.to<r.from)drawSnake(r);

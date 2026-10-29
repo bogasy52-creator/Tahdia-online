@@ -31,7 +31,9 @@
     "test:worlds": "node scripts/verify-arena-worlds-v27.mjs",
     "test:quiz": "node scripts/verify-quiz-v28-runtime.mjs",
     "test:party": "node scripts/verify-party-v29-runtime.mjs",
-    "test:rooms20": "node scripts/verify-rooms20-v29.mjs"
+    "test:rooms20": "node scripts/verify-rooms20-v29.mjs",
+    "test:voice": "node --test test/baloot-voice-player.test.js test/baloot-voice-ui.test.js test/baloot-voice-cache.test.js && python3 -m unittest discover -s test -p test_voice_import.py -v",
+    "test:voice:browser": "node scripts/test-baloot-voice-browser.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.1",

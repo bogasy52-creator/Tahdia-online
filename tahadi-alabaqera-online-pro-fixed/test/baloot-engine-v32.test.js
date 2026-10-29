@@ -186,7 +186,7 @@ test('scoring: doubling multiplies, projects go to the best project, Baloot alwa
   assert.ok(r.declWins);
   // doubled: the winners take 32 plus doubled projects plus 2 for Baloot
   const projects = r.projects[0] + r.projects[1];
-  assert.equal(r.score[0], r.kaboot === 0 ? 50 + projects + r.baloot[0] : 32 + projects + r.baloot[0]);
+  assert.equal(r.score[0], r.kaboot === 0 ? 25 + projects + r.baloot[0] : 32 + projects + r.baloot[0]);
   assert.equal(r.baloot[0], 2);
   assert.equal(r.score[1], 0);
 });

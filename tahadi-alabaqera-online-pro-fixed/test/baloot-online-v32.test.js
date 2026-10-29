@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { environment, api } from './worker-harness.mjs';
 import { chooseBalootAction } from '../public/assets/js/engines/baloot-bot.js';
-import { balootActions } from '../public/assets/js/engines/baloot-engine.js';
+import { balootActions, createBalootMatch } from '../public/assets/js/engines/baloot-engine.js';
 
 async function makeRoom() {
   const env = environment();
@@ -143,6 +143,9 @@ test('32.1.0: a Baloot room plays open by default; a claim comes from any seat d
   const guest = h.board.addPlayer('ماجد', 'guest');
   await h.board.webSocketMessage(h.socket(h.host), JSON.stringify({ type: 'start' }));
   assert.equal(h.board.room.state.open, true);
+  // Bots can finish buying before the first snapshot. Give this bidding check
+  // a valid engine deal with a human first, independent of that random opening.
+  h.board.room.state = createBalootMatch({ open:true, dealer:3, names:h.board.room.state.names, rng:()=>.37 });
   const claimFrom=async(player)=>{
     const st=h.board.room.state,tricks=[...(st.tricks||[]),...(st.trick?.cards?.length?[st.trick]:[])];const index=tricks.findIndex(t=>t.cards.some(p=>p.seat%2!==player.seat%2)),entry=tricks[index]?.cards.find(p=>p.seat%2!==player.seat%2);
     await h.board.webSocketMessage(h.socket(player),JSON.stringify({type:'baloot',action:{type:'review_claim',reason:'cut',target:entry?.seat??1,card:entry?.card,tricks:index>=0?[index]:[]},expectedVersion:h.board.room.version}));

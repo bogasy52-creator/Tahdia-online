@@ -11,7 +11,7 @@
   // court: the palette of the court artwork (yellow, blue, red, black, white) and its frame
   const DECKS = {
     'deck-classic': { name: 'كلاسيك بوسراج', face: ['#fffefa', '#f5efe2'], edge: '#d8ccb3', red: '#c4253a', black: '#1c2230', gold: ['#f6dd8e', '#c99a3c', '#8c6420'], court: { Y: '#ebb847', B: '#24427f', R: '#c8283c', K: '#1a1d26', W: '#fffdf8', frame: '#1c2230' }, back: 'sadu' },
-    'deck-night': { name: 'ليل المجلس', face: ['#1d2740', '#121a2e'], edge: '#3c4b70', red: '#ff7d8c', black: '#e9eefb', gold: ['#ffe7a3', '#e0b354', '#9a6d1e'], court: { Y: '#e0b354', B: '#2a3c78', R: '#d0405a', K: '#141a2c', W: '#ece6d6', frame: '#e0b354' }, back: 'arabesque', dark: true },
+    'deck-night': { name: 'ليل المجلس', face: ['#fffef8', '#e8edf4'], edge: '#a7bad3', red: '#b91d38', black: '#15283f', gold: ['#ffe7a3', '#e0b354', '#9a6d1e'], court: { Y: '#d5a735', B: '#2a3c78', R: '#bc2441', K: '#141a2c', W: '#fffdf6', frame: '#253b59' }, back: 'arabesque', backDark: true },
     'deck-emerald': { name: 'الزمرد', face: ['#fffdf6', '#f1ece0'], edge: '#cfc6ad', red: '#b5243a', black: '#0f3b33', gold: ['#f3dd9a', '#bf9440', '#7e5a1c'], court: { Y: '#e4c46a', B: '#0f5a4a', R: '#b5243a', K: '#0c2c26', W: '#fffdf6', frame: '#0f3b33' }, back: 'emerald' },
     'deck-four': { name: 'أربعة ألوان', face: ['#ffffff', '#f3f4f7'], edge: '#cfd5e1', red: '#d4283e', black: '#161a24', blue: '#1f6fd6', green: '#178a4e', gold: ['#ffe5a0', '#cfa14a', '#8f6a23'], court: { Y: '#efbe4c', B: '#1f4fa8', R: '#d4283e', K: '#161a24', W: '#ffffff', frame: '#161a24' }, back: 'slate', four: true },
     'deck-royal': { name: 'الذهب الأسود', face: ['#16130f', '#0b0a08'], edge: '#6b5426', red: '#f0c25c', black: '#f7e3a8', gold: ['#fff1b8', '#e3b450', '#8a6416'], court: { Y: '#e3b450', B: '#5c4520', R: '#a3192d', K: '#16120b', W: '#f6ead0', frame: '#e3b450' }, back: 'royal', dark: true, foil: true },
@@ -153,7 +153,7 @@
       <path d="M125 143L157 175 125 207 93 175Z" fill="none" stroke="${gold}" stroke-width="3"/>
       <path d="M112 162H128C135 162 138 166 138 170S135 175 129 175H112ZM112 175H131C138 175 141 180 141 185S137 190 130 190H112Z" fill="none" stroke="${gold}" stroke-width="3.6" stroke-linejoin="round"/>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>${goldGradient(id + 'g', deck)}</defs>
-      <rect x="1.5" y="1.5" width="${W - 3}" height="${H - 3}" rx="17" fill="${deck.dark ? '#0b0d14' : '#fbf6ea'}" stroke="${deck.edge}" stroke-width="2"/>${art}</svg>`;
+      <rect x="1.5" y="1.5" width="${W - 3}" height="${H - 3}" rx="17" fill="${deck.dark || deck.backDark ? '#0b0d14' : '#fbf6ea'}" stroke="${deck.edge}" stroke-width="2"/>${art}</svg>`;
   }
 
   const cache = new Map();

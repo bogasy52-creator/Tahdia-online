@@ -1,0 +1,13 @@
+{
+  "release": "33.0.0",
+  "runtime": "native Workerd / SQLite / real WebSockets",
+  "published": false,
+  "browser_tested": false,
+  "physical_phone_tested": false,
+  "checks": [
+    "merged solo/friends page and one shared board served by the real Worker",
+    "forged manually selected project rejected without advancing the game",
+    "first-play manual selections accepted; 1 real dealt projects revealed without a modal; other hands remain private",
+    "snakes deadline includes the actual display duration before the next decision window"
+  ]
+}

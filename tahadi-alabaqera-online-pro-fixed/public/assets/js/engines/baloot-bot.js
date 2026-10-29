@@ -97,17 +97,26 @@ function double(view, seat, options, level) {
 
 /* ---------- Card play ---------- */
 
-function knowledge(view) {
+export function balootKnowledge(view) {
   const played = new Set(view.played || []);
   const voids = [new Set(), new Set(), new Set(), new Set()];
   const c = view.contract;
-  const tricks = [...(view.tricks || []), ...(view.trick?.cards?.length ? [{ cards: view.trick.cards }] : [])];
+  const tricks = [...(view.tricks || []), ...(view.trick?.cards?.length ? [view.trick] : [])];
   for (const t of tricks) {
     const led = suitOf(t.cards[0].card);
-    for (const { seat, card } of t.cards.slice(1)) {
+    for (let index=0;index<t.cards.length;index++) {
+      const {seat,card}=t.cards[index];
+      // A later visible card can contradict an earlier inference in open play.
+      voids[seat].delete(suitOf(card));
       if (suitOf(card) !== led) {
         voids[seat].add(led);
-        if (c.type === 'hokm' && suitOf(card) !== c.trump) voids[seat].add(c.trump);
+        if (c.type === 'hokm' && suitOf(card) !== c.trump && index>0) {
+          const before=t.cards.slice(0,index),winning=trickWinner(before,c);
+          const partnerWinning=teamOf(winning.seat)===teamOf(seat);
+          const freePartner=partnerWinning&&(index===3||suitOf(winning.card)===c.trump||
+            (winning.seat===before[0].seat&&Boolean(t.top)));
+          if(suitOf(winning.card)!==c.trump&&!freePartner)voids[seat].add(c.trump);
+        }
       }
     }
   }
@@ -250,7 +259,7 @@ function play(view, seat, options, level, rng, honest) {
   if (!honest) { const cut = cutCard(view, seat, legal, level, rng); if (cut) return { type: 'play', card: cut }; }
   if (legal.length === 1) return { type: 'play', card: legal[0] };
   if (level.noise && rng() < level.noise * 0.25) return { type: 'play', card: legal[Math.floor(rng() * legal.length)] };
-  const info = knowledge(view);
+  const info = balootKnowledge(view);
   const card = view.trick.cards.length ? follow(view, seat, legal, info) : lead(view, seat, legal, info);
   return { type: 'play', card: legal.includes(card) ? card : legal[0] };
 }

@@ -78,7 +78,7 @@ test('board games expose shared online room client', async () => {
     assert.match(html, /game-menu-v33\.js/);
   }
   const table = await readFile(join(publicDir, 'assets/js/board-table-v33.js'), 'utf8');
-  assert.match(table, /from '\.\/board-online\.js\?v=[\d.]+'/);
+  assert.match(table, /from '\.\/board-online\.js\?v=[\w.-]+'/);
   assert.match(table, /client\.create\(/);
   assert.match(table, /client\.join\(/);
   assert.match(table, /client\.quick\(/);

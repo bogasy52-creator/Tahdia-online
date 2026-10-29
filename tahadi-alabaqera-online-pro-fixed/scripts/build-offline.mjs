@@ -1,15 +1,21 @@
 import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 const release=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
 const root=fileURLToPath(new URL('../public/',import.meta.url));
 async function walk(dir){const rows=[];for(const entry of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())rows.push(...await walk(file));else rows.push('/'+path.relative(root,file).split(path.sep).join('/'));}return rows;}
 const shell=['/assets/js/tahdia-premium-v25.js?v=25.3.0','/assets/css/tahdia-premium-v25.css?v=25.3.0','/assets/js/play-feedback-v24-1.js?v=25.3.0','/','/journey.html','/offline.html','/sudoku.html','/assets/css/app-sudoku.css?v=23.0.1','/assets/js/sudoku-ui.js?v=25.3.0','/assets/js/sudoku-online.js?v=25.3.0','/assets/js/sudoku-grid.js','/assets/js/engines/sudoku-engine.js','/assets/js/engines/sudoku-core.js','/assets/js/engines/sudoku-stages.js','/assets/js/engines/paths-v20.js','/assets/brand/sudoku-cover.svg','/quiz.html','/picture.html','/assets/css/app-quiz.css?v=23.0.1','/assets/css/app-picture.css?v=23.0.1','/assets/js/quiz-hub.js?v=23.0.1','/assets/js/picture-ui.js?v=25.3.0','/assets/js/engines/image-puzzle.js?v=23.0.1','/assets/js/home-v19.js?v=25.3.0','/assets/quiz-catalog.json','/manifest.webmanifest','/assets/css/app-index.css?v=23.0.1','/assets/css/app-journey.css?v=24.0.1',...['client-health','audio-manager','platform','social-client','profile-core','career-client','ui-icons','pro-experience','home-v14','home-return-v17','journey-client','journey-renderer','journey-ui','match3-renderer'].map(name=>'/assets/js/'+name+'.js?v='+(['journey-ui','social-client'].includes(name)?'25.3.0':'23.0.1')),'/assets/js/engines/journey-engine.js?v=23.0.1','/assets/js/engines/match3-engine.js?v=23.0.1',...['journey-world','jewels-cover','paths-cover','memory-cover','reaction-cover','logic-cover','puzzle-cover'].map(name=>'/assets/brand/'+name+'.svg')];
 shell.push('/assets/css/play-experience-v25.css?v=29.1.0','/assets/fonts/tajawal-arabic-700.woff2');
-for(let i=0;i<shell.length;i++)shell[i]=shell[i].replace(/\?v=[0-9.]+/,'?v='+release);
+for(let i=0;i<shell.length;i++)if(!shell[i].includes('-gameplay3'))shell[i]=shell[i].replace(/\?v=[0-9.]+/,'?v='+release);
 const demand=[...new Set([...(await walk(root)),'/service-worker.js'])].filter(file=>/\.(?:css|js|json|html|webp|png|svg|wav|mp3|woff2)$/.test(file)).sort();
 const runtime=await readFile(new URL('./service-worker-runtime.txt',import.meta.url),'utf8');
+const voiceHash=createHash('sha256');let voiceFiles=0;
+for(const file of ['assets/js/baloot-voice-pack.js','assets/js/baloot-voice-player.js','assets/js/baloot-voice.js','assets/js/baloot-table.js','assets/js/engines/baloot-engine.js','assets/js/engines/baloot-bot.js','baloot.html','assets/js/baloot-cards.js','assets/css/app-baloot.css','assets/js/paths-online-v24.js','assets/js/engines/paths-solo.js','paths-online.html','assets/css/app-paths-online.css','assets/js/journey-ui.js','assets/js/engines/party-catalog-v29.js','index.html','snakes.html','assets/js/board-online.js','assets/js/board-table-v33.js','assets/js/snakes-v4-fx.js','assets/js/neon-arena.js']){
+  try{voiceHash.update(file).update('\0').update(await readFile(path.join(root,file))).update('\0');voiceFiles++;}catch(error){if(error.code!=='ENOENT')throw error;}
+}
+const voiceRevision=voiceFiles?voiceHash.digest('hex').slice(0,12):'legacy';
 const cacheName='busraj-games-v66-release-'+release.replaceAll('.','-');
-const value="// Small offline core. Other games and media are cached after the first visit.\nconst CACHE_NAME = '"+cacheName+"';\nconst RUNTIME_CACHE = CACHE_NAME + '-visited';\nconst MEDIA_CACHE = 'busraj-quiz-media-v4';\nconst APP_SHELL = "+JSON.stringify(shell,null,2)+";\nconst ON_DEMAND = "+JSON.stringify(demand,null,2)+";\n"+runtime;
+const value="// Small offline core. Other games and media are cached after the first visit.\nconst CACHE_NAME = '"+cacheName+"';\nconst RUNTIME_CACHE = CACHE_NAME + '-visited-voice-"+voiceRevision+"';\nconst MEDIA_CACHE = 'busraj-quiz-media-v4';\nconst APP_SHELL = "+JSON.stringify(shell,null,2)+";\nconst ON_DEMAND = "+JSON.stringify(demand,null,2)+";\n"+runtime;
 const out=path.join(root,'service-worker.js');if(process.argv.includes('--check')){if(await readFile(out,'utf8')!==value)throw Error('Rebuild offline manifest');}else await writeFile(out,value);
 console.log('Offline core: '+shell.length+' resources; other assets stay on demand.');

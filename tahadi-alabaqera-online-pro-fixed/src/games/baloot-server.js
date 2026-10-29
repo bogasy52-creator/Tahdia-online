@@ -17,7 +17,7 @@ const TURN_MS = { bidding: 20_000, doubling: 15_000, playing: 25_000 };
 const BOT_NAMES = ['سلطان', 'نايف', 'بندر', 'مشعل', 'تركي', 'فيصل', 'ريان', 'فهد', 'عبدالله', 'خالد'];
 // How long a table needs to show each event, so a human is never timed out
 // while the moves before their turn are still on screen.
-const SHOW_MS = { deal: 2300, bid: 1000, second_round: 1300, redeal: 1500, contract: 3000, double: 1300, declare: 0, play: 650, baloot: 600, trick: 1500, projects: 3000, play_started: 0, claim: 3300 };
+const SHOW_MS = { deal: 2300, bid: 1000, second_round: 1300, redeal: 1500, contract: 3000, double: 1300, declare: 0, play: 650, baloot: 600, trick: 1500, projects: 350, play_started: 0, claim: 3300 };
 
 export function freeBalootSeat(room) {
   const taken = new Set(Object.values(room.players).map((p) => p.seat));
@@ -122,11 +122,13 @@ function sanitizeAction(action) {
   const type = String(action?.type || '');
   if (type === 'bid') return { type, bid: String(action.bid || ''), suit: action.suit ? String(action.suit).slice(0, 1) : undefined };
   if (type === 'double') return { type, call: String(action.call || ''), locked: Boolean(action.locked) };
-  if (type === 'play') return { type, card: String(action.card || '').slice(0, 2), projects: Array.isArray(action.projects)?action.projects.slice(0,3):[] };
+  if (type === 'play') return { type, card: String(action.card || '').slice(0, 2), projects: Array.isArray(action.projects)?action.projects.slice(0,3):[],
+    ...(Object.hasOwn(action,'projectCards')?{projectCards:Array.isArray(action.projectCards)?action.projectCards.slice(0,3).map(project=>({type:String(project?.type||''),cards:Array.isArray(project?.cards)?project.cards.slice(0,9):null})):null}:{}) };
+  if(type==='show_projects')return {type};
   if(type==='review_projects')return {type};
   if(type==='review_claim')return {type,target:action.target,reason:action.reason,project:action.project,card:String(action.card||'').slice(0,2),tricks:Array.isArray(action.tricks)?action.tricks.slice(0,9):null};
   if(['confirm_review','cancel_review'].includes(type))return {type,reviewId:String(action.reviewId||'').slice(0,80)};
-  if(type==='show_projects'||type==='claim')throw new Error('review_required');
+  if(type==='claim')throw new Error('review_required');
 
   throw new Error('invalid_action');
 }

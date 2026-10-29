@@ -27,9 +27,9 @@ test('help keeps an online match going, traps keyboard focus, and stays inside f
  assert.equal(h.context.BS_PRO.paused,false);assert.match(h.doc.getElementById('boardHelpNote').textContent,/المباراة تستمر/);assert.equal(h.doc.activeElement.id,'boardHelpClose');
  h.doc.dispatchEvent({type:'keydown',key:'Escape',preventDefault(){}});assert.equal(h.doc.getElementById('boardHelpDialog').classList.contains('hidden'),true);assert.equal(h.doc.activeElement,opener);
 });
-test('fast board presentation shortens motion without changing state or die results',async()=>{
+test('snakes keeps moderate motion under an old global fast preference without changing state or dice',async()=>{
  const h=await board();await start(h);const before=structuredClone(h.context.playHooks.state());h.context.BS_PLAY_INSIGHTS.setTempo('fast');const element=h.doc.createElement('div');let duration;
- element.animate=(_frames,options)=>{duration=options.duration;return {finished:Promise.resolve()}};await h.context.playHooks.runAnimation(element,[],{duration:1000});assert.equal(duration,450);assert.deepEqual(h.context.playHooks.state(),before);assert.equal(h.storage.get('tahdia-board-tempo-v15'),'fast');
+ element.animate=(_frames,options)=>{duration=options.duration;return {finished:Promise.resolve()}};await h.context.playHooks.runAnimation(element,[],{duration:1000});assert.equal(duration,1000);assert.deepEqual(h.context.playHooks.state(),before);assert.equal(h.storage.get('tahdia-board-tempo-v15'),'fast');
 });
 test('arena insights use actual scores and kills, bound graph samples, and reset between rounds',async()=>{
  const h=await board(),journal=h.context.BS_PLAY_INSIGHTS.arena(),game={tick:0,elapsed:0,status:'playing',snakes:[{id:'a',name:'A',score:0,kills:0,alive:true,boost:false}]};journal.reset(game,['a']);journal.observe(game,['a']);

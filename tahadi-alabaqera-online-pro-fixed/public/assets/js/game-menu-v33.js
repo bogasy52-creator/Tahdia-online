@@ -10,9 +10,9 @@
   'use strict';
   if(root.BS_GAME_MENU)return;
   const doc=root.document;
-  const TITLES=Object.freeze({quiz:'تحدي الأسئلة',party:'الألعاب الجماعية',sudoku:'سودوكو',paths:'توصيل الأرقام',picture:'سباق الصور',serpent:'حلبة الثعابين',snakes:'الثعبان والسلالم',zahra:'الزهرة',jackaroo:'جاكارو',dice:'تحدي النرد',baloot:'بلوت',memory:'الذاكرة',logic:'الألغاز',puzzle:'تركيب الصور',reaction:'سرعة البديهة',jewels:'ماستر الجواهر',colors:'مسارات الألوان'});
+  const TITLES=Object.freeze({quiz:'تحدي الأسئلة',party:'الألعاب الجماعية',sudoku:'سودوكو',paths:'توصيل الأرقام',picture:'سباق الصور',serpent:'حلبة الثعابين',snakes:'الثعبان والسلالم',zahra:'الزهرة',jackaroo:'جاكارو',dice:'تحدي النرد',baloot:'بلوت',memory:'الذاكرة',logic:'الألغاز',puzzle:'تركيب الصور',reaction:'سرعة البديهة',jewels:'ماستر الجواهر',colors:'توصيل الأرقام'});
   // the first two digits of a room code name its game (src/rooms/room-codes.js)
-  const FAMILIES=Object.freeze([['quiz',10,14,'/online'],['party',15,19,'/party'],['sudoku',20,24,'/sudoku'],['paths',25,29,'/paths-online'],['picture',30,34,'/picture'],['serpent',35,39,'/serpent'],['snakes',40,44,'/snakes'],['zahra',45,49,'/zahra'],['jackaroo',50,54,'/jackaroo'],['dice',55,59,'/dice'],['baloot',60,64,'/baloot'],['memory',65,69,'/memory'],['logic',70,74,'/logic'],['puzzle',75,79,'/puzzle'],['reaction',80,84,'/reaction'],['jewels',85,89,'/journey?game=jewels'],['colors',90,94,'/journey?game=paths']]);
+  const FAMILIES=Object.freeze([['quiz',10,14,'/online'],['party',15,19,'/party'],['sudoku',20,24,'/sudoku'],['paths',25,29,'/paths-online'],['picture',30,34,'/picture'],['serpent',35,39,'/serpent'],['snakes',40,44,'/snakes'],['zahra',45,49,'/zahra'],['jackaroo',50,54,'/jackaroo'],['dice',55,59,'/dice'],['baloot',60,64,'/baloot'],['memory',65,69,'/memory'],['logic',70,74,'/logic'],['puzzle',75,79,'/puzzle'],['reaction',80,84,'/reaction'],['jewels',85,89,'/journey?game=jewels'],['colors',90,94,'/paths-online?mode=solo']]);
   const LAST_KEY='bs-last-match-v33',NAME_KEY='bs-player-name-v33',MODE_KEY=game=>'bs-mode-v33-'+game;
   const store={get(key){try{return localStorage.getItem(key)}catch{return null}},set(key,value){try{localStorage.setItem(key,value)}catch{}},remove(key){try{localStorage.removeItem(key)}catch{}}};
 

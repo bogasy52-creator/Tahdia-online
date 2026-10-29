@@ -9,15 +9,15 @@ const REACTIONS=Object.freeze({
   ]),
   ladder:Object.freeze([
     Object.freeze({name:'wake',duration:160,sound:'ladderIgnite'}),
-    Object.freeze({name:'climb',duration:400,sound:'ladderClimb'}),
+    Object.freeze({name:'climb',duration:650,sound:'ladderClimb'}),
     Object.freeze({name:'land',duration:220,sound:'ladderLand',haptic:[20,24,46]}),
   ]),
   snake:Object.freeze([
     Object.freeze({name:'track',duration:180,sound:'snakeHiss'}),
-    Object.freeze({name:'strike',duration:170,sound:'snakeBite',haptic:[70,25,100]}),
-    Object.freeze({name:'swallow',duration:340,sound:'snakeSwallow'}),
+    Object.freeze({name:'strike',duration:240,sound:'snakeBite',haptic:[70,25,100]}),
+    Object.freeze({name:'swallow',duration:520,sound:'snakeSwallow'}),
     Object.freeze({name:'grow',duration:320,sound:'snakeGrow',haptic:38}),
-    Object.freeze({name:'release',duration:190,sound:'snakeRelease'}),
+    Object.freeze({name:'release',duration:300,sound:'snakeRelease'}),
   ]),
 });
 
@@ -70,7 +70,7 @@ export function createBoardMovePlan(from,to,{reducedMotion=false}={}){
   const direction=end>=start?1:-1;
   const cells=[];
   for(let cell=start+direction;direction>0?cell<=end:cell>=end;cell+=direction)cells.push(cell);
-  const duration=reducedMotion?clamp(110+cells.length*18,130,260):clamp(180+cells.length*58,260,680);
+  const duration=reducedMotion?clamp(110+cells.length*18,130,260):clamp(260+cells.length*115,420,1150);
   const pulses=cells.map((cell,index)=>Object.freeze({cell,at:Math.round((index+1)/Math.max(1,cells.length)*duration)}));
   return Object.freeze({from:start,to:end,cells:Object.freeze(cells),pulses:Object.freeze(pulses),duration});
 }
@@ -86,6 +86,31 @@ export function createSmoothMotionFrames(points,{lift=14}={}){
     frames.push(Object.freeze({...b,scale:index===segments-1?1:1.025,rotate:0,offset:next}));
   }
   return Object.freeze(frames);
+}
+
+// Anchor the pawn once and animate only its transform. Left/top keyframes cause
+// layout on every frame, which is particularly expensive on a full mobile board.
+export function createPawnAnimationFrames(frames,{width,height,left,top}){
+  const baseX=parseFloat(left)||0,baseY=parseFloat(top)||0;
+  return frames.map(frame=>{
+    const {left:x,top:y,...rest}=frame;
+    const dx=x===undefined?0:((parseFloat(x)||0)-baseX)*width/100;
+    const dy=y===undefined?0:((parseFloat(y)||0)-baseY)*height/100;
+    return {...rest,transform:`translate3d(${dx}px,${dy}px,0) ${rest.transform||''}`.trim()};
+  });
+}
+
+// The server reserves the same display time as the client, so a long snake or
+// bonus turn never eats into the following human player's decision time.
+export function snakesTurnDisplayMs(event){
+  if(!event)return 0;
+  const walk=(from,to)=>from===to?0:createBoardMovePlan(from,to).duration;
+  const reaction=kind=>['snake','ladder'].includes(kind)?createReactionPlan(kind).total:0;
+  let duration=1040+180+240+walk(event.from,event.landed);
+  if(event.to!==event.landed)duration+=360+reaction(event.jumpType);
+  if(event.bonusRoll)duration+=350+1040+950;
+  if(event.event&&event.eventTo!==event.eventFrom)duration+=walk(event.eventFrom,event.eventLanding??event.eventTo)+reaction(event.bonusJumpType);
+  return duration+100;
 }
 
 export function createSnakeBodyProgress(samples=18){

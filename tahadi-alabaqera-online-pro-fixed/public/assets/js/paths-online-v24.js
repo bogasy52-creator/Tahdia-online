@@ -1,25 +1,30 @@
 import {drawBoard} from './journey-renderer.js?v=29.1.0';
-import {adjacent} from './engines/journey-engine.js?v=29.1.0';
+import {adjacent,nextStage,stageCount} from './engines/journey-engine.js?v=29.1.0';
+import {createSoloPathsSession} from './engines/paths-solo.js?v=33.0.0-gameplay3';
+import * as progress from './journey-client.js?v=29.1.0';
 const $=id=>document.getElementById(id),show=(id,yes)=>$(id).hidden=!yes;
 const read=k=>{try{return localStorage.getItem(k)||'';}catch{return '';}},write=(k,v)=>{try{localStorage.setItem(k,v);}catch{}},remove=k=>{try{localStorage.removeItem(k);}catch{}};
 const account=()=>window.BS_CAREER?.account?.()||read('bs_social_session').split('.')[0]||'guest',key=()=> 'tahdia-paths-room-v24:'+account();
 const names=['سهل','متوسط','صعب','خبير','ماستر'];
 const faults={endpoint:'وصّلت رقمًا مختلفًا أو تركت المسار ناقصًا',loop:'المسار التف على نفسه',jump:'المسار قفز فوق خانة',wall:'المسار دخل حاجزًا',cross:'تقاطع مساران',gate:'فاتتك نقطة عبور',coverage:'بقيت مربعات فارغة',incomplete:'التوصيلة ناقصة'};
 const canvas=$('pathCanvas');let socket=null,state=null,seat=null,attempt=0,retry=null,retries=0,offset=0,pending=null,queued=null,pointer=null,pointerDragged=false,selected=[],color=-1,cursor=0,boardRound='',seenSeq=-1,lastPing=0,initialAccount=account(),request=null;
+let mode='friends',solo=null,soloEpoch=0,soloSaved=false,soloSaving=false;
+const stageOwner=()=>window.BS_CAREER?.account?.()||'guest',soloKey=()=> 'tahdia-stage-resume-v17:'+stageOwner()+':paths';
 function saved(){try{const s=JSON.parse(read(key()));return /^\d{6}$/.test(s?.code)&&typeof s.token==='string'?s:null;}catch{return null;}}
 function busy(value){$('pathCreate').disabled=value;$('pathJoin').disabled=value;}
 function message(text,entry=false){$(entry?'pathEntryMessage':'pathRoomMessage').textContent=text;}
 function clearGesture(){selected=[];color=-1;const id=pointer;pointer=null;if(id!==null&&canvas.hasPointerCapture?.(id))try{canvas.releasePointerCapture(id);}catch{}}
 function connected(){return socket?.readyState===1;}
 function send(value){if(!connected())return false;socket.send(JSON.stringify(value));return true;}
-function editable(){return connected()&&state?.status==='playing'&&!queued&&(!pending||pending.type==='path');}
-function stop(keepSeat=true){attempt++;clearTimeout(retry);request?.abort();request=null;const old=socket;socket=null;if(old)try{old.close(1000,'exit');}catch{}clearGesture();pending=null;queued=null;state=null;seat=null;busy(false);if(!keepSeat)remove(key());}
+function editable(){return (solo||connected())&&state?.status==='playing'&&!queued&&(!pending||pending.type==='path');}
+function stop(keepSeat=true){soloEpoch++;solo=null;soloSaved=soloSaving=false;attempt++;clearTimeout(retry);request?.abort();request=null;const old=socket;socket=null;if(old)try{old.close(1000,'exit');}catch{}clearGesture();pending=null;queued=null;state=null;seat=null;busy(false);if(!keepSeat)remove(key());}
 function displayPaths(){const paths={...state.me.paths};if(pending?.type==='path')paths[pending.color]=pending.path;if(queued)paths[queued.color]=queued.path;return paths;}
 function renderBoard(){if(!state?.puzzle)return;const paths=displayPaths();if(color>=0&&selected.length)delete paths[color];drawBoard(canvas,{...state.puzzle,game:'paths',paths},selected,{hover:cursor});canvas.setAttribute('aria-disabled',String(!editable()));const row=Math.floor(cursor/state.puzzle.size)+1,col=cursor%state.puzzle.size+1;canvas.setAttribute('aria-label','لوحة توصيل الأرقام. المؤشر صف '+row+' عمود '+col+'. الأسهم للتنقل، المسافة لاختيار أو تمديد المسار، وEnter للتأكيد، وEscape للإلغاء.');}
 function renderPlayers(target){const fragment=document.createDocumentFragment();for(const p of state.players){const li=document.createElement('li');li.dataset.self=String(p.id===seat?.playerId);const number=document.createElement('b');number.textContent=p.rank;const label=document.createElement('span');label.textContent=p.name+(p.id===seat?.playerId?' · أنت':'');const sub=document.createElement('small');sub.textContent=(p.role==='host'?'المضيف · ':'')+(p.connected?'متصل':'يعيد الاتصال')+(state.status==='playing'||state.status==='finished'?' · '+p.covered+' خانة':'');label.append(sub);li.append(number,label);fragment.append(li);}$(target).replaceChildren(fragment);}
 function accept(next){
  if(!next?.me||!seat)return;if(next.round===boardRound&&next.me.seq<seenSeq)return;
- window.BS_INVITES?.set({game:'paths',code:next.code,joinable:['lobby','countdown'].includes(next.status)});
+ window.BS_INVITES?.set(solo?null:{game:'paths',code:next.code,joinable:['lobby','countdown'].includes(next.status)});
+ show('pathCopy',!solo);show('pathRaceList',!solo);show('pathTimer',!solo);show('pathNext',Boolean(solo&&soloSaved&&next.status==='finished'&&!solo.proof().daily&&solo.proof().level<stageCount('paths')));show('pathSaveRetry',Boolean(solo&&next.status==='finished'&&!soloSaved));$('pathSaveRetry').disabled=soloSaving;
  const newRound=next.round!==boardRound,changed=newRound||next.me.seq!==seenSeq,faulted=!newRound&&next.me.faults>(state?.me.faults||0),acked=!newRound&&pending&&next.me.seq>=pending.seq;
  const nextMove=acked&&!faulted&&next.status==='playing'?queued:null,confirmedMove=acked&&!faulted&&pending?.type==='path'?{color:pending.color,path:pending.path}:null;
  if(newRound||faulted||next.status!=='playing'){clearGesture();pending=null;queued=null;}else if(acked){pending=null;queued=null;}
@@ -30,20 +35,22 @@ function accept(next){
  $('pathRoomDifficulty').value=String(next.difficulty);$('pathRoomCapacity').value=String(next.capacity);for(const id of ['pathRoomDifficulty','pathRoomCapacity'])$(id).disabled=!host||next.status!=='lobby';
  show('pathStart',host&&next.status==='lobby');show('pathCancel',host&&next.status==='countdown');show('pathCountdown',next.status==='countdown');$('pathHostNote').textContent=host?'أنت المضيف. اختر الصعوبة والمقاعد، ثم ابدأ التجمع.':'المضيف يحدد الصعوبة ويبدأ التجمع. تقدر تبقى هنا لين تبدأ الجولة.';
  $('pathLobbyTitle').textContent=next.status==='countdown'?'الجولة على وشك البداية':'أصحابك على بُعد رمز';$('pathSeats').textContent=next.players.length+' / '+next.capacity;renderPlayers('pathLobbyPlayers');renderPlayers('pathRanking');
- if(next.puzzle){const paths=Object.values(next.me.paths);$('pathPairs').textContent=paths.length+' / '+next.puzzle.pairs.length;$('pathCoverage').textContent=new Set(paths.flat()).size+' / '+next.total;$('pathFaults').textContent=next.me.faults;$('pathMatchLevel').textContent=names[next.difficulty-1]+' · '+next.puzzle.size+'×'+next.puzzle.size;
+ if(next.puzzle){const paths=Object.values(next.me.paths);$('pathPairs').textContent=paths.length+' / '+next.puzzle.pairs.length;$('pathCoverage').textContent=new Set(paths.flat()).size+' / '+next.total;$('pathFaults').textContent=next.me.faults;$('pathMatchLevel').textContent=(solo?'المرحلة '+next.puzzle.level:names[next.difficulty-1])+' · '+next.puzzle.size+'×'+next.puzzle.size;
   if(changed&&next.me.lastFault){$('pathMoveMessage').textContent='غلط: '+(faults[next.me.lastFault]||'مسار غير صحيح')+' — أعدنا لوحتك من البداية.';const card=canvas.closest('.paths-board-card');card.classList.remove('path-fault');void card.offsetWidth;card.classList.add('path-fault');window.BS_AUDIO?.play?.('wrong',{volume:.2});}
   else if(changed){$('pathMoveMessage').textContent=playing?'ابدأ من رقم واسحب إلى نظيره. غطِّ كل الخانات.':'انتهت الجولة؛ تقدر تراجع لوحتك.';}
   renderBoard();if(confirmed){window.BS_GAME_FX?.path?.(canvas,next.puzzle,confirmed.path,confirmed.color);window.BS_GAME_FX?.progress?.(canvas,new Set(Object.values(next.me.paths).flat()).size,next.total,'تغطية المسارات');window.BS_AUDIO?.play?.('correct');}if(faulted)window.BS_GAME_FX?.wrong?.(canvas);
  }
- show('pathResult',next.status==='finished');show('pathRematch',host&&next.status==='finished');
+ show('pathResult',next.status==='finished');show('pathRematch',!solo&&host&&next.status==='finished');
  if(next.status==='finished'){const winner=next.players.find(p=>p.id===next.winnerId);$('pathResultTitle').textContent=winner?(winner.id===seat.playerId?'فزت بالمسارات!':winner.name+' فاز بالجولة'):'الجولة انتهت بتعادل';$('pathResultCopy').textContent=winner?(winner.finishedAt?'أكمل كل الأرقام وغطّى اللوحة كاملة.':'انتهى الوقت وتصدر بعدد الخانات الموصولة.'):'لم ينفرد لاعب بأعلى نتيجة. جولة جديدة؟';$('pathMatchTitle').textContent='كل مسار كان خطوة.';if(changed){window.BS_AUDIO?.play?.('reward',{volume:.2});window.BS_GAME_FX?.celebrate?.(winner?.name||'تعادل',{key:'paths:'+next.round,self:winner?.id===seat.playerId,tie:!winner,subtitle:winner?.finishedAt?'غطّى اللوحة ووصل كل الأرقام.':'حسم الجولة بأكبر تغطية صحيحة.'});}}else $('pathMatchTitle').textContent='وصّل، وغطِّ اللوحة.';
+ if(solo&&next.status==='finished'){$('pathResultTitle').textContent='اكتملت المرحلة!';$('pathResultCopy').textContent=soloSaved?'تم حفظ نجومك وتقدّمك.':soloSaving?'جاري حفظ التقدّم…':'احفظ التقدّم للانتقال للمرحلة التالية.';}
  $('pathReset').disabled=!editable()||Boolean(pending);$('pathCommit').disabled=!editable();if(nextMove)move('path',nextMove);tick();
 }
 async function connect(candidate,resuming=false){
+ if(solo){stop();setMode('friends');}
  const mine=++attempt;clearTimeout(retry);const old=socket;socket=null;if(old)try{old.close(1000,'replace');}catch{}busy(true);show('pathConnection',Boolean(state));$('pathConnection').textContent='جاري الاتصال بالغرفة…';
  const protocols=['tahdia-paths-v1'];if(candidate.hostKey)protocols.push('hk.'+candidate.hostKey);if(candidate.token)protocols.push('rt.'+candidate.token);const token=read('bs_social_session');if(token)protocols.push('st.'+token);
  let ws;try{const url=new URL('/api/paths/rooms/'+candidate.code+'/ws',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('name',$('pathName').value||'لاعب المسارات');
- ws=new WebSocket(url,protocols);socket=ws;}catch{busy(false);message('الأونلاين يحتاج تشغيل التحديث على سيرفر اللعبة. تقدر تلعب المراحل من رحلة النجوم.',true);return;}
+ ws=new WebSocket(url,protocols);socket=ws;}catch{busy(false);message('تعذر الاتصال بالغرفة. المراحل الفردية متاحة من هنا بدون غرفة.',true);return;}
  const welcomeTimer=setTimeout(()=>{if(mine===attempt&&socket===ws)ws.close(4000,'timeout');},12000);
  ws.onmessage=event=>{if(mine!==attempt||ws!==socket)return;let m;try{m=JSON.parse(event.data);}catch{return;}
   if(m.type==='welcome'){clearTimeout(welcomeTimer);retries=0;pending=null;queued=null;seat={code:candidate.code,playerId:m.playerId,token:m.token};write(key(),JSON.stringify(seat));busy(false);show('pathConnection',false);message('');accept(m.state);}
@@ -58,7 +65,7 @@ async function connect(candidate,resuming=false){
 async function create(){if($('pathCreate').disabled)return;stop();busy(true);const mine=attempt;request=new AbortController();const timer=setTimeout(()=>request?.abort(),12000);try{const res=await fetch('/api/paths/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({difficulty:Number($('pathDifficulty').value),capacity:Number($('pathCapacity').value)}),signal:request.signal});const data=await res.json();if(mine!==attempt)return;if(!res.ok||!data.ok)throw Error(data.error||'تعذر إنشاء الغرفة');await connect({code:data.code,hostKey:data.hostKey});}catch(error){if(mine===attempt)message(error.name==='AbortError'?'تأخر السيرفر؛ جرّب مرة ثانية.':error.message,true);}finally{clearTimeout(timer);if(mine===attempt)busy(false);}}
 function tick(){if(!state)return;const now=Date.now()+offset;if(state.status==='countdown')$('pathCountdown').textContent=Math.max(0,Math.ceil((state.startsAt-now)/1000));if(state.deadline){const n=Math.max(0,Math.ceil((state.deadline-now)/1000));$('pathTime').textContent=Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
  if(pending&&Date.now()-pending.sentAt>6000&&connected()){socket.close(4000,'resync');pending=null;}if(connected()&&Date.now()-lastPing>20000){lastPing=Date.now();send({type:'ping'});}}
-function move(type,data={}){if(!editable()||pending)return;pending={type,...data,seq:state.me.seq+1,sentAt:Date.now()};if(!send({type,round:state.round,seq:pending.seq,...data})){pending=null;return;}$('pathReset').disabled=true;$('pathCommit').disabled=!editable();if(type==='path')$('pathMoveMessage').textContent='المسار ظاهر؛ نثبت الحركة مع السيرفر…';renderBoard();}
+function move(type,data={}){if(!editable()||pending)return;if(solo){if(!solo.move(type,data))return;const next=solo.snapshot();pending={type,...data,seq:next.me.seq,sentAt:Date.now()};storeSolo();accept(next);if(next.status==='finished')saveSolo();return;}pending={type,...data,seq:state.me.seq+1,sentAt:Date.now()};if(!send({type,round:state.round,seq:pending.seq,...data})){pending=null;return;}$('pathReset').disabled=true;$('pathCommit').disabled=!editable();if(type==='path')$('pathMoveMessage').textContent='المسار ظاهر؛ نثبت الحركة مع السيرفر…';renderBoard();}
 function commit(){if(!editable()||selected.length<2)return;const path=[...selected],chosen=color;clearGesture();if(pending){queued={color:chosen,path};$('pathCommit').disabled=true;}else move('path',{color:chosen,path});renderBoard();}
 function startOrExtend(cell){if(!editable()||cell<0)return;cursor=cell;const end=state.puzzle.pairs.findIndex(pair=>pair.includes(cell));if(!selected.length){if(end<0)return;selected=[cell];color=end;}else if(cell!==selected.at(-1)){extend(cell);}renderBoard();}
 function extend(cell){if(!selected.length||cell===selected.at(-1)||!editable())return;const n=state.puzzle.size,last=selected.at(-1);if(!adjacent(last,cell,n))return;const prior=selected.indexOf(cell);if(prior>=0){selected=selected.slice(0,prior+1);return;}selected.push(cell);cursor=cell;const others=new Set(Object.entries(displayPaths()).filter(([key])=>Number(key)!==color).flatMap(([,v])=>v)),wrongEndpoint=state.puzzle.pairs.some((pair,i)=>i!==color&&pair.includes(cell));if(others.has(cell)||state.puzzle.walls.includes(cell)||wrongEndpoint)commit();}
@@ -70,11 +77,32 @@ for(const event of ['pointercancel','lostpointercapture'])canvas.addEventListene
 canvas.addEventListener('keydown',e=>{if(!editable())return;const n=state.puzzle.size,delta={ArrowRight:1,ArrowLeft:-1,ArrowDown:n,ArrowUp:-n};if(Object.hasOwn(delta,e.key)){e.preventDefault();const next=cursor+delta[e.key];if(adjacent(cursor,next,n)){cursor=next;if(e.shiftKey&&selected.length)extend(cursor);}renderBoard();}else if(e.key===' '){e.preventDefault();startOrExtend(cursor);}else if(e.key==='Enter'){e.preventDefault();commit();}else if(e.key==='Escape'){e.preventDefault();clearGesture();renderBoard();}});
 $('pathCreate').onclick=create;$('pathJoin').onclick=()=>{const code=$('pathCode').value.trim().replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632));if(!/^\d{6}$/.test(code)){message('اكتب رمز الغرفة المكوّن من 6 أرقام.',true);return;}stop();const old=saved();connect(old?.code===code?old:{code});};$('pathResume').onclick=()=>{const old=saved();if(old){stop();connect(old,true);}};
 $('pathStart').onclick=()=>send({type:'start',difficulty:Number($('pathRoomDifficulty').value),capacity:Number($('pathRoomCapacity').value)});$('pathCancel').onclick=()=>send({type:'cancel'});$('pathRematch').onclick=()=>send({type:'rematch'});
-$('pathLeave').onclick=()=>{const live=state&&['playing','countdown'].includes(state.status);if(!live)send({type:'leave'});stop(live);show('pathRoom',false);show('pathEntry',true);show('pathResume',Boolean(saved()));message(live?'مقعدك محفوظ؛ تقدر ترجع للجولة من هنا.':'غادرت الغرفة.',true);};
+$('pathLeave').onclick=()=>{if(solo){storeSolo();stop();setMode('solo');show('pathRoom',false);show('pathEntry',true);return;}const live=state&&['playing','countdown'].includes(state.status);if(!live)send({type:'leave'});stop(live);show('pathRoom',false);show('pathEntry',true);show('pathResume',Boolean(saved()));message(live?'مقعدك محفوظ؛ تقدر ترجع للجولة من هنا.':'غادرت الغرفة.',true);};
 $('pathCopy').onclick=async()=>{if(window.BS_INVITES){window.BS_INVITES.open();return;}try{await navigator.clipboard.writeText(state.code);message('تم نسخ رمز الغرفة.');}catch{message('رمز الغرفة: '+state.code);}};
 for(const id of ['pathRoomDifficulty','pathRoomCapacity'])$(id).onchange=()=>send({type:'settings',difficulty:Number($('pathRoomDifficulty').value),capacity:Number($('pathRoomCapacity').value)});
 $('pathReset').onclick=()=>{clearGesture();move('reset');};$('pathCommit').onclick=commit;
-for(const event of ['bs-career-change','bs-social-session'])window.addEventListener(event,()=>{if(account()!==initialAccount){stop();initialAccount=account();show('pathRoom',false);show('pathEntry',true);show('pathResume',Boolean(saved()));message('تغير الحساب؛ اختر غرفة للحساب الحالي.',true);}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)clearGesture();else if(state)renderBoard();});window.addEventListener('pagehide',()=>stop());
+for(const event of ['bs-career-change','bs-social-session'])window.addEventListener(event,()=>{if(account()!==initialAccount){stop();initialAccount=account();show('pathRoom',false);show('pathEntry',true);show('pathResume',Boolean(saved()));refreshStages();message('تغير الحساب؛ اختر المرحلة أو الغرفة للحساب الحالي.',true);}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearGesture();else if(state)renderBoard();});window.addEventListener('pagehide',()=>{storeSolo();stop();});
 setInterval(tick,1000);show('pathResume',Boolean(saved()));const ownName=window.BS_SOCIAL?.accountName?.()||window.BS_PARTY_LINK?.name||window.BS_CAREER?.get?.()?.name;if(ownName)$('pathName').value=ownName;
-const roomCode=new URLSearchParams(location.search).get('room');if(/^\d{6}$/.test(roomCode||'')){$('pathCode').value=roomCode;if(window.BS_PARTY_LINK?.room===roomCode)$('pathJoin').click();}
+function storeSolo(){if(solo&&!soloSaved)write(soloKey(),JSON.stringify(solo.proof()));}
+function refreshStages(){
+ const unlocked=nextStage(progress.get(),'paths'),select=$('pathStage'),previous=Number(select.value)||unlocked;
+ select.replaceChildren();for(let level=1;level<=unlocked;level++){const option=document.createElement('option');option.value=String(level);option.textContent='المرحلة '+level;select.append(option);}select.value=String(Math.min(unlocked,previous));
+ $('pathSoloProgress').textContent=unlocked+' / '+stageCount('paths')+' مرحلة';
+}
+function setMode(value){mode=value==='solo'?'solo':'friends';show('pathSoloEntry',mode==='solo');show('pathFriendsEntry',mode==='friends');$('pathModeSolo').setAttribute('aria-pressed',String(mode==='solo'));$('pathModeFriends').setAttribute('aria-pressed',String(mode==='friends'));if(mode==='solo')refreshStages();}
+function startSolo(level=Number($('pathStage').value)||1,daily=''){
+ storeSolo();stop();setMode('solo');const unlocked=nextStage(progress.get(),'paths');level=Math.max(1,Math.min(unlocked,level));let resume=null;try{resume=JSON.parse(read(soloKey())||'null');}catch{}
+ solo=createSoloPathsSession(level,daily,resume);seat={playerId:'solo'};boardRound='';seenSeq=-1;show('pathConnection',false);message('');accept(solo.snapshot());if(state.status==='finished')saveSolo();
+}
+async function saveSolo(){
+ if(!solo||soloSaved||soloSaving||state?.status!=='finished')return;
+ const current=solo,epoch=soloEpoch,owner=stageOwner();soloSaving=true;accept(solo.snapshot());
+ try{const result=await progress.complete(current.proof());if(epoch!==soloEpoch||solo!==current||owner!==stageOwner())return;soloSaved=true;remove(soloKey());refreshStages();$('pathResultCopy').textContent=result.stars+' نجوم · تم حفظ تقدّمك.';}
+ catch{if(epoch===soloEpoch&&solo===current)message('تعذر حفظ التقدّم؛ حاول مرة ثانية. لوحتك محفوظة على هذا الجهاز.');}
+ finally{if(epoch===soloEpoch&&solo===current){soloSaving=false;accept(solo.snapshot());}}
+}
+$('pathModeSolo').onclick=()=>setMode('solo');$('pathModeFriends').onclick=()=>setMode('friends');$('pathSoloStart').onclick=()=>startSolo();$('pathDaily').onclick=()=>startSolo(1,progress.today());$('pathSaveRetry').onclick=saveSolo;$('pathNext').onclick=()=>{if(soloSaved)startSolo(solo.proof().level+1);};
+window.addEventListener('tahdia-journey-change',refreshStages);progress.ready.then(refreshStages);refreshStages();
+const params=new URLSearchParams(location.search),roomCode=params.get('room');setMode(roomCode||params.get('mode')==='friends'?'friends':'solo');if(params.get('daily')==='1')startSolo(1,progress.today());else if(params.has('level'))startSolo(Number(params.get('level'))||1);
+if(/^\d{6}$/.test(roomCode||'')){$('pathCode').value=roomCode;if(window.BS_PARTY_LINK?.room===roomCode)$('pathJoin').click();}

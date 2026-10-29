@@ -170,16 +170,17 @@ export function expandSteps(room,afterVersion=-1){
 /* Plays room states in order, one at a time, never skipping a step unless a long
    backlog piled up (a hidden tab, a slow phone): then it jumps to the newest. */
 export function createStepPlayer(apply,{maxBacklog=14,onError}={}){
-  let queue=[],running=false,last=-1;
+  let queue=[],running=false,last=-1,generation=0,controller=new AbortController();
   async function drain(){
-    if(running)return;running=true;
+    if(running)return;running=true;const current=generation,signal=controller.signal;
     try{
-      while(queue.length){
-        if(queue.length>maxBacklog||globalThis.document?.hidden&&queue.length>1)queue=queue.slice(-1);
+      while(queue.length&&current===generation){
+        const catchUp=queue.length>maxBacklog||globalThis.document?.hidden&&queue.length>1;
+        if(catchUp)queue=queue.slice(-1);
         const next=queue.shift();
-        try{await apply(next,{animate:!globalThis.document?.hidden&&queue.length<maxBacklog});}catch(error){onError?.(error);}
+        try{await apply(next,{animate:!catchUp&&!globalThis.document?.hidden,signal});}catch(error){if(!signal.aborted)onError?.(error);}
       }
-    }finally{running=false;}
+    }finally{running=false;if(queue.length)drain();}
   }
   return {
     push(room){
@@ -191,7 +192,7 @@ export function createStepPlayer(apply,{maxBacklog=14,onError}={}){
       last=room.version;
       queue.push(...list);drain();
     },
-    reset(){queue=[];last=-1;},
+    reset(){queue=[];last=-1;generation++;controller.abort();controller=new AbortController();},
     get busy(){return running||queue.length>0;},
     get version(){return last;}
   };

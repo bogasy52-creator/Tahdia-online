@@ -58,3 +58,21 @@ test('a lobby state goes to the shared menu and a match goes to the board',async
  assert.equal(h.doc.getElementById('game').classList.contains('hidden'),false);
  assert.match(h.doc.getElementById('players').textContent,/بوت/,'a bot is tagged in the player list');
 });
+
+test('unchanged server snapshots reuse pawn art and roster nodes',async()=>{
+ const h=await ui(),state=Enhanced.createEnhancedGame(['A','B']);await h.table.apply(h.room(state));
+ const pawn=h.doc.querySelector('[data-player="0"]'),row=h.doc.getElementById('players').children[0];await h.table.apply(h.room(structuredClone(state),{version:3}));
+ assert.equal(h.doc.querySelector('[data-player="0"]'),pawn);assert.equal(h.doc.getElementById('players').children[0],row);
+});
+test('leaving while dice animate cancels the old turn without altering a newly opened game',async()=>{
+ const h=await ui(),before=Enhanced.createEnhancedGame(['A','B']);before.players[0].position=10;await h.table.apply(h.room(before));
+ let release;h.context.BS_DICE.roll=()=>new Promise(r=>release=r);const next=Enhanced.playEnhancedTurn(before,[1]);const old=h.table.apply(h.room(next,{version:3}),{animate:true});
+ await Promise.resolve();h.table.leave();const fresh=Enhanced.createEnhancedGame(['New A','New B']);await h.table.apply(h.room(fresh,{code:'999999',version:1}));release();await old;
+ assert.equal(h.context.TEST.get().players[0].name,'New A');assert.equal(h.context.TEST.get().moveCount,0);assert.equal(h.doc.querySelectorAll('.snake-travel-pawn').length,0);
+});
+test('normal pawn movement uses moderate transform-only animations even with global fast motion enabled',async()=>{
+ const h=await ui(),before=Enhanced.createEnhancedGame(['A','B']),animations=[];before.players[0].position=13;h.context.matchMedia=()=>({matches:false});h.context.BS_PLAY_INSIGHTS={motionScale:()=>.45,boardRender(){}};await h.table.apply(h.room(before));
+ const prototype=Object.getPrototypeOf(h.doc.createElement('span')),original=prototype.animate;prototype.animate=function(frames,options){if(this.classList.contains('snake-travel-pawn'))animations.push({frames,options});return{finished:Promise.resolve(),cancel(){}};};
+ try{await h.table.apply(h.room(Enhanced.playEnhancedTurn(before,[2]),{version:3}),{animate:true});}finally{prototype.animate=original;}
+ assert.ok(animations.length);assert.ok(animations[0].options.duration>=420);assert.ok(animations.flatMap(a=>a.frames).every(frame=>!('left'in frame)&&!('top'in frame)));
+});

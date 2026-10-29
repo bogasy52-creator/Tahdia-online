@@ -1,0 +1,31 @@
+{
+  "version": "33.0.0",
+  "date_riyadh": "2026-10-29",
+  "javascript_tests": {
+    "total": 1002,
+    "passed": 996,
+    "failed": 0,
+    "skipped": 6,
+    "skip_reason": "Legacy ZIP installer fixtures are not present; the delivered sparse installer is tested separately."
+  },
+  "python_voice_import_tests": {
+    "passed": 4,
+    "failed": 0
+  },
+  "static_asset_references": 703,
+  "worker_config_verified": true,
+  "styles_verified": true,
+  "offline_manifest_verified": true,
+  "cloudflare_dry_run_passed": true,
+  "manual_project_runtime_checks": 4,
+  "public_review_runtime_checks": 5,
+  "room_and_audio_runtime_checks": 9,
+  "all_paths_stage_proofs_verified": 120,
+  "daily_paths_proof_verified": true,
+  "night_card_svg_render_inspected": true,
+  "browser_tested": false,
+  "physical_phone_tested": false,
+  "published": false,
+  "human_voice_pack_included": false,
+  "browser_limit": "Chromium download failed: invalid/truncated archive."
+}
