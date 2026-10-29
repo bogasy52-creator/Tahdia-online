@@ -126,10 +126,10 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     ctx.strokeStyle='#e23a55';ctx.lineWidth=Math.max(.8,size*.08);ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+L,0);ctx.moveTo(x+L,0);ctx.lineTo(x+L+size*.22,-size*.17);ctx.moveTo(x+L,0);ctx.lineTo(x+L+size*.22,size*.17);ctx.stroke();
   }
-  function drawSnake(r){
+  function drawSnake(r,headOnly=false){
     const state=snakes.get(r.from)||{phase:'idle',at:0},elapsed=clock-state.at,ph=state.phase,still=reduce();
     const cell=width/10,species=speciesFor(r.colorIndex||0),A=art();
-    const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!still,route:r.from});
+    const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!still,route:r.from,layout:'ordered'});
     const raw=shape.points,n=raw.length;
     // idle slither: a small travelling wave; both ends stay on their cells
     const amp=still?0:cell*(ph==='idle'?.06:.03),speed=ph==='digesting'?700:1500;
@@ -139,24 +139,25 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
       return {x:p.x+nx*wave,y:p.y+ny*wave,nx,ny,t};
     });
     const fed=meals.get(r.from)||0,grownBy=1+fed*.08;
-    const swell=ph==='digesting'?1+.3*ease(elapsed/900):ph==='releasing'?1+.12*(1-Math.min(1,elapsed/550)):1;
+    const swell=ph==='digesting'?1+.3*ease(elapsed/320):ph==='releasing'?1+.12*(1-Math.min(1,elapsed/300)):1;
     const length=Math.hypot(r.a.x-r.b.x,r.a.y-r.b.y);
     const R=cell*clamp(.1+length/(cell*70),.105,.145)*grownBy*swell;
     ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
     // The tapered silhouette supplies its own dark edge, without a blunt tail shadow.
     // body: the arena species, its scales shrunk to the board
-    drawNeonBody(ctx,pts,species,R,ph!=='idle');
+    if(!headOnly)drawNeonBody(ctx,pts,species,R,ph!=='idle');
     // the swallowed stone runs down the body as a lump
-    if(ph==='swallowing'){
-      const s=Math.min(1,elapsed/900),i=Math.min(n-2,Math.max(1,Math.round(s*(n-1)))),p=pts[i],lump=R*(1.55-.35*s);
+    if(!headOnly&&ph==='swallowing'){
+      const s=Math.min(1,elapsed/520),i=Math.min(n-2,Math.max(1,Math.round(s*(n-1)))),p=pts[i],lump=R*(1.55-.35*s);
       const [base,dark,light]=FALLBACK[species]||FALLBACK['snake-wild'];
       ctx.fillStyle=dark;ctx.beginPath();ctx.arc(p.x,p.y,lump+.8,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=base;ctx.beginPath();ctx.arc(p.x,p.y,lump,0,Math.PI*2);ctx.fill();
       ctx.globalAlpha=.45;ctx.fillStyle=light;ctx.beginPath();ctx.arc(p.x-lump*.3,p.y-lump*.35,lump*.42,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     }
     // head: lifts toward the stone, lunges, and grows with the snake
+    if(headOnly){
     const neck=pts[0],head=shape.head,dir=Math.atan2(head.y-neck.y,head.x-neck.x);
-    const track=ph==='tracking'?Math.min(1,elapsed/380):ph==='attacking'?1:0,strike=ph==='attacking'?ease(elapsed/360):0,breathe=still||ph!=='idle'?0:Math.sin(clock/900+r.index)*.035;
+    const track=ph==='tracking'?Math.min(1,elapsed/180):ph==='attacking'?1:0,strike=ph==='attacking'?ease(elapsed/240):0,breathe=still||ph!=='idle'?0:Math.sin(clock/900+r.index)*.035;
     const size=R*2.35*(1+breathe+.14*track+.3*strike)*(1+(swell-1)*.6);
     const shake=ph==='digesting'&&!still?Math.sin(elapsed/45)*cell*.02:0;
     ctx.save();
@@ -168,8 +169,9 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     ctx.restore();
     // the bite: a white flash and a ring at the head
     if(ph==='attacking'&&!still){
-      const k=Math.min(1,elapsed/360);ctx.globalAlpha=(1-k)*.8;ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,cell*.04);
+      const k=Math.min(1,elapsed/240);ctx.globalAlpha=(1-k)*.8;ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,cell*.04);
       ctx.beginPath();ctx.arc(head.x,head.y,cell*(.2+.45*k),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+    }
     }
     ctx.restore();
     const proxy=document.querySelector(`.snake-creature[data-from="${r.from}"]`);
@@ -187,7 +189,8 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     if(clock-paintedAt<(active?30:80)){frame=requestAnimationFrame(tick);return;}
     paintedAt=clock;ctx.clearRect(0,0,width,height);
     for(const r of routes)if(r.to>r.from)drawLadder(r);
-    for(const r of routes)if(r.to<r.from)drawSnake(r);
+    for(const r of routes)if(r.to<r.from)drawSnake(r,false);
+    for(const r of routes)if(r.to<r.from)drawSnake(r,true);
     canvas.dataset.frame=String(Math.floor(clock));
     frame=requestAnimationFrame(tick);
   }

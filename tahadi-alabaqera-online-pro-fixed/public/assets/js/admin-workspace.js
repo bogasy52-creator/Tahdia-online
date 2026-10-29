@@ -1,0 +1,12 @@
+(function(root){
+ 'use strict';const doc=root.document,$=id=>doc.getElementById(id);let tab='overview';
+ function select(value){tab=value;doc.querySelectorAll('[data-admin-tab]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.adminTab===tab)));doc.querySelectorAll('[data-admin-section]').forEach(section=>{section.hidden=tab!=='overview'&&section.dataset.adminSection!==tab;if(tab==='overview'&&section.dataset.adminSection==='store')section.hidden=true;});}
+ doc.querySelectorAll('[data-admin-tab]').forEach(button=>button.onclick=()=>select(button.dataset.adminTab));
+ $('adminAuditFilter').oninput=()=>{const query=$('adminAuditFilter').value.trim().toLowerCase();$('adminAudit').querySelectorAll('tr').forEach(row=>row.hidden=Boolean(query)&&!row.textContent.toLowerCase().includes(query));};
+ root.addEventListener('bs-admin-data',e=>{$('adminOverviewAudit').textContent=e.detail.auditCount;$('adminAuditFilter').oninput();});
+ root.addEventListener('bs-admin-live-change',e=>{const data=e.detail;$('adminOverviewPeople').textContent=data.people;$('adminOverviewSigned').textContent=data.signed;$('adminOverviewRooms').textContent=data.inRooms;select(tab);});
+ root.addEventListener('bs-social-session',()=>{for(const id of ['adminOverviewAudit','adminOverviewPeople','adminOverviewSigned','adminOverviewRooms'])$(id).textContent='—';});
+ const session=()=>{try{return localStorage.getItem('bs_social_session')||'';}catch{return '';}};
+ async function sales(){const saved=session();if(!saved)return;try{const r=await fetch('/api/billing/admin',{headers:{authorization:'Bearer '+saved},cache:'no-store'}),data=await r.json();if(saved!==session()||!r.ok)return;const line=doc.createElement('p');line.id='adminSalesSummary';line.textContent='مشتريات مكتملة: '+data.metrics.paid+' · الإجمالي '+(data.metrics.revenue/100).toFixed(2)+' ر.س'+(data.mode==='test'?' · بيئة تجريبية':'');doc.getElementById('adminSalesSummary')?.remove();$('adminBillingStatus').after?.(line);}catch{}}
+ root.addEventListener('bs-social-session',()=>{doc.getElementById('adminSalesSummary')?.remove();sales();});sales();select(tab);fetch('/api/billing/catalog',{cache:'no-store'}).then(r=>r.json()).then(data=>{$('adminBillingStatus').textContent=data.enabled?'الشراء بالريال مفعّل. تُمنح الشخصية بعد التحقق من فاتورة الدفع.':'الشراء بالريال مجهّز برمجيًا ويحتاج تفعيل إعدادات مزوّد الدفع. الشراء بعملات اللعبة يعمل كالمعتاد.';}).catch(()=>{$('adminBillingStatus').textContent='تعذر التحقق من حالة الدفع. حدّث الصفحة بعد اكتمال تحديث السيرفر.';});
+})(window);

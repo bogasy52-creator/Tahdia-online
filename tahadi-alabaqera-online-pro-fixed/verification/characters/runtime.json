@@ -1,0 +1,15 @@
+{
+  "release": "33.0.0",
+  "runtime": "native Workerd / SQLite / real WebSocket / Web Crypto",
+  "published": false,
+  "browser_tested": false,
+  "physical_phone_tested": false,
+  "merchant_api_called": false,
+  "checks": [
+    "new game, character store, profile and owner dashboard assets served by the real Worker",
+    "cash payments stay disabled without explicit merchant activation, and checkout requires an account",
+    "owner-only billing totals persist in SQLite; regular players cannot read them and no secret is returned",
+    "native Web Crypto verifies signed fulfillment; duplicate receipts grant once without changing game coins or results; private grants have no public route",
+    "real social WebSocket updates online/last-seen on disconnect and the privacy setting hides both"
+  ]
+}

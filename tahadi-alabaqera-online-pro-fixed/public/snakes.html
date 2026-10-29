@@ -12,6 +12,7 @@
 import { ADVENTURE_EVENTS, BONUS_CELLS, BONUS_FACES } from "./assets/js/engines/snakes-adventure.js?v=29.1.0";
 import { createTable, seatLook, botTag, skinDie } from "./assets/js/board-table-v33.js?v=33.0.0-gameplay3";
 import { createBoardMovePlan, createReactionPlan, createSmoothMotionFrames, createSnakeBodyProgress, createPawnAnimationFrames, getPieceProfile } from "./assets/js/snakes-v4-fx.js?v=33.0.0-gameplay3";
+import {snakeGeometry} from "./assets/js/arena-geometry.js?v=33.0.0-signatures1";
 // 33.0.0: every match is online. «العب الحين» or a friends' room; bots of every
 // strength take the empty seats and play on the server; their moves arrive as
 // steps that this page plays one by one. Each player's stone (or hero) and die
@@ -110,30 +111,12 @@ function center(n) {
   if (!el) return { x: 0, y: 0 };
   return { x: ((el.offsetLeft + el.offsetWidth / 2) / b.clientWidth) * 1000, y: ((el.offsetTop + el.offsetHeight / 2) / b.clientHeight) * 1000 };
 }
-function snakeCurve(from, to, seed = 0) {
-  const dx = to.x - from.x,
-    dy = to.y - from.y,
-    len = Math.hypot(dx, dy) || 1,
-    nx = -dy / len,
-    ny = dx / len,
-    amp = Math.min(72, Math.max(27, len * 0.12)),
-    parts = 5,
-    pts = [];
-  for (let i = 0; i <= parts; i++) {
-    const t = i / parts,
-      fade = Math.sin(Math.PI * t),
-      wave = Math.sin((t * 3.4 + seed * 0.41) * Math.PI) * amp * fade;
-    pts.push({ x: from.x + dx * t + nx * wave, y: from.y + dy * t + ny * wave });
-  }
-  let d = `M ${pts[0].x} ${pts[0].y}`;
-  for (let i = 1; i < pts.length - 1; i++) {
-    const mx = (pts[i].x + pts[i + 1].x) / 2,
-      my = (pts[i].y + pts[i + 1].y) / 2;
-    d += ` Q ${pts[i].x} ${pts[i].y}, ${mx} ${my}`;
-  }
-  d += ` Q ${pts.at(-2).x} ${pts.at(-2).y}, ${pts.at(-1).x} ${pts.at(-1).y}`;
-  return d;
+function snakeCurve(from,to,seed=0,route=null){
+ const board=$('#board'),width=board.clientWidth||1000,height=board.clientHeight||1000;
+ const a={x:from.x*width/1000,y:from.y*height/1000},b={x:to.x*width/1000,y:to.y*height/1000},shape=snakeGeometry(a,b,{width,height},{seed,route,motion:false,layout:'ordered'});
+ return shape.points.map((p,i)=>(i?'L ':'M ')+(p.x/width*1000).toFixed(2)+' '+(p.y/height*1000).toFixed(2)).join(' ');
 }
+
 function drawPaths() {
   const svg = $("#paths");
   svg.innerHTML =
@@ -165,7 +148,7 @@ function drawPaths() {
       }
     } else {
       const hue = [352, 148, 205, 35, 276, 94, 329, 188][si % 8],
-        path = snakeCurve(from, to, si),
+        path = snakeCurve(from, to, si, Number(a)),
         dx = to.x - from.x,
         dy = to.y - from.y,
         angle = (Math.atan2(dy, dx) * 180) / Math.PI,
@@ -192,6 +175,7 @@ function snakeVisualParts(from) {
 /* Each seat walks with its owner's shop stone, or the hero itself with «شخصيتي». */
 function drawSeatPiece(el, seat) {
   const look = seatLook(room, seat);
+  if(look.pawn==='pawn-character'&&window.BS_HERO_FX){const rig=window.BS_HERO_FX.rig(look.character,{piece:true,pose:el.classList.contains('snake-travel-pawn')?'walk':'idle'});el.appendChild(rig);return rig;}
   if (look.pawn === "pawn-character" && window.BS_STONES?.draw) {
     const c = document.createElement("canvas");
     c.className = "crystal-sprite hero-piece";
@@ -426,6 +410,7 @@ function makeTravelPawn(player, fromPos) {
   ghost.append(head, body, ring, emblem);
   drawSeatPiece(ghost, player);
   wrap.appendChild(ghost);
+  window.BS_HERO_FX?.move(ghost,seatLook(room,player).character,{force:true});
   const pt = cellCenterRect(fromPos);
   ghost.style.left = (pt.x / wrap.clientWidth) * 100 + "%";
   ghost.style.top = (pt.y / wrap.clientHeight) * 100 + "%";
@@ -981,4 +966,4 @@ window.BS_TABLE = Object.freeze({
 window.addEventListener('pagehide',cancelMotion);
 </script>
 
-<script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>
+<script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/hero-effects.js?v=33.0.0-signatures1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>

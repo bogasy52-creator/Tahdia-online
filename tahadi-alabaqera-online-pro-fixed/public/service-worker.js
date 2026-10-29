@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-0-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-a08b1bbc6c8b';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-554f22380fc2';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.0.0",
@@ -162,6 +162,7 @@ const ON_DEMAND = [
   "/assets/characters/princess.webp",
   "/assets/characters/robot.webp",
   "/assets/css/admin-live-v32.css",
+  "/assets/css/admin-workspace.css",
   "/assets/css/admin.css",
   "/assets/css/app-accuracy.css",
   "/assets/css/app-admin.css",
@@ -211,6 +212,7 @@ const ON_DEMAND = [
   "/assets/css/gameplay-v134.css",
   "/assets/css/gameplay-v135.css",
   "/assets/css/gameplay-v34.css",
+  "/assets/css/hero-effects.css",
   "/assets/css/home-pro.css",
   "/assets/css/home-v19.css",
   "/assets/css/home-v33.css",
@@ -229,6 +231,7 @@ const ON_DEMAND = [
   "/assets/css/picture.css",
   "/assets/css/platform.css",
   "/assets/css/play-experience-v25.css",
+  "/assets/css/player-profile.css",
   "/assets/css/pro-games.css",
   "/assets/css/pro-v7.css",
   "/assets/css/professional-v13.css",
@@ -238,6 +241,7 @@ const ON_DEMAND = [
   "/assets/css/quiz-v19.css",
   "/assets/css/quiz-v21.css",
   "/assets/css/quiz-v28.css",
+  "/assets/css/reaction-challenge.css",
   "/assets/css/reactions-v31.css",
   "/assets/css/release-v30-1.css",
   "/assets/css/release-v31.css",
@@ -303,6 +307,7 @@ const ON_DEMAND = [
   "/assets/js/adaptive-board-layout.js",
   "/assets/js/admin-live-v32.js",
   "/assets/js/admin-quiz-ai-v31.js",
+  "/assets/js/admin-workspace.js",
   "/assets/js/admin.js",
   "/assets/js/arcade-games.js",
   "/assets/js/arena-art-v23.js",
@@ -328,6 +333,7 @@ const ON_DEMAND = [
   "/assets/js/board-table-v33.js",
   "/assets/js/card-courts.js",
   "/assets/js/career-client.js",
+  "/assets/js/character-commerce.js",
   "/assets/js/client-health.js",
   "/assets/js/cognitive-ui-v34.js",
   "/assets/js/commercial-upgrade-engine.js",
@@ -352,6 +358,7 @@ const ON_DEMAND = [
   "/assets/js/engines/paths-solo.js",
   "/assets/js/engines/paths-v20.js",
   "/assets/js/engines/quiz-relay-v28.js",
+  "/assets/js/engines/reaction-challenge.js",
   "/assets/js/engines/serpent-combat-v23.js",
   "/assets/js/engines/serpent-engine.js",
   "/assets/js/engines/snakes-adventure.js",
@@ -364,6 +371,7 @@ const ON_DEMAND = [
   "/assets/js/game-menu-v33.js",
   "/assets/js/games/jackaroo-ui.js",
   "/assets/js/games/snakes-ui.js",
+  "/assets/js/hero-effects.js",
   "/assets/js/home-return-v17.js",
   "/assets/js/home-v14.js",
   "/assets/js/home-v19.js",
@@ -391,6 +399,7 @@ const ON_DEMAND = [
   "/assets/js/platform.js",
   "/assets/js/play-feedback-v24-1.js",
   "/assets/js/play-insights-v15.js",
+  "/assets/js/player-profile.js",
   "/assets/js/pro-dice.js",
   "/assets/js/pro-experience.js",
   "/assets/js/profile-core.js",

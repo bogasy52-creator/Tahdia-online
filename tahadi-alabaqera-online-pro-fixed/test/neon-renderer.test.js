@@ -16,7 +16,7 @@ async function renderer(){
  let made=0;
  const document={hidden:false,documentElement:{dataset:{}},getElementById:id=>({board,game,boardWrap:wrap}[id]),createElement:tag=>tag!=='canvas'?{setAttribute(){}}:++made===1?canvas:{width:0,height:0,setAttribute(){},getContext:()=>ctx},querySelector:()=>proxy,addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
  class Image{constructor(){this.complete=true;this.naturalWidth=1024;this.naturalHeight=1536;}addEventListener(){}set src(value){this.url=value;if(value.includes('objects')){this.naturalWidth=2048;this.naturalHeight=768}}}
- const context=vm.createContext({drawNeonBody,drawNeonHead,snakeGeometry,recolorBluePixels,ARENA_HUES,cosmeticSnakeHue,document,Image,devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:(fn,ms)=>{timers.set(++nextTimer,{fn,ms});return nextTimer},clearTimeout:id=>timers.delete(id)});
+ const context=vm.createContext({drawNeonBody:(...args)=>{calls.push('spine');return drawNeonBody(...args)},drawNeonHead:(...args)=>{calls.push('head');return drawNeonHead(...args)},snakeGeometry,recolorBluePixels,ARENA_HUES,cosmeticSnakeHue,document,Image,devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>wall},requestAnimationFrame:fn=>{frames.push(fn);return frames.length},setTimeout:(fn,ms)=>{timers.set(++nextTimer,{fn,ms});return nextTimer},clearTimeout:id=>timers.delete(id)});
  context.window=context;context.BS_PRO={paused:false};context.addEventListener=(name,fn)=>events.set(name,fn);context.removeEventListener=name=>events.delete(name);
  vm.runInContext((await readFile(new URL('../public/assets/js/neon-arena.js',import.meta.url),'utf8')).replace(/^import .*?;\n/gm,''),context);
  context.BS_ARENA.layout([{from:17,to:7,index:0,a:{x:300,y:800},b:{x:600,y:900}},{from:4,to:14,index:1,a:{x:200,y:900},b:{x:500,y:800}}]);
@@ -27,7 +27,7 @@ test('without the arena art helper the board still draws its snakes and ladders,
  const clears=h.calls.filter(x=>x==='clear').length;h.step(115);assert.equal(h.calls.filter(x=>x==='clear').length,clears,'throttled frames must retain the previous drawing');
 });
 test('the visible creature grows, freezes while paused, and returns to its original scale',async()=>{
- const h=await renderer();h.step(100);h.context.BS_ARENA.phase(17,'digesting');for(let i=1;i<=9;i++)h.step(100+i*50);
+ const h=await renderer();h.step(100);h.context.BS_ARENA.phase(17,'digesting');for(let i=1;i<=3;i++)h.step(100+i*50);
  const grown=Number(h.proxy.dataset.visualScale);assert.ok(grown>1.22);h.context.BS_PRO.paused=true;h.step(4000);assert.equal(Number(h.proxy.dataset.visualScale),grown);
  h.context.BS_PRO.paused=false;h.context.BS_ARENA.phase(17,null);h.step(4050);assert.equal(Number(h.proxy.dataset.visualScale),1);assert.equal(h.proxy.dataset.visualPhase,'idle');
 });
@@ -47,3 +47,9 @@ test('every shop stone becomes its 3D piece in the player colour, and characters
 });
 
 test('scale sampling follows arc length through uneven and repeated knots and preserves endpoints',()=>{const points=[{x:0,y:0},{x:1,y:0},{x:1,y:0},{x:10,y:0},{x:10,y:7}],out=sampleNeonSpine(points,2);assert.deepEqual(out[0],points[0]);assert.deepEqual(out.at(-1),points.at(-1));assert.deepEqual(out.slice(0,6),[0,2,4,6,8,10].map(x=>({x,y:0})));assert.deepEqual(out.slice(6),[2,4,6,7].map(y=>({x:10,y})));for(const spacing of [0,-1,NaN,Infinity])assert.throws(()=>sampleNeonSpine(points,spacing),RangeError);});
+
+// Heads must remain visible where the ordered routes cross.
+test('all snake bodies render before all heads at a phone board size',async()=>{
+ const h=await renderer();h.context.BS_ARENA.layout([{from:87,to:24,index:0,a:{x:650,y:100},b:{x:350,y:800}},{from:62,to:19,index:1,a:{x:150,y:400},b:{x:850,y:850}}]);h.step(100);
+ assert.deepEqual(h.calls.filter(call=>['spine','head'].includes(call)),['spine','spine','head','head']);
+});

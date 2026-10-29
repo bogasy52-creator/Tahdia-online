@@ -7,6 +7,7 @@ const corridors={
  62:[[.19,.46],[.12,.61],[.18,.74]],64:[[.30,.30],[.22,.25],[.11,.25],[.032,.30],[.032,.38]],
  68:[[.83,.41],[.87,.48]],54:[[.73,.51],[.70,.57]],17:[[.37,.92],[.49,.966]]
 };
+const orderedCorridors={...corridors,87:[[.55,.27],[.46,.40],[.46,.58],[.38,.68]],62:[[.10,.47],[.09,.63],[.15,.77]],68:[[.88,.41],[.91,.48]],54:[[.73,.51],[.70,.57]]};
 function spline(knots,t){
  const span=(knots.length-1)*t,index=Math.min(knots.length-2,Math.floor(span)),u=span-index;
  const p=knots[Math.max(0,index-1)],a=knots[index],b=knots[index+1],q=knots[Math.min(knots.length-1,index+2)];
@@ -14,12 +15,14 @@ function spline(knots,t){
  return {x:axis('x'),y:axis('y')};
 }
 // Coordinates are real board pixels. Endpoints never drift during idle motion.
-export function snakeGeometry(a,b,{width,height},{time=0,seed=0,motion=true,route=null}={}){
+export function snakeGeometry(a,b,{width,height},{time=0,seed=0,motion=true,route=null,layout='classic'}={}){
  const cell=width/10,side=a.x>width*.55?-1:1;
- const neck={x:a.x-side*cell*.31,y:a.y+cell*.23};
+ const routeKnots=(layout==='ordered'?orderedCorridors:corridors)[route];
+ let neck={x:a.x-side*cell*.31,y:a.y+cell*.23};
+ if(layout==='ordered'&&routeKnots?.length){const q={x:routeKnots[0][0]*width,y:routeKnots[0][1]*height},len=Math.hypot(q.x-a.x,q.y-a.y)||1;neck={x:a.x+(q.x-a.x)/len*cell*.38,y:a.y+(q.y-a.y)/len*cell*.38};}
  const dx=b.x-neck.x,dy=b.y-neck.y,length=Math.hypot(dx,dy)||1,nx=-dy/length,ny=dx/length;
  const amplitude=cell*clamp(length/(cell*9),.30,.66),lobes=1;
- const knots=corridors[route]?[neck,...corridors[route].map(([x,y])=>({x:x*width,y:y*height})),b]:null;
+ const knots=routeKnots?[neck,...routeKnots.map(([x,y])=>({x:x*width,y:y*height})),b]:null;
  const points=Array.from({length:65},(_,i)=>{
   const t=i/64,fade=Math.sin(Math.PI*t);
   const bend=Math.sin(t*Math.PI*2*lobes)*amplitude*fade;
@@ -28,5 +31,5 @@ export function snakeGeometry(a,b,{width,height},{time=0,seed=0,motion=true,rout
   return {x:clamp(base.x+nx*breath,cell*.28,width-cell*.28),y:clamp(base.y+ny*breath,cell*.28,height-cell*.28)};
  });
  points[0]=neck;points[64]={...b};
- return {head:{...a},side,headWidth:cell*clamp(1.17+length/(cell*70),1.18,1.32),radius:cell*clamp(.21+length/(cell*110),.23,.28),points};
+ return {head:{...a},neck:{...neck},angle:Math.atan2(a.y-neck.y,a.x-neck.x),side,headWidth:cell*clamp(1.17+length/(cell*70),1.18,1.32),radius:cell*clamp(.21+length/(cell*110),.23,.28),points};
 }

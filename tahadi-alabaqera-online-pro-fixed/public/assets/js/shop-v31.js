@@ -287,6 +287,13 @@ function updatePreviewControls(){
  action.disabled=pending||s.equipped||isReaction&&s.owned||locked(item)&&!s.owned||!s.owned&&p.coins<s.price;action.onclick=()=>buy(item,s.price);
  $('previewBag').hidden=s.owned||locked(item);$('previewBag').disabled=pending;$('previewBag').textContent=bag.includes(item.id)?'فتح السلة':'أضف إلى السلة';$('previewBag').onclick=()=>{addToBag(item);};
 }
+function characterShowcase(item){
+ if(item.type!=='character'||!window.BS_HERO_FX)return;const panel=make('section','hero-signature-panel'),spec=core.HERO_SIGNATURES[item.id.slice(10)],list=make('div','hero-signature-list');
+ for(const [label,value]of [['دخول',spec.entry],['حركة',spec.trail],['فوز',spec.victory]])list.append(make('span',null,label+' · '+value));
+ const buttons=make('div','hero-signature-controls'),stage=make('div','hero-signature-showcase');let cleanup=()=>{};
+ for(const [pose,label]of [['entry','الدخول'],['move','المشي'],['win','رقصة الفوز']]){const button=make('button',null,label);button.type='button';button.setAttribute('aria-pressed',String(pose==='entry'));button.onclick=()=>{cleanup();buttons.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));cleanup=window.BS_HERO_FX.preview(stage,item.id,pose);};buttons.append(button);}
+ panel.append(list,buttons,stage);$('previewOptions').append(panel);cleanup=window.BS_HERO_FX.preview(stage,item.id);const oldCleanup=previewCleanup;previewCleanup=()=>{cleanup();panel.remove();oldCleanup();};
+}
 function openPreview(item){
  if($('bagDialog').open)$('bagDialog').close();previewCleanup();previewId=item.id;$('previewMessage').textContent='';
  const t=tier(item);$('previewType').textContent=TYPE_LABEL[item.type]+' · '+TIER[t];$('previewType').className='sx-chip tier-'+t;$('previewName').textContent=item.name;$('previewMaterial').textContent=item.type==='emote'?item.glyph+' إيموجي متحرك':item.type==='phrase'?'عبارة جاهزة':item.type==='move'?item.glyph+' حركة على اللوحة':subtitle(item);$('previewDescription').textContent=item.description;
@@ -298,7 +305,7 @@ function openPreview(item){
  if(REACTION.has(item.type)){const play=make('button','sx-try-button',item.type==='move'?'شغّل الحركة':'جرّب على الشاشة');play.type='button';play.onclick=()=>window.BS_REACTIONS?.preview?.(item.id,$('previewDialog'));options.append(play);if(!window.BS_REACTIONS?.preview)play.hidden=true;}
  if(item.type==='victory'){const play=make('button','sx-try-button','أعد الاحتفال');play.type='button';play.onclick=()=>replace({});options.append(play);}
  const [href,label]=item.id==='pawn-character'?TRY.character:TRY[item.type]||TRY.pawn;$('previewTry').href=href;$('previewTry').textContent=label;
- updatePreviewControls();previewCleanup=()=>mounted.dispose();if(!$('previewDialog').open)$('previewDialog').showModal();
+ updatePreviewControls();previewCleanup=()=>mounted.dispose();if(!$('previewDialog').open)$('previewDialog').showModal();characterShowcase(item);window.dispatchEvent(new CustomEvent('bs-shop-preview',{detail:item}));
 }
 
 /* ---------- bag ---------- */

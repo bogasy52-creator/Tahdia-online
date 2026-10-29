@@ -15,7 +15,7 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
   let client=null,room=null,quickMode=null,leaving=false,retriedQuick=false;
   const player=createStepPlayer(async(next,{animate,signal})=>{
     if(signal?.aborted)return;
-    room=next;
+    room=next;window.BS_HERO_FX?.frame(next);
     if(next.status==='lobby'){
       onLobby?.(next);
       menu.lobby(lobbyModel(next));

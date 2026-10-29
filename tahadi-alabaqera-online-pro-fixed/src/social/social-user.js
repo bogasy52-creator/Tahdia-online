@@ -1,3 +1,4 @@
+import {verifyBillingGrant} from '../billing/proof.js';
 import {Career} from '../career/core.js';
 import {normalizeJourney,commitJourney,journeyStats} from '../../public/assets/js/engines/journey-engine.js';
 import {OWNER_USERNAME,isOwner,accountAccess,accountCareer} from './account-policy.js';
@@ -93,6 +94,11 @@ export function createSocialUserClass(DurableObject) {
       if(body.actor!==OWNER_USERNAME)return json({ok:false,error:'forbidden'},403);
       if(!this.profile)return json({ok:false,error:'account_not_found'},404);
       return this.ctx.blockConcurrencyWhile(()=>url.pathname==='/management/get'?this.managedAccount():this.managementApply(body));
+    }
+    if(url.pathname==='/billing/grant'&&request.method==='POST'){
+      if(!(await verifyBillingGrant(this.env.MOYASAR_SECRET_KEY,{username:this.profile?.username,invoiceId:body.invoiceId,item:body.item,amount:body.amount},body.proof)))return json({ok:false,error:'invalid_billing_proof'},403);
+      if(!this.profile||!/^[-a-f0-9]{36}$/i.test(body.invoiceId||'')||!Career.CATALOG.some(i=>i.id===body.item&&i.type==='character')||!Number.isInteger(body.amount)||body.amount<100)return json({ok:false,error:'invalid_purchase'},400);
+      return this.ctx.blockConcurrencyWhile(async()=>{const receipt='billing:invoice:'+body.invoiceId;await this.ctx.storage.transaction(async tx=>{const previous=await tx.get(receipt);if(previous){if(previous.item!==body.item)throw Error('purchase_conflict');return;}const career=accountCareer(await tx.get('career')||{name:this.profile.displayName},this.profile);const next=Career.normalize({...career,owned:[...career.owned,body.item]});await tx.put('career',next);await tx.put(receipt,{item:body.item,amount:body.amount,at:Date.now()});});return json({ok:true});});
     }
     if (url.pathname.startsWith('/career/')) {
       const action=url.pathname.split('/')[2];
@@ -557,6 +563,7 @@ export function createSocialUserClass(DurableObject) {
     let data;
     try { data = JSON.parse(String(message)); } catch { return; }
     if (data.type === "ping") {
+      const now=Date.now();if(now-(this.presence.lastActiveAt||0)>=60000){this.presence.lastActiveAt=now;await this.ctx.storage.put("presence",this.presence);}
       try { ws.send(JSON.stringify({ type: "pong", at: Date.now() })); } catch {}
     }
   }
@@ -584,6 +591,7 @@ export function createSocialUserClass(DurableObject) {
     this.presence = {
       online: next,
       lastSeen: next ? this.presence.lastSeen || null : Date.now(),
+      lastActiveAt: Date.now(),
     };
     await this.ctx.storage.put("presence", this.presence);
     this.ctx.waitUntil(this.notifyFriendsPresence());

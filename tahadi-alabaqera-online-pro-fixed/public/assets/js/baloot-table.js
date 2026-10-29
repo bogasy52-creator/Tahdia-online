@@ -908,6 +908,7 @@ function showResult(result, scores, view) {
 }
 
 function showMatchEnd(winner, scores) {
+  const actor=teamOf(ui.me)===winner?ui.me:[0,1,2,3].find(seat=>teamOf(seat)===winner);const signature=window.BS_HERO_FX?.victory(actor===ui.me?window.BS_HERO_FX.current():playerAt(actor)?.character||'fox',{container:$('matchEnd').querySelector('.bl-end-card')||$('matchEnd'),key:'baloot:'+ui.session+':'+winner});
   const us = teamOf(ui.me);
   const won = winner === us;
   $('matchTitle').textContent = won ? 'فزتم بالصكّة! 🏆' : 'راحت الصكّة عليكم';
@@ -916,7 +917,7 @@ function showMatchEnd(winner, scores) {
   fan.innerHTML = '';
   ['AS', 'KH', 'QD', 'JC', 'TS'].forEach((card, i) => { const img = document.createElement('img'); img.src = cardUrl(card); img.alt = ''; img.style.transform = `translateX(-50%) rotate(${(i - 2) * 11}deg)`; fan.appendChild(img); });
   $('matchEnd').hidden = false;
-  play(won ? 'win' : 'wrong');
+  if(signature?.dataset.soundPlayed!=='true')play(won ? 'win' : 'wrong');
   if (won) celebrate();
   if (!ui.rewarded) {
     ui.rewarded = true;

@@ -12,7 +12,7 @@
  function clock(at){try{return new Date(at).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch{return '';}}
  function people(n){return n===1?'شخص واحد':n===2?'شخصان':n>=3&&n<=10?n+' أشخاص':n+' شخصًا';}
  function render(){
-  if(!data)return;
+  if(!data)return;window.dispatchEvent(new CustomEvent('bs-admin-live-change',{detail:data}));
   $('adminLiveTotal').textContent=data.people;$('adminLiveSigned').textContent=data.signed;$('adminLiveGuests').textContent=data.guests;$('adminLiveRooms').textContent=data.inRooms;$('adminLiveAway').textContent=data.background;
   $('adminLiveStatus').textContent='آخر تحديث '+clock(data.now)+' · يتحدّث تلقائيًا كل 20 ثانية';
   const max=Math.max(1,...data.games.map(g=>g.people)),games=$('adminLiveGames');games.replaceChildren();
@@ -43,8 +43,8 @@
  async function load(){
   if(busy||!token())return;busy=true;$('adminLiveRefresh').disabled=true;
   try{
-   const response=await fetch('/api/social/admin/live',{headers:{authorization:'Bearer '+token()},cache:'no-store',signal:AbortSignal.timeout?.(9000)});
-   const result=await response.json().catch(()=>({}));
+   const session=token();const response=await fetch('/api/social/admin/live',{headers:{authorization:'Bearer '+session},cache:'no-store',signal:AbortSignal.timeout?.(9000)});
+   const result=await response.json().catch(()=>({}));if(session!==token())return;
    if(response.status===401||response.status===403){allowed=false;$('adminLive').hidden=true;stop();return;}
    allowed=true;$('adminLive').hidden=false;
    if(!response.ok||!result.ok){$('adminLiveStatus').textContent=response.status===404?'السيرفر يحتاج تحديث الحزمة كاملة لعرض الموجودين.':'تعذر جلب الموجودين الآن. نعيد المحاولة تلقائيًا.';return;}

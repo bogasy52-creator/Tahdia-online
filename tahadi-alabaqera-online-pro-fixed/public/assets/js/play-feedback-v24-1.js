@@ -34,14 +34,14 @@
     const host=effectLayer();while(host.querySelectorAll('.bs-fx-badge').length>=6)host.querySelector('.bs-fx-badge')?.remove();const badge = doc.createElement('b'); badge.className = 'bs-fx-badge is-' + kind; badge.textContent = kind === 'right' ? '✓ صحيح' : kind === 'wrong' ? '× حاول ثانية' : '✦ تقدّم';
     badge.style.left = Math.max(12, Math.min((root.innerWidth || 1024) - 150, rect.left + rect.width / 2 - 58)) + 'px'; badge.style.top = Math.max(72, rect.top - 12) + 'px'; host.appendChild(badge); setTimeout(() => badge.remove(), 950);
   }
-  function cell(node, kind = 'right') { restartClass(node, 'bs-fx-' + kind); if (kind === 'right') burst(node, 8); feedbackBadge(node, kind); }
+  function cell(node, kind = 'right') { if(kind==='right')root.BS_HERO_FX?.move(node); restartClass(node, 'bs-fx-' + kind); if (kind === 'right') burst(node, 8); feedbackBadge(node, kind); }
   function sudoku(cells, board, index, kind = 'right') {
     cell(cells[index]?.el || cells[index], kind); if (kind !== 'right') return; const row = Math.floor(index / 9), col = index % 9;
     const units = [Array.from({length:9},(_,i)=>row*9+i),Array.from({length:9},(_,i)=>i*9+col),Array.from({length:9},(_,i)=>(Math.floor(row/3)*3+Math.floor(i/3))*9+Math.floor(col/3)*3+i%3)];
     for (const unit of units) if (unit.every(i=>board[i]) && new Set(unit.map(i=>board[i])).size === 9) { for (const i of unit) restartClass(cells[i]?.el || cells[i], 'bs-fx-unit'); burst(cells[index]?.el || cells[index], 16, true); }
     progress(cells[index]?.el || cells[index], board.filter(Boolean).length, 81, 'تقدم اللوحة');
   }
-  function path(canvas, puzzle, points, color = 0) {
+  function path(canvas, puzzle, points, color = 0) { root.BS_HERO_FX?.move(canvas);
     if (!enabled() || !canvas || !points?.length) return; restartClass(canvas, 'bs-fx-right'); if (reduced()) return; const rect = canvas.getBoundingClientRect(), size = puzzle.size; if (!size || !rect.width || !rect.height) return;
     const svg = doc.createElementNS('http://www.w3.org/2000/svg','svg'), line = doc.createElementNS('http://www.w3.org/2000/svg','polyline'); svg.classList.add('bs-fx-line'); svg.setAttribute('viewBox',`0 0 ${rect.width} ${rect.height}`); Object.assign(svg.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',color:colors[color%colors.length]});
     line.setAttribute('points',points.map(i=>`${(i%size+.5)*rect.width/size},${(Math.floor(i/size)+.5)*rect.height/size}`).join(' ')); svg.appendChild(line); effectLayer().appendChild(svg); setTimeout(()=>svg.remove(),900); burst(canvas,10);
@@ -53,6 +53,7 @@
     clearTimeout(progress.timer); progress.timer = setTimeout(()=>meter?.remove(),1600); if (current >= total) burst(node || meter,22,true);
   }
   function celebrate(name = 'فوز مستحق!', options = {}) {
+    const appearance=root.BS_HERO_FX?.result?.();if(appearance&&!options.tie)options={...appearance,...options,hero:options.hero||appearance.hero};
     const cleanName = String(name || 'فوز مستحق!').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,48) || 'فوز مستحق!', key = (options.key || cleanName)+':'+(options.round || '');
     if (celebrationKey === key) return; celebrationKey = key; doc.getElementById('bsVictory')?.remove();
     const source=doc.activeElement,wrap=doc.createElement('div'); wrap.id='bsVictory'; wrap.className='bs-victory'+(options.self===false?' is-rival':''); wrap.setAttribute('role','dialog'); wrap.setAttribute('aria-modal','true'); wrap.setAttribute('aria-label','نتيجة الجولة');
@@ -63,7 +64,7 @@
     const subtitle=doc.createElement('p'); subtitle.textContent=options.subtitle||(options.tie?'جولة قوية تستحق الإعادة.':options.self===false?'حسم الجولة بجدارة.':'هذا الفوز لك. احتفل به!'); const close=doc.createElement('button'); close.type='button'; close.textContent='متابعة ←'; close.onclick=dismiss; card.append(crown,eyebrow,title,subtitle,close); wrap.append(rays,card);
     wrap.addEventListener('keydown',event=>{event.stopPropagation?.();if(event.key==='Escape'){event.preventDefault();dismiss();}else if(event.key==='Tab'){event.preventDefault();close.focus();}});
     if (!reduced()) for(let i=0;i<46;i++){const bit=doc.createElement('i');bit.className='bs-victory-confetti';bit.style.setProperty('--x',(2+i*47%96)+'vw');bit.style.setProperty('--delay',(i%9*.07)+'s');bit.style.setProperty('--spin',(i%2?1:-1)*(240+i*19)+'deg');bit.style.setProperty('--color',colors[i%colors.length]);wrap.appendChild(bit);}
-    effectHost().appendChild(wrap); root.BS_AUDIO?.play?.('win'); root.BS_AUDIO?.vibrate?.([90,45,130,45,220]); setTimeout(()=>card.classList.add('is-ready'),20); close.focus(); clearTimeout(celebrate.timer); celebrate.timer=setTimeout(dismiss,options.hold?9000:5200);
+    effectHost().appendChild(wrap); const signature=!options.tie&&(options.self!==false||options.hero)?root.BS_HERO_FX?.victory(options.hero,{container:card,key}):null; if(signature?.dataset.soundPlayed!=='true')root.BS_AUDIO?.play?.('win'); root.BS_AUDIO?.vibrate?.([90,45,130,45,220]); setTimeout(()=>card.classList.add('is-ready'),20); close.focus(); clearTimeout(celebrate.timer); celebrate.timer=setTimeout(dismiss,options.hold?9000:5200);
   }
   function win(node, options={}) { restartClass(node,'bs-fx-unit',1100); burst(node,24,true); if(options.name||options.celebrate)celebrate(options.name,options); }
   root.BS_GAME_FX=Object.freeze({cell,sudoku,path,progress,celebrate,win,wrong:node=>cell(node,'wrong')});

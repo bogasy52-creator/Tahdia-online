@@ -1,0 +1,19 @@
+{
+  "release": "33.0.0",
+  "project_tests_passed": 1017,
+  "github_wrapper_tests": 6,
+  "new_behavior_tests": 21,
+  "native_character_checks": 5,
+  "native_gameplay_checks": 4,
+  "payments_enabled_by_default": false,
+  "merchant_api_called": false,
+  "deployed": false,
+  "browser_tested": false,
+  "physical_phone_tested": false,
+  "human_recordings_included": false,
+  "sources": [
+    "https://docs.moyasar.com/api/invoices/01-create-invoice",
+    "https://docs.moyasar.com/api/authentication",
+    "https://docs.moyasar.com/api/invoices/03-list-invoice"
+  ]
+}

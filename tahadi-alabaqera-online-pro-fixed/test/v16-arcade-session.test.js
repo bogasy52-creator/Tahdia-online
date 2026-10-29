@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {createDOM} from './dom-harness.mjs';
 import * as engine from '../public/assets/js/engines/arcade-engine.js';
 async function ui(game,level='standard'){
- const intervals=new Map();let id=0;const h=await createDOM(game+'.html',{setInterval:fn=>{intervals.set(++id,fn);return id;},clearInterval:key=>intervals.delete(key)});h.storage.set('tahdia-arcade-level-v16:'+game,level);await h.runFile('assets/js/arcade-games.js',engine);vm.runInContext('globalThis.probe=()=>({active,paused,round,rules,time:moment()});',h.context);return {...h,intervals,$:id=>h.doc.getElementById(id)};
+ const intervals=new Map();let id=0;const h=await createDOM(game+'.html',{setInterval:fn=>{intervals.set(++id,fn);return id;},clearInterval:key=>intervals.delete(key)});h.storage.set('tahdia-arcade-level-v16:'+game,level);if(game==='reaction')h.doc.getElementById('reactionMode').value='classic';await h.runFile('assets/js/arcade-games.js',engine);vm.runInContext('globalThis.probe=()=>({active,paused,round,rules,time:moment()});',h.context);return {...h,intervals,$:id=>h.doc.getElementById(id)};
 }
 function fire(h){const pair=[...h.timers.entries()].at(-1);assert.ok(pair);h.timers.delete(pair[0]);pair[1].fn();return pair[1];}
 test('memory, reaction and logic difficulty change the actual playable round',async()=>{

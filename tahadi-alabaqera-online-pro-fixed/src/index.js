@@ -1,3 +1,4 @@
+import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
 import {PartyRoom} from './party/party-room.js';
 import {normalizePlaylist} from '../public/assets/js/engines/party-catalog-v29.js';
 import {PathsRoom,pathsSettings} from './paths/paths-room.js';
@@ -291,6 +292,7 @@ export default {
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
     else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
+    if(url.pathname.startsWith('/api/billing/'))return handleBillingRequest(request,env,{rateLimit});
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
     // 32.1.0: live presence for the owner's dashboard (see src/presence/presence-registry.js)
@@ -1821,6 +1823,7 @@ export class BoardRoom extends DurableObject {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.hostname === "billing.internal") {this.billing ??= new BillingRegistry(this.ctx,this.env);return this.ctx.blockConcurrencyWhile(()=>this.billing.fetch(request));}
     if (url.hostname === "social.internal") return (await this.socialDelegate()).fetch(request);
     if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
     if (url.hostname === "presence.internal") { this.presence ??= new PresenceRegistry(this.ctx); return this.presence.fetch(request); }
