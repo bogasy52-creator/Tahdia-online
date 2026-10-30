@@ -1,0 +1,65 @@
+{
+  "version": "33.0.0-full1",
+  "characters": [
+    {
+      "id": "astronaut",
+      "metadata": "astronaut.json",
+      "poster": "portraits/astronaut.webp"
+    },
+    {
+      "id": "racer",
+      "metadata": "racer.json",
+      "poster": "portraits/racer.webp"
+    },
+    {
+      "id": "fairy",
+      "metadata": "fairy.json",
+      "poster": "portraits/fairy.webp"
+    },
+    {
+      "id": "robot",
+      "metadata": "robot.json",
+      "poster": "portraits/robot.webp"
+    },
+    {
+      "id": "princess",
+      "metadata": "princess.json",
+      "poster": "portraits/princess.webp"
+    },
+    {
+      "id": "cat",
+      "metadata": "cat.json",
+      "poster": "portraits/cat.webp"
+    },
+    {
+      "id": "fox",
+      "metadata": "fox.json",
+      "poster": "portraits/fox.webp"
+    },
+    {
+      "id": "samurai",
+      "metadata": "samurai.json",
+      "poster": "portraits/samurai.webp"
+    },
+    {
+      "id": "diver",
+      "metadata": "diver.json",
+      "poster": "portraits/diver.webp"
+    },
+    {
+      "id": "viking",
+      "metadata": "viking.json",
+      "poster": "portraits/viking.webp"
+    },
+    {
+      "id": "gladiator",
+      "metadata": "gladiator.json",
+      "poster": "portraits/gladiator.webp"
+    },
+    {
+      "id": "cyber",
+      "metadata": "cyber.json",
+      "poster": "portraits/cyber.webp"
+    }
+  ]
+}

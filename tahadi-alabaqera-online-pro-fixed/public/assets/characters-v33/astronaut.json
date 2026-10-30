@@ -1,0 +1,397 @@
+{
+  "version": 1,
+  "id": "astronaut",
+  "atlas": "astronaut.png",
+  "poster": "portraits/astronaut.webp",
+  "width": 1774,
+  "height": 887,
+  "source_sha256": "9613565a25615c5040b5bb9d6ee00960441af48936f67bea028d7e27a4fb9c5f",
+  "frameCount": 32,
+  "scale": 1.0849056603773586,
+  "idleHeight": 212.0,
+  "viewport": {
+    "width": 384,
+    "height": 320,
+    "baseline": 296
+  },
+  "frames": [
+    {
+      "x": 56,
+      "y": 22,
+      "w": 132,
+      "h": 215,
+      "anchorX": 60.681,
+      "anchorY": 213,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 270,
+      "y": 21,
+      "w": 139,
+      "h": 216,
+      "anchorX": 63.146,
+      "anchorY": 214,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 495,
+      "y": 21,
+      "w": 135,
+      "h": 216,
+      "anchorX": 62.129,
+      "anchorY": 214,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 714,
+      "y": 21,
+      "w": 134,
+      "h": 217,
+      "anchorX": 64.291,
+      "anchorY": 215,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 933,
+      "y": 21,
+      "w": 134,
+      "h": 216,
+      "anchorX": 62.333,
+      "anchorY": 214,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1155,
+      "y": 21,
+      "w": 134,
+      "h": 216,
+      "anchorX": 62.297,
+      "anchorY": 214,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1376,
+      "y": 21,
+      "w": 133,
+      "h": 216,
+      "anchorX": 64.031,
+      "anchorY": 214,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1596,
+      "y": 21,
+      "w": 134,
+      "h": 216,
+      "anchorX": 61.973,
+      "anchorY": 214,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 42,
+      "y": 248,
+      "w": 145,
+      "h": 209,
+      "anchorX": 74.681,
+      "anchorY": 207,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 266,
+      "y": 250,
+      "w": 143,
+      "h": 209,
+      "anchorX": 67.146,
+      "anchorY": 207,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 491,
+      "y": 250,
+      "w": 139,
+      "h": 211,
+      "anchorX": 66.129,
+      "anchorY": 209,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 713,
+      "y": 250,
+      "w": 142,
+      "h": 212,
+      "anchorX": 65.291,
+      "anchorY": 210,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 935,
+      "y": 250,
+      "w": 139,
+      "h": 213,
+      "anchorX": 60.333,
+      "anchorY": 211,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1154,
+      "y": 250,
+      "w": 140,
+      "h": 211,
+      "anchorX": 63.297,
+      "anchorY": 209,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1378,
+      "y": 250,
+      "w": 138,
+      "h": 211,
+      "anchorX": 62.031,
+      "anchorY": 209,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1593,
+      "y": 250,
+      "w": 135,
+      "h": 212,
+      "anchorX": 64.973,
+      "anchorY": 210,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 33,
+      "y": 457,
+      "w": 178,
+      "h": 201,
+      "anchorX": 83.681,
+      "anchorY": 199,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 251,
+      "y": 483,
+      "w": 167,
+      "h": 183,
+      "anchorX": 82.146,
+      "anchorY": 181,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 484,
+      "y": 515,
+      "w": 153,
+      "h": 152,
+      "anchorX": 73.129,
+      "anchorY": 150,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 715,
+      "y": 479,
+      "w": 136,
+      "h": 192,
+      "anchorX": 63.291,
+      "anchorY": 190,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 929,
+      "y": 475,
+      "w": 145,
+      "h": 197,
+      "anchorX": 66.333,
+      "anchorY": 195,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1155,
+      "y": 476,
+      "w": 162,
+      "h": 198,
+      "anchorX": 62.297,
+      "anchorY": 196,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1393,
+      "y": 475,
+      "w": 161,
+      "h": 199,
+      "anchorX": 47.031,
+      "anchorY": 197,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1601,
+      "y": 474,
+      "w": 133,
+      "h": 199,
+      "anchorX": 56.973,
+      "anchorY": 197,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 43,
+      "y": 664,
+      "w": 175,
+      "h": 195,
+      "anchorX": 73.681,
+      "anchorY": 193,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 250,
+      "y": 672,
+      "w": 199,
+      "h": 190,
+      "anchorX": 83.146,
+      "anchorY": 188,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 494,
+      "y": 682,
+      "w": 158,
+      "h": 186,
+      "anchorX": 63.129,
+      "anchorY": 184,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 710,
+      "y": 682,
+      "w": 139,
+      "h": 190,
+      "anchorX": 68.291,
+      "anchorY": 188,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 928,
+      "y": 680,
+      "w": 150,
+      "h": 194,
+      "anchorX": 67.333,
+      "anchorY": 192,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1141,
+      "y": 680,
+      "w": 155,
+      "h": 195,
+      "anchorX": 76.297,
+      "anchorY": 193,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1352,
+      "y": 680,
+      "w": 195,
+      "h": 187,
+      "anchorX": 88.031,
+      "anchorY": 185,
+      "cutouts": [],
+      "usable": true
+    },
+    {
+      "x": 1598,
+      "y": 681,
+      "w": 150,
+      "h": 193,
+      "anchorX": 59.973,
+      "anchorY": 191,
+      "cutouts": [],
+      "usable": true
+    }
+  ],
+  "states": {
+    "idle": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "fps": 6,
+      "loop": true
+    },
+    "walk": {
+      "frames": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "fps": 12,
+      "loop": true
+    },
+    "entry": {
+      "frames": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "fps": 6,
+      "loop": false
+    },
+    "win": {
+      "frames": [
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "fps": 6,
+      "loop": false
+    }
+  }
+}
