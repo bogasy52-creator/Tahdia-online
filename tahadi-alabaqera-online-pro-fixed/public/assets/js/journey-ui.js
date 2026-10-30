@@ -73,7 +73,7 @@ function openStage(level,daily='',resume=true){
   $('stageResult').classList.add('hidden');$('stageHelpPanel').classList.add('hidden');workspace.inert=false;topbar.inert=false;$('stageClose').disabled=false;$('stageHelp').disabled=false;
   message(resumed?'رجعنا لنفس اللوحة. كمّل من آخر حركة.':upgraded?'المحرك تغيّر: بدأنا لوحة التبديل الجديدة، ونجوم المراحل السابقة محفوظة.':jewel?'بدّل قطعتين وراقب التساقط. التبديلة غير المطابقة ترجع بدون خصم حركة.':'خطأ واحد يعيد اللوحة. ابدأ بدائرة ووصل الرقم نفسه.');
   canvas.setAttribute('aria-label',jewel?'لوحة مطابقة الجواهر. بدّل قطعتين متجاورتين بالسحب أو بنقرتين. الأسهم للتنقل والمسافة للاختيار.':'لوحة المسارات. اسحب بين الرقمين المتماثلين. الأسهم مع Shift لمد المسار.');
-  if(!play.open)play.showModal();meters();draw();storeResume();canvas.focus();if(state.over||state.won)finish();
+  if(!play.open)play.showModal();window.BS_HERO_FX?.enter(null,{key:'journey:'+game+':'+level+':'+roundVersion});meters();draw();storeResume();canvas.focus();if(state.over||state.won)finish();
 }
 function closeStage(){if(saving)return;storeResume();roundVersion++;busy=false;renderer.cancel();play.close();chapter=Math.floor((nextStage(progress.get(),game)-1)/12);render();$('journeyContinue').focus();}
 function help(textValue,action){
@@ -94,7 +94,7 @@ async function finish(){
 async function swapAction(action){
   if(!state||busy||saving||state.over||state.won)return;const version=roundVersion,initial=state,result=moveMatch3(state,action);selected=[];boosting=false;
   if(!result.accepted){if(action.swap&&adjacent(...action.swap,state.size)){busy=true;meters();const before=state.board.slice(),after=before.slice(),[a,b]=action.swap;[after[a],after[b]]=[after[b],after[a]];await renderer.animate([{type:'swap',before,after,swap:[a,b]},{type:'swap',before:after,after:before,swap:[a,b]}],state);}if(version!==roundVersion)return;busy=false;meters();draw();message('ما صار تطابق؛ رجعت القطعتان بدون خصم حركة.');return;}
-  state=result.state;busy=true;storeResume();meters();sound('move');
+  state=result.state;busy=true;storeResume();meters();sound('move');window.BS_HERO_FX?.move(canvas);
   await renderer.animate(result.events,state,event=>{if(version!==roundVersion)return;if(event.type==='clear'){text('stageChain',event.cascade?'سلسلة × '+(event.cascade+1):event.activated.length?'انفجار خاص!':'مطابقة!');}});
   if(version!==roundVersion||state===initial)return;busy=false;text('stageChain',result.extraMove?'حركة إضافية!':result.cascades>1?'سلسلة × '+result.cascades:'');meters();draw();
   message(result.extraMove?'مطابقة قوية! كسبت حركة إضافية.':result.cascades>1?'تساقط متتابع × '+result.cascades+' · +'+(state.score-initial.score)+' نقطة':'+ '+(state.score-initial.score)+' نقطة · ابحث عن فرصة لقطعة خاصة.');

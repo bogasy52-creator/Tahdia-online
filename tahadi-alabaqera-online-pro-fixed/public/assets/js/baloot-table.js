@@ -519,6 +519,7 @@ async function animateSecondDeal(view, contract) {
 
 async function animatePlay(seat, card) {
   const slot = slotEl(seat);
+  if (seat === ui.me) window.BS_HERO_FX?.move(slot);
   let from;
   if (seat === ui.me) {
     const el = [...$('hand').children].find((x) => x.dataset.card === card);
@@ -1082,6 +1083,7 @@ async function startOnline(kind, code = '') {
 function showTable() {
   $('setup').hidden = true;
   $('table').hidden = false;
+  window.BS_HERO_FX?.enter(null,{key:'baloot:'+ui.room?.code+':'+ui.room?.startedAt});
   document.body.classList.add('bl-playing');
   $('resultSheet').hidden = true;
   $('matchEnd').hidden = true;

@@ -1,0 +1,332 @@
+{
+  "version": 1,
+  "speech": false,
+  "sampleRate": 22050,
+  "channels": 1,
+  "files": [
+    {
+      "path": "fox-entry.wav",
+      "hero": "fox",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.20142,
+      "sha256": "7e815afe2c187f79c54e9ba64ab05e8e7dfa0636258e01869d4d9b8bee4f5479"
+    },
+    {
+      "path": "fox-move.wav",
+      "hero": "fox",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.16653,
+      "sha256": "3fbc2194312c9f211e3c5af22f272cd71d2a227f4ef993bc28d82011dac9f5f3"
+    },
+    {
+      "path": "fox-win.wav",
+      "hero": "fox",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.18329,
+      "sha256": "09a746219d2b0f9b802fa8cd8fedbcd09a5833f1cbc0ac780695b3621aaea38f"
+    },
+    {
+      "path": "cat-entry.wav",
+      "hero": "cat",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.18227,
+      "sha256": "d98ce96df5aae7f3e9cbfaa6cf843b3c348463b63e5eb5a3f14351164acdba45"
+    },
+    {
+      "path": "cat-move.wav",
+      "hero": "cat",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.1629,
+      "sha256": "3958d1dc1c9e78add87e3d176c98592b65f6fa7a4e4d92113022e152eeaf5602"
+    },
+    {
+      "path": "cat-win.wav",
+      "hero": "cat",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.18637,
+      "sha256": "28cd07dcfe1c7c559410fb2d5c8ab45bfefdd2e07a8301cc462b528f0c41f4a0"
+    },
+    {
+      "path": "robot-entry.wav",
+      "hero": "robot",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.16804,
+      "sha256": "4a7bc467a78fd7c741dba146f38f51a38cc940ff27d3c402ded257500accc8aa"
+    },
+    {
+      "path": "robot-move.wav",
+      "hero": "robot",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.14244,
+      "sha256": "faa2ff84855cc18ffb8d58a773d4a23f68cc6211aea4f37e54da72ed88dd98fc"
+    },
+    {
+      "path": "robot-win.wav",
+      "hero": "robot",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.15974,
+      "sha256": "4ac97803d8b8336dc8a5c0d6f5749e548c45358a6a25cd095237aa0120c2150e"
+    },
+    {
+      "path": "princess-entry.wav",
+      "hero": "princess",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.17361,
+      "sha256": "5bae8805ece1ffeec10054185362d13ddbb16f7fe52ca2cff6b3072ca0c42c9f"
+    },
+    {
+      "path": "princess-move.wav",
+      "hero": "princess",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.15024,
+      "sha256": "3286b15bd2e586fbb913881a4d932831b8085ef8e0ab8ddb63c93911cc928c63"
+    },
+    {
+      "path": "princess-win.wav",
+      "hero": "princess",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.17416,
+      "sha256": "0535da4f9a2adec442ec9760df8dd252438efeea4e58543e82eea3836cb9432b"
+    },
+    {
+      "path": "fairy-entry.wav",
+      "hero": "fairy",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.18229,
+      "sha256": "344c114662d34da56822ebb88782342b0c9d701b6cef5e5c923d11d27c6e9198"
+    },
+    {
+      "path": "fairy-move.wav",
+      "hero": "fairy",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.16903,
+      "sha256": "571cba50815415672bafff9d83ae034917f12cd1b68159baee244909a3c68bf5"
+    },
+    {
+      "path": "fairy-win.wav",
+      "hero": "fairy",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.18469,
+      "sha256": "e1a0c350f3534064744dfa2aaabe0880e16b501b9385e2267786418da3b40cb2"
+    },
+    {
+      "path": "astronaut-entry.wav",
+      "hero": "astronaut",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.18542,
+      "sha256": "b6b2866fa1fcd12a320be272cf1ed9cdd16af74d6feca06e3ae89676320f295d"
+    },
+    {
+      "path": "astronaut-move.wav",
+      "hero": "astronaut",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.16255,
+      "sha256": "610c65a1445b597a7992aeaac4daf0b72a1807fa0924c055270a1aa39d527b22"
+    },
+    {
+      "path": "astronaut-win.wav",
+      "hero": "astronaut",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.18241,
+      "sha256": "1828a826cca7144bf1f2b8c74b5bb52d50230c485c5817e48c6baa5c46ca7101"
+    },
+    {
+      "path": "racer-entry.wav",
+      "hero": "racer",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.18578,
+      "sha256": "d1e6f84db794d81f9599419305d944b97a6ba41eba75f187eff099a1f2d8706c"
+    },
+    {
+      "path": "racer-move.wav",
+      "hero": "racer",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.16124,
+      "sha256": "1792bdf21e86df0a748819cdeaaf7be7cad465c70e521a7287c22a85a133b321"
+    },
+    {
+      "path": "racer-win.wav",
+      "hero": "racer",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.19129,
+      "sha256": "cfc1b09263ef22e45a11796065a139012fa162ffc1bc386b5aa1a69c6082179f"
+    },
+    {
+      "path": "diver-entry.wav",
+      "hero": "diver",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.20424,
+      "sha256": "d2c66bec7f1f048325240dfaa42895a90ffff69b4f16824a6477a1ed1d51f3f3"
+    },
+    {
+      "path": "diver-move.wav",
+      "hero": "diver",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.17432,
+      "sha256": "dbebc911a0ba3e5d6194e15a1e77fde8f0bacfa8d593c1d9f4c28c24995c6257"
+    },
+    {
+      "path": "diver-win.wav",
+      "hero": "diver",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.19903,
+      "sha256": "81ebeaeed03d09c9384c4f37597e5a028ca67afd9264d0057ecfd568c5a03f44"
+    },
+    {
+      "path": "viking-entry.wav",
+      "hero": "viking",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.20043,
+      "sha256": "ca1fad98b01b1d27f5612a9893a51339777a23ede67bca7266c0ae452b1af016"
+    },
+    {
+      "path": "viking-move.wav",
+      "hero": "viking",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.19374,
+      "sha256": "94d6d8b8ec3993e116413e79cf223e570c0efb0c7ca8534c5225a4f44c4346bf"
+    },
+    {
+      "path": "viking-win.wav",
+      "hero": "viking",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.19901,
+      "sha256": "becf77aad284a885074be6f707ff81b6cf5a9e469a8a252d0c234a79c5bf947a"
+    },
+    {
+      "path": "gladiator-entry.wav",
+      "hero": "gladiator",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.17821,
+      "sha256": "df3e70d44be6fcebc64f4a4bf425487674d46b04674b381997ca350fe5bd7333"
+    },
+    {
+      "path": "gladiator-move.wav",
+      "hero": "gladiator",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.14105,
+      "sha256": "c386dd96cd9053477d009492c8b4a854a8b4df03b9b5229011762ba37ecb8c2b"
+    },
+    {
+      "path": "gladiator-win.wav",
+      "hero": "gladiator",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.17051,
+      "sha256": "13e32e7edade21cc38a09a8822db4c55fda9d30c452e32b2143df07e37c21361"
+    },
+    {
+      "path": "cyber-entry.wav",
+      "hero": "cyber",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.17537,
+      "sha256": "6b70be339fc725c2e59feceac6f52fc404879f747bf5984df4953c80a2fbe7ac"
+    },
+    {
+      "path": "cyber-move.wav",
+      "hero": "cyber",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.14847,
+      "sha256": "aadca6befa1bd122560bf9247c8c2d420c578cdf277d1e197e8c9544bd13612f"
+    },
+    {
+      "path": "cyber-win.wav",
+      "hero": "cyber",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.15726,
+      "sha256": "eae2917af7ee5253b2205bc15b3ff1c75731944fd24e067c3d132106f0111043"
+    },
+    {
+      "path": "samurai-entry.wav",
+      "hero": "samurai",
+      "kind": "entry",
+      "duration": 0.78,
+      "peak": 0.68,
+      "rms": 0.17914,
+      "sha256": "97aa45ba929eeef5653821b0826485ee52b87c428efd0ea997bf451c8b44a75d"
+    },
+    {
+      "path": "samurai-move.wav",
+      "hero": "samurai",
+      "kind": "move",
+      "duration": 0.19,
+      "peak": 0.68,
+      "rms": 0.16809,
+      "sha256": "343d12a36520619cee21bb175517cf0b275b9c8a4fffe5893f3e9fd5d9517b15"
+    },
+    {
+      "path": "samurai-win.wav",
+      "hero": "samurai",
+      "kind": "win",
+      "duration": 1.18,
+      "peak": 0.68,
+      "rms": 0.18568,
+      "sha256": "aa371df8aadbde21d8f85fcb482f455047c73eafb4ca845be3e0b4b4abd49e2c"
+    }
+  ]
+}

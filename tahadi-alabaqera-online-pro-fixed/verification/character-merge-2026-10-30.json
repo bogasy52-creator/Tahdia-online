@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-30",
+  "version": "33.0.0",
+  "repository_base": "bd4592a63e16ffa8f86373096278b2fd77dca33f",
+  "integration": "three-way merge against original upload; preserve latest Baloot fixes",
+  "characters": 12,
+  "frames_per_character": 32,
+  "frames_total": 384,
+  "foley_cues": 36,
+  "original_art_and_ownership": "preserved",
+  "cleanup_hook": "retired; compatibility entry point never deletes files",
+  "future_patch_builder": {
+    "path": "scripts/create-update-patch.py",
+    "baseline": "actual installed project snapshot",
+    "generated_cache_and_checksums": "excluded and rebuilt by CI",
+    "conflicting_later_edits": "rejected before replacement",
+    "compatibility_checks_passed": 6
+  },
+  "full_release": {
+    "tests": 1070,
+    "passed": 1070,
+    "failed": 0,
+    "skipped": 0,
+    "static_references": 770,
+    "js_modules": 378,
+    "inline_scripts": 9,
+    "css_asset_references": 68,
+    "offline_core_resources": 53,
+    "offline_core_bytes": 995868,
+    "worker_offline_check": "passed",
+    "worker_dry_run": "passed"
+  },
+  "browser_characters": {
+    "checks": [
+      "fox: real atlas decoded, walking frames changed, victory rendered",
+      "cat: real atlas decoded, walking frames changed, victory rendered",
+      "robot: real atlas decoded, walking frames changed, victory rendered",
+      "princess: real atlas decoded, walking frames changed, victory rendered",
+      "fairy: real atlas decoded, walking frames changed, victory rendered",
+      "astronaut: real atlas decoded, walking frames changed, victory rendered",
+      "racer: real atlas decoded, walking frames changed, victory rendered",
+      "diver: real atlas decoded, walking frames changed, victory rendered",
+      "viking: real atlas decoded, walking frames changed, victory rendered",
+      "gladiator: real atlas decoded, walking frames changed, victory rendered",
+      "cyber: real atlas decoded, walking frames changed, victory rendered",
+      "samurai: real atlas decoded, walking frames changed, victory rendered",
+      "real Foley clip reaches ended; mute cancels active playback",
+      "shop previews the same complete actor; ownership is preserved and closing disposes controls"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  "browser_baloot": {
+    "release": "33.0.0",
+    "browser": "138.0.7204.0",
+    "runtime": "native Workerd / SQLite / four real browser WebSockets",
+    "viewports": [
+      360,
+      390,
+      1280
+    ],
+    "checks": [
+      "visible menu creates a private Baloot room",
+      "four independent browser players bid and play four legal cards through the real Worker and SQLite",
+      "every remaining card retains its exact position, rotation and stacking after four visible card clicks",
+      "closing the real WebSocket reconnects to the same seat without moving remaining cards",
+      "snakes, Jackaroo, Zahra, dice, serpent and quiz menus render at 360px without the removed labels or horizontal overflow"
+    ],
+    "errors": [],
+    "warnings": [
+      {
+        "index": 0,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 1,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 1,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 2,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 2,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 3,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 3,
+        "text": "Service Worker registration blocked by Playwright"
+      }
+    ],
+    "physicalPhoneTested": false,
+    "speechQualityReviewed": false
+  },
+  "staging": {
+    "part1_full_release_tests": 1045,
+    "part1_requires_no_character_activation": true,
+    "part2_requires_artwork_receipt": true,
+    "generated_files_are_rebuilt_between_parts": true
+  },
+  "deployment": "not performed",
+  "limitations": [
+    "No physical-phone or Safari test.",
+    "Valid patches must be generated against the installed base; conflicting changes require merging."
+  ]
+}

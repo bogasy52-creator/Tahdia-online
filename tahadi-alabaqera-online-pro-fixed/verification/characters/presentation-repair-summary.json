@@ -1,0 +1,15 @@
+{
+  "release": "33.0.0",
+  "date": "2026-10-30",
+  "original_art_preserved": true,
+  "artificial_limbs_removed": true,
+  "sound_clips": 36,
+  "speech": false,
+  "browser_tested": false,
+  "physical_phone_tested": false,
+  "browser_attempt": "Chromium launch and computer-use runtime could not start in this environment",
+  "human_recording_received": true,
+  "human_voice_cloned": false,
+  "deployed": false,
+  "new_regression_tests": 7
+}

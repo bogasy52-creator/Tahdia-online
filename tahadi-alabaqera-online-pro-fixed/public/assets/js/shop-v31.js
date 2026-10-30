@@ -118,11 +118,14 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame='
   const die=make('div','die');stage.append(die);window.BS_DICE?.mount?.(die);window.BS_DICE?.set?.(die,5);stage.roll=()=>window.BS_DICE?.roll?.(die,window.BS_DICE.random(),{quiet:false});
  }else if(item.type==='pawn'&&item.id==='pawn-character'){
   // 33.0.0: «شخصيتي» shows the hero you equipped, the one that walks the board
-  const img=make('img','sx-character-art');img.src=core.heroArt?.(api()?.get?.()?.equipped?.character||'character-fox')||'/assets/heroes/desert.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
+  const id=api()?.get?.()?.equipped?.character||'character-fox';
+  if(window.BS_CHARACTERS){const actor=window.BS_CHARACTERS.actor(id,{pose:live?'walk':'idle',posterOnly:!live});stage.append(actor);stage.cleanups.push(()=>window.BS_CHARACTERS.dispose(actor));}
+  else {const img=make('img','sx-character-art');img.src=core.heroArt?.(id);img.alt='';stage.append(img);}
  }else if(item.type==='pawn'){
   const svg=window.BS_PIECES?.icon?.(document,{design:window.BS_PIECES.designFor(item.id),item:item.id,color:playerColor||pawnColor(item),className:'sx-pawn-art',label:'',size:'l'});if(svg)stage.append(svg);
  }else if(item.type==='character'){
-  const img=make('img','sx-character-art');img.src='/assets/heroes/'+(item.asset||'desert')+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
+  if(window.BS_CHARACTERS){const actor=window.BS_CHARACTERS.actor(item.id,{pose:live?'entry':'idle',posterOnly:!live});stage.append(actor);stage.cleanups.push(()=>window.BS_CHARACTERS.dispose(actor));}
+  else {const img=make('img','sx-character-art');img.src='/assets/heroes/'+(item.asset||'desert')+'.webp';img.alt='';img.loading='lazy';stage.append(img);}
  }else if(item.type==='deck'){deckArt(stage,item,live);
  }else if(item.type==='snake'){
   const img=make('img','sx-snake-art'+(item.id==='snake-sovereign'?' is-hero':''));img.src=item.id==='snake-sovereign'?'/assets/brand/sovereign-hero.webp':'/assets/previews/'+item.id+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
@@ -288,12 +291,23 @@ function updatePreviewControls(){
  $('previewBag').hidden=s.owned||locked(item);$('previewBag').disabled=pending;$('previewBag').textContent=bag.includes(item.id)?'فتح السلة':'أضف إلى السلة';$('previewBag').onclick=()=>{addToBag(item);};
 }
 function characterShowcase(item){
- if(item.type!=='character'||!window.BS_HERO_FX)return;const panel=make('section','hero-signature-panel'),spec=core.HERO_SIGNATURES[item.id.slice(10)],list=make('div','hero-signature-list');
- for(const [label,value]of [['دخول',spec.entry],['حركة',spec.trail],['فوز',spec.victory]])list.append(make('span',null,label+' · '+value));
- const buttons=make('div','hero-signature-controls'),stage=make('div','hero-signature-showcase');let cleanup=()=>{};
- for(const [pose,label]of [['entry','الدخول'],['move','المشي'],['win','رقصة الفوز']]){const button=make('button',null,label);button.type='button';button.setAttribute('aria-pressed',String(pose==='entry'));button.onclick=()=>{cleanup();buttons.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));cleanup=window.BS_HERO_FX.preview(stage,item.id,pose);};buttons.append(button);}
- panel.append(list,buttons,stage);$('previewOptions').append(panel);cleanup=window.BS_HERO_FX.preview(stage,item.id);const oldCleanup=previewCleanup;previewCleanup=()=>{cleanup();panel.remove();oldCleanup();};
+ if(item.type!=='character'||!window.BS_HERO_FX)return;
+ const panel=make('section','hero-signature-panel'),spec=core.HERO_SIGNATURES[item.id.slice(10)],buttons=make('div','hero-signature-controls'),note=make('p','hero-signature-note','نجهّز عرض الشخصية…');
+ panel.style.setProperty('--hero-color',spec.color);let cleanup=()=>{};
+ const actor=$('previewArt').querySelector('.character-actor');
+ for(const [pose,label]of [['entry','الدخول'],['move',window.BS_CHARACTERS?'المشي':'أثر الحركة'],['win','احتفال الفوز']]){
+  const button=make('button',null,label);button.type='button';button.setAttribute('aria-pressed','false');
+  button.disabled=Boolean(actor);
+  button.onclick=()=>{window.BS_HERO_FX.unlock();cleanup();buttons.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));cleanup=window.BS_HERO_FX.preview($('previewArt'),item.id,pose,{artwork:true});note.textContent=pose==='entry'?spec.entry:pose==='move'?spec.trail:spec.victory;};buttons.append(button);
+ }
+ if(actor)actor.ready.then(()=>{if(!panel.isConnected)return;const loaded=actor.dataset.loaded==='true';buttons.querySelectorAll('button').forEach(b=>b.disabled=!loaded);note.textContent=loaded?'اختر الحركة واسمع توقيع الشخصية.':'تعذّر تحميل الحركات. أغلق العرض وافتحه وأنت متصل.';});
+ else note.textContent='اختر الحركة لتجربتها.';
+ const listen=make('button','hero-signature-sound'),caption=make('span',null,'اسمع صوت الشخصية'),hint=make('small',null,'مؤثر قصير');listen.type='button';listen.append(caption,hint);
+ listen.onclick=()=>{const settings=window.BS_AUDIO?.getSettings?.()||{};if(settings.muted||settings.effects===false||Number(settings.volume??.72)===0){note.textContent='الصوت مكتوم في إعداداتك؛ فعّله ثم جرّب.';return;}const result=window.BS_HERO_FX.sample(item.id,'win');if(!result){note.textContent='تعذر بدء الصوت. اضغط مرة ثانية.';return;}note.textContent='تشغيل مؤثر '+item.name;result.played.then(()=>{if(panel.isConnected)note.textContent='هذا صوت '+item.name+' عند الفوز.';}).catch(()=>{if(panel.isConnected)note.textContent='المتصفح منع الصوت. اضغط تشغيل مرة ثانية.';});};
+ panel.append(buttons,listen,note);$('previewOptions').append(panel);
+ const oldCleanup=previewCleanup;previewCleanup=()=>{cleanup();window.BS_HERO_FX.cancel();panel.remove();oldCleanup();};
 }
+
 function openPreview(item){
  if($('bagDialog').open)$('bagDialog').close();previewCleanup();previewId=item.id;$('previewMessage').textContent='';
  const t=tier(item);$('previewType').textContent=TYPE_LABEL[item.type]+' · '+TIER[t];$('previewType').className='sx-chip tier-'+t;$('previewName').textContent=item.name;$('previewMaterial').textContent=item.type==='emote'?item.glyph+' إيموجي متحرك':item.type==='phrase'?'عبارة جاهزة':item.type==='move'?item.glyph+' حركة على اللوحة':subtitle(item);$('previewDescription').textContent=item.description;

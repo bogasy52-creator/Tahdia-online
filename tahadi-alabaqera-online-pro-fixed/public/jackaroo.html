@@ -319,6 +319,7 @@ async function apply(next, { animate }) {
   const event = state.lastEvent;
   if (animate && prev && event && JSON.stringify(event) !== JSON.stringify(prev.lastEvent)) {
     stepping = true;
+    if(event.player===me())window.BS_HERO_FX?.move($("#board"));
     try {
       const t = event.action?.type;
       const who = event.player === me() ? "أنت" : state.players[event.player]?.name || "";
@@ -406,4 +407,4 @@ window.BS_TABLE = Object.freeze({
     return (state?.players || []).map((p, i) => ({ index: i, name: String(p?.name || "لاعب " + (i + 1)) }));
   },
 });
-</script><script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/hero-effects.js?v=33.0.0-signatures1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>
+</script><script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/character-player.js?v=33.0.0-full1"></script><script src="/assets/js/hero-effects.js?v=33.0.0-full1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>

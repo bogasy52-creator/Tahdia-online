@@ -1,0 +1,51 @@
+{
+  "mode": "built-in image_gen",
+  "classification": "stylized-concept",
+  "recoveredAssets": {
+    "note": "Eight previously generated assets restored unchanged from their saved Library images. Original exact prompts were not persisted in the recovered source; identity/style references and state specification are documented in CHARACTER_FULL_BODY_V33_AR.md.",
+    "ids": [
+      "samurai",
+      "fox",
+      "cat",
+      "robot",
+      "princess",
+      "fairy",
+      "astronaut",
+      "racer"
+    ]
+  },
+  "newPrompts": [
+    {
+      "id": "diver",
+      "body": "round polished brass deep-sea helmet, teal barred circular window and metal rivets; tan canvas pressure suit, brass fittings, dark gloves, weighted boots, small hose loop",
+      "walk": "heavy buoyant underwater-style walk, alternate boots with genuine opposite contact and passing poses",
+      "entry": "rise from a compact crouch, inspect a helmet valve, turn and open one hand in greeting",
+      "win": "slow underwater two-step sway, arms wave above head, finish with both thumbs up",
+      "prompt": "Use case: stylized-concept. Production game sprite atlas on a genuinely transparent background. Image 1 is the original diver identity reference; preserve its helmet, face and palette. Image 2 is STYLE ONLY: match that premium cohesive chibi 3D render quality and whole-body proportions, do not copy the samurai costume. Create one COMPLETE full-body diver with round polished brass deep-sea helmet, teal barred circular window and metal rivets; tan canvas pressure suit, brass fittings, dark gloves, weighted boots, small hose loop. Render all anatomy, clothes, arms and legs together; no pasted limbs, no pedestal. Exactly 8 columns and 4 rows, 32 full-body animation poses, every figure separate, consistent scale, fixed near-front orthographic three-quarter camera facing slightly right, same costume, same lighting. Generous transparent gutters, keep boots, horns and weapons completely inside each cell. Row 1: 8 subtle breathing idle poses, loop. Row 2: 8 sequential frames of heavy buoyant underwater-style walk, alternate boots with genuine opposite contact and passing poses, loop. Row 3: 8 sequential frames of entrance: rise from a compact crouch, inspect a helmet valve, turn and open one hand in greeting. Row 4: 8 sequential victory frames: slow underwater two-step sway, arms wave above head, finish with both thumbs up. Every action has actual distinct poses, consistent identity and proportions. No floor, no text, numbers, grid, watermark, motion blur or extra particles. Wide 2:1 atlas. Accurate professional game-animation silhouette and readable gestures."
+    },
+    {
+      "id": "viking",
+      "body": "silver horned helmet with brass bands, warm amber eyes on dark face, blond braided beard, pale fur collar; sturdy brown leather and steel armor, fur mantle, thick boots, compact engraved battleaxe",
+      "walk": "broad grounded stomp walk, alternate boot contact and real weight shift with beard and fur follow-through",
+      "entry": "low brace, rise with axe on shoulder, a strong boot stamp, ready stance",
+      "win": "raise axe high, two hearty alternating stomps, free fist taps chest then a proud salute",
+      "prompt": "Use case: stylized-concept. Production game sprite atlas on a genuinely transparent background. Image 1 is the original viking identity reference; preserve its helmet, face and palette. Image 2 is STYLE ONLY: match that premium cohesive chibi 3D render quality and whole-body proportions, do not copy the samurai costume. Create one COMPLETE full-body viking with silver horned helmet with brass bands, warm amber eyes on dark face, blond braided beard, pale fur collar; sturdy brown leather and steel armor, fur mantle, thick boots, compact engraved battleaxe. Render all anatomy, clothes, arms and legs together; no pasted limbs, no pedestal. Exactly 8 columns and 4 rows, 32 full-body animation poses, every figure separate, consistent scale, fixed near-front orthographic three-quarter camera facing slightly right, same costume, same lighting. Generous transparent gutters, keep boots, horns and weapons completely inside each cell. Row 1: 8 subtle breathing idle poses, loop. Row 2: 8 sequential frames of broad grounded stomp walk, alternate boot contact and real weight shift with beard and fur follow-through, loop. Row 3: 8 sequential frames of entrance: low brace, rise with axe on shoulder, a strong boot stamp, ready stance. Row 4: 8 sequential victory frames: raise axe high, two hearty alternating stomps, free fist taps chest then a proud salute. Every action has actual distinct poses, consistent identity and proportions. No floor, no text, numbers, grid, watermark, motion blur or extra particles. Wide 2:1 atlas. Accurate professional game-animation silhouette and readable gestures."
+    },
+    {
+      "id": "gladiator",
+      "body": "bronze perforated gladiator helmet with brim, dark eye openings, short red crest; bronze breastplate and segmented skirt, leather bracers, greaves, boots, short gladius and small round shield",
+      "walk": "confident arena stride with genuinely alternating boot contacts, sword arm and shield counterbalance",
+      "entry": "low crouch behind forward shield, rise and make a gladius salute",
+      "win": "lift gladius, tap fist on shield twice, raise arms then a short proud bow",
+      "prompt": "Use case: stylized-concept. Production game sprite atlas on a genuinely transparent background. Image 1 is the original gladiator identity reference; preserve its helmet, face and palette. Image 2 is STYLE ONLY: match that premium cohesive chibi 3D render quality and whole-body proportions, do not copy the samurai costume. Create one COMPLETE full-body gladiator with bronze perforated gladiator helmet with brim, dark eye openings, short red crest; bronze breastplate and segmented skirt, leather bracers, greaves, boots, short gladius and small round shield. Render all anatomy, clothes, arms and legs together; no pasted limbs, no pedestal. Exactly 8 columns and 4 rows, 32 full-body animation poses, every figure separate, consistent scale, fixed near-front orthographic three-quarter camera facing slightly right, same costume, same lighting. Generous transparent gutters, keep boots, horns and weapons completely inside each cell. Row 1: 8 subtle breathing idle poses, loop. Row 2: 8 sequential frames of confident arena stride with genuinely alternating boot contacts, sword arm and shield counterbalance, loop. Row 3: 8 sequential frames of entrance: low crouch behind forward shield, rise and make a gladius salute. Row 4: 8 sequential victory frames: lift gladius, tap fist on shield twice, raise arms then a short proud bow. Every action has actual distinct poses, consistent identity and proportions. No floor, no text, numbers, grid, watermark, motion blur or extra particles. Wide 2:1 atlas. Accurate professional game-animation silhouette and readable gestures."
+    },
+    {
+      "id": "cyber",
+      "body": "glossy black angular helmet, cyan light seams, narrow magenta visor, cyan neck rings; sleek full black segmented armor body, cyan and magenta illuminated seams, gauntlets, stealth boots",
+      "walk": "smooth precise stealth walk with distinct alternating contacts and angular counterbalanced arms",
+      "entry": "compact crouch, rise while activating wrist display, extend hand then poised stance",
+      "win": "tutting dance with angular hand shapes, shoulder pop, short pivot, two-finger salute",
+      "prompt": "Use case: stylized-concept. Production game sprite atlas on a genuinely transparent background. Image 1 is the original cyber identity reference; preserve its helmet, face and palette. Image 2 is STYLE ONLY: match that premium cohesive chibi 3D render quality and whole-body proportions, do not copy the samurai costume. Create one COMPLETE full-body cyber with glossy black angular helmet, cyan light seams, narrow magenta visor, cyan neck rings; sleek full black segmented armor body, cyan and magenta illuminated seams, gauntlets, stealth boots. Render all anatomy, clothes, arms and legs together; no pasted limbs, no pedestal. Exactly 8 columns and 4 rows, 32 full-body animation poses, every figure separate, consistent scale, fixed near-front orthographic three-quarter camera facing slightly right, same costume, same lighting. Generous transparent gutters, keep boots, horns and weapons completely inside each cell. Row 1: 8 subtle breathing idle poses, loop. Row 2: 8 sequential frames of smooth precise stealth walk with distinct alternating contacts and angular counterbalanced arms, loop. Row 3: 8 sequential frames of entrance: compact crouch, rise while activating wrist display, extend hand then poised stance. Row 4: 8 sequential victory frames: tutting dance with angular hand shapes, shoulder pop, short pivot, two-finger salute. Every action has actual distinct poses, consistent identity and proportions. No floor, no text, numbers, grid, watermark, motion blur or extra particles. Wide 2:1 atlas. Accurate professional game-animation silhouette and readable gestures."
+    }
+  ]
+}

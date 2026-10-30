@@ -175,7 +175,12 @@ function snakeVisualParts(from) {
 /* Each seat walks with its owner's shop stone, or the hero itself with «شخصيتي». */
 function drawSeatPiece(el, seat) {
   const look = seatLook(room, seat);
-  if(look.pawn==='pawn-character'&&window.BS_HERO_FX){const rig=window.BS_HERO_FX.rig(look.character,{piece:true,pose:el.classList.contains('snake-travel-pawn')?'walk':'idle'});el.appendChild(rig);return rig;}
+  if (look.pawn === "pawn-character" && window.BS_CHARACTERS) {
+    const actor = window.BS_CHARACTERS.actor(look.character, {piece:true, staticIdle:true});
+    actor.classList.add("crystal-sprite", "hero-piece");
+    el.appendChild(actor);
+    return actor;
+  }
   if (look.pawn === "pawn-character" && window.BS_STONES?.draw) {
     const c = document.createElement("canvas");
     c.className = "crystal-sprite hero-piece";
@@ -410,11 +415,11 @@ function makeTravelPawn(player, fromPos) {
   ghost.append(head, body, ring, emblem);
   drawSeatPiece(ghost, player);
   wrap.appendChild(ghost);
-  window.BS_HERO_FX?.move(ghost,seatLook(room,player).character,{force:true});
   const pt = cellCenterRect(fromPos);
   ghost.style.left = (pt.x / wrap.clientWidth) * 100 + "%";
   ghost.style.top = (pt.y / wrap.clientHeight) * 100 + "%";
   ghost.title = p?.name || "";
+  window.BS_HERO_FX?.move(ghost,seatLook(room,player).character,{force:true});
   return ghost;
 }
 async function runAnimation(element,frames,options){
@@ -966,4 +971,4 @@ window.BS_TABLE = Object.freeze({
 window.addEventListener('pagehide',cancelMotion);
 </script>
 
-<script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/hero-effects.js?v=33.0.0-signatures1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>
+<script src="assets/js/ui-icons.js?v=33.0.0"></script><script src="assets/js/pro-experience.js?v=33.0.0"></script><script defer src="assets/js/client-health.js?v=33.0.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.0.0"></script><script src="assets/js/reactions-v31.js?v=33.0.0"></script><script src="/assets/js/character-player.js?v=33.0.0-full1"></script><script src="/assets/js/hero-effects.js?v=33.0.0-full1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.0.0"></script></body></html>

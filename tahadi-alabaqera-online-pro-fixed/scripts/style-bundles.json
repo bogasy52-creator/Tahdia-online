@@ -314,5 +314,8 @@
     "assets/css/baloot-v32.css",
     "assets/css/game-menu-v33.css",
     "assets/css/game-interaction-v34.css"
+  ],
+  "characters.html": [
+    "/assets/css/character-gallery.css"
   ]
 }

@@ -662,11 +662,14 @@ function paintLobby(state) {
       : "بدون منافسين إضافيين" + (state.players.length < 2 ? " (ينضم منافس واحد إذا كنت وحدك)" : ""));
   lobbyCountdown();
 }
+let characterScore = null;
 function updateHud() {
   if (!game) return;
   journal?.observe(game, [selfId]);
   const mine = game.snakes.find((s) => s.id === selfId) || game.snakes[0];
   $("hudName").textContent = mine.name;
+  if(characterScore!==null&&mine.score>characterScore)window.BS_HERO_FX?.move($("arenaCanvas"));
+  characterScore=mine.score;
   $("hudScore").textContent = mine.score;
   const remaining = Math.max(0, Math.ceil(game.duration - game.elapsed)),
     survival = game.matchMode === "survival";
