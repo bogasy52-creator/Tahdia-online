@@ -68,7 +68,7 @@ export function seatPlan(game, humanIds, seats) {
 
 function makeBot(seat, rng, taken) {
   const pool = BOT_NAMES.filter((name) => !taken.has(name));
-  const name = pool.length ? pool[Math.floor(rng() * pool.length)] : 'بوت ' + (seat + 1);
+  const name = pool.length ? pool[Math.floor(rng() * pool.length)] : 'لاعب ' + (seat + 1);
   taken.add(name);
   const pick = (list) => list[Math.floor(rng() * list.length)] || null;
   return {

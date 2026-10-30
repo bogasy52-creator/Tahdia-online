@@ -346,7 +346,7 @@ const table = createTable({
   onLobby: showMenu,
   onMenu: showMenu,
   onStatus: net,
-  lobbyNote: (room, quick) => (quick ? "تبدأ بعد العد. أول لاعبين يكونون شركاء، والبوتات تكمل الطاولة." : "أرسل الرمز لأصحابك. أول اثنين شركاء، والبوتات تكمل الطاولة لأربعة أو ستة."),
+  lobbyNote: (room, quick) => (quick ? "تبدأ بعد العد. أول لاعبين يكونون شركاء، والطاولة تكتمل تلقائيًا." : "أرسل الرمز لأصحابك. أول اثنين شركاء، والطاولة تكتمل لأربعة أو ستة."),
   onError: (m) => {
     clearTimeout(actionTimer);
     pendingAction = false;

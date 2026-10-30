@@ -7,7 +7,7 @@
   "checks": [
     "merged solo/friends page and one shared board served by the real Worker",
     "forged manually selected project rejected without advancing the game",
-    "first-play manual selections accepted; 1 real dealt projects revealed without a modal; other hands remain private",
+    "first-play manual selections accepted; 2 real dealt projects revealed without a modal; other hands remain private",
     "snakes deadline includes the actual display duration before the next decision window"
   ]
 }

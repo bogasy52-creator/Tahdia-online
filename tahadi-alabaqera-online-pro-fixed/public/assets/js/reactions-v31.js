@@ -293,7 +293,7 @@
   const REPLIES={emote:['emote-laugh','emote-wow','emote-clap','phrase-gg','emote-fire'],phrase:['phrase-gg','phrase-luck','emote-laugh','emote-angry','phrase-fast'],move:['emote-wow','emote-clap','phrase-gg','emote-fire']};
   function botAnswer(it){
     const t=table();const bots=(t?.bots||[]).filter(i=>Number.isInteger(i));if(!bots.length||Math.random()>.6)return;
-    const index=pick(bots),name=t.players?.[index]?.name||'البوت',reply=item(pick(REPLIES[it.type]||REPLIES.emote));
+    const index=pick(bots),name=t.players?.[index]?.name||'المنافس',reply=item(pick(REPLIES[it.type]||REPLIES.emote));
     setTimeout(()=>{if(localMode()&&reply)show({emote:reply.id,name,from:'bot-'+index});},rand(1100,2400));
   }
   function explainLock(it,why){

@@ -57,7 +57,7 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
       code:next.code,isPublic:true,deadline:next.lobbyDeadline,ringSeconds:30,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
       seats:party.expected,variant:next.variant,openSeat:['بانتظار لاعب','من الجمعة'],
       title:'طاولتك في الجمعة',
-      note:'نبدأ أول ما يوصل أصحاب طاولتك ('+people.length+' من '+party.expected+'). إذا تأخر أحد نبدأ بعد العد، وبوت ياخذ مكانه.',
+      note:'نبدأ أول ما يوصل أصحاب طاولتك ('+people.length+' من '+party.expected+'). إذا تأخر أحد نبدأ بعد العد بمنافس إضافي.',
       players:people.map(p=>({name:p.name,host:false,me:p.id===next.me?.id,connected:p.connected})),
       canStart:false,onLeave:()=>leave()
     };
@@ -65,9 +65,9 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
       code:next.code,isPublic:Boolean(next.publicMatch),deadline:next.lobbyDeadline,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
       seats:next.publicMatch?QUICK_SEATS[game]:0,variant:next.variant,
       title:next.publicMatch?'نجمع اللاعبين':'غرفتك جاهزة',
-      note:next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد، والبوتات تكمل المقاعد الفاضية بمستويات مختلفة.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، والبوتات تكمل الطاولة.'),
+      note:next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
       players:people.map(p=>({name:p.name,host:p.role==='host'&&!next.publicMatch,me:p.id===next.me?.id,connected:p.connected})),
-      canStart:host,startDisabled:people.some(p=>!p.connected),startLabel:people.length>1?'ابدأ المباراة':'ابدأ مع البوتات',
+      canStart:host,startDisabled:people.some(p=>!p.connected),startLabel:people.length>1?'ابدأ المباراة':'ابدأ المباراة',
       waitingText:'بانتظار المضيف يبدأ المباراة',
       onStart:()=>client?.send('start'),
       onLeave:()=>leave()
@@ -120,15 +120,8 @@ export function seatLook(room,seat){
   return {dice:look.dice||'dice-ivory',pawn:look.pawn||'pawn-classic',character:look.character||'fox',bot:Boolean(p?.bot),level:p?.level||null,name:p?.name||'',id};
 }
 export const BOT_LEVEL_NAMES=Object.freeze({easy:'سهل',medium:'متوسط',hard:'صعب'});
-/** A small «بوت» tag (with its strength) for a player row. */
-export function botTag(player){
-  if(!player?.bot)return null;
-  // short enough for the smallest player chip: the strength is its colour and its title
-  const tag=document.createElement('small');tag.className='bot-tag-v33';tag.dataset.level=player.level||'medium';
-  const level=BOT_LEVEL_NAMES[player.level]||'متوسط';
-  tag.textContent='بوت';tag.title='بوت · '+level;tag.setAttribute('aria-label','بوت، المستوى '+level);
-  return tag;
-}
+/** Keep the shared renderer API; player rows use names without extra badges. */
+export function botTag(){ return null; }
 /* Gives a die the skin of a shop item (the 3D die reads it, and the CSS cube its colours). */
 export function skinDie(el,id){
   if(!el)return;

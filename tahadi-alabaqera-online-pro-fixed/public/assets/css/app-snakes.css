@@ -1373,6 +1373,10 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 .quiz-lobby-friends-v33[hidden]{display:none}
 /* on a phone the menu comes first: the big brain picture waits for a wider screen */
 @media (max-width:640px){.quizOnlineHero .onlineHeroOrb{display:none}}
+@media (max-width:400px){
+  .quiz-v19 #app>.top{flex-wrap:wrap}
+  .quiz-v19 #app>.top>.topBtns{max-inline-size:100%;flex-wrap:wrap;margin-inline-start:auto}
+}
 
 /* assets/css/tables-v33.css */
 /* Tahdia 33.0.0 — the table games online: two dice (yours and the player on turn),

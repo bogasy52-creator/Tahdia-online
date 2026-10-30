@@ -27,4 +27,11 @@ test('replacing a human voice manifest invalidates its runtime cache without cha
   await writeFile(join(root,'public/assets/js/engines/baloot-engine.js'),'updated cut rules');build();
   const rules=await readFile(join(root,'public/service-worker.js'),'utf8');
   assert.notEqual(rules.match(/const RUNTIME_CACHE = (.*);/)[1],player.match(/const RUNTIME_CACHE = (.*);/)[1]);
+  await writeFile(join(root,'public/assets/js/game-menu-v33.js'),'updated player labels');build();
+  const menu=await readFile(join(root,'public/service-worker.js'),'utf8');
+  assert.notEqual(menu.match(/const RUNTIME_CACHE = (.*);/)[1],rules.match(/const RUNTIME_CACHE = (.*);/)[1]);
+  await writeFile(join(root,'public/assets/js/engines/bot-strategy.js'),'correct six-seat decisions');build();
+  const strategy=await readFile(join(root,'public/service-worker.js'),'utf8');
+  assert.notEqual(strategy.match(/const RUNTIME_CACHE = (.*);/)[1],menu.match(/const RUNTIME_CACHE = (.*);/)[1]);
+  assert.equal(strategy.match(/const CACHE_NAME = (.*);/)[1],before.match(/const CACHE_NAME = (.*);/)[1]);
 });

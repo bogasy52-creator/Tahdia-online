@@ -11,13 +11,12 @@ async function shop(profile=Career.normalize({coins:3000}),globals={}){
  await loadAtelier(h);return {...h,get:()=>p,calls:()=>calls,$:id=>h.doc.getElementById(id)};
 }
 
-test('character preview keeps one original image and attaches effect controls to it',async()=>{
+test('each character preview runs entry, walking limbs and its own victory without leaking the previous preview',async()=>{
  const h=await shop();await h.runFile('assets/js/hero-effects.js');
- h.doc.querySelector('[data-item="character-cat"] [data-control="inspect"]').click();const art=h.$('previewArt'),original=art.querySelector('.sx-character-art');
- assert.equal(h.$('previewDialog').open,true);assert.equal(original.src,Career.heroArt('cat'));assert.equal(art.querySelectorAll('img').length,1);assert.equal(h.doc.querySelectorAll('.hero-rig,.hero-arm,.hero-leg').length,0);
- const controls=h.doc.querySelectorAll('.hero-signature-controls button');assert.equal(controls.length,3);controls[1].click();assert.equal(art.querySelector('.hero-preview-overlay').dataset.pose,'move');assert.equal(art.querySelector('.sx-character-art'),original);controls[2].click();assert.equal(art.querySelectorAll('.hero-preview-overlay').length,1);assert.equal(art.querySelector('.hero-preview-overlay').dataset.pose,'win');assert.equal(art.querySelectorAll('img').length,1);
- assert.ok(h.doc.querySelector('.hero-signature-sound'));assert.doesNotMatch(h.$('previewOptions').textContent,/رقصة|المشي/);
- h.doc.querySelector('[data-item="character-robot"] [data-control="inspect"]').click();assert.equal(h.doc.querySelectorAll('.hero-signature-panel').length,1);assert.equal(h.$('previewArt').querySelector('.sx-character-art').src,Career.heroArt('robot'));h.$('previewDialog').close();assert.equal(h.doc.querySelectorAll('.hero-signature-panel').length,0);
+ h.doc.querySelector('[data-item="character-cat"] [data-control="inspect"]').click();
+ assert.equal(h.$('previewDialog').open,true);assert.equal(h.doc.querySelector('.hero-signature-showcase .hero-rig').dataset.hero,'cat');
+ const controls=h.doc.querySelectorAll('.hero-signature-controls button');assert.equal(controls.length,3);controls[1].click();assert.equal(h.doc.querySelector('.hero-signature-showcase .hero-rig').dataset.pose,'walk');controls[2].click();assert.ok(h.doc.querySelector('.hero-signature-showcase .hero-dance-bow'));
+ h.doc.querySelector('[data-item="character-robot"] [data-control="inspect"]').click();assert.equal(h.doc.querySelectorAll('.hero-signature-panel').length,1);assert.equal(h.doc.querySelector('.hero-signature-showcase .hero-rig').dataset.hero,'robot');h.$('previewDialog').close();assert.equal(h.doc.querySelectorAll('.hero-signature-panel').length,0);
 });
 
 test('reactions are sold in their own shelves and stay owned without taking a slot',async()=>{

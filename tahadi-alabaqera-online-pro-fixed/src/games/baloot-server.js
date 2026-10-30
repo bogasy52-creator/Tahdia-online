@@ -6,7 +6,7 @@
 // turns, the lobby countdown of a public table and the pause between hands
 // need an alarm, which keeps Durable Object requests low.
 import { createBalootMatch, applyBalootAction, balootView, teamOf, partnerOf, provenCuts, balootPublicTricks } from '../../public/assets/js/engines/baloot-engine.js';
-import { chooseBalootAction } from '../../public/assets/js/engines/baloot-bot.js';
+import { chooseBalootAction, createBalootProfile } from '../../public/assets/js/engines/baloot-bot.js';
 import { pickBotLevel } from './board-tables.js';
 
 export const BALOOT_SEATS = [0, 2, 1, 3]; // the first two players are partners
@@ -50,7 +50,12 @@ export function startBalootRoom(room, rng, now) {
   room.botNames = {};
   // 33.0.0: bots of every strength — sometimes easy, sometimes hard
   room.botLevels = {};
-  for (const seat of room.bots) { names[seat] = pool.shift() || 'بوت'; room.botNames[seat] = names[seat]; room.botLevels[seat] = pickBotLevel(rng); }
+  room.botProfiles = {};
+  for (const seat of room.bots) {
+    names[seat] = pool.shift() || 'لاعب ' + (seat + 1);
+    room.botNames[seat] = names[seat]; room.botLevels[seat] = pickBotLevel(rng);
+    room.botProfiles[seat] = createBalootProfile(room.botLevels[seat], rng);
+  }
   // 32.1.0: open play unless the room was made with strict rules
   room.state = createBalootMatch({ names, target: 152, rng, open: room.open !== false });
   room.status = 'playing';
@@ -71,7 +76,7 @@ export function runBalootBots(room, rng, now, events, { level = null } = {}) {
   while (room.state && !room.state.review && ['bidding', 'doubling', 'playing'].includes(room.state.phase) && autoSeat(room, room.state.turn) && guard++ < 200) {
     const seat = room.state.turn;
     // a bot never cuts for a team that has a human in it
-    const action = chooseBalootAction(balootView(room.state, seat), seat, { level: level || room.botLevels?.[seat] || 'hard', rng, honest: !autoSeat(room, partnerOf(seat)) });
+    const action = chooseBalootAction(balootView(room.state, seat), seat, { level: level || room.botLevels?.[seat] || 'hard', profile: level ? null : room.botProfiles?.[seat], rng, honest: !autoSeat(room, partnerOf(seat)) });
     if (!action) break;
     if(action.type==='claim'){
       const proof=provenCuts(balootView(room.state,seat),1-teamOf(seat))[0];
@@ -173,7 +178,7 @@ export function balootAlarm(room, rng, now) {
 export function balootPlayers(room) {
   const list = [];
   for (const p of Object.values(room.players)) list.push({ id: p.id, index: p.seat, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: false, character: p.character || '' });
-  for (const seat of room.bots || []) list.push({ id: 'bot-' + seat, index: seat, name: room.botNames?.[seat] || 'بوت', role: 'bot', ready: true, connected: true, bot: true, level: room.botLevels?.[seat] || 'hard', character: '' });
+  for (const seat of room.bots || []) list.push({ id: 'bot-' + seat, index: seat, name: room.botNames?.[seat] || 'لاعب', role: 'bot', ready: true, connected: true, bot: true, level: room.botLevels?.[seat] || 'hard', character: '' });
   return list.sort((a, b) => a.index - b.index);
 }
 

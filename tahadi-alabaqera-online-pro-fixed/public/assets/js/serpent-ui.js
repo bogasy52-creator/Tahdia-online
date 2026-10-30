@@ -594,7 +594,7 @@ function paintLobby(state) {
     : "تجمّع اللاعبين · البداية تلقائية";
   $("quickLobbyNote").textContent = party
     ? "وصل " + here + " من " + party.expected + " · إذا تأخر أحد نبدأ بعد العد"
-    : "البوتات تكمل المقاعد الناقصة بمستويات مختلفة";
+    : "تكتمل الحلبة بمنافسين متنوعي المستوى";
   document.querySelector(".room-code-block").classList.toggle("hidden", !privateRoom);
   document.querySelector(".arena-invite-actions").classList.toggle("hidden", !privateRoom);
   document.querySelector(".arena-lobby-bots").classList.toggle("hidden", !privateRoom);
@@ -604,7 +604,7 @@ function paintLobby(state) {
       ? "أصحاب الجمعة يوصلون."
       : "اجمع فريق المطاردة.";
   document.querySelector(".lobby-heading p").textContent = privateRoom
-    ? "أرسل الرمز لأصحابك. تبدأ بمن حضر، والبوتات اللي تختارها تنضم معكم."
+    ? "أرسل الرمز لأصحابك. تبدأ بمن حضر، والمنافسون الإضافيون ينضمون معكم."
     : "البداية تلقائية. واجه الأقصر بمقدمتك، وابتعد عن نهاية الذيل.";
   // online friends to invite with one tap (a friends' room only)
   const friends = $("arenaLobbyFriends");
@@ -632,19 +632,19 @@ function paintLobby(state) {
   const allHere = state.players.every((p) => p.connected);
   show("arenaHostStart", privateRoom && host);
   $("arenaHostStart").disabled = !allHere;
-  $("arenaHostStart").textContent = state.players.length > 1 ? "ابدأ المطاردة" : "ابدأ مع البوتات";
+  $("arenaHostStart").textContent = state.players.length > 1 ? "ابدأ المطاردة" : "ابدأ المباراة";
   $("lobbyMessage").textContent = publicMatch
-    ? "دخل " + here + " من " + state.playerLimit + " · المقاعد الباقية تكملها البوتات"
+    ? "دخل " + here + " من " + state.playerLimit + " · المقاعد الباقية تكتمل تلقائيًا"
     : party
-      ? "نبدأ أول ما يوصل أصحاب حلبتك، والبوت ياخذ مكان اللي يتأخر."
+      ? "نبدأ أول ما يوصل أصحاب حلبتك، ومع التأخير ينضم منافس إضافي."
       : host
         ? allHere
           ? "ابدأ متى ما حضر أصحابك."
           : "انتظر اللاعب اللي يعيد الاتصال."
         : "بانتظار المضيف يبدأ المطاردة.";
   $("lobbyNote").textContent = privateRoom
-    ? "المضيف يختار الخريطة والبوتات، ويبدأ متى ما حضر أصحابه."
-    : "حتى " + state.playerLimit + " في الحلبة · البوتات بمستويات مختلفة.";
+    ? "المضيف يختار الخريطة والمنافسين الإضافيين، ويبدأ متى ما حضر أصحابه."
+    : "حتى " + state.playerLimit + " في الحلبة · منافسون بمستويات متنوعة.";
   $("lobbyWorld").value = state.worldId || "classic";
   $("lobbyBots").value = String(state.botCount || 0);
   $("lobbyDifficulty").value = state.difficulty || "mixed";
@@ -658,8 +658,8 @@ function paintLobby(state) {
     (SERPENT_WORLDS[state.worldId]?.name || "الحلبة الأصلية") +
     " · " +
     (state.botCount
-      ? state.botCount + " بوتات " + (levels[state.difficulty] || "")
-      : "بدون بوتات" + (state.players.length < 2 ? " (بوت واحد إذا كنت وحدك)" : ""));
+      ? state.botCount + " منافسين إضافيين " + (levels[state.difficulty] || "")
+      : "بدون منافسين إضافيين" + (state.players.length < 2 ? " (ينضم منافس واحد إذا كنت وحدك)" : ""));
   lobbyCountdown();
 }
 function updateHud() {
@@ -733,12 +733,6 @@ function updateHud() {
       score = document.createElement("b");
     row.dataset.self = String(s.id === selfId);
     name.textContent = s.name;
-    if (s.bot) {
-      const mark = document.createElement("em");
-      mark.textContent = " · بوت";
-      mark.dataset.level = s.level || "";
-      name.appendChild(mark);
-    }
     score.textContent = s.score;
     row.append(name, score);
     ranking.appendChild(row);
@@ -793,7 +787,7 @@ function showResults() {
       name = document.createElement("span"),
       score = document.createElement("b"),
       kills = document.createElement("small");
-    name.textContent = s.name + (s.bot ? " · بوت" : "");
+    name.textContent = s.name;
     kills.textContent = s.kills + " افتراس" + (s.alive ? "" : " · خارج الجولة");
     name.appendChild(kills);
     score.textContent = s.score + " طاقة";
@@ -1327,8 +1321,8 @@ window.addEventListener("bs-career-change", equippedPreview);
 const menu = window.BS_GAME_MENU?.mount?.($("gameMenu"), {
   game: "serpent",
   loadout: false,
-  quickNote: "مواجهة عامة على خريطة يختارها السيرفر · تبدأ بعد 10 ثوانٍ والبوتات تكمل الحلبة",
-  roomNote: "تختار الخريطة والبوتات داخل الغرفة، وتبدأ بمن حضر — حتى 20 لاعبًا.",
+  quickNote: "مواجهة عامة على خريطة يختارها السيرفر · تبدأ بعد 10 ثوانٍ وتكتمل الحلبة تلقائيًا",
+  roomNote: "تختار الخريطة والمنافسين الإضافيين داخل الغرفة، وتبدأ بمن حضر — حتى 20 لاعبًا.",
   onQuick: () => quickJoin(),
   onCreate: () => createRoom(),
   onJoin: ({ code }) => joinRoom(code),

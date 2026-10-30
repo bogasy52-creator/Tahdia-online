@@ -141,6 +141,14 @@ export function createVoicePlayer({ recordings, getContext, fetchClip, isAllowed
     if (active) active.gain.gain.value = volume();
     void drain();
   }
+  function finish({ clearLast = true } = {}) {
+    // Scoring may arrive while its final call is still audible. Keep that
+    // complete recording; no queued call from the closed hand should follow it.
+    if (!active) { stop({ clearLast }); return; }
+    queue = []; error = null; seen.clear();
+    if (clearLast) last = null;
+    changed();
+  }
   async function prime(ids) {
     if (!allowed()) return;
     const ticket = generation, pending = ids.filter(id => recordings[id]?.src);
@@ -151,7 +159,7 @@ export function createVoicePlayer({ recordings, getContext, fetchClip, isAllowed
       }
     }));
   }
-  return { enqueue, drain, prime, stop, refreshSettings, status,
+  return { enqueue, drain, prime, stop, finish, refreshSettings, status,
     replay() { return last ? enqueue(last, { urgent: true }) : false; },
     dispose() { stop({ clearLast: true }); buffers.clear(); disposed = true; } };
 }

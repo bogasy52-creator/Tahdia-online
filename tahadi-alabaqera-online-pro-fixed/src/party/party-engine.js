@@ -53,7 +53,7 @@ function resetQuizQuestion(r,now){r.questionStartedAt=now;r.answerOpensAt=now+(r
 function tableGroups(room,r,random){
  // 33.0.0: a full room plays a table game on several tables (snakes and dice 10, zahra and jackaroo 6 each)
  const ids=shuffled(room.roster,random),count=tablesFor(r.game,ids.length).length,groups=Array.from({length:count},()=>[]);ids.forEach((id,i)=>groups[i%count].push(id));
- return groups.map((members,index)=>{const min=r.game==='jackaroo'?(members.length>4?6:4):2;while(members.length<min)members.push('bot:'+index+':'+members.length);const names=members.map((id,i)=>room.players[id]?.name||'بوت '+(i+1));let state;
+ return groups.map((members,index)=>{const min=r.game==='jackaroo'?(members.length>4?6:4):2;while(members.length<min)members.push('bot:'+index+':'+members.length);const names=members.map((id,i)=>room.players[id]?.name||'لاعب '+(i+1));let state;
   if(r.game==='jackaroo')state=createJackarooGame(names,{rng:random});else if(r.game==='zahra')state=createLudoGame(names);else if(r.game==='dice')state=createRaceDiceGame(names,40);else state=createSnakesServerGame(names,{variant:'adventure'});
   return{id:index,members,state,pendingRoll:null,turnDeadline:r.startedAt+20000,finished:false,actions:0};});
 }
@@ -293,7 +293,7 @@ export function partyRoundView(room,id=null,now=Date.now()){
  if(r.link&&r.link.status!=='failed')return view;
  if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,category:q.category||null,visual:Boolean(q.visual),sequence:q.sequence||null,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
  if(r.game==='reaction')view.reaction={trial:r.trial,trials:r.trials,signal:r.signal};
- if(r.tables)view.tables=r.tables.map(t=>({id:t.id,members:t.members.map(id=>({id,name:room.players[id]?.name||'بوت',connected:room.players[id]?.connected??true})),finished:t.finished,turn:t.state.turn,turnDeadline:t.turnDeadline,pendingRoll:t.pendingRoll,players:t.state.players,jumps:t.state.jumps,bonusCells:t.state.bonusCells,lastRoll:t.state.lastRoll,lastEvent:t.state.lastEvent,winner:t.state.winner,winnerTeam:t.state.winnerTeam,turnTotal:t.state.turnTotal,target:t.state.target,actions:t.actions||0,moveCount:t.state.moveCount,history:r.game==='dice'?(t.state.history||[]).slice(-8):undefined}));
+ if(r.tables)view.tables=r.tables.map(t=>({id:t.id,members:t.members.map(id=>({id,name:room.players[id]?.name||'لاعب',connected:room.players[id]?.connected??true})),finished:t.finished,turn:t.state.turn,turnDeadline:t.turnDeadline,pendingRoll:t.pendingRoll,players:t.state.players,jumps:t.state.jumps,bonusCells:t.state.bonusCells,lastRoll:t.state.lastRoll,lastEvent:t.state.lastEvent,winner:t.state.winner,winnerTeam:t.state.winnerTeam,turnTotal:t.state.turnTotal,target:t.state.target,actions:t.actions||0,moveCount:t.state.moveCount,history:r.game==='dice'?(t.state.history||[]).slice(-8):undefined}));
  if(r.game==='serpent')view.arena=serpentSnapshot(r.arena);
  return view;
 }

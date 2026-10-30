@@ -50,7 +50,7 @@ function room(view,{id=1,age=0,seat=0,startedAt=1}={}){
   return {code:'123456',status:'playing',startedAt,serverNow:10000,me:{index:0},players:[],state:view,
     batch:{id,at:10000-age,events:[{type:'bid',bid:'pass',seat}]}};
 }
-function audibleVoice(calls,stops=[]){return {enabled:true,unlock(){},stop(){stops.push(true);},say(text,position,options){calls.push({text,position,options});return true;},getStatus:()=>({available:true,enabled:true,state:'ready'})};}
+function audibleVoice(calls,stops=[],finishes=[]){return {enabled:true,unlock(){},stop(){stops.push(true);},finish(){finishes.push(true);},say(text,position,options){calls.push({text,position,options});return true;},getStatus:()=>({available:true,enabled:true,state:'ready'})};}
 test('room batches speak once, do not replay old reconnects, and allow the next player to pass',async()=>{
   const calls=[],h=await table(audibleVoice(calls)),ui=h.context.BS_BALOOT.ui;
   const view=engine.balootView(engine.createBalootMatch({dealer:3}),0);
@@ -81,11 +81,11 @@ test('a rematch cancels unfinished speech and no old animation can announce anot
   assert.equal(calls.filter(call=>call.position===1).length,1);
 });
 
-test('ending a hand stops playback and cancels a delayed bot reply even if its callback arrives late',async()=>{
- const calls=[],stops=[],h=await table(audibleVoice(calls,stops)),ui=h.context.BS_BALOOT.ui;
+test('ending a hand finishes its active call and cancels a delayed reply even if its callback arrives late',async()=>{
+ const calls=[],stops=[],finishes=[],h=await table(audibleVoice(calls,stops,finishes)),ui=h.context.BS_BALOOT.ui;
  ui.room={state:{phase:'playing',handNo:4},players:[{index:1,bot:true}]};ui.view={phase:'playing',handNo:4};h.doc.getElementById('table').hidden=false;
  h.context.botTalk('reply',[1],true);assert.equal(ui.botTalkTimers.size,1);const timer=h.timers.get([...ui.botTalkTimers][0]);
- h.context.endHandAudio();assert.equal(ui.botTalkTimers.size,0);assert.equal(stops.length,1);timer.fn();h.context.speak('pass',1);
+ h.context.endHandAudio();assert.equal(ui.botTalkTimers.size,0);assert.equal(stops.length,0);assert.equal(finishes.length,1);timer.fn();h.context.speak('pass',1);
  assert.equal(calls.length,0);assert.equal(h.doc.getElementById('talkSheet').hidden,true);
  h.context.resetVoiceSession();h.context.speak('pass',0);assert.equal(calls.length,1,'new hands can speak normally');
 });

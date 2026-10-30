@@ -108,6 +108,7 @@ export const BalootVoice = {
   replay() { return player.replay(); },
   preview() { void this.unlock(); return this.say('pass', 0, { urgent:true }); },
   stop(options = { clearLast:true }) { player.stop(options); },
+  finish(options) { player.finish(options); },
   dispose() { player.dispose(); try { void ctx?.close(); } catch {} ctx = null; }
 };
 try {

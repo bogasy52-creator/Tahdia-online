@@ -109,7 +109,7 @@
     }
     // العب الحين
     const quick=button('gm33-quick',null,()=>run(()=>options.onQuick?.({mode,name:playerName()})));
-    quick.append(make('span','gm33-quick-icon','⚡'),make('b',null,options.quickLabel||'العب الحين'),make('small',null,options.quickNote||'نجمع لاعبين خلال 10 ثوانٍ، والبوتات تكمل الطاولة'));
+    quick.append(make('span','gm33-quick-icon','⚡'),make('b',null,options.quickLabel||'العب الحين'),make('small',null,options.quickNote||'تكتمل الطاولة خلال 10 ثوانٍ بمنافسين متنوعي المستوى'));
     if(options.onQuick)menu.append(quick);
     // غرفة مع أصحابك
     const friends=make('details','gm33-friends');
@@ -124,9 +124,15 @@
     code.addEventListener('input',()=>{const clean=String(code.value).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/\D/g,'').slice(0,6);if(clean!==code.value)code.value=clean;});
     const friendsBody=make('div','gm33-friends-body');
     if(options.onCreate)friendsBody.append(create);
-    friendsBody.append(form,make('small','gm33-friends-note',options.roomNote||'الغرفة تبدأ بمن حضر، والبوتات تكمل المقاعد الفاضية.'));
+    friendsBody.append(form,make('small','gm33-friends-note',options.roomNote||'الغرفة تبدأ بمن حضر، وتكتمل بقية المقاعد تلقائيًا.'));
     friends.append(summary,friendsBody);
     if(options.onCreate||options.onJoin)menu.append(friends);
+    const opponents=make('details','gm33-friends gm33-opponents');
+    const opponentsTitle=make('summary');
+    opponentsTitle.append(make('span','gm33-friends-icon','🎮'),make('b',null,'كيف تكتمل المباراة؟'));
+    const opponentsBody=make('div','gm33-friends-body');
+    opponentsBody.append(make('p','gm33-friends-note','عند نقص اللاعبين، قد يكمل الكمبيوتر المقاعد الشاغرة بمنافسين متنوعي المستوى.'));
+    opponents.append(opponentsTitle,opponentsBody);menu.append(opponents);
     // who you are and what you play with
     const foot=make('div','gm33-foot');
     const who=make('div','gm33-who');
@@ -199,7 +205,7 @@
       if(model.isPublic){
         const total=Number(model.ringSeconds)||10;
         const ring=make('div','gm33-ring');const seconds=make('b',null,model.deadline?String(total):'…');ring.append(seconds);
-        const copy=make('div');copy.append(make('h2',null,model.title||'نجمع اللاعبين'),make('p',null,model.note||'تبدأ المباراة بعد العد. المقاعد الفاضية يكملها بوتات بمستويات مختلفة.'));
+        const copy=make('div');copy.append(make('h2',null,model.title||'نجمع اللاعبين'),make('p',null,model.note||'تبدأ المباراة بعد العد بمنافسين متنوعي المستوى.'));
         head.append(ring,copy);
         const paint=()=>{
           if(!model.deadline){ring.style.setProperty('--left','1');return;}
@@ -236,7 +242,7 @@
         row.append(text);list.append(row);
       }
       const empty=Math.max(0,Number(model.seats||0)-(model.players||[]).length);
-      if(model.isPublic&&empty>0)for(let i=0;i<Math.min(empty,6);i++){const row=make('li','gm33-player is-open');row.append(make('span','gm33-avatar','؟'),make('span','gm33-player-name',''));row.lastChild.append(make('b',null,model.openSeat?.[0]||'مقعد فاضي'),make('small',null,model.openSeat?.[1]||'لاعب أو بوت'));list.append(row);}
+      if(model.isPublic&&empty>0)for(let i=0;i<Math.min(empty,6);i++){const row=make('li','gm33-player is-open');row.append(make('span','gm33-avatar','؟'),make('span','gm33-player-name',''));row.lastChild.append(make('b',null,model.openSeat?.[0]||'مقعد فاضي'),make('small',null,model.openSeat?.[1]||'بانتظار المنافس'));list.append(row);}
       lobbyView.append(list);
       // your online friends, one tap to invite
       if(!model.isPublic&&model.code){

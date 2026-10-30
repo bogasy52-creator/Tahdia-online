@@ -592,7 +592,7 @@ export default {
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مربوط؛ انشر الحزمة كاملة'},503);
       const body=await request.json().catch(()=>({})),playerLimit=body.playerLimit??20,duration=body.duration??120,botCount=body.botCount??3,difficulty=body.difficulty??'mixed',matchMode=body.matchMode??'timed',worldId=body.worldId??'classic';
       if(!validWorld(worldId))return json({ok:false,error:'خريطة الحلبة غير صالحة'},400);
-      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>20||!Number.isInteger(botCount)||botCount<0||botCount>6||!['easy','medium','hard','mixed'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'إعدادات الحلبة غير صالحة: حتى 20 لاعبًا و6 بوتات'},400);
+      if(!Number.isInteger(playerLimit)||playerLimit<2||playerLimit>20||!Number.isInteger(botCount)||botCount<0||botCount>6||!['easy','medium','hard','mixed'].includes(difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return json({ok:false,error:'إعدادات الحلبة غير صالحة: حتى 20 لاعبًا و6 منافسين إضافيين'},400);
       for(let attempt=0;attempt<5;attempt++){
         const code=roomCodeFor('serpent'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+code));
         const response=await stub.fetch('https://serpent.internal/init',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,hostKey,playerLimit,duration,botCount,difficulty,matchMode,worldId})});
@@ -2108,8 +2108,18 @@ export class BoardRoom extends DurableObject {
     try {
       if (ws.deserializeAttachment()?.username) return (await this.socialDelegate()).webSocketClose(ws, code, reason);
     } catch {}
+    // Complete a peer-initiated close promptly, including runtimes which do
+    // not automatically send the reciprocal Close frame. Safe if already closed.
+    try { ws.close([1005,1006,1015].includes(code) ? 1000 : code, reason); } catch {}
     const p = this.playerForSocket(ws);
     if (!p || !this.room) return;
+    // An old connection can finish closing after its replacement welcomed the
+    // same seat. Its callback must not mark the live player away.
+    const reconnected = this.ctx.getWebSockets().some(other => {
+      try { return other !== ws && other.readyState === 1 && other.deserializeAttachment()?.playerId === p.id; }
+      catch { return false; }
+    });
+    if (reconnected) return;
     p.connected = false;
     p.disconnectedAt = Date.now();
     // a player who left during their turn: the table does not wait the whole minute

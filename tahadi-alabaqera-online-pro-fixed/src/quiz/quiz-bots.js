@@ -16,7 +16,7 @@ export function makeQuizBots(count, takenNames = [], rng = unit) {
   const taken = new Set(takenNames), bots = [];
   for (let i = 0; i < count; i++) {
     const pool = QUIZ_BOT_NAMES.filter((name) => !taken.has(name));
-    const name = pool.length ? pool[Math.floor(rng() * pool.length)] : 'بوت ' + (i + 1);
+    const name = pool.length ? pool[Math.floor(rng() * pool.length)] : 'لاعب ' + (i + 1);
     taken.add(name);
     bots.push({ id: 'bot-' + crypto.randomUUID(), name, bot: true, level: pickQuizBotLevel(rng) });
   }

@@ -58,7 +58,7 @@
 <div class="top"><div class="brand"><div class="logo">BS</div><div><h1>التحدي الأونلاين</h1><div class="mut">منافسة فردية وفرق • النتيجة من الخادم</div></div></div><div class="topBtns"><span id="net" class="net"><i class="dot"></i><span id="netText">غير متصل</span></span><button class="ib" data-audio-toggle aria-label="كتم الصوت">🔊</button><button class="ib" data-settings-open aria-label="إعدادات الصوت">⚙️</button><button class="ib" onclick="location.href='./'">⌂</button></div></div>
 
 <section id="entry">
-<div class="card quizOnlineHero"><div><div class="mut">مواجهة سريعة · غرفة مع أصحابك</div><h2>ادخل مباشرة.<br><span>والتحدي يبدأ.</span></h2><p class="mut">«العب الحين» يطابقك مع منافس خلال ثوانٍ، وإذا ما حصلنا أحد تلعب ضد بوت بمستوى مختلف كل مرة.</p></div><div class="onlineHeroOrb" aria-hidden="true">🧠</div></div>
+<div class="card quizOnlineHero"><div><div class="mut">مواجهة سريعة · غرفة مع أصحابك</div><h2>ادخل مباشرة.<br><span>والتحدي يبدأ.</span></h2><p class="mut">«العب الحين» يطابقك مع منافس خلال ثوانٍ، ونجهّز لك منافسًا بمستوى متغيّر عند الحاجة.</p></div><div class="onlineHeroOrb" aria-hidden="true">🧠</div></div>
 <div class="entry entry-v33"><div id="gameMenu" class="quiz-menu-v33"></div></div>
 </section>
 
@@ -249,7 +249,7 @@ function joinRoom(code){
  const next=new URL('/online.html',location.origin);next.searchParams.set('room',code);const api=qs.get('api')||activeApiOrigin;if(api&&api!==location.origin)next.searchParams.set('api',api);location.href=next.href;
 }
 window.BS_GAME_MENU?.mount($('#gameMenu'),{game:'quiz',loadout:false,
- quickNote:'مواجهة 1 ضد 1 · إذا ما حصلنا أحد خلال ثوانٍ تلعب ضد بوت',
+ quickNote:'مواجهة 1 ضد 1 · إذا طال الانتظار نجهّز لك منافسًا',
  roomNote:wantTeams?'تفتح الغرفة على فريقين (2 ضد 2 أو 3 ضد 3). تبدأ بمن حضر.':'كل واحد لنفسه أو فريقين — تختارون داخل الغرفة، وتبدأ بمن حضر.',
  friendsOpen:wantTeams||Boolean(qs.get('categories')),
  onQuick:quickPlay,onCreate:createRoom,onJoin:({code})=>joinRoom(code),onResume:({code})=>joinRoom(code)});
@@ -291,7 +291,7 @@ function render(){
 
 function renderPlayers(){
  const box=$('#players');box.innerHTML='';
- state.players.forEach(p=>{const d=document.createElement('div');d.className='player '+(p.id===myId?'me':'');d.innerHTML='<div class="name">'+safeName(p.name)+(p.id===myId?' • أنت':'')+(p.bot?' <small class="bot-tag-v33" data-level="'+safeName(p.level||'medium')+'">بوت</small>':'')+'</div><div class="presence '+(p.connected?'on':'')+'">'+(p.bot?'● '+({easy:'مستوى سهل',medium:'مستوى متوسط',hard:'مستوى صعب'}[p.level]||'بوت'):p.connected?'● متصل':'○ غير متصل')+' • '+(p.team?'الفريق '+p.team:(p.role==='host'?'المضيف':'المنافس'))+'</div><div class="score">'+p.score+'</div>';box.appendChild(d)})
+ state.players.forEach(p=>{const d=document.createElement('div');d.className='player '+(p.id===myId?'me':'');d.innerHTML='<div class="name">'+safeName(p.name)+(p.id===myId?' • أنت':'')+'</div><div class="presence '+(p.connected?'on':'')+'">'+(p.bot?'● جاهز':p.connected?'● متصل':'○ غير متصل')+' • '+(p.team?'الفريق '+p.team:(p.role==='host'?'المضيف':'المنافس'))+'</div><div class="score">'+p.score+'</div>';box.appendChild(d)})
 }
 
 function renderLobby(){
@@ -311,13 +311,13 @@ function renderLobby(){
  document.querySelectorAll('.roundOpt').forEach(b=>{const n=Number(b.dataset.round);b.classList.toggle('active',n===state.roundCount);b.disabled=!host;b.onclick=()=>send('set_round_count',{roundCount:n})});
  const people=state.players.filter(p=>!p.bot),teams=state.mode?.startsWith('teams-'),allHere=people.every(p=>p.connected),catsReady=state.selectedCategories.length===6;
  const canStart=allHere&&catsReady&&(!teams||[4,6].includes(people.length));
- $('#startBtn').disabled=!canStart;$('#startBtn').textContent=!catsReady?'اعتمد 6 فئات أولًا':!allHere?'بانتظار اتصال اللاعبين':teams&&![4,6].includes(people.length)?'الفريقين يحتاجون 4 أو 6 — الحين '+people.length:!teams&&people.length<2?'⚔️ ابدأ مع البوتات':'⚔️ بدء المنافسة';
+ $('#startBtn').disabled=!canStart;$('#startBtn').textContent=!catsReady?'اعتمد 6 فئات أولًا':!allHere?'بانتظار اتصال اللاعبين':teams&&![4,6].includes(people.length)?'الفريقين يحتاجون 4 أو 6 — الحين '+people.length:!teams&&people.length<2?'⚔️ ابدأ المباراة':'⚔️ بدء المنافسة';
  const partyWait=Boolean(state.party?.first);
  $('#startWrap').classList.toggle('hidden',!host||partyWait);
  $('#lobbyWait').hidden=host&&!partyWait;
  $('#lobbyWait').textContent=partyWait?'تبدأ الجولة لحالها أول ما يوصل أصحاب الجمعة ('+people.length+' من '+state.party.expected+')، أو بعد 30 ثانية بمن حضر.':'بانتظار المضيف يبدأ المنافسة.';
  document.querySelectorAll('.modeOpt').forEach(b=>{const on=(b.dataset.mode==='teams')===Boolean(teams);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));b.disabled=!host;b.onclick=()=>{if(!on)send('set_mode',{mode:b.dataset.mode})}});
- $('#modeNote').textContent=teams?'فريقان من الحاضرين: 2 ضد 2 أو 3 ضد 3':'كل واحد لنفسه · لو كنت وحدك يلعب معك بوتان';
+ $('#modeNote').textContent=teams?'فريقان من الحاضرين: 2 ضد 2 أو 3 ضد 3':'كل واحد لنفسه · لو كنت وحدك ينضم لك منافسان';
  // categories picked on the quiz page: the host's room takes them once
  if(host&&state.status==='lobby'){let picked=null;try{picked=JSON.parse(sessionStorage.getItem('bs-quiz-categories-v33')||'null')}catch{}if(Array.isArray(picked)&&picked.length===6){try{sessionStorage.removeItem('bs-quiz-categories-v33')}catch{}hostSel=new Set(picked);send('set_categories',{categories:picked});}}
  // the categories the host picked go with the start, even without «اعتماد الفئات»

@@ -17,6 +17,19 @@ const TRUMP_ORDER = ['7', '8', 'Q', 'K', 'T', 'A', '9', 'J'];
 // catch: chance to notice a cut it can prove; cut: chance to cut when it pays
 const LEVELS = { easy: { noise: 0.9, bid: 1.25, sun: 5, catch: 0.35, cut: 0.07 }, medium: { noise: 0.35, bid: 1, sun: 4.6, catch: 0.7, cut: 0.045 }, hard: { noise: 0, bid: 0.92, sun: 4.5, catch: 0.97, cut: 0.025 } };
 export const BOT_LEVELS = LEVELS;
+// A seat keeps this style for the whole match. Difficulty is still meaningful,
+// but two equally skilled opponents need not bid or notice mistakes identically.
+export function createBalootProfile(level = 'medium', rng = Math.random) {
+  const base = LEVELS[level] || LEVELS.medium;
+  const vary = (value, spread, min, max) => Math.max(min, Math.min(max, value + (rng() * 2 - 1) * spread));
+  return {
+    noise: vary(base.noise, .1, 0, .98),
+    bid: vary(base.bid, .1, .8, 1.4),
+    sun: vary(base.sun, .2, 4, 5.3),
+    catch: vary(base.catch, .08, .2, 1),
+    cut: vary(base.cut, .015, 0, .09),
+  };
+}
 
 function hokmStrength(cards, trump) {
   const trumps = cards.filter((c) => suitOf(c) === trump);
@@ -246,10 +259,10 @@ function noticed(seat, proof, view, chance) {
   for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0) / 4294967296 < chance;
 }
-export function botClaim(view, seat, level = 'hard') {
+export function botClaim(view, seat, level = 'hard', profile = null) {
   if (!view?.open || view.phase !== 'playing' || view.claim) return null;
-  const profile = LEVELS[level] || LEVELS.hard;
-  const proof = provenCuts(view, 1 - teamOf(seat)).find((p) => noticed(seat, p, view, profile.catch));
+  const strategy = profile || LEVELS[level] || LEVELS.hard;
+  const proof = provenCuts(view, 1 - teamOf(seat)).find((p) => noticed(seat, p, view, strategy.catch));
   return proof ? { type: 'claim', proof } : null;
 }
 
@@ -266,13 +279,13 @@ function play(view, seat, options, level, rng, honest) {
 
 // The action a bot takes for `seat`. `view` should be balootView(state, seat).
 // `honest`: never cut (a server playing for a human who ran out of time).
-export function chooseBalootAction(view, seat, { level = 'hard', rng = Math.random, honest = false } = {}) {
+export function chooseBalootAction(view, seat, { level = 'hard', rng = Math.random, honest = false, profile = null } = {}) {
   const options = balootActions(view, seat);
   if (!options.length) return null;
-  const profile = LEVELS[level] || LEVELS.hard;
-  if (view.phase === 'bidding') return bid(view, seat, options.map(({ type, ...o }) => o), profile);
-  if (view.phase === 'doubling') return double(view, seat, options.map(({ type, ...o }) => o), profile);
-  if (view.phase === 'playing') { const claim = botClaim(view, seat, level); if (claim) return { type: 'claim' }; return play(view, seat, options, profile, rng, honest); }
+  const strategy = profile || LEVELS[level] || LEVELS.hard;
+  if (view.phase === 'bidding') return bid(view, seat, options.map(({ type, ...o }) => o), strategy);
+  if (view.phase === 'doubling') return double(view, seat, options.map(({ type, ...o }) => o), strategy);
+  if (view.phase === 'playing') { const claim = botClaim(view, seat, level, strategy); if (claim) return { type: 'claim' }; return play(view, seat, options, strategy, rng, honest); }
   return null;
 }
 

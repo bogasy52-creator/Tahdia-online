@@ -2,7 +2,7 @@ export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=10000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',real:true,image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة نفسها، بقواعد الرأس والذيل والقدرات.'},
  {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
- {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، والبوتات تكمل الناقص.'},
+ {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، وتكتمل المقاعد تلقائيًا.'},
  {id:'zahra',name:'الزهرة',kind:'board',maxPlayers:6,real:true,image:'assets/game-cards-v27/zahra.svg',hint:'ستة ألوان، وأربعة أحجار لكل لاعب، ستة في كل طاولة.'},
  {id:'dice',name:'تحدي النرد',kind:'board',maxPlayers:10,image:'assets/brand/dice-studio-v26.webp',hint:'ارمِ أو ثبّت رصيدك؛ الحظ والخطة يصنعان الفارق.'},
  {id:'quiz',name:'تحدي العباقرة',kind:'quiz',real:true,image:'assets/game-cards-v27/quiz.svg',hint:'نفس الأسئلة والوقت للجميع، مع الصور والصوت والذاكرة.'},

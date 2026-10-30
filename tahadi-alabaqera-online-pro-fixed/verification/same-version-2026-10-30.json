@@ -1,0 +1,83 @@
+{
+  "release": "33.0.0",
+  "published": false,
+  "date": "2026-10-30",
+  "tests": {
+    "passed": 1045,
+    "failed": 0,
+    "command": "npm run verify"
+  },
+  "static_references_checked": 738,
+  "worker_dry_run": "passed",
+  "package_lock_and_wrangler_config": "byte-for-byte unchanged from uploaded ZIP",
+  "original_files_removed": [],
+  "browser": {
+    "release": "33.0.0",
+    "browser": "138.0.7204.0",
+    "runtime": "native Workerd / SQLite / four real browser WebSockets",
+    "viewports": [
+      360,
+      390,
+      1280
+    ],
+    "checks": [
+      "visible menu creates a private Baloot room",
+      "four independent browser players bid and play twelve legal cards through the real Worker and SQLite",
+      "every remaining card retains its exact position, rotation and stacking after twelve visible card clicks",
+      "closing the real WebSocket reconnects to the same seat without moving remaining cards",
+      "snakes, Jackaroo, Zahra, dice, serpent and quiz menus render at 360px without the removed labels or horizontal overflow"
+    ],
+    "errors": [],
+    "warnings": [
+      {
+        "index": 0,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 1,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 1,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 2,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 2,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 3,
+        "text": "Service Worker registration blocked by Playwright"
+      },
+      {
+        "index": 3,
+        "text": "Service Worker registration blocked by Playwright"
+      }
+    ],
+    "physicalPhoneTested": false,
+    "speechQualityReviewed": false
+  },
+  "voice_component": {
+    "browser": "Chromium",
+    "realPhoneTested": false,
+    "speechQualityReviewed": false,
+    "checks": [
+      "pending human pack is accurately labeled; rejected audio is never requested",
+      "real Web Audio playback completes three WAV fixtures in order without overlapping",
+      "replay, global mute, and leaving-page cleanup work in the browser",
+      "voice controls fit 360, 390, and 1280 pixel viewports with 44 pixel tap targets",
+      "no uncaught page errors or rejected legacy voice downloads"
+    ]
+  },
+  "human_voice_pack": "pending: no real human recordings supplied; rejected synthetic speech remains disabled",
+  "review": "Author final diff review completed. An independent review was started but could not complete because reviewer resources became unavailable.",
+  "limitations": [
+    "No physical Android/iOS device or Safari test.",
+    "No production deployment or production database modification.",
+    "Voice browser fixtures verify timing, not natural speech quality."
+  ]
+}

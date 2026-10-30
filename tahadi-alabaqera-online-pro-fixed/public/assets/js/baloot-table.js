@@ -33,19 +33,21 @@ const ui = {
   deck: 'deck-classic', speed: 1, receipt: '', rewarded: false, client: null, room: null, eventSeq: 0,
   pending: Promise.resolve(), lastHandShown: 0, botTimer: null, sending: false,
   open: true, claimArmed: 0, talkTab: 'phrase', lastTalk: 0, botTalkAt: 0, session: 0, handClosed:false, botTalkTimers:new Set(),
+  handKey: '', handOrder: [], handPlayed: new Set(),
 };
 /* ---------- Voices ---------- */
 const relPos = (seat) => ((seat - ui.me) % 4 + 4) % 4;
-function speak(text, seat, opts) { if ($('table').hidden || ui.handClosed || ['scored','finished'].includes(ui.room?.state?.phase)) return false; if (seat === null || seat === undefined) seat = ui.me; return BalootVoice.say(text, relPos(seat), opts); }
+function speak(text, seat, opts) { if ($('table').hidden || ui.handClosed) return false; if (seat === null || seat === undefined) seat = ui.me; return BalootVoice.say(text, relPos(seat), opts); }
 function endHandAudio() {
   ui.handClosed=true;
   for(const timer of ui.botTalkTimers)clearTimeout(timer);
-  ui.botTalkTimers.clear();BalootVoice.stop();closeTalk();
+  ui.botTalkTimers.clear();BalootVoice.finish();closeTalk();
 }
 function resetVoiceSession() {
   ui.session++; ui.pending = Promise.resolve(); ui.busy = false; ui.queued = null;
   publicReviewKey = '';
   ui.handClosed=false;
+  ui.handKey='';ui.handOrder=[];ui.handPlayed.clear();
   for(const timer of ui.botTalkTimers)clearTimeout(timer);
   ui.botTalkTimers.clear();projectChoiceKey='';projectChoices=[];projectDraft=null;
   BalootVoice.stop();
@@ -157,18 +159,24 @@ function ruleSet(view) {
 
 function renderHand(view) {
   const hand = $('hand');
-  const cards = view.hands?.[ui.me] || [];
+  const key = `${ui.session}:${view.handNo}:${ui.me}`;
+  if (ui.handKey !== key) { ui.handKey = key; ui.handOrder = []; ui.handPlayed.clear(); }
+  // Slots belong to the deal, not to the number of cards still held. Only a
+  // new distribution may reflow the fan; confirmed plays leave their slot empty.
+  const cards = (view.hands?.[ui.me] || []).filter(card => !ui.handPlayed.has(card));
+  if (cards.some(card => !ui.handOrder.includes(card))) ui.handOrder = [...cards];
   const legal = legalSet(view);
   hand.classList.toggle('waiting', !legal);hand.classList.toggle('open-play',Boolean(view.open));
   const width = hand.clientWidth || 360;
   const cw = parseFloat(getComputedStyle(document.body).getPropertyValue('--bl-card-w')) || Math.min(92, width * 0.175);
-  const n = cards.length;
+  const n = ui.handOrder.length;
   const step = n > 1 ? Math.min(cw * 0.86, (width - cw - 28) / (n - 1)) : 0;
   const total = cw + step * (n - 1);
   const start = (width - total) / 2;
   const existing = new Map([...hand.children].map((el) => [el.dataset.card, el]));
   const keep = new Set();
-  cards.forEach((card, i) => {
+  cards.forEach((card) => {
+    const i = ui.handOrder.indexOf(card);
     let el = existing.get(card);
     if (!el) { el = cardEl(card); el.addEventListener('click', () => onCardTap(card)); hand.appendChild(el); }
     keep.add(card);
@@ -186,24 +194,6 @@ function renderHand(view) {
   });
   for (const [card, el] of existing) if (!keep.has(card)) el.remove();
   if (ui.picked && !keep.has(ui.picked)) ui.picked = null;
-}
-
-// The cards left in the hand slide together as soon as one leaves it.
-function closeHandGap() {
-  const hand = $('hand');
-  const els = [...hand.children];
-  const width = hand.clientWidth || 360;
-  const cw = parseFloat(getComputedStyle(document.body).getPropertyValue('--bl-card-w')) || Math.min(92, width * 0.175);
-  const n = els.length;
-  const step = n > 1 ? Math.min(cw * 0.86, (width - cw - 28) / (n - 1)) : 0;
-  const start = (width - (cw + step * (n - 1))) / 2;
-  els.forEach((el, i) => {
-    const t = n > 1 ? i / (n - 1) - 0.5 : 0;
-    const fan = `rotate(${(t * 16).toFixed(2)}deg) translateY(${(Math.abs(t) * 14).toFixed(1)}px)`;
-    el.style.left = (start + i * step).toFixed(1) + 'px';
-    el.style.setProperty('--fan', fan);
-    if (!el.classList.contains('picked')) el.style.transform = fan;
-  });
 }
 
 let projectChoiceKey='', projectChoices=[], projectDraft=null;
@@ -533,8 +523,8 @@ async function animatePlay(seat, card) {
   if (seat === ui.me) {
     const el = [...$('hand').children].find((x) => x.dataset.card === card);
     from = el ? rectOf(el) : rectOf($('hand'));
+    ui.handPlayed.add(card);
     el?.remove();
-    closeHandGap();
   } else from = seatPoint(seat);
   play('balootPlay', { volume: 0.8 });
   slot.dataset.hold = '1';
@@ -971,7 +961,6 @@ function onRoomState(room) {
   const view = room.state;
   if (!view) return;
   if (ui.matchStart !== room.startedAt) { resetVoiceSession(); ui.matchStart = room.startedAt; ui.batchId = 0; ui.seenBatch = false; }
-  if(['scored','finished'].includes(view.phase))endHandAudio();
   if ($('table').hidden) showTable();
   // Animate a new batch; on (re)connect only a batch that just happened.
   let events = [];
@@ -988,6 +977,7 @@ function onRoomState(room) {
     const session = ui.session;
     if (events.length) await playEvents(events, view, session, { createdAt, key:`batch:${session}:${room.code}:${room.startedAt}:${batch.id}` });
     if (session !== ui.session) return;
+    if (['scored','finished'].includes(view.phase) && !ui.handClosed) endHandAudio();
     ui.view = view;
     render(view);
     paintTimer();
@@ -1018,14 +1008,14 @@ function showLobby(room) {
     card.className = 'bl-seat-card' + (p ? '' : ' empty');
     card.dataset.team = String(seat % 2);
     const face = p ? (window.BS_CAREER_CORE?.heroFace?.(p.character) || '') : '';
-    card.innerHTML = p ? `<span class="bl-mini-face">${face ? `<img src="${esc(face)}" alt="">` : esc((p.name || '؟').slice(0, 1))}</span><span><b>${esc(p.name)}${p.id === room.me?.id ? ' (أنت)' : ''}</b><small>${seat % 2 === 0 ? 'الفريق الأول' : 'الفريق الثاني'} · ${p.connected ? 'متصل' : 'يعيد الاتصال'}</small></span>` : `<span class="bl-mini-face">🤖</span><span><b>مقعد فاضي</b><small>لاعب أو بوت يكمله عند البداية</small></span>`;
+    card.innerHTML = p ? `<span class="bl-mini-face">${face ? `<img src="${esc(face)}" alt="">` : esc((p.name || '؟').slice(0, 1))}</span><span><b>${esc(p.name)}${p.id === room.me?.id ? ' (أنت)' : ''}</b><small>${seat % 2 === 0 ? 'الفريق الأول' : 'الفريق الثاني'} · ${p.connected ? 'متصل' : 'يعيد الاتصال'}</small></span>` : `<span class="bl-mini-face">؟</span><span><b>مقعد فاضي</b><small>يكتمل المقعد عند البداية</small></span>`;
     seats.appendChild(card);
   }
   const me = room.players.find((p) => p.id === room.me?.id);
   $('readyBtn').hidden = true;
   $('hostStart').hidden = room.publicMatch || room.me?.role !== 'host';
-  $('hostStart').textContent = room.players.length > 1 ? 'ابدأ الآن' : 'ابدأ مع البوتات';
-  $('lobbyNote').textContent = room.publicMatch ? 'تبدأ الطاولة تلقائيًا، والمقاعد الفاضية تكملها بوتات بمستويات مختلفة.' : room.me?.role === 'host' ? 'أرسل الرمز لأصحابك. أول لاعبين شركاء، وابدأ متى ما بغيت؛ البوتات تكمل الناقص.' : 'أول لاعبين شركاء. بانتظار المضيف يبدأ.';
+  $('hostStart').textContent = room.players.length > 1 ? 'ابدأ الآن' : 'ابدأ المباراة';
+  $('lobbyNote').textContent = room.publicMatch ? 'تبدأ الطاولة تلقائيًا بمنافسين متنوعي المستوى.' : room.me?.role === 'host' ? 'أرسل الرمز لأصحابك. أول لاعبين شركاء، والطاولة تكتمل عند البداية.' : 'أول لاعبين شركاء. بانتظار المضيف يبدأ.';
   $('lobbyCountdown').hidden = !room.publicMatch || !room.lobbyDeadline;
   paintLobbyRing();
 }
@@ -1156,8 +1146,8 @@ function init() {
       { id: 'strict', label: 'مقيّد', hint: 'القانون يمنع الغلط', note: 'المقيّد: ما تقدر تلعب إلا الورقة اللي يسمح فيها القانون، فما فيه قطع ولا تسجيل.' },
     ],
     modesLabel: 'طريقة اللعب',
-    quickNote: 'نجمع لاعبين خلال 10 ثوانٍ، والبوتات تكمل الطاولة',
-    roomNote: 'أول لاعبين يدخلون شركاء. تبدأ متى ما بغيت، والبوتات تكمل المقاعد.',
+    quickNote: 'تكتمل الطاولة خلال 10 ثوانٍ بمنافسين متنوعي المستوى',
+    roomNote: 'أول لاعبين يدخلون شركاء. تبدأ متى ما بغيت، وتكتمل بقية المقاعد تلقائيًا.',
     loadout: 'cards', loadoutHref: '/shop?filter=deck', loadoutLabel: 'ورقك من المتجر',
     onQuick: () => startOnline('quick'),
     onCreate: () => startOnline('create'),

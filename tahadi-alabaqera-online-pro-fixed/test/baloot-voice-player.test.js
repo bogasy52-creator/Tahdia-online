@@ -31,6 +31,18 @@ test('a recording plays in full and later calls never interrupt it', async () =>
   f.finish(); await flush(); assert.deepEqual(f.started.map(x=>x.id),['a','b']);
   f.finish(); await flush(); assert.equal(f.player.status().state,'ready'); f.player.dispose();
 });
+test('hand completion finishes the active recording and discards queued calls', async () => {
+  const f=setup();f.player.enqueue('a');await flush();f.player.enqueue('b');await flush();
+  assert.equal(typeof f.player.finish,'function');f.player.finish();
+  assert.equal(f.sources[0].stopped,0);assert.equal(f.player.status().pending,0);
+  f.finish();await flush();assert.deepEqual(f.started.map(x=>x.id),['a']);
+  assert.equal(f.player.status().state,'ready');f.player.dispose();
+});
+test('finishing while a clip loads cannot start it after the hand is closed', async () => {
+  const late=deferred(),f=setup({fetch:()=>late.promise});f.player.enqueue('a');await flush();
+  assert.equal(typeof f.player.finish,'function');f.player.finish();late.resolve('a');await flush();
+  assert.deepEqual(f.started,[]);assert.equal(f.player.status().pending,0);f.player.dispose();
+});
 test('urgent calls keep their arrival order without cutting the active word',async()=>{
   const f=setup();f.player.enqueue('a');await flush();f.player.enqueue('b');f.player.enqueue('c',{urgent:true});f.player.enqueue('d',{urgent:true});
   for(let i=0;i<4;i++){f.finish();await flush();}

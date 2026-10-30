@@ -140,11 +140,11 @@ export class SerpentRoom {
   if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',sentAt:Number.isFinite(msg.sentAt)?msg.sentAt:null,serverNow:Date.now()}))}catch{}return;}
   if(msg.type==='resync'){const now=Date.now();if(!p.resyncAt||now-p.resyncAt>=500){p.resyncAt=now;this.broadcast(true);}return;}
   if(msg.type==='configure'){
-   if(p.role!=='host')return this.error(ws,'تعديل البوتات للمضيف فقط');if(this.room.status!=='lobby')return;
+   if(p.role!=='host')return this.error(ws,'تعديل المنافسين الإضافيين للمضيف فقط');if(this.room.status!=='lobby')return;
    if(this.room.publicMatch)return this.error(ws,'إعدادات المواجهة السريعة يحددها السيرفر');
    const matchMode=msg.matchMode??this.room.matchMode??'timed',duration=msg.duration??this.room.duration;
    const worldId=msg.worldId??this.room.worldId??'classic';if(!validWorld(worldId))return this.error(ws,'خريطة الحلبة غير صالحة');
-   if(!Number.isInteger(msg.botCount)||msg.botCount<0||msg.botCount>6||!DIFFICULTIES.includes(msg.difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return this.error(ws,'اختر عدد بوتات (حتى 6) ومستوى وطريقة لعب صالحة');
+   if(!Number.isInteger(msg.botCount)||msg.botCount<0||msg.botCount>6||!DIFFICULTIES.includes(msg.difficulty)||!['timed','survival'].includes(matchMode)||![60,120,180].includes(duration))return this.error(ws,'اختر عدد منافسين إضافيين (حتى 6) ومستوى وطريقة لعب صالحة');
    if(this.room.botCount===msg.botCount&&this.room.difficulty===msg.difficulty&&(this.room.matchMode||'timed')===matchMode&&this.room.duration===duration&&(this.room.worldId||'classic')===worldId)return;
    this.room.worldId=worldId;this.room.botCount=msg.botCount;this.room.difficulty=msg.difficulty;this.room.matchMode=matchMode;this.room.duration=duration;for(const player of this.room.players)player.ready=false;await this.save();this.broadcast();return;
   }

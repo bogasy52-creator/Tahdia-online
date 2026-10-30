@@ -56,7 +56,8 @@ test('a lobby state goes to the shared menu and a match goes to the board',async
  assert.equal(lobbies,1);assert.equal(h.doc.getElementById('game').classList.contains('hidden'),true);
  await h.table.apply(h.room(Enhanced.createEnhancedGame(['A','B'])));
  assert.equal(h.doc.getElementById('game').classList.contains('hidden'),false);
- assert.match(h.doc.getElementById('players').textContent,/بوت/,'a bot is tagged in the player list');
+ assert.doesNotMatch(h.doc.getElementById('players').textContent,/بوت/,'player rows use names without an extra badge');
+ assert.ok(h.doc.getElementById('players').textContent.includes('B'),'the opponent name remains visible');
 });
 
 test('unchanged server snapshots reuse pawn art and roster nodes',async()=>{

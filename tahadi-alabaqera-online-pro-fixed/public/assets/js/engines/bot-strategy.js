@@ -1,38 +1,42 @@
-import {getJackarooActions,playJackarooAction} from './jackaroo-engine.js?v=29.1.0';
-import {getLegalLudoMoves,applyLudoMove,globalLudoPosition,LUDO_SAFE} from './ludo-engine.js?v=29.1.0';
+import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=29.1.0';
+import {getLegalLudoMoves,applyLudoMove,globalLudoPosition} from './ludo-engine.js?v=29.1.0';
+import {boardGeometry} from './board-geometry-v29.js';
 
 function pick(scored,difficulty,rng){
  if(!scored.length)return null;
  if(difficulty==='easy')return scored[Math.min(scored.length-1,Math.floor(rng()*scored.length))].value;
  scored.sort((a,b)=>b.score-a.score);
- return scored[0].value;
+ const best=scored.filter(item=>item.score===scored[0].score);
+ return best.length===1?best[0].value:best[Math.min(best.length-1,Math.floor(rng()*best.length))].value;
 }
 
 export function chooseJackarooMove(state,difficulty='medium',rng=Math.random){
- const actor=state.turn,team=actor%2,scored=[];
+ const actor=state.turn,team=actor%2,scored=[],geometry=boardGeometry(state);
  state.hands[actor].forEach((_,cardIndex)=>{
   for(const action of getJackarooActions(state,cardIndex,actor)){
    let score=action.type==='discard'?-100:0;
    if(difficulty!=='easy'){
-    const next=playJackarooAction(state,cardIndex,action),event=next.lastEvent;
-    for(let owner=0;owner<4;owner++){
+    // Evaluate the public piece result only: do not deal or shuffle a future
+    // hand while considering a candidate card.
+    const next=previewJackarooAction(state,action,state.hands[actor][cardIndex]),event=next.lastEvent;
+    for(let owner=0;owner<state.players.length;owner++){
      const sign=owner%2===team?1:-1;
      for(let mi=0;mi<4;mi++){
       const before=state.players[owner].marbles[mi],after=next.players[owner].marbles[mi];
       if(before===after)continue;
-      if(after===56)score+=sign*600;
+      if(after===geometry.finish)score+=sign*600;
       else if(after===-1)score-=sign*95;
       else if(before===-1)score+=sign*55;
-      else score+=sign*((after>=52?100:0)+(after-before)*2);
+      else score+=sign*((after>=geometry.track?100:0)+(after-before)*2);
      }
     }
-    if(next.winnerTeam===team)score+=10000;
+    if(teamWinner(next)===team)score+=10000;
     if(difficulty==='hard'){
      // Look only at public pieces. Private opponents' cards are never read.
-     for(const owner of [actor,(actor+2)%4])for(const m of next.players[owner].marbles){
-      if(m>0&&m<52){const global=(owner*13+m)%52;
-       for(let op=0;op<4;op++)if(op%2!==team)for(const om of next.players[op].marbles){
-        if(om>=0&&om<52){const gap=(global-(op*13+om)%52+52)%52;if(gap>0&&gap<=13)score-=4}
+     for(let owner=0;owner<next.players.length;owner++)if(owner%2===team)for(const m of next.players[owner].marbles){
+      if(m>0&&m<geometry.track){const global=globalJackarooPosition(owner,m,next);
+       for(let op=0;op<next.players.length;op++)if(op%2!==team)for(const om of next.players[op].marbles){
+        if(om>=0&&om<geometry.track){const gap=(global-globalJackarooPosition(op,om,next)+geometry.track)%geometry.track;if(gap>0&&gap<=13)score-=4}
        }
       }
      }
@@ -48,16 +52,16 @@ export function chooseJackarooMove(state,difficulty='medium',rng=Math.random){
 function cardCost(card){return /^[AK]/.test(card)?10:/^7/.test(card)?8:1}
 
 export function chooseLudoMove(state,roll,difficulty='medium',rng=Math.random){
- const actor=state.turn;
+ const actor=state.turn,geometry=boardGeometry(state);
  return pick(getLegalLudoMoves(state,roll).map(token=>{
   const next=applyLudoMove(state,token,roll),event=next.lastEvent;
-  let score=event.to===56?600:event.to>=52?150+event.to:event.from===-1?65:event.to;
+  let score=event.to===geometry.finish?600:event.to>=geometry.track?150+event.to:event.from===-1?65:event.to;
   score+=(event.captured?.length||0)*110;
-  if(difficulty==='hard'&&event.to<=51){
-   const global=globalLudoPosition(actor,event.to);
-   if(LUDO_SAFE.has(global))score+=35;
+  if(difficulty==='hard'&&event.to<geometry.track){
+   const global=globalLudoPosition(actor,event.to,state);
+   if(geometry.safe.has(global))score+=35;
    else for(let op=0;op<state.players.length;op++)if(op!==actor)for(const m of next.players[op].tokens){
-    if(m>=0&&m<=51){const gap=(global-globalLudoPosition(op,m)+52)%52;if(gap>0&&gap<=6)score-=18}
+    if(m>=0&&m<geometry.track){const gap=(global-globalLudoPosition(op,m,state)+geometry.track)%geometry.track;if(gap>0&&gap<=6)score-=18}
    }
   }
   return{value:token,score};

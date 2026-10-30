@@ -10,8 +10,11 @@ shell.push('/assets/css/play-experience-v25.css?v=29.1.0','/assets/fonts/tajawal
 for(let i=0;i<shell.length;i++)if(!shell[i].includes('-gameplay3'))shell[i]=shell[i].replace(/\?v=[0-9.]+/,'?v='+release);
 const demand=[...new Set([...(await walk(root)),'/service-worker.js'])].filter(file=>/\.(?:css|js|json|html|webp|png|svg|wav|mp3|woff2)$/.test(file)).sort();
 const runtime=await readFile(new URL('./service-worker-runtime.txt',import.meta.url),'utf8');
+// Same-release fixes must invalidate every cached executable/page, including
+// shared menus and strategies, not only the original Baloot files.
 const voiceHash=createHash('sha256');let voiceFiles=0;
-for(const file of ['assets/js/baloot-voice-pack.js','assets/js/baloot-voice-player.js','assets/js/baloot-voice.js','assets/js/baloot-table.js','assets/js/engines/baloot-engine.js','assets/js/engines/baloot-bot.js','baloot.html','assets/js/baloot-cards.js','assets/css/app-baloot.css','assets/js/paths-online-v24.js','assets/js/engines/paths-solo.js','paths-online.html','assets/css/app-paths-online.css','assets/js/journey-ui.js','assets/js/engines/party-catalog-v29.js','index.html','snakes.html','assets/js/board-online.js','assets/js/board-table-v33.js','assets/js/snakes-v4-fx.js','assets/js/neon-arena.js','assets/js/hero-effects.js','assets/css/hero-effects.css','assets/js/profile-core.js','assets/js/arcade-games.js','assets/js/engines/reaction-challenge.js','reaction.html','assets/css/app-reaction.css','assets/js/player-profile.js','assets/css/app-social.css','social.html','admin.html','assets/js/admin.js','assets/js/admin-workspace.js','assets/css/app-admin.css','assets/js/admin-live-v32.js','assets/js/shop-v31.js','assets/js/character-commerce.js','shop.html','assets/js/arena-geometry.js','assets/js/party-v29.js','party.html','assets/js/sudoku-ui.js','assets/js/play-feedback-v24-1.js','online.html','assets/js/quick-match-game.js']){
+for(const file of [...demand,'/manifest.webmanifest']){
+  if(file==='/service-worker.js'||! /\.(?:js|css|html|json|webmanifest)$/.test(file))continue;
   try{voiceHash.update(file).update('\0').update(await readFile(path.join(root,file))).update('\0');voiceFiles++;}catch(error){if(error.code!=='ENOENT')throw error;}
 }
 const voiceRevision=voiceFiles?voiceHash.digest('hex').slice(0,12):'legacy';
