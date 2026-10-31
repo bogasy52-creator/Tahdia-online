@@ -1,4 +1,4 @@
-import {ChallengeRoom} from './challenges/challenge-room.js';
+import {ChallengeRoom,ChallengeQueue} from './challenges/challenge-room.js';
 import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
 import {PartyRoom} from './party/party-room.js';
 import {normalizePlaylist} from '../public/assets/js/engines/party-catalog-v29.js';
@@ -423,12 +423,17 @@ export default {
 
     if(url.pathname.startsWith('/api/challenges/')){
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
-      const limited=await rateLimit(request,env,'challenges-api',90,60000);if(limited)return limited;
+      const limited=await rateLimit(request,env,'challenges-api',240,60000);if(limited)return limited;
+      if(url.pathname==='/api/challenges/quick'&&request.method==='POST'){
+        const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
+        if(!['labyrinth','focus','cipher','territory','survival'].includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        return env.ROOMS.get(env.ROOMS.idFromName('challenge-queue:'+b.game)).fetch('https://challenge-queue.internal/assign',{method:'POST',body:JSON.stringify({game:b.game})});
+      }
       if(url.pathname==='/api/challenges/rooms'&&request.method==='POST'){
         if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
-        const games=['labyrinth','focus','cipher','patterns','survival'];if(!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        const games=['labyrinth','focus','cipher','territory','survival'];if(!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
         for(let i=0;i<8;i++){const code=String(95+games.indexOf(b.game))+String(crypto.getRandomValues(new Uint32Array(1))[0]%10000).padStart(4,'0'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء الغرفة'},503);
       }
@@ -815,6 +820,7 @@ export class GameRoom extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
     if(url.hostname==='party.internal')return (await this.partyDelegate()).fetch(request);
+    if(url.hostname==='challenge-queue.internal'){this.challengeQueue??=new ChallengeQueue(this.ctx,this.env);return this.challengeQueue.fetch(request);}
     if(url.hostname==='challenge.internal')return (await this.challengeDelegate()).fetch(request);
     if(url.hostname==='paths.internal')return (await this.pathsDelegate()).fetch(request);
     if(url.hostname==='sudoku.internal')return (await this.sudokuDelegate()).fetch(request);

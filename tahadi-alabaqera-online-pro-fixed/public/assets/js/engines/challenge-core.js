@@ -1,10 +1,10 @@
 // Deterministic rules shared by practice and authoritative rooms. No DOM or network dependencies.
 export const CHALLENGES=Object.freeze({
  labyrinth:{title:'سباق المتاهة',tag:'خطوة تسبق خصمك',color:'#5de2c2',players:2},
- focus:{title:'مواجهة التركيز',tag:'فكّر بسرعة. واضغط بثقة.',color:'#f5c76e',players:4},
- cipher:{title:'شفرة الخصم',tag:'كل تلميح يقرّبك',color:'#b6a0ff',players:2},
- patterns:{title:'صائد الأنماط',tag:'عينك على العلاقة',color:'#f798b6',players:4},
- survival:{title:'ساحة البقاء',tag:'اقرأ الأرض. وابقَ واقفًا.',color:'#77c9ff',players:4}
+ focus:{title:'مواجهة التركيز',tag:'فكّر بسرعة. واضغط بثقة.',color:'#f5c76e',players:20},
+ cipher:{title:'ساحة الشفرات',tag:'كل تلميح يقرّبك',color:'#b6a0ff',players:20},
+ territory:{title:'ميدان السيطرة',tag:'خطّط. توسّع. واحمِ حدودك.',color:'#f798b6',players:20},
+ survival:{title:'ساحة البقاء',tag:'اقرأ الأرض. وابقَ واقفًا.',color:'#77c9ff',players:20}
 });
 export const HEROES=['fox','cat','robot','princess','fairy','astronaut','racer','diver','viking','gladiator','cyber','samurai'];
 export function rng(seed=1){let x=seed>>>0;return()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -15,29 +15,31 @@ export function mazePath(pos,goal,blocks,n=7){const queue=[[pos]],seen=new Set([
 export function setValid(cards){return cards.length===3&&new Set(cards.map(c=>c.id)).size===3&&[0,1,2].every(k=>new Set(cards.map(c=>c.attrs[k])).size!==2);}
 export function patternSet(cards){for(let a=0;a<cards.length;a++)for(let b=a+1;b<cards.length;b++)for(let c=b+1;c<cards.length;c++)if(setValid([cards[a],cards[b],cards[c]]))return[cards[a].id,cards[b].id,cards[c].id];return null;}
 function cards(r){const deck=Array.from({length:27},(_,id)=>({id,attrs:[id%3,Math.floor(id/3)%3,Math.floor(id/9)]}));for(let i=deck.length-1;i>0;i--){const j=pick(r,i+1);[deck[i],deck[j]]=[deck[j],deck[i]];}const board=deck.slice(0,9);if(!patternSet(board)){const a=board[0].attrs,b=board[1].attrs,attrs=a.map((v,i)=>v===b[i]?v:3-v-b[i]);const id=attrs[0]+attrs[1]*3+attrs[2]*9;board[8]={id,attrs};}return board;}
-export function cipherHint(secret,guess){let exact=0,near=0;for(let i=0;i<4;i++)if(secret[i]===guess[i])exact++;for(let d=0;d<6;d++)near+=Math.min(secret.filter(x=>x===d).length,guess.filter(x=>x===d).length);return{exact,near:near-exact};}
-function focusRound(m,now,r){const type=['color','opposite','sequence','hold'][m.round%4],target=pick(r,4),sequence=Array.from({length:Math.min(5,3+Math.floor(m.round/6))},()=>pick(r,4));const opensAt=now+1500+(type==='sequence'?sequence.length*650:0);m.task={type,target,sequence,opensAt,deadline:opensAt+6500};m.answers={};m.phaseAt=now;}
+export function cipherHint(secret,guess){let exact=0,near=0;for(let i=0;i<4;i++)if(secret[i]===guess[i])exact++;for(let d=0;d<10;d++)near+=Math.min(secret.filter(x=>x===d).length,guess.filter(x=>x===d).length);return{exact,near:near-exact};}
+function focusRound(m,now,r){const type=['color','opposite','sequence','hold','word','parity'][m.round%6],target=pick(r,4),sequence=Array.from({length:Math.min(5,3+Math.floor(m.round/6))},()=>pick(r,4));const opensAt=now+1500+(type==='sequence'?sequence.length*650:0);m.task={type,target,word:(target+1+pick(r,3))%4,number:1+pick(r,9),sequence,opensAt,deadline:opensAt+6500};m.answers={};m.phaseAt=now;}
 function hazard(m,now,r){const n=m.board.size,round=m.round;let unsafe=[];
  // Every highlighted tile has a neighbouring refuge; the warning is generous enough for several steps.
  const axis=pick(r,2),parity=pick(r,2);for(let c=0;c<n*n;c++){const x=c%n,y=Math.floor(c/n);if((axis?x:y)%2===parity)unsafe.push(c);}
  if(round%3===2){const hole=pick(r,n);unsafe=Array.from({length:n*n},(_,i)=>i).filter(i=>i%n!==hole&&Math.floor(i/n)!==hole);}
  m.board.unsafe=unsafe;m.board.collapseAt=now+Math.max(2200,4200-round*110);m.board.recoverAt=m.board.collapseAt+650;m.board.collapsed=false;
 }
-export function createChallenge(game,players,seed=1,now=Date.now()){
+export function createChallenge(game,players,seed=1,now=Date.now(),options={}){
  if(!CHALLENGES[game]||players.length<2||players.length>CHALLENGES[game].players||new Set(players.map(p=>p.id)).size!==players.length)throw Error('invalid_players');
- const m={game,seed:seed>>>0,phase:'playing',round:0,version:1,startedAt:now,endsAt:now+(game==='labyrinth'?240000:game==='cipher'?180000:game==='survival'?90000:game==='focus'?180000:100000),players:players.map((p,i)=>({id:p.id,name:p.name,hero:HEROES.includes(p.hero)?p.hero:'fox',bot:!!p.bot,score:0,alive:true,moves:0,lastMove:0,attempts:[],slot:i})),winners:[],log:[],nextBotAt:now+1200};
+ const m={rules:2,retainHistory:options.retainHistory===true,game,seed:seed>>>0,phase:'playing',round:0,version:1,startedAt:now,endsAt:now+(game==='labyrinth'?240000:game==='cipher'?600000:game==='survival'?90000:game==='focus'?180000:100000),players:players.map((p,i)=>({id:p.id,name:p.name,hero:HEROES.includes(p.hero)?p.hero:'fox',bot:!!p.bot,score:0,alive:true,moves:0,lastMove:0,attempts:[],attemptCount:0,intel:{},historyCounts:{},kills:0,energy:3,energyAt:now,slot:i})),winners:[],log:[],nextBotAt:now+1200};
  const r=rng(m.seed);
  if(game==='labyrinth'){m.board={size:7,positions:[3,45],blocks:[],walls:[10,10]};m.turn=0;m.turnDeadline=now+18000;}
  if(game==='focus')focusRound(m,now,r);
- if(game==='cipher'){m.secrets=Object.fromEntries(m.players.map((p,i)=>{const secret=players[(i+1)%players.length].secret;return[p.id,Array.isArray(secret)&&secret.length===4&&secret.every(x=>Number.isInteger(x)&&x>=0&&x<6)?[...secret]:Array.from({length:4},()=>pick(r,6))];}));m.nextGuess=Object.fromEntries(m.players.map(p=>[p.id,0]));}
+ if(game==='cipher'){m.digits=10;m.secrets=Object.fromEntries(m.players.map((p,i)=>[p.id,validSecret(players[i].secret)?[...players[i].secret]:Array.from({length:4},()=>pick(r,10))]));m.nextGuess=Object.fromEntries(m.players.map(p=>[p.id,0]));}
+ if(game==='territory'){const size=players.length>8?11:9,positions=spawnCells(players.length,size);m.board={size,owners:Array(size*size).fill(-1),crystals:Array.from({length:Math.floor(size*size/12)},(_,i)=>(i*17+Math.floor(size*size/2))%(size*size))};positions.forEach((c,i)=>m.board.owners[c]=i);territoryScores(m);}
+
  if(game==='patterns'){m.board={cards:cards(r)};m.nextGuess={};}
- if(game==='survival'){m.board={size:7,positions:m.players.map((_,i)=>[16,18,30,32][i])};hazard(m,now,r);}
+ if(game==='survival'){m.board={size:players.length>10?11:players.length>4?9:7,positions:players.length<=4?m.players.map((_,i)=>[16,18,30,32][i]):spawnCells(players.length,players.length>10?11:9)};hazard(m,now,r);}
  return m;
 }
 function finish(m,now,winners){m.phase='finished';m.finishedAt=now;m.winners=winners??(()=>{const best=Math.max(...m.players.map(p=>p.score));return m.players.filter(p=>p.score===best).map(p=>p.id);})();m.version++;}
 function note(m,text){m.log.push(text);if(m.log.length>5)m.log.shift();}
 export function applyChallenge(m,id,action,now=Date.now()){
- if(m.phase!=='playing')throw Error('الجولة انتهت');const p=m.players.find(p=>p.id===id);if(!p)throw Error('غير مصرح');
+ if(m.phase!=='playing')throw Error('الجولة انتهت');const p=m.players.find(p=>p.id===id);if(!p)throw Error('غير مصرح');if(!p.alive)throw Error('أُقصيت؛ تقدر تتابع المنافسين');
  if(!action||typeof action!=='object'||Array.isArray(action))throw Error('حركة غير صالحة');
  const r=rng(m.seed+m.version*7919);
  if(m.game==='labyrinth'){
@@ -49,28 +51,34 @@ export function applyChallenge(m,id,action,now=Date.now()){
  if(m.game==='focus'){
   const t=m.task;if(action.round!==m.round)throw Error('الجولة تغيّرت');if(now<t.opensAt)throw Error('انتظر الإشارة');if(now>=t.deadline)throw Error('انتهى وقت السؤال');if(m.answers[id])throw Error('تم تسجيل إجابتك');
   let correct=false;if(t.type==='sequence'){if(!Array.isArray(action.values)||action.values.length!==t.sequence.length||action.values.some(v=>!Number.isInteger(v)||v<0||v>3))throw Error('أكمل التسلسل');correct=action.values.every((v,i)=>v===t.sequence[i]);}
-  else{if(!Number.isInteger(action.choice)||action.choice<0||action.choice>3)throw Error('إجابة غير صالحة');correct=t.type==='hold'?false:action.choice===(t.type==='opposite'?(t.target+2)%4:t.target);}
+  else{if(!Number.isInteger(action.choice)||action.choice<0||action.choice>3)throw Error('إجابة غير صالحة');correct=t.type==='hold'?false:action.choice===(t.type==='opposite'?(t.target+2)%4:t.type==='word'?t.word:t.type==='parity'?t.number%2:t.target);}
   const gain=correct?100+Math.floor(Math.max(0,t.deadline-now)/100):-40;p.score+=gain;m.answers[id]={correct,gain};
  }
  if(m.game==='cipher'){
-  if(p.solvedAt||p.attempts.length>=10)throw Error('اكتملت محاولاتك');if(now<m.nextGuess[id])throw Error('تمهّل قليلًا');const g=action.guess;if(!Array.isArray(g)||g.length!==4||g.some(v=>!Number.isInteger(v)||v<0||v>5))throw Error('اختر أربعة رموز');
-  const hint=cipherHint(m.secrets[id],g);p.attempts.push({guess:[...g],...hint});m.nextGuess[id]=now+700;p.score=hint.exact*10+hint.near;
-  if(hint.exact===4){p.solvedAt=now;p.score=1000-p.attempts.length*40;}
-  if(m.players.every(x=>x.solvedAt||x.attempts.length>=10))finish(m,now,cipherWinners(m));
+  const target=m.players.find(x=>x.id===action.target);if(!target||target.id===id||!target.alive)throw Error('اختر خصمًا ما زال في الجولة');if(now<m.nextGuess[id])throw Error('انتظر تجهيز المحاولة التالية');const g=action.guess;if(!validSecret(g,m.digits||6))throw Error('اختر أربعة أرقام من 0 إلى 9');
+  const hint=cipherHint(m.secrets[target.id],g);p.intel[target.id]??=[];p.historyCounts??={};p.historyCounts[target.id]=(p.historyCounts[target.id]??p.intel[target.id].length)+1;p.intel[target.id].push({guess:[...g],...hint,number:p.historyCounts[target.id],at:now});if(!m.retainHistory&&p.intel[target.id].length>30)p.intel[target.id].shift();p.attemptCount=(p.attemptCount??p.attempts.length)+1;p.attempts.push({target:target.id});if(p.attempts.length>30)p.attempts.shift();m.nextGuess[id]=now+1400;
+  if(hint.exact===4){target.alive=false;target.eliminatedAt=now;target.eliminatedBy=id;p.kills++;p.score+=1000;note(m,p.name+' فك شفرة '+target.name+' وأقصاه');const alive=m.players.filter(x=>x.alive);if(alive.length===1)finish(m,now,[alive[0].id]);}
  }
+ if(m.game==='territory'){
+  const b=m.board,to=action.to;if(!Number.isInteger(to)||to<0||to>=b.owners.length)throw Error('اختر مربعًا داخل الميدان');if(now-p.lastMove<650)throw Error('انتظر تجهيز الحركة');
+  const near=[to-1,to+1,to-b.size,to+b.size].filter(c=>adjacent(c,to,b.size)),friendly=near.filter(c=>b.owners[c]===p.slot).length;if(!friendly||b.owners[to]===p.slot)throw Error('اختر مربعًا ملاصقًا لحدودك');const enemy=b.owners[to]>=0,cost=enemy?3:1,energy=Math.min(3,p.energy+Math.floor((now-p.energyAt)/1200));if(energy<cost)throw Error('طاقتك لا تكفي؛ الهجوم يحتاج 3');if(enemy&&friendly<2)throw Error('الهجوم يحتاج حدّين ملاصقين من منطقتك');
+  p.energy=energy-cost;p.energyAt=now;p.lastMove=now;p.moves++;b.owners[to]=p.slot;territoryScores(m);for(const x of m.players)if(x.score===0){x.alive=false;x.eliminatedAt=now;}const alive=m.players.filter(x=>x.alive);if(alive.length===1)finish(m,now,[alive[0].id]);
+ }
+
  if(m.game==='patterns'){
   if(action.round!==m.round)throw Error('تغيّرت البطاقات');if(now<(m.nextGuess[id]||0))throw Error('انتظر قليلًا قبل المحاولة');const ids=action.cards;if(!Array.isArray(ids)||ids.length!==3||new Set(ids).size!==3||ids.some(x=>!m.board.cards.some(c=>c.id===x)))throw Error('اختر ثلاث بطاقات');
   const chosen=ids.map(id=>m.board.cards.find(c=>c.id===id));if(setValid(chosen)){p.score+=100;m.round++;m.board.cards=cards(r);note(m,p.name+' اكتشف النمط');if(m.round>=12)finish(m,now);}else{p.score-=25;m.nextGuess[id]=now+1400;note(m,p.name+' خسر 25 نقطة');}
  }
  if(m.game==='survival'){
-  if(!p.alive)throw Error('أنت تشاهد الجولة');if(now-p.lastMove<180)throw Error('تمهّل قليلًا');const to=action.to,b=m.board;if(!adjacent(b.positions[p.slot],to,b.size)||b.collapsed&&b.unsafe.includes(to))throw Error('هذا المربع غير متاح');b.positions[p.slot]=to;p.lastMove=now;p.moves++;
+  if(!p.alive)throw Error('أنت تشاهد الجولة');if(now-p.lastMove<180)throw Error('تمهّل قليلًا');const to=action.to,b=m.board,from=b.positions[p.slot],dash=action.dash===true,mid=Number.isInteger(to)?(from+to)/2:-1;const legal=dash?Number.isInteger(mid)&&adjacent(from,mid,b.size)&&adjacent(mid,to,b.size)&&(from%b.size===to%b.size||Math.floor(from/b.size)===Math.floor(to/b.size))&&now-(p.lastDash||0)>=8000&&!(b.collapsed&&b.unsafe.includes(mid)):adjacent(from,to,b.size);if(!legal||b.collapsed&&b.unsafe.includes(to))throw Error('هذا المربع غير متاح');b.positions[p.slot]=to;p.lastMove=now;if(dash)p.lastDash=now;p.moves++;
  }
  m.version++;return m;
 }
 function cipherWinners(m){const solved=m.players.filter(p=>p.solvedAt).sort((a,b)=>a.attempts.length-b.attempts.length||a.solvedAt-b.solvedAt);return solved.length?[solved[0].id]:[];}
 export function advanceChallenge(m,now=Date.now()){
  if(m.phase!=='playing')return m;
- if(now>=m.endsAt){if(m.game==='cipher')finish(m,now,cipherWinners(m));else if(m.game==='survival')finish(m,now,m.players.filter(p=>p.alive).map(p=>p.id));else if(m.game==='labyrinth'){const d=m.players.map((p,i)=>mazePath(m.board.positions[i],i===0?6:0,m.board.blocks)?.length??999);finish(m,now,d[0]===d[1]?m.players.map(p=>p.id):[m.players[d[0]<d[1]?0:1].id]);}else finish(m,now);return m;}
+ if(now>=m.endsAt&&m.game==='cipher'&&m.players.filter(p=>p.alive).length>1){m.overtime=true;m.endsAt=now+60000;m.version++;}
+ if(now>=m.endsAt){if(m.game==='cipher')finish(m,now,m.players.filter(p=>p.alive).length===1?m.players.filter(p=>p.alive).map(p=>p.id):[]);else if(m.game==='survival')finish(m,now,m.players.filter(p=>p.alive).map(p=>p.id));else if(m.game==='labyrinth'){const d=m.players.map((p,i)=>mazePath(m.board.positions[i],i===0?6:0,m.board.blocks)?.length??999);finish(m,now,d[0]===d[1]?m.players.map(p=>p.id):[m.players[d[0]<d[1]?0:1].id]);}else finish(m,now);return m;}
  const r=rng(m.seed+m.round*3571+m.version);
  if(m.game==='labyrinth'&&now>=m.turnDeadline){note(m,'انتهى وقت الدور');m.turn=1-m.turn;m.turnDeadline=now+18000;m.version++;}
  if(m.game==='focus'&&now>=m.task.deadline){if(m.task.type==='hold')for(const p of m.players)if(!m.answers[p.id])p.score+=100;m.round++;if(m.round>=12)finish(m,now);else focusRound(m,now+700,r);m.version++;}
@@ -87,17 +95,26 @@ export function botAction(m,id,now=Date.now()){
   const other=1-p.slot,otherGoal=other===0?6:0,op=mazePath(m.board.positions[other],otherGoal,m.board.blocks);
   if(m.board.walls[p.slot]>0&&r()<.65&&op?.length>2){let best=null,bestGain=0;for(let i=0;i<Math.min(op.length-1,5);i++){const a=op[i],b=op[i+1],blocks=[...m.board.blocks,edge(a,b)],mine=mazePath(m.board.positions[p.slot],p.slot===0?6:0,blocks),theirs=mazePath(m.board.positions[other],otherGoal,blocks);if(!mine||!theirs)continue;const gain=theirs.length-op.length-(mine.length-path.length)*1.5;if(gain>bestGain){bestGain=gain;best={type:'wall',a,b};}}if(best)return best;}
   if(path?.[1]!==m.board.positions[1-p.slot])return{type:'step',to:path[1]};const alt=[-7,7,-1,1].map(d=>m.board.positions[p.slot]+d).filter(to=>adjacent(to,m.board.positions[p.slot],7)&&to!==m.board.positions[1-p.slot]&&!m.board.blocks.includes(edge(to,m.board.positions[p.slot])));return alt.length?{type:'step',to:alt[pick(r,alt.length)]}:null;}
- if(m.game==='focus'){if(now<m.task.opensAt+650||m.answers[id]||m.task.type==='hold')return null;return m.task.type==='sequence'?{round:m.round,values:m.task.sequence.map(v=>r()<.86?v:pick(r,4))}:{round:m.round,choice:r()<.78?(m.task.type==='opposite'?(m.task.target+2)%4:m.task.target):pick(r,4)};}
- if(m.game==='cipher'){if(p.solvedAt||now<(p.nextThink||0)||p.attempts.length>=10)return null;p.nextThink=now+3500;const candidates=[];for(let code=0;code<1296;code++){const g=[code%6,Math.floor(code/6)%6,Math.floor(code/36)%6,Math.floor(code/216)];if(p.attempts.every(a=>{const h=cipherHint(g,a.guess);return h.exact===a.exact&&h.near===a.near;}))candidates.push(g);}return{guess:candidates[pick(r,candidates.length)]};}
+ if(m.game==='focus'){if(now<m.task.opensAt+650||m.answers[id]||m.task.type==='hold')return null;return m.task.type==='sequence'?{round:m.round,values:m.task.sequence.map(v=>r()<.86?v:pick(r,4))}:{round:m.round,choice:r()<.78?(m.task.type==='opposite'?(m.task.target+2)%4:m.task.type==='word'?m.task.word:m.task.type==='parity'?m.task.number%2:m.task.target):pick(r,4)};}
+ if(m.game==='cipher'){
+  if(now<(p.nextThink||0))return null;p.nextThink=now+2700;const targets=m.players.filter(x=>x.alive&&x.id!==id);if(!targets.length)return null;const target=targets.sort((a,b)=>(p.intel[b.id]?.length||0)-(p.intel[a.id]?.length||0))[0],history=p.intel[target.id]||[],candidates=[];
+  const radix=m.digits||6;for(let code=0;code<radix**4;code++){const g=[code%radix,Math.floor(code/radix)%radix,Math.floor(code/(radix**2))%radix,Math.floor(code/(radix**3))];if(history.every(a=>{const h=cipherHint(g,a.guess);return h.exact===a.exact&&h.near===a.near;}))candidates.push(g);}return{target:target.id,guess:candidates[pick(r,candidates.length)]};
+ }
+ if(m.game==='territory'){const b=m.board,candidates=[];for(let to=0;to<b.owners.length;to++)if(b.owners[to]===-1&&[to-1,to+1,to-b.size,to+b.size].some(c=>adjacent(c,to,b.size)&&b.owners[c]===p.slot))candidates.push(to);if(!candidates.length)return null;candidates.sort((a,c)=>Number(b.crystals.includes(c))-Number(b.crystals.includes(a)));return{to:candidates[pick(r,Math.min(3,candidates.length))]};}
+
  if(m.game==='patterns'){if(now<(p.nextThink||0))return null;p.nextThink=now+3500+pick(r,2000);return{round:m.round,cards:patternSet(m.board.cards)};}
- if(m.game==='survival'){const b=m.board,start=b.positions[p.slot];if(!b.unsafe.includes(start))return null;const queue=[[start]],seen=new Set([start]);for(let i=0;i<queue.length;i++){const path=queue[i],at=path.at(-1);if(!b.unsafe.includes(at))return{to:path[1]};for(const to of [at-7,at+7,at-1,at+1])if(adjacent(at,to,7)&&!seen.has(to)){seen.add(to);queue.push([...path,to]);}}}
+ if(m.game==='survival'){const b=m.board,start=b.positions[p.slot];if(!b.unsafe.includes(start))return null;const queue=[[start]],seen=new Set([start]);for(let i=0;i<queue.length;i++){const path=queue[i],at=path.at(-1);if(!b.unsafe.includes(at))return{to:path[1]};for(const to of [at-b.size,at+b.size,at-1,at+1])if(adjacent(at,to,b.size)&&!seen.has(to)){seen.add(to);queue.push([...path,to]);}}}
  return null;
 }
 export function challengeView(m,id,now=Date.now()){
- const p=m.players.find(p=>p.id===id);if(!p)throw Error('forbidden');const view={game:m.game,phase:m.phase,round:m.round,version:m.version,startedAt:m.startedAt,endsAt:m.endsAt,serverNow:now,winners:m.winners,log:m.log,turn:m.turn,turnDeadline:m.turnDeadline,board:m.board?structuredClone(m.board):null,players:m.players.map(x=>({id:x.id,name:x.name,hero:x.hero,bot:x.bot,score:x.score,alive:x.alive,moves:x.moves,slot:x.slot,solved:!!x.solvedAt,attemptCount:x.attempts.length})),me:{id,slot:p.slot,attempts:structuredClone(p.attempts),answered:!!m.answers?.[id],nextGuess:m.nextGuess?.[id]||0}};
+ const p=m.players.find(p=>p.id===id);if(!p)throw Error('forbidden');const view={digits:m.digits||6,game:m.game,phase:m.phase,overtime:!!m.overtime,round:m.round,version:m.version,startedAt:m.startedAt,endsAt:m.endsAt,serverNow:now,winners:m.winners,log:m.log,turn:m.turn,turnDeadline:m.turnDeadline,board:m.board?structuredClone(m.board):null,players:m.players.map(x=>({id:x.id,name:x.name,hero:x.hero,bot:x.bot,score:x.score,alive:x.alive,moves:x.moves,slot:x.slot,kills:x.kills||0,eliminatedBy:x.eliminatedBy||null,eliminatedAt:x.eliminatedAt||null,solved:!!x.solvedAt,attemptCount:x.attemptCount??x.attempts.length})),me:{id,slot:p.slot,attempts:structuredClone(p.attempts),answered:!!m.answers?.[id],energy:Math.min(3,p.energy+Math.floor((now-p.energyAt)/1200)),energyRaw:p.energy,energyAt:p.energyAt,lastDash:p.lastDash||0,nextGuess:m.nextGuess?.[id]||0}};
  if(m.game==='focus'){view.task={...m.task};if(now>=m.task.opensAt||m.phase==='finished')delete view.task.sequence;view.me.answer=m.answers[id]||null;}
- if(m.game==='cipher'&&m.phase==='finished')view.me.secret=m.secrets[id];return view;
+ if(m.game==='cipher'&&m.rules===2){view.me.secret=[...m.secrets[id]];view.me.intel=Object.fromEntries(Object.entries(p.intel).map(([id,rows])=>[id,structuredClone(rows.slice(-30))]));view.me.historyCounts={...p.historyCounts};view.revealed=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,digits:m.secrets[x.id].map((v,i)=>i<(m.overtime?4:Math.min(3,Math.floor((now-m.startedAt)/90000)))?v:null)}));}return view;
 }
 export function nextChallengeAlarm(m,now=Date.now()){
  if(m.phase!=='playing')return now+60000;const times=[m.endsAt];if(m.players.some(p=>p.bot))times.push(m.nextBotAt);if(m.game==='focus')times.push(m.task.deadline);if(m.game==='labyrinth')times.push(m.turnDeadline);if(m.game==='survival')times.push(m.board.collapsed?m.board.recoverAt:m.board.collapseAt);return Math.max(now+10,Math.min(...times));
 }
+
+export const validSecret=(s,radix=10)=>Array.isArray(s)&&s.length===4&&s.every(x=>Number.isInteger(x)&&x>=0&&x<radix);
+export function spawnCells(count,size){const cols=Math.ceil(Math.sqrt(count)),rows=Math.ceil(count/cols);return Array.from({length:count},(_,i)=>Math.round((i%cols+1)*(size-1)/(cols+1))+Math.round((Math.floor(i/cols)+1)*(size-1)/(rows+1))*size);}
+function territoryScores(m){for(const p of m.players)p.score=m.board.owners.reduce((v,o,i)=>v+(o===p.slot?(m.board.crystals.includes(i)?4:1):0),0);}

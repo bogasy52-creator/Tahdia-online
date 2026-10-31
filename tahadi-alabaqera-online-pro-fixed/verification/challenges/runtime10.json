@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "engine": "Workerd / SQLite / WebSockets",
+  "checks": [
+    "retired game, unknown quick modes and foreign origins rejected",
+    "maze: original move legality and duplicate packet protection",
+    "labyrinth: resume token and SQLite reload",
+    "labyrinth: rematch resets the round",
+    "focus: twenty concurrent answers score once without stale version conflicts",
+    "focus: resume token and SQLite reload",
+    "focus: rematch resets the round",
+    "cipher: 20 actual sockets, arbitrary targets, 19 eliminations, one survivor, private histories",
+    "cipher: resume token and SQLite reload",
+    "cipher: rematch resets the round",
+    "territory: authoritative territory claim and energy with twenty seats",
+    "territory: resume token and SQLite reload",
+    "territory: rematch resets the round",
+    "survival: twenty seats, dash cooldown and server collapse",
+    "survival: resume token and SQLite reload",
+    "survival: rematch resets the round",
+    "decimal cipher: 0–9 and leading zeros, 76+ attempts, private archived history, large state reload, atomic rollback and one successful retry",
+    "labyrinth: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+    "focus: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+    "cipher: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+    "territory: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+    "survival: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+    "party20: real room creation, 20-seat child arena, automatic entry countdown, result settlement and return to standings"
+  ]
+}

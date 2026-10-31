@@ -341,5 +341,9 @@
     "assets/css/release-v31.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reaction-challenge.css"
+  ],
+  "territory.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
   ]
 }

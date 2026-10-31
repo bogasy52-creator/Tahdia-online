@@ -23,7 +23,7 @@ export const ROOM_FAMILIES = Object.freeze({
   labyrinth: { from: 95, to: 95, page: '/labyrinth' },
   focus: { from: 96, to: 96, page: '/focus' },
   cipher: { from: 97, to: 97, page: '/cipher' },
-  patterns: { from: 98, to: 98, page: '/patterns' },
+  territory: { from: 98, to: 98, page: '/territory' },
   survival: { from: 99, to: 99, page: '/survival' },
 });
 
@@ -58,7 +58,7 @@ function probeFor(kind, env, code) {
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }
 const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot']);
-const kindOf = (game) => (['labyrinth','focus','cipher','patterns','survival'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
+const kindOf = (game) => (['labyrinth','focus','cipher','territory','survival'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
 
 async function probe(kind, env, code) {
   const target = probeFor(kind, env, code);

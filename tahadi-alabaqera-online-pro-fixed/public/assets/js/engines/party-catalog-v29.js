@@ -1,5 +1,10 @@
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=10000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
+ {id:'labyrinth',name:'سباق المتاهة',kind:'board',maxPlayers:2,real:true,image:'assets/challenges/labyrinth.svg',hint:'غرفة 20 تتوزع على مواجهات ثنائية ونقاط الطاولات تدخل الترتيب.'},
+ {id:'focus',name:'مواجهة التركيز',kind:'reaction',real:true,image:'assets/challenges/focus.svg',hint:'20 لاعبًا وستة اختبارات تركيز متبدّلة.'},
+ {id:'cipher',name:'ساحة الشفرات',kind:'puzzle',real:true,image:'assets/challenges/cipher.svg',hint:'اختر أي خصم واكشف شفرته لإقصائه؛ الفوز لآخر لاعب.'},
+ {id:'territory',name:'ميدان السيطرة',kind:'arena',real:true,image:'assets/challenges/territory.svg',hint:'وسّع حدودك، اجمع البلورات، وخطّط للهجوم بطاقتك.'},
+ {id:'survival',name:'ساحة البقاء',kind:'arena',real:true,image:'assets/challenges/survival.svg',hint:'20 لاعبًا، انهيارات وتحذيرات واندفاع محسوب.'},
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',real:true,image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة نفسها، بقواعد الرأس والذيل والقدرات.'},
  {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
  {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، وتكتمل المقاعد تلقائيًا.'},
@@ -11,11 +16,10 @@ export const PARTY_GAMES=Object.freeze([
  {id:'paths-online',name:'توصيل الأرقام',kind:'puzzle',real:true,image:'assets/game-cards-v27/paths-online.svg',hint:'صِل الأرقام المتطابقة على نفس اللوحة قبل أصحابك.'},
  {id:'picture',name:'سباق الصور',kind:'puzzle',real:true,image:'assets/ai-v19/garden.webp',hint:'ركّب الصورة قطعة قطعة قبل أصحابك.'},
  {id:'memory',name:'الذاكرة',kind:'puzzle',image:'assets/game-cards-v27/memory.svg',hint:'نفس الأزواج للجميع، ولا تُكشف إلا البطاقات التي تقلبها.'},
- {id:'reaction',name:'سرعة الاستجابة',kind:'reaction',image:'assets/game-cards-v27/reaction.svg',hint:'انتظر الأخضر، ثم اضغط. عدة محاولات وترتيب نهائي.'},
  {id:'logic',name:'المنطق',kind:'quiz',image:'assets/game-cards-v27/logic.svg',hint:'أنماط وحساب واستنتاج، بنفس الأسئلة والوقت للجميع.'},
  {id:'puzzle',name:'ترتيب الأرقام',kind:'puzzle',image:'assets/game-cards-v27/puzzle.svg',hint:'حرّك الأرقام إلى الفراغ حتى تكتمل اللوحة.'},
 ]);
-export const partyGame=id=>PARTY_GAMES.find(game=>game.id===(id==='paths'?'paths-online':id))||null;
+export const partyGame=id=>PARTY_GAMES.find(game=>game.id===(id==='paths'?'paths-online':id==='reaction'?'focus':id))||null;
 // 32.1.0: every game has its own seat limit; turn games stay small enough to play.
 // 33.0.0: every game takes the whole room (20). A table game seats `maxPlayers` per
 // table, so a bigger room plays it on several tables at once.
@@ -28,7 +32,7 @@ export function limitingGame(){return null;}
 export function capacityMessage(rows){const id=limitingGame(rows);return id?`«${partyGame(id).name}» حدها ${playersLabel(gameCapacity(id))}؛ عدد الغرفة الحالي أكبر`:'الغرفة ممتلئة';}
 export function normalizePlaylist(value){
  if(!Array.isArray(value)||value.length<1||value.length>20)throw Error('اختر من لعبة إلى 20 لعبة في القائمة');
- return value.map(row=>{const requested=typeof row==='string'?row:row?.game,game=requested==='paths'?'paths-online':requested;if(!partyGame(game))throw Error('لعبة غير معروفة');const difficulty=row?.difficulty??2,duration=row?.duration??180;if(!Number.isInteger(difficulty)||difficulty<1||difficulty>5||!Number.isInteger(duration)||duration<60||duration>900)throw Error('اختر صعوبة من 1 إلى 5 ومدة من دقيقة إلى 15 دقيقة');const worldId=row?.worldId??'classic';if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))throw Error('خريطة غير معروفة');const extra={};if(game==='memory'){if(row.memoryTheme!==undefined){if(!['classic','wildlife','space','vehicles','ocean'].includes(row.memoryTheme))throw Error('مجموعة صور غير معروفة');extra.memoryTheme=row.memoryTheme;}if(row.memoryMode!==undefined){if(!['pairs','sequence'].includes(row.memoryMode))throw Error('نمط ذاكرة غير معروف');extra.memoryMode=row.memoryMode;}}return{game,difficulty,duration,worldId,...extra};});
+ return value.map(row=>{const requested=typeof row==='string'?row:row?.game,game=requested==='paths'?'paths-online':requested==='reaction'?'focus':requested;if(!partyGame(game))throw Error('لعبة غير معروفة');const difficulty=row?.difficulty??2,duration=row?.duration??180;if(!Number.isInteger(difficulty)||difficulty<1||difficulty>5||!Number.isInteger(duration)||duration<60||duration>900)throw Error('اختر صعوبة من 1 إلى 5 ومدة من دقيقة إلى 15 دقيقة');const worldId=row?.worldId??'classic';if(!['classic','neon','forest','crystals','volcano','ruins','storm'].includes(worldId))throw Error('خريطة غير معروفة');const extra={};if(game==='memory'){if(row.memoryTheme!==undefined){if(!['classic','wildlife','space','vehicles','ocean'].includes(row.memoryTheme))throw Error('مجموعة صور غير معروفة');extra.memoryTheme=row.memoryTheme;}if(row.memoryMode!==undefined){if(!['pairs','sequence'].includes(row.memoryMode))throw Error('نمط ذاكرة غير معروف');extra.memoryMode=row.memoryMode;}}return{game,difficulty,duration,worldId,...extra};});
 }
 
 export const playlistCapacity=()=>PARTY_CAPACITY;

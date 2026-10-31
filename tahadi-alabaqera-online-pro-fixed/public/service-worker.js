@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-0-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-72d8b257f4d7';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-9b5e274dfc32';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.0.0",
@@ -160,6 +160,7 @@ const ON_DEMAND = [
   "/assets/challenges/labyrinth.svg",
   "/assets/challenges/patterns.svg",
   "/assets/challenges/survival.svg",
+  "/assets/challenges/territory.svg",
   "/assets/characters-v33/astronaut.json",
   "/assets/characters-v33/astronaut.png",
   "/assets/characters-v33/cat.json",
@@ -236,6 +237,7 @@ const ON_DEMAND = [
   "/assets/css/app-social.css",
   "/assets/css/app-sudoku.css",
   "/assets/css/app-survival.css",
+  "/assets/css/app-territory.css",
   "/assets/css/app-v5.css",
   "/assets/css/app-zahra.css",
   "/assets/css/arcade.css",
@@ -1086,6 +1088,7 @@ const ON_DEMAND = [
   "/social.html",
   "/sudoku.html",
   "/survival.html",
+  "/territory.html",
   "/v5.html",
   "/zahra.html"
 ];
