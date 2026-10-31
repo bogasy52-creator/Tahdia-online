@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "engine": "Workerd / SQLite / WebSocket",
+  "checks": [
+    "invalid games and cross-origin commands rejected",
+    "labyrinth: legal moves, wrong turns and duplicate packets",
+    "labyrinth: token resume and SQLite reload",
+    "labyrinth: rematch clears game state",
+    "focus: cue timing and simultaneous answers without stale-version rejection",
+    "focus: token resume and SQLite reload",
+    "focus: rematch clears game state",
+    "cipher: opponent chosen code, private attempts and independent scoring",
+    "cipher: token resume and SQLite reload",
+    "cipher: rematch clears game state",
+    "patterns: atomic pattern claim and rejection of stale board",
+    "patterns: token resume and SQLite reload",
+    "patterns: rematch clears game state",
+    "survival: movement cooldown, authoritative collapse and winner",
+    "survival: token resume and SQLite reload",
+    "survival: rematch clears game state"
+  ]
+}

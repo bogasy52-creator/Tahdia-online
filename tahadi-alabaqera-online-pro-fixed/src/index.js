@@ -1,3 +1,4 @@
+import {ChallengeRoom} from './challenges/challenge-room.js';
 import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
 import {PartyRoom} from './party/party-room.js';
 import {normalizePlaylist} from '../public/assets/js/engines/party-catalog-v29.js';
@@ -290,7 +291,7 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence|challenges)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if(url.pathname.startsWith('/api/billing/'))return handleBillingRequest(request,env,{rateLimit});
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
@@ -418,6 +419,29 @@ export default {
       const headers=new Headers(request.headers);headers.delete('x-bs-account');
       if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}}
       return env.ROOMS.get(env.ROOMS.idFromName('party:'+m[1])).fetch(new Request('https://party.internal/'+m[2]+url.search,{headers}));
+    }
+
+    if(url.pathname.startsWith('/api/challenges/')){
+      if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
+      const limited=await rateLimit(request,env,'challenges-api',90,60000);if(limited)return limited;
+      if(url.pathname==='/api/challenges/rooms'&&request.method==='POST'){
+        if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
+        const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
+        let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
+        const games=['labyrinth','focus','cipher','patterns','survival'];if(!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        for(let i=0;i<8;i++){const code=String(95+games.indexOf(b.game))+String(crypto.getRandomValues(new Uint32Array(1))[0]%10000).padStart(4,'0'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}
+        return json({ok:false,error:'تعذر إنشاء الغرفة'},503);
+      }
+      const m=url.pathname.match(/^\/api\/challenges\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);
+      if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
+      const headers=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-character','x-bs-name'])headers.delete(key);
+      if(m[2]==='ws'){
+        const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
+        const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
+        if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);
+        if(auth){headers.set('x-bs-account',auth.username);headers.set('x-bs-name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json();headers.set('x-bs-character',String(data.career?.equipped?.character||'character-fox').replace(/^character-/,''));}}
+      }
+      return env.ROOMS.get(env.ROOMS.idFromName('challenge:'+m[1])).fetch(new Request('https://challenge.internal/'+m[2]+url.search,{headers}));
     }
 
     if(url.pathname.startsWith('/api/paths/')){
@@ -778,6 +802,8 @@ export class GameRoom extends DurableObject {
 
   async partyDelegate(){if(!this.partyRoom)this.partyRoom=new PartyRoom(this.ctx,this.env);await this.partyRoom.ready;return this.partyRoom;}
 
+  async challengeDelegate(){if(!this.challengeRoom)this.challengeRoom=new ChallengeRoom(this.ctx,this.env);await this.challengeRoom.ready;return this.challengeRoom;}
+
   async pathsDelegate(){if(!this.pathsRoom)this.pathsRoom=new PathsRoom(this.ctx,this.env);await this.pathsRoom.ready;return this.pathsRoom;}
 
   async sudokuDelegate(){if(!this.sudokuRoom)this.sudokuRoom=new SudokuRoom(this.ctx,this.env);await this.sudokuRoom.ready;return this.sudokuRoom;}
@@ -789,6 +815,7 @@ export class GameRoom extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
     if(url.hostname==='party.internal')return (await this.partyDelegate()).fetch(request);
+    if(url.hostname==='challenge.internal')return (await this.challengeDelegate()).fetch(request);
     if(url.hostname==='paths.internal')return (await this.pathsDelegate()).fetch(request);
     if(url.hostname==='sudoku.internal')return (await this.sudokuDelegate()).fetch(request);
     if(url.hostname==='picture.internal')return (await this.pictureDelegate()).fetch(request);
@@ -950,6 +977,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketMessage(ws, raw);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketMessage(ws, raw);
@@ -1070,6 +1098,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketClose(ws);
@@ -1090,6 +1119,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.sudoku)return (await this.sudokuDelegate()).webSocketError(ws);
@@ -1483,6 +1513,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.challengeRoom||await this.ctx.storage.get('challenge'))return (await this.challengeDelegate()).alarm();
     if(this.partyRoom||await this.ctx.storage.get('partyRoom'))return (await this.partyDelegate()).alarm();
     if(this.pathsRoom||await this.ctx.storage.get('pathsRoom'))return (await this.pathsDelegate()).alarm();
     if(this.sudokuRoom||await this.ctx.storage.get('sudokuRoom'))return (await this.sudokuDelegate()).alarm();

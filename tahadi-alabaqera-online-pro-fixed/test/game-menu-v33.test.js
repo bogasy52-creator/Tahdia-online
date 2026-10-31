@@ -43,7 +43,7 @@ test('the page and the server agree on which game every code belongs to', async 
   assert.equal(api.roomUrl('quiz', '104321'), '/online?room=104321');
   assert.equal(api.roomUrl('snakes', '401234'), '/snakes?room=401234');
   assert.equal(api.roomUrl('jewels', '851234'), '/journey?game=jewels&room=851234');
-  assert.equal(api.gameOfCode('991234'), null, 'no game uses that prefix');
+  assert.equal(api.gameOfCode('991234'), 'survival');assert.equal(api.gameOfCode('091234'),null,'unused prefix stays invalid');
 });
 
 test('you play under your account name, then the party name, then your own guest name', async () => {

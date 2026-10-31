@@ -105,10 +105,10 @@
  root.addEventListener('bs-audio-change',()=>{const settings=root.BS_AUDIO?.getSettings?.()||{};if(!enabled())cancel();else if(settings.muted||Number(settings.volume??.72)<=0)stopSounds();else for(const audio of sounds)audio.volume=Math.min(1,Math.max(0,Number(settings.volume??.72)*audio._heroGainFactor));});
  root.addEventListener('pagehide',cancel);doc.addEventListener('visibilitychange',()=>{if(doc.hidden)cancel();});root.addEventListener('bs-social-session',cancel);
  root.addEventListener('bs-match-pause',event=>{if(event.detail?.paused)stopSounds();});
- const games=new Set(['baloot','snakes','jackaroo','zahra','dice','serpent','party','journey','paths-online','sudoku','picture','quiz','online','local','memory','logic','reaction','puzzle']);
+ const games=new Set(['baloot','snakes','jackaroo','zahra','dice','serpent','party','journey','paths-online','sudoku','picture','quiz','online','local','memory','logic','reaction','puzzle','labyrinth','focus','cipher','patterns','survival']);
  const route=location.pathname.replace(/\.html$/,'').split('/').pop();
  const setupCompanion=()=>Promise.resolve(root.BS_CAREER?.ready).then(mountCompanion).catch(()=>{});
  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',setupCompanion,{once:true});else setupCompanion();
  root.addEventListener('bs-career-change',setupCompanion);root.addEventListener('bs-social-session',()=>{if(companion){remove(companion);companion=null;}setupCompanion();});
- if(games.has(route)&&!new Set(['snakes','jackaroo','zahra','dice','baloot','memory','logic','reaction','puzzle','journey']).has(route))doc.addEventListener('click',event=>{const button=event.target.closest?.('button');if(!button||button.matches?.('[data-audio-toggle],[data-settings-open]'))return;const version=epoch;Promise.resolve(root.BS_CAREER?.ready).then(()=>{if(version===epoch&&!doc.hidden)enter(current(),{key:route+':'+(root.BS_CAREER?.account?.()||'guest')});}).catch(()=>{});});
+ if(games.has(route)&&!new Set(['labyrinth','focus','cipher','patterns','survival','snakes','jackaroo','zahra','dice','baloot','memory','logic','reaction','puzzle','journey']).has(route))doc.addEventListener('click',event=>{const button=event.target.closest?.('button');if(!button||button.matches?.('[data-audio-toggle],[data-settings-open]'))return;const version=epoch;Promise.resolve(root.BS_CAREER?.ready).then(()=>{if(version===epoch&&!doc.hidden)enter(current(),{key:route+':'+(root.BS_CAREER?.account?.()||'guest')});}).catch(()=>{});});
 })(window);

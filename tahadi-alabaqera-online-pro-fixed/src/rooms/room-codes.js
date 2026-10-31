@@ -20,6 +20,11 @@ export const ROOM_FAMILIES = Object.freeze({
   reaction: { from: 80, to: 84, page: '/reaction' },
   jewels: { from: 85, to: 89, page: '/journey' },
   colors: { from: 90, to: 94, page: '/journey' },
+  labyrinth: { from: 95, to: 95, page: '/labyrinth' },
+  focus: { from: 96, to: 96, page: '/focus' },
+  cipher: { from: 97, to: 97, page: '/cipher' },
+  patterns: { from: 98, to: 98, page: '/patterns' },
+  survival: { from: 99, to: 99, page: '/survival' },
 });
 
 const random = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
@@ -48,12 +53,12 @@ export const pageOfGame = (game) => ROOM_FAMILIES[game]?.page || null;
 function probeFor(kind, env, code) {
   const usable = (ns) => typeof ns?.idFromName === 'function' && typeof ns?.get === 'function';
   if (kind === 'board') return usable(env.BOARD_ROOMS) && { stub: env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(code)), url: 'https://board.internal/status' };
-  const names = { quiz: [code, 'https://room.internal/status'], party: ['party:' + code, 'https://party.internal/status'], sudoku: ['sudoku:' + code, 'https://sudoku.internal/status'], paths: ['paths:' + code, 'https://paths.internal/status'], picture: ['picture:' + code, 'https://picture.internal/status'], serpent: ['__serpent__:' + code, 'https://serpent.internal/status'], duel: ['duel:' + code, 'https://duel.internal/status'] };
+  const names = { challenge:['challenge:'+code,'https://challenge.internal/status'], quiz: [code, 'https://room.internal/status'], party: ['party:' + code, 'https://party.internal/status'], sudoku: ['sudoku:' + code, 'https://sudoku.internal/status'], paths: ['paths:' + code, 'https://paths.internal/status'], picture: ['picture:' + code, 'https://picture.internal/status'], serpent: ['__serpent__:' + code, 'https://serpent.internal/status'], duel: ['duel:' + code, 'https://duel.internal/status'] };
   const [name, url] = names[kind] || [];
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }
 const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot']);
-const kindOf = (game) => (BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
+const kindOf = (game) => (['labyrinth','focus','cipher','patterns','survival'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
 
 async function probe(kind, env, code) {
   const target = probeFor(kind, env, code);
@@ -64,7 +69,7 @@ async function probe(kind, env, code) {
     const data = await res.json().catch(() => ({}));
     if (data?.ok === false) return null;
     if (kind === 'board') return BOARD_GAMES.has(data.game) ? data.game : null;
-    if (kind === 'duel') return data.game || null;
+    if (kind === 'duel'||kind==='challenge') return data.game || null;
     return kind;
   } catch (error) {
     if (/exceeded allowed volume of requests/i.test(String(error?.message || ''))) throw error;

@@ -143,15 +143,7 @@
   ],
   "reaction.html": [
     "assets/css/platform.css",
-    "assets/css/pro-games.css",
-    "assets/css/arcade.css",
-    "assets/css/cosmetics.css",
-    "assets/css/professional-v14.css",
-    "assets/css/studio-v16.css",
-    "assets/css/mobile-v21.css",
-    "assets/css/release-v31.css",
-    "assets/css/game-interaction-v34.css",
-    "assets/css/reaction-challenge.css"
+    "assets/css/challenges.css"
   ],
   "serpent.html": [
     "assets/css/platform.css",
@@ -317,5 +309,37 @@
   ],
   "characters.html": [
     "/assets/css/character-gallery.css"
+  ],
+  "labyrinth.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
+  ],
+  "focus.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
+  ],
+  "cipher.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
+  ],
+  "patterns.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
+  ],
+  "survival.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
+  ],
+  "reaction-classic.html": [
+    "assets/css/platform.css",
+    "assets/css/pro-games.css",
+    "assets/css/arcade.css",
+    "assets/css/cosmetics.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css",
+    "assets/css/release-v31.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/reaction-challenge.css"
   ]
 }

@@ -35,7 +35,7 @@ export async function createDOM(file,globals={}){
  const clean=source=>source.replace(/import[\s\S]*?from\s*['"][^'"]+['"];?/g,'').replace(/\bexport /g,'');
  const vmContext=vm.createContext(context);
  if(['memory.html','logic.html','party.html'].includes(file)){for(const name of ['memory-themes-v34.js','cognitive-ui-v34.js'])vm.runInContext(clean(await readFile(new URL('../public/assets/js/'+name,import.meta.url),'utf8')),vmContext);}
- if(['memory.html','logic.html','puzzle.html','reaction.html','party.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/native-play-v33.js',import.meta.url),'utf8')),vmContext);
+ if(['memory.html','logic.html','puzzle.html','reaction.html','reaction-classic.html','party.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/native-play-v33.js',import.meta.url),'utf8')),vmContext);
  if(['jackaroo.html','zahra.html','party.html','shop.html','snakes.html'].includes(file))vm.runInContext(await readFile(new URL('../public/assets/js/pieces-v31.js',import.meta.url),'utf8'),vmContext);
  // 33.0.0: the table games run their room through board-table-v33.js. The page helpers
  // (seat looks, bot tags, dice skins) run here as they are; createTable is a stand-in that
