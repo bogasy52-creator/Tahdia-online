@@ -1,0 +1,19 @@
+{
+  "release": "33.0.0",
+  "edition": "studio1",
+  "unit_tests": 1157,
+  "native_runtime_cases": 23,
+  "updater_tests": 6,
+  "browser_tested": false,
+  "physical_phone_tested": false,
+  "published": false,
+  "source_commit": "b4893f454440e70ae48f1b5dea3d54a62079e1cf",
+  "features": [
+    "maze route and barrier impact preview",
+    "focus server-side streak scoring and private response statistics",
+    "per-target cipher notebook",
+    "territory attack confirmation and attacking bot",
+    "four reachable survival hazards and swipe input",
+    "compact arena HUD, timing, podium and deduplicated cues"
+  ]
+}
