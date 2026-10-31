@@ -28,7 +28,7 @@
  function account(){const token=read(area('localStorage'),'bs_social_session'),user=token.split('.')[0]||'';return /^[a-z0-9_]{3,20}$/.test(user)?{token,user}:{token:'',user:''};}
  function room(){
   const query=new URLSearchParams(location.search).get('room')||'';if(/^\d{6}$/.test(query))return query;
-  for(const key of ['soCode','pathRoomCode','roomCode','gameRoomCode','lobbyCode','arenaCode']){
+  for(const key of ['chRoomCode','soCode','pathRoomCode','roomCode','gameRoomCode','lobbyCode','arenaCode']){
    const el=document.getElementById(key);if(!el||el.tagName==='INPUT'||el.closest?.('[hidden],.hidden'))continue;
    const value=String(el.textContent||'').replace(/\s+/g,'');if(/^\d{6}$/.test(value)&&(!el.getClientRects||el.getClientRects().length))return value;
   }

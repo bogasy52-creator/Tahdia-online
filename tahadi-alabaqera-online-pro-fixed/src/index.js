@@ -426,14 +426,14 @@ export default {
       const limited=await rateLimit(request,env,'challenges-api',240,60000);if(limited)return limited;
       if(url.pathname==='/api/challenges/quick'&&request.method==='POST'){
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
-        if(!['labyrinth','focus','cipher','territory','survival'].includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        if(!b||typeof b!=='object'||Array.isArray(b)||!['labyrinth','focus','cipher','territory','survival'].includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
         return env.ROOMS.get(env.ROOMS.idFromName('challenge-queue:'+b.game)).fetch('https://challenge-queue.internal/assign',{method:'POST',body:JSON.stringify({game:b.game})});
       }
       if(url.pathname==='/api/challenges/rooms'&&request.method==='POST'){
         if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
-        const games=['labyrinth','focus','cipher','territory','survival'];if(!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        const games=['labyrinth','focus','cipher','territory','survival'];if(!b||typeof b!=='object'||Array.isArray(b)||!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
         for(let i=0;i<8;i++){const code=String(95+games.indexOf(b.game))+String(crypto.getRandomValues(new Uint32Array(1))[0]%10000).padStart(4,'0'),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء الغرفة'},503);
       }

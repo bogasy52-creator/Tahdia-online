@@ -54,7 +54,7 @@ async function setup(count){
  console.log('Checking guest relay control',count);guest.send('set_relay',{enabled:false});await guest.next(m=>m.type==='error');
  host.send('set_relay',{enabled:false});await host.state(s=>!s.relayEnabled);
  host.send('set_relay',{enabled:true});await host.state(s=>s.relayEnabled&&s.players.every(p=>!p.ready));
- for(const p of peers)p.send('ready',{ready:true});await host.state(s=>s.players.length===count&&s.players.every(p=>p.ready));host.send('start');await host.state(s=>s.status==='playing');
+ for(const p of peers)p.send('ready',{ready:true});await host.state(s=>s.players.length===count&&s.players.every(p=>p.ready));await new Promise(resolve=>setTimeout(resolve,50));host.send('start');await host.state(s=>s.status==='playing');
  assert.equal((await control(created.code,'fourth')).mode,'relay');
  for(const p of peers){const s=await p.state(s=>s.roundIndex===3&&s.current?.mode==='relay'),v=s.current.relay;assert.ok(v);assert.equal(Boolean(v.clue),v.ownerId===p.id);assert.doesNotMatch(JSON.stringify(v),/correctIndex|"steps"|"answers"|"relays"/);}
  return{...created,peers};

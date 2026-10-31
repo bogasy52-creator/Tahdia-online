@@ -334,3 +334,13 @@ for(const game of ['sudoku','paths'])test(game+' invitations validate its real n
  const body={username:'bob_2',game,roomCode:'123456'},result=await social(env,'/api/social/invites',{method:'POST',token:alice,body});assert.equal(result.response.status,200);assert.equal(result.data.invite.joinPath,(game==='paths'?'/paths-online':'/sudoku')+'?room=123456');status='playing';assert.equal((await social(env,'/api/social/invites',{method:'POST',token:alice,body})).response.status,409);
 });
 test('friends can send direct in-game challenges without fabricating a room code',async()=>{const {env}=createEnvironment(),alice=await signup(env,'alice_1','أليس'),bob=await signup(env,'bob_2','بوب');await social(env,'/api/social/friends/request',{method:'POST',token:alice,body:{username:'bob_2'}});await social(env,'/api/social/friends/respond',{method:'POST',token:bob,body:{username:'alice_1',accept:true}});const result=await social(env,'/api/social/invites',{method:'POST',token:alice,body:{username:'bob_2',game:'logic',roomCode:''}});assert.equal(result.response.status,200,JSON.stringify(result.data));assert.equal(result.data.invite.roomCode,'');assert.equal(result.data.invite.joinPath,'/logic');const dashboard=await social(env,'/api/social/me',{token:bob});const invite=dashboard.data.notifications.find(n=>n.type==='game_invite'&&n.game==='logic');assert.equal(invite.joinPath,'/logic');});
+
+for(const game of ['labyrinth','focus','cipher','territory','survival'])test(game+' friend invitations use the challenge namespace, enforce capacity and reject a started or mismatched room',async()=>{
+ const {env}=createEnvironment(),alice=await signup(env,'alice_1','أليس'),bob=await signup(env,'bob_2','بوب');
+ await social(env,'/api/social/friends/request',{method:'POST',token:alice,body:{username:'bob_2'}});await social(env,'/api/social/friends/respond',{method:'POST',token:bob,body:{username:'alice_1',accept:true}});
+ let status='lobby',players=1,actualGame=game;
+ env.ROOMS={idFromName:id=>id,get:id=>{assert.equal(id,'challenge:971234');return{fetch:async url=>{assert.equal(url,'https://challenge.internal/status');return Response.json({ok:true,game:actualGame,status,players,playerLimit:2});}};}};
+ const body={username:'bob_2',game,roomCode:'971234'},send=()=>social(env,'/api/social/invites',{method:'POST',token:alice,body});
+ const result=await send();assert.equal(result.response.status,200,JSON.stringify(result.data));assert.equal(result.data.invite.joinPath,'/'+game+'?room=971234');
+ players=2;assert.equal((await send()).response.status,409);players=1;status='playing';assert.equal((await send()).response.status,409);status='lobby';actualGame='snakes';assert.equal((await send()).response.status,409);
+});

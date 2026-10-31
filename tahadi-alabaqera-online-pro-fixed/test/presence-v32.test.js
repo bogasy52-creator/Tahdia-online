@@ -93,3 +93,9 @@ test('heartbeats reach the registry; only the owner reads who is here', async ()
   const wrongMethod = await Worker.default.fetch(new Request('https://game.test/api/presence', { headers: { Origin: 'https://game.test' } }), env);
   assert.equal(wrongMethod.status, 405);
 });
+
+test('all five challenge arenas have distinct admin presence and room summaries',()=>{
+ const reg=registry(),games=['labyrinth','focus','cipher','territory','survival'],now=1_000_000;
+ games.forEach((game,i)=>{assert.equal(presencePage('/'+game+'.html?room=971234').key,game);reg.beat(cleanBeat({cid:ID(i),did:DEV(i),path:'/'+game,room:'971234'}),null,now);});
+ const summary=reg.summary(now);assert.equal(summary.games.length,5);assert.equal(summary.rooms.length,5);assert.deepEqual(new Set(summary.games.map(g=>g.key)),new Set(games));
+});
