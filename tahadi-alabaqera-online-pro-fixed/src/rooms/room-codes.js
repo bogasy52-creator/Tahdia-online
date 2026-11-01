@@ -20,11 +20,8 @@ export const ROOM_FAMILIES = Object.freeze({
   reaction: { from: 80, to: 84, page: '/reaction' },
   jewels: { from: 85, to: 89, page: '/journey' },
   colors: { from: 90, to: 94, page: '/journey' },
-  labyrinth: { from: 95, to: 95, page: '/labyrinth' },
   focus: { from: 96, to: 96, page: '/focus' },
   cipher: { from: 97, to: 97, page: '/cipher' },
-  territory: { from: 98, to: 98, page: '/territory' },
-  survival: { from: 99, to: 99, page: '/survival' },
 });
 
 const random = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
@@ -58,7 +55,7 @@ function probeFor(kind, env, code) {
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }
 const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot']);
-const kindOf = (game) => (['labyrinth','focus','cipher','territory','survival'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
+const kindOf = (game) => (['focus','cipher'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
 
 async function probe(kind, env, code) {
   const target = probeFor(kind, env, code);

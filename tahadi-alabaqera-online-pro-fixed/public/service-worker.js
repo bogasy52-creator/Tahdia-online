@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-0-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-9571e5b7ffe5';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-22a9d43a7d2d';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.0.0",

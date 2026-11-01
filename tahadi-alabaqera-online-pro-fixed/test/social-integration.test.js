@@ -335,7 +335,7 @@ for(const game of ['sudoku','paths'])test(game+' invitations validate its real n
 });
 test('friends can send direct in-game challenges without fabricating a room code',async()=>{const {env}=createEnvironment(),alice=await signup(env,'alice_1','أليس'),bob=await signup(env,'bob_2','بوب');await social(env,'/api/social/friends/request',{method:'POST',token:alice,body:{username:'bob_2'}});await social(env,'/api/social/friends/respond',{method:'POST',token:bob,body:{username:'alice_1',accept:true}});const result=await social(env,'/api/social/invites',{method:'POST',token:alice,body:{username:'bob_2',game:'logic',roomCode:''}});assert.equal(result.response.status,200,JSON.stringify(result.data));assert.equal(result.data.invite.roomCode,'');assert.equal(result.data.invite.joinPath,'/logic');const dashboard=await social(env,'/api/social/me',{token:bob});const invite=dashboard.data.notifications.find(n=>n.type==='game_invite'&&n.game==='logic');assert.equal(invite.joinPath,'/logic');});
 
-for(const game of ['labyrinth','focus','cipher','territory','survival'])test(game+' friend invitations use the challenge namespace, enforce capacity and reject a started or mismatched room',async()=>{
+for(const game of ['focus','cipher'])test(game+' friend invitations use the challenge namespace, enforce capacity and reject a started or mismatched room',async()=>{
  const {env}=createEnvironment(),alice=await signup(env,'alice_1','أليس'),bob=await signup(env,'bob_2','بوب');
  await social(env,'/api/social/friends/request',{method:'POST',token:alice,body:{username:'bob_2'}});await social(env,'/api/social/friends/respond',{method:'POST',token:bob,body:{username:'alice_1',accept:true}});
  let status='lobby',players=1,actualGame=game;

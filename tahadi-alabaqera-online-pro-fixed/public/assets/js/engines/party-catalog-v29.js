@@ -1,10 +1,7 @@
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=10000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
- {id:'labyrinth',name:'سباق المتاهة',kind:'board',maxPlayers:2,real:true,image:'assets/challenges/labyrinth.svg',hint:'غرفة 20 تتوزع على مواجهات ثنائية ونقاط الطاولات تدخل الترتيب.'},
  {id:'focus',name:'مواجهة التركيز',kind:'reaction',real:true,image:'assets/challenges/focus.svg',hint:'20 لاعبًا وستة اختبارات تركيز متبدّلة.'},
  {id:'cipher',name:'ساحة الشفرات',kind:'puzzle',real:true,image:'assets/challenges/cipher.svg',hint:'اختر أي خصم واكشف شفرته لإقصائه؛ الفوز لآخر لاعب.'},
- {id:'territory',name:'ميدان السيطرة',kind:'arena',real:true,image:'assets/challenges/territory.svg',hint:'وسّع حدودك، اجمع البلورات، وخطّط للهجوم بطاقتك.'},
- {id:'survival',name:'ساحة البقاء',kind:'arena',real:true,image:'assets/challenges/survival.svg',hint:'20 لاعبًا، انهيارات وتحذيرات واندفاع محسوب.'},
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',real:true,image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة نفسها، بقواعد الرأس والذيل والقدرات.'},
  {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
  {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، وتكتمل المقاعد تلقائيًا.'},

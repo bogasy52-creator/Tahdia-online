@@ -1,13 +1,13 @@
 {
   "release": "33.0.0",
-  "base_commit": "9209316312112acc174437d2c38d5bce494bc07a",
+  "base_commit": "94b0ba7301f10d9690adac85d792b05333c90d65",
   "previous_challenges20_commit": "b92f630",
   "cipher_digits": "0-9",
   "unlimited_attempts": true,
   "history": "paged, private, atomic with the game state",
-  "unit_tests": 1133,
+  "unit_tests": 1144,
   "failures": 0,
-  "runtime_checks": 23,
+  "runtime_checks": 11,
   "runtime_passed": true,
   "large_history_checks": {
     "persisted_guesses": 650,
@@ -16,5 +16,14 @@
     "atomic_failure_retry": "passed"
   },
   "browser_qa": "not verified; managed preview relay unavailable",
-  "delivery": "one sparse ZIP under 25 MB; same 33.0.0; manual upload"
+  "delivery": "one sparse ZIP under 25 MB; same 33.0.0; manual upload",
+  "active_games": [
+    "focus",
+    "cipher"
+  ],
+  "retired_games": [
+    "labyrinth",
+    "territory",
+    "survival"
+  ]
 }

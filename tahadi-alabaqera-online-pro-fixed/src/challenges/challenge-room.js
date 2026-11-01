@@ -4,6 +4,7 @@ import {roomCodeFor} from '../rooms/room-codes.js';
 import {CHALLENGES,HEROES,createChallenge,applyChallenge,advanceChallenge,challengeView,nextChallengeAlarm} from '../../public/assets/js/engines/challenge-core.js';
 const reply=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store'}});
 const LOBBY_GRACE_MS=45000;
+const active=game=>['focus','cipher'].includes(game);
 const clean=value=>String(value||'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,20)||'لاعب';
 export class ChallengeRoom{
  constructor(ctx,env){this.ctx=ctx;this.env=env;this.room=null;this.ready=ctx.blockConcurrencyWhile(async()=>{this.room=await loadChallenge(ctx.storage);if(this.room?.match&&!this.room.match.rules){this.room.match.phase='finished';this.room.match.winners=[];this.room.match.log=['قواعد الجولة تغيرت؛ ابدأ جولة جديدة'];}});}
@@ -13,8 +14,9 @@ export class ChallengeRoom{
  broadcast(){for(const ws of this.ctx.getWebSockets()){const a=ws.deserializeAttachment();if(a?.challenge&&this.room?.players.some(p=>p.id===a.id&&p.connection===a.connection))try{ws.send(JSON.stringify({type:'state',state:this.snapshot(a.id)}));}catch{}}}
  async expire(){if(!this.room||Date.now()<this.room.expiresAt)return false;for(const ws of this.ctx.getWebSockets())try{ws.close(4000,'expired');}catch{}await this.ctx.storage.deleteAll();this.room=null;return true;}
  async fetch(request){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{
+  if(this.room&&!active(this.room.game))return reply({ok:false,error:'هذه اللعبة حُذفت؛ اختر الشفرة أو مواجهة التركيز'},410);
   const u=new URL(request.url),b=request.method==='POST'?await request.json().catch(()=>({})):{};
-  if(u.pathname==='/init'){if(this.room)return reply({ok:false},409);if(!CHALLENGES[b.game]||!/^\d{6}$/.test(b.code)||typeof b.hostKey!=='string'||b.hostKey.length<32)return reply({ok:false},400);this.room={code:b.code,game:b.game,hostKey:b.hostKey,hostId:null,players:[],round:0,quick:b.quick===true,expected:Math.min(20,Math.max(1,Number(b.expected)||0)),partyLink:cleanPartyLink(b.party),expiresAt:Date.now()+3600000};await this.save();return reply({ok:true},201);}
+  if(u.pathname==='/init'){if(this.room)return reply({ok:false},409);if(!active(b.game)||!/^\d{6}$/.test(b.code)||typeof b.hostKey!=='string'||b.hostKey.length<32)return reply({ok:false},400);this.room={code:b.code,game:b.game,hostKey:b.hostKey,hostId:null,players:[],round:0,quick:b.quick===true,expected:Math.min(20,Math.max(1,Number(b.expected)||0)),partyLink:cleanPartyLink(b.party),expiresAt:Date.now()+3600000};await this.save();return reply({ok:true},201);}
   if(!this.room||await this.expire())return reply({ok:false,error:'انتهت الغرفة؛ أنشئ غرفة جديدة'},404);
   if(this.pruneLobby())await this.save();
   if(u.pathname==='/status')return reply({ok:true,game:this.room.game,status:this.room.match?.phase||'lobby',players:this.room.players.length,playerLimit:CHALLENGES[this.room.game].players});
@@ -33,7 +35,7 @@ export class ChallengeRoom{
   const pair=new WebSocketPair(),ws=pair[1];this.ctx.acceptWebSocket(ws);ws.serializeAttachment({challenge:true,id:p.id,connection:p.connection});await this.save();ws.send(JSON.stringify({type:'welcome',token:p.token,seq:p.seq,state:this.snapshot(p.id)}));this.broadcast();return new Response(null,{status:101,webSocket:pair[0],headers:{'sec-websocket-protocol':'tahdia-challenge-v1'}});
  });}
  async webSocketMessage(ws,raw){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{
-  if(!this.room||await this.expire())return;const a=ws.deserializeAttachment(),r=this.room,p=r.players.find(p=>p.id===a.id&&p.connection===a.connection);if(!p)return;
+  if(!this.room||await this.expire())return;if(!active(this.room.game)){ws.close(4000,'retired');return;}const a=ws.deserializeAttachment(),r=this.room,p=r.players.find(p=>p.id===a.id&&p.connection===a.connection);if(!p)return;
   const text=typeof raw==='string'?raw:new TextDecoder().decode(raw);if(text.length>2048)return this.error(ws,'الطلب كبير');let b;try{b=JSON.parse(text);}catch{return this.error(ws,'طلب غير صالح');}if(!b||typeof b!=='object')return;
   const second=Math.floor(Date.now()/1000);if(p.second!==second){p.second=second;p.count=0;}if(++p.count>16)return this.error(ws,'تمهّل قليلًا');
   await this.advance();
@@ -56,12 +58,12 @@ export class ChallengeRoom{
  start(){const r=this.room;let players=r.players.filter(p=>p.connection||p.bot);if(players.length<2){const bot={id:'bot:'+crypto.randomUUID(),name:'المنافس الآلي',hero:'robot',bot:true,ready:true};r.players.push(bot);players=[...players,bot];}r.match=createChallenge(r.game,players,crypto.getRandomValues(new Uint32Array(1))[0]);r.round++;r.startsAt=null;r.expiresAt=Date.now()+3600000;for(const p of r.players)p.ready=false;}
  async advance(){const r=this.room;if(!r)return;const now=Date.now();this.pruneLobby(now);if(!r.match&&r.startsAt&&now>=r.startsAt){const count=r.players.filter(p=>p.connection).length;if(!count)r.startsAt=null;else if(r.partyLink&&count<r.expected&&now-r.firstJoinAt<30000)r.startsAt=now+1000;else this.start();}if(r.match)advanceChallenge(r.match,now);await this.report();}
  async report(){const r=this.room,m=r?.match;if(!r?.partyLink||r.partyReported||m?.phase!=='finished')return;const ranked=m.players.filter(p=>!p.bot).sort((a,b)=>Number(m.winners.includes(b.id))-Number(m.winners.includes(a.id))||Number(b.alive)-Number(a.alive)||b.score-a.score||(b.eliminatedAt||0)-(a.eliminatedAt||0));const rows=standings(ranked.map(p=>({...p,username:r.players.find(x=>x.id===p.id)?.username,won:m.winners.length===1&&m.winners.includes(p.id)})),(a,b)=>a.won===b.won&&a.alive===b.alive&&a.score===b.score&&a.eliminatedAt===b.eliminatedAt);if(await reportPartyLink(this.env,r.partyLink,r.game,rows)){r.partyReported=true;r.reportAt=null;}else{r.reportTries=(r.reportTries||0)+1;r.reportAt=r.reportTries<6?Date.now()+5000:null;if(!r.reportAt)r.partyReported=true;}}
- async alarm(){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{if(!this.room||await this.expire())return;await this.advance();await this.save();this.broadcast();});}
+ async alarm(){await this.ready;if(this.room&&!active(this.room.game)){for(const ws of this.ctx.getWebSockets())try{ws.close(4000,'retired');}catch{}await this.ctx.storage.deleteAlarm();return;}return this.ctx.blockConcurrencyWhile(async()=>{if(!this.room||await this.expire())return;await this.advance();await this.save();this.broadcast();});}
 }
 
 export class ChallengeQueue{
  constructor(ctx,env){this.ctx=ctx;this.env=env;}
- async fetch(request){return this.ctx.blockConcurrencyWhile(async()=>{const b=await request.json().catch(()=>({}));if(!CHALLENGES[b.game])return reply({ok:false,error:'لعبة غير معروفة'},400);let entry=await this.ctx.storage.get('challengeQueue');
+ async fetch(request){return this.ctx.blockConcurrencyWhile(async()=>{const b=await request.json().catch(()=>({}));if(!active(b.game))return reply({ok:false,error:'لعبة غير معروفة'},400);let entry=await this.ctx.storage.get('challengeQueue');
  if(entry&&entry.expiresAt>Date.now()){const stub=this.env.ROOMS.get(this.env.ROOMS.idFromName('challenge:'+entry.code)),res=await stub.fetch('https://challenge.internal/status'),status=await res.json();if(res.ok&&status.status==='lobby'&&status.players<CHALLENGES[b.game].players)return reply({ok:true,code:entry.code});}
  for(let i=0;i<6;i++){const code=roomCodeFor(b.game),hostKey=crypto.randomUUID()+crypto.randomUUID(),stub=this.env.ROOMS.get(this.env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey,quick:true})});if(res.status===201){await this.ctx.storage.put('challengeQueue',{code,expiresAt:Date.now()+60000});return reply({ok:true,code,hostKey});}}
  return reply({ok:false,error:'تعذر تجهيز المواجهة'},503);

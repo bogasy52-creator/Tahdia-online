@@ -1,12 +1,12 @@
 import {loadParty,storeParty} from './party-storage.js';
-import {createParty,addPartyPlayer,partySnapshot,partyRoundView,configureParty,applyPartyAction,advanceParty,openPartyLink,failPartyLink,applyLinkResult} from './party-engine.js';
+import {retirePartyChallenges,createParty,addPartyPlayer,partySnapshot,partyRoundView,configureParty,applyPartyAction,advanceParty,openPartyLink,failPartyLink,applyLinkResult} from './party-engine.js';
 import {createLinkedRoom} from './party-link.js';
 import {steerSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
 import {compactSerpentFrame,compactSerpentKeyframe} from '../../public/assets/js/serpent-network.js';
 const PROTOCOL='tahdia-party-v29',json=(value,status=200)=>Response.json(value,{status,headers:{'cache-control':'no-store'}});
 const open=ws=>ws.readyState===undefined||ws.readyState===1;
 export class PartyRoom{
- constructor(ctx,env){this.ctx=ctx;this.env=env;this.room=null;this.chain=Promise.resolve();this.timer=null;this.lastSavedAt=0;this.ready=ctx.blockConcurrencyWhile(async()=>{this.room=await loadParty(ctx.storage);if(this.room){this.syncConnections();if(this.room.status==='countdown'&&this.room.order.some(id=>!this.room.players[id].connected)){this.room.status='lobby';this.room.startsAt=0;for(const p of Object.values(this.room.players))if(!p.connected)p.ready=false;await this.save();await this.schedule();}this.run();}});}
+ constructor(ctx,env){this.ctx=ctx;this.env=env;this.room=null;this.chain=Promise.resolve();this.timer=null;this.lastSavedAt=0;this.ready=ctx.blockConcurrencyWhile(async()=>{this.room=await loadParty(ctx.storage);if(this.room){if(retirePartyChallenges(this.room)){await this.save();await this.schedule();}this.syncConnections();if(this.room.status==='countdown'&&this.room.order.some(id=>!this.room.players[id].connected)){this.room.status='lobby';this.room.startsAt=0;for(const p of Object.values(this.room.players))if(!p.connected)p.ready=false;await this.save();await this.schedule();}this.run();}});}
  enqueue(fn){const work=this.chain.then(fn);this.chain=work.catch(()=>{});return work;}
  syncConnections(){if(!this.room)return;const ids=new Set();for(const ws of this.ctx.getWebSockets())try{const a=ws.deserializeAttachment(),p=this.room.players[a?.playerId];if(open(ws)&&p&&p.connection===a.connection)ids.add(p.id);}catch{}for(const p of Object.values(this.room.players)){const connected=ids.has(p.id);if(p.connected&&!connected)p.disconnectedAt=Date.now();p.connected=connected;}}
  async save(){if(this.room){this.room.updatedAt=Date.now();try{await storeParty(this.ctx.storage,this.room);this.lastSavedAt=Date.now();this.dirty=false;}catch(error){this.dirty=true;throw error;}}}

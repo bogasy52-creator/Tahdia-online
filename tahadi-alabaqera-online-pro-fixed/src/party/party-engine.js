@@ -101,7 +101,7 @@ export function openPartyLink(room,{code,page},now=Date.now(),table=0){
 // The real room could not open: the round is played inside the party instead.
 export function failPartyLink(room,now=Date.now()){
  const r=room.round;if(room.status!=='playing'||r?.link?.status!=='creating')return false;
- if(['labyrinth','focus','cipher','territory','survival'].includes(r.game)){r.events.push('تعذر فتح اللعبة؛ الانتقال للجولة التالية دون نقاط');finishPartyRound(room,now);return true;}
+ if(['focus','cipher'].includes(r.game)){r.events.push('تعذر فتح اللعبة؛ الانتقال للجولة التالية دون نقاط');finishPartyRound(room,now);return true;}
  r.link={status:'failed',page:r.link.page};r.startedAt=now;r.deadline=now+r.settings.duration*1000;setupRoundGame(room,r,now);r.revision++;return true;
 }
 /** The real room's final ranking becomes this round's result. */
@@ -208,7 +208,7 @@ export function finishPartyRound(room,now=Date.now(),aborted=false){
  const r=room.round;if(room.status!=='playing'||!r||room.history.some(h=>h.id===r.id))return false;
  const rows=roundRows(room,r,now);if(aborted)for(const p of rows)p.points=0;
  for(const row of rows){const p=room.players[row.id];p.score+=row.points;if(!aborted&&row.rank===1&&row.points>0)p.wins++;}
- room.history.push({id:r.id,game:r.game,name:partyGame(r.game).name,rows,aborted,finishedAt:now,linked:Boolean(r.link&&r.link.status!=='failed')});room.status='intermission';r.finishedAt=now;
+ room.history.push({id:r.id,game:r.game,name:partyGame(r.game)?.name||'لعبة محذوفة',rows,aborted,finishedAt:now,linked:Boolean(r.link&&r.link.status!=='failed')});room.status='intermission';r.finishedAt=now;
  // after a game played on its own page, everyone gets a minute to come back
  const away=Boolean(r.link&&r.link.status!=='failed');room.returnWait=away;room.nextAt=now+(away?PARTY_RETURN_MS:PARTY_BREAK_MS);if(r.link)r.link={...r.link,status:r.link.status==='open'||r.link.status==='creating'?'closed':r.link.status,tables:(r.link.tables||[]).map(t=>({...t,token:undefined}))};return true;
 }
@@ -289,7 +289,7 @@ function publicParticipant(r,p,now){
 // 33.0.0: the state the room sends to everyone lists every table and its players
 // (`link.list`), so each page finds its own table; `code` is the viewer's own table.
 export function partyRoundView(room,id=null,now=Date.now()){
- const r=room.round;if(!r)return null;const view={id:r.id,game:r.game,name:partyGame(r.game).name,startedAt:r.startedAt,deadline:r.deadline,settings:r.settings,revision:r.revision,me:publicParticipant(r,r.participants[id],now)};
+ const r=room.round;if(!r)return null;const view={id:r.id,game:r.game,name:partyGame(r.game)?.name||'لعبة محذوفة',startedAt:r.startedAt,deadline:r.deadline,settings:r.settings,revision:r.revision,me:publicParticipant(r,r.participants[id],now)};
  if(r.link){const tables=r.link.tables||[],mine=tables.find(t=>t.players.includes(id))||[...tables].filter(t=>t.code).sort((a,b)=>a.players.length-b.players.length)[0];view.link={status:r.link.status,page:r.link.page,code:mine?.code||r.link.code||null,count:r.link.count||0,tables:tables.length,table:mine?mine.id:null,list:tables.map(t=>({id:t.id,code:t.code||null,players:[...(t.players||[])]}))};}
  if(r.link&&r.link.status!=='failed')return view;
  if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,category:q.category||null,visual:Boolean(q.visual),sequence:q.sequence||null,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
@@ -300,4 +300,12 @@ export function partyRoundView(room,id=null,now=Date.now()){
 }
 export function partySnapshot(room,id=null,now=Date.now()){
  return{format:PARTY_VERSION,code:room.code,capacity:room.capacity,status:room.status,revision:room.revision,serverNow:now,sessionId:room.sessionId,playlist:room.playlist,playlistRevision:room.playlistRevision,cursor:room.cursor,startsAt:room.startsAt||0,nextAt:room.nextAt||0,players:partyRanking(room),round:partyRoundView(room,id,now),history:room.history,finishedAt:room.finishedAt||0,returnWait:Boolean(room.returnWait&&room.status==='intermission')};
+}
+
+export function retirePartyChallenges(room,now=Date.now()){
+ const retired=new Set(['labyrinth','territory','survival']);let changed=false;
+ for(const row of room.playlist||[])if(retired.has(row.game)){row.game='focus';changed=true;}
+ if(changed)room.playlistRevision=(room.playlistRevision||0)+1;
+ if(retired.has(room.round?.game)){if(room.status==='playing')finishPartyRound(room,now,true);room.round=null;room.returnWait=false;if(room.status==='intermission')room.nextAt=now+PARTY_BREAK_MS;changed=true;}
+ return changed;
 }
