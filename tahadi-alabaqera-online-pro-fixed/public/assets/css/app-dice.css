@@ -876,9 +876,8 @@ html[data-dice=dice-smoke],html[data-dice=dice-nebula]{--die-one:#ffdf9d}
 .game-dice .game-livebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;font-size:12px;color:#a7b4c6}
 
 /* assets/css/game-interaction-v34.css */
-/* Labels are controls, not prose: on every page a long press selects nothing and opens no copy menu; typing fields still do. */
-html{-webkit-tap-highlight-color:transparent}
+/* A long press selects no text and opens no copy menu; fields stay editable. */
 body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body input,body textarea,body select,body [contenteditable]:not([contenteditable="false"]),body [contenteditable]:not([contenteditable="false"]) *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body input,body textarea,body select,body [contenteditable],body [contenteditable] *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 body a,body button,body [role=button],body label{touch-action:manipulation}
 body img,body svg,body canvas{-webkit-user-drag:none}

@@ -206,6 +206,18 @@
     {id:'online-winner',kind:'achievement',name:'بطل المنافسة',description:'اربح 5 مباريات أونلاين موثّقة.',metric:'rankedWins',goal:5,coins:150}
   ].map(Object.freeze));
   const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot'];
+  // 33.2.0: a Baloot mission every day and one more game that changes daily
+  const GAME_MISSIONS=Object.freeze([
+    ['baloot','games',2,60,'جلسة بلوت','العب صكّتين بلوت كاملة اليوم.'],['baloot','wins',1,80,'صكّة لك','اربح صكّة بلوت اليوم.'],
+    ['snakes','games',2,50,'سلم وثعبان','العب جولتين سلم وثعبان اليوم.'],['zahra','games',2,50,'طاولة الزهرة','العب جولتين زهرة اليوم.'],
+    ['quiz','games',2,50,'تحدي الأسئلة','العب مباراتين في تحدي الأسئلة اليوم.'],['jackaroo','games',2,50,'جاكارو','العب جولتين جاكارو اليوم.'],
+    ['dice','wins',1,70,'سباق النرد','اربح جولة في تحدي النرد اليوم.'],['serpent','games',3,50,'حلبة الثعابين','العب 3 جولات في حلبة الثعابين اليوم.'],
+    ['snakes','wins',1,70,'أول من يوصل','اربح جولة سلم وثعبان اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.']
+  ].map(([game,metric,goal,coins,name,description])=>Object.freeze({id:'day-'+game+(metric==='wins'?'-win':'-play'),game,metric,goal,coins,name,description})));
+  function gameMissionsFor(day){
+    const n=Math.floor(Date.parse(day+'T00:00:00Z')/86400000)||0,baloot=GAME_MISSIONS.filter(m=>m.game==='baloot'),others=GAME_MISSIONS.filter(m=>m.game!=='baloot');
+    return [baloot[n%baloot.length],others[n%others.length]];
+  }
   const COSMETIC_STYLES=Object.freeze({
     'dice-studio':{'--die-color':'#eee8da','--die-highlight':'#fffdf4','--die-shade':'#b9aa8f','--die-pip':'#182027','--die-pip-light':'#465158','--die-edge':'#b8a484','--die-radius':'18%','--die-pip-radius':'50%'},
     'dice-smoke':{'--die-color':'#39454c','--die-highlight':'#a8b8ba','--die-shade':'#10191f','--die-pip':'#f2dfb9','--die-pip-light':'#fff9e9','--die-edge':'#94a9ae','--die-radius':'12%','--die-pip-radius':'50%'},
@@ -235,7 +247,7 @@
     'trail-none':{'--trail-color':'#20ccff'},'trail-comet':{'--trail-color':'#4ce6ff'},'trail-plasma':{'--trail-color':'#e777ff'}
   });
   const finite=n=>Math.max(0,Math.min(100000000,Math.floor(Number(n)||0)));
-  function period(raw={}){raw=raw&&typeof raw==='object'?raw:{};return {key:String(raw.key||'').slice(0,10),games:finite(raw.games),wins:finite(raw.wins),online:finite(raw.online),variety:[...new Set(Array.isArray(raw.variety)?raw.variety:[])].filter(x=>GAME_IDS.includes(x)),claimed:[...new Set(Array.isArray(raw.claimed)?raw.claimed:[])].filter(x=>OBJECTIVES.some(o=>o.id===x))}}
+  function period(raw={}){raw=raw&&typeof raw==='object'?raw:{};const byGame={};for(const game of GAME_IDS){const row=raw.byGame?.[game];if(row&&typeof row==='object'&&(row.g||row.w))byGame[game]={g:finite(row.g),w:finite(row.w)}}return {key:String(raw.key||'').slice(0,10),games:finite(raw.games),wins:finite(raw.wins),online:finite(raw.online),variety:[...new Set(Array.isArray(raw.variety)?raw.variety:[])].filter(x=>GAME_IDS.includes(x)),byGame,claimed:[...new Set(Array.isArray(raw.claimed)?raw.claimed:[])].filter(x=>OBJECTIVES.some(o=>o.id===x)||GAME_MISSIONS.some(o=>o.id===x))}}
   function normalize(raw={}){
     raw=raw&&typeof raw==='object'?raw:{};
     const free=CATALOG.filter(i=>i.price===0&&!i.source).map(i=>i.id);
@@ -254,7 +266,15 @@
     const gain=verified?(win?250:80):(win?100:40);
     p.xp+=gain;p.coins+=verified?(win?50:15):(win?20:8);p.games++;p[win?'wins':'losses']++;
     if(verified){p.rankedXP+=gain;p[win?'rankedWins':'rankedLosses']++}
-    for(const kind of ['daily','weekly']){const key=kind==='daily'?riyadhDay(now):riyadhWeek(now);if(p.missions[kind].key!==key)p.missions[kind]=period({key});const m=p.missions[kind];m.games++;if(win)m.wins++;if(verified)m.online++;if(!m.variety.includes(game))m.variety.push(game)}
+    for(const kind of ['daily','weekly']){const key=kind==='daily'?riyadhDay(now):riyadhWeek(now);if(p.missions[kind].key!==key)p.missions[kind]=period({key});const m=p.missions[kind];m.games++;if(win)m.wins++;if(verified)m.online++;if(!m.variety.includes(game))m.variety.push(game);const row=m.byGame[game]||(m.byGame[game]={g:0,w:0});row.g++;if(win)row.w++}
+    p.receipts.push(receipt);return normalize(p);
+  }
+  // 33.2.0: a server prize (the weekly Baloot cup), paid once per receipt
+  function grant(raw,{id,coins=0,item=null}={}){
+    const p=normalize(raw),receipt=String(id||'').slice(0,160),amount=finite(coins);
+    if(!/^prize:[a-z0-9:_-]{3,150}$/.test(receipt)||amount>100000)throw new Error('invalid_prize');
+    if(p.receipts.includes(receipt))return p;
+    p.coins+=amount;if(item&&CATALOG.some(i=>i.id===item)&&!p.owned.includes(item))p.owned.push(item);
     p.receipts.push(receipt);return normalize(p);
   }
   function purchase(raw,id,{now=Date.now(),expectedPrice}={}){const p=normalize(raw),item=CATALOG.find(i=>i.id===id);if(!item)throw new Error('item_not_found');if(!p.owned.includes(id)){if(item.source)throw new Error('item_locked');if(item.retired)throw new Error('item_retired');const price=itemPrice(id,now);if(expectedPrice!=null&&expectedPrice!==price)throw new Error('price_changed');if(p.coins<price)throw new Error('insufficient_coins');p.coins-=price;p.owned.push(id)}if(!isReaction(item))p.equipped[item.type]=id;return normalize(p)}
@@ -278,7 +298,10 @@
   }
   function objectives(raw,{now=Date.now()}={}){
     const p=normalize(raw);
-    return OBJECTIVES.map(o=>{const key=o.kind==='daily'?riyadhDay(now):o.kind==='weekly'?riyadhWeek(now):'lifetime',stored=p.missions[o.kind],m=stored?.key===key?stored:period(),claimed=o.kind==='achievement'?p.achievements.includes(o.id):m.claimed.includes(o.id);const current=o.kind==='achievement'?(o.metric==='collection'?p.owned.filter(id=>CATALOG.find(i=>i.id===id)?.price>0).length:p[o.metric]||0):o.metric==='variety'?m.variety.length:m[o.metric]||0;return {...o,key,current,claimed,ready:current>=o.goal&&!claimed}});
+    const rows=OBJECTIVES.map(o=>{const key=o.kind==='daily'?riyadhDay(now):o.kind==='weekly'?riyadhWeek(now):'lifetime',stored=p.missions[o.kind],m=stored?.key===key?stored:period(),claimed=o.kind==='achievement'?p.achievements.includes(o.id):m.claimed.includes(o.id);const current=o.kind==='achievement'?(o.metric==='collection'?p.owned.filter(id=>CATALOG.find(i=>i.id===id)?.price>0).length:p[o.metric]||0):o.metric==='variety'?m.variety.length:m[o.metric]||0;return {...o,key,current,claimed,ready:current>=o.goal&&!claimed}});
+    const day=riyadhDay(now),today=p.missions.daily?.key===day?p.missions.daily:period();
+    const games=gameMissionsFor(day).map(o=>{const row=today.byGame[o.game]||{g:0,w:0},current=o.metric==='wins'?row.w:row.g,claimed=today.claimed.includes(o.id);return {...o,kind:'daily',key:day,current,claimed,ready:current>=o.goal&&!claimed}});
+    const at=rows.findIndex(o=>o.kind!=='daily');rows.splice(at<0?rows.length:at,0,...games);return rows;
   }
   function claimObjective(raw,id,{now=Date.now()}={}){
     const p=normalize(raw),o=objectives(p,{now}).find(o=>o.id===id);if(!o)throw new Error('objective_not_found');if(o.claimed)return p;if(!o.ready)throw new Error('objective_incomplete');
@@ -319,9 +342,9 @@
   const HEROES=Object.freeze(CATALOG.filter(i=>i.type==='character').map(i=>Object.freeze({id:i.id.slice(10),item:i.id,name:i.name,art:i.asset})));
   const heroOf=value=>{const id=String(value||'').replace(/^character-/,'');return HEROES.find(h=>h.id===id)||null;};
   const heroArt=value=>{const h=heroOf(value);return h?'/assets/heroes/'+h.art+'.webp':'';};
-  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.1.0-full1':'';};
+  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.2.0-full1':'';};
   const heroFace=value=>{const h=heroOf(value);return h?'/assets/heroes/face/'+h.art+'.webp':'';};
   const BOT_HEROES=['robot','princess','samurai','viking','cyber','diver','racer','gladiator'];
   const botHeroFace=seat=>heroFace(BOT_HEROES[Math.abs(Math.floor(Number(seat)||0))%BOT_HEROES.length]);
-  root.BS_CAREER_CORE=Object.freeze({HERO_SIGNATURES,HEROES,heroOf,heroArt,heroPoster,heroFace,botHeroFace,unlockJourney,CATALOG,COLLECTION,REACTIONS,REACTION_TYPES,LEGACY_REACTIONS,STOREFRONT,SLOTS,isReaction,reactionOf,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
+  root.BS_CAREER_CORE=Object.freeze({HERO_SIGNATURES,HEROES,heroOf,heroArt,heroPoster,heroFace,botHeroFace,unlockJourney,CATALOG,COLLECTION,REACTIONS,REACTION_TYPES,LEGACY_REACTIONS,STOREFRONT,SLOTS,isReaction,reactionOf,BUNDLES,OBJECTIVES,COSMETIC_STYLES,normalize,reward,purchase,equip,DAILY_GIFTS,riyadhDay,riyadhWeek,dailyOffer,itemPrice,dailyStatus,claimDaily,objectives,claimObjective,GAME_MISSIONS,gameMissionsFor,grant,bundleQuote,purchaseBundle,cartQuote,purchaseCart});
 })(globalThis);

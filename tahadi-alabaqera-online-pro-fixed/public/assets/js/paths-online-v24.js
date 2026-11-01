@@ -1,6 +1,6 @@
 import {drawBoard} from './journey-renderer.js?v=29.1.0';
 import {adjacent,nextStage,stageCount} from './engines/journey-engine.js?v=29.1.0';
-import {createSoloPathsSession} from './engines/paths-solo.js?v=33.1.0-gameplay3';
+import {createSoloPathsSession} from './engines/paths-solo.js?v=33.2.0-gameplay3';
 import * as progress from './journey-client.js?v=29.1.0';
 const $=id=>document.getElementById(id),show=(id,yes)=>$(id).hidden=!yes;
 const read=k=>{try{return localStorage.getItem(k)||'';}catch{return '';}},write=(k,v)=>{try{localStorage.setItem(k,v);}catch{}},remove=k=>{try{localStorage.removeItem(k);}catch{}};

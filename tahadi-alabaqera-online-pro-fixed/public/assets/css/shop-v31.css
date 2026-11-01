@@ -296,3 +296,9 @@ body.shop31 .sx-bag-summary small{color:var(--sx-muted);font-size:12px}
 @media (prefers-reduced-motion:reduce){
  body.shop31 *{animation:none!important;transition:none!important}
 }
+
+/* 33.2.0: the day's game missions (Baloot + one more game) open their game */
+body.shop31 .sx-objective.is-game-mission{border-color:#2f6f63;background:linear-gradient(170deg,#0f2a2a,#11223a 65%)}
+body.shop31 .sx-objective.is-game-mission .sx-eyebrow{color:#8fe3c7}
+body.shop31 .sx-objective.is-game-mission.is-ready{border-color:var(--sx-gold);background:linear-gradient(170deg,#2a2210,#11223a 60%)}
+body.shop31 a.sx-mission-play{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}

@@ -336,9 +336,8 @@ body.journey-page,body.picture-page{inline-size:100%;max-inline-size:100%;min-in
 body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-inline-size:0;flex-wrap:wrap}
 
 /* assets/css/game-interaction-v34.css */
-/* Labels are controls, not prose: on every page a long press selects nothing and opens no copy menu; typing fields still do. */
-html{-webkit-tap-highlight-color:transparent}
+/* A long press selects no text and opens no copy menu; fields stay editable. */
 body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body input,body textarea,body select,body [contenteditable]:not([contenteditable="false"]),body [contenteditable]:not([contenteditable="false"]) *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body input,body textarea,body select,body [contenteditable],body [contenteditable] *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 body a,body button,body [role=button],body label{touch-action:manipulation}
 body img,body svg,body canvas{-webkit-user-drag:none}

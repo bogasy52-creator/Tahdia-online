@@ -548,6 +548,12 @@ body.shop31 .sx-bag-summary small{color:var(--sx-muted);font-size:12px}
  body.shop31 *{animation:none!important;transition:none!important}
 }
 
+/* 33.2.0: the day's game missions (Baloot + one more game) open their game */
+body.shop31 .sx-objective.is-game-mission{border-color:#2f6f63;background:linear-gradient(170deg,#0f2a2a,#11223a 65%)}
+body.shop31 .sx-objective.is-game-mission .sx-eyebrow{color:#8fe3c7}
+body.shop31 .sx-objective.is-game-mission.is-ready{border-color:var(--sx-gold);background:linear-gradient(170deg,#2a2210,#11223a 60%)}
+body.shop31 a.sx-mission-play{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+
 /* assets/css/shop-v31-1.css */
 /* Tahdia 31.1.0 — shop touches for the 3D pieces, the GPU dice and the real
    board pictures. */
@@ -579,9 +585,8 @@ body.shop31 .sx-character-art{height:92%;height:92cqh;filter:drop-shadow(0 12px 
 @media (prefers-reduced-motion:reduce){body.shop31 .sx-card:hover .sx-deck-card{transition:none}}
 
 /* assets/css/game-interaction-v34.css */
-/* Labels are controls, not prose: on every page a long press selects nothing and opens no copy menu; typing fields still do. */
-html{-webkit-tap-highlight-color:transparent}
+/* A long press selects no text and opens no copy menu; fields stay editable. */
 body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body input,body textarea,body select,body [contenteditable]:not([contenteditable="false"]),body [contenteditable]:not([contenteditable="false"]) *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body input,body textarea,body select,body [contenteditable],body [contenteditable] *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 body a,body button,body [role=button],body label{touch-action:manipulation}
 body img,body svg,body canvas{-webkit-user-drag:none}

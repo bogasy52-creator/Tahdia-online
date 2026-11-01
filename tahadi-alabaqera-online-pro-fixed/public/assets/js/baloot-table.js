@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.1.0-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.1.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.1.0';
-import { BalootVoice } from './baloot-voice.js?v=33.1.0-baloot2';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.2.0-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.2.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.2.0';
+import { BalootVoice } from './baloot-voice.js?v=33.2.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -904,6 +904,8 @@ function showMatchEnd(winner, scores) {
   const won = winner === us;
   $('matchTitle').textContent = won ? 'فزتم بالصكّة! 🏆' : 'راحت الصكّة عليكم';
   $('matchLine').textContent = `لنا ${scores[us]} · لهم ${scores[1 - us]}`;
+  // 33.2.0: what this match added to the weekly cup
+  try { window.BS_BALOOT_CUP?.matchEnded?.(won); } catch {}
   const fan = document.querySelector('.bl-end-fan');
   fan.innerHTML = '';
   ['AS', 'KH', 'QD', 'JC', 'TS'].forEach((card, i) => { const img = document.createElement('img'); img.src = cardUrl(card); img.alt = ''; img.style.transform = `translateX(-50%) rotate(${(i - 2) * 11}deg)`; fan.appendChild(img); });

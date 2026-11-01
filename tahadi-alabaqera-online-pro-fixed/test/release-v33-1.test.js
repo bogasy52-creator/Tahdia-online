@@ -76,8 +76,8 @@ test('the voice studio takes a voice note from a file, shaped like a recording',
   assert.match(admin, /<div class="admin-table-wrap" data-selectable>/);
 });
 
-test('the home footer shows this release', async () => {
+test('the home footer shows the release of the project, whatever it is', async () => {
   const pkg = JSON.parse(await read('package.json')), home = await read('public/index.html');
-  assert.equal(pkg.version, '33.1.0');
-  assert.match(home, /الإصدار 33\.1\.0/);
+  assert.match(pkg.version, /^33\.\d+\.\d+$/);
+  assert.ok(home.includes('الإصدار ' + pkg.version), 'footer ' + pkg.version);
 });

@@ -4,6 +4,12 @@
 export const LEADERBOARD_OBJECT = '__leaderboard__:v1';
 export const LEADERBOARD_POINTS = Object.freeze({ win: 250, play: 80 }); // mirrors verified career XP
 const TOP = 100, RECENT = 40, HALL = 3, KEEP_PERIODS = 3;
+// 33.2.0: the weekly Baloot cup. Every finished Baloot match an account plays
+// (the server ran it, so the result cannot be forged) adds points to that
+// Riyadh week's table; the top three of a finished week claim coins, once.
+export const CUP_POINTS = Object.freeze({ win: 3, play: 1 });
+export const CUP_PRIZES = Object.freeze([1000, 600, 300]);
+export const CUP_SHOW = 20;
 const DAY = 86_400_000, RIYADH = 3 * 3_600_000;
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -45,6 +51,18 @@ export class LeaderboardStore {
     if (url.pathname === '/top' && request.method === 'GET') {
       return json(await this.top(url.searchParams.get('period'), url.searchParams.get('player')));
     }
+    if (url.pathname === '/cup' && request.method === 'GET') return json(await this.cup(url.searchParams.get('player')));
+    // Internal (the Worker, after it checked the player's session): what the player may claim, then mark it paid.
+    if (url.pathname === '/cup/prize' && request.method === 'POST') {
+      const body = await request.json().catch(() => null);
+      return json({ ok: true, prize: await this.cupPrize(String(body?.username || '').toLowerCase()) });
+    }
+    if (url.pathname === '/cup/claimed' && request.method === 'POST') {
+      const body = await request.json().catch(() => null), username = String(body?.username || '').toLowerCase(), week = String(body?.week || '');
+      if (!validUser(username) || !/^\d{4}-\d{2}-\d{2}$/.test(week)) return json({ ok: false, error: 'invalid_claim' }, 400);
+      await this.ctx.blockConcurrencyWhile(() => this.ctx.storage.put(`cup:${week}:claimed:${username}`, { at: Date.now() }));
+      return json({ ok: true });
+    }
     return json({ ok: false, error: 'not_found' }, 404);
   }
 
@@ -70,7 +88,55 @@ export class LeaderboardStore {
       await this.updateTop(period, key, entry);
       applied = true;
     }
+    if (body.game === 'baloot' && await this.recordCup({ username, name, owner, win, receipt, at })) applied = true;
     return { ok: true, applied };
+  }
+
+  async recordCup({ username, name, owner, win, receipt, at }) {
+    const { key } = periodBounds('week', at);
+    await this.prune('cup', key);
+    const entryKey = `cup:${key}:p:${username}`;
+    const entry = await this.ctx.storage.get(entryKey) || { u: username, p: 0, w: 0, g: 0, at, recent: [] };
+    if (entry.recent.includes(receipt)) return false;
+    entry.recent = [...entry.recent, receipt].slice(-RECENT);
+    entry.n = name; entry.o = owner; entry.p += win ? CUP_POINTS.win : CUP_POINTS.play;
+    entry.w += win ? 1 : 0; entry.g += 1; entry.at = at;
+    await this.ctx.storage.put(entryKey, entry);
+    await this.updateTop('cup', key, entry);
+    return true;
+  }
+
+  /** The two finished weeks whose winners may still claim, newest first. */
+  claimWeeks(now = Date.now()) {
+    const { startsAt } = periodBounds('week', now);
+    return [riyadhWeekKey(startsAt - 1), riyadhWeekKey(startsAt - 7 * DAY - 1)];
+  }
+
+  async cupPrize(username, now = Date.now()) {
+    if (!validUser(username)) return null;
+    for (const week of this.claimWeeks(now)) {
+      const top = (await this.ctx.storage.get(`cup:${week}:top`) || []).slice(0, CUP_PRIZES.length), rank = top.findIndex(row => row.u === username);
+      if (rank < 0 || await this.ctx.storage.get(`cup:${week}:claimed:${username}`)) continue;
+      return { week, rank: rank + 1, coins: CUP_PRIZES[rank] };
+    }
+    return null;
+  }
+
+  async cup(playerValue, now = Date.now()) {
+    const bounds = periodBounds('week', now), top = await this.ctx.storage.get(`cup:${bounds.key}:top`) || [];
+    const player = String(playerValue || '').toLowerCase();
+    let me = null, prize = null;
+    if (validUser(player)) {
+      const entry = await this.ctx.storage.get(`cup:${bounds.key}:p:${player}`), rank = top.findIndex(row => row.u === player);
+      me = entry ? { ...publicRow(entry), rank: rank >= 0 ? rank + 1 : null } : { username: player, name: player, points: 0, wins: 0, games: 0, owner: false, rank: null };
+      prize = await this.cupPrize(player, now);
+    }
+    const champions = (await this.ctx.storage.get(`cup:${bounds.previous}:top`) || []).slice(0, CUP_PRIZES.length);
+    return {
+      ok: true, key: bounds.key, startsAt: bounds.startsAt, endsAt: bounds.endsAt, serverNow: now, points: CUP_POINTS, prizes: CUP_PRIZES,
+      total: top.length, players: top.slice(0, CUP_SHOW).map((row, i) => ({ rank: i + 1, ...publicRow(row) })), me, prize,
+      champions: { key: bounds.previous, players: champions.map((row, i) => ({ rank: i + 1, ...publicRow(row), coins: CUP_PRIZES[i] })) },
+    };
   }
 
   async updateTop(period, key, entry) {
@@ -86,6 +152,7 @@ export class LeaderboardStore {
   // final top list (a hall of fame); their per-player rows are removed.
   async prune(period, key) {
     const index = await this.ctx.storage.get('periods') || { week: [], season: [] };
+    // a cup week keeps its final table and its prize claims; its per-player rows go
     const list = index[period] || [];
     if (list.includes(key)) return;
     list.push(key); list.sort();

@@ -3,7 +3,7 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.1.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.2.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
@@ -244,6 +244,7 @@ function renderSets(p){
  }
  $('setsSection').hidden=view!=='shop'||!target.children.length;
 }
+const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'سلم وثعبان',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'}};
 function renderRewards(p){
  const status=core.dailyStatus(p,{now:now()}),gift=$('dailyGift');gift.replaceChildren();
  const head=make('div','sx-daily-head'),copy=make('div');copy.append(make('span','sx-eyebrow','سلسلة الحضور · اليوم '+status.streak+' من 7'),make('h3',null,status.claimed?'هدية اليوم في رصيدك.':'هدية اليوم: '+status.coins+' عملة'),make('p',null,'ادخل كل يوم لترتفع الهدية حتى 120 عملة.'));
@@ -254,8 +255,12 @@ function renderRewards(p){
  for(const objective of core.objectives(p,{now:now()})){
   const tile=make('article','atelier-objective sx-objective'+(objective.ready?' is-ready':'')+(objective.claimed?' is-claimed':''));tile.dataset.objective=objective.id;
   const footer=make('div','sx-objective-footer'),button=make('button','sx-button '+(objective.ready?'primary':'ghost'),objective.claimed?'مستلمة':objective.ready?'استلام':Math.min(objective.current,objective.goal)+' / '+objective.goal);button.type='button';button.disabled=pending||!objective.ready;button.onclick=()=>operate(()=>api().claim(objective.id),'استلمت مكافأة '+objective.name+'.');
-  const reward=make('b','sx-objective-reward');reward.append(coin(),make('span',null,'+'+objective.coins));footer.append(reward,button);
-  tile.append(make('span','sx-eyebrow',{daily:'مهمّة يومية',weekly:'تحدٍّ أسبوعي',achievement:'إنجاز دائم'}[objective.kind]),make('h3',null,objective.name),make('p',null,objective.description));
+  // 33.2.0: a game mission opens its game until it is done
+  const game=objective.game&&MISSION_GAMES[objective.game];let action=button;
+  if(game&&!objective.ready&&!objective.claimed){action=make('a','sx-button ghost sx-mission-play','العب · '+Math.min(objective.current,objective.goal)+' / '+objective.goal);action.href=game.href;}
+  const reward=make('b','sx-objective-reward');reward.append(coin(),make('span',null,'+'+objective.coins));footer.append(reward,action);
+  tile.append(make('span','sx-eyebrow',game?'مهمّة اليوم · '+game.name:{daily:'مهمّة يومية',weekly:'تحدٍّ أسبوعي',achievement:'إنجاز دائم'}[objective.kind]),make('h3',null,objective.name),make('p',null,objective.description));
+  if(game)tile.classList.add('is-game-mission');
   const meter=make('div','sx-meter'),fill=make('i');fill.style.width=Math.min(100,objective.current/objective.goal*100)+'%';meter.append(fill);tile.append(meter);
   tile.append(footer);grid.append(tile);
  }
@@ -347,7 +352,7 @@ for(const dialog of [$('previewDialog'),$('bagDialog')]){
  dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();dialog.close();return;}if(event.key!=='Tab')return;const controls=[...dialog.querySelectorAll('button,a,input,select')].filter(el=>!el.disabled&&!el.hidden&&!el.closest?.('[hidden]')),first=controls[0],last=controls.at(-1);if(!dialog.contains(document.activeElement)){event.preventDefault();first?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}});
 }
 window.addEventListener('bs-career-change',render);window.addEventListener('storage',event=>{if(event.key?.startsWith('atelier30:')){bag=readList('bag');favorites=readList('favorites');checkout=null;render();}});
-{const params=new URLSearchParams(location.search),initialView=params.get('view'),initialFilter=params.get('filter');if(['shop','inventory','rewards'].includes(initialView))view=initialView;if(initialFilter&&(initialFilter==='favorites'||TYPE_LABEL[initialFilter]))filter=initialFilter;}
+{const params=new URLSearchParams(location.search),initialView=params.get('view'),initialFilter=params.get('filter');if(['shop','inventory','rewards'].includes(initialView))view=initialView;else if(initialView==='missions')view='rewards';/* 33.2.0: the home and winner cards link to «مهماتك ومكافآتك» with view=missions */if(initialFilter&&(initialFilter==='favorites'||TYPE_LABEL[initialFilter]))filter=initialFilter;}
 function measure(){const h=document.querySelector('.sx-top')?.offsetHeight;if(h)document.body.style.setProperty('--sx-head',h+'px');}
 window.addEventListener('resize',measure,{passive:true});measure();
 accountKey=key();bag=readList('bag');favorites=readList('favorites');render();

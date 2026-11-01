@@ -102,7 +102,7 @@ export function createSocialUserClass(DurableObject) {
     }
     if (url.pathname.startsWith('/career/')) {
       const action=url.pathname.split('/')[2];
-      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle','cart','journey'].includes(action)) return json({ok:false,error:'not_found'},404);
+      if (!['get','practice','purchase','equip','rename','verified','daily','claim','bundle','cart','journey','prize'].includes(action)) return json({ok:false,error:'not_found'},404);
       if(action!=='verified' && !(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
       if(!this.profile)return json({ok:false,error:'account_not_found'},404);
       return this.ctx.blockConcurrencyWhile(async()=>{
@@ -122,6 +122,8 @@ export function createSocialUserClass(DurableObject) {
           }
           if(action==='practice'||action==='verified')career=Career.reward(career,{id:body.id,game:body.game,win:body.win===true,verified:action==='verified'});
           if(action==='daily')career=Career.claimDaily(career);
+          // 33.2.0: a cup prize; only the Worker sends this, after the leaderboard confirmed the place
+          if(action==='prize')career=Career.grant(career,{id:body.id,coins:body.coins});
           if(action==='purchase')career=Career.purchase(career,body.id,{expectedPrice:body.expectedPrice});
           if(action==='equip')career=Career.equip(career,body.id);
           if(action==='claim')career=Career.claimObjective(career,body.id);

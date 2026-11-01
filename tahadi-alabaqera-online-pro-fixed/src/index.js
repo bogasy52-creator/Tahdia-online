@@ -40,7 +40,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.1.0';
+const RELEASE='33.2.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -404,6 +404,41 @@ export default {
         const res = await stub.fetch('https://quizai.internal/' + url.pathname.split('/').pop(), { method: 'POST', headers: { 'content-type': 'application/json', 'x-bs-owner': '1' }, body });
         if (cache && res.ok) await cache.delete(packKey).catch(() => {});
         return res;
+      }
+      return json({ ok: false, error: 'not_found' }, 404);
+    }
+
+    // 33.2.0: the weekly Baloot cup: the table (public, cached briefly) and the winners' prize claim
+    if (url.pathname === '/api/baloot/cup' || url.pathname === '/api/baloot/cup/claim') {
+      if (!env.BOARD_ROOMS?.idFromName) return json({ ok: false, error: 'unavailable' }, 503);
+      const board = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(LEADERBOARD_OBJECT));
+      if (url.pathname === '/api/baloot/cup' && request.method === 'GET') {
+        const limited = await rateLimit(request, env, 'baloot-cup', 120, 60_000); if (limited) return limited;
+        const player = String(url.searchParams.get('player') || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+        const cache = player ? null : globalThis.caches?.default, cacheKey = new Request(url.origin + '/api/baloot/cup');
+        if (cache) { const hit = await cache.match(cacheKey).catch(() => null); if (hit) return hit; }
+        try {
+          const res = await board.fetch('https://leaderboard.internal/cup' + (player ? '?player=' + player : '')), data = await res.json();
+          const response = new Response(JSON.stringify(data), { status: res.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': cache ? 'public, max-age=30' : 'no-store', 'x-content-type-options': 'nosniff' } });
+          if (cache && res.ok) await cache.put(cacheKey, response.clone()).catch(() => {});
+          return response;
+        } catch (error) { if (isDurableRequestQuotaError(error)) throw error; return json({ ok: false, error: 'تعذر تحميل البطولة الآن، حاول بعد قليل' }, 503); }
+      }
+      if (url.pathname === '/api/baloot/cup/claim' && request.method === 'POST') {
+        const limited = await rateLimit(request, env, 'baloot-cup-claim', 20, 60_000); if (limited) return limited;
+        const auth = await authenticate(request, env);
+        if (!auth) return json({ ok: false, error: 'unauthorized' }, 401);
+        try {
+          const found = await (await board.fetch('https://leaderboard.internal/cup/prize', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: auth.username }) })).json();
+          const prize = found?.prize;
+          if (!prize) return json({ ok: false, error: 'no_prize' }, 404);
+          // the coins first (paid once per receipt), then the mark, so a failure in between is safe to retry
+          const paid = await auth.stub.fetch('https://social.internal/career/prize', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'prize:baloot-cup:' + prize.week, coins: prize.coins, secret: auth.secret }) });
+          const result = await paid.json().catch(() => ({}));
+          if (!paid.ok || !result.ok) return json({ ok: false, error: result.error || 'prize_failed' }, paid.ok ? 400 : paid.status);
+          await board.fetch('https://leaderboard.internal/cup/claimed', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: auth.username, week: prize.week }) });
+          return json({ ok: true, prize, career: result.career, username: auth.username });
+        } catch (error) { if (isDurableRequestQuotaError(error)) throw error; return json({ ok: false, error: 'prize_failed' }, 503); }
       }
       return json({ ok: false, error: 'not_found' }, 404);
     }
