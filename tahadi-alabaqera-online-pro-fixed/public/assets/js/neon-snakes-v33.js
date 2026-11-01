@@ -1,11 +1,23 @@
-/* Detailed board creatures: tapered bodies, evenly spaced scales and restrained neon. */
+/* Tahdia 33.1.0 — neon board snakes.
+   Each snake is a lit neon tube in its own colour: a soft halo, a dark glass
+   body with a bright rim, a white-hot core and evenly spaced chevrons that point
+   down the snake, the way a stone slides. Clean shapes and no busy scales, so
+   the board stays tidy; the halo is layered fills (no blur filter), which keeps
+   it cheap on phones. The heads are drawn too: no image sheet. */
 const PALETTES={
- 'snake-wild':['#52f1c5','#124e48'], 'snake-gold':['#f3cc78','#65502a'],
- 'snake-aurora':['#c5a4ff','#443365'], 'snake-toxic':['#c2e88b','#415432'],
- 'snake-ice':['#8fe2ef','#245264'], 'snake-plasma':['#ee9ed5','#633957'],
- 'snake-sovereign':['#f8df9d','#44513d']
+ // [neon rim, white-hot core, dark glass]
+ 'snake-wild':['#3dff9a','#e2fff0','#04261a'],
+ 'snake-gold':['#ffbe2e','#fff4cf','#2a1904'],
+ 'snake-aurora':['#b27dff','#f0e6ff','#1b0d36'],
+ 'snake-toxic':['#c6ff33','#f4ffd6','#1d2905'],
+ 'snake-ice':['#3fb0ff','#e2f4ff','#061c33'],
+ 'snake-plasma':['#ff4fd6','#ffe2f7','#2e0625'],
+ 'snake-coral':['#ff6450','#ffe3dd','#320b06'],
+ 'snake-aqua':['#24f0d0','#dcfff8','#03282a'],
+ 'snake-sovereign':['#ffd76a','#fff7da','#0b291b']
 };
-// Use arc length so scales stay the same size on short and long spline spans.
+export const NEON_SNAKE_COLORS=Object.freeze(Object.fromEntries(Object.entries(PALETTES).map(([id,[neon]])=>[id,neon])));
+// Use arc length so the chevrons stay evenly spaced on short and long spline spans.
 export function sampleNeonSpine(points,spacing){
  if(!Number.isFinite(spacing)||spacing<=0)throw new RangeError('Scale spacing must be positive');
  if(points.length<2)return points.map(p=>({...p}));const out=[{...points[0]}];let remaining=spacing;
@@ -15,37 +27,60 @@ export function sampleNeonSpine(points,spacing){
  }const end=points.at(-1);if(Math.hypot(end.x-out.at(-1).x,end.y-out.at(-1).y)>.01)out.push({...end});return out;
 }
 function trace(c,points){c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));}
-const girth=(r,t)=>r*(1.02+.12*Math.sin(t*Math.PI))*(1-.92*Math.pow(t,2.4));
+// Full at the neck, a slight belly, then a long fine tail.
+const girth=(r,t)=>r*(1.02+.1*Math.sin(t*Math.PI))*(1-.9*Math.pow(t,2.2));
 function outline(c,points,r){
  const sides=[[],[]];for(let i=0;i<points.length;i++){const p=points[i],a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)],length=Math.hypot(b.x-a.x,b.y-a.y)||1,nx=-(b.y-a.y)/length,ny=(b.x-a.x)/length,w=girth(r,i/(points.length-1));sides[0].push({x:p.x+nx*w,y:p.y+ny*w});sides[1].push({x:p.x-nx*w,y:p.y-ny*w});}
  trace(c,[...sides[0],...sides[1].reverse()]);c.closePath();
 }
 export function drawNeonBody(c,points,species,radius,active=false){
- const [light,dark]=PALETTES[species]||PALETTES['snake-wild'];c.save();c.lineCap='round';c.lineJoin='round';
- outline(c,points,radius*1.18);c.fillStyle='#07151e';c.fill();
- outline(c,points,radius);c.fillStyle=dark;c.fill();c.strokeStyle=light;c.lineWidth=Math.max(.8,radius*.14);c.shadowColor=light;c.shadowBlur=radius*(active?1.15:.5);c.stroke();c.shadowBlur=0;
- // Real scale plates, in two staggered rows instead of a ladder-shaped wireframe.
- const spine=sampleNeonSpine(points,Math.max(2,radius*.85));
- for(let i=1;i<spine.length-2;i++){
-  const p=spine[i],a=spine[i-1],b=spine[i+1],t=i/(spine.length-1),w=girth(radius,t);if(w<radius*.24)continue;
+ const [neon,core,glass]=PALETTES[species]||PALETTES['snake-wild'];c.save();c.lineCap='round';c.lineJoin='round';
+ // the halo: two soft layers of the snake's own colour
+ c.fillStyle=neon;c.globalAlpha=active?.2:.11;outline(c,points,radius*2);c.fill();
+ c.globalAlpha=active?.3:.19;outline(c,points,radius*1.45);c.fill();c.globalAlpha=1;
+ // the tube: dark glass inside a bright rim
+ outline(c,points,radius);c.fillStyle=glass;c.fill();
+ c.strokeStyle=neon;c.lineWidth=Math.max(1.1,radius*(active?.34:.27));c.stroke();
+ // the white-hot core along the spine
+ c.globalAlpha=.92;outline(c,points,radius*.3);c.fillStyle=core;c.fill();c.globalAlpha=1;
+ // chevrons pointing down the snake (head → tail), the way a stone slides
+ const spine=sampleNeonSpine(points,Math.max(3,radius*2.4));c.strokeStyle=neon;c.lineWidth=Math.max(.9,radius*.24);
+ for(let i=2;i<spine.length-1;i++){
+  const p=spine[i],a=spine[i-1],b=spine[i+1],t=i/(spine.length-1),w=girth(radius,t);if(w<radius*.42)break;
   c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(b.y-a.y,b.x-a.x));
-  for(const sign of [-1,1]){c.save();c.translate((i%2)*w*.16,sign*w*.43);c.beginPath();c.moveTo(-w*.46,0);c.quadraticCurveTo(-w*.04,-w*.37,w*.4,0);c.quadraticCurveTo(-w*.04,w*.37,-w*.46,0);c.fillStyle=i%3===0?light:'#092830';c.globalAlpha=i%3===0?.24:.32;c.fill();c.globalAlpha=.48;c.strokeStyle=light;c.lineWidth=Math.max(.35,radius*.055);c.stroke();c.restore();}
-  // A small dorsal diamond creates depth without a continuous bright tube.
-  if(i%2===0){c.globalAlpha=.68;c.fillStyle=light;c.beginPath();c.moveTo(-w*.36,0);c.lineTo(0,-w*.2);c.lineTo(w*.36,0);c.lineTo(0,w*.2);c.closePath();c.fill();}c.restore();
+  c.beginPath();c.moveTo(-w*.5,-w*.66);c.lineTo(w*.2,0);c.lineTo(-w*.5,w*.66);c.stroke();c.restore();
  }
- // Interrupted, narrow highlight on the upper flank.
- c.globalAlpha=.4;trace(c,points.slice(0,Math.max(3,Math.floor(points.length*.75))).map((p,i)=>({x:p.x-radius*.16,y:p.y-radius*.24})));c.strokeStyle='#e8fff8';c.lineWidth=Math.max(.45,radius*.075);c.stroke();c.restore();
+ c.restore();
+}
+// The head faces +x from the neck at the origin; the snout ends near 1.2 × size.
+function headShape(c,s){
+ c.beginPath();c.moveTo(-s*.62,-s*.4);
+ c.bezierCurveTo(-s*.3,-s*.6,s*.12,-s*.74,s*.46,-s*.6);
+ c.quadraticCurveTo(s*.92,-s*.38,s*1.16,-s*.08);
+ c.quadraticCurveTo(s*1.24,0,s*1.16,s*.08);
+ c.quadraticCurveTo(s*.92,s*.38,s*.46,s*.6);
+ c.bezierCurveTo(s*.12,s*.74,-s*.3,s*.6,-s*.62,s*.4);
+ c.closePath();
 }
 export function drawNeonHead(c,species,size){
- const [light,dark]=PALETTES[species]||PALETTES['snake-wild'];c.save();
- // Defined cheek plates, a narrow snout and a continuous neck connection.
- c.beginPath();c.moveTo(-size*.72,-size*.38);c.bezierCurveTo(-size*.32,-size*.75,size*.13,-size*.72,size*.5,-size*.43);c.quadraticCurveTo(size*.75,-size*.25,size*1.06,-size*.17);c.quadraticCurveTo(size*1.2,0,size*1.06,size*.17);c.quadraticCurveTo(size*.75,size*.25,size*.5,size*.43);c.bezierCurveTo(size*.13,size*.72,-size*.32,size*.75,-size*.72,size*.38);c.closePath();
- const shade=c.createLinearGradient(0,-size*.8,0,size*.8);shade.addColorStop(0,light);shade.addColorStop(.2,dark);shade.addColorStop(.6,'#102732');shade.addColorStop(1,dark);c.fillStyle=shade;c.fill();c.lineWidth=Math.max(.8,size*.045);c.strokeStyle=light;c.shadowColor=light;c.shadowBlur=size*.18;c.stroke();c.shadowBlur=0;
- // Crown plates: three inset diamonds with thin seams.
- for(const [x,y,k] of [[-.22,0,.22],[.13,0,.21],[.39,0,.15],[-.42,-.27,.14],[-.42,.27,.14]]){c.beginPath();c.moveTo(size*(x-k),size*y);c.lineTo(size*x,size*(y-k*.8));c.lineTo(size*(x+k),size*y);c.lineTo(size*x,size*(y+k*.8));c.closePath();c.globalAlpha=.5;c.fillStyle=dark;c.fill();c.strokeStyle=light;c.lineWidth=Math.max(.4,size*.022);c.stroke();}c.globalAlpha=1;
- // Recessed almond eyes with slit pupils and a small white catchlight.
- for(const sign of [-1,1]){c.save();c.translate(size*.43,sign*size*.29);c.rotate(sign*.3);c.fillStyle='#041119';c.beginPath();c.ellipse(0,0,size*.19,size*.13,0,0,Math.PI*2);c.fill();c.fillStyle='#e9f3b2';c.beginPath();c.ellipse(size*.015,0,size*.125,size*.085,0,0,Math.PI*2);c.fill();c.fillStyle='#03121b';c.fillRect(-size*.005,-size*.076,size*.027,size*.152);c.fillStyle='#fff';c.beginPath();c.arc(size*.04,-size*.026,size*.025,0,Math.PI*2);c.fill();c.restore();}
- // Nostrils and jaw line sharpen the snout at phone sizes.
- c.fillStyle='#020f16';for(const sign of [-1,1]){c.beginPath();c.ellipse(size*.91,sign*size*.095,size*.035,size*.02,sign*.2,0,Math.PI*2);c.fill();}
- c.strokeStyle=light;c.globalAlpha=.7;c.lineWidth=Math.max(.5,size*.027);c.beginPath();c.moveTo(size*.56,-size*.19);c.quadraticCurveTo(size*.7,0,size*1.07,0);c.quadraticCurveTo(size*.7,0,size*.56,size*.19);c.stroke();c.restore();
+ const [neon,core,glass]=PALETTES[species]||PALETTES['snake-wild'];c.save();c.lineJoin='round';c.lineCap='round';
+ c.scale(1.14,1.14);
+ // halo
+ c.fillStyle=neon;c.globalAlpha=.15;c.save();c.translate(size*.28,0);c.scale(1.45,1.45);c.translate(-size*.28,0);headShape(c,size);c.fill();c.restore();
+ c.globalAlpha=.26;c.save();c.translate(size*.28,0);c.scale(1.2,1.2);c.translate(-size*.28,0);headShape(c,size);c.fill();c.restore();c.globalAlpha=1;
+ // glass head tinted with the snake's colour, and a bright rim
+ headShape(c,size);c.fillStyle=glass;c.fill();c.globalAlpha=.24;c.fillStyle=neon;c.fill();c.globalAlpha=1;
+ c.strokeStyle=neon;c.lineWidth=Math.max(1.2,size*.12);c.stroke();
+ // the core runs on from the body to a crest diamond between the eyes
+ c.strokeStyle=core;c.lineWidth=Math.max(.8,size*.1);c.globalAlpha=.9;c.beginPath();c.moveTo(-size*.62,0);c.lineTo(size*.08,0);c.stroke();
+ c.fillStyle=core;c.beginPath();c.moveTo(size*.02,0);c.lineTo(size*.2,-size*.14);c.lineTo(size*.4,0);c.lineTo(size*.2,size*.14);c.closePath();c.fill();c.globalAlpha=1;
+ // big glowing almond eyes with slit pupils
+ for(const sign of [-1,1]){c.save();c.translate(size*.6,sign*size*.33);c.rotate(sign*.3);
+  c.fillStyle=neon;c.globalAlpha=.5;c.beginPath();c.ellipse(0,0,size*.3,size*.22,0,0,Math.PI*2);c.fill();c.globalAlpha=1;
+  c.fillStyle='#fffbe6';c.beginPath();c.ellipse(0,0,size*.21,size*.15,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#03060b';c.beginPath();c.ellipse(size*.02,0,size*.045,size*.13,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#ffffff';c.beginPath();c.arc(size*.08,-size*.06,Math.max(.5,size*.035),0,Math.PI*2);c.fill();c.restore();}
+ // nostrils
+ c.fillStyle=neon;for(const sign of [-1,1]){c.beginPath();c.arc(size*1.02,sign*size*.1,Math.max(.6,size*.04),0,Math.PI*2);c.fill();}
+ c.restore();
 }

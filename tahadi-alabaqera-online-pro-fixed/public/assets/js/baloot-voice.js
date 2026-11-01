@@ -1,6 +1,6 @@
-import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.0.0';
-import { VOICE_LINES, VOICE_PACK } from './baloot-voice-pack.js?v=33.0.0-baloot2';
-import { createVoicePlayer } from './baloot-voice-player.js?v=33.0.0-baloot2';
+import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.1.0';
+import { VOICE_LINES, VOICE_PACK } from './baloot-voice-pack.js?v=33.1.0-baloot2';
+import { createVoicePlayer } from './baloot-voice-player.js?v=33.1.0-baloot2';
 
 const KEY = 'bs_baloot_voice';
 const plain = text => String(text || '').replace(/[ً-ْٰ]/g, '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/[،,؟?!.…]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -38,14 +38,19 @@ export function humanPackReady(pack, lines = VOICE_LINES) {
     });
 }
 const packReady = humanPackReady(VOICE_PACK);
+// 33.1.0: the calls the manager records in the admin voice studio (no key, nothing
+// outside). Each one takes the place of its line; a line without one keeps the pack's.
+const recordings = packReady ? { ...VOICE_PACK.recordings } : {};
+let studio = 0;
+const ready = () => packReady || studio > 0;
 let enabled = readEnabled(), ctx = null, primed = false;
 function supported() { return typeof window !== 'undefined' && Boolean(window.AudioContext || window.webkitAudioContext); }
 function visible() { return typeof document === 'undefined' || !document.hidden; }
-function allowed() { const s = settings(); return packReady && enabled && !s.muted && s.effects !== false; }
+function allowed() { const s = settings(); return ready() && enabled && !s.muted && s.effects !== false; }
 function context() {
   if (ctx?.state === 'closed') { ctx = null; primed = false; }
   if (ctx) return ctx;
-  if (!supported() || !packReady) return null;
+  if (!supported() || !ready()) return null;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     ctx = new AC({ latencyHint:'interactive' });
@@ -59,29 +64,53 @@ async function fetchClip(clip, signal) {
   const timeout = setTimeout(abort, 8000);
   try {
     const url = new URL(clip.src, window.location.origin);
-    url.searchParams.set('v', clip.sha256.slice(0, 16));
+    url.searchParams.set('v', clip.sha256 ? clip.sha256.slice(0, 16) : String(clip.rev || 0));
     const response = await fetch(url, { cache:'force-cache', signal:controller.signal });
     if (!response.ok) throw new Error('clip_unavailable');
     return await response.arrayBuffer();
   } finally { clearTimeout(timeout); signal.removeEventListener('abort', abort); }
 }
-const player = createVoicePlayer({ recordings:packReady ? VOICE_PACK.recordings : {}, getContext:context,
+const player = createVoicePlayer({ recordings, getContext:context,
   fetchClip, isAllowed:allowed, getVolume:() => settings().volume ?? .72, isVisible:visible, onChange:() => notify() });
 function getStatus() {
   const detail = player.status(), s = settings();
-  const state = !packReady ? 'awaiting-recordings' : !supported() ? 'unsupported' : !enabled ? 'disabled' :
+  const state = !ready() ? 'awaiting-recordings' : !supported() ? 'unsupported' : !enabled ? 'disabled' :
     s.muted || s.effects === false || Number(s.volume ?? .72) <= 0 ? 'muted' :
     detail.state === 'error' ? 'error' : !ctx || ctx.state !== 'running' ? 'locked' : detail.state;
-  return { ...detail, state, available:packReady && supported(), enabled,
-    lastText:detail.last ? VOICE_LINES[detail.last] : null, synthetic:packReady ? false : null };
+  return { ...detail, state, available:ready() && supported(), enabled, studio,
+    lastText:detail.last ? VOICE_LINES[detail.last] : null, synthetic:ready() ? false : null };
+}
+/** The studio's calls: which lines the manager recorded (one small request, cached a little). */
+async function loadStudio({ fresh = false } = {}) {
+  try {
+    const response = await fetch('/api/baloot/voice/pack', { cache:fresh ? 'no-store' : 'default' });
+    if (!response.ok) return studio;
+    const pack = await response.json();
+    let count = 0;
+    for (const id of Object.keys(VOICE_LINES)) {
+      const at = Number(pack?.lines?.[id]?.at) || 0;
+      if (at) { recordings[id] = { src:'/api/baloot/voice/clip/' + id, rev:at, text:VOICE_LINES[id] }; count++; }
+      else if (packReady) recordings[id] = VOICE_PACK.recordings[id];
+      else delete recordings[id];
+    }
+    if (count !== studio || fresh) player.forget();
+    studio = count;
+    notify();
+  } catch { /* the calls stay written */ }
+  return studio;
 }
 function notify() {
   try { window.dispatchEvent(new CustomEvent('bs-baloot-voice-change', { detail:getStatus() })); } catch {}
 }
 export const BalootVoice = {
-  get voice() { return packReady ? VOICE_PACK.voice : null; },
-  get synthetic() { return packReady ? false : null; },
-  supported, hasArabic() { return packReady && supported(); }, get enabled() { return enabled; }, getStatus,
+  get voice() { return packReady ? VOICE_PACK.voice : studio ? 'studio' : null; },
+  get synthetic() { return ready() ? false : null; },
+  supported, hasArabic() { return ready() && supported(); }, get enabled() { return enabled; }, getStatus,
+  /** The voice studio saved or removed a call: read the set again. */
+  reload() { return loadStudio({ fresh:true }); },
+  /** The voice studio: say one call as the tables say it now. */
+  async previewLine(id) { await this.unlock(); return player.enqueue(id, { urgent:true }); },
+  hasRecording(id) { return Boolean(recordings[id]?.src); },
   setEnabled(on) {
     enabled = Boolean(on);
     try { localStorage.setItem(KEY, enabled ? 'on' : 'off'); } catch {}
@@ -95,7 +124,7 @@ export const BalootVoice = {
       if (ac.state !== 'running') await ac.resume();
       if (ac.state !== 'running') { notify(); return false; }
       void player.drain();
-      if (!primed) { primed = true; void player.prime(['pass', 'sun', 'claim', 'review_claim']); }
+      if (!primed) { primed = true; void player.prime(['pass', 'sun', 'ashkal', 'hokom_S', 'hokom_H', 'hokom_D', 'hokom_C', 'thani_S', 'claim', 'review_claim']); }
       notify(); return true;
     } catch { notify(); return false; }
   },
@@ -112,6 +141,7 @@ export const BalootVoice = {
   dispose() { player.dispose(); try { void ctx?.close(); } catch {} ctx = null; }
 };
 try {
+  if (typeof fetch === 'function' && typeof window !== 'undefined' && window.location?.origin) void loadStudio();
   addEventListener('pointerdown', () => { void BalootVoice.unlock(); }, { passive:true });
   addEventListener('keydown', () => { void BalootVoice.unlock(); });
   addEventListener('bs-audio-change', () => { player.refreshSettings(); notify(); });

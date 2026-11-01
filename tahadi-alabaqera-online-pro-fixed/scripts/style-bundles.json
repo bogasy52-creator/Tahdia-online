@@ -20,7 +20,8 @@
     "assets/css/mobile-v21.css",
     "assets/css/admin-live-v32.css",
     "assets/css/game-interaction-v34.css",
-    "assets/css/admin-workspace.css"
+    "assets/css/admin-workspace.css",
+    "assets/css/admin-voice-studio.css"
   ],
   "dice.html": [
     "assets/css/platform.css",
@@ -143,7 +144,8 @@
   ],
   "reaction.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "serpent.html": [
     "assets/css/platform.css",
@@ -308,27 +310,33 @@
     "assets/css/game-interaction-v34.css"
   ],
   "characters.html": [
-    "/assets/css/character-gallery.css"
+    "/assets/css/character-gallery.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "labyrinth.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "focus.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "cipher.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "patterns.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "survival.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "reaction-classic.html": [
     "assets/css/platform.css",
@@ -344,10 +352,12 @@
   ],
   "territory.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ],
   "wordbomb.html": [
     "assets/css/platform.css",
-    "assets/css/challenges.css"
+    "assets/css/challenges.css",
+    "assets/css/game-interaction-v34.css"
   ]
 }

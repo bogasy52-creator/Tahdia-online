@@ -598,6 +598,9 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 /* Voice controls remain usable on a narrow phone. */
 .bl-talk-foot.bl-voice-panel{display:grid;gap:.65rem;align-items:start}.bl-voice-controls{display:flex;flex-wrap:wrap;gap:.5rem}.bl-voice-controls .bl-btn{min-height:44px;flex:1 1 120px}.bl-voice-controls .bl-btn:disabled{opacity:.48;cursor:default}.bl-voice-panel small{display:block;line-height:1.7;text-align:start}.bl-voice-panel [hidden]{display:none!important}
 
+/* 33.1.0: the projects bar takes its own row above the prompt, so «سجّل» stays on screen */
+.bl-tools .bl-project-picker{grid-column:1/-1;order:-1;justify-self:center;justify-content:center}
+
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,
    «غرفة مع أصحابك», the room lobby and your online friends. */
@@ -742,8 +745,9 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 }
 
 /* assets/css/game-interaction-v34.css */
-/* Game labels are controls, not editable prose. Keep native text fields usable. */
-body.bs-game-interaction-v34,body.bs-game-interaction-v34 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body.bs-game-interaction-v34 input,body.bs-game-interaction-v34 textarea,body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]),body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]) *,body.bs-game-interaction-v34 [data-selectable],body.bs-game-interaction-v34 [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-body.bs-game-interaction-v34 button,body.bs-game-interaction-v34 [role=button]{touch-action:manipulation}
-body.bs-game-interaction-v34 img{-webkit-user-drag:none}
+/* Labels are controls, not prose: on every page a long press selects nothing and opens no copy menu; typing fields still do. */
+html{-webkit-tap-highlight-color:transparent}
+body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body input,body textarea,body select,body [contenteditable]:not([contenteditable="false"]),body [contenteditable]:not([contenteditable="false"]) *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body a,body button,body [role=button],body label{touch-action:manipulation}
+body img,body svg,body canvas{-webkit-user-drag:none}

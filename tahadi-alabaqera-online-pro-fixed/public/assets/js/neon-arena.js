@@ -1,4 +1,4 @@
-import {drawNeonBody,drawNeonHead} from './neon-snakes-v33.js?v=33.0.0';
+import {drawNeonBody,drawNeonHead} from './neon-snakes-v33.js?v=33.1.0';
 import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
 /* Tahdia 31.1.0 — the living snakes and ladders of the snakes & ladders board.
    The snakes are the arena's own species (serpent-art-v16.js): painted heads
@@ -20,8 +20,8 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   const art=()=>window.BS_SERPENT_ART||null;
 
   // Arena species. The equipped snake leads; the rest follow in this order.
-  const SPECIES=['snake-wild','snake-gold','snake-aurora','snake-toxic','snake-ice','snake-plasma'];
-  const FALLBACK={'snake-wild':['#378d6b','#102e2b','#a9ecc3'],'snake-gold':['#be8c34','#52381d','#ffe6a8'],'snake-aurora':['#8961bb','#342440','#e9d3ff'],'snake-toxic':['#76a52c','#27361c','#ddff91'],'snake-ice':['#65b8d9','#23415f','#e5fcff'],'snake-plasma':['#448dc5','#392853','#bcfaff'],'snake-sovereign':['#1b5a3d','#06100b','#e8c46a']};
+  const SPECIES=['snake-wild','snake-gold','snake-aurora','snake-toxic','snake-ice','snake-plasma','snake-coral','snake-aqua'];
+  const FALLBACK={'snake-wild':['#378d6b','#102e2b','#a9ecc3'],'snake-gold':['#be8c34','#52381d','#ffe6a8'],'snake-aurora':['#8961bb','#342440','#e9d3ff'],'snake-toxic':['#76a52c','#27361c','#ddff91'],'snake-ice':['#65b8d9','#23415f','#e5fcff'],'snake-plasma':['#448dc5','#392853','#bcfaff'],'snake-sovereign':['#1b5a3d','#06100b','#e8c46a'],'snake-coral':['#d8503f','#3a110b','#ffd2c9'],'snake-aqua':['#1fbfa8','#06302d','#c8fff4']};
   function speciesFor(index){
     const eq=document.documentElement?.dataset?.snake;
     const list=eq==='snake-sovereign'||SPECIES.includes(eq)?[eq,...SPECIES.filter(s=>s!==eq)]:SPECIES;
@@ -31,7 +31,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   const LADDERS={
     classic:{dark:'#3f230c',mid:'#94602f',light:'#d9a46c',hi:'#ffe2b5',peg:'#2a1606',glow:'#ffd27a'},
     royal:{dark:'#5c3d0b',mid:'#c29236',light:'#efd28a',hi:'#fff6d8',peg:'#3e2905',glow:'#fff0a8'},
-    cyber:{dark:'#06202e',mid:'#1a6f92',light:'#4fd9fb',hi:'#d4fbff',peg:'#041723',glow:'#6ff6ff'},
+    cyber:{dark:'#13293a',mid:'#8fb4c6',light:'#e6f7ff',hi:'#ffffff',peg:'#0b1824',glow:'#c9f4ff'},
     ember:{dark:'#140804',mid:'#5b2a14',light:'#ff8a3d',hi:'#ffd2a1',peg:'#0d0503',glow:'#ffb347'},
     cosmic:{dark:'#1b1638',mid:'#6c5fb8',light:'#cdc4ff',hi:'#f5f2ff',peg:'#100c26',glow:'#d9ccff'}
   };
@@ -122,7 +122,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
     ctx.fillStyle=light;for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(size*.55,s*size*.42,size*.18,size*.13,0,0,Math.PI*2);ctx.fill();}
   }
   function tongue(size,flick){
-    const L=size*(.8+.25*Math.sin(clock/40))*flick,x=size*1.62;
+    const L=size*(.8+.25*Math.sin(clock/40))*flick,x=size*1.42;
     ctx.strokeStyle='#e23a55';ctx.lineWidth=Math.max(.8,size*.08);ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+L,0);ctx.moveTo(x+L,0);ctx.lineTo(x+L+size*.22,-size*.17);ctx.moveTo(x+L,0);ctx.lineTo(x+L+size*.22,size*.17);ctx.stroke();
   }

@@ -29,6 +29,7 @@ import { validWorld } from '../public/assets/js/engines/arena-worlds-v27.js';
 import { LeaderboardStore, LEADERBOARD_OBJECT } from './leaderboard/leaderboard.js';
 import { Career } from './career/core.js';
 import { QuizImageBank, QUIZ_AI_OBJECT } from './quiz/ai-bank.js';
+import { BalootVoiceBank, BALOOT_VOICE_OBJECT, MAX_CLIP_BYTES, voiceId } from './games/baloot-voice-bank.js';
 import { aiCategory } from './quiz/ai-subjects.js';
 import { makeQuizBots, planBotAnswers, dueBotAnswers, nextBotAnswer, hurryBotAnswers } from './quiz/quiz-bots.js';
 import { isOwner } from './social/account-policy.js';
@@ -39,7 +40,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.0.0';
+const RELEASE='33.1.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -401,6 +402,50 @@ export default {
         const body = (await request.text()).slice(0, 512);
         if (url.pathname === '/api/quiz/ai/status') { const res = await stub.fetch('https://quizai.internal/pack'); return new Response(res.body, { status: res.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } }); }
         const res = await stub.fetch('https://quizai.internal/' + url.pathname.split('/').pop(), { method: 'POST', headers: { 'content-type': 'application/json', 'x-bs-owner': '1' }, body });
+        if (cache && res.ok) await cache.delete(packKey).catch(() => {});
+        return res;
+      }
+      return json({ ok: false, error: 'not_found' }, 404);
+    }
+
+    // 33.1.0: the Baloot calls the manager records in the voice studio (one set for every table)
+    if (url.pathname.startsWith('/api/baloot/voice/')) {
+      if (!env.BOARD_ROOMS?.idFromName) return json({ ok: false, error: 'unavailable' }, 503);
+      const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(BALOOT_VOICE_OBJECT)), cache = globalThis.caches?.default, packKey = new Request(url.origin + '/api/baloot/voice/pack');
+      const headers = (extra = {}) => ({ 'content-type': 'application/json; charset=utf-8', 'x-content-type-options': 'nosniff', ...extra });
+      if (url.pathname === '/api/baloot/voice/pack' && request.method === 'GET') {
+        const limited = await rateLimit(request, env, 'baloot-voice-pack', 120, 60_000); if (limited) return limited;
+        if (cache) { const hit = await cache.match(packKey).catch(() => null); if (hit) return hit; }
+        try {
+          const res = await stub.fetch('https://balootvoice.internal/pack'), data = await res.json();
+          const response = new Response(JSON.stringify({ ok: data.ok, rev: data.rev || 0, lines: Object.fromEntries(Object.entries(data.lines || {}).map(([id, line]) => [id, { at: line.at }])) }), { status: res.status, headers: headers({ 'cache-control': cache ? 'public, max-age=30' : 'no-store' }) });
+          if (cache && res.ok) await cache.put(packKey, response.clone()).catch(() => {});
+          return response;
+        } catch (error) { if (isDurableRequestQuotaError(error)) throw error; return json({ ok: false, error: 'unavailable' }, 503); }
+      }
+      const clip = url.pathname.match(/^\/api\/baloot\/voice\/clip\/([A-Za-z0-9_]{1,40})$/);
+      if (clip && request.method === 'GET') {
+        if (!voiceId(clip[1])) return json({ ok: false, error: 'not_found' }, 404);
+        const limited = await rateLimit(request, env, 'baloot-voice-clip', 600, 60_000); if (limited) return limited;
+        if (cache) { const hit = await cache.match(request).catch(() => null); if (hit) return hit; }
+        try { const res = await stub.fetch('https://balootvoice.internal/clip?id=' + clip[1]); if (cache && res.ok) await cache.put(request, res.clone()).catch(() => {}); return res; }
+        catch (error) { if (isDurableRequestQuotaError(error)) throw error; return json({ ok: false, error: 'unavailable' }, 503); }
+      }
+      if (request.method === 'POST' && ['/api/baloot/voice/status', '/api/baloot/voice/save', '/api/baloot/voice/remove'].includes(url.pathname)) {
+        const limited = await rateLimit(request, env, 'baloot-voice-admin', 150, 60_000); if (limited) return limited;
+        const auth = await authenticate(request, env);
+        if (!auth) return json({ ok: false, error: 'unauthorized' }, 401);
+        if (!isOwner(auth.profile || { username: auth.username })) return json({ ok: false, error: 'forbidden' }, 403);
+        if (url.pathname === '/api/baloot/voice/status') { const res = await stub.fetch('https://balootvoice.internal/pack'); return new Response(res.body, { status: res.status, headers: headers({ 'cache-control': 'no-store' }) }); }
+        let res;
+        if (url.pathname === '/api/baloot/voice/save') {
+          const bytes = await request.arrayBuffer();
+          if (bytes.byteLength > MAX_CLIP_BYTES) return json({ ok: false, error: 'too_long' }, 413);
+          res = await stub.fetch('https://balootvoice.internal/save?id=' + encodeURIComponent(String(url.searchParams.get('id') || '').slice(0, 40)), { method: 'POST', headers: { 'content-type': 'application/octet-stream', 'x-bs-owner': '1' }, body: bytes });
+        } else {
+          const body = (await request.text()).slice(0, 512);
+          res = await stub.fetch('https://balootvoice.internal/remove', { method: 'POST', headers: { 'content-type': 'application/json', 'x-bs-owner': '1' }, body });
+        }
         if (cache && res.ok) await cache.delete(packKey).catch(() => {});
         return res;
       }
@@ -1866,6 +1911,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "leaderboard.internal") { this.leaderboard ??= new LeaderboardStore(this.ctx); return this.leaderboard.fetch(request); }
     if (url.hostname === "presence.internal") { this.presence ??= new PresenceRegistry(this.ctx); return this.presence.fetch(request); }
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
+    if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
     if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'))); }
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','adventure']});

@@ -92,3 +92,6 @@ html[data-board=board-cyber]{--snl-veil:linear-gradient(160deg,rgba(110,230,255,
 :is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell:is([data-n="1"],[data-n="100"])>b{color:#fff1ca!important;text-shadow:none!important}
 
 :is(html,#v31):is(:not([data-board]),[data-board=board-forest]) body.game-snakes #game.snl31 .snake-cell:is(.snake-head-cell,.ladder-foot-cell){--t:var(--snl-tile)}
+
+/* 33.1.0: the cell numbers sit above the neon snakes and ladders, always readable */
+#board .snake-cell>b{z-index:12!important;opacity:.96!important;text-shadow:0 0 3px #02060c,0 1px 2px #02060c,0 0 1px #02060c!important}

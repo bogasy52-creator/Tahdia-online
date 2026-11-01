@@ -579,8 +579,9 @@ body.shop31 .sx-character-art{height:92%;height:92cqh;filter:drop-shadow(0 12px 
 @media (prefers-reduced-motion:reduce){body.shop31 .sx-card:hover .sx-deck-card{transition:none}}
 
 /* assets/css/game-interaction-v34.css */
-/* Game labels are controls, not editable prose. Keep native text fields usable. */
-body.bs-game-interaction-v34,body.bs-game-interaction-v34 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body.bs-game-interaction-v34 input,body.bs-game-interaction-v34 textarea,body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]),body.bs-game-interaction-v34 [contenteditable]:not([contenteditable="false"]) *,body.bs-game-interaction-v34 [data-selectable],body.bs-game-interaction-v34 [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-body.bs-game-interaction-v34 button,body.bs-game-interaction-v34 [role=button]{touch-action:manipulation}
-body.bs-game-interaction-v34 img{-webkit-user-drag:none}
+/* Labels are controls, not prose: on every page a long press selects nothing and opens no copy menu; typing fields still do. */
+html{-webkit-tap-highlight-color:transparent}
+body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body input,body textarea,body select,body [contenteditable]:not([contenteditable="false"]),body [contenteditable]:not([contenteditable="false"]) *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+body a,body button,body [role=button],body label{touch-action:manipulation}
+body img,body svg,body canvas{-webkit-user-drag:none}

@@ -1,0 +1,31 @@
+/* Tahdia 33.1.0 — the Baloot voice studio in the admin page */
+.admin-voice{margin-top:20px}
+.admin-voice-list{display:grid;gap:14px;margin-top:6px}
+.admin-voice-group h3{margin:6px 0 8px;font-size:14px;color:#efd293}
+.admin-voice-group{display:grid;gap:6px}
+.admin-voice-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid #30536a;border-radius:13px;background:#0a1727}
+.admin-voice-row.is-kept{border-color:#3f8f6b;background:linear-gradient(90deg,#0b2a22,#0a1727 70%)}
+.admin-voice-row div{display:grid;gap:2px;min-width:0}
+.admin-voice-row b{font-size:15px;color:#eef6ff;overflow-wrap:anywhere}
+.admin-voice-row small{font-size:11.5px;color:#9dbcd3}
+.admin-voice-row.is-kept small{color:#8fe3bf}
+.admin-voice-row nav{display:flex;gap:6px;flex:0 0 auto}
+.admin-voice-row nav button{min-height:38px;min-width:42px;padding:0 10px;border-radius:10px;border:1px solid #355572;background:#122b3c;color:#d4e3f1;font:inherit;font-size:13px;cursor:pointer}
+.admin-voice-row nav button.rec{border-color:#b9893a;background:#2b2210;color:#f4cf72;font-weight:800}
+.admin-voice-row nav button:disabled{opacity:.5;cursor:default}
+.admin-voice-row nav button:focus-visible,.admin-voice-rec:focus-visible{outline:3px solid #f4cf72;outline-offset:2px}
+.admin-voice-dialog{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:#020812cc;backdrop-filter:blur(4px)}
+.admin-voice-dialog[hidden]{display:none}
+.admin-voice-card{width:min(420px,100%);display:grid;gap:12px;justify-items:center;text-align:center;padding:22px 18px;border:1px solid #30536a;border-radius:22px;background:#0d1d30;box-shadow:0 24px 60px #000c}
+.admin-voice-card small{font-size:12px;color:#9dbcd3}
+.admin-voice-say{margin:0;font-size:13px;color:#9dbcd3}
+.admin-voice-card>b{font-size:30px;line-height:1.4;color:#fff3d6}
+.admin-voice-rec{width:132px;height:132px;border-radius:50%;border:0;font:inherit;font-size:16px;font-weight:900;color:#2a1708;background:radial-gradient(circle at 35% 30%,#ffe48f,#e0a33a);box-shadow:0 10px 0 #9b6b1f,0 18px 36px #0008;cursor:pointer}
+.admin-voice-rec.live{color:#fff;background:radial-gradient(circle at 35% 30%,#ff8a7a,#c4253a);box-shadow:0 10px 0 #6d0f1d,0 0 0 10px #c4253a44;animation:voice-live 1s ease-in-out infinite alternate}
+@keyframes voice-live{to{box-shadow:0 10px 0 #6d0f1d,0 0 0 18px #c4253a22}}
+.admin-voice-file{min-height:40px;padding:0 14px;border:1px dashed #4d7390;border-radius:12px;background:transparent;color:#bcd3e6;font:inherit;font-size:13.5px;cursor:pointer}
+.admin-voice-file:focus-visible{outline:3px solid #f4cf72;outline-offset:2px}
+.admin-voice-file:disabled{opacity:.5;cursor:default}
+.admin-voice-take,.admin-voice-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.admin-voice-take .bs-btn,.admin-voice-foot .bs-btn{min-height:44px}
+@media(prefers-reduced-motion:reduce){.admin-voice-rec.live{animation:none}}

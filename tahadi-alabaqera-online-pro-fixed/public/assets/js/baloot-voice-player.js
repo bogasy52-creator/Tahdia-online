@@ -159,7 +159,9 @@ export function createVoicePlayer({ recordings, getContext, fetchClip, isAllowed
       }
     }));
   }
-  return { enqueue, drain, prime, stop, finish, refreshSettings, status,
+  // 33.1.0: a call was recorded again: drop the decoded copies so the new take is fetched
+  function forget() { buffers.clear(); }
+  return { enqueue, drain, prime, stop, finish, refreshSettings, status, forget,
     replay() { return last ? enqueue(last, { urgent: true }) : false; },
     dispose() { stop({ clearLast: true }); buffers.clear(); disposed = true; } };
 }

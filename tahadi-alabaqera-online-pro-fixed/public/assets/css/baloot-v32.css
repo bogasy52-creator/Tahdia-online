@@ -326,3 +326,6 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 
 /* Voice controls remain usable on a narrow phone. */
 .bl-talk-foot.bl-voice-panel{display:grid;gap:.65rem;align-items:start}.bl-voice-controls{display:flex;flex-wrap:wrap;gap:.5rem}.bl-voice-controls .bl-btn{min-height:44px;flex:1 1 120px}.bl-voice-controls .bl-btn:disabled{opacity:.48;cursor:default}.bl-voice-panel small{display:block;line-height:1.7;text-align:start}.bl-voice-panel [hidden]{display:none!important}
+
+/* 33.1.0: the projects bar takes its own row above the prompt, so «سجّل» stays on screen */
+.bl-tools .bl-project-picker{grid-column:1/-1;order:-1;justify-self:center;justify-content:center}

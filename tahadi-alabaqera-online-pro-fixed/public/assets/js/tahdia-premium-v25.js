@@ -4,6 +4,14 @@
   if (window.__TAHDIA_INTERFACE_25_1__) return;
   window.__TAHDIA_INTERFACE_25_1__ = true;
   const doc = document;
+  // 33.1.0: a long press never selects text or opens the copy menu, on every page;
+  // typing fields and anything marked data-selectable still do.
+  if (!window.__BS_NO_SELECT__) {
+    window.__BS_NO_SELECT__ = true;
+    const editable = (t) => { const el = t && t.nodeType === 3 ? t.parentElement : t; return el?.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[data-selectable]'); };
+    doc.addEventListener('selectstart', (e) => { if (!editable(e.target)) e.preventDefault(); });
+    doc.addEventListener('contextmenu', (e) => { if (!editable(e.target) && e.pointerType === 'touch') e.preventDefault(); });
+  }
   const route = new URL(location.href).pathname.replace(/\/$/,'').replace(/\.html$/,'').split('/').at(-1)||'index';
   const shellRoutes = new Set(['index','shop','social','leaderboard']);
   const icons = {
