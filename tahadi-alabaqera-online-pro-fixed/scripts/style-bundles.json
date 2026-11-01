@@ -345,5 +345,9 @@
   "territory.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css"
+  ],
+  "wordbomb.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css"
   ]
 }

@@ -9,6 +9,7 @@ export const PARTY_LINK_WAIT_MS = 45 * 60_000;   // the longest a party waits fo
 export const PARTY_RETURN_MS = 60_000;           // after a linked game, time for everyone to come back
 
 export const LINKED_GAMES = Object.freeze({
+  wordbomb:{page:'/wordbomb',min:1,max:20},
   focus:{page:'/focus',min:1,max:20},
   cipher:{page:'/cipher',min:1,max:20},
   quiz: { page: '/online', min: 1, max: 20 },
@@ -54,7 +55,7 @@ const secret = () => crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID
 function initFor(game, settings, count, code, hostKey, party, seats = count) {
   const difficulty = Math.min(5, Math.max(1, Number(settings?.difficulty) || 2));
   const room = Math.max(1, Math.min(20, Math.max(count, Number(seats) || 0)));
-  if(['focus','cipher'].includes(game))return{ns:'ROOMS',name:'challenge:'+code,url:'https://challenge.internal/init',body:{game,code,hostKey,party,expected:count,capacity:room}};
+  if(['focus','cipher','wordbomb'].includes(game))return{ns:'ROOMS',name:'challenge:'+code,url:'https://challenge.internal/init',body:{game,code,hostKey,party,expected:count,capacity:room}};
   if (game === 'quiz') {
     // 4 and 6 open a team match; a party plays everyone against everyone
     const playerLimit = Math.min(20, Math.max(2, [4, 6].includes(room) ? room + 1 : room));

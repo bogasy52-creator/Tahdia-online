@@ -20,6 +20,7 @@ export const ROOM_FAMILIES = Object.freeze({
   reaction: { from: 80, to: 84, page: '/reaction' },
   jewels: { from: 85, to: 89, page: '/journey' },
   colors: { from: 90, to: 94, page: '/journey' },
+  wordbomb: { from: 9, to: 9, page: '/wordbomb' },
   focus: { from: 96, to: 96, page: '/focus' },
   cipher: { from: 97, to: 97, page: '/cipher' },
 });
@@ -31,7 +32,7 @@ export function roomCodeFor(game) {
   const family = ROOM_FAMILIES[game];
   if (!family) return String(100000 + random(900000));
   const prefix = family.from + random(family.to - family.from + 1);
-  return String(prefix) + String(random(10000)).padStart(4, '0');
+  return String(prefix).padStart(2, '0') + String(random(10000)).padStart(4, '0');
 }
 
 /** The game a code was made for (by its prefix), or null. */
@@ -55,7 +56,7 @@ function probeFor(kind, env, code) {
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }
 const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot']);
-const kindOf = (game) => (['focus','cipher'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
+const kindOf = (game) => (['focus','cipher','wordbomb'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
 
 async function probe(kind, env, code) {
   const target = probeFor(kind, env, code);

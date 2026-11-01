@@ -29,6 +29,7 @@ export const PRESENCE_PAGES = Object.freeze({
   puzzle: { key: 'puzzle', label: 'ترتيب الأرقام' },
   reaction: { key: 'reaction', label: 'سرعة الاستجابة' },
   dice: { key: 'dice', label: 'تحدي النرد' },
+  wordbomb: { key: 'wordbomb', label: 'قنبلة الكلمات' },
   focus: { key: 'focus', label: 'مواجهة التركيز' },
   cipher: { key: 'cipher', label: 'ساحة الشفرات' },
   shop: { key: 'shop', label: 'المتجر' },

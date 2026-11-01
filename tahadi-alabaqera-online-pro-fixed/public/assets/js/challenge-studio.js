@@ -7,7 +7,7 @@
  function options(b,slot,energy){return b.owners.map((owner,to)=>{const friends=neighbours(to,b.size).filter(c=>b.owners[c]===slot).length,cost=owner>=0?3:1;return{to,cost,attack:owner>=0,legal:owner!==slot&&friends>0&&(owner<0||friends>=2)&&energy>=cost};});}
  let pointer=null,suppressUntil=0;
  let current=null,hooks={},key='',routeOn=false,notes=new Map(),events=new Set(),selectedAttack=null,lastScore=null,controlKey='',noteTarget='',lastAttempt=0;
- function once(id,sound){if(events.has(id))return false;events.add(id);if(events.size>256)events.delete(events.values().next().value);if(sound)window.BS_AUDIO?.play?.(sound);return true;}
+ function once(id,sound){if(events.has(id))return false;events.add(id);if(events.size>256)events.delete(events.values().next().value);if(sound&&!document.hidden)window.BS_AUDIO?.play?.(sound);return true;}
  function meter(label,value){const box=create('div','ch-metric');box.append(create('small','',label),create('strong','',String(value)));return box;}
  function metrics(rows){const area=$('chStudioHud');if(!area)return;const signature=JSON.stringify(rows);if(area.dataset.signature===signature)return;area.dataset.signature=signature;area.replaceChildren(...rows.map(([label,value])=>meter(label,value)));}
  function mine(m){return m.players.find(p=>p.id===current.me);}
@@ -16,7 +16,7 @@
  document.body.classList.add('ch-in-match');const me=mine(m);if(!me)return;
  const caption=$('chArenaLabel');if(caption)caption.textContent=callbacks.local?'تدريب تكتيكي · منافس آلي':state.quick?'مواجهة سريعة':state.party?'تحدي غرفة الأصدقاء':'مواجهة الأصدقاء';
  const board=$('chBoard');if(lastScore!==null&&me.score>lastScore&&m.game==='territory'){once('capture:'+me.moves,'capture');board.classList.remove('ch-captured');void board.offsetWidth;board.classList.add('ch-captured');}lastScore=me.score;
- if(m.game==='labyrinth')maze(m);if(m.game==='focus')focus(m);if(m.game==='cipher')cipher(m);if(m.game==='territory')territory(m);if(m.game==='survival')survival(m);
+ if(m.game==='labyrinth')maze(m);if(m.game==='wordbomb'){metrics([['كلماتك',me.words||0],['قلوبك',me.hearts||0],['باقي اللاعبين',m.players.filter(p=>p.alive).length]]);$('chTactics').replaceChildren();}if(m.game==='focus')focus(m);if(m.game==='cipher')cipher(m);if(m.game==='territory')territory(m);if(m.game==='survival')survival(m);
  if(m.phase==='finished')recap(m);tick(clock());
  }
  function maze(m){const b=m.board,me=mine(m),ownPath=path(b.positions[me.slot],me.slot===0?b.size-1:0,b),other=1-me.slot,otherPath=path(b.positions[other],other===0?b.size-1:0,b);
@@ -47,7 +47,7 @@
  $('chTactics').querySelector('.ch-hazard-title').textContent=m.board.hazardName||'موجة الخطر';if(m.board.collapsed)once('collapse:'+m.round,'boardLand');
  for(const c of $('chBoard').querySelectorAll('.ch-cell'))c.classList.toggle('ch-safe',!m.board.unsafe.includes(Number(c.dataset.cell)));
  }
- function recap(m){const area=$('chRecap');if(!area||area.dataset.round===key)return;area.dataset.round=key;const me=mine(m),ranked=[...m.players].sort((a,b)=>Number(m.winners.includes(b.id))-Number(m.winners.includes(a.id))||b.score-a.score||a.slot-b.slot),podium=create('div','ch-podium');for(const [i,p]of ranked.slice(0,3).entries()){const card=create('div','ch-podium-seat'+(p.id===current.me?' self':''));card.append(create('small','',m.winners.includes(p.id)&&m.winners.length>1?'فوز مشترك':'المركز '+(1+ranked.filter(q=>Number(m.winners.includes(q.id))>Number(m.winners.includes(p.id))||m.winners.includes(q.id)===m.winners.includes(p.id)&&q.score>p.score).length)),create('b','',p.name),create('strong','',m.game==='cipher'?p.kills+' إقصاء':p.score+' نقطة'));podium.append(card);}
+ function recap(m){const area=$('chRecap');if(!area||area.dataset.round===key)return;area.dataset.round=key;const me=mine(m),ranked=[...m.players].sort((a,b)=>Number(m.winners.includes(b.id))-Number(m.winners.includes(a.id))||(m.game==='wordbomb'?Number(b.alive)-Number(a.alive)||b.hearts-a.hearts:0)||b.score-a.score||a.slot-b.slot),podium=create('div','ch-podium');for(const [i,p]of ranked.slice(0,3).entries()){const card=create('div','ch-podium-seat'+(p.id===current.me?' self':''));card.append(create('small','',m.winners.includes(p.id)&&m.winners.length>1?'فوز مشترك':'المركز '+(1+ranked.filter(q=>Number(m.winners.includes(q.id))>Number(m.winners.includes(p.id))||m.winners.includes(q.id)===m.winners.includes(p.id)&&(m.game==='wordbomb'?(Number(q.alive)>Number(p.alive)||q.alive===p.alive&&(q.hearts>p.hearts||q.hearts===p.hearts&&q.score>p.score)):q.score>p.score)).length)),create('b','',p.name),create('strong','',m.game==='cipher'?p.kills+' إقصاء':p.score+' نقطة'));podium.append(card);}
  const detail=m.game==='focus'?'أفضل سلسلة: '+(m.me.focus?.bestStreak||0)+' · الصحيحة: '+(m.me.focus?.correct||0)+' · الأخطاء: '+(m.me.focus?.wrong||0):m.game==='cipher'?'محاولاتك: '+me.attemptCount+' · إقصاءاتك: '+me.kills:m.game==='survival'?'موجات نجوت منها: '+Math.floor(me.score/100)+' · حركاتك: '+me.moves:'حركاتك: '+me.moves+' · نقاطك: '+me.score;
  area.replaceChildren(podium,create('p','ch-recap-detail',detail));
  }
@@ -55,6 +55,7 @@
  function tick(t=clock()){const m=current?.match;if(!m||!$('chFlow'))return;const me=mine(m),flow=$('chFlow');let ratio=0,label='';if(m.game==='focus'){const ready=t>=m.task.opensAt;ratio=ready?(m.task.deadline-t)/6500:(m.task.opensAt-t)/(m.task.opensAt-m.phaseAt||4000);label=ready?'نافذة الإجابة':'استعداد';if(ready&&m.phase==='playing')once('cue:'+m.round,'turn');}
  else if(m.game==='survival'){const b=m.board;ratio=(b.collapseAt-t)/(b.collapseAt-(b.warningStartedAt||m.startedAt));label=b.collapsed?'انهيار':b.hazardName||'تحذير';flow.classList.toggle('urgent',!b.collapsed&&b.unsafe.includes(b.positions[me.slot])&&b.collapseAt-t<1400);}
  else if(m.game==='labyrinth'){ratio=(m.turnDeadline-t)/18000;label=m.turn===me.slot?'دورك الآن':'دور المنافس';}
+ else if(m.game==='wordbomb'){ratio=(m.turnDeadline-t)/m.bomb.turnDuration;label='وقت الكلمة';}
  else{ratio=(m.endsAt-t)/(m.endsAt-m.startedAt);label=m.game==='cipher'?'المطاردة مستمرة':'وقت السيطرة';}
  flow.style.setProperty('--flow',String(Math.max(0,Math.min(1,ratio))));flow.setAttribute('aria-label',label);flow.setAttribute('aria-valuenow',String(Math.round(Math.max(0,Math.min(1,ratio))*100)));
  if(m.game==='territory'){const energy=Math.min(3,m.me.energyRaw+Math.floor((t-m.me.energyAt)/1200)),legal=options(m.board,me.slot,energy);for(const c of $('chBoard').querySelectorAll('.ch-land')){const o=legal[Number(c.dataset.land)];c.classList.toggle('ch-expand',o.legal&&!o.attack);c.classList.toggle('ch-attack',o.legal&&o.attack);c.classList.toggle('ch-selected-attack',o.to===selectedAttack);c.setAttribute('aria-label','مربع '+(o.to+1)+' · '+(o.legal?(o.attack?'هجوم · 3 طاقة':'توسّع · طاقة واحدة'):'غير متاح'));c.disabled=m.phase!=='playing'||!me.alive;} }

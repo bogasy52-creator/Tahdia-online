@@ -1,13 +1,13 @@
 {
   "release": "33.0.0",
-  "base_commit": "94b0ba7301f10d9690adac85d792b05333c90d65",
+  "base_commit": "31f92210c659f45320d1e1986516e52a70dcf001",
   "previous_challenges20_commit": "b92f630",
   "cipher_digits": "0-9",
   "unlimited_attempts": true,
   "history": "paged, private, atomic with the game state",
-  "unit_tests": 1144,
+  "unit_tests": 1169,
   "failures": 0,
-  "runtime_checks": 11,
+  "runtime_checks": 16,
   "runtime_passed": true,
   "large_history_checks": {
     "persisted_guesses": 650,
@@ -15,15 +15,21 @@
     "actual_websocket_guesses": 77,
     "atomic_failure_retry": "passed"
   },
-  "browser_qa": "not verified; managed preview relay unavailable",
+  "browser_qa": "not verified; managed preview relay unavailable; physical phone and audio not tested",
   "delivery": "one sparse ZIP under 25 MB; same 33.0.0; manual upload",
   "active_games": [
     "focus",
-    "cipher"
+    "cipher",
+    "wordbomb"
   ],
   "retired_games": [
     "labyrinth",
     "territory",
     "survival"
-  ]
+  ],
+  "also_supported_base": "94b0ba7301f10d9690adac85d792b05333c90d65",
+  "focus_modes": 9,
+  "patience_mode": false,
+  "wordbank_entries": 1643,
+  "wordbomb_initial_fragments": 207
 }

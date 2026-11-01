@@ -50,6 +50,37 @@ body.release-v26.challenge-page{background:radial-gradient(ellipse at 80% 0,colo
 @media(prefers-reduced-motion:reduce){.ch-captured{animation:none}.ch-flow:before{transition:none}}
 [data-challenge=survival] .ch-grid{touch-action:none}.ch-notebook:has(.ch-note-digit:nth-child(6):last-child){grid-template-columns:repeat(6,minmax(0,1fr))}
 
+/* Word Bomb — warm metal, restrained motion and readable mobile controls. */
+.ch-wordbomb{display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 18px;min-height:420px}
+.ch-bomb-turn{font-weight:800;font-size:clamp(16px,3vw,22px);margin:0;text-align:center}
+.ch-bomb-orb{--fuse:1;position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;justify-content:center;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 32% 22%,#526270 0,#273440 40%,#111b24 80%);box-shadow:inset 0 0 0 1px #8494a94d,0 22px 55px #0005;color:#ffe1bd;transition:box-shadow .25s}
+.ch-bomb-orb:before{content:"";position:absolute;z-index:-1;inset:-10px;border-radius:50%;background:conic-gradient(from -90deg,#ffad77 calc(var(--fuse)*1turn),#ffffff12 0);mask:radial-gradient(transparent 67%,#000 68%);-webkit-mask:radial-gradient(transparent 67%,#000 68%)}
+.ch-bomb-cap{position:absolute;top:-15px;left:48%;height:23px;width:35px;background:linear-gradient(#b4c1c9,#616f7c);border-radius:8px;transform:rotate(14deg)}
+.ch-bomb-spark{position:absolute;top:-35px;left:64%;width:10px;height:10px;background:#ffe0aa;border-radius:50%;box-shadow:0 0 25px 7px #ffa57380}
+.ch-bomb-fragment{font-size:68px;line-height:1.4;font-weight:900;letter-spacing:8px}
+.ch-bomb-clock{font-variant-numeric:tabular-nums;font-size:20px}
+.ch-bomb-caption{color:#c6cdd2;font-size:13px}
+.ch-bomb-orb.mine{box-shadow:inset 0 0 0 2px #ffad7760,0 20px 65px #ff9b5528}
+.ch-bomb-orb.urgent{animation:ch-bomb-pulse .65s ease-in-out infinite}
+.ch-bomb-orb.burst{animation:ch-bomb-burst .5s ease-out}
+.ch-bomb-hearts{color:var(--ch-accent);margin:0;font-weight:700}
+.ch-bomb-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;width:min(100%,600px);margin:auto}
+.ch-bomb-label{grid-column:1/-1;font-size:13px;color:var(--ch-muted)}
+.ch-bomb-input{width:100%;min-width:0;border:1px solid var(--ch-line);background:var(--ch-soft);color:var(--ch-ink);border-radius:14px;padding:14px 16px;font:inherit;font-size:20px}
+.ch-bomb-input:focus-visible{outline:2px solid var(--ch-accent);outline-offset:3px}
+.ch-bomb-input:disabled{opacity:.55}
+.ch-bomb-history{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:210px;overflow:auto;width:min(100%,600px)}
+.ch-bomb-history>.ch-help{grid-column:1/-1}
+.ch-bomb-word{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:10px 14px;border:1px solid var(--ch-line);background:var(--ch-soft);border-radius:12px}
+.ch-bomb-word small{grid-column:1;color:var(--ch-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-bomb-word span{grid-column:2;grid-row:1/3;align-self:center;color:var(--ch-accent);font-variant-numeric:tabular-nums}
+.ch-count-dots{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;max-width:280px;margin:16px auto}
+.ch-count-dots[hidden]{display:none}.ch-count-dots i{width:23px;height:23px;border-radius:50%;background:var(--dot);box-shadow:inset 0 0 0 1px #0002}
+@keyframes ch-bomb-pulse{50%{transform:scale(1.025);filter:brightness(1.15)}}
+@keyframes ch-bomb-burst{25%{transform:translateX(-5px);filter:brightness(1.5)}75%{transform:translateX(5px)}}
+@media(max-width:520px){.ch-wordbomb{padding:24px 12px}.ch-bomb-orb{width:180px;height:180px}.ch-bomb-fragment{font-size:55px}.ch-bomb-form{grid-template-columns:1fr}.ch-bomb-history{grid-template-columns:1fr}.ch-bomb-word{padding:8px 12px}}
+@media(prefers-reduced-motion:reduce){.ch-bomb-orb.urgent,.ch-bomb-orb.burst{animation:none}}
+
 /* assets/css/design-system.css */
 /* V17 shared product system. Board coordinates remain owned by each game. */
 :root{--bs-bg:#0b1522;--bs-bg2:#112131;--bs-surface:#142738;--bs-surface2:#1a3043;--bs-line:#355061;--bs-text:#f0f4ed;--bs-muted:#abc0cd;--bs-purple:#87c6b0;--bs-pink:#b6a5d9;--bs-gold:#eed093;--bs-cyan:#8cc9d5;--bs-green:#a4d6a7;--bs-radius:18px;--bs-shadow:0 14px 40px #020a1533}
