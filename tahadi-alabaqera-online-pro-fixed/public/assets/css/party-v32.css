@@ -222,3 +222,6 @@ body.party-app{--pv-surface:#141e33;--pv-raised:#1a2741;--pv-mint:#8fe3c3;--pv-g
 .party-seats-head>div:first-child{flex:none}
 .party-seats-head b{white-space:nowrap}
 .party-seats-head .party-ready-meter{min-width:60px}
+
+/* 33.3.0: the header fits narrow phones: the brand shrinks and the volume slider leaves (mute stays) */
+@media(max-width:420px){.party-header{gap:8px}.party-brand{min-width:0;flex:0 1 auto}.party-brand b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.party-header-tools{min-width:0;flex:0 1 auto}.party-volume-label{display:none!important}.party-header-tools>span{max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}

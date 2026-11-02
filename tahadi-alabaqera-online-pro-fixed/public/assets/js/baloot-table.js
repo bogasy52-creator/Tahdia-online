@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.2.0-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.2.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.2.0';
-import { BalootVoice } from './baloot-voice.js?v=33.2.0-baloot2';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.3.0-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.3.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.3.0';
+import { BalootVoice } from './baloot-voice.js?v=33.3.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -615,7 +615,13 @@ async function playEvents(events, after, session = ui.session, delivery = {}) {
     if (session !== ui.session) return;
     // Catch up to the authoritative view after a slow animation or reconnect.
     // Old calls must not be presented as if somebody just made them.
-    if (delivery.createdAt != null && Date.now() - delivery.createdAt > 4000) return;
+    if (delivery.createdAt != null && Date.now() - delivery.createdAt > 4000) {
+      // 33.3.0: skipping old events must never skip the end of the صكّة (the last
+      // result sheet waits for a tap, so its batch is old by then)
+      const end = events.slice(index).find((x) => x.type === 'match_finished');
+      if (end) showMatchEnd(end.winner, end.scores, after);
+      return;
+    }
     const voiceOptions = { urgent:true, createdAt:delivery.createdAt,
       key:delivery.key == null ? undefined : `${delivery.key}:${index}` };
     if (e.type === 'deal') {
@@ -680,7 +686,7 @@ async function playEvents(events, after, session = ui.session, delivery = {}) {
       botTalk(e.result.winnerTeam === teamOf(ui.me) ? 'lostHand' : 'wonHand', [1, 3]);
       await showResult(e.result, e.scores, after);
     } else if (e.type === 'match_finished') {
-      showMatchEnd(e.winner, e.scores);
+      showMatchEnd(e.winner, e.scores, after);
     }
   }
 }
@@ -893,17 +899,23 @@ function showResult(result, scores, view) {
     let done = false;
     const close = () => { if (done) return; done = true; sheet.hidden = true; resolve(); };
     $('nextHand').onclick = close;
-    // Online the room deals the next hand by itself.
-    if (!finished) setTimeout(close, 5200);
+    // Online the room deals the next hand by itself; after the last hand the
+    // winner screen follows by itself too (33.3.0), a tap only makes it sooner.
+    setTimeout(close, finished ? 3800 : 5200);
   });
 }
 
-function showMatchEnd(winner, scores) {
+function showMatchEnd(winner, scores, view = ui.view) {
+  // 33.3.0: once per match, whichever path gets here first (the events, or the view after a reconnect)
+  const key = String(ui.matchStart ?? ui.room?.startedAt ?? '') + ':' + winner;
+  if (ui.endShownFor === key) return;
+  ui.endShownFor = key;
   const actor=teamOf(ui.me)===winner?ui.me:[0,1,2,3].find(seat=>teamOf(seat)===winner);const signature=window.BS_HERO_FX?.victory(actor===ui.me?window.BS_HERO_FX.current():playerAt(actor)?.character||'fox',{container:$('matchEnd').querySelector('.bl-end-card')||$('matchEnd'),key:'baloot:'+ui.session+':'+winner});
   const us = teamOf(ui.me);
   const won = winner === us;
   $('matchTitle').textContent = won ? 'فزتم بالصكّة! 🏆' : 'راحت الصكّة عليكم';
-  $('matchLine').textContent = `لنا ${scores[us]} · لهم ${scores[1 - us]}`;
+  const names = [0, 1, 2, 3].filter((seat) => teamOf(seat) === winner).map((seat) => (seat === ui.me ? 'أنت' : seatName(view, seat)));
+  $('matchLine').textContent = `الفايزين: ${names.join(' و')} · لنا ${scores[us]} · لهم ${scores[1 - us]}`;
   // 33.2.0: what this match added to the weekly cup
   try { window.BS_BALOOT_CUP?.matchEnded?.(won); } catch {}
   const fan = document.querySelector('.bl-end-fan');
@@ -984,6 +996,7 @@ function onRoomState(room) {
     ui.view = view;
     render(view);
     paintTimer();
+    if (view.phase === 'finished' && view.winner != null && $('matchEnd').hidden && $('resultSheet').hidden) showMatchEnd(view.winner, view.scores, view);
   });
 }
 

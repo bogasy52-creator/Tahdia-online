@@ -1,7 +1,7 @@
-import {previewJackarooAction} from './engines/jackaroo-engine.js?v=33.2.0';
-import {applyLudoMove} from './engines/ludo-engine.js?v=33.2.0';
-import {boardGeometry} from './engines/board-geometry-v29.js?v=33.2.0';
-import {paintBoardPreview,clearBoardPreview} from './board-petals-v29.js?v=33.2.0';
+import {previewJackarooAction} from './engines/jackaroo-engine.js?v=33.3.0';
+import {applyLudoMove} from './engines/ludo-engine.js?v=33.3.0';
+import {boardGeometry} from './engines/board-geometry-v29.js?v=33.3.0';
+import {paintBoardPreview,clearBoardPreview} from './board-petals-v29.js?v=33.3.0';
 export function previewBoardAction(game,state,action,{card='',roll=0}={}){
  const next=game==='jackaroo'?previewJackarooAction(state,action,card):applyLudoMove(state,action.token,roll),key=game==='jackaroo'?'marbles':'tokens',g=boardGeometry(state),changes=[];
  state.players.forEach((p,seat)=>p[key].forEach((from,index)=>{const to=next.players[seat][key][index];if(from!==to)changes.push({seat,index,from,to});}));

@@ -40,6 +40,7 @@
     "assets/css/dice-v31.css",
     "assets/css/game-menu-v33.css",
     "assets/css/tables-v33.css",
+    "assets/css/tables-phone-v33-3.css",
     "assets/css/game-interaction-v34.css"
   ],
   "index.html": [
@@ -76,6 +77,7 @@
     "assets/css/reactions-v31.css",
     "assets/css/game-menu-v33.css",
     "assets/css/tables-v33.css",
+    "assets/css/tables-phone-v33-3.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/gameplay-v34.css"
   ],
@@ -204,6 +206,7 @@
     "assets/css/reactions-v31.css",
     "assets/css/game-menu-v33.css",
     "assets/css/tables-v33.css",
+    "assets/css/snakes-screen-v33-3.css",
     "assets/css/game-interaction-v34.css"
   ],
   "social.html": [
@@ -247,6 +250,7 @@
     "assets/css/reactions-v31.css",
     "assets/css/game-menu-v33.css",
     "assets/css/tables-v33.css",
+    "assets/css/tables-phone-v33-3.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/gameplay-v34.css"
   ],
@@ -308,6 +312,7 @@
     "assets/css/baloot-v32.css",
     "assets/css/game-menu-v33.css",
     "assets/css/baloot-cup-v33-2.css",
+    "assets/css/baloot-table-v33-3.css",
     "assets/css/game-interaction-v34.css"
   ],
   "characters.html": [

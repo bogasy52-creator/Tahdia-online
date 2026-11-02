@@ -234,7 +234,7 @@ void main(){
     const size=()=>{const r=el.getBoundingClientRect(),dpr=Math.min(root.devicePixelRatio||1,2.25),css=Math.max(24,r.width||64)*1.6;const px=Math.round(css*dpr);if(cv.width!==px){cv.width=cv.height=px;}};
     view.render=()=>{if(view.disposed)return;size();draw(view,view.state);};
     view.set=value=>{if(!NORMAL[value])return;view.value=value;view.skin=skinFor(el);view.state={q:faceUp(value,view.yaw),h:0,x:0,z:0};view.render();};
-    view.roll=(value,duration=1040)=>new Promise(resolve=>{
+    view.roll=(value,duration=760)=>new Promise(resolve=>{
       if(!NORMAL[value]){resolve();return;}
       cancelAnimationFrame(view.raf);view.skin=skinFor(el);
       if(reduced()){view.set(value);resolve();return;}

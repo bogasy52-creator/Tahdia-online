@@ -47,7 +47,8 @@ test('room protocol declares the selected cards, reveals compact projects withou
 test('pawn keyframes follow the same board coordinates using transform alone',()=>{
  const frames=createPawnAnimationFrames([{left:'10%',top:'20%',transform:'scale(1)',offset:0},{left:'50%',top:'70%',transform:'scale(.9)',offset:1}],{width:400,height:500,left:'10%',top:'20%'});
  assert.match(frames[0].transform,/translate3d\(0px,0px,0\)/);assert.match(frames[1].transform,/translate3d\(160px,250px,0\)/);assert.equal(frames[1].offset,1);assert.ok(frames.every(frame=>!('left'in frame)&&!('top'in frame)));
- assert.ok(createBoardMovePlan(10,16).duration>900);
+ // 33.3.0: quicker, still readable: six cells in about two thirds of a second
+ assert.ok(createBoardMovePlan(10,16).duration>=600&&createBoardMovePlan(10,16).duration<=760);
 });
 test('turn deadlines reserve the full snake and bonus animation instead of a fixed short step',()=>{
  const plain={from:10,landed:16,to:16},snake={...plain,to:4,jumpType:'snake'},bonus={...snake,bonusRoll:2,event:'advance',eventFrom:4,eventTo:12,eventLanding:12};

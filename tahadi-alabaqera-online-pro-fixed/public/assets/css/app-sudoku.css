@@ -170,6 +170,10 @@ body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-in
 @keyframes sudokuShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
 @keyframes sudokuPulse{50%{opacity:.55}}
 
+/* 33.3.0: the level grid fits a 360px phone (the tile's height no longer forces its width) */
+@media(max-width:460px){.sudoku-levels{gap:8px}.sudoku-levels button{min-width:0;min-height:0;aspect-ratio:1.15;padding:6px}}
+@media(max-width:340px){.sudoku-levels{grid-template-columns:repeat(3,1fr)}}
+
 /* assets/css/sudoku-feedback-v29-1.css */
 /* Keep user Sudoku styles intact; expose errors even when optional effects are off. */
 .sudoku-page button.sudoku-cell[data-sudoku-error="true"],
@@ -221,8 +225,8 @@ body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-in
 .bs-num,[data-career-coins]{font-variant-numeric:tabular-nums lining-nums}
 
 /* assets/css/game-interaction-v34.css */
-/* A long press selects no text and opens no copy menu; fields stay editable. */
-body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body input,body textarea,body select,body [contenteditable],body [contenteditable] *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-body a,body button,body [role=button],body label{touch-action:manipulation}
-body img,body svg,body canvas{-webkit-user-drag:none}
+html,body{overflow-x:clip}
+html{touch-action:pan-x pan-y}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable],[contenteditable] *,[data-selectable],[data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg,canvas{-webkit-user-drag:none}

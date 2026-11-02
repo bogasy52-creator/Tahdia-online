@@ -3,6 +3,8 @@
    A real cube: six rounded faces around a solid core (no see-through edges),
    a tumbling throw that lands on the exact face, and a short glow on a six. */
 (function(){
+  // 33.3.0: a snappier roll (was 1040 ms); the server's turn timing uses the same figure
+  const ROLL_MS=760;
   'use strict';
   const faces={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
   // Cube rotation that brings each face to the front.
@@ -61,13 +63,13 @@
       if(!quiet){window.BS_AUDIO?.play?.('dice');window.BS_AUDIO?.vibrate?.([10,30,10]);}
       try{
         if(el.__die3d){
-          const duration=reduce?0:1040;
+          const duration=reduce?0:ROLL_MS;
           if(!quiet&&!reduce)setTimeout(()=>window.BS_AUDIO?.play?.('diceImpact',{volume:.3}),Math.round(duration*.36));
           await el.__die3d.roll(value,duration);
         }else if(!reduce&&cube?.animate){
           const [x,y]=rotations[value],spinX=(Math.random()<.5?-1:1)*360,spinY=720;
           const final=`rotateX(${x+spinX*2}deg) rotateY(${y+spinY}deg)`;
-          const from=cube.style.transform||transform(1),duration=1040;
+          const from=cube.style.transform||transform(1),duration=ROLL_MS;
           anims.push(cube.animate([
             {transform:from,offset:0},
             {transform:`rotateX(${spinX*.55}deg) rotateY(${spinY*.35}deg) rotateZ(-24deg)`,offset:.22},
@@ -108,6 +110,6 @@
   }
   function random(){const limit=4294967292,arr=new Uint32Array(1);do{crypto.getRandomValues(arr)}while(arr[0]>=limit);return arr[0]%6+1;}
   function unit(){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}
-  window.BS_DICE={mount,mountBonus,set,roll,random,unit};
+  window.BS_DICE={mount,mountBonus,set,roll,random,unit,ROLL_MS};
   document.querySelectorAll('.die').forEach(el=>{if(!el.classList.contains('bonus-die'))mount(el);});
 })();

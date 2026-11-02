@@ -6,7 +6,7 @@ window.BS_UUID=()=>{if(typeof crypto.randomUUID==='function')return crypto.rando
   const gamePath=location.pathname.replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');
   {
     document.body.classList.add('bs-game-interaction-v34');
-    // tahdia-premium-v25.js adds the same guard on every page; add it once.
+    if(!window.__BS_NO_ZOOM__){window.__BS_NO_ZOOM__=true;for(const t of['gesturestart','gesturechange','gestureend'])document.addEventListener(t,e=>e.preventDefault(),{passive:false});}
     if(!window.__BS_NO_SELECT__){
       window.__BS_NO_SELECT__=true;
       const editable=target=>{const el=target&&target.nodeType===3?target.parentElement:target;return el?.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[data-selectable]');};

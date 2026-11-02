@@ -61,7 +61,7 @@ test('pro-dice hands rolls and faces to the GPU die when it is available',async(
  context.window=context;context.BS_DIE3D={attach(target){target.__die3d={set:v=>calls.push(['set',v]),roll:(v,d)=>{calls.push(['roll',v,d]);return Promise.resolve();}};return target.__die3d;}};
  vm.runInContext(await read('assets/js/pro-dice.js'),context);
  context.BS_DICE.mount(el);await context.BS_DICE.roll(el,6,{quiet:true});
- assert.deepEqual(calls.filter(c=>c[0]==='roll'),[['roll',6,1040]]);
+ assert.deepEqual(calls.filter(c=>c[0]==='roll'),[['roll',6,760]],'33.3.0: a snappier roll');
  assert.equal(calls.at(-1)[0],'set');assert.equal(calls.at(-1)[1],6);assert.equal(el.dataset.value,6);
 });
 

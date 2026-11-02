@@ -14,7 +14,7 @@ test('board movement lights every traversed cell on a smooth bounded timeline', 
   const plan=createBoardMovePlan(11,17);
   assert.deepEqual(plan.cells,[12,13,14,15,16,17]);
   assert.equal(plan.pulses.length,6);
-  assert.ok(plan.duration>=900&&plan.duration<=1150);
+  assert.ok(plan.duration>=600&&plan.duration<=760,'33.3.0: six cells in about two thirds of a second');
   assert.ok(plan.pulses.every((pulse,index)=>pulse.cell===12+index));
   assert.ok(plan.pulses.every((pulse,index,list)=>index===0||pulse.at>list[index-1].at));
 });
@@ -32,7 +32,7 @@ test('snake reaction is a complete hunt, bite, swallow, growth and release seque
   const plan=createReactionPlan('snake');
   assert.deepEqual(plan.phases.map(phase=>phase.name),['track','strike','swallow','grow','release']);
   assert.deepEqual(plan.phases.map(phase=>phase.sound),['snakeHiss','snakeBite','snakeSwallow','snakeGrow','snakeRelease']);
-  assert.ok(plan.total>=1400&&plan.total<=1800);
+  assert.ok(plan.total>=1100&&plan.total<=1300,'33.3.0: the whole bite in about 1.2 s');
   assert.deepEqual(plan.phases.find(phase=>phase.name==='strike').haptic,[70,25,100]);
 });
 

@@ -1,0 +1,33 @@
+/* Tahdia 33.3.0 — Zahra, Jackaroo and the dice race on phones: the table, your
+   hand and the main button fit on one screen. The players become one slim strip
+   instead of a two-row grid, and the board takes the room that is left. */
+@media (max-width: 640px) {
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game { align-content: start !important }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game .game-toolbar { margin-top: 6px !important; min-height: 0 !important }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #livebar { min-height: 0 !important; margin-top: 4px !important; padding-block: 0 !important; line-height: 20px !important }
+
+  /* the players: one strip of slim chips */
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #players { display: flex !important; flex-wrap: nowrap !important; gap: 6px !important; overflow-x: auto !important; scrollbar-width: none; padding: 2px 0 !important; margin-top: 6px !important; min-height: 0 !important; height: auto !important; grid-template-columns: none !important }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #players::-webkit-scrollbar { display: none }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #players > * { flex: 1 0 auto !important; min-width: 104px !important; max-width: 48% !important; min-height: 46px !important; height: auto !important; padding: 4px 8px !important; gap: 6px !important; border-radius: 13px !important }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #players > * b { font-size: 13px !important; line-height: 1.25 !important }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #players .mini-note { font-size: 10.5px !important; line-height: 1.2 !important; margin: 0 !important }
+  :is(html,#v31) body.game-jackaroo #game#game #players .home-marbles { margin: 1px 0 !important; transform: scale(.85); transform-origin: right center }
+  :is(html,#v31) body:is(.game-zahra,.game-jackaroo,.game-dice) #game#game #players > * > span.score, :is(html,#v31) body.game-jackaroo #game#game #players > * > b:last-child { font-size: 22px !important }
+
+  /* the board takes what is left */
+  :is(html,#v31) body.game-zahra #game#game .ludo-frame { width: min(100%, calc(100svh - 330px)) !important; max-width: none !important; margin-inline: auto !important }
+  :is(html,#v31) body.game-jackaroo #game#game .jack-board-wrap { width: min(100%, calc(100svh - 410px)) !important; max-width: none !important; margin-inline: auto !important }
+  :is(html,#v31) body.game-jackaroo #game#game .jack-side { margin-top: 6px !important; padding: 6px !important; gap: 4px !important }
+  :is(html,#v31) body.game-jackaroo #game#game .jack-side .hand-title { display: none !important }
+  :is(html,#v31) body.game-jackaroo #game#game #status { margin: 2px 0 !important; min-height: 0 !important; padding: 0 !important; font-size: 14px !important }
+  :is(html,#v31) body.game-jackaroo #game#game #hand { min-height: 112px !important; padding: 8px 6px 4px !important }
+
+  /* zahra and the dice race: the dice and the roll button in one slim row */
+  :is(html,#v31) body:is(.game-zahra,.game-dice) #game#game .dice-duel-v33 .duel-die { padding: 4px 4px 3px !important; gap: 2px !important; border-radius: 14px !important }
+  :is(html,#v31) body:is(.game-zahra,.game-dice) #game#game .dice-duel-v33 .duel-pair { min-height: 38px !important }
+  :is(html,#v31) body:is(.game-zahra,.game-dice) #game#game .dice-duel-v33 .die.pro-die { --die-size: 36px }
+  :is(html,#v31) body:is(.game-zahra,.game-dice) #game#game .dice-duel-v33 .duel-die b.duel-skin { display: none !important }
+  :is(html,#v31) body.game-zahra #game#game #roll { min-height: 58px !important; height: auto !important; max-height: 66px }
+  :is(html,#v31) body.game-zahra #game#game #status { margin: 4px 0 0 !important; min-height: 0 !important; font-size: 14px !important }
+}

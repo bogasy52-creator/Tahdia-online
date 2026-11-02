@@ -794,9 +794,61 @@ body.bl-playing .bl-toast{bottom:auto;top:calc(104px + env(safe-area-inset-top))
 .bl-cup-more:focus-visible,.bl-cup-claim:focus-visible,.bl-cup-link:focus-visible{outline:3px solid var(--bl-gold,#f1cf7e);outline-offset:2px}
 .bl-cup a.bl-cup-link{display:inline-block;margin-top:2px;color:var(--bl-gold,#f1cf7e)!important;text-decoration:underline;text-underline-offset:4px}
 
+/* assets/css/baloot-table-v33-3.css */
+/* Tahdia 33.3.0 — a luxurious Baloot table that uses the whole phone.
+   A lacquered frame with a brass inlay around the sadu band, a felt lit from
+   above with a gold eight-point medallion under the trick, leather name plates,
+   and cards sized to the screen: on a taller phone the hand and the trick grow. */
+body.game-baloot { --bl-trim: #d4a64e; --bl-frame-a: #7a4a24; --bl-frame-b: #4a2a12; --bl-frame-c: #261408 }
+body.game-baloot[data-felt="ivory"] { --bl-frame-a: #b48a58; --bl-frame-b: #7d5a34; --bl-frame-c: #4a3219 }
+body.game-baloot[data-felt="carbon"] { --bl-trim: #a9b8c9; --bl-frame-a: #2b3038; --bl-frame-b: #16191f; --bl-frame-c: #07080b }
+body.game-baloot[data-felt="jade"] { --bl-frame-a: #5e3a1f; --bl-frame-b: #3a2210; --bl-frame-c: #1f1007 }
+body.game-baloot[data-felt="royal"] { --bl-trim: #e2b956; --bl-frame-a: #3a2448; --bl-frame-b: #22132c; --bl-frame-c: #110818 }
+body.game-baloot[data-felt="majlis"] { --bl-trim: #e2b956; --bl-frame-a: #5a1c1c; --bl-frame-b: #36100f; --bl-frame-c: #1c0706 }
+
+body.game-baloot .bl-felt {
+  border-radius: 34px;
+  background:
+    linear-gradient(165deg, #ffffff1f, transparent 34%),
+    repeating-linear-gradient(97deg, #0000001a 0 2px, transparent 2px 9px),
+    linear-gradient(160deg, var(--bl-frame-a), var(--bl-frame-b) 55%, var(--bl-frame-c));
+  box-shadow: 0 28px 54px #000c, 0 0 0 1px #000a, inset 0 2px 0 #ffffff33, inset 0 -3px 0 #0009, inset 0 0 0 3px color-mix(in srgb, var(--bl-trim) 55%, transparent);
+}
+body.game-baloot .bl-felt-inner {
+  background:
+    radial-gradient(ellipse 58% 40% at 50% 50%, #ffffff17, transparent 72%),
+    radial-gradient(ellipse at 50% 42%, var(--bl-felt-a) 0, var(--bl-felt-b) 58%, var(--bl-felt-c) 100%);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bl-trim) 60%, transparent), inset 0 0 0 6px #00000038, inset 0 14px 48px #000b;
+}
+/* the medallion under the trick */
+body.game-baloot .bl-center::before {
+  content: ''; position: absolute; left: 50%; top: 52%; width: min(64%, 300px); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; opacity: .9;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23d9b061' stroke-width='1.4'%3E%3Ccircle cx='100' cy='100' r='97' stroke-opacity='.26'/%3E%3Ccircle cx='100' cy='100' r='90' stroke-opacity='.14'/%3E%3Crect x='40' y='40' width='120' height='120' stroke-opacity='.18'/%3E%3Crect x='40' y='40' width='120' height='120' transform='rotate(45 100 100)' stroke-opacity='.18'/%3E%3Ccircle cx='100' cy='100' r='46' stroke-opacity='.16'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* leather name plates */
+body.game-baloot .bl-name b { padding: 1px 10px; border-radius: 999px; background: linear-gradient(180deg, #2a1a10e6, #150c07e6); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bl-trim) 45%, transparent), 0 2px 6px #0008 }
+body.game-baloot .bl-avatar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--bl-trim) 55%, transparent), 0 6px 14px #000a }
+
+/* cards sized to the screen: a taller phone gets a bigger hand and trick */
+@media (max-width: 640px) {
+  body.game-baloot { --bl-card-w: clamp(56px, min(19vw, 10.5svh), 92px) }
+  body.game-baloot .bl-felt { padding: 8px }
+  /* the projects bar stays slim so the table keeps its room */
+  body.game-baloot .bl-tools .bl-project-picker { padding: 3px !important; gap: 4px !important; border-radius: 12px }
+  body.game-baloot .bl-tools .bl-project-picker button { min-height: 36px !important; padding: 0 14px !important; font-size: 14px !important }
+}
+/* a short phone: the trick sits a little smaller, clear of the seats */
+@media (max-width: 640px) and (max-height: 720px) {
+  body.game-baloot .bl-slot, body.game-baloot .bl-exposed, body.game-baloot .bl-deck { scale: .84 }
+  body.game-baloot .bl-center::before { width: min(56%, 240px) }
+}
+@media (max-width: 640px) and (min-height: 760px) {
+  body.game-baloot { --bl-card-w: clamp(60px, 20vw, 96px) }
+}
+
 /* assets/css/game-interaction-v34.css */
-/* A long press selects no text and opens no copy menu; fields stay editable. */
-body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body input,body textarea,body select,body [contenteditable],body [contenteditable] *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-body a,body button,body [role=button],body label{touch-action:manipulation}
-body img,body svg,body canvas{-webkit-user-drag:none}
+html,body{overflow-x:clip}
+html{touch-action:pan-x pan-y}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable],[contenteditable] *,[data-selectable],[data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg,canvas{-webkit-user-drag:none}

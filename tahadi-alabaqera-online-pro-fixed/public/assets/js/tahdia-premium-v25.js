@@ -4,7 +4,8 @@
   if (window.__TAHDIA_INTERFACE_25_1__) return;
   window.__TAHDIA_INTERFACE_25_1__ = true;
   const doc = document;
-  // 33.1.0: no text selection or copy menu on long press; fields stay editable
+  // no text selection on long press (fields stay editable), and no pinch zoom (iOS ignores user-scalable)
+  if (!window.__BS_NO_ZOOM__) { window.__BS_NO_ZOOM__ = true; for (const t of ['gesturestart', 'gesturechange', 'gestureend']) doc.addEventListener(t, (e) => e.preventDefault(), { passive: false }); }
   if (!window.__BS_NO_SELECT__) {
     window.__BS_NO_SELECT__ = true;
     const editable = (t) => { const el = t && t.nodeType === 3 ? t.parentElement : t; return el?.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[data-selectable]'); };

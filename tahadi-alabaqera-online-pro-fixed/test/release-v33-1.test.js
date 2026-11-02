@@ -12,12 +12,12 @@ test('every page bundle stops long-press selection, and typing fields stay selec
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
   for (const [page, list] of Object.entries(bundles)) assert.ok(list.includes('assets/css/game-interaction-v34.css'), page + ' misses the no-selection rules');
   const css = await read('public/assets/css/game-interaction-v34.css');
-  assert.match(css, /body,body \*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/);
-  assert.match(css, /body input,body textarea,body select,[^{]*\[data-selectable\] \*\{-webkit-user-select:text;user-select:text/);
+  assert.match(css, /^\*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/m);
+  assert.match(css, /^input,textarea,select,[^{]*\[data-selectable\] \*\{-webkit-user-select:text;user-select:text/m);
   // accuracy.html only redirects home, so build-styles leaves its old bundle alone
   for (const file of (await readdir(new URL('public/assets/css/', root))).filter((f) => /^app-.*\.css$/.test(f) && f !== 'app-accuracy.css')) {
     const text = await read('public/assets/css/' + file);
-    assert.match(text, /body,body \*\{-webkit-user-select:none/, file);
+    assert.match(text, /\*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/, file);
   }
   const offline = await read('public/offline.html');
   assert.match(offline, /body,body \*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/);

@@ -1,4 +1,4 @@
-import {CHALLENGES,createChallenge,applyChallenge,advanceChallenge,challengeView,adjacent,edge} from './engines/challenge-core.js?v=33.2.0-bomb1';
+import {CHALLENGES,createChallenge,applyChallenge,advanceChallenge,challengeView,adjacent,edge} from './engines/challenge-core.js?v=33.3.0-bomb1';
 const $=id=>document.getElementById(id),game=document.body.dataset.challenge,spec=CHALLENGES[game];
 const safe={get(k){try{return localStorage.getItem(k);}catch{return null;}},set(k,v){try{localStorage.setItem(k,v);}catch{}},del(k){try{localStorage.removeItem(k);}catch{}}};
 let local=null,state=null,ws=null,generation=0,seq=0,pending=0,retry=0,retryTimer=0,heartbeat=0,code='',hostKey='',roomToken='',offlineAt=0,stopped=false,boardKey='',taskKey='',selection=[],guess=[0,0,0,0],slot=0,secret=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x%10),secretSlot=0,wallMode=false,wallFrom=null,wallTo=null,actors=new Map(),played=new Set(),lastVersion=-1,lastRound=-1,lastPositions=[],clockOffset=0,pausedAt=0,localSerial=0,preparing=false,targetId="",dashMode=false;

@@ -1,0 +1,78 @@
+/* Tahdia 33.3.0 — the snakes & ladders game screen on phones.
+   One page, no scrolling to play: a slim tools row, a slim players strip, the board
+   as large as the screen allows, the waiting stones on a launch pad at the board's
+   foot, and the dice with the roll button in one row at the bottom. The stones are
+   big, ringed in their player's colour, and the one whose turn it is bounces. */
+@media (max-width: 640px) {
+  :is(html,#v31) body.game-snakes #game.snl31 { --snl-board: min(calc(100vw - 16px), calc(100svh - 316px), 600px); padding-bottom: calc(6px + env(safe-area-inset-bottom)) !important }
+  :is(html,#v31) body.game-snakes #game.snl31 .stage-orb { display: none !important }
+  /* start under the game bar: a tall phone must not centre the table and leave a gap above it */
+  :is(html,#v31) body.game-snakes #game.snl31 { align-content: start !important; padding-top: 0 !important }
+
+  /* one slim row of tools, the connection line folded beside it */
+  :is(html,#v31) body.game-snakes #game.snl31 .game-toolbar { margin: 6px 0 0 !important; padding: 0 !important; min-height: 0 !important; height: auto !important; border: 0 !important; background: none !important; box-shadow: none !important }
+  :is(html,#v31) body.game-snakes #game.snl31 .game-toolbar .toolbar-title { display: none !important }
+  :is(html,#v31) body.game-snakes #game.snl31 .toolbar-actions { display: flex !important; flex-wrap: nowrap !important; gap: 6px !important; width: 100% !important; overflow-x: auto; scrollbar-width: none }
+  :is(html,#v31) body.game-snakes #game.snl31 .toolbar-actions::-webkit-scrollbar { display: none }
+  :is(html,#v31) body.game-snakes #game.snl31 .toolbar-actions .bs-btn { flex: 0 0 auto !important; min-height: 32px !important; height: 32px !important; padding: 0 12px !important; font-size: 13px !important; border-radius: 11px !important; line-height: 1 !important }
+  :is(html,#v31) body.game-snakes #game.snl31 #livebar { margin: 4px 2px 0 !important; min-height: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 18px !important }
+
+  /* the players: one strip of slim chips, the one whose turn it is lit */
+  :is(html,#v31) body.game-snakes #game.snl31 #players { margin: 6px 0 0 !important; gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto !important; scrollbar-width: none; padding: 2px 0 !important; min-height: 0 !important }
+  :is(html,#v31) body.game-snakes #game.snl31 #players::-webkit-scrollbar { display: none }
+  :is(html,#v31) body.game-snakes #game.snl31 #players > * { flex: 1 0 auto !important; min-width: 96px !important; max-width: 46% !important; min-height: 44px !important; height: 44px !important; padding: 4px 10px !important; border-radius: 14px !important }
+
+  /* the order on a phone: board, launch pad, status, then dice and roll */
+  :is(html,#v31) body.game-snakes #game.snl31 .game-layout { grid-template-areas: "board board" "status status" "dice roll" "power power" "help help" "log log" "rules rules" "more more" !important; row-gap: 0 !important; margin-top: 0 !important }
+  :is(html,#v31) body.game-snakes #game.snl31 #players { height: auto !important; max-height: none !important; align-items: stretch !important }
+
+  /* the board, as large as the screen allows */
+  :is(html,#v31) body.game-snakes #game.snl31 #boardWrap { width: var(--snl-board) !important; max-width: none !important; margin: 8px auto 0 !important }
+
+  /* the waiting stones: a launch pad under the board's first cells */
+  :is(html,#v31) body.game-snakes #game.snl31 #mobileStartLane { grid-area: status !important; justify-self: end; margin-left: 60px !important; align-self: center; position: relative !important; inset: auto !important; z-index: 2; display: flex !important; align-items: center; gap: 4px !important; width: auto !important; max-width: 38%; height: 34px !important; min-height: 0 !important; margin-top: 6px !important; padding: 0 8px !important; border-radius: 12px !important; background: #0e1d2f !important; border: 1px dashed #2f4b66 !important; direction: ltr; overflow: hidden !important }
+  :is(html,#v31) body.game-snakes #game.snl31 #mobileStartLane:empty { visibility: hidden }
+  :is(html,#v31) body.game-snakes #game.snl31 #mobileStartLane .start-token { width: 26px !important; height: 30px !important; flex: 0 0 auto }
+
+  /* status, then the dice and the roll button in one row */
+  :is(html,#v31) body.game-snakes #game.snl31 #status { grid-area: status !important; margin: 6px 0 0 !important; min-height: 34px !important; padding: 0 !important; display: flex !important; align-items: center; justify-content: center; font-size: 14px !important; text-align: center }
+  :is(html,#v31) body.game-snakes #game.snl31:has(#mobileStartLane:not(:empty)) #status { justify-content: flex-start; padding-inline-start: 4px !important; padding-inline-end: calc(38% + 64px) !important; font-size: 13px !important; line-height: 1.35 }
+  :is(html,#v31) body.game-snakes #game.snl31 .dice-stage { margin: 6px 0 0 !important; min-height: 0 !important; height: auto !important; padding: 0 !important; gap: 6px !important; align-self: stretch }
+  :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-die { padding: 4px 4px 3px !important; gap: 2px !important; border-radius: 14px !important }
+  :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-pair { min-height: 38px !important }
+  :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .die.pro-die { --die-size: 36px }
+  :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-die small { font-size: 11px !important; line-height: 14px }
+  :is(html,#v31) body.game-snakes #game.snl31 .dice-duel-v33 .duel-die b.duel-skin { display: none !important }
+  :is(html,#v31) body.game-snakes #game.snl31 #roll { margin: 6px 0 0 !important; min-height: 58px !important; height: auto !important; max-height: 66px; font-size: 18px !important; border-radius: 18px !important }
+  /* the shared game bar, a little lower on this screen */
+  :is(html,#v31) body.game-snakes .bs-game-command { min-height: 50px !important; padding: 4px 6px !important; margin: 6px auto 0 !important }
+  :is(html,#v31) body.game-snakes #game.snl31 #roll:not(:disabled) { animation: snl-roll-ready 1.4s ease-in-out infinite }
+  :is(html,#v31) body.game-snakes #game.snl31 #eventLog { margin-top: 10px !important }
+}
+@keyframes snl-roll-ready { 0%, 100% { box-shadow: 0 6px 0 #8c6b22, 0 0 0 0 #f6d36a66 } 50% { box-shadow: 0 6px 0 #8c6b22, 0 0 0 10px #f6d36a00 } }
+
+/* the stones: big, ringed in the player's colour, the active one bouncing */
+:is(html,#v31) body.game-snakes #game.snl31 .snake-token { width: 96% !important; height: 112% !important; filter: drop-shadow(0 0 3px var(--pc, #fff)) drop-shadow(0 2px 2px #000a) !important; z-index: 2 }
+:is(html,#v31) body.game-snakes #game.snl31 .token-stack:has(.snake-token:nth-child(2)) .snake-token { width: 60% !important; height: 74% !important }
+:is(html,#v31) body.game-snakes #game.snl31 .snake-token.active { animation: snl-stone-bob .9s ease-in-out infinite !important; z-index: 3 }
+@keyframes snl-stone-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-14%) } }
+
+/* the art inside a stone fills more of its cell (scale is its own property, so the
+   older transform resets do not undo it) */
+:is(html,#v31) body.game-snakes #game.snl31 #board .snake-token > :is(svg, canvas, img, .crystal-sprite) { scale: 1.5; transform-origin: 50% 88% }
+:is(html,#v31) body.game-snakes #game.snl31 #board .token-stack:has(.snake-token:nth-child(2)) .snake-token > :is(svg, canvas, img, .crystal-sprite) { scale: 1.2 }
+:is(html,#v31) body.game-snakes #game.snl31 #mobileStartLane .start-token > :is(svg, canvas, img, .crystal-sprite) { scale: 1.25; transform-origin: 50% 90% }
+/* the turn tag on the players strip would cover a score on a phone; the lit chip says it */
+@media (max-width: 640px) { :is(html,#v31) body.game-snakes #game.snl31 #players .player-row.turn::before { display: none !important } }
+
+/* your turn: the board's rim lights for a moment */
+:is(html,#v31) body.game-snakes #game.snl31.snl-your-turn #boardWrap { animation: snl-turn-glow 1.25s ease-out 1 }
+@keyframes snl-turn-glow { 0% { box-shadow: 0 0 0 0 #6fd3ff00 } 25% { box-shadow: 0 0 0 3px #6fd3ffaa, 0 0 26px #6fd3ff66 } 100% { box-shadow: 0 0 0 0 #6fd3ff00 } }
+
+/* a bite shakes the board; a ladder lights it */
+:is(html,#v31) body.game-snakes #game.snl31 #boardWrap.snake-active { animation: snl-shake .42s cubic-bezier(.36,.07,.19,.97) 1 }
+:is(html,#v31) body.game-snakes #game.snl31 #boardWrap.ladder-active { box-shadow: 0 0 0 2px #ffe08a99, 0 0 28px #ffd86a55 !important }
+@keyframes snl-shake { 10%, 90% { transform: translateX(-1px) } 20%, 80% { transform: translateX(3px) } 30%, 50%, 70% { transform: translateX(-5px) } 40%, 60% { transform: translateX(5px) } }
+@media (prefers-reduced-motion: reduce) {
+  :is(html,#v31) body.game-snakes #game.snl31 #roll:not(:disabled), :is(html,#v31) body.game-snakes #game.snl31 .snake-token.active, :is(html,#v31) body.game-snakes #game.snl31 #boardWrap.snake-active { animation: none !important }
+}

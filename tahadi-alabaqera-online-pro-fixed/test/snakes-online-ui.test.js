@@ -75,5 +75,5 @@ test('normal pawn movement uses moderate transform-only animations even with glo
  const h=await ui(),before=Enhanced.createEnhancedGame(['A','B']),animations=[];before.players[0].position=13;h.context.matchMedia=()=>({matches:false});h.context.BS_PLAY_INSIGHTS={motionScale:()=>.45,boardRender(){}};await h.table.apply(h.room(before));
  const prototype=Object.getPrototypeOf(h.doc.createElement('span')),original=prototype.animate;prototype.animate=function(frames,options){if(this.classList.contains('snake-travel-pawn'))animations.push({frames,options});return{finished:Promise.resolve(),cancel(){}};};
  try{await h.table.apply(h.room(Enhanced.playEnhancedTurn(before,[2]),{version:3}),{animate:true});}finally{prototype.animate=original;}
- assert.ok(animations.length);assert.ok(animations[0].options.duration>=420);assert.ok(animations.flatMap(a=>a.frames).every(frame=>!('left'in frame)&&!('top'in frame)));
+ assert.ok(animations.length);assert.ok(animations[0].options.duration>=330,'33.3.0: quicker steps, still visible');assert.ok(animations.flatMap(a=>a.frames).every(frame=>!('left'in frame)&&!('top'in frame)));
 });

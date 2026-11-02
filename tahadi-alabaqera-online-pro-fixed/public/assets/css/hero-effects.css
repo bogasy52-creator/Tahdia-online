@@ -64,3 +64,6 @@ body.shop31 .sx-card .sx-art-character .sx-character-art{animation:none!importan
 @keyframes hero-entry-in{0%{opacity:0;transform:translateY(12px)}10%,86%{opacity:1;transform:none}100%{opacity:0;transform:translateY(4px)}}
 @media(max-width:600px){.hero-entry{inset-inline-end:10px;bottom:16px;max-width:240px}.hero-victory .hero-original{width:118px;height:154px}.hero-victory{max-width:200px}}
 @media(prefers-reduced-motion:reduce){.hero-entry,.hero-motif,.hero-spark{animation:none!important}.hero-motif{opacity:.4}.hero-spark{display:none}.hero-entry{opacity:1}}
+
+/* 33.3.0: at a game table the entrance card shows at the top, clear of the hand, the dice and the roll button */
+body:is(.board-game,.game-baloot,.game-snakes,.game-zahra,.game-jackaroo,.game-dice) .hero-entry{top:calc(max(8px,env(safe-area-inset-top)) + 58px);bottom:auto}

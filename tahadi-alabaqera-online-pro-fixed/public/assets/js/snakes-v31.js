@@ -37,6 +37,12 @@
     die.addEventListener('click',()=>{const roll=$('#roll');if(roll&&!roll.disabled)roll.click();});
   }
   function refresh(){hero();loadout();}
-  refresh();dieTap();
+  // 33.3.0: your turn is felt: a tap sound, a short buzz and a glow on the board, once per turn
+  function turnCue(){
+    const roll=$('#roll'),game=$('#game');if(!roll||!game||!window.MutationObserver)return;
+    let ready=!roll.disabled,timer=0;
+    new MutationObserver(()=>{const now=!roll.disabled;if(now&&!ready&&!game.classList.contains('hidden')){window.BS_AUDIO?.play?.('select',{volume:.55});window.BS_AUDIO?.vibrate?.([16]);game.classList.add('snl-your-turn');clearTimeout(timer);timer=setTimeout(()=>game.classList.remove('snl-your-turn'),1300);}ready=now;}).observe(roll,{attributes:true,attributeFilter:['disabled']});
+  }
+  refresh();dieTap();turnCue();
   addEventListener('bs-career-change',refresh);
 })();

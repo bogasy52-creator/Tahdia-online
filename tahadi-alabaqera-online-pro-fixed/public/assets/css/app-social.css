@@ -336,8 +336,8 @@ body.journey-page,body.picture-page{inline-size:100%;max-inline-size:100%;min-in
 body[data-arcade] .bs-topbar{flex-wrap:wrap}body[data-arcade] .bs-actions{min-inline-size:0;flex-wrap:wrap}
 
 /* assets/css/game-interaction-v34.css */
-/* A long press selects no text and opens no copy menu; fields stay editable. */
-body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body input,body textarea,body select,body [contenteditable],body [contenteditable] *,body [data-selectable],body [data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-body a,body button,body [role=button],body label{touch-action:manipulation}
-body img,body svg,body canvas{-webkit-user-drag:none}
+html,body{overflow-x:clip}
+html{touch-action:pan-x pan-y}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable],[contenteditable] *,[data-selectable],[data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg,canvas{-webkit-user-drag:none}

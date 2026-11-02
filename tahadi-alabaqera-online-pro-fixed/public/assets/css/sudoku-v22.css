@@ -90,3 +90,7 @@
 @keyframes sudokuDone{0%,100%{filter:none}40%{filter:brightness(1.12) saturate(1.6);background:#b9ecc9}}
 @keyframes sudokuShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
 @keyframes sudokuPulse{50%{opacity:.55}}
+
+/* 33.3.0: the level grid fits a 360px phone (the tile's height no longer forces its width) */
+@media(max-width:460px){.sudoku-levels{gap:8px}.sudoku-levels button{min-width:0;min-height:0;aspect-ratio:1.15;padding:6px}}
+@media(max-width:340px){.sudoku-levels{grid-template-columns:repeat(3,1fr)}}

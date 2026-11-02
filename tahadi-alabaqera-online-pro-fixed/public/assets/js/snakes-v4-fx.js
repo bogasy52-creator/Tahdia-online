@@ -2,22 +2,22 @@ const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
 const REACTIONS=Object.freeze({
   die:Object.freeze([
-    Object.freeze({name:'lift',duration:220,sound:'dice'}),
-    Object.freeze({name:'tumble',duration:440}),
-    Object.freeze({name:'impact',duration:150,sound:'diceImpact',haptic:[18,22,54]}),
-    Object.freeze({name:'settle',duration:170}),
+    Object.freeze({name:'lift',duration:160,sound:'dice'}),
+    Object.freeze({name:'tumble',duration:320}),
+    Object.freeze({name:'impact',duration:120,sound:'diceImpact',haptic:[18,22,54]}),
+    Object.freeze({name:'settle',duration:140}),
   ]),
   ladder:Object.freeze([
-    Object.freeze({name:'wake',duration:160,sound:'ladderIgnite'}),
-    Object.freeze({name:'climb',duration:650,sound:'ladderClimb'}),
-    Object.freeze({name:'land',duration:220,sound:'ladderLand',haptic:[20,24,46]}),
+    Object.freeze({name:'wake',duration:120,sound:'ladderIgnite'}),
+    Object.freeze({name:'climb',duration:480,sound:'ladderClimb'}),
+    Object.freeze({name:'land',duration:170,sound:'ladderLand',haptic:[20,24,46]}),
   ]),
   snake:Object.freeze([
-    Object.freeze({name:'track',duration:180,sound:'snakeHiss'}),
-    Object.freeze({name:'strike',duration:240,sound:'snakeBite',haptic:[70,25,100]}),
-    Object.freeze({name:'swallow',duration:520,sound:'snakeSwallow'}),
-    Object.freeze({name:'grow',duration:320,sound:'snakeGrow',haptic:38}),
-    Object.freeze({name:'release',duration:300,sound:'snakeRelease'}),
+    Object.freeze({name:'track',duration:140,sound:'snakeHiss'}),
+    Object.freeze({name:'strike',duration:200,sound:'snakeBite',haptic:[70,25,100]}),
+    Object.freeze({name:'swallow',duration:400,sound:'snakeSwallow'}),
+    Object.freeze({name:'grow',duration:230,sound:'snakeGrow',haptic:38}),
+    Object.freeze({name:'release',duration:230,sound:'snakeRelease'}),
   ]),
 });
 
@@ -70,7 +70,7 @@ export function createBoardMovePlan(from,to,{reducedMotion=false}={}){
   const direction=end>=start?1:-1;
   const cells=[];
   for(let cell=start+direction;direction>0?cell<=end:cell>=end;cell+=direction)cells.push(cell);
-  const duration=reducedMotion?clamp(110+cells.length*18,130,260):clamp(260+cells.length*115,420,1150);
+  const duration=reducedMotion?clamp(110+cells.length*18,130,260):clamp(170+cells.length*88,330,860);
   const pulses=cells.map((cell,index)=>Object.freeze({cell,at:Math.round((index+1)/Math.max(1,cells.length)*duration)}));
   return Object.freeze({from:start,to:end,cells:Object.freeze(cells),pulses:Object.freeze(pulses),duration});
 }
@@ -106,9 +106,9 @@ export function snakesTurnDisplayMs(event){
   if(!event)return 0;
   const walk=(from,to)=>from===to?0:createBoardMovePlan(from,to).duration;
   const reaction=kind=>['snake','ladder'].includes(kind)?createReactionPlan(kind).total:0;
-  let duration=1040+180+240+walk(event.from,event.landed);
+  let duration=760+180+240+walk(event.from,event.landed);
   if(event.to!==event.landed)duration+=360+reaction(event.jumpType);
-  if(event.bonusRoll)duration+=350+1040+950;
+  if(event.bonusRoll)duration+=300+760+800;
   if(event.event&&event.eventTo!==event.eventFrom)duration+=walk(event.eventFrom,event.eventLanding??event.eventTo)+reaction(event.bonusJumpType);
   return duration+100;
 }
