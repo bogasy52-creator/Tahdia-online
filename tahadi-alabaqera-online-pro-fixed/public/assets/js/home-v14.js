@@ -42,14 +42,7 @@
     const route = link.dataset.gameRoute || link.getAttribute('href');
     if (allowed.has(route)) try { localStorage.setItem('tahdia-last-game-v14', route); } catch {}
   }));
-  $('homeQuickPlay').onclick = async () => {
-    const button = $('homeQuickPlay');
-    if (button.disabled) return;
-    button.disabled = true; button.setAttribute('aria-busy', 'true');
-    try { await window.TahdiaMatchmaking.join(); }
-    catch (error) { window.BS_PLATFORM?.toast?.(error.message || 'تعذر بدء المواجهة. أعد المحاولة.'); }
-    finally { button.disabled = false; button.setAttribute('aria-busy', 'false'); }
-  };
+  // 33.4.0: no room or quick-match box on the home page; each game has its own inside
   $('editProfile').onclick = async () => {
     const name = prompt('اكتب اسم اللاعب', window.BS_CAREER.get().name);
     if (!name?.trim()) return;

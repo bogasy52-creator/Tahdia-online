@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.3.0-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.3.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.3.0';
-import { BalootVoice } from './baloot-voice.js?v=33.3.0-baloot2';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.4.0-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.4.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.4.0';
+import { BalootVoice } from './baloot-voice.js?v=33.4.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -60,9 +60,9 @@ function equipped(type) {
 function applyCosmetics() {
   const deck = equipped('deck');
   ui.deck = window.BS_CARDS?.DECKS?.[deck] ? deck : 'deck-classic';
-  const table = equipped('table');
-  const felt = { 'table-gallery': 'ivory', 'table-nocturne': 'carbon', 'table-midnight': 'carbon', 'table-cyber': 'carbon', 'table-slate': 'carbon', 'table-botanic': 'jade', 'table-emerald': 'jade', 'table-royal': 'royal', 'table-majlis': 'majlis' }[table] || '';
-  if (felt) document.body.dataset.felt = felt; else delete document.body.dataset.felt;
+  // 33.4.0: each table is its own piece of furniture (baloot-tables.js)
+  if (window.BS_BALOOT_TABLES) window.BS_BALOOT_TABLES.apply($('felt'));
+  else $('felt').dataset.table = 'diwan';
 }
 const cardUrl = (card) => window.BS_CARDS.url(card === '??' ? 'back' : card, ui.deck);
 function cardEl(card, extra = '') {

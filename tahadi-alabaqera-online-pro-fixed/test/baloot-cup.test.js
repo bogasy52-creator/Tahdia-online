@@ -118,7 +118,7 @@ test('the Baloot page carries the cup card, its script and styles; the missions 
   const { readFile } = await import('node:fs/promises');
   const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
   const page = await read('public/baloot.html'), table = await read('public/assets/js/baloot-table.js'), shop = await read('public/assets/js/shop-v31.js');
-  assert.match(page, /<div id="gameMenu" class="bl-menu-v33"><\/div>\s*<section id="balootCup" class="bl-cup" aria-label="بطولة البلوت الأسبوعية" hidden><\/section>/);
+  assert.match(page, /<div id="gameMenu" class="bl-menu-v33"><\/div>\s*(?:<div id="tableChoice" class="blt-choice-host"><\/div>\s*)?<section id="balootCup" class="bl-cup" aria-label="بطولة البلوت الأسبوعية" hidden><\/section>/);
   assert.match(page, /<p id="matchLine"><\/p><p id="matchCup" class="bl-end-cup" hidden><\/p>/);
   assert.match(page, /<script defer src="assets\/js\/baloot-cup\.js\?v=33\.\d+\.\d+"><\/script>/);
   assert.match(table, /window\.BS_BALOOT_CUP\?\.matchEnded\?\.\(won\)/);

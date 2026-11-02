@@ -5,8 +5,8 @@
    «سجّل الكل» walks through the calls one by one: say it, listen, keep it, next.
    A call can also come from a sound file (a voice note someone with a clear Gulf
    voice recorded): it goes through the same trimming and evening out. */
-import { VOICE_LINES } from './baloot-voice-pack.js?v=33.3.0-baloot2';
-import { BalootVoice } from './baloot-voice.js?v=33.3.0-baloot2';
+import { VOICE_LINES } from './baloot-voice-pack.js?v=33.4.0-baloot2';
+import { BalootVoice } from './baloot-voice.js?v=33.4.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 const RATE = 22050, MAX_SECONDS = 5, MAX_FILE_BYTES = 12 * 1024 * 1024, MAX_KEPT_SECONDS = 6.5;

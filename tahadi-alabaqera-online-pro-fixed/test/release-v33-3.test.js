@@ -56,8 +56,9 @@ test('a luxurious Baloot table and the other tables fit the phone', async () => 
   assert.ok(bundles['baloot.html'].includes('assets/css/baloot-table-v33-3.css'));
   for (const page of ['zahra.html', 'jackaroo.html', 'dice.html']) assert.ok(bundles[page].includes('assets/css/tables-phone-v33-3.css'), page);
   const baloot = await read('public/assets/css/app-baloot.css');
-  for (const theme of ['ivory', 'carbon', 'jade', 'royal', 'majlis']) assert.match(baloot, new RegExp(`body\\.game-baloot\\[data-felt="${theme}"\\] \\{ (--bl-trim: #[0-9a-f]{6}; )?--bl-frame-a:`), theme);
-  assert.match(baloot, /body\.game-baloot \.bl-center::before \{/);
+  // 33.4.0: each table is now its own furniture, keyed on the felt (baloot-tables-v33-4.css)
+  for (const theme of ['diwan', 'ivory', 'night', 'garden', 'palace', 'majlis']) assert.match(baloot, new RegExp(`\\.bl-felt\\[data-table="${theme}"\\]\\{--t-rx:`), theme);
+  assert.match(baloot, /\.bl-felt\[data-table\] \.bl-center::before\{/);
   assert.match(baloot, /--bl-card-w: clamp\(56px, min\(19vw, 10\.5svh\), 92px\)/);
   assert.match(await read('public/assets/css/hero-effects.css'), /\.hero-entry\{top:calc\(max\(8px,env\(safe-area-inset-top\)\) \+ 58px\);bottom:auto\}/);
 });

@@ -1,0 +1,41 @@
+/* Tahdia 33.4.0 — Jackaroo cards: the Baloot deck's faces with a plate that draws what
+   each card does (green: out of the yard, blue: forward, orange: back, violet: swap,
+   teal: split seven, red: any stone, gold: the king's sweep). The same plates make
+   the card guide under «دليل الأوراق والقواعد». */
+.jk-act{--jk-c:#2b6fd6;display:inline-grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:4px;align-items:center;justify-content:start;padding:3px 6px 3px 4px;border-radius:8px;background:var(--jk-c);color:#fff;box-shadow:0 2px 6px #0006,inset 0 0 0 1px #ffffff47;direction:rtl;text-align:right;font-family:Tajawal,Arial,sans-serif;line-height:1}
+.jk-act[data-act="exit"]{--jk-c:#16936a}
+.jk-act[data-act="king"]{--jk-c:#a8741a}
+.jk-act[data-act="back"]{--jk-c:#cf6f22}
+.jk-act[data-act="swap"]{--jk-c:#7550d0}
+.jk-act[data-act="split"]{--jk-c:#0f97a0}
+.jk-act[data-act="any"]{--jk-c:#cc4040}
+.jk-act .jk-ico{grid-row:1/3;width:18px;height:18px}
+.jk-act b{font-size:13px;font-weight:900;white-space:nowrap}
+.jk-act small{font-size:10px;font-weight:700;opacity:.95;white-space:nowrap}
+
+/* the hand: the deck's face fills the card, the plate sits at its foot */
+:is(html,#v31) body.game-jackaroo{--jk-w:clamp(56px,calc((100vw - 60px) / 5),80px)}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card{width:var(--jk-w)!important;height:calc(var(--jk-w) * 1.4)!important;margin:0 2px!important;background:none!important;border:0!important;border-radius:8px!important;box-shadow:0 6px 14px #0008!important;overflow:visible!important;opacity:1!important}
+/* not your turn: the cards stay readable, only a little quieter */
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card:disabled{opacity:1!important;filter:saturate(.85) brightness(.9)!important}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-face{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:8px;pointer-events:none}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-act{position:absolute;left:5px;right:5px;bottom:5px;padding:3px 4px 3px 3px;border-radius:7px}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-act .jk-ico{width:16px;height:16px}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-act b{font-size:12px}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-act small{font-size:9px;overflow:hidden;text-overflow:ellipsis}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card.selected{transform:translateY(-12px) scale(1.04)!important;box-shadow:0 0 0 3px #f2c14e,0 16px 26px #000a!important}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card.card-back{background:none!important;border:0!important}
+:is(html,#v31) body.game-jackaroo .playing-card.jk-card.card-back::after{content:none}
+@media (max-width:380px){
+  :is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-act b{font-size:11px}
+  :is(html,#v31) body.game-jackaroo .playing-card.jk-card .jk-act small{font-size:8.5px}
+}
+/* what the chosen card does, under the board */
+:is(html,#v31) body.game-jackaroo #game#game #status{font-weight:700;line-height:1.45;margin-bottom:14px!important;position:relative;z-index:3}
+
+/* the card guide */
+.jk-legend{display:grid;gap:6px;margin:10px 0 8px}
+.jk-legend-row{display:grid;grid-template-columns:30px 104px minmax(0,1fr);align-items:center;gap:8px;padding:6px 8px;border-radius:12px;background:#ffffff0a;border:1px solid #ffffff12}
+.jk-legend-rank{font:700 19px/1 Georgia,'Times New Roman',serif;text-align:center;color:#fff4dc}
+.jk-legend-row p{margin:0;font-size:13px;line-height:1.55;color:#d6dfe8}
+.jk-legend .jk-act{justify-self:start}

@@ -25,7 +25,9 @@ test('expanded platform assets exist', async () => {
 test('home links every game and the online quiz (33.0.0: every game is online)', async () => {
   const html = await readFile(join(publicDir, 'index.html'), 'utf8');
   assert.doesNotMatch(html, /href=["']\/local/, 'the same-device quiz moved online');
-  for (const href of ['/quiz', '/online', '/snakes', '/dice', '/zahra', '/jackaroo', '/baloot', '/serpent']) {
+  // 33.4.0: no unnamed «الأونلاين» link: the quiz card opens the quiz, and its online room is inside it
+  assert.doesNotMatch(html, /href=["']\/online["']/);
+  for (const href of ['/quiz', '/party', '/snakes', '/dice', '/zahra', '/jackaroo', '/baloot', '/serpent']) {
     assert.match(html, new RegExp(`href=["']${href.replace('.', '\\.')}`));
   }
 });

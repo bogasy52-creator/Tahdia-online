@@ -15,10 +15,10 @@ export class BoardOnlineClient {
     this.pageShow=event=>{if(event?.persisted)this.resume();};
   }
   tokenKey(code){return `bs_board_${this.game}_${code}`}
-  async create(name,playerLimit,{variant='classic',character='',open=true}={}){
+  async create(name,playerLimit,{variant='classic',character='',open=true,seats=null}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
     this.character=character;
-    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant,open:open!==false})});
+    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant,open:open!==false,...(seats?{seats}:{})})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
         const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
@@ -33,9 +33,9 @@ export class BoardOnlineClient {
   }
   // 33.0.0: «العب الحين» — the server seats you at the open public table of this game
   // (and way of playing); it starts ten seconds after it opened, bots in the empty seats.
-  async quick(name,{variant='classic'}={}){
+  async quick(name,{variant='classic',seats=null}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
-    const res=await timedFetch('/api/board/quick',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,variant})});
+    const res=await timedFetch('/api/board/quick',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,variant,...(seats?{seats}:{})})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);
     if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'){const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';throw error;}

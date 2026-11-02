@@ -62,7 +62,7 @@
       box.append(copy);
     }else if(!mine.games){
       box.append(node('span','lb-me-rank is-out','—'));copy.append(node('b',null,COPY[period].none),node('span',null,'فوز واحد يضيف 250 نقطة، وإكمال المباراة 80.'));
-      const go=node('a','bs-btn primary','العب أونلاين');go.href='/online';box.append(copy,go);
+      const go=node('a','bs-btn primary','اختر لعبتك');go.href='/#games';box.append(copy,go);
     }else{
       const last=data.players.at(-1),gap=last?Math.max(0,last.points-mine.points)+1:0;
       box.append(node('span','lb-me-rank is-out','+100'));copy.append(node('b',null,'خارج أول 100'),node('span',null,`${points.format(mine.points)} نقطة. تحتاج ${points.format(gap)} نقطة لدخول القائمة.`));

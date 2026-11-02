@@ -809,6 +809,17 @@ html[data-dice=dice-smoke],html[data-dice=dice-nebula]{--die-one:#ffdf9d}
   .quiz-v19 #app>.top{flex-wrap:wrap}
   .quiz-v19 #app>.top>.topBtns{max-inline-size:100%;flex-wrap:wrap;margin-inline-start:auto}
 }
+/* 33.4.0: how many sit at the table (snakes & ladders) */
+.gm33-seats{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--gm-line);border-radius:16px;background:var(--gm-deep)}
+.gm33-seats-label{font-size:14px;font-weight:800;color:var(--gm-text)}
+.gm33-seat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gm33-seat{display:grid;justify-items:center;gap:0;min-height:52px;padding:6px 4px;border:1px solid transparent;border-radius:12px;background:#0d1828;color:var(--gm-muted);cursor:pointer;font:inherit;transition:background .18s,border-color .18s}
+.gm33-seat b{font-size:22px;line-height:1.1;font-weight:900;color:var(--gm-text)}
+.gm33-seat small{font-size:11.5px}
+.gm33-seat:hover{background:#142235}
+.gm33-seat.is-on{background:var(--gm-surface-2);border-color:#f7ba5570}
+.gm33-seat.is-on b{color:#ffd48a}
+.gm33-seats-note{font-size:12px;line-height:1.6;color:var(--gm-muted)}
 
 /* assets/css/tables-v33.css */
 /* Tahdia 33.0.0 — the table games online: two dice (yours and the player on turn),

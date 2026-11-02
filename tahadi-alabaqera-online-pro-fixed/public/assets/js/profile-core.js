@@ -26,7 +26,7 @@
     {id:'board-forest',type:'board',name:'لوحة النيون',description:'خانات كحلية هادئة متبادلة، وإطار معدني مع ثعابين مفصّلة وسلالم نيون رفيعة. اللوحة المجانية.',price:0,color:'#21434e'},
     {id:'board-ocean',type:'board',name:'لوحة المحيط',description:'درجات زرقاء هادئة.',price:160,color:'#173f61'},
     {id:'board-sand',type:'board',name:'لوحة الرمال',description:'ألوان رملية دافئة.',price:160,color:'#62492c'},
-    {id:'table-walnut',type:'table',name:'طاولة الجوز',description:'خشب دافئ ومسارات عاجية.',price:0,color:'#5b3928'},
+    {id:'table-walnut',type:'table',name:'طاولة الجوز',description:'ديوانية البلوت: جوز وسدو أحمر وجوخ أخضر. وتلبس لوحتي الجاكارو والزهرة.',price:0,color:'#5b3928'},
     {id:'table-slate',type:'table',name:'طاولة الأردواز',description:'سطح داكن وحواف معدنية.',price:240,color:'#344454'},
     {id:'table-emerald',type:'table',name:'طاولة الزمرد',description:'سطح أخضر بإطار جوزي.',price:260,color:'#184c3b'},
     {id:'snake-wild',type:'snake',name:'وحوش النيون',description:'ثعابين معدنية متنوعة تتحرك وتتفاعل مع الأحجار.',price:0,color:'#77b38a'},
@@ -40,7 +40,7 @@
     {id:'board-twilight',type:'board',name:'لوحة الغسق',description:'خانات بنفسجية وإطار داكن.',price:360,color:'#68608e'},
     {id:'board-royal',type:'board',name:'لوحة القصر',description:'رخام أسود بعروق ذهبية على فواصل من الذهب، بإطار ملكي وسلالم ذهبية.',price:550,color:'#c8a159'},
     {id:'table-midnight',type:'table',name:'طاولة منتصف الليل',description:'طاولة جاكارو داكنة بأمان واضح.',price:380,color:'#1f273d'},
-    {id:'table-royal',type:'table',name:'طاولة القصر',description:'طاولة جاكارو بنفسجية بإطار ذهبي.',price:580,color:'#4a3659'},
+    {id:'table-royal',type:'table',name:'طاولة القصر',description:'طاولة بلوت بإطار ذهب ومخمل بنفسجي مزخرف. وتلبس لوحتي الجاكارو والزهرة.',price:580,color:'#4a3659'},
     {id:'snake-toxic',type:'snake',name:'أفاعي الزمرد الكهربائي',description:'دروع خضراء لامعة وعيون نيون مع حركة الافتراس الكاملة.',price:420,color:'#8aef48'},
     {id:'snake-plasma',type:'snake',name:'أفاعي البلازما',description:'ألوان سماوية وبنفسجية متدرجة بين الثعابين.',price:600,color:'#ca73ff'},
     {id:'dice-nebula',type:'dice',name:'نرد السديم',description:'أوجه زرقاء معدنية ونقاط عاجية كبيرة.',price:380,color:'#245797'},
@@ -95,6 +95,7 @@
     {id:'table-gallery',type:'table',name:'المعرض',subtitle:'عاج وحبر فحمي',design:'ivory',price:280,color:'#d5cbb7',collection:'atelier-30'},
     {id:'table-nocturne',type:'table',name:'نوكترن',subtitle:'كربون ومسارات مضيئة',design:'carbon',price:420,color:'#657b85',collection:'atelier-30'},
     {id:'table-botanic',type:'table',name:'الحديقة',subtitle:'يشم وتطعيم نباتي',design:'jade',price:460,color:'#5eaa91',collection:'atelier-30'},
+    {id:'table-majlis',type:'table',name:'المجلس',subtitle:'سدو أحمر ودلّة نحاس',design:'majlis',price:380,color:'#8e1526'},
     {id:'trail-pencil',type:'trail',name:'خط الضوء',subtitle:'مسار رفيع وهادئ',design:'line',price:0,color:'#e5d6b8',collection:'atelier-30'},
     {id:'trail-ripple',type:'trail',name:'تموّج',subtitle:'حلقات عند الوصول',design:'ripple',price:160,color:'#7bd0be',collection:'atelier-30'},
     {id:'trail-meteor',type:'trail',name:'شهاب',subtitle:'ذيل من شرارات قصيرة',design:'meteor',price:240,color:'#f4b36c',collection:'atelier-30'},
@@ -105,7 +106,7 @@
     {id:'victory-orbit',type:'victory',name:'احتفال المدار',subtitle:'حلقات متقاطعة',design:'orbit',price:480,color:'#8dd8c5',collection:'atelier-30'},
     {id:'title-tactician',type:'title',name:'صانع الخطط',subtitle:'توقيعك على الطاولة',design:'signature',price:180,color:'#c9b38e',collection:'atelier-30'},
     {id:'title-virtuoso',type:'title',name:'مايسترو',subtitle:'هوية المجموعات',design:'signature',price:420,color:'#e5b7a4',collection:'atelier-30'}
-  ].map(item=>Object.freeze({...item,description:item.id==='pawn-character'?'في السلم والثعبان تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'مادة '+item.subtitle+' للوحتي الجاكارو والزهرة، مع مسارات ونهايات واضحة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+  ].map(item=>Object.freeze({...item,description:item.id==='pawn-character'?'في السلم والثعبان تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'. وتلبس لوحتي الجاكارو والزهرة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
   // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
   // phrases and board-wide moves. They are owned, never equipped, and the
   // first eight keep the ids older rooms already relay (`legacy`).
@@ -167,7 +168,7 @@
     'character-fox','character-cat','character-racer','character-robot','character-diver','character-princess','character-viking','character-gladiator','character-fairy','character-astronaut','character-cyber','character-samurai',
     'deck-classic','deck-four','deck-night','deck-emerald','deck-royal',
     'dice-studio','dice-porcelain','dice-smoke','dice-nebula','dice-oxblood','dice-milled','dice-crystal','dice-obsidian','dice-gold',
-    'table-club','table-gallery','table-nocturne','table-botanic','table-royal',
+    'table-club','table-gallery','table-nocturne','table-botanic','table-royal','table-majlis',
     'board-forest','board-cyber','board-lava','board-galaxy','board-royal',
     'snake-wild','snake-aurora','snake-ice','snake-toxic','snake-gold','snake-plasma','snake-sovereign',
     ...REACTIONS.map(item=>item.id),
@@ -223,7 +224,7 @@
     'dice-smoke':{'--die-color':'#39454c','--die-highlight':'#a8b8ba','--die-shade':'#10191f','--die-pip':'#f2dfb9','--die-pip-light':'#fff9e9','--die-edge':'#94a9ae','--die-radius':'12%','--die-pip-radius':'50%'},
     'dice-oxblood':{'--die-color':'#842c39','--die-highlight':'#d98489','--die-shade':'#300f1b','--die-pip':'#fff3dc','--die-pip-light':'#fff','--die-edge':'#d29b78','--die-radius':'21%','--die-pip-radius':'50%'},
     'dice-milled':{'--die-color':'#aab7bb','--die-highlight':'#f5fbf9','--die-shade':'#3f535b','--die-pip':'#1b252b','--die-pip-light':'#56686d','--die-edge':'#d0d7d3','--die-radius':'7%','--die-pip-radius':'20%'},
-    'table-club':{'--table-look':'none'},'table-gallery':{'--table-look':'none'},'table-nocturne':{'--table-look':'none'},'table-botanic':{'--table-look':'none'},
+    'table-club':{'--table-look':'none'},'table-majlis':{'--table-look':'none'},'table-gallery':{'--table-look':'none'},'table-nocturne':{'--table-look':'none'},'table-botanic':{'--table-look':'none'},
     'trail-pencil':{'--trail-color':'#e5d6b8'},'trail-ripple':{'--trail-color':'#7bd0be'},'trail-meteor':{'--trail-color':'#f4b36c'},'trail-echo':{'--trail-color':'#94b4e5'},
     'dice-porcelain':{'--die-color':'#eee8d9','--die-highlight':'#fffef9','--die-shade':'#b7a37c','--die-pip':'#24313b','--die-pip-light':'#546575','--die-edge':'#d8bd82','--die-radius':'21%','--die-pip-radius':'50%'},
     'dice-crystal':{'--die-color':'#208b7b','--die-highlight':'#a5f1d9','--die-shade':'#0b3b3b','--die-pip':'#d6fff1','--die-pip-light':'#ffffff','--die-edge':'#85ebd0','--die-radius':'7%','--die-pip-radius':'12%'},
@@ -342,7 +343,7 @@
   const HEROES=Object.freeze(CATALOG.filter(i=>i.type==='character').map(i=>Object.freeze({id:i.id.slice(10),item:i.id,name:i.name,art:i.asset})));
   const heroOf=value=>{const id=String(value||'').replace(/^character-/,'');return HEROES.find(h=>h.id===id)||null;};
   const heroArt=value=>{const h=heroOf(value);return h?'/assets/heroes/'+h.art+'.webp':'';};
-  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.3.0-full1':'';};
+  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.4.0-full1':'';};
   const heroFace=value=>{const h=heroOf(value);return h?'/assets/heroes/face/'+h.art+'.webp':'';};
   const BOT_HEROES=['robot','princess','samurai','viking','cyber','diver','racer','gladiator'];
   const botHeroFace=seat=>heroFace(BOT_HEROES[Math.abs(Math.floor(Number(seat)||0))%BOT_HEROES.length]);

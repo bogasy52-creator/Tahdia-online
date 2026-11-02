@@ -51,10 +51,18 @@ export function pickBotLevel(rng = Math.random) {
   return x < 0.35 ? 'easy' : x < 0.75 ? 'medium' : 'hard';
 }
 
-/** How many seats the table gets for this many players. */
-export function seatsFor(game, humans, quick = false) {
+// 33.4.0: snakes & ladders lets you pick the table size: 2, 3 or 4 players
+export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4] });
+/** A table size the player picked, when this game offers one; otherwise null. */
+export function chosenSeats(game, value) {
+  const n = Number(value);
+  return TABLE_SIZES[game]?.includes(n) ? n : null;
+}
+/** How many seats the table gets for this many players (and the size picked, if any). */
+export function seatsFor(game, humans, quick = false, chosen = null) {
   if (game === 'jackaroo') return humans > 4 ? 6 : 4;
-  const least = quick ? QUICK_SEATS[game] : 2;
+  const picked = chosenSeats(game, chosen);
+  const least = picked || (quick ? QUICK_SEATS[game] : 2);
   return Math.min(MAX_SEATS[game], Math.max(least, humans));
 }
 
@@ -109,7 +117,7 @@ export const stepsTime = (room, steps) => room.game==='snakes'
 /* ---------- starting a table ---------- */
 export function startTable(room, { quick = false, rng = Math.random, roll = rollWith(rng), now = Date.now() } = {}) {
   const humans = room.order.filter((id) => room.players[id] && !room.players[id].bot);
-  const seats = seatsFor(room.game, humans.length, quick);
+  const seats = seatsFor(room.game, humans.length, quick, room.tableSeats);
   const plan = seatPlan(room.game, humans, seats);
   const taken = new Set(humans.map((id) => room.players[id].name));
   for (let seat = 0; seat < seats; seat++) {

@@ -86,11 +86,6 @@ body.bl-playing .bl-felt{min-height:0}
 .bl-felt:before{content:'';position:absolute;inset:9px;border-radius:23px;background:conic-gradient(from -45deg at 50% 100%,var(--bl-sadu) 90deg,#0000 0) 0 0/14px 9px,conic-gradient(from 135deg at 50% 0,#f3e6cf 90deg,#0000 0) 7px 0/14px 9px,#1c1013;}
 .bl-felt-inner{position:absolute;inset:17px;border-radius:19px;background:radial-gradient(ellipse at 50% 42%,var(--bl-felt-a) 0,var(--bl-felt-b) 58%,var(--bl-felt-c) 100%);box-shadow:inset 0 0 0 2px #d9b06155,inset 0 10px 40px #0008;overflow:hidden}
 .bl-felt-inner:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,#ffffff05 0 2px,#0000 2px 6px);pointer-events:none}
-body.game-baloot[data-felt="ivory"]{--bl-felt-a:#2f6a5c;--bl-felt-b:#1d4a40;--bl-felt-c:#10302a}
-body.game-baloot[data-felt="carbon"]{--bl-felt-a:#1f3550;--bl-felt-b:#12233a;--bl-felt-c:#0a1524;--bl-sadu:#2c7dd6}
-body.game-baloot[data-felt="jade"]{--bl-felt-a:#1d6a45;--bl-felt-b:#0f4630;--bl-felt-c:#082a1d}
-body.game-baloot[data-felt="royal"]{--bl-felt-a:#4c2a6a;--bl-felt-b:#2f1946;--bl-felt-c:#1a0d29;--bl-sadu:#c99a3c}
-body.game-baloot[data-felt="majlis"]{--bl-felt-a:#5a1a24;--bl-felt-b:#3a0f17;--bl-felt-c:#22080d}
 
 .bl-seat{position:absolute;display:grid;justify-items:center;gap:3px;z-index:3;pointer-events:none}
 .bl-seat[data-pos="top"]{top:6px;left:50%;transform:translateX(-50%)}

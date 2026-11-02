@@ -5,14 +5,14 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.3.0-gameplay3';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.4.0-gameplay3';
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3};
 
-export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
+export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
   const $=selector=>document.querySelector(selector);
   const menuHost=$('#gameMenu');
-  let client=null,room=null,quickMode=null,leaving=false,retriedQuick=false;
+  let client=null,room=null,quickMode=null,quickSeats=null,leaving=false,retriedQuick=false;
   const player=createStepPlayer(async(next,{animate,signal})=>{
     if(signal?.aborted)return;
     room=next;window.BS_HERO_FX?.frame(next);
@@ -27,9 +27,9 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
   },{onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
-    game,modes,quickNote,roomNote,
-    onQuick:async({mode})=>{quickMode=mode;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic'});window.BS_AUDIO?.play?.('join');},
-    onCreate:async({mode})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic'});window.BS_AUDIO?.play?.('join');},
+    game,modes,seats,seatsDefault,quickNote,roomNote,
+    onQuick:async({mode,seats:count})=>{quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
+    onCreate:async({mode,seats:count})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
     onJoin:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());window.BS_AUDIO?.play?.('join');},
     onResume:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());}
   });
@@ -42,7 +42,7 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
       onStatus:status=>onStatus?.(status),
       onError:message=>{
         // a public table that started before we got in: find the next one
-        if(quickMode!==null&&!retriedQuick&&!room&&/بدأت|ممتلئة|انتهت/.test(message)){retriedQuick=true;setTimeout(()=>menu.busy(false),0);client.quick(menu.name(),{variant:quickMode||'classic'}).catch(()=>{});return;}
+        if(quickMode!==null&&!retriedQuick&&!room&&/بدأت|ممتلئة|انتهت/.test(message)){retriedQuick=true;setTimeout(()=>menu.busy(false),0);client.quick(menu.name(),{variant:quickMode||'classic',seats:quickSeats}).catch(()=>{});return;}
         onError?.(message);
       }
     });
@@ -63,7 +63,7 @@ export function createTable({game,modes=null,quickNote,roomNote,lobbyNote,apply,
     };
     return {
       code:next.code,isPublic:Boolean(next.publicMatch),deadline:next.lobbyDeadline,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
-      seats:next.publicMatch?QUICK_SEATS[game]:0,variant:next.variant,
+      seats:next.publicMatch?(next.tableSeats||QUICK_SEATS[game]):0,variant:next.variant,
       title:next.publicMatch?'نجمع اللاعبين':'غرفتك جاهزة',
       note:next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
       players:people.map(p=>({name:p.name,host:p.role==='host'&&!next.publicMatch,me:p.id===next.me?.id,connected:p.connected})),

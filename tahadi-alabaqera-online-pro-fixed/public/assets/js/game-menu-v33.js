@@ -13,7 +13,7 @@
   const TITLES=Object.freeze({quiz:'تحدي الأسئلة',party:'الألعاب الجماعية',sudoku:'سودوكو',paths:'توصيل الأرقام',picture:'سباق الصور',serpent:'حلبة الثعابين',snakes:'الثعبان والسلالم',zahra:'الزهرة',jackaroo:'جاكارو',dice:'تحدي النرد',baloot:'بلوت',memory:'الذاكرة',logic:'الألغاز',puzzle:'تركيب الصور',reaction:'مواجهة التركيز',wordbomb:'قنبلة الكلمات',focus:'مواجهة التركيز',cipher:'ساحة الشفرات',jewels:'ماستر الجواهر',colors:'توصيل الأرقام'});
   // the first two digits of a room code name its game (src/rooms/room-codes.js)
   const FAMILIES=Object.freeze([['wordbomb',9,9,'/wordbomb'],['quiz',10,14,'/online'],['party',15,19,'/party'],['sudoku',20,24,'/sudoku'],['paths',25,29,'/paths-online'],['picture',30,34,'/picture'],['serpent',35,39,'/serpent'],['snakes',40,44,'/snakes'],['zahra',45,49,'/zahra'],['jackaroo',50,54,'/jackaroo'],['dice',55,59,'/dice'],['baloot',60,64,'/baloot'],['memory',65,69,'/memory'],['logic',70,74,'/logic'],['puzzle',75,79,'/puzzle'],['reaction',80,84,'/reaction'],['jewels',85,89,'/journey?game=jewels'],['colors',90,94,'/paths-online?mode=solo'],['focus',96,96,'/focus'],['cipher',97,97,'/cipher'],]);
-  const LAST_KEY='bs-last-match-v33',NAME_KEY='bs-player-name-v33',MODE_KEY=game=>'bs-mode-v33-'+game;
+  const LAST_KEY='bs-last-match-v33',NAME_KEY='bs-player-name-v33',MODE_KEY=game=>'bs-mode-v33-'+game,SEATS_KEY=game=>'bs-seats-v33-'+game;
   const store={get(key){try{return localStorage.getItem(key)}catch{return null}},set(key,value){try{localStorage.setItem(key,value)}catch{}},remove(key){try{localStorage.removeItem(key)}catch{}}};
 
   /* ---------- codes ---------- */
@@ -107,15 +107,33 @@
       modeNote=make('p','gm33-mode-note');
       menu.append(group,modeNote);
     }
+    // 33.4.0: how many sit at the table (snakes & ladders: 2, 3 or 4); the seats
+    // nobody takes are filled by opponents of every level
+    const seatChoices=Array.isArray(options.seats)?options.seats.filter(n=>Number.isInteger(n)&&n>1):[];
+    let seats=null;
+    if(seatChoices.length){
+      const saved=Number(store.get(SEATS_KEY(game)));
+      seats=seatChoices.includes(saved)?saved:seatChoices.includes(options.seatsDefault)?options.seatsDefault:seatChoices.at(-1);
+      const box=make('div','gm33-seats');box.setAttribute('role','radiogroup');box.setAttribute('aria-label','عدد اللاعبين');
+      box.append(make('span','gm33-seats-label','عدد اللاعبين'));
+      const row=make('div','gm33-seat-row');
+      const paint=()=>row.querySelectorAll('.gm33-seat').forEach(b=>{const on=Number(b.dataset.seats)===seats;b.classList.toggle('is-on',on);b.setAttribute('aria-checked',String(on));});
+      for(const count of seatChoices){
+        const b=button('gm33-seat',null,()=>{if(pending)return;seats=count;store.set(SEATS_KEY(game),String(count));paint();sound('select');});
+        b.dataset.seats=String(count);b.setAttribute('role','radio');b.append(make('b',null,String(count)),make('small',null,'لاعبين'));row.append(b);
+      }
+      box.append(row,make('small','gm33-seats-note',options.seatsNote||'الأماكن الفاضية يكمّلها منافسين متنوعي المستوى.'));
+      menu.append(box);paint();
+    }
     // العب الحين
-    const quick=button('gm33-quick',null,()=>run(()=>options.onQuick?.({mode,name:playerName()})));
+    const quick=button('gm33-quick',null,()=>run(()=>options.onQuick?.({mode,seats,name:playerName()})));
     quick.append(make('span','gm33-quick-icon','⚡'),make('b',null,options.quickLabel||'العب الحين'),make('small',null,options.quickNote||'تكتمل الطاولة خلال 10 ثوانٍ بمنافسين متنوعي المستوى'));
     if(options.onQuick)menu.append(quick);
     // غرفة مع أصحابك
     const friends=make('details','gm33-friends');
     if(options.friendsOpen)friends.open=true;
     const summary=make('summary',null);summary.append(make('span','gm33-friends-icon','👥'),make('b',null,'غرفة مع أصحابك'),make('small',null,'أنشئ غرفة أو ادخل برمز من أي لعبة'));
-    const create=button('gm33-create',options.createLabel||'＋ أنشئ غرفة',()=>run(()=>options.onCreate?.({mode,name:playerName()})));
+    const create=button('gm33-create',options.createLabel||'＋ أنشئ غرفة',()=>run(()=>options.onCreate?.({mode,seats,name:playerName()})));
     const form=make('form','gm33-join');form.noValidate=true;
     const code=make('input');code.type='text';code.inputMode='numeric';code.maxLength=7;code.placeholder='رمز من 6 أرقام';code.autocomplete='off';code.dir='ltr';code.setAttribute('aria-label','رمز الغرفة');code.name='code';
     const join=make('button','gm33-join-btn','ادخل');join.type='submit';
@@ -269,6 +287,7 @@
     checkResume();
     return {
       get mode(){return mode;},
+      get seats(){return seats;},
       get view(){return view;},
       setMode,menu:showMenu,lobby:showLobby,say,
       busy:setPending,

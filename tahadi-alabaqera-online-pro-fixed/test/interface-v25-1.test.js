@@ -14,7 +14,9 @@ test('home shell mounts once, marks the current destination and preserves workin
  assert.equal(h.doc.querySelectorAll('.mobile-dock').length,1);
  assert.equal(h.doc.querySelectorAll('.bs-premium-nav').length,0);
  assert.equal(h.doc.getElementById('hubRail').querySelector('[aria-current="page"]').getAttribute('href'),'/');
- for(const id of ['gameSearch','gameFilters','editProfile','homeQuickPlay','homeRoomJoin'])assert.ok(h.doc.getElementById(id),id);
+ for(const id of ['gameSearch','gameFilters','editProfile','homeResume'])assert.ok(h.doc.getElementById(id),id);
+ // 33.4.0: rooms live inside each game; the home page asks for no room code
+ for(const id of ['homeQuickPlay','homeRoomJoin','homeRoomCode'])assert.equal(h.doc.getElementById(id),null,id);
 });
 test('game pages retain only one game command bar and the compatibility API delegates to it',async()=>{
  const h=await createDOM('sudoku.html');
@@ -41,35 +43,32 @@ test('friends page receives a mobile dock, an active destination and an explicit
  assert.equal(h.doc.querySelector('.mobile-dock [aria-current="page"]').href,'/social');
  assert.equal(h.doc.querySelector('[data-hub-back]').href,'/');
 });
-// 33.0.0: no game to pick — the code names its game (its first two digits) and the
-// server confirms the room is open
-async function homeJoin(answer){
- const h=await createDOM('index.html'),visits=[];h.context.location.assign=url=>visits.push(url);
+// 33.4.0: the home page has no room box. A code typed in any game's «غرفة مع أصحابك» finds
+// its own game (its first two digits name it) and the server confirms the room is open.
+async function gameJoin(answer,page='snakes'){
+ const h=await createDOM(page+'.html'),joined=[];
  h.context.fetch=async(url)=>{const code=String(url).split('/').pop();const found=answer(code);return found===null?Response.json({ok:false,found:false,error:'none'},{status:404}):Response.json({ok:true,game:found})};
  h.context.AbortSignal=AbortSignal;
- await h.runFile('assets/js/game-menu-v33.js');await h.runFile('assets/js/home-v19.js');
- const field=h.doc.getElementById('homeRoomCode'),form=h.doc.getElementById('homeRoomJoin');
- const submit=async value=>{field.value=value;form.dispatchEvent({type:'submit',preventDefault(){}});for(let i=0;i<6;i++)await new Promise(r=>setImmediate(r));};
- return {h,visits,field,submit,message:()=>h.doc.getElementById('homeRoomMessage').textContent};
+ await h.runFile('assets/js/game-menu-v33.js');
+ const join=async value=>{try{return await h.context.BS_GAME_MENU.joinAnywhere(value,{game:page,onJoin:code=>joined.push(code)});}catch(error){return {error:error.message};}};
+ return {h,joined,join,href:()=>h.context.location.href};
 }
-test('room entry finds the game of any code and normalizes Arabic and Persian digits',async()=>{
- const routes={quiz:'/online',picture:'/picture',sudoku:'/sudoku',paths:'/paths-online',serpent:'/serpent',snakes:'/snakes',jackaroo:'/jackaroo',zahra:'/zahra',dice:'/dice',baloot:'/baloot',party:'/party'};
+test('a room code typed inside a game opens its own game and reads Arabic and Persian digits',async()=>{
+ const routes={quiz:'/online',picture:'/picture',sudoku:'/sudoku',paths:'/paths-online',serpent:'/serpent',jackaroo:'/jackaroo',zahra:'/zahra',dice:'/dice',baloot:'/baloot',party:'/party'};
  const prefixes={quiz:'10',party:'15',sudoku:'20',paths:'25',picture:'30',serpent:'35',snakes:'40',zahra:'45',jackaroo:'50',dice:'55',baloot:'60'};
- const {visits,submit}=await homeJoin(code=>Object.keys(prefixes).find(game=>code.startsWith(prefixes[game])));
+ const {joined,join,href}=await gameJoin(code=>Object.keys(prefixes).find(game=>code.startsWith(prefixes[game])));
  for(const [game,route]of Object.entries(routes)){
   const code=prefixes[game]+'3456',typed=code.replace(/[0-9]/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
-  await submit(typed);assert.equal(visits.at(-1),route+'?room='+code,game);
+  const result=await join(typed);assert.equal(result.here,false,game);assert.equal(href(),route+'?room='+code,game);
  }
- assert.equal(visits.length,Object.keys(routes).length);
- // Persian digits too
- await submit('۴۰۱۲۳۴');assert.equal(visits.at(-1),'/snakes?room=401234');
+ // this game's own code joins here, Persian digits too
+ const here=await join('۴۰۱۲۳۴');assert.equal(here.here,true);assert.deepEqual(joined,['401234']);
 });
-test('invalid or closed room codes do not navigate',async()=>{
- const {visits,submit,message,field,h}=await homeJoin(()=>null);
- await submit('12');assert.equal(visits.length,0);assert.match(message(),/6 أرقام/);
- await submit('401234');assert.equal(visits.length,0,'no open room with this code');assert.match(message(),/ما لقينا غرفة/);
- field.value='١٢٣-٤٥٦٧';field.dispatchEvent({type:'input'});assert.equal(field.value,'123456');
- assert.equal(h.doc.getElementById('homeRoomGame'),null,'there is no game to choose any more');
+test('a short or closed room code joins nothing',async()=>{
+ const {joined,join,href}=await gameJoin(()=>null);
+ assert.match((await join('12')).error,/6 أرقام/);
+ assert.match((await join('401234')).error,/ما لقينا غرفة/);
+ assert.equal(joined.length,0);assert.equal(href(),'https://game.test/snakes');
 });
 test('the game library precedes progression and all static HTML ids remain unique',async()=>{
  const home=await source('index.html');assert.ok(home.indexOf('id="games"')<home.indexOf('class="home-today-v17"'));
