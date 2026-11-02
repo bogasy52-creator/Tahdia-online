@@ -1,0 +1,126 @@
+/* Tahdia 33.5.0 — «صيد الكلمات». A board of letter tiles you sweep with a finger: every
+   found word is marked like a highlighter in its finder's colour, the pick follows the finger,
+   and the words to hunt sit right under the board. */
+
+.ch-board.ch-hunt{display:flex;flex-direction:column;gap:8px;width:100%;max-width:600px;min-height:0;margin:0 auto;padding:12px 12px 10px;border:1px solid var(--ch-line);border-radius:22px;background:radial-gradient(ellipse 90% 55% at 50% 0%,color-mix(in srgb,var(--ch-accent) 10%,transparent),transparent 70%),color-mix(in srgb,var(--ch-panel) 90%,transparent);box-shadow:0 18px 40px #0004}
+.ch-hunt-head{display:flex;align-items:center;gap:10px;padding:0 2px}
+.ch-hunt-topic{display:grid;min-width:0;margin-inline-end:auto;line-height:1.25}
+.ch-hunt-round{font-size:11.5px;color:var(--ch-muted)}
+.ch-hunt-theme{overflow:hidden;font:800 21px/1.25 ChallengeArabic,sans-serif;color:var(--ch-accent);white-space:nowrap;text-overflow:ellipsis}
+.ch-hunt-count{padding:4px 10px;border:1px solid var(--ch-line);border-radius:99px;font-size:12.5px;color:var(--ch-muted);white-space:nowrap}
+.ch-hunt-clock{min-width:56px;font-size:17px;text-align:center;font-variant-numeric:tabular-nums;color:var(--ch-ink)}
+.ch-hunt-timer{height:6px;overflow:hidden;border-radius:9px;background:var(--ch-line);direction:ltr}
+.ch-hunt-timer i{display:block;width:100%;height:100%;border-radius:inherit;background:var(--ch-accent);transition:width .12s linear}
+.ch-hunt-timer.urgent i{background:#ff8d79}
+
+/* the board: the highlighter marks sit under the letters */
+.ch-hunt-frame{position:relative;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid var(--ch-line);border-radius:16px;background:color-mix(in srgb,var(--ch-soft) 72%,transparent);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.ch-hunt-lines{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
+.ch-hunt-lines line{fill:none;stroke-linecap:round;stroke-width:.74}
+.ch-hunt-lines .found{stroke:var(--hit);opacity:.42}
+.ch-hunt-lines .found.mine{opacity:.58}
+.ch-hunt-lines .missed{stroke:var(--ch-ink);stroke-width:.17;stroke-dasharray:0 .3;opacity:.55}
+.ch-hunt-lines .select{stroke:var(--ch-accent);opacity:.55}
+.ch-hunt-lines .wrong{stroke:#ff7a6b;opacity:.5}
+.ch-hunt-lines .pending{stroke:var(--ch-accent);opacity:.32;animation:ch-hunt-wait .8s ease-in-out infinite alternate}
+.ch-hunt-grid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));grid-template-rows:repeat(var(--n,8),minmax(0,1fr));width:100%;height:100%;touch-action:none}
+.ch-hunt-cell{position:relative;isolation:isolate;display:grid;place-items:center;min-width:0;min-height:0;margin:0;padding:0;border:0;background:none;font:800 clamp(17px,5.4vw,27px)/1 ChallengeArabic,sans-serif;color:var(--ch-ink);cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
+.ch-hunt-cell::before{content:'';position:absolute;inset:9%;z-index:-1;border-radius:30%;background:color-mix(in srgb,var(--ch-ink) 6%,transparent);transition:background .15s}
+.ch-hunt-cell.anchor::before{background:color-mix(in srgb,var(--ch-accent) 38%,transparent)}
+.ch-hunt-cell.sel{transform:scale(1.08)}
+.ch-hunt-cell:focus-visible{outline:none}
+.ch-hunt-cell:focus-visible::before{box-shadow:0 0 0 2px var(--ch-accent)}
+.ch-hunt-grid.locked .ch-hunt-cell{cursor:default}
+.ch-hunt-grid.cooling{opacity:.55;filter:grayscale(.5)}
+.ch-hunt-grid.shake{animation:ch-hunt-shake .32s}
+@keyframes ch-hunt-shake{25%{transform:translateX(6px)}50%{transform:translateX(-6px)}75%{transform:translateX(3px)}}
+@keyframes ch-hunt-wait{from{opacity:.16}to{opacity:.42}}
+.ch-hunt-break{position:absolute;z-index:3;inset:auto 10px 10px;display:grid;justify-items:center;gap:2px;padding:12px 14px;border:1px solid var(--ch-line);border-radius:14px;background:color-mix(in srgb,var(--ch-panel) 94%,transparent);box-shadow:0 10px 30px #0006;text-align:center}
+.ch-hunt-break[hidden]{display:none}
+.ch-hunt-break b{font-size:17px;color:var(--ch-accent)}
+.ch-hunt-break span{font-size:15px;font-variant-numeric:tabular-nums}
+.ch-hunt-break small{font-size:11.5px;color:var(--ch-muted)}
+.ch-hunt-break small[hidden]{display:none}
+.ch-hunt-pick{min-height:24px;margin:0;font-size:13px;line-height:24px;text-align:center;color:var(--ch-muted)}
+.ch-hunt-pick.live{font:800 20px/24px ChallengeArabic,sans-serif;letter-spacing:1px;color:var(--ch-accent)}
+
+/* the words to hunt */
+.ch-hunt-words{box-sizing:border-box;width:100%;max-width:600px;margin:10px auto 0;padding:10px 12px 12px;border:1px solid var(--ch-line);border-radius:18px;background:color-mix(in srgb,var(--ch-panel) 82%,transparent)}
+.ch-hunt-words-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 10px}
+.ch-hunt-words-head b{font-size:14px}
+.ch-hunt-words-head small{font-size:12px;color:var(--ch-muted)}
+.ch-hunt-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:13px 7px;margin:0;padding:0;list-style:none}
+.ch-hunt-word{position:relative;display:grid;place-items:center;min-width:0;min-height:42px;padding:10px 8px 6px;border:1px solid var(--ch-line);border-radius:12px;background:color-mix(in srgb,var(--ch-soft) 62%,transparent)}
+.ch-hunt-label{max-width:100%;overflow:hidden;font:800 17px/1.2 ChallengeArabic,sans-serif;white-space:nowrap;text-overflow:ellipsis}
+/* the points and the finder sit on the chip's edge, so the word keeps the whole chip */
+.ch-hunt-points,.ch-hunt-by{position:absolute;inset-block-start:-11px;max-width:80%;overflow:hidden;padding:0 7px;border-radius:99px;font-size:10.5px;font-weight:700;line-height:17px;white-space:nowrap;text-overflow:ellipsis}
+.ch-hunt-points{inset-inline-end:8px;border:1px solid var(--ch-line);background:var(--ch-panel);color:var(--ch-muted);font-variant-numeric:tabular-nums}
+.ch-hunt-word.golden{border-color:#e6c25f;box-shadow:inset 0 0 0 1px #e6c25f40}
+.ch-hunt-word.golden .ch-hunt-points{color:#e6c25f}
+.ch-hunt-word.found{border-color:color-mix(in srgb,var(--hit) 65%,transparent);background:color-mix(in srgb,var(--hit) 15%,transparent)}
+.ch-hunt-word.found .ch-hunt-label{opacity:.72;text-decoration:line-through 1.5px color-mix(in srgb,var(--hit) 80%,transparent)}
+.ch-hunt-word.missed{border-style:dashed;opacity:.7}
+.ch-hunt-by{inset-inline-start:8px;background:var(--hit);color:#10161b}
+.ch-hunt-mask{display:inline-flex;gap:3px}
+.ch-hunt-mask i{display:grid;place-items:center;width:15px;height:21px;border-bottom:2px solid var(--ch-muted);font:800 15px/1 ChallengeArabic,sans-serif;font-style:normal;color:var(--ch-accent)}
+
+/* who found what, last first */
+.ch-hunt-feed{box-sizing:border-box;width:100%;display:grid;gap:4px;max-width:600px;margin:10px auto 0;padding:0 4px}
+.ch-hunt-news{display:flex;align-items:center;gap:6px;margin:0;font-size:12.5px;color:var(--ch-muted)}
+.ch-hunt-news i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--hit)}
+.ch-hunt-news b{color:var(--ch-ink)}
+.ch-hunt-news.mine b{color:var(--ch-accent)}
+.ch-hunt-news small{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.ch-hunt-news.empty{justify-content:center;text-align:center}
+
+/* in a match: the board, then the words, then the news */
+.ch-in-match[data-challenge="wordbomb"] .ch-stage{display:flex;flex-direction:column}
+.ch-in-match[data-challenge="wordbomb"] .ch-board{order:1}
+.ch-in-match[data-challenge="wordbomb"] .ch-controls{order:2;margin:0}
+.ch-in-match[data-challenge="wordbomb"] .ch-tactics{order:3;margin:0}
+.ch-in-match[data-challenge="wordbomb"] .ch-log{order:4}
+/* the round, its clock and the counts live on the board itself */
+.ch-in-match[data-challenge="wordbomb"] #chSubstatus,.ch-in-match[data-challenge="wordbomb"] #chFlow,.ch-in-match[data-challenge="wordbomb"] .ch-match-meta,.ch-in-match[data-challenge="wordbomb"] .ch-studio-hud{display:none}
+.ch-in-match[data-challenge="wordbomb"] .ch-stage{padding-top:12px}
+
+/* a wide screen: the board on the right, the words beside it, and the board sized to the
+   window's height so the whole match is on screen */
+@media (min-width:900px){
+  .ch-in-match[data-challenge="wordbomb"] .ch-stage{display:grid;grid-template-columns:auto minmax(220px,280px);grid-template-areas:"result result" "board words" "board feed" "board log";grid-template-rows:auto auto auto 1fr;justify-content:center;align-items:start;column-gap:18px}
+  .ch-in-match[data-challenge="wordbomb"] .ch-board{grid-area:board;width:min(600px,max(420px,calc(100vh - 300px)))}
+  .ch-in-match[data-challenge="wordbomb"] .ch-controls{grid-area:words}
+  .ch-in-match[data-challenge="wordbomb"] .ch-tactics{grid-area:feed}
+  .ch-in-match[data-challenge="wordbomb"] .ch-log{grid-area:log}
+  .ch-in-match[data-challenge="wordbomb"] .ch-result{grid-area:result;margin:0 0 16px}
+  .ch-in-match[data-challenge="wordbomb"] .ch-hunt-words{margin:0}
+  .ch-in-match[data-challenge="wordbomb"] .ch-hunt-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .ch-board.ch-hunt{gap:6px;padding:8px 8px 6px;border-radius:18px}
+  .ch-hunt-theme{font-size:18px}
+  .ch-hunt-frame{border-radius:13px}
+  .ch-hunt-cell{font-size:clamp(16px,5.7vw,25px)}
+  .ch-hunt-words{margin-top:8px;padding:8px}
+  .ch-hunt-list{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:13px 6px}
+  .ch-hunt-word{min-height:38px;padding:9px 6px 5px}
+  .ch-hunt-label{font-size:15.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ch-hunt-timer i,.ch-hunt-cell::before{transition:none}
+  .ch-hunt-grid.shake,.ch-hunt-lines .pending{animation:none}
+}
+/* short phones (an iPhone SE and the like): a smaller board keeps the words on the first screen */
+@media (max-width:640px) and (max-height:720px){
+  .ch-hunt-round{display:none}
+  .ch-hunt-theme{font-size:17px}
+  .ch-hunt-frame{width:min(100%,calc(100vh - 370px));margin:0 auto}
+  .ch-hunt-pick{min-height:18px;font-size:12px;line-height:18px}
+  .ch-hunt-pick.live{font-size:17px;line-height:18px}
+  .ch-hunt-words-head{display:none}
+  .ch-hunt-words{padding:8px}
+  /* only the golden word keeps its points badge here */
+  .ch-hunt-word:not(.golden) .ch-hunt-points{display:none}
+  .ch-hunt-list{gap:12px 6px}
+  .ch-hunt-word{min-height:34px;padding:6px 6px 4px}
+  .ch-hunt-word.golden,.ch-hunt-word.found{padding-top:8px}
+}

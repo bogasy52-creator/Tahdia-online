@@ -94,6 +94,264 @@ body.release-v26.challenge-page{background:radial-gradient(ellipse at 80% 0,colo
 @media(max-width:350px){.suite-v17 .bs-brand b{font-size:10px}.suite-v17 .bs-actions{gap:4px}.suite-v17 .home-nav{gap:20px}.suite-v17.home-v14 .home-hero{padding:23px 15px}.suite-v17.home-v14 .home-hero h1{font-size:35px}.suite-v17.home-v14 .home-hero p{max-width:77%;font-size:10px}.suite-v17.home-v14 .home-game{padding:10px}.suite-v17.home-v14 .home-game h3{font-size:13px}.suite-v17.home-v14 .home-game>small{font-size:7px}.suite-v17.home-v14 .game-cover{height:95px}.suite-v17.store-v16 .store-card>h2{font-size:12px}.suite-v17.store-v16 .store-card>p{font-size:9px}.suite-v17.store-v16 .vault-copy h1{font-size:26px}.store-journey-v17 small{font-size:8px}.store-journey-v17 b{font-size:12px}.home-today-heading>a{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.suite-v17 *{animation-duration:.01ms!important;transition:none!important;scroll-behavior:auto!important}.suite-v17.home-v14 .home-game:hover{transform:none}}
 
+/* assets/css/challenges-v33-5.css */
+/* Tahdia 33.5.0 — the challenge games on a phone: while a match is on, the page is the
+   match. The title and the side panel step aside, the rivals become one slim strip,
+   and in «مواجهة التركيز» the question, its countdown and the four answers sit
+   together in one card — nothing to scroll for. */
+
+/* the question card (every screen size) */
+.ch-board.ch-focus{min-height:0;justify-content:flex-start;gap:6px;padding:14px 14px 16px;margin:0 auto;max-width:640px;border:1px solid var(--ch-line);border-radius:22px;background:radial-gradient(ellipse 80% 60% at 50% 35%,color-mix(in srgb,var(--ch-accent) 9%,transparent),transparent 70%),color-mix(in srgb,var(--ch-bg) 72%,transparent);box-shadow:0 18px 40px #0005}
+.ch-focus .ch-task-label{font-size:12.5px;letter-spacing:0;color:var(--ch-muted)}
+.ch-focus-ask{margin:0;font-size:18px;line-height:1.5;font-weight:800;color:var(--ch-accent);text-align:center}
+.ch-focus .ch-cue{min-height:0;font-size:clamp(40px,11vw,62px);line-height:1.25;margin:4px 0 2px}
+.ch-focus .ch-cue[data-kind="majority"]{font-size:clamp(26px,7.4vw,40px);letter-spacing:2px}
+.ch-focus .ch-cue[data-kind="missing"]{font-size:clamp(28px,8.4vw,44px);direction:ltr}
+.ch-focus .ch-cue[data-kind="match"]{font-size:clamp(34px,9vw,52px)}
+.ch-focus .ch-count-dots{margin:6px auto}
+.ch-focus-timer{width:100%;max-width:520px;height:7px;margin:6px auto 4px;border-radius:9px;background:var(--ch-line);overflow:hidden;direction:ltr}
+.ch-focus-timer i{display:block;height:100%;width:100%;border-radius:inherit;background:var(--ch-accent);transition:width .12s linear}
+.ch-focus-timer.waiting i{background:color-mix(in srgb,var(--ch-ink) 35%,transparent)}
+.ch-focus-timer.urgent i{background:#ff8d79}
+.ch-focus .ch-focus-pad{margin-top:6px;gap:10px}
+.ch-focus .ch-focus-button{min-height:66px;font-size:22px;font-weight:800}
+.ch-focus .ch-focus-button[data-kind="odd"]{font-size:19px}
+.ch-focus .ch-focus-button[data-kind="majority"],.ch-focus .ch-focus-button[data-kind="opposite"]{font-size:30px}
+/* «الرقم الخاطف»: the answers stay covered while the number shows */
+.ch-focus-pad.masked .ch-focus-button{color:transparent!important}
+.ch-focus-pad.masked .ch-focus-button::after{content:'•••';position:absolute;inset:0;display:grid;place-items:center;color:var(--choice);font-size:22px}
+/* «أي زر فيه نقاط أكثر؟»: the dots sit in the buttons */
+.ch-dot-cluster{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:58px;height:58px;margin:auto;direction:ltr}
+.ch-dot-cluster i{border-radius:50%}
+.ch-dot-cluster i.on{background:currentColor;box-shadow:0 0 6px color-mix(in srgb,currentColor 45%,transparent)}
+@media (prefers-reduced-motion:reduce){.ch-focus-timer i{transition:none}}
+
+/* the feedback and the twelve rounds come after the answers */
+.ch-in-match[data-challenge="focus"] .ch-stage{display:flex;flex-direction:column}
+.ch-in-match[data-challenge="focus"] .ch-tactics{order:2;margin:10px auto 0}
+.ch-in-match[data-challenge="focus"] .ch-board{order:1}
+.ch-in-match[data-challenge="focus"] .ch-controls{order:3}
+.ch-in-match[data-challenge="focus"] .ch-log{order:4}
+/* the instruction and the answer window live in the card now */
+.ch-in-match[data-challenge="focus"] #chSubstatus,.ch-in-match[data-challenge="focus"] #chFlow{display:none}
+
+/* during a match the title steps aside on every screen, and the counters stay slim */
+.ch-in-match .ch-heading{display:none}
+.ch-in-match .ch-studio-hud{padding-bottom:10px}
+.ch-in-match .ch-metric{padding:7px 6px}
+.ch-in-match .ch-metric strong{font-size:16px}
+/* a match on a phone: the page is the match */
+@media (max-width:640px){
+  .ch-in-match .ch-heading,.ch-in-match .ch-footer{display:none}
+  .ch-in-match .ch-shell{padding:8px 8px calc(10px + env(safe-area-inset-bottom))}
+  .ch-in-match .ch-topbar{padding-bottom:8px;margin-bottom:6px}
+  .ch-in-match .ch-topnav a{display:none}
+  .ch-in-match #chPlay{border-radius:18px}
+  .ch-in-match .ch-arena-heading{padding:8px 10px}
+  .ch-in-match .ch-arena-heading .ch-tool{min-height:34px;padding:0 10px;font-size:12px}
+  .ch-in-match .ch-players{max-height:62px;padding:8px 10px;gap:6px}
+  .ch-in-match .ch-player{flex-basis:132px}
+  .ch-in-match .ch-match-meta{padding:8px 12px 0}
+  .ch-in-match .ch-studio-hud{padding:6px 10px 8px;gap:6px}
+  .ch-in-match .ch-metric{padding:5px 4px;border-radius:9px}
+  .ch-in-match .ch-metric small{font-size:9.5px}
+  .ch-in-match .ch-metric strong{font-size:14px}
+  .ch-in-match .ch-stage{padding:2px 8px 10px}
+  .ch-in-match .ch-bottom{padding:10px 12px}
+  .ch-board.ch-focus{padding:10px 10px 12px;border-radius:18px}
+  .ch-focus-ask{font-size:16px}
+  .ch-focus .ch-focus-button{min-height:60px;font-size:20px}
+  .ch-in-match[data-challenge="focus"] .ch-tactics{margin-top:8px}
+  .ch-in-match[data-challenge="focus"] .ch-focus-feedback{min-height:20px;font-size:12.5px}
+}
+
+/* «ساحة الشفرات» in a match: whom you hunt and what is uncovered of their code, your attempts
+   (newest at the bottom), your own code, then the keypad — wearing your notebook's marks —
+   and the notebook itself. */
+.ch-board.ch-cipher-hunt{display:flex;flex-direction:column;justify-content:flex-start;gap:8px;min-height:0;max-width:640px;margin:0 auto;padding:12px;border:1px solid var(--ch-line);border-radius:22px;background:color-mix(in srgb,var(--ch-panel) 90%,transparent)}
+.ch-cipher-hunt .ch-targets{padding:0 0 2px}
+.ch-cipher-hunt .ch-targets[hidden],.ch-cipher-hunt .ch-history-nav[hidden]{display:none}
+.ch-target-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--ch-line);border-radius:16px;background:color-mix(in srgb,var(--ch-accent) 8%,transparent)}
+.ch-cipher-hunt .ch-target-heading{display:grid;min-width:0;padding:0;line-height:1.35;text-align:start}
+.ch-cipher-hunt .ch-target-heading small{font-size:11.5px;color:var(--ch-muted)}
+.ch-cipher-hunt .ch-target-heading b{overflow:hidden;font-size:18px;color:var(--ch-accent);white-space:nowrap;text-overflow:ellipsis}
+.ch-revealed{display:grid;justify-items:end;gap:4px;flex:none}
+.ch-revealed-digits{display:flex;gap:4px;direction:ltr}
+.ch-revealed-digits i{display:grid;place-items:center;width:28px;height:32px;border:1px dashed var(--ch-line);border-radius:8px;font:700 17px/1 Arial,sans-serif;font-style:normal;color:var(--ch-muted)}
+.ch-revealed-digits i.open{border-style:solid;border-color:var(--ch-accent);background:color-mix(in srgb,var(--ch-accent) 14%,transparent);color:var(--ch-accent)}
+.ch-revealed small{font-size:11px;color:var(--ch-muted);font-variant-numeric:tabular-nums}
+.ch-cipher-hunt .ch-history-count{margin:2px 0 0}
+.ch-cipher-hunt .ch-attempts{min-height:96px;max-height:min(30vh,280px);overscroll-behavior:contain}
+.ch-secret-row{display:flex;align-items:center;justify-content:center;gap:6px;padding-top:6px;border-top:1px solid var(--ch-line)}
+.ch-secret-row .ch-own-secret,.ch-secret-row .ch-secret-toggle{margin:0}
+[data-challenge="cipher"] #chControls .ch-code-pad .ch-button[data-mark="1"]{border-color:#72ebc2;color:#72ebc2;background:#5de2c214}
+[data-challenge="cipher"] #chControls .ch-code-pad .ch-button[data-mark="2"]{border-color:#ab6f65;color:#ef9d91;text-decoration:line-through;opacity:.6}
+/* the kills are a small label, so the player cards keep their size */
+[data-challenge="cipher"] .ch-player-score{font-size:14px;white-space:nowrap}
+.ch-in-match[data-challenge="cipher"] .ch-stage{display:flex;flex-direction:column}
+.ch-in-match[data-challenge="cipher"] .ch-board{order:1}
+.ch-in-match[data-challenge="cipher"] .ch-controls{order:2;margin-top:12px}
+.ch-in-match[data-challenge="cipher"] .ch-tactics{order:3;margin:12px auto 0}
+.ch-in-match[data-challenge="cipher"] .ch-log{order:4}
+@media (max-width:640px){
+  .ch-in-match[data-challenge="cipher"] .ch-studio-hud,.ch-in-match[data-challenge="cipher"] #chFlow,.ch-in-match[data-challenge="cipher"] #chSubstatus{display:none}
+  .ch-board.ch-cipher-hunt{gap:6px;padding:10px;border-radius:18px}
+  .ch-target-card{padding:8px 10px}
+  .ch-cipher-hunt .ch-attempts{max-height:min(24vh,220px)}
+  .ch-cipher-hunt .ch-attempt{padding:6px 8px}
+  .ch-in-match[data-challenge="cipher"] .ch-code-slots{margin-bottom:8px}
+  .ch-in-match[data-challenge="cipher"] .ch-code-slot{width:48px;height:50px}
+  .ch-in-match[data-challenge="cipher"] .ch-code-pad .ch-button{min-height:42px}
+  .ch-in-match[data-challenge="cipher"] .ch-controls{margin-top:8px;gap:8px}
+}
+/* a wide screen: the attempts on the right, the keypad and the notebook beside them */
+@media (min-width:900px){
+  .ch-in-match[data-challenge="cipher"] .ch-stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"result result" "board controls" "board tactics" "log log";grid-template-rows:auto auto 1fr auto;align-items:start;column-gap:20px}
+  .ch-in-match[data-challenge="cipher"] .ch-board{grid-area:board;width:100%;max-width:none}
+  .ch-in-match[data-challenge="cipher"] .ch-controls{grid-area:controls;margin:0}
+  .ch-in-match[data-challenge="cipher"] .ch-tactics{grid-area:tactics;margin:14px 0 0}
+  .ch-in-match[data-challenge="cipher"] .ch-log{grid-area:log}
+  .ch-in-match[data-challenge="cipher"] .ch-result{grid-area:result;margin:0 0 16px}
+  .ch-in-match[data-challenge="cipher"] .ch-cipher-hunt .ch-attempts{max-height:max(260px,calc(100vh - 470px))}
+}
+/* short phones: the keypad and the button stay on the first screen */
+@media (max-width:640px) and (max-height:720px){
+  .ch-cipher-hunt .ch-attempts{min-height:64px}
+  .ch-target-card{padding:6px 10px}
+  .ch-revealed-digits i{width:25px;height:28px;font-size:15px}
+  .ch-secret-row{padding-top:4px}
+  .ch-in-match[data-challenge="cipher"] .ch-code-slot{width:44px;height:44px}
+  .ch-in-match[data-challenge="cipher"] .ch-code-pad .ch-button{min-height:38px}
+}
+
+/* assets/css/wordhunt-v33-5.css */
+/* Tahdia 33.5.0 — «صيد الكلمات». A board of letter tiles you sweep with a finger: every
+   found word is marked like a highlighter in its finder's colour, the pick follows the finger,
+   and the words to hunt sit right under the board. */
+
+.ch-board.ch-hunt{display:flex;flex-direction:column;gap:8px;width:100%;max-width:600px;min-height:0;margin:0 auto;padding:12px 12px 10px;border:1px solid var(--ch-line);border-radius:22px;background:radial-gradient(ellipse 90% 55% at 50% 0%,color-mix(in srgb,var(--ch-accent) 10%,transparent),transparent 70%),color-mix(in srgb,var(--ch-panel) 90%,transparent);box-shadow:0 18px 40px #0004}
+.ch-hunt-head{display:flex;align-items:center;gap:10px;padding:0 2px}
+.ch-hunt-topic{display:grid;min-width:0;margin-inline-end:auto;line-height:1.25}
+.ch-hunt-round{font-size:11.5px;color:var(--ch-muted)}
+.ch-hunt-theme{overflow:hidden;font:800 21px/1.25 ChallengeArabic,sans-serif;color:var(--ch-accent);white-space:nowrap;text-overflow:ellipsis}
+.ch-hunt-count{padding:4px 10px;border:1px solid var(--ch-line);border-radius:99px;font-size:12.5px;color:var(--ch-muted);white-space:nowrap}
+.ch-hunt-clock{min-width:56px;font-size:17px;text-align:center;font-variant-numeric:tabular-nums;color:var(--ch-ink)}
+.ch-hunt-timer{height:6px;overflow:hidden;border-radius:9px;background:var(--ch-line);direction:ltr}
+.ch-hunt-timer i{display:block;width:100%;height:100%;border-radius:inherit;background:var(--ch-accent);transition:width .12s linear}
+.ch-hunt-timer.urgent i{background:#ff8d79}
+
+/* the board: the highlighter marks sit under the letters */
+.ch-hunt-frame{position:relative;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid var(--ch-line);border-radius:16px;background:color-mix(in srgb,var(--ch-soft) 72%,transparent);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.ch-hunt-lines{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
+.ch-hunt-lines line{fill:none;stroke-linecap:round;stroke-width:.74}
+.ch-hunt-lines .found{stroke:var(--hit);opacity:.42}
+.ch-hunt-lines .found.mine{opacity:.58}
+.ch-hunt-lines .missed{stroke:var(--ch-ink);stroke-width:.17;stroke-dasharray:0 .3;opacity:.55}
+.ch-hunt-lines .select{stroke:var(--ch-accent);opacity:.55}
+.ch-hunt-lines .wrong{stroke:#ff7a6b;opacity:.5}
+.ch-hunt-lines .pending{stroke:var(--ch-accent);opacity:.32;animation:ch-hunt-wait .8s ease-in-out infinite alternate}
+.ch-hunt-grid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));grid-template-rows:repeat(var(--n,8),minmax(0,1fr));width:100%;height:100%;touch-action:none}
+.ch-hunt-cell{position:relative;isolation:isolate;display:grid;place-items:center;min-width:0;min-height:0;margin:0;padding:0;border:0;background:none;font:800 clamp(17px,5.4vw,27px)/1 ChallengeArabic,sans-serif;color:var(--ch-ink);cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
+.ch-hunt-cell::before{content:'';position:absolute;inset:9%;z-index:-1;border-radius:30%;background:color-mix(in srgb,var(--ch-ink) 6%,transparent);transition:background .15s}
+.ch-hunt-cell.anchor::before{background:color-mix(in srgb,var(--ch-accent) 38%,transparent)}
+.ch-hunt-cell.sel{transform:scale(1.08)}
+.ch-hunt-cell:focus-visible{outline:none}
+.ch-hunt-cell:focus-visible::before{box-shadow:0 0 0 2px var(--ch-accent)}
+.ch-hunt-grid.locked .ch-hunt-cell{cursor:default}
+.ch-hunt-grid.cooling{opacity:.55;filter:grayscale(.5)}
+.ch-hunt-grid.shake{animation:ch-hunt-shake .32s}
+@keyframes ch-hunt-shake{25%{transform:translateX(6px)}50%{transform:translateX(-6px)}75%{transform:translateX(3px)}}
+@keyframes ch-hunt-wait{from{opacity:.16}to{opacity:.42}}
+.ch-hunt-break{position:absolute;z-index:3;inset:auto 10px 10px;display:grid;justify-items:center;gap:2px;padding:12px 14px;border:1px solid var(--ch-line);border-radius:14px;background:color-mix(in srgb,var(--ch-panel) 94%,transparent);box-shadow:0 10px 30px #0006;text-align:center}
+.ch-hunt-break[hidden]{display:none}
+.ch-hunt-break b{font-size:17px;color:var(--ch-accent)}
+.ch-hunt-break span{font-size:15px;font-variant-numeric:tabular-nums}
+.ch-hunt-break small{font-size:11.5px;color:var(--ch-muted)}
+.ch-hunt-break small[hidden]{display:none}
+.ch-hunt-pick{min-height:24px;margin:0;font-size:13px;line-height:24px;text-align:center;color:var(--ch-muted)}
+.ch-hunt-pick.live{font:800 20px/24px ChallengeArabic,sans-serif;letter-spacing:1px;color:var(--ch-accent)}
+
+/* the words to hunt */
+.ch-hunt-words{box-sizing:border-box;width:100%;max-width:600px;margin:10px auto 0;padding:10px 12px 12px;border:1px solid var(--ch-line);border-radius:18px;background:color-mix(in srgb,var(--ch-panel) 82%,transparent)}
+.ch-hunt-words-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 10px}
+.ch-hunt-words-head b{font-size:14px}
+.ch-hunt-words-head small{font-size:12px;color:var(--ch-muted)}
+.ch-hunt-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:13px 7px;margin:0;padding:0;list-style:none}
+.ch-hunt-word{position:relative;display:grid;place-items:center;min-width:0;min-height:42px;padding:10px 8px 6px;border:1px solid var(--ch-line);border-radius:12px;background:color-mix(in srgb,var(--ch-soft) 62%,transparent)}
+.ch-hunt-label{max-width:100%;overflow:hidden;font:800 17px/1.2 ChallengeArabic,sans-serif;white-space:nowrap;text-overflow:ellipsis}
+/* the points and the finder sit on the chip's edge, so the word keeps the whole chip */
+.ch-hunt-points,.ch-hunt-by{position:absolute;inset-block-start:-11px;max-width:80%;overflow:hidden;padding:0 7px;border-radius:99px;font-size:10.5px;font-weight:700;line-height:17px;white-space:nowrap;text-overflow:ellipsis}
+.ch-hunt-points{inset-inline-end:8px;border:1px solid var(--ch-line);background:var(--ch-panel);color:var(--ch-muted);font-variant-numeric:tabular-nums}
+.ch-hunt-word.golden{border-color:#e6c25f;box-shadow:inset 0 0 0 1px #e6c25f40}
+.ch-hunt-word.golden .ch-hunt-points{color:#e6c25f}
+.ch-hunt-word.found{border-color:color-mix(in srgb,var(--hit) 65%,transparent);background:color-mix(in srgb,var(--hit) 15%,transparent)}
+.ch-hunt-word.found .ch-hunt-label{opacity:.72;text-decoration:line-through 1.5px color-mix(in srgb,var(--hit) 80%,transparent)}
+.ch-hunt-word.missed{border-style:dashed;opacity:.7}
+.ch-hunt-by{inset-inline-start:8px;background:var(--hit);color:#10161b}
+.ch-hunt-mask{display:inline-flex;gap:3px}
+.ch-hunt-mask i{display:grid;place-items:center;width:15px;height:21px;border-bottom:2px solid var(--ch-muted);font:800 15px/1 ChallengeArabic,sans-serif;font-style:normal;color:var(--ch-accent)}
+
+/* who found what, last first */
+.ch-hunt-feed{box-sizing:border-box;width:100%;display:grid;gap:4px;max-width:600px;margin:10px auto 0;padding:0 4px}
+.ch-hunt-news{display:flex;align-items:center;gap:6px;margin:0;font-size:12.5px;color:var(--ch-muted)}
+.ch-hunt-news i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--hit)}
+.ch-hunt-news b{color:var(--ch-ink)}
+.ch-hunt-news.mine b{color:var(--ch-accent)}
+.ch-hunt-news small{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.ch-hunt-news.empty{justify-content:center;text-align:center}
+
+/* in a match: the board, then the words, then the news */
+.ch-in-match[data-challenge="wordbomb"] .ch-stage{display:flex;flex-direction:column}
+.ch-in-match[data-challenge="wordbomb"] .ch-board{order:1}
+.ch-in-match[data-challenge="wordbomb"] .ch-controls{order:2;margin:0}
+.ch-in-match[data-challenge="wordbomb"] .ch-tactics{order:3;margin:0}
+.ch-in-match[data-challenge="wordbomb"] .ch-log{order:4}
+/* the round, its clock and the counts live on the board itself */
+.ch-in-match[data-challenge="wordbomb"] #chSubstatus,.ch-in-match[data-challenge="wordbomb"] #chFlow,.ch-in-match[data-challenge="wordbomb"] .ch-match-meta,.ch-in-match[data-challenge="wordbomb"] .ch-studio-hud{display:none}
+.ch-in-match[data-challenge="wordbomb"] .ch-stage{padding-top:12px}
+
+/* a wide screen: the board on the right, the words beside it, and the board sized to the
+   window's height so the whole match is on screen */
+@media (min-width:900px){
+  .ch-in-match[data-challenge="wordbomb"] .ch-stage{display:grid;grid-template-columns:auto minmax(220px,280px);grid-template-areas:"result result" "board words" "board feed" "board log";grid-template-rows:auto auto auto 1fr;justify-content:center;align-items:start;column-gap:18px}
+  .ch-in-match[data-challenge="wordbomb"] .ch-board{grid-area:board;width:min(600px,max(420px,calc(100vh - 300px)))}
+  .ch-in-match[data-challenge="wordbomb"] .ch-controls{grid-area:words}
+  .ch-in-match[data-challenge="wordbomb"] .ch-tactics{grid-area:feed}
+  .ch-in-match[data-challenge="wordbomb"] .ch-log{grid-area:log}
+  .ch-in-match[data-challenge="wordbomb"] .ch-result{grid-area:result;margin:0 0 16px}
+  .ch-in-match[data-challenge="wordbomb"] .ch-hunt-words{margin:0}
+  .ch-in-match[data-challenge="wordbomb"] .ch-hunt-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .ch-board.ch-hunt{gap:6px;padding:8px 8px 6px;border-radius:18px}
+  .ch-hunt-theme{font-size:18px}
+  .ch-hunt-frame{border-radius:13px}
+  .ch-hunt-cell{font-size:clamp(16px,5.7vw,25px)}
+  .ch-hunt-words{margin-top:8px;padding:8px}
+  .ch-hunt-list{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:13px 6px}
+  .ch-hunt-word{min-height:38px;padding:9px 6px 5px}
+  .ch-hunt-label{font-size:15.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ch-hunt-timer i,.ch-hunt-cell::before{transition:none}
+  .ch-hunt-grid.shake,.ch-hunt-lines .pending{animation:none}
+}
+/* short phones (an iPhone SE and the like): a smaller board keeps the words on the first screen */
+@media (max-width:640px) and (max-height:720px){
+  .ch-hunt-round{display:none}
+  .ch-hunt-theme{font-size:17px}
+  .ch-hunt-frame{width:min(100%,calc(100vh - 370px));margin:0 auto}
+  .ch-hunt-pick{min-height:18px;font-size:12px;line-height:18px}
+  .ch-hunt-pick.live{font-size:17px;line-height:18px}
+  .ch-hunt-words-head{display:none}
+  .ch-hunt-words{padding:8px}
+  /* only the golden word keeps its points badge here */
+  .ch-hunt-word:not(.golden) .ch-hunt-points{display:none}
+  .ch-hunt-list{gap:12px 6px}
+  .ch-hunt-word{min-height:34px;padding:6px 6px 4px}
+  .ch-hunt-word.golden,.ch-hunt-word.found{padding-top:8px}
+}
+
 /* assets/css/game-interaction-v34.css */
 html,body{overflow-x:clip}
 html{touch-action:pan-x pan-y}

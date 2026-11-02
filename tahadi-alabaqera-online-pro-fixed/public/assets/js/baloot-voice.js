@@ -1,6 +1,6 @@
-import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.4.0';
-import { VOICE_LINES, VOICE_PACK } from './baloot-voice-pack.js?v=33.4.0-baloot2';
-import { createVoicePlayer } from './baloot-voice-player.js?v=33.4.0-baloot2';
+import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.5.0';
+import { VOICE_LINES, VOICE_PACK } from './baloot-voice-pack.js?v=33.5.0-baloot2';
+import { createVoicePlayer } from './baloot-voice-player.js?v=33.5.0-baloot2';
 
 const KEY = 'bs_baloot_voice';
 const plain = text => String(text || '').replace(/[ً-ْٰ]/g, '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/[،,؟?!.…]/g, ' ').replace(/\s+/g, ' ').trim();

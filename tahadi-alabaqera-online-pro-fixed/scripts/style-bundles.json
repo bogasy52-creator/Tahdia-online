@@ -149,6 +149,7 @@
   "reaction.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "serpent.html": [
@@ -326,26 +327,31 @@
   "labyrinth.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "focus.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "cipher.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "patterns.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "survival.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "reaction-classic.html": [
@@ -363,11 +369,14 @@
   "territory.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ],
   "wordbomb.html": [
     "assets/css/platform.css",
     "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
+    "assets/css/wordhunt-v33-5.css",
     "assets/css/game-interaction-v34.css"
   ]
 }

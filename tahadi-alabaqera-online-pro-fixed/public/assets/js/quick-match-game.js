@@ -2,11 +2,14 @@
 const params=new URLSearchParams(location.search),matchId=params.get('quickMatch')||params.get('match'),$=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const session=window.TahdiaMatchmaking?.session();
-let state=null,pollTimer=null,clock=null,submitting=false,stopped=false,received=0,serverBase=0,failures=0,rewardRecorded=false;
+let state=null,pollTimer=null,clock=null,submitting=false,stopped=false,received=0,serverBase=0,failures=0,rewardRecorded=false,shown='';
 const estimatedNow=()=>serverBase+(performance.now()-received);
 function status(text){if($('qmStatus'))$('qmStatus').textContent=text}
 function timer(){if(!state||state.phase!=='question')return;const left=Math.max(0,state.deadline-estimatedNow());if($('qmTimer'))$('qmTimer').textContent=(left/1000).toFixed(1)+' ث';if($('qmBar'))$('qmBar').style.width=Math.max(0,Math.min(100,left/150))+'%';if(left<=0)document.querySelectorAll('#qmChoices button').forEach(b=>b.disabled=true)}
 function render(data){if(state&&data.updatedAt<state.updatedAt)return;state=data;received=performance.now();serverBase=data.serverNow;$('qmRound').textContent=data.phase==='finished'?'النتيجة':`${data.index+1} / ${data.total}`;$('qmPlayers').innerHTML=data.players.map(p=>`<div class="qm-player ${p.id===session.id?'me':''}"><b>${esc(p.name)}${p.id===session.id?' · أنت':''}</b><strong>${data.scores[p.id]||0}</strong></div>`).join('');
+  // 33.5.0: the answers are rebuilt only when the question, its phase or your answer changes —
+  // a poll every second used to replace them under a finger and lose the tap
+  const view=data.phase==='finished'?'finished':[data.index,data.phase,!!data.answered,submitting].join(':');if(view===shown){if(data.phase==='question')timer();return}shown=view;
   $('qmReveal').classList.add('hidden');$('qmChoices').replaceChildren();
   if(data.phase==='finished'){clearInterval(clock);status('اكتملت المواجهة — نتيجة موثقة من السيرفر');$('qmQuestion').textContent=data.winners.length!==1?'تعادل!':data.winners.includes(session.id)?'فزت بالمواجهة!':'انتهت المواجهة';$('qmMeta').textContent='';$('qmTimer').textContent='';const results=data.players.map(p=>`<div class="qm-result-row"><b>${esc(p.name)}</b><strong>${data.scores[p.id]}</strong></div>`).join('');$('qmReveal').innerHTML=results+'<a class="bs-btn primary" href="/online">مواجهة جديدة</a>'; $('qmReveal').classList.remove('hidden');if(!rewardRecorded){rewardRecorded=true;if(data.winners.length===1&&data.winners.includes(session.id))window.BS_HERO_FX?.victory(null,{container:$('qmReveal'),key:'quick:'+matchId});if(window.BS_SOCIAL?.isLoggedIn())window.BS_CAREER?.refresh?.().catch(()=>{});else window.BS_CAREER?.record?.({id:'quick:'+matchId,game:'quiz',win:data.winners.length===1&&data.winners.includes(session.id)})}return}
   $('qmQuestion').textContent=data.question.text;$('qmMeta').innerHTML=`<span class="pill">${esc(data.question.category)}</span><span class="pill gold">${data.question.value} نقطة</span>`;
