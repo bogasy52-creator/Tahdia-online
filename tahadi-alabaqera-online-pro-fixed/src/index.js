@@ -40,7 +40,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.5.0';
+const RELEASE='33.6.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -507,14 +507,14 @@ export default {
       const limited=await rateLimit(request,env,'challenges-api',240,60000);if(limited)return limited;
       if(url.pathname==='/api/challenges/quick'&&request.method==='POST'){
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
-        if(!b||typeof b!=='object'||Array.isArray(b)||!['focus','cipher','wordbomb'].includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        if(!b||typeof b!=='object'||Array.isArray(b)||!['focus','cipher','wordbomb','chaos'].includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
         return env.ROOMS.get(env.ROOMS.idFromName('challenge-queue:'+b.game)).fetch('https://challenge-queue.internal/assign',{method:'POST',body:JSON.stringify({game:b.game})});
       }
       if(url.pathname==='/api/challenges/rooms'&&request.method==='POST'){
         if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
-        const games=['focus','cipher','wordbomb'];if(!b||typeof b!=='object'||Array.isArray(b)||!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
+        const games=['focus','cipher','wordbomb','chaos'];if(!b||typeof b!=='object'||Array.isArray(b)||!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
         for(let i=0;i<8;i++){const code=roomCodeFor(b.game),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء الغرفة'},503);
       }
@@ -1813,7 +1813,8 @@ export class BoardRoom extends DurableObject {
     if (this.room.game === "jackaroo") {
       const me = this.playerIndex(playerId);
       state.deck = Array(state.deck?.length || 0).fill("?");
-      state.discard = Array(state.discard?.length || 0).fill("?");
+      // 33.6.0: the last three cards played lie face up in the middle of the table, as on a real board
+      state.discard = (state.discard || []).map((card, i, all) => (i >= all.length - 3 ? card : "?"));
       state.hands = (state.hands || []).map((hand, i) => i === me ? hand : Array(hand.length).fill("?"));
     }
     return state;

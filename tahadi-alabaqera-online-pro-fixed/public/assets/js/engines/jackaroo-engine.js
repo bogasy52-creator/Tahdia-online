@@ -1,11 +1,14 @@
-import {boardGeometry,boardStonePosition} from './board-geometry-v29.js';
+import {boardGeometry,boardStonePosition} from './board-geometry-v29.js?v=33.6.0';
 export const JACKAROO_STARTS=Object.freeze([0,13,26,39]);
+// 33.6.0: the rooms deal a table of four on the big board, eighteen holes to every seat's quarter
+// (the starts move to 0, 18, 36, 54); six seats keep thirteen. A game without `arm` is the old board.
+export const jackarooArm=seats=>seats===4?18:13;
 const SUITS=['S','H','D','C'];const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const clone=s=>structuredClone(s);export const cardRank=c=>String(c).replace(/[SHDC]$/,'');
 export function createJackarooDeck(){return SUITS.flatMap(s=>RANKS.map(r=>r+s))}
 export function shuffleJackarooDeck(deck=createJackarooDeck(),rng=Math.random){const a=[...deck];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function dealBatch(state,size){if(state.deck.length<size*state.players.length){state.deck=shuffleJackarooDeck(createJackarooDeck());state.discard=[];state.dealer=(state.dealer+1)%state.players.length}state.hands=state.hands.map(()=>[]);for(let r=0;r<size;r++)for(let i=1;i<=state.players.length;i++){const p=(state.dealer+i)%state.players.length;state.hands[p].push(state.deck.pop())}state.dealIndex=(state.dealIndex+1)%3}
-export function createJackarooGame(names=['لاعب 1','لاعب 2','لاعب 3','لاعب 4'],options={}){if(!Array.isArray(names)||![4,6].includes(names.length))throw new Error('jackaroo_requires_4_or_6_players');const s={players:names.map((n,id)=>({id,name:String(n||`لاعب ${id+1}`).slice(0,20),marbles:[-1,-1,-1,-1]})),hands:names.map(()=>[]),deck:options.deck?[...options.deck]:shuffleJackarooDeck(createJackarooDeck(),options.rng||Math.random),discard:[],dealer:options.dealer??0,dealIndex:0,turn:(options.dealer??0)+1,played:0,winnerTeam:null,lastEvent:null};s.turn%=names.length;dealBatch(s,4);return s}
+export function createJackarooGame(names=['لاعب 1','لاعب 2','لاعب 3','لاعب 4'],options={}){if(!Array.isArray(names)||![4,6].includes(names.length))throw new Error('jackaroo_requires_4_or_6_players');const s={...([13,18].includes(options.arm)&&!(options.arm===18&&names.length!==4)?{arm:options.arm}:{}),players:names.map((n,id)=>({id,name:String(n||`لاعب ${id+1}`).slice(0,20),marbles:[-1,-1,-1,-1]})),hands:names.map(()=>[]),deck:options.deck?[...options.deck]:shuffleJackarooDeck(createJackarooDeck(),options.rng||Math.random),discard:[],dealer:options.dealer??0,dealIndex:0,turn:(options.dealer??0)+1,played:0,winnerTeam:null,lastEvent:null};s.turn%=names.length;dealBatch(s,4);return s}
 export function globalJackarooPosition(player,progress,state=4){return boardStonePosition(player,progress,state)}
 export const jackarooTeam=p=>p%2;
 export function teamWinner(state){const {finish}=boardGeometry(state);for(const team of[0,1])if(state.players.filter((_,i)=>i%2===team).every(p=>p.marbles.every(m=>m===finish)))return team;return null}

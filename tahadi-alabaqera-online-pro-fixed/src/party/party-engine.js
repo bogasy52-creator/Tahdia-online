@@ -101,7 +101,7 @@ export function openPartyLink(room,{code,page},now=Date.now(),table=0){
 // The real room could not open: the round is played inside the party instead.
 export function failPartyLink(room,now=Date.now()){
  const r=room.round;if(room.status!=='playing'||r?.link?.status!=='creating')return false;
- if(['focus','cipher','wordbomb'].includes(r.game)){r.events.push('تعذر فتح اللعبة؛ الانتقال للجولة التالية دون نقاط');finishPartyRound(room,now);return true;}
+ if(['focus','cipher','wordbomb','chaos'].includes(r.game)){r.events.push('تعذر فتح اللعبة؛ الانتقال للجولة التالية دون نقاط');finishPartyRound(room,now);return true;}
  r.link={status:'failed',page:r.link.page};r.startedAt=now;r.deadline=now+r.settings.duration*1000;setupRoundGame(room,r,now);r.revision++;return true;
 }
 /** The real room's final ranking becomes this round's result. */

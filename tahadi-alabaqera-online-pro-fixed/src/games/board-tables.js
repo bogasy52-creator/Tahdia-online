@@ -10,7 +10,7 @@
 import { createSnakesServerGame, rollSnakesServer } from './snakes-server.js';
 import { snakesTurnDisplayMs } from '../../public/assets/js/snakes-v4-fx.js';
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from '../../public/assets/js/engines/ludo-engine.js';
-import { createJackarooGame, getJackarooActions, playJackarooAction } from '../../public/assets/js/engines/jackaroo-engine.js';
+import { createJackarooGame, getJackarooActions, playJackarooAction, jackarooArm } from '../../public/assets/js/engines/jackaroo-engine.js';
 import { createRaceDiceGame, rollRaceDice, bankRaceDice } from '../../public/assets/js/engines/dice-engine.js';
 import { chooseJackarooMove, chooseLudoMove, chooseSnakePower, shouldBankDice } from '../../public/assets/js/engines/bot-strategy.js';
 import { Career } from '../career/core.js';
@@ -89,7 +89,7 @@ function makeBot(seat, rng, taken) {
 function createState(game, names, variant, rng) {
   if (game === 'snakes') return createSnakesServerGame(names, { variant: variant || 'classic' });
   if (game === 'zahra') return createLudoGame(names);
-  if (game === 'jackaroo') return createJackarooGame(names, { rng });
+  if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length) });
   return createRaceDiceGame(names, DICE_TARGET);
 }
 

@@ -206,14 +206,16 @@
     {id:'collector',kind:'achievement',name:'خزانة الكنوز',description:'امتلك 10 إضافات مدفوعة مختلفة.',metric:'collection',goal:10,coins:150},
     {id:'online-winner',kind:'achievement',name:'بطل المنافسة',description:'اربح 5 مباريات أونلاين موثّقة.',metric:'rankedWins',goal:5,coins:150}
   ].map(Object.freeze));
-  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot'];
+  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot','focus','cipher','wordbomb','chaos'];
   // 33.2.0: a Baloot mission every day and one more game that changes daily
   const GAME_MISSIONS=Object.freeze([
     ['baloot','games',2,60,'جلسة بلوت','العب صكّتين بلوت كاملة اليوم.'],['baloot','wins',1,80,'صكّة لك','اربح صكّة بلوت اليوم.'],
     ['snakes','games',2,50,'سلم وثعبان','العب جولتين سلم وثعبان اليوم.'],['zahra','games',2,50,'طاولة الزهرة','العب جولتين زهرة اليوم.'],
     ['quiz','games',2,50,'تحدي الأسئلة','العب مباراتين في تحدي الأسئلة اليوم.'],['jackaroo','games',2,50,'جاكارو','العب جولتين جاكارو اليوم.'],
     ['dice','wins',1,70,'سباق النرد','اربح جولة في تحدي النرد اليوم.'],['serpent','games',3,50,'حلبة الثعابين','العب 3 جولات في حلبة الثعابين اليوم.'],
-    ['snakes','wins',1,70,'أول من يوصل','اربح جولة سلم وثعبان اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.']
+    ['snakes','wins',1,70,'أول من يوصل','اربح جولة سلم وثعبان اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.'],
+    // 33.6.0: the new games have missions too
+    ['chaos','games',2,50,'سباق الفوضى','العب سباقين في سباق الفوضى اليوم.'],['wordbomb','games',2,50,'صيد الكلمات','العب مباراتين في صيد الكلمات اليوم.'],['cipher','wins',1,70,'فك الشفرة','افُز بمباراة في ساحة الشفرات اليوم.']
   ].map(([game,metric,goal,coins,name,description])=>Object.freeze({id:'day-'+game+(metric==='wins'?'-win':'-play'),game,metric,goal,coins,name,description})));
   function gameMissionsFor(day){
     const n=Math.floor(Date.parse(day+'T00:00:00Z')/86400000)||0,baloot=GAME_MISSIONS.filter(m=>m.game==='baloot'),others=GAME_MISSIONS.filter(m=>m.game!=='baloot');
@@ -343,7 +345,7 @@
   const HEROES=Object.freeze(CATALOG.filter(i=>i.type==='character').map(i=>Object.freeze({id:i.id.slice(10),item:i.id,name:i.name,art:i.asset})));
   const heroOf=value=>{const id=String(value||'').replace(/^character-/,'');return HEROES.find(h=>h.id===id)||null;};
   const heroArt=value=>{const h=heroOf(value);return h?'/assets/heroes/'+h.art+'.webp':'';};
-  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.5.0-full1':'';};
+  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.6.0-full1':'';};
   const heroFace=value=>{const h=heroOf(value);return h?'/assets/heroes/face/'+h.art+'.webp':'';};
   const BOT_HEROES=['robot','princess','samurai','viking','cyber','diver','racer','gladiator'];
   const botHeroFace=seat=>heroFace(BOT_HEROES[Math.abs(Math.floor(Number(seat)||0))%BOT_HEROES.length]);

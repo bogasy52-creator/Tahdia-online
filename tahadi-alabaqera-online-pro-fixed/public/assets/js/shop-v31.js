@@ -3,7 +3,7 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.5.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.6.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
@@ -255,7 +255,7 @@ function renderSets(p){
  }
  $('setsSection').hidden=view!=='shop'||!target.children.length;
 }
-const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'سلم وثعبان',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'}};
+const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'سلم وثعبان',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},chaos:{name:'سباق الفوضى',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'}};
 function renderRewards(p){
  const status=core.dailyStatus(p,{now:now()}),gift=$('dailyGift');gift.replaceChildren();
  const head=make('div','sx-daily-head'),copy=make('div');copy.append(make('span','sx-eyebrow','سلسلة الحضور · اليوم '+status.streak+' من 7'),make('h3',null,status.claimed?'هدية اليوم في رصيدك.':'هدية اليوم: '+status.coins+' عملة'),make('p',null,'ادخل كل يوم لترتفع الهدية حتى 120 عملة.'));

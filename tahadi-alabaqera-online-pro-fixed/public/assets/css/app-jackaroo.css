@@ -15,7 +15,7 @@ button,input,select{font:inherit}button{touch-action:manipulation}.bs-shell{widt
 @media(max-width:600px){.bs-shell{padding:9px 9px calc(22px + env(safe-area-inset-bottom))}.bs-brand-copy span{display:none}.bs-mark{width:44px;height:44px;border-radius:14px}.bs-actions .bs-btn span.optional{display:none}.bs-btn{padding-inline:12px}.bs-panel{border-radius:20px}.bs-range{width:120px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 /* Social layer shared UI */
-.social-nav-link{position:relative;text-decoration:none}.social-badge{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#ef4444;color:#fff;border:2px solid #070812;font-size:9px;display:grid;place-items:center}.bs-social-invite-card{position:fixed;z-index:140;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));width:min(390px,calc(100vw - 28px));padding:14px;border:1px solid #7a62b6;border-radius:18px;background:linear-gradient(145deg,#17152b,#0b0f1d);box-shadow:0 24px 70px rgba(0,0,0,.48);display:grid;gap:7px}.bs-social-invite-card>span{color:var(--bs-muted);font-size:12px}.bs-social-invite-actions{display:flex;gap:7px}.bs-social-invite-actions .bs-btn{text-decoration:none;display:grid;place-items:center}.bs-social-picker{width:min(520px,100%);padding:16px;max-height:min(680px,90vh);display:flex;flex-direction:column}.bs-social-picker-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.bs-social-picker-head h2{margin:0}.bs-social-picker-head small{display:block;color:var(--bs-muted);margin-top:3px}.bs-social-picker-list{display:grid;gap:7px;margin-top:12px;overflow:auto}.bs-social-picker-row{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:10px;border:1px solid var(--bs-line);border-radius:14px;background:#0a0e1a}.bs-social-picker-row b,.bs-social-picker-row small{display:block}.bs-social-picker-row small{color:var(--bs-muted);direction:ltr;text-align:right}.bs-social-empty{padding:20px;text-align:center;color:var(--bs-muted)}.bs-social-picker-footer{margin-top:10px;color:#cfc7ff;text-decoration:none;font-size:12px;font-weight:850;text-align:center}
+.social-nav-link{position:relative;text-decoration:none}.social-badge{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#ef4444;color:#fff;border:2px solid #070812;font-size:9px;display:grid;place-items:center}.bs-social-invite-card{position:fixed;z-index:13000;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));width:min(390px,calc(100vw - 28px));padding:14px;border:1px solid #7a62b6;border-radius:18px;background:linear-gradient(145deg,#17152b,#0b0f1d);box-shadow:0 24px 70px rgba(0,0,0,.48);display:grid;gap:7px}.bs-social-invite-card>span{color:var(--bs-muted);font-size:12px}.bs-social-invite-actions{display:flex;gap:7px}.bs-social-invite-actions .bs-btn{text-decoration:none;display:grid;place-items:center}.bs-social-picker{width:min(520px,100%);padding:16px;max-height:min(680px,90vh);display:flex;flex-direction:column}.bs-social-picker-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.bs-social-picker-head h2{margin:0}.bs-social-picker-head small{display:block;color:var(--bs-muted);margin-top:3px}.bs-social-picker-list{display:grid;gap:7px;margin-top:12px;overflow:auto}.bs-social-picker-row{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:10px;border:1px solid var(--bs-line);border-radius:14px;background:#0a0e1a}.bs-social-picker-row b,.bs-social-picker-row small{display:block}.bs-social-picker-row small{color:var(--bs-muted);direction:ltr;text-align:right}.bs-social-empty{padding:20px;text-align:center;color:var(--bs-muted)}.bs-social-picker-footer{margin-top:10px;color:#cfc7ff;text-decoration:none;font-size:12px;font-weight:850;text-align:center}
 
 /* 32.0.1: a game's own-name field showing the signed-in account's name (read-only) */
 input.bs-account-name{cursor:default;border-style:dashed!important;caret-color:transparent}
@@ -1270,6 +1270,26 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 .jk-legend-rank{font:700 19px/1 Georgia,'Times New Roman',serif;text-align:center;color:#fff4dc}
 .jk-legend-row p{margin:0;font-size:13px;line-height:1.55;color:#d6dfe8}
 .jk-legend .jk-act{justify-self:start}
+
+/* assets/css/jackaroo-v33-6.css */
+/* Tahdia 33.6.0 — the Jackaroo star board. The board draws its own octagon, edge and middle,
+   so the old wooden table picture goes; the board on the menu stands straight (it leaned five
+   degrees to the left); «شكل اللوحة» picks the look, on the menu and from the 🎨 in a game. */
+:is(html,#v31) body.game-jackaroo .jack-board{background:none!important;box-shadow:none!important;border-radius:0!important;aspect-ratio:1}
+:is(html,#v31) body.game-jackaroo .jack-board .table-art,:is(html,#v31) body.game-jackaroo .jack-board .jack-center{display:none!important}
+:is(html,#v31) body.game-jackaroo .tbl-hero-art{transform:none;max-width:300px;filter:drop-shadow(0 12px 22px #0008)}
+.jk-looks{display:grid;gap:8px;margin:0 0 14px}
+.jk-looks-title{font-size:14px;font-weight:900}
+.jk-looks-row{display:flex;flex-wrap:wrap;gap:8px}
+.jk-look{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:6px 12px 6px 8px;border-radius:999px;border:1px solid #ffffff24;background:#ffffff0d;color:inherit;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.jk-look i{flex:none;width:22px;height:22px;border-radius:7px;background:radial-gradient(circle,var(--look-hole) 0 3px,transparent 3.6px),var(--look-bg);box-shadow:inset 0 0 0 2px var(--look-edge),0 0 9px color-mix(in srgb,var(--look-edge) 55%,transparent)}
+.jk-look.is-on{border-color:var(--look-edge);background:color-mix(in srgb,var(--look-edge) 20%,transparent)}
+.jk-look.is-locked{opacity:.55}
+.jk-look:focus-visible{outline:2px solid #fff;outline-offset:2px}
+:is(html,#v31) body.game-jackaroo .jk-look-next{min-width:44px;padding-inline:10px;font-size:18px}
+@media (max-width:520px){.jk-looks-row{gap:6px}.jk-look{min-height:38px;padding:5px 10px 5px 7px;font-size:12.5px}}
+/* a wide screen: the whole board fits under the players without scrolling */
+@media (min-width:900px){:is(html,#v31) body.game-jackaroo #game.tbl31 .jack-board-wrap{width:min(100%,600px,calc(100vh - 250px))!important;min-width:420px}}
 
 /* assets/css/game-interaction-v34.css */
 html,body{overflow-x:clip}

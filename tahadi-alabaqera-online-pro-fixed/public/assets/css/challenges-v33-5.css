@@ -126,3 +126,8 @@
   .ch-in-match[data-challenge="cipher"] .ch-code-slot{width:44px;height:44px}
   .ch-in-match[data-challenge="cipher"] .ch-code-pad .ch-button{min-height:38px}
 }
+
+/* a room of three or more: the rivals' strip scrolls sideways instead of widening the page
+   (a long strip used to push the whole match off the side of a phone) */
+.ch-layout>*{min-width:0}
+.ch-players{min-width:0;max-width:100%}

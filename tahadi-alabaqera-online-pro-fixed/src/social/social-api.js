@@ -89,7 +89,7 @@ async function call(stub, path, body = {}) {
 }
 
 async function validateInviteRoom(env, game, roomCode) {
-  const challenge=['focus','cipher','wordbomb'].includes(game),shared=challenge||['party','quiz','serpent','picture','sudoku','paths'].includes(game),namespace=shared?env?.ROOMS:env?.BOARD_ROOMS;
+  const challenge=['focus','cipher','wordbomb','chaos'].includes(game),shared=challenge||['party','quiz','serpent','picture','sudoku','paths'].includes(game),namespace=shared?env?.ROOMS:env?.BOARD_ROOMS;
   if(!namespace)return {ok:false,status:503,error:'محرك الغرفة غير متاح'};
   try {
     const prefix=challenge?'challenge:':{party:'party:',picture:'picture:',serpent:'__serpent__:',sudoku:'sudoku:',paths:'paths:'}[game]||'',hostname=challenge?'challenge':{party:'party',picture:'picture',serpent:'serpent',sudoku:'sudoku',paths:'paths',quiz:'room'}[game]||'board';
@@ -98,7 +98,7 @@ async function validateInviteRoom(env, game, roomCode) {
     const data = await readJson(response);
     if (!response.ok || !data.ok) return { ok: false, status: 404, error: "الغرفة غير موجودة" };
     if (game !== "quiz" && data.game !== game) return { ok: false, status: 409, error: "رمز الغرفة يخص لعبة أخرى" };
-    if (data.status !== "lobby" && !(["sudoku","paths"].includes(game)&&data.status==="countdown")) return { ok: false, status: 409, error: "لا يمكن إرسال دعوة بعد بدء المباراة" };
+    if (data.status !== "lobby" && !(["sudoku","paths"].includes(game)&&data.status==="countdown") && !(challenge&&data.status==="finished")) return { ok: false, status: 409, error: "لا يمكن إرسال دعوة بعد بدء المباراة" };
     const count=Array.isArray(data.players)?data.players.length:Number(data.players),limit=Number(data.playerLimit||data.capacity);
     if(Number.isFinite(count)&&limit>0&&count>=limit)return {ok:false,status:409,error:'الغرفة ممتلئة؛ أنشئ غرفة جديدة لأصدقائك'};
     return { ok: true };
@@ -316,7 +316,9 @@ export async function handleSocialRequest(request, env, options = {}) {
     const targetUsername = normalizeUsername(body.username);
     const game = normalizeGame(body.game);
     const roomCode = normalizeRoomCode(body.roomCode);
-    const variant=body.variant;if(variant!==undefined&&!(game==='journey'&&['paths','jewels'].includes(variant)))return json({ok:false,error:'نوع التحدي غير صالح'},400);
+    // 33.6.0: only the journey has kinds of challenge (paths/jewels). A room's own mode (classic, teams…)
+    // travels with its code, so the board-game lobbies' «variant: classic» no longer turns the invite away.
+    const variant=game==='journey'&&['paths','jewels'].includes(body.variant)?body.variant:undefined;
     if (!validUsername(targetUsername) || !game || (body.roomCode && !roomCode)) return json({ ok: false, error: "بيانات الدعوة غير صالحة" }, 400);
     const targetStub = stubFor(env, targetUsername);
     if (!targetStub || !(await publicProfile(env, targetUsername))) return json({ ok: false, error: "الحساب غير موجود" }, 404);

@@ -485,7 +485,7 @@ export function createSocialUserClass(DurableObject) {
     }
     const game = normalizeGame(body.game);
     const roomCode = normalizeRoomCode(body.roomCode);
-    const variant=body.variant;if(variant!==undefined&&!(game==='journey'&&['paths','jewels'].includes(variant)))return json({ok:false,error:'invalid_invite'},400);
+    const variant=game==='journey'&&['paths','jewels'].includes(body.variant)?body.variant:undefined;
     const joinPath = gameJoinPath(game, roomCode, variant);
     if (!game || !joinPath) return json({ ok: false, error: "invalid_invite" }, 400);
     const existing=await this.ctx.storage.list({prefix:'notification:',reverse:true,limit:SOCIAL_MAX_NOTIFICATIONS});

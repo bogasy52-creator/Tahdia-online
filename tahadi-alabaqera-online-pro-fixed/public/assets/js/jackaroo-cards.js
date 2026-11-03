@@ -68,7 +68,8 @@
     target.replaceChildren(list);
   }
   const info = (card) => INFO[rankOf(card)] || null;
-  window.BS_JACK_CARDS = Object.freeze({ INFO, ORDER, face, legend, info, rankOf });
+  // 33.6.0: ICON also draws the badge on the card that was just played, in the middle of the board
+  window.BS_JACK_CARDS = Object.freeze({ INFO, ORDER, ICON, face, legend, info, rankOf });
   const guide = () => legend(document.getElementById('cardGuide'));
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guide, { once: true }); else guide();
 })();

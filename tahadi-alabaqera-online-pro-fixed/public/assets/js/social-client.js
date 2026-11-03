@@ -127,14 +127,20 @@
   async function block(username) { const data = await api('/api/social/block', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function unblock(username) { const data = await api('/api/social/unblock', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function settings(values) { const data = await api('/api/social/settings', { method: 'POST', body: JSON.stringify(values) }); state.dashboard = null; return data; }
-  async function invite(username, game, roomCode, variant) { return api('/api/social/invites', { method: 'POST', body: JSON.stringify({ username, game, roomCode, ...(variant?{variant}:{}) }) }); }
+  async function invite(username, game, roomCode, variant) { return api('/api/social/invites', { method: 'POST', body: JSON.stringify({ username, game, roomCode, ...(game === 'journey' && variant ? { variant } : {}) }) }); }
   async function readNotifications(ids = []) { const data = await api('/api/social/notifications/read', { method: 'POST', body: JSON.stringify({ ids }),keepalive:true }); state.dashboard = null; return data; }
 
   function emit(type, detail) { events.dispatchEvent(new CustomEvent(type, { detail })); }
 
+  // 33.6.0: every game that has rooms opens from an invitation — the challenge games (focus, cipher,
+  // wordbomb, chaos) were missing here, so their invitations reached the phone and were dropped.
+  const GAME_LABELS = Object.freeze({ party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان والسلالم', zahra: 'الزهرة', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى' });
+  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
+  const gameLabel = (game) => GAME_LABELS[game] || String(game || 'لعبة');
+
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
-    if(!/^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/.test(notification.joinPath))return;
+    if (!INVITE_PATH.test(notification.joinPath)) return;
     if (notification.id && seenInvites.has(String(notification.id))) return;
     rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);
     let wrap = document.querySelector('#bsSocialInvite');
@@ -142,13 +148,14 @@
       wrap = document.createElement('div');
       wrap.id = 'bsSocialInvite';
       wrap.className = 'bs-social-invite-card';
-      document.body.appendChild(wrap);
     }
+    const host = document.fullscreenElement || document.body;
+    if (wrap.parentElement !== host) host.appendChild(wrap);
     wrap.innerHTML = '';
     const title = document.createElement('b');
     title.textContent = `🎮 دعوة من ${notification.from?.displayName || notification.from?.username || 'صديق'}`;
     const sub = document.createElement('span');
-    const labels = {  wordbomb:'صيد الكلمات',focus:'مواجهة التركيز', cipher:'ساحة الشفرات',   party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان', zahra: 'الزهرة', serpent: 'حلبة الثعبان', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'النرد', journey: 'رحلة النجوم', local: 'العباقرة المحلي', logic: 'المنطق', memory: 'الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'سرعة الاستجابة' };
+    const labels = GAME_LABELS;
     sub.textContent = notification.roomCode ? `${labels[notification.game] || notification.game} • الغرفة ${notification.roomCode}` : `تحدٍ جديد • ${labels[notification.game] || notification.game}`;
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';
@@ -339,7 +346,7 @@
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
     isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,
-    accountName: () => accountName(),
+    accountName: () => accountName(), gameLabel,
   };
   window.BS_SOCIAL = apiPublic;
   decorate();

@@ -94,7 +94,8 @@ test('the Jackaroo board turns to you, numbers its holes from your start and has
   for (const key of ['club', 'majlis', 'reactor']) assert.match(board, new RegExp(`  ${key}:\\{label:`), key);
   assert.match(board, /'table-club':'club'/);
   assert.match(board, /'table-majlis':'majlis'/);
-  assert.match(board, /const SHAPES=\{walnut:'square',club:'round',ivory:'octagon',carbon:'chamfer',jade:'round',royal:'square',majlis:'square',reactor:'chamfer'\}/);
+  // 33.6.0: the ring gave way to the star board of the photo; each table still dresses it its own way
+  assert.match(board, /const LOOK_OF=\{walnut:'emerald',club:'emerald',jade:'emerald',ivory:'ivory',carbon:'carbon',reactor:'carbon',royal:'royal',majlis:'majlis'\};/);
   assert.match(board, /const host=svg\.querySelector\('\[data-board-root\]'\)\|\|svg/);
 });
 

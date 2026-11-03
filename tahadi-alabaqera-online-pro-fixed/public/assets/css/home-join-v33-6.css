@@ -1,0 +1,17 @@
+/* Tahdia 33.6.0 — home: «ادخل غرفة برمز» — a sheet that opens only when asked */
+.home-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.home-join-open{display:inline-flex;align-items:center;gap:6px;font-weight:800}
+.home-join-open span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#ffffff1a;font-weight:900}
+.home-join-sheet{position:fixed;inset:0;z-index:12600;display:grid;place-items:center;padding:18px;background:#02060fd0;backdrop-filter:blur(8px)}
+.home-join-sheet[hidden]{display:none}
+.home-join-card{width:min(420px,100%);display:grid;gap:12px;padding:20px;border-radius:22px;border:1px solid #ffffff22;background:linear-gradient(160deg,#18203f,#0c1124);box-shadow:0 26px 70px #000a;text-align:right}
+.home-join-card h2{margin:0;font-size:20px}
+.home-join-card p{margin:0;color:var(--bs-muted,#a8b0c8);font-size:14px;line-height:1.6}
+.home-join-card input{width:100%;min-height:58px;padding:0 14px;border-radius:16px;border:1px solid #ffffff33;background:#070b18;color:#fff;font:900 30px/1 Tajawal,system-ui,sans-serif;letter-spacing:.32em;text-align:center}
+.home-join-card input:focus-visible{outline:2px solid #6f8fff;outline-offset:2px}
+.home-join-card .home-join-error{color:#ff9a9a;font-weight:700;min-height:0}
+.home-join-card .home-join-error:empty{display:none}
+.home-join-actions{display:grid;grid-template-columns:1fr auto;gap:10px}
+.home-join-actions .bs-btn{min-height:48px}
+body.home-join-on{overflow:hidden}
+@media (max-width:520px){.home-join-sheet{place-items:end center;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.home-join-card{border-radius:22px 22px 18px 18px}}

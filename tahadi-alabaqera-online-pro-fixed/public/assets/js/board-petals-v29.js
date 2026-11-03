@@ -1,4 +1,4 @@
-import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js';
+import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js?v=33.6.0';
 /* Tahdia 31.0.0 — the Zahra and Jackaroo tables (file name kept for imports).
    Zahra: a classic cross board — coloured yards, a cream track, home lanes and
    a flower in the centre — with glossy standing stones.
@@ -94,23 +94,10 @@ function crossLayout(seats){
   const bases=yards.map(y=>{const g=y.kind==='square'?c*1.15:y.r*.47;return [[-1,-1],[1,-1],[-1,1],[1,1]].map(([i,j])=>({x:y.x+i*g,y:y.y+j*g}));});
   return {kind:'cross',seats,c,R0,C,track,lanes,gates,finish,yards,bases,angle};
 }
-// Jackaroo: a ring of holes; each seat has a pocket outside and a lane inside.
-function ringLayout(seats){
-  const T=seats*13,four=seats===4,C={x:100,y:100};
-  const seatAngle=s=>s*2*Math.PI/seats-Math.PI/2;
-  const polar=(a,r)=>({x:C.x+Math.cos(a)*r,y:C.y+Math.sin(a)*r});
-  const track=Array.from({length:T},(_,i)=>{const a=i*2*Math.PI/T-Math.PI/2,co=Math.cos(a),si=Math.sin(a),r=four?55/Math.pow(co**4+si**4,.25):56;return {...polar(a,r),a};});
-  const lanes=Array.from({length:seats},(_,s)=>[0,1,2,3].map(h=>polar(seatAngle(s),40-h*7.4)));
-  const finish=Array.from({length:seats},(_,s)=>polar(seatAngle(s),10.5));
-  const pockets=Array.from({length:seats},(_,s)=>{const a=seatAngle(s),p=polar(a,four?84:84);return {x:p.x,y:p.y,a};});
-  const hole=four?3:2.4,gap=four?7.6:6.6,tray=4*gap+hole*2+2.4;
-  const bases=pockets.map(p=>{const t=p.a+Math.PI/2;return [-1.5,-.5,.5,1.5].map(k=>({x:p.x+Math.cos(t)*k*gap,y:p.y+Math.sin(t)*k*gap}));});
-  return {kind:'ring',seats,C,track,lanes,finish,pockets,bases,seatAngle,hole,tray};
-}
 const layouts=new Map();
-function layoutFor(game,seats){const key=game+seats;if(!layouts.has(key))layouts.set(key,game==='jackaroo'?ringLayout(seats):crossLayout(seats));return layouts.get(key);}
+function layoutFor(game,seats,arm=13){const key=game+seats+':'+arm;if(!layouts.has(key))layouts.set(key,game==='jackaroo'?starLayout(seats,arm):crossLayout(seats));return layouts.get(key);}
 function rawPoint(state,seat,index,progress,game){
-  const g=boardGeometry(state),L=layoutFor(game,g.seats);
+  const g=boardGeometry(state),L=layoutFor(game,g.seats,g.arm);
   if(progress<0)return L.bases[seat][index%4];
   if(progress>=g.track)return progress>=g.finish?L.finish[seat]:L.lanes[seat][Math.min(3,progress-g.track)];
   return L.track[boardStonePosition(seat,progress,state)];
@@ -120,7 +107,8 @@ export function petalStonePoint(state,seat,index,game='zahra'){
   if(value<0)return {x:p.x,y:p.y};
   const stack=[];
   state.players.forEach((player,pi)=>(player.tokens||player.marbles).forEach((v,ti)=>{if(value<g.track?boardStonePosition(pi,v,state)===boardStonePosition(seat,value,state):pi===seat&&v===value)stack.push(pi+':'+ti);}));
-  const o=stoneOffset(stack.indexOf(seat+':'+index),stack.length,Math.min(4.2,1.9+stack.length*.5));
+  // finished marbles gather in the cup at the end of their lane
+  const o=stoneOffset(stack.indexOf(seat+':'+index),stack.length,game==='jackaroo'?(value>=g.finish?Math.min(3,1.4+stack.length*.45):Math.min(3.4,1.6+stack.length*.45)):Math.min(4.2,1.9+stack.length*.5));
   return {x:p.x+o.x,y:p.y+o.y};
 }
 
@@ -194,23 +182,6 @@ function drawCross(svg,defs,prefix,state,L,theme,active){
   finishGroup.append(petals);svg.append(finishGroup);
 }
 
-/* ---------- Jackaroo: the ring board (33.4.0) ----------
-   Every table is its own board: a shape (rounded square, round, octagon or a
-   chamfered plate), a surface with its own weave, a rim decoration and an emblem
-   in the centre. The board turns so your seat is at the bottom; the holes carry
-   numbers counted from your start (1 is your start hole), each player's quarter
-   of the ring is tinted in its colour, and the yards are wide trays with names. */
-let ROT=0;
-const up=(el,x,y)=>{if(ROT)el.setAttribute('transform',`rotate(${-ROT} ${(+x).toFixed(2)} ${(+y).toFixed(2)})`);return el;};
-const SHAPES={walnut:'square',club:'round',ivory:'octagon',carbon:'chamfer',jade:'round',royal:'square',majlis:'square',reactor:'chamfer'};
-function boardOutline(shape,inset){
-  const a=1+inset,b=199-inset;
-  if(shape==='round')return `M100 ${a}A${99-inset} ${99-inset} 0 1 1 99.99 ${a}Z`;
-  if(shape==='octagon'){const k=30-inset*.4;return `M${a+k} ${a}H${b-k}L${b} ${a+k}V${b-k}L${b-k} ${b}H${a+k}L${a} ${b-k}V${a+k}Z`;}
-  if(shape==='chamfer'){const k=15-inset*.3;return `M${a+k} ${a}H${b-k}L${b} ${a+k}V${b-k}L${b-k} ${b}H${a+k}L${a} ${b-k}V${a+k}Z`;}
-  const r=Math.max(4,25-inset*.5);return `M${a+r} ${a}H${b-r}Q${b} ${a} ${b} ${a+r}V${b-r}Q${b} ${b} ${b-r} ${b}H${a+r}Q${a} ${b} ${a} ${b-r}V${a+r}Q${a} ${a} ${a+r} ${a}Z`;
-}
-function hexOutline(r){return 'M'+Array.from({length:6},(_,i)=>xy({x:100+Math.cos(i*Math.PI/3-Math.PI/2)*r,y:100+Math.sin(i*Math.PI/3-Math.PI/2)*r})).join('L')+'Z';}
 // the weave of each surface, as an SVG pattern
 const WEAVE={
   walnut:[3,3,[['path',{d:'M0 3 3 0',stroke:'#fff','stroke-opacity':.06,'stroke-width':.5}]]],
@@ -223,94 +194,214 @@ const WEAVE={
   reactor:[8,8,[['path',{d:'M8 0V8H0',fill:'none',stroke:'#5ab8ff','stroke-opacity':.12,'stroke-width':.3}]]],
 };
 function pattern(defs,id,w,h,parts){const el=n('pattern',{id,width:w,height:h,patternUnits:'userSpaceOnUse'});for(const [tag,attrs] of parts)el.append(n(tag,attrs));defs.append(el);return paint(id);}
-function weave(defs,prefix,key){const [w,h,parts]=WEAVE[key]||WEAVE.walnut;return pattern(defs,prefix+'-weave',w,h,parts);}
-// the emblem in the middle (the finish), one per table
-function emblem(g,key,theme){
-  const ink=theme.medal,c=100;
-  const add=(tag,attrs,text)=>{const el=n(tag,attrs,text);g.append(el);return el;};
-  if(key==='ivory'){add('path',{d:'M'+Array.from({length:16},(_,i)=>{const a=i*Math.PI/8-Math.PI/2,r=i%2?3:i%4===0?11.5:7.4;return xy({x:+(c+Math.cos(a)*r).toFixed(2),y:+(c+Math.sin(a)*r).toFixed(2)});}).join('L')+'Z',fill:ink,'fill-opacity':.18,stroke:ink,'stroke-width':.5,opacity:.9});for(let i=0;i<8;i++){const a=i*Math.PI/4;add('line',{x1:c+Math.cos(a)*11.6,y1:c+Math.sin(a)*11.6,x2:c+Math.cos(a)*13.4,y2:c+Math.sin(a)*13.4,stroke:ink,'stroke-width':.45,opacity:.8});}return;}
-  if(key==='carbon'||key==='reactor'){add('circle',{cx:c,cy:c,r:9.5,fill:'none',stroke:ink,'stroke-width':2.4,opacity:.25});add('circle',{cx:c,cy:c,r:9.5,fill:'none',stroke:ink,'stroke-width':.6,opacity:.9});add('path',{d:'M'+Array.from({length:6},(_,i)=>xy({x:c+Math.cos(i*Math.PI/3)*5.4,y:c+Math.sin(i*Math.PI/3)*5.4})).join('L')+'Z',fill:'none',stroke:ink,'stroke-width':.45,opacity:.8});return;}
-  if(key==='jade'){for(let i=0;i<8;i++)add('ellipse',{cx:c,cy:c-6.4,rx:2.1,ry:5.4,transform:`rotate(${i*45} ${c} ${c})`,fill:ink,'fill-opacity':.12,stroke:ink,'stroke-width':.35,opacity:.9});add('circle',{cx:c,cy:c,r:2.2,fill:ink,opacity:.7});return;}
-  if(key==='royal'){add('path',{d:`M${c-8} ${c+4}L${c-9} ${c-4}L${c-4.5} ${c}L${c} ${c-7}L${c+4.5} ${c}L${c+9} ${c-4}L${c+8} ${c+4}Z`,fill:ink,'fill-opacity':.35,stroke:ink,'stroke-width':.45});add('rect',{x:c-8.2,y:c+5,width:16.4,height:2.4,rx:.6,fill:ink,opacity:.6});[[-9,-4.6],[0,-7.8],[9,-4.6]].forEach(([dx,dy])=>add('circle',{cx:c+dx,cy:c+dy,r:1,fill:ink}));return;}
-  if(key==='majlis'){add('path',{d:`M${c-1.6} ${c-9}h3.2l-.4 1.8h-2.4z M${c-3.4} ${c-7}h6.8l-1 3c3 1.3 4.6 4.2 4.6 7.6 0 4.4-3 7.4-6.5 7.8-3.5-.4-6.5-3.4-6.5-7.8 0-3.4 1.6-6.3 4.6-7.6z M${c-6.6} ${c+1.6}c-2.8-1.3-4.6-3.6-5.8-6.7l1.3-.6c1.2 2.6 2.7 4.4 5 5.7z`,fill:ink,'fill-opacity':.45,stroke:ink,'stroke-width':.35});add('path',{d:`M${c+6.4} ${c-1.2}c2.8.5 4 2.8 3.2 5.5-.6 2-1.9 3.2-3.6 3.6`,fill:'none',stroke:ink,'stroke-width':.9,opacity:.8});return;}
-  if(key==='club'){['♠','♥','♦','♣'].forEach((suit,i)=>{const a=i*Math.PI/2-Math.PI/2;add('text',{x:c+Math.cos(a)*8.6,y:c+Math.sin(a)*8.6+1.6,'text-anchor':'middle','font-size':4.6,fill:i===1||i===2?'#e0474c':ink,opacity:.9},suit);});add('circle',{cx:c,cy:c,r:3.4,fill:'none',stroke:ink,'stroke-width':.5,'stroke-dasharray':'1 1'});return;}
-  ['♠','♥','♦','♣'].forEach((suit,i)=>{const a=i*Math.PI/2-Math.PI/4;add('text',{x:c+Math.cos(a)*9.2,y:c+Math.sin(a)*9.2+1.4,'text-anchor':'middle','font-size':3.8,fill:i===1||i===2?'#e0474c':ink,opacity:.85},suit);});
-  add('text',{x:c,y:c+1.4,'text-anchor':'middle','font-size':4,'font-weight':900,fill:ink,'font-family':'Tajawal,Arial,sans-serif'},'جاكارو');
-}
-// the rim: what makes each table its own piece of furniture
-function rim(svg,defs,prefix,key,shape,theme,four){
-  const inner=four?boardOutline(shape,6):hexOutline(93);
-  if(key==='majlis'){
-    // a woven sadu band inside the frame
-    const band=pattern(defs,prefix+'-sadu',8,4,[['rect',{width:8,height:4,fill:'#8e1526'}],['path',{d:'M0 4 2 0 4 4Z',fill:'#f1e4c8'}],['path',{d:'M4 4 6 0 8 4Z',fill:'#1b0e0e'}]]);
-    svg.append(n('path',{d:inner,fill:'none',stroke:band,'stroke-width':4.2}),n('path',{d:four?boardOutline(shape,8.3):hexOutline(90.6),fill:'none',stroke:'#e7bf62','stroke-width':.35,opacity:.8}));
-  }else if(key==='royal'){
-    svg.append(n('path',{d:inner,fill:'none',stroke:'#f6dc86','stroke-width':1.6}),n('path',{d:four?boardOutline(shape,8.6):hexOutline(90.4),fill:'none',stroke:'#f6dc86','stroke-width':.4,opacity:.8}));
-    const pts=four?[[13,13],[187,13],[187,187],[13,187]]:[];for(const [x,y] of pts)svg.append(up(n('path',{d:`M${x-4.4} ${y+2}L${x-5} ${y-2.6}L${x-2.2} ${y-.4}L${x} ${y-4}L${x+2.2} ${y-.4}L${x+5} ${y-2.6}L${x+4.4} ${y+2}Z`,fill:'#f1cf7d',opacity:.55}),x,y));
-  }else if(key==='ivory'){
-    svg.append(n('path',{d:four?boardOutline(shape,8.4):hexOutline(90.6),fill:'none',stroke:'#c9a24f','stroke-width':.5}),n('path',{d:four?boardOutline(shape,10.2):hexOutline(88.8),fill:'none',stroke:'#c9a24f','stroke-width':.25,opacity:.7}));
-  }else if(key==='carbon'||key==='reactor'){
-    const glow=theme.rim;svg.append(n('path',{d:four?boardOutline(shape,7.4):hexOutline(91.6),fill:'none',stroke:glow,'stroke-width':1.8,opacity:.18}),n('path',{d:four?boardOutline(shape,7.4):hexOutline(91.6),fill:'none',stroke:glow,'stroke-width':.45,opacity:.9}));
-    if(four)for(const [x,y,sx,sy] of [[9,9,1,1],[191,9,-1,1],[191,191,-1,-1],[9,191,1,-1]])svg.append(n('path',{d:`M${x} ${y+sy*14}V${y+sy*4}L${x+sx*4} ${y}H${x+sx*14}`,fill:'none',stroke:glow,'stroke-width':.8,opacity:.85}));
-  }else if(key==='jade'){
-    const r=four?95.6:94;for(let i=0;i<48;i++){const a=i*Math.PI/24;svg.append(n('circle',{cx:100+Math.cos(a)*r,cy:100+Math.sin(a)*r,r:.85,fill:'#f6fff9',opacity:.85}));}
-  }else if(key==='club'){
-    svg.append(n('circle',{cx:100,cy:100,r:93.4,fill:'none',stroke:'#f0cf7c','stroke-width':1.3,opacity:.85}),n('circle',{cx:100,cy:100,r:91.8,fill:'none',stroke:'#000','stroke-width':.5,opacity:.4}));
-  }else if(four){
-    [['♠',18,18],['♥',182,18],['♦',182,186],['♣',18,186]].forEach(([suit,x,y],i)=>svg.append(up(n('text',{x,y,'text-anchor':'middle','font-size':9,fill:i===1||i===2?'#e0474c':theme.rim,opacity:.32},suit),x,y-3)));
-  }
-}
-function drawRing(svg,defs,prefix,state,L,theme,active,key='walnut',viewer=-1){
-  const seats=L.seats,four=seats===4,names=state.players.map(playerLabel),shape=four?SHAPES[key]||'square':'hex',geo=boardGeometry(state);
-  const frame=gradient(defs,prefix+'-frame',[[0,theme.frame[0]],[.3,theme.frame[1]],[1,theme.frame[2]]]);
-  const felt=radial(defs,prefix+'-felt',[[0,theme.felt[0]],[.7,theme.felt[1]],[1,theme.felt[2]]]);
-  const outline=four?boardOutline(shape,0):hexOutline(99),inner=four?boardOutline(shape,6):hexOutline(93);
-  svg.append(n('path',{d:outline,fill:'#000',opacity:.3,transform:'translate(0 1.8)'}),n('path',{d:outline,fill:frame}),n('path',{d:outline,fill:'none',stroke:'#ffffff','stroke-width':.6,opacity:.26,transform:'translate(.4 .4) scale(.996)'}),n('path',{d:inner,fill:felt,stroke:theme.rim,'stroke-width':.8}));
-  svg.append(n('path',{d:inner,fill:weave(defs,prefix,key)}));
-  rim(svg,defs,prefix,key,shape,theme,four);
-  svg.append(n('circle',{cx:100,cy:100,r:46,fill:'none',stroke:theme.rim,'stroke-width':.35,opacity:.4}));
-  const hole=radial(defs,prefix+'-hole',[[0,mix(theme.hole,'#ffffff',.22),1],[.45,theme.hole,1],[.85,'#000000',1],[1,'#000000',1]],.62,.68,.72);
-  const lit=key==='carbon'||key==='reactor',gilt=key==='royal'||key==='ivory';
-  // each player's quarter of the ring, tinted in its colour
+/* ---------- Jackaroo: the star board (33.6.0) ----------
+   An octagon (a hexagon for six) edged in every player's colour. The walk is a star: each
+   seat's start is the tip of a finger in a corner, its home lane runs from that tip toward the
+   middle, and its quarter of the walk — numbered 1 to 18 (13 on six-seat and older boards) —
+   runs along its own side. Each player sits on that side: a portrait, a name plate, and the
+   yard (four holes in a plus) by the start. The last cards played lie face up in the middle.
+   Several looks dress the same board (LOOKS); the board turns so your side is the bottom one,
+   your start at its right-hand tip. */
+let ROT=0;
+const up=(el,x,y)=>{if(ROT)el.setAttribute('transform',`rotate(${-ROT} ${(+x).toFixed(2)} ${(+y).toFixed(2)})`);return el;};
+// a step on the screen (down = toward the bottom of the phone) as a step on the turned board
+const shift=(p,dx,dy)=>{const r=-ROT*Math.PI/180,c=Math.cos(r),s=Math.sin(r);return{x:p.x+dx*c-dy*s,y:p.y+dx*s+dy*c};};
+// six seats leave no room on a side for the yard, so it sits just inside the walk, facing its player
+const STAR=Object.freeze({4:{Ra:86,D:48,alpha:28,tip:5,bend:14,yard:[73,37],seat:72,avatar:9.6,plate:7.6,name:3.7,room:33},6:{Ra:88,D:54,alpha:24,tip:5,bend:9,yard:[39.5,0],seat:70.5,avatar:6.6,plate:5.8,name:2.8,room:24}});
+function starLayout(seats,arm){
+  const six=seats===6,cfg=STAR[six?6:4],C={x:100,y:100},sector=2*Math.PI/seats,T=seats*arm,alpha=cfg.alpha*Math.PI/180;
+  const side=s=>s*sector-Math.PI/2,finger=s=>side(s)-sector/2,at=(a,r)=>({x:C.x+Math.cos(a)*r,y:C.y+Math.sin(a)*r}),dir=a=>({x:Math.cos(a),y:Math.sin(a)});
+  // the corners of the walk: each finger's tip, and where its edges meet the side lines
+  const corners=[];
   for(let s=0;s<seats;s++){
-    const pts=Array.from({length:13},(_,k)=>L.track[(geo.starts[s]+k)%L.track.length]);
-    svg.append(n('path',{d:pts.map((p,i)=>(i?'L':'M')+xy(p)).join(''),fill:'none',stroke:BOARD_COLORS[s],'stroke-width':four?7.6:5.8,'stroke-linecap':'round','stroke-linejoin':'round',opacity:s<state.players.length?.17:.06,'data-quarter':s}));
+    const u=dir(side(s)),tip=at(finger(s),cfg.Ra),next=at(finger(s+1),cfg.Ra);
+    const meet=(p,e)=>{const t=(cfg.D-((p.x-C.x)*u.x+(p.y-C.y)*u.y))/(e.x*u.x+e.y*u.y);return{x:p.x+e.x*t,y:p.y+e.y*t};};
+    corners.push({p:tip,r:cfg.tip},{p:meet(tip,dir(finger(s)+Math.PI-alpha)),r:cfg.bend},{p:meet(next,dir(finger(s+1)+Math.PI+alpha)),r:cfg.bend});
   }
-  // the yards: a tray of four holes, the name between it and the ring
-  for(let s=0;s<seats;s++){
-    const p=L.pockets[s],color=BOARD_COLORS[s],live=s<state.players.length,on=s===active,deg=(p.a+Math.PI/2)*180/Math.PI;
-    const g=n('g',{'data-pocket':s,'data-active':String(on),opacity:live?1:.38});
-    const tf=`rotate(${deg.toFixed(2)} ${p.x.toFixed(2)} ${p.y.toFixed(2)})`,w=L.tray,h=L.hole*2+4.4;
-    g.append(n('rect',{x:p.x-w/2,y:p.y-h/2+.6,width:w,height:h,rx:h/2,fill:'#000',opacity:.25,transform:tf}));
-    g.append(n('rect',{x:p.x-w/2,y:p.y-h/2,width:w,height:h,rx:h/2,fill:gradient(defs,`${prefix}-pocket-${s}`,[[0,mix(color,'#000000',.45)],[.4,mix(color,'#000000',.22)],[1,mix(color,'#ffffff',.08)]],0,1),stroke:on?'#ffffff':mix(color,'#ffffff',.3),'stroke-width':on?1:.5,transform:tf,class:on?'yard-glow':null}));
-    for(const b of L.bases[s])g.append(n('circle',{cx:b.x,cy:b.y,r:L.hole,fill:hole,stroke:mix(color,'#ffffff',.3),'stroke-width':.45}));
-    // a name sits upright between the ring and its tray; a side seat has a narrow band, so a long name shrinks or wraps
-    const va=p.a+ROT*Math.PI/180,side=Math.abs(Math.cos(va))>.3,radius=four?68:(side?68:69),room=side?(four?17:16.5):(four?52:50),size=four?4.3:3.2;
-    const label={x:100+Math.cos(p.a)*radius,y:100+Math.sin(p.a)*radius};
-    g.append(up(nameText(label.x,label.y,fitName(live?names[s]:'',room,size,side?2:1),{fill:theme.label,opacity:.96,'paint-order':'stroke',stroke:mix(theme.felt[2],'#000000',.3),'stroke-width':.5}),label.x,label.y));
-    svg.append(g);
-  }
-  // the track: start holes wear their seat's colour; the numbers count from your start
-  const base=geo.starts[viewer>=0&&viewer<seats?viewer:0];
-  L.track.forEach((p,i)=>{
-    const start=geo.starts.indexOf(i);
-    svg.append(n('circle',{cx:p.x,cy:p.y,r:L.hole,fill:hole,stroke:start>=0?BOARD_COLORS[start]:lit?theme.rim:gilt?'#e9c77a':theme.holeRim,'stroke-width':start>=0?1.1:lit?.55:.45,'data-track':i,class:'tbl-hole'}));
-    if(start>=0){const next=L.track[(i+1)%L.track.length];svg.append(arrow({x:p.x+(next.x-p.x)*.62,y:p.y+(next.y-p.y)*.62},Math.atan2(next.y-p.y,next.x-p.x),1.25,BOARD_COLORS[start]));}
-    if(four){const num=(i-base+L.track.length)%L.track.length+1,mark=num===1||num%5===0;svg.append(up(n('text',{x:+p.x.toFixed(2),y:+(p.y+1.15).toFixed(2),'text-anchor':'middle','font-size':mark?3.6:3.2,'font-weight':900,'font-family':'Tajawal,Arial,sans-serif',fill:'#ffffff',opacity:mark?1:.7,'pointer-events':'none','data-track-number':num,class:'tbl-num'},String(num)),p.x,p.y));}
+  const dense=[];
+  corners.forEach((c,i)=>{
+    const prev=corners[(i+corners.length-1)%corners.length].p,next=corners[(i+1)%corners.length].p,cur=c.p,la=Math.hypot(cur.x-prev.x,cur.y-prev.y),lb=Math.hypot(next.x-cur.x,next.y-cur.y),da=Math.min(c.r,la*.45),db=Math.min(c.r,lb*.45);
+    const a={x:cur.x+(prev.x-cur.x)/la*da,y:cur.y+(prev.y-cur.y)/la*da},b={x:cur.x+(next.x-cur.x)/lb*db,y:cur.y+(next.y-cur.y)/lb*db};
+    for(let k=0;k<=20;k++){const t=k/20;dense.push({x:(1-t)*(1-t)*a.x+2*(1-t)*t*cur.x+t*t*b.x,y:(1-t)*(1-t)*a.y+2*(1-t)*t*cur.y+t*t*b.y});}
   });
+  // from the middle of seat 0's tip all the way round to it again; the holes at equal steps
+  const loop=[...dense.slice(10),...dense.slice(0,11)],cum=[0];
+  for(let i=1;i<loop.length;i++)cum.push(cum[i-1]+Math.hypot(loop[i].x-loop[i-1].x,loop[i].y-loop[i-1].y));
+  const step=cum.at(-1)/T,track=[];
+  for(let k=0,i=1;k<T;k++){const d=k*step;while(i<cum.length-1&&cum[i]<d)i++;const f=(d-cum[i-1])/((cum[i]-cum[i-1])||1),p=loop[i-1],q=loop[i];track.push({x:+(p.x+(q.x-p.x)*f).toFixed(2),y:+(p.y+(q.y-p.y)*f).toFixed(2)});}
+  // a lane starts where it clears both edges of its finger
+  const hole=Math.min(3.2,step*.43),gap=Math.min(step,6.9),d0=(hole*1.92+1.4)/Math.sin(alpha);
+  const lanes=[],finish=[],bases=[],seatsAt=[],tips=[];
   for(let s=0;s<seats;s++){
-    const color=BOARD_COLORS[s];
-    const a=L.seatAngle(s),from={x:100+Math.cos(a)*44.6,y:100+Math.sin(a)*44.6},to={x:100+Math.cos(a)*14.5,y:100+Math.sin(a)*14.5};
-    svg.append(n('line',{x1:from.x,y1:from.y,x2:to.x,y2:to.y,stroke:color,'stroke-width':6.6,'stroke-linecap':'round',opacity:.28}));
-    L.lanes[s].forEach((p,h)=>svg.append(n('circle',{cx:p.x,cy:p.y,r:L.hole,fill:hole,stroke:color,'stroke-width':.8,'data-home':s+':'+h,'data-safe':s+':'+h,class:'tbl-hole'})));
+    const a=finger(s),w=dir(a+Math.PI),tip=at(a,cfg.Ra),u=dir(side(s)),t=dir(side(s)-Math.PI/2),along=d=>({x:+(tip.x+w.x*d).toFixed(2),y:+(tip.y+w.y*d).toFixed(2)});
+    tips.push({x:tip.x,y:tip.y,w});
+    lanes.push([0,1,2,3].map(h=>along(d0+h*gap)));
+    finish.push(along(d0+4*gap+1.4));
+    // the yard: four holes in a plus, on the seat's side by its start
+    const yard={x:C.x+u.x*cfg.yard[0]+t.x*cfg.yard[1],y:C.y+u.y*cfg.yard[0]+t.y*cfg.yard[1]},g=hole*2.2;
+    bases.push([[-1,0],[0,1],[0,-1],[1,0]].map(([i,j])=>({x:+(yard.x+t.x*i*g+u.x*j*g).toFixed(2),y:+(yard.y+t.y*i*g+u.y*j*g).toFixed(2)})));
+    seatsAt.push({x:C.x+u.x*cfg.seat,y:C.y+u.y*cfg.seat,yard,u,t});
   }
-  // the centre: each table's emblem
-  const finish=n('g',{'data-finish':'true'}),medal=radial(defs,prefix+'-medal',[[0,mix(theme.felt[0],'#ffffff',.15)],[1,theme.felt[2]]]);
-  const brass=gradient(defs,prefix+'-brass',[[0,'#fff3c4'],[.35,theme.rim],[1,mix(theme.rim,'#000000',.45)]]);
-  finish.append(n('circle',{cx:100.5,cy:101.3,r:16.4,fill:'#000',opacity:.25}),n('circle',{cx:100,cy:100,r:16.2,fill:brass}),n('circle',{cx:100,cy:100,r:15,fill:medal,stroke:mix(theme.rim,'#000000',.3),'stroke-width':.4}),n('circle',{cx:100,cy:100,r:13.6,fill:'none',stroke:theme.rim,'stroke-width':.3,opacity:.7}));
-  const art=n('g',{'data-emblem':key});emblem(art,key,theme);finish.append(up(art,100,100));
-  svg.append(finish);
+  return{kind:'star',seats,arm,C,cfg,track,lanes,finish,bases,seatsAt,tips,hole,step,gap,loop};
 }
+// the looks of the board: the same board, dressed differently
+const LOOKS=Object.freeze({
+  neon:{base:['#1d2e62','#121e46','#080f27'],frame:['#0b1433','#04081a'],edge:'seats',glow:true,road:['#ffffff',.055],tint:.16,hole:['#ffffff','#e7edf8','#9fadc9'],holeLine:'#7f8fb3',ink:'#1b2643',inset:'#6f8fff',insetFill:'#0b1536',plate:['#0c1636','#ffffff'],lane:.24,weave:'neon'},
+  carbon:{base:['#22374a','#152433','#0a131c'],frame:['#30465a','#0a1219'],edge:'#55e1ff',glow:true,road:['#55e1ff',.07],tint:.12,hole:['#f2fcff','#cfeef8','#6a98aa'],holeLine:'#55e1ff',ink:'#0b2531',inset:'#55e1ff',insetFill:'#0d1c28',plate:['#0e1f2c','#e3f8ff'],lane:.24,weave:'carbon'},
+  ivory:{base:['#fffefa','#f6efe2','#e4d5b6'],frame:['#f5e6c2','#b08739'],edge:'#c9a24f',glow:false,road:['#8d6a27',.085],tint:.18,hole:['#ffffff','#fbf6eb','#d3c098'],holeLine:'#b89a5a',ink:'#47351a',inset:'#c9a24f',insetFill:'#fbf5e8',plate:['#fffaf0','#3e2f14'],lane:.32,weave:'ivory'},
+  emerald:{base:['#3a9d71','#246f4e','#113d2b'],frame:['#9a6a3d','#3a2210'],edge:'#ecc57c',glow:false,road:['#000000',.13],tint:.17,hole:['#ffffff','#eef4ed','#9ab4a3'],holeLine:'#e2bf7a',ink:'#163626',inset:'#ecc57c',insetFill:'#1c5a3f',plate:['#173d2c','#fff4dc'],lane:.3,weave:'club'},
+  royal:{base:['#4e2e70','#321c4c','#180c27'],frame:['#f8e08f','#7a5216'],edge:'#f6dc86',glow:false,road:['#f1cf7d',.075],tint:.15,hole:['#fffaf0','#f3e1b0','#ad8737'],holeLine:'#f1cf7d',ink:'#3a2452',inset:'#f1cf7d',insetFill:'#2a173c',plate:['#2a173c','#fff3d0'],lane:.28,weave:'royal'},
+  majlis:{base:['#a2303f','#721b28','#3b0b13'],frame:['#82502e','#2c1609'],edge:'#e7bf62',glow:false,road:['#000000',.15],tint:.15,hole:['#fff8ec','#f3e2c4','#b48e57'],holeLine:'#e7bf62',ink:'#4a1520',inset:'#e7bf62',insetFill:'#5c1622',plate:['#3c0e16','#fff0d8'],lane:.3,weave:'majlis'},
+});
+// the shop's tables dress the board in a look of their own
+const LOOK_OF={walnut:'emerald',club:'emerald',jade:'emerald',ivory:'ivory',carbon:'carbon',reactor:'carbon',royal:'royal',majlis:'majlis'};
+const LOOK_KEY='bs_jack_look_v1';
+/** The looks a player can pick on the Jackaroo page; the last two come with their shop tables. */
+export const JACK_LOOKS=Object.freeze([['neon','نيون'],['carbon','كربون'],['ivory','عاجي'],['emerald','زمردي'],['royal','ملكي','table-royal'],['majlis','مجلس','table-majlis']]);
+/** Two colours and a hole for each look's button on the page. */
+export const JACK_LOOK_SWATCH=Object.freeze(Object.fromEntries(Object.entries(LOOKS).map(([k,v])=>[k,[v.base[1],v.edge==='seats'?'#6f8fff':v.edge,v.hole[0]]])));
+export function jackLookOpen(key){const need=JACK_LOOKS.find(x=>x[0]===key)?.[2];if(!need)return Boolean(LOOKS[key]);let owned=[];try{owned=globalThis.BS_CAREER?.get?.()?.owned||[];}catch{}return owned.includes(need)||equipped('table')===need;}
+/** The look this player sees: the one they picked, else their shop table's, else neon. */
+export function jackLook(){
+  try{const v=globalThis.localStorage?.getItem(LOOK_KEY);if(v&&LOOKS[v]&&jackLookOpen(v))return v;}catch{}
+  const t=MATERIALS[equipped('table')];return t&&t!=='walnut'&&LOOK_OF[t]?LOOK_OF[t]:'neon';
+}
+export function setJackLook(key){
+  if(!LOOKS[key]||!jackLookOpen(key))return false;
+  try{globalThis.localStorage?.setItem(LOOK_KEY,key);}catch{}
+  for(const [target,{state,options}] of surfaces){if(target.isConnected&&options.game==='jackaroo')renderPetalBoard(target,state,options);else if(!target.isConnected)surfaces.delete(target);}
+  return true;
+}
+const WEAVE_NEON=[6,6,[['circle',{cx:3,cy:3,r:.38,fill:'#9fb6ff','fill-opacity':.09}]]];
+function polygon(n,r,turn=0){return 'M'+Array.from({length:n},(_,i)=>{const a=turn+i*2*Math.PI/n;return (100+Math.cos(a)*r).toFixed(2)+' '+(100+Math.sin(a)*r).toFixed(2);}).join('L')+'Z';}
+// the board's outline: an octagon cut at the corners where the fingers point (a hexagon for six)
+function starOutline(seats,inset){
+  if(seats===6)return polygon(6,98-inset);
+  const a=2+inset,b=198-inset,k=40-inset*.41;return `M${a+k} ${a}H${b-k}L${b} ${a+k}V${b-k}L${b-k} ${b}H${a+k}L${a} ${b-k}V${a+k}Z`;
+}
+function starVertices(seats,inset){
+  if(seats===6)return Array.from({length:6},(_,i)=>({x:100+Math.cos((i*60-120)*Math.PI/180)*(98-inset),y:100+Math.sin((i*60-120)*Math.PI/180)*(98-inset)}));
+  const a=2+inset,b=198-inset,k=40-inset*.41;return [[a+k,a],[b-k,a],[b,a+k],[b,b-k],[b-k,b],[a+k,b],[a,b-k],[a,a+k]].map(([x,y])=>({x,y}));
+}
+// what each card does (jackaroo-cards.js), and the colours of its plate (jackaroo-v33-4.css)
+const ACT_OF={A:'exit',K:'king',J:'swap','7':'split','5':'any','4':'back'};
+const ACT_COLOR={exit:'#16936a',king:'#c58a1f',step:'#2b6fd6',back:'#cf6f22',swap:'#7550d0',split:'#0f97a0',any:'#cc4040'};
+// the small drawings of jackaroo-cards.js, as SVG elements
+function iconParts(markup){const out=[];for(const m of String(markup||'').matchAll(/<(path|circle)\b([^>]*)\/>/g)){const attrs={};for(const a of m[2].matchAll(/([\w-]+)="([^"]*)"/g))attrs[a[1]]=a[2];out.push(n(m[1],attrs));}return out;}
+function cardCode(card){const rank=String(card).replace(/[SHDC]$/,''),suit=String(card).slice(-1);return (rank==='10'?'T':rank)+suit;}
+function deckOf(){try{return globalThis.BS_CAREER?.get?.()?.equipped?.deck||'deck-classic';}catch{return 'deck-classic';}}
+// one card lying in the middle: the deck's face, or a plain face where the deck is not loaded
+function pileCard(defs,prefix,card,x,y,w,h,angle,top){
+  const g=n('g',{transform:`rotate(${angle} ${(x+w/2).toFixed(2)} ${(y+h+7).toFixed(2)})`,'data-pile-card':card||'back'});
+  g.append(n('rect',{x:x+.5,y:y+1.1,width:w,height:h,rx:1.6,fill:'#000',opacity:.35}));
+  let url='';try{url=globalThis.BS_CARDS?.url?.(card?cardCode(card):'back',deckOf())||'';}catch{url='';}
+  if(url)g.append(n('image',{href:url,x,y,width:w,height:h,preserveAspectRatio:'none'}));
+  else{
+    g.append(n('rect',{x,y,width:w,height:h,rx:1.6,fill:card?'#fbfaf5':'#2a3a8a',stroke:'#c9c3b0','stroke-width':.3}));
+    if(card){const rank=String(card).replace(/[SHDC]$/,''),suit=String(card).slice(-1),red=suit==='H'||suit==='D',sym={S:'♠',H:'♥',D:'♦',C:'♣'}[suit]||'';
+      g.append(n('text',{x:x+1.4,y:y+4.6,'font-size':4,'font-weight':900,fill:red?'#d23a3f':'#1d2230','font-family':'Arial,sans-serif'},rank),n('text',{x:x+w/2,y:y+h/2+3.2,'text-anchor':'middle','font-size':8.5,fill:red?'#d23a3f':'#1d2230'},sym));}
+  }
+  if(top&&card){
+    const act=globalThis.BS_JACK_CARDS?.info?.(card)?.act||ACT_OF[String(card).replace(/[SHDC]$/,'')]||'step',icon=globalThis.BS_JACK_CARDS?.ICON?.[act];
+    const cx=x+w/2,cy=y+h+.4,badge=n('g',{'data-pile-act':act});
+    badge.append(n('circle',{cx,cy,r:4.3,fill:ACT_COLOR[act]||'#2b6fd6',stroke:'#ffffff','stroke-width':.6}));
+    if(icon){const art=n('g',{transform:`translate(${(cx-3.1).toFixed(2)} ${(cy-3.1).toFixed(2)}) scale(.26)`,fill:'none',stroke:'#ffffff','stroke-width':2.6,'stroke-linecap':'round','stroke-linejoin':'round'});for(const part of iconParts(icon))art.append(part);badge.append(art);}
+    else badge.append(n('text',{x:cx,y:cy+1.5,'text-anchor':'middle','font-size':4.2,'font-weight':900,fill:'#ffffff'},{exit:'↑',king:'♔',back:'↶',swap:'⇄',split:'⑂',any:'◎'}[act]||'→'));
+    g.append(badge);
+  }
+  return g;
+}
+// the middle of the board: the last three cards played, the newest in front
+function drawPile(root,defs,prefix,state,look,seats,pile){
+  const L=n('g',{'data-pile':'true'}),inner=seats===6?polygon(6,25.5):polygon(8,27.5,Math.PI/8);
+  L.append(n('path',{d:inner,fill:look.insetFill,opacity:.82}));
+  if(look.glow)L.append(n('path',{d:inner,fill:'none',stroke:look.inset,'stroke-width':2.6,opacity:.16}));
+  L.append(n('path',{d:inner,fill:'none',stroke:look.inset,'stroke-width':.6,opacity:.95}));
+  const shown=(Array.isArray(pile)?pile:(state.discard||[])).filter(c=>c&&c!=='?').slice(-3);
+  if(!shown.length&&state.lastEvent?.card&&state.lastEvent.card!=='?')shown.push(state.lastEvent.card);
+  const cards=n('g',{'data-pile-cards':shown.length}),w=13.6,h=19;
+  if(!shown.length)cards.append(pileCard(defs,prefix,null,100-w/2,100-h/2-2,w,h,0,false));
+  const angles=shown.length===3?[-17,17,0]:shown.length===2?[-12,0]:[0];
+  shown.forEach((card,i)=>cards.append(pileCard(defs,prefix,card,100-w/2,100-h/2-2.4,w,h,angles[i],i===shown.length-1)));
+  L.append(up(cards,100,100));root.append(L);
+}
+function drawStar(root,defs,prefix,state,L,look,active,lookKey,{avatars=[],pile=null}={}){
+  const seats=L.seats,names=state.players.map(playerLabel),geo=boardGeometry(state),six=seats===6;
+  // the frame and the surface
+  const frame=gradient(defs,prefix+'-frame',[[0,look.frame[0]],[1,look.frame[1]]]);
+  const surface=radial(defs,prefix+'-surface',[[0,look.base[0]],[.62,look.base[1]],[1,look.base[2]]],.5,.5,.72);
+  root.append(n('path',{d:starOutline(seats,0),fill:'#000',opacity:.32,transform:'translate(0 1.8)'}),n('path',{d:starOutline(seats,0),fill:frame}),n('path',{d:starOutline(seats,4.2),fill:surface}));
+  const [ww,wh,wparts]=look.weave==='neon'?WEAVE_NEON:WEAVE[look.weave]||WEAVE_NEON;root.append(n('path',{d:starOutline(seats,4.2),fill:pattern(defs,prefix+'-weave',ww,wh,wparts)}));
+  // the edge: every side in its player's colour (one colour on the other looks), lit on the neon ones
+  const V=starVertices(seats,2.4),edge=n('g',{'data-edge':look.edge==='seats'?'seats':'one'});
+  for(let i=0;i<V.length;i++){
+    const a=V[i],b=V[(i+1)%V.length],s=six?i:Math.floor(i/2),own=six||i%2===0;
+    let ink=look.edge;
+    if(look.edge==='seats')ink=own?BOARD_COLORS[s]:gradientLine(defs,`${prefix}-edge-${i}`,a,b,BOARD_COLORS[s],BOARD_COLORS[(s+1)%seats]);
+    const seg=d=>n('path',{d:`M${a.x.toFixed(2)} ${a.y.toFixed(2)}L${b.x.toFixed(2)} ${b.y.toFixed(2)}`,fill:'none',stroke:ink,'stroke-linecap':'round',...d});
+    if(look.glow)edge.append(seg({'stroke-width':6.5,opacity:.1}),seg({'stroke-width':3.2,opacity:.3}));
+    edge.append(seg({'stroke-width':look.glow?1.25:1.1,opacity:1}));
+  }
+  if(!look.glow)edge.append(n('path',{d:starOutline(seats,5.6),fill:'none',stroke:look.edge==='seats'?'#ffffff':look.edge,'stroke-width':.35,opacity:.7}));
+  root.append(edge);
+  // the walk: a road under the holes, each player's quarter tinted in its colour
+  const road=L.loop.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join('')+'Z';
+  root.append(n('path',{d:road,fill:'none',stroke:'#000','stroke-width':L.hole*2+3.4,'stroke-linejoin':'round',opacity:look.glow?.32:.14}),n('path',{d:road,fill:'none',stroke:look.road[0],'stroke-width':L.hole*2+2.6,'stroke-linejoin':'round',opacity:look.road[1]}));
+  for(let s=0;s<seats;s++){
+    const pts=Array.from({length:L.arm},(_,k)=>L.track[(geo.starts[s]+k)%L.track.length]);
+    root.append(n('path',{d:pts.map((p,i)=>(i?'L':'M')+xy(p)).join(''),fill:'none',stroke:BOARD_COLORS[s],'stroke-width':L.hole*2+1.6,'stroke-linecap':'round','stroke-linejoin':'round',opacity:look.tint,'data-quarter':s}));
+  }
+  // the home lanes: a capsule from each finger's tip toward the middle, and a cup at its end
+  for(let s=0;s<seats;s++){
+    const color=BOARD_COLORS[s],lane=L.lanes[s],w=L.tips[s].w,from={x:lane[0].x-w.x*(L.hole+.9),y:lane[0].y-w.y*(L.hole+.9)},to={x:L.finish[s].x+w.x*(L.hole+.6),y:L.finish[s].y+w.y*(L.hole+.6)};
+    const line=attrs=>n('line',{x1:from.x.toFixed(2),y1:from.y.toFixed(2),x2:to.x.toFixed(2),y2:to.y.toFixed(2),'stroke-linecap':'round',...attrs});
+    const g=n('g',{'data-lane':s});
+    if(look.glow)g.append(line({stroke:color,'stroke-width':L.hole*2+6.2,opacity:.12}));
+    g.append(line({stroke:color,'stroke-width':L.hole*2+3.4,opacity:.95}),line({stroke:look.insetFill,'stroke-width':L.hole*2+2.2}),line({stroke:color,'stroke-width':L.hole*2+2.2,opacity:look.lane}));
+    const well=radial(defs,`${prefix}-well-${s}`,[[0,mix(color,'#000000',.55)],[.7,mix(color,'#000000',.3)],[1,mix(color,'#ffffff',.25)]],.42,.38,.62);
+    lane.forEach((p,h)=>g.append(n('circle',{cx:p.x,cy:p.y,r:+(L.hole*.96).toFixed(2),fill:well,stroke:mix(color,'#ffffff',.35),'stroke-width':.45,'data-home':s+':'+h,'data-safe':s+':'+h,class:'tbl-hole'})));
+    const cup=L.finish[s];g.append(n('circle',{cx:cup.x,cy:cup.y,r:+(L.hole*1.3).toFixed(2),fill:mix(color,'#000000',.55),stroke:color,'stroke-width':.8,'data-finish-cup':s}),n('path',{d:star(cup.x,cup.y,L.hole*.82),fill:color,opacity:.9}));
+    root.append(g);
+  }
+  // the holes of the walk, numbered 1–18 from every seat's start
+  const holeFill=radial(defs,prefix+'-hole',[[0,look.hole[0]],[.62,look.hole[1]],[1,look.hole[2]]],.4,.36,.68);
+  L.track.forEach((p,i)=>{
+    const seat=Math.floor(i/L.arm),num=i-seat*L.arm+1,start=num===1,color=BOARD_COLORS[seat];
+    if(start&&look.glow)root.append(n('circle',{cx:p.x,cy:p.y,r:+(L.hole+1.6).toFixed(2),fill:'none',stroke:color,'stroke-width':1.8,opacity:.28}));
+    root.append(n('circle',{cx:p.x,cy:p.y,r:L.hole,fill:holeFill,stroke:start?color:look.holeLine,'stroke-width':start?1.15:.35,'data-track':i,class:'tbl-hole'}));
+    root.append(up(n('text',{x:+p.x.toFixed(2),y:+(p.y+L.hole*.38).toFixed(2),'text-anchor':'middle','font-size':+(L.hole*(num<10?1.1:.98)).toFixed(2),'font-weight':900,'font-family':'Tajawal,Arial,sans-serif',fill:start?mix(color,'#000000',.25):look.ink,'pointer-events':'none','data-track-number':num,class:'tbl-num'},String(num)),p.x,p.y));
+  });
+  // the players: the yard by the start, the portrait and the name on their own side
+  const cfg=L.cfg;
+  for(let s=0;s<seats;s++){
+    const color=BOARD_COLORS[s],on=s===active,live=s<state.players.length,S=L.seatsAt[s],g=n('g',{'data-pocket':s,'data-seat':s,'data-active':String(on),opacity:live?1:.38});
+    const yard=L.bases[s],plate=n('path',{d:'M'+[yard[0],yard[2],yard[3],yard[1]].map(p=>xy({x:+(p.x+(p.x-S.yard.x)*.55).toFixed(2),y:+(p.y+(p.y-S.yard.y)*.55).toFixed(2)})).join('L')+'Z',fill:color,'fill-opacity':.13,stroke:color,'stroke-width':.5,'stroke-opacity':.7,'stroke-linejoin':'round'});
+    g.append(plate);
+    const socket=radial(defs,`${prefix}-socket-${s}`,[[0,mix(look.hole[2],'#000000',.6)],[.75,mix(look.hole[2],'#000000',.35)],[1,mix(color,'#ffffff',.2)]],.42,.38,.62);
+    for(const b of yard)g.append(n('circle',{cx:b.x,cy:b.y,r:+(L.hole*1.02).toFixed(2),fill:socket,stroke:color,'stroke-width':.45}));
+    const H=cfg.avatar*2+1.6+cfg.plate,face=shift(S,0,-(1.6+cfg.plate)/2),tag=shift(S,0,cfg.avatar+.8);
+    // the portrait: the player's character, or the first letter of the name
+    const ring=n('g',{'data-avatar':s});
+    if(look.glow||on)ring.append(n('circle',{cx:face.x,cy:face.y,r:cfg.avatar+1.7,fill:'none',stroke:color,'stroke-width':on?2.4:1.6,opacity:on?.55:.22,class:on?'yard-glow':null}));
+    ring.append(n('circle',{cx:face.x,cy:face.y,r:cfg.avatar,fill:mix(color,'#000000',.6),stroke:color,'stroke-width':on?1.4:1}));
+    const hero=avatars[s],url=hero?(String(hero).includes('/')?String(hero):globalThis.BS_CHARACTERS?.poster?.(hero)):'';
+    if(url){
+      const clip=n('clipPath',{id:`${prefix}-face-${s}`});clip.append(n('circle',{cx:face.x,cy:face.y,r:cfg.avatar-.5}));defs.append(clip);
+      const W=cfg.avatar*4.1,Hh=W*320/384,img=n('image',{href:url,x:(face.x-W/2).toFixed(2),y:(face.y-Hh*.36).toFixed(2),width:W.toFixed(2),height:Hh.toFixed(2),preserveAspectRatio:'xMidYMid meet','clip-path':`url(#${prefix}-face-${s})`});
+      ring.append(up(img,face.x,face.y));
+    }else ring.append(up(n('text',{x:face.x.toFixed(2),y:(face.y+cfg.avatar*.36).toFixed(2),'text-anchor':'middle','font-size':(cfg.avatar*1.05).toFixed(2),'font-weight':900,'font-family':'Tajawal,Arial,sans-serif',fill:'#ffffff'},([...(names[s]||'؟')][0]||'؟')),face.x,face.y));
+    g.append(ring);
+    // the name plate, under the portrait on the screen
+    const fit=fitName(live?names[s]:'',cfg.room,cfg.name,1),pw=Math.min(cfg.room+5,Math.max(cfg.avatar*2.4,fit.width+5.2)),ph=cfg.plate;
+    const name=n('g',{'data-name-plate':s});
+    name.append(n('rect',{x:(tag.x-pw/2).toFixed(2),y:(tag.y-ph/2).toFixed(2),width:pw.toFixed(2),height:ph,rx:ph/2,fill:on?mix(color,look.plate[0],.45):look.plate[0],stroke:color,'stroke-width':on?.9:.55,opacity:.96}));
+    name.append(nameText(tag.x,tag.y,fit,{fill:look.plate[1]}));
+    g.append(up(name,tag.x,tag.y));
+    root.append(g);
+  }
+  drawPile(root,defs,prefix,state,look,seats,pile);
+}
+function gradientLine(defs,id,a,b,from,to){const g=n('linearGradient',{id,gradientUnits:'userSpaceOnUse',x1:a.x.toFixed(2),y1:a.y.toFixed(2),x2:b.x.toFixed(2),y2:b.y.toFixed(2)});g.append(n('stop',{offset:0,'stop-color':from}),n('stop',{offset:1,'stop-color':to}));defs.append(g);return paint(id);}
 
 /* ---------- Pieces ---------- */
 export function createAtelierPiece({prefix='piece',color='#2f86e8',kind='classic',number='',metal}={}){
@@ -321,10 +412,10 @@ export function createAtelierPiece({prefix='piece',color='#2f86e8',kind='classic
   return g;
 }
 // 33.0.0: `own` is the seat's own stone from the shop (online tables); «شخصيتي» is a snakes piece
-function stoneGraphic(game,defs,prefix,seat,c,own){
+function stoneGraphic(game,defs,prefix,seat,c,own,size=.66){
   const P=pieces(),color=BOARD_COLORS[seat],chosen=own||equipped('pawn'),pawn=chosen==='pawn-character'?'pawn-classic':chosen;
   if(game==='jackaroo'){
-    const g=n('g',{transform:'scale(.66)'});
+    const g=n('g',{transform:`scale(${size})`});
     if(P)g.append(P.marble(document,defs,{style:P.marbleFor(pawn),color,scope:prefix+'-m'+seat}));
     else g.append(n('circle',{r:5,fill:color,stroke:'#fff','stroke-width':.6}));
     return g;
@@ -362,20 +453,25 @@ function trace(svg,points,color,duration){
 
 /* ---------- Render ---------- */
 export function renderPetalBoard(target,state,options={}){
-  const {game='zahra',legal=[],legalStones=[],onPick=()=>{},onSelect=null,active=state.turn,material,pawn,preview=false,looks=null,viewer=-1}=options;
+  const {game='zahra',legal=[],legalStones=[],onPick=()=>{},onSelect=null,active=state.turn,material,pawn,preview=false,looks=null,viewer=-1,avatars=null,pile=null}=options;
   const g=boardGeometry(state),themeKey=material&&THEMES[material]?material:MATERIALS[material]||MATERIALS[equipped('table')]||'walnut',theme=THEMES[themeKey],pawnId=pawn?Object.keys(KINDS).find(k=>KINDS[k]===(LEGACY_KINDS[pawn]||pawn))||'pawn-classic':equipped('pawn');
+  // 33.6.0: the Jackaroo board's look: asked for, else a shop table's (previews), else the player's
+  const lookKey=game!=='jackaroo'?'':options.look&&LOOKS[options.look]?options.look:material?(LOOK_OF[THEMES[material]?material:MATERIALS[material]]||'neon'):jackLook();
   // 33.4.0: the Jackaroo ring turns so your own seat is at the bottom, by your hand
   const seat=Number.isInteger(viewer)&&viewer>=0&&viewer<g.seats?viewer:-1;
   ROT=game==='jackaroo'&&seat>=0?((180-seat*360/g.seats)%360+540)%360-180:0;if(ROT===-180)ROT=180;
-  const signature=JSON.stringify([game,active,themeKey,pawnId,legal,legalStones,looks,ROT,seat,state.players.map(p=>[p.name,p.tokens||p.marbles])]),existing=target.querySelector('.petal-board-v30'),previous=existing?motionHistory.get(target):null;
+  const pileCards=game==='jackaroo'?(Array.isArray(pile)?pile:(state.discard||[]).slice(-3)).concat(state.lastEvent?.card||[]):[];
+  const signature=JSON.stringify([game,active,themeKey,lookKey,pawnId,legal,legalStones,looks,avatars,pileCards,g.arm,ROT,seat,state.players.map(p=>[p.name,p.tokens||p.marbles])]),existing=target.querySelector('.petal-board-v30'),previous=existing?motionHistory.get(target):null;
   if(!preview)surfaces.set(target,{state,options});
   if(existing&&previous?.signature===signature)return existing;
-  const prefix='tbl-'+(++sequence),L=layoutFor(game,g.seats);
-  const svg=n('svg',{viewBox:'0 0 200 200',role:'group','aria-label':game==='zahra'?'لوحة الزهرة؛ أربعة أحجار لكل لاعب':'طاولة جاكارو؛ أربع كرات لكل لاعب','data-material':themeKey,'data-game':game,'data-seats':g.seats});
+  const prefix='tbl-'+(++sequence),L=layoutFor(game,g.seats,g.arm);
+  const svg=n('svg',{viewBox:'0 0 200 200',role:'group','aria-label':game==='zahra'?'لوحة الزهرة؛ أربعة أحجار لكل لاعب':'طاولة جاكارو؛ أربع كرات لكل لاعب','data-material':themeKey,'data-look':lookKey||null,'data-game':game,'data-seats':g.seats,'data-arm':game==='jackaroo'?g.arm:null});
   svg.classList.add('petal-board-v29','petal-board-v30','table-v31');
   const defs=n('defs'),root=n('g',{'data-board-root':'','data-rot':ROT,transform:ROT?`rotate(${ROT} 100 100)`:null});svg.append(defs,root);
-  if(game==='jackaroo')drawRing(root,defs,prefix,state,L,theme,active,themeKey,seat);else drawCross(root,defs,prefix,state,L,theme,active);
+  if(game==='jackaroo')drawStar(root,defs,prefix,state,L,LOOKS[lookKey],active,lookKey,{avatars:avatars||[],pile});else drawCross(root,defs,prefix,state,L,theme,active);
   const positions=new Map(),values=new Map(),motions=[],effects=[],traces=[],cellSize=L.c||12.8;
+  // a marble a little bigger than its hole, never wider than the step between two holes
+  const marble=game==='jackaroo'?Math.min(L.hole*1.2,L.step*.49):0,marbleScale=+(marble/6.5).toFixed(3);
   const stoneLayer=n('g',{'data-layer':'stones'});
   // Stones further down the board are drawn later so they overlap correctly.
   const order=[];state.players.forEach((player,seat)=>(player.tokens||player.marbles).forEach((progress,index)=>order.push({seat,index,progress,p:petalStonePoint(state,seat,index,game)})));
@@ -384,9 +480,9 @@ export function renderPetalBoard(target,state,options={}){
     const player=state.players[seat],key=seat+':'+index,can=seat===active&&legal.includes(index)||legalStones.includes(key);
     const piece=n('g',{'data-stone':key,'data-player':seat,'data-token':index,transform:`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`,role:'button',tabindex:can?0:-1,'pointer-events':can?'auto':'none','aria-label':player.name+'، '+(game==='jackaroo'?'كرة ':'حجر ')+(index+1)+(can?'، حركة متاحة':''),'aria-disabled':String(!can)});
     piece.classList.add('petal-stone-v29','atelier-piece-v30');if(can)piece.classList.add('legal');
-    piece.append(n('circle',{r:game==='jackaroo'?4.6:6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
-    if(can)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?4.2:cellSize*.42,ry:game==='jackaroo'?4.2:cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
-    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat]));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?1:0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':2.5,'font-weight':700,fill:'#ffffff',stroke:'#15202b','stroke-width':.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
+    piece.append(n('circle',{r:game==='jackaroo'?+Math.max(3.6,Math.min(4.6,L.step*.62)).toFixed(2):6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
+    if(can)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.42,ry:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
+    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.27).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?+Math.min(2.5,marble*.72).toFixed(2):2.5,'font-weight':700,fill:'#ffffff',stroke:'#15202b','stroke-width':.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);
     const old=previous?.positions.get(key),oldValue=previous?.values.get(key),moved=old&&(Math.abs(old.x-p.x)>.01||Math.abs(old.y-p.y)>.01);

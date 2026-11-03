@@ -55,7 +55,8 @@
     "assets/css/home-v19.css",
     "assets/css/mobile-v21.css",
     "assets/css/home-v33.css",
-    "assets/css/game-interaction-v34.css"
+    "assets/css/game-interaction-v34.css",
+    "assets/css/home-join-v33-6.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -79,6 +80,7 @@
     "assets/css/tables-v33.css",
     "assets/css/tables-phone-v33-3.css",
     "assets/css/jackaroo-v33-4.css",
+    "assets/css/jackaroo-v33-6.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/gameplay-v34.css"
   ],
@@ -370,6 +372,13 @@
     "assets/css/platform.css",
     "assets/css/challenges.css",
     "assets/css/challenges-v33-5.css",
+    "assets/css/game-interaction-v34.css"
+  ],
+  "chaos.html": [
+    "assets/css/platform.css",
+    "assets/css/challenges.css",
+    "assets/css/challenges-v33-5.css",
+    "assets/css/chaos-v33-6.css",
     "assets/css/game-interaction-v34.css"
   ],
   "wordbomb.html": [
