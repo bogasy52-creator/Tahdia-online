@@ -41,6 +41,7 @@ c3d187d92f95eeda50669ace8bab8e719a7b745672d1f63fa5f6d1bc35c65d6b  ./GAMEPLAY_REF
 2311b3a1eafeabb5f9ac58bc0f0dc43573caed2a2d38a31e1394f9c289bf21a5  ./package-lock.json
 7f392fac8003d890fe99a1251e3393af4ff8641cadb23501ff69e70838cb3047  ./package.json
 ca1ca347e95e68aeb94c0cde9f2e024a6dce58e30208c7f2d46112e82c53e680  ./PART2-NOTES-AR.md
+13bcfc1dc8f058b2a567cb75118d9dc47a1a53b9d1d2c77d8e03a15ec125437a  ./PATCH_JACKAROO_FULLSCREEN_33_7_0_AR.md
 74aec2e6c6e8ac33875cdcbaf0e9bd8db2fc5f358065e66277ac4a63b481d92c  ./PATCH_REFINEMENT_AR.md
 adc8e0f3a818ac4e8da5f6ef8bd0fe2f714554939ec2da80c9ea8bdf03b1b509  ./public/accuracy.html
 212bec5328865a585a6918c426fab6bae8a3597cab4480ab680ba72dcb7b66cd  ./public/admin.html
@@ -205,7 +206,7 @@ b955fa527e1260d8df65ced09bd1c40d5d99f9d5b0153a981f309261a51bfe9c  ./public/asset
 04fdfee66b9f601e866e602d2652ca2ef17f9a76218a2df078a6165d6b4bd9fd  ./public/assets/css/app-dice.css
 0e9ac64023e7e8a9fd9141d6f6823af9c53175131ae4e4bd72538f972bcf96f1  ./public/assets/css/app-focus.css
 88b79773a228440dde51f5896efe28fc5b05bac6085449e2818d192ade3c4d71  ./public/assets/css/app-index.css
-18d735208cb98857944d27b1948b3be5b38ecc610d2bd4889c5b6bb2acbebff4  ./public/assets/css/app-jackaroo.css
+c783eca4fb5b8e0f94c1b5c9b7c42c0ca4a9eb008e283be1e6268eb2ab36635b  ./public/assets/css/app-jackaroo.css
 42ca5687a98a52d38a90b878d3ca64a163a2ecfda1d2989fadf7438deb5e5ee1  ./public/assets/css/app-journey.css
 a2135bdeb8a9c75041ac3b2b46bfdbca5432a14d60e16cf3730ffd033c9708b8  ./public/assets/css/app-labyrinth.css
 fc31c0b11ebfb3f5901882881424edd31e5cbd9f968d38e836d1b6c531f9365d  ./public/assets/css/app-leaderboard.css
@@ -269,7 +270,7 @@ dd55076b06999854b842d89064780286b0a410e1615a8adf568d7746aeb833e7  ./public/asset
 bb7caa7549beccb389ac9d677814454a8d9bb783d56a56c89ba94b37abdb496b  ./public/assets/css/jackaroo-next.css
 19ac23a5b06d5b8625972f443a12e716ee033b924a7ce1ba419f7ffeb929e56c  ./public/assets/css/jackaroo-v33-4.css
 9fde1b244a3e3ed511e159da30a53d36367ed8fdae7f0f60fbec392d6c7e0300  ./public/assets/css/jackaroo-v33-6.css
-629d2e354b71ea136c2b0d56b7a6ca34907601d5c04cfd90770ac75adf6c7df7  ./public/assets/css/jackaroo-v33-7.css
+78a1e462234ef61c3690d0a8750e34cffc5ec6f0c39a22b95b7eb914d67f5714  ./public/assets/css/jackaroo-v33-7.css
 306bdaf0a20587c7cc03895e61a100fad752d5b4acc0c182811aff8fbc4475a3  ./public/assets/css/journey.css
 e8edc1cbf08975f1c4af09ed070e45172fd7e932e3c81318e7fba64354d1f060  ./public/assets/css/leaderboard-v30-1.css
 5457eca2ab5ebcea9761b3fcbf892123840e46fab35d75034f23e11c12832c6a  ./public/assets/css/luxury-game-ui.css
@@ -1171,7 +1172,7 @@ ac51180272b51f5507061f9c1828ac52d02f4734f036e1bfbe0a532fe4fa6c04  ./public/icon-
 a3698599fc6034a180025a063683f99fb2a1552abef6a92b67cb036ca174074b  ./public/icon-512.png
 4d3e08122248b46fe6c6d4c5598f92c09ae6ce330910fe46f6d292bd31ef2ef4  ./public/icon-maskable-512.png
 7c04be8da03ca8b1d4525880439aaea1d4f9bb4cbd92ef851ea54f70c6240ffb  ./public/index.html
-2d5018af7c89d245c5082ce774b4040af3f9050faf44def225955921abdfdd6f  ./public/jackaroo.html
+36e9946c42503280cccedf876882399b8928538c0c40015ada69024825d4f7a5  ./public/jackaroo.html
 528e493e2c3567ace9d3ca32833f21fcbc1ddc07f6879bd44cd21d089c6c913c  ./public/journey.html
 25ee3133d8f8f2a87fb7d20a0e64a3e264cfa1c323368bb58c4f7b2b0d7aad3a  ./public/labyrinth.html
 4e1feeb0e028df09e6ce540122e666ec5635c4dcf0d3d3a87ab938e82194dab0  ./public/leaderboard.html
@@ -1190,7 +1191,7 @@ fd3fa961b1e0015716e8ae97b97c774ba524048c510cc3e00c1cecedb63e8d69  ./public/pictu
 217b91bbc00f37c5eb129892cbe4910af8581c682a832f695a229d40313bf385  ./public/reaction-classic.html
 0986873401cf074ed9694c67050e4bff3a2703f4199d3194d39f0378b7f66003  ./public/reaction.html
 5e2415108f6850e441b8aaf064baae17af1c1dfc76be89a9b76092c3c00def74  ./public/serpent.html
-28154e9f68499dc30cb0db8e9e4639163df946647b85f8b2d195f20d7dd6743a  ./public/service-worker.js
+985903123c36fa0b15f48180463192e5407c03805512568c9a1e22edf0178e25  ./public/service-worker.js
 38b78cb790b73ae5e4f07d2f3206021c52a109f2dc5f65382f6430f878b65ab0  ./public/shop.html
 09720d5bbdea9b5f0ab6365af7ebd52652c4fe8a10a5c5fa363356cc8d9403d8  ./public/snakes.html
 0d05bb664cf9dfd0d5858f87211a4e4304e437e416816d84ca517b94a65b18a2  ./public/social.html

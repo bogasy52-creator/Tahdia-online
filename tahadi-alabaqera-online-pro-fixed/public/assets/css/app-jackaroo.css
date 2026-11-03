@@ -1302,6 +1302,125 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 :is(html,#v31) body.game-jackaroo .jack-board svg [data-player-tag]:focus-visible circle:first-child{stroke:#fff;stroke-width:1.4}
 .jk-look.is-armed{border-color:#f3cf72;background:#f3cf7226}
 
+/* Tahdia 33.7.0 (patch, same version) — Jackaroo on ONE full screen.
+   While a match runs the page stops scrolling: the board is as big as the screen allows
+   (a phone: edge to edge; a wide screen: the whole height) and everything else —
+   status, your cards, the moves — sits in a slim dock under it (portrait) or beside it
+   (landscape). Players are already on the board by their sides, so the long list goes. */
+:is(html,#v31) body.game-jackaroo.game-running{overflow:hidden!important;height:var(--game-vh,100dvh)!important;overscroll-behavior:none;display:flex!important;flex-direction:column!important;padding-top:env(safe-area-inset-top)!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
+:is(html,#v31) body.game-jackaroo.game-running .bs-game-command{flex:none!important;margin:3px auto 2px!important;padding:3px 8px!important;width:calc(100% - 12px)!important;max-width:none!important}
+:is(html,#v31) body.game-jackaroo.game-running .bs-topbar,
+:is(html,#v31) body.game-jackaroo.game-running #modeHint,
+:is(html,#v31) body.game-jackaroo.game-running .rules-note,
+:is(html,#v31) body.game-jackaroo.game-running #players{display:none!important}
+:is(html,#v31) body.game-jackaroo.game-running .bs-shell{position:relative!important;flex:1 1 auto!important;min-height:0!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;height:auto!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game{flex:1 1 auto!important;min-height:0!important;display:flex!important;flex-direction:column!important;gap:4px!important;margin:0!important;padding:0 6px 6px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game.hidden{display:none!important}
+
+/* a slim bar on top: title, deck count, the look, full screen, leave */
+:is(html,#v31) body.game-jackaroo.game-running #game#game .game-toolbar{flex:none!important;display:flex!important;align-items:center!important;gap:6px!important;min-height:40px!important;margin:0!important;padding:4px 2px 0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .toolbar-title{flex:1 1 auto!important;min-width:0!important;display:flex!important;align-items:baseline!important;gap:8px!important;flex-wrap:wrap!important;overflow:hidden!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .toolbar-title h1{display:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .toolbar-title span{font-size:11px!important;opacity:.8;white-space:nowrap}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .game-toolbar .bs-btn{flex:none!important;min-height:36px!important;padding:0 12px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .fullscreen-toggle{width:40px!important;padding:0!important;font-size:19px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .fullscreen-toggle.is-fullscreen{outline:1px solid #f3cf7288}
+:is(html,#v31) body.game-jackaroo:not(.game-running) .fullscreen-toggle{display:none}
+:is(html,#v31) body.game-jackaroo.game-running #livebar{flex:none!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;margin:0!important;padding:0 4px!important;min-height:0!important;font-size:11.5px!important}
+:is(html,#v31) body.game-jackaroo.game-running #livebar.hidden{display:none!important}
+
+/* the stage: board first, dock second. Portrait = column, landscape = side by side */
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-layout{flex:1 1 auto!important;min-height:0!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important;gap:6px!important;align-items:stretch!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-main{min-width:0!important;min-height:0!important;display:grid!important;place-items:center!important;container-type:size;overflow:visible!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-board-wrap{width:min(100%,100vh)!important;width:min(100cqw,100cqh)!important;height:auto!important;max-width:none!important;min-width:0!important;aspect-ratio:1!important;margin:0!important;padding:0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-board{width:100%!important;height:100%!important;max-width:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-board svg{width:100%!important;height:100%!important;display:block}
+
+/* the dock */
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-side{min-width:0!important;min-height:0!important;max-height:46vh!important;max-height:46dvh!important;display:flex!important;flex-direction:column!important;gap:6px!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;padding:0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game #status{order:0!important;flex:none!important;min-height:34px;margin:0!important;font-size:13.5px!important;text-align:center}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .hand-title{order:1!important;flex:none!important;display:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game #hand{order:1!important;flex:none!important;min-height:calc(var(--jk-w) * 1.4 + 22px)!important;padding:14px 6px 4px!important;border-radius:16px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game #actions{order:2!important;flex:none!important;display:flex!important;gap:6px!important;overflow-x:auto!important;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+:is(html,#v31) body.game-jackaroo.game-running #game#game #actions>*{flex:0 0 auto!important;white-space:nowrap}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .team-rail{order:3!important;flex:none!important;gap:6px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .team-card{padding:5px 9px!important;border-radius:11px!important;font-size:11px!important;grid-template-columns:auto 1fr auto!important;align-items:center!important;column-gap:8px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .team-card b{font-size:12px!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game details.rules{order:4!important;flex:none!important;margin:0!important;padding:6px 10px!important;font-size:12.5px}
+/* the rules open over the game instead of pushing it off the screen */
+:is(html,#v31) body.game-jackaroo.game-running #game#game details.rules[open]{position:fixed!important;z-index:60;inset:auto 8px calc(8px + env(safe-area-inset-bottom)) 8px;max-height:72dvh;overflow:auto;background:#0a1627!important;box-shadow:0 -10px 40px #000c}
+
+/* landscape and wide screens: the board takes the whole height, the dock stands beside it */
+@media (min-width:760px) and (min-aspect-ratio:11/10){
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .jack-layout{grid-template-columns:minmax(0,1fr) clamp(250px,26vw,380px)!important;grid-template-rows:minmax(0,1fr)!important;gap:12px!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .jack-side{max-height:none!important;height:100%!important;justify-content:flex-start}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #actions{display:grid!important;overflow:visible!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #actions>*{white-space:normal}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #players{display:grid!important;grid-template-columns:1fr 1fr;gap:6px;order:5}
+  :is(html,#v31) body.game-jackaroo.game-running{--jk-w:clamp(40px,calc((clamp(250px,26vw,380px) - 40px) / 5.3),72px)}
+}
+/* a phone turned on its side: little height, so a smaller dock and cards */
+@media (max-height:520px) and (min-aspect-ratio:11/10){
+  :is(html,#v31) body.game-jackaroo.game-running{--jk-w:36px}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .jack-layout{grid-template-columns:minmax(0,1fr) 240px!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .toolbar-title span,:is(html,#v31) body.game-jackaroo.game-running #game#game #players{display:none!important}
+}
+/* a narrow phone: the dock keeps the cards on one row */
+@media (max-width:420px) and (max-aspect-ratio:1/1){
+  :is(html,#v31) body.game-jackaroo.game-running{--jk-w:clamp(52px,calc((100vw - 48px) / 5),72px)}
+}
+/* patch: the page wrapper no longer stops at 1100px, the strips above the board lose their margins */
+:is(html,#v31) body.game-jackaroo.game-running #game#game{width:100%!important;max-width:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .game-livebar,
+:is(html,#v31) body.game-jackaroo.game-running #game#game #livebar{margin:0!important;padding:0 4px!important;min-height:0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .round-roster{margin:0!important;min-height:0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .round-roster:empty{display:none!important}
+/* upright phone: status, cards and moves take a full row each; teams and the rules share the last row */
+@media (max-aspect-ratio:11/10),(max-width:759px){
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .jack-side{flex-direction:row!important;flex-wrap:wrap!important;align-content:flex-start!important;gap:5px!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #status,
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #hand,
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #actions{flex:1 1 100%!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .team-rail{flex:1 1 0!important;min-width:0!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game details.rules{flex:0 0 auto!important;align-self:stretch}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game details.rules>summary{white-space:nowrap}
+}
+@media (max-height:700px) and (max-aspect-ratio:11/10){
+  :is(html,#v31) body.game-jackaroo.game-running{--jk-w:clamp(46px,calc((100vw - 48px) / 5.4),62px)}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #status{min-height:22px!important;font-size:12.5px!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .team-card span:nth-of-type(1){display:none}
+}
+/* patch: one top row — room and connection on one side, the look / full screen / leave buttons on the other */
+:is(html,#v31) body.game-jackaroo.game-running #game#game{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto minmax(0,1fr)!important;gap:0 6px!important;align-items:center!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game #livebar{grid-column:1!important;grid-row:1!important;justify-content:flex-start!important;flex-wrap:wrap!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .game-toolbar{grid-column:2!important;grid-row:1!important;padding:2px 0!important;min-height:0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .game-toolbar .toolbar-title{display:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .round-roster{grid-column:1/-1!important;grid-row:2!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-layout{grid-column:1/-1!important;grid-row:3!important;align-self:stretch!important;margin-top:4px!important}
+/* the deck count lives in the board's own middle now; keep it as a small line under the status */
+@media (max-aspect-ratio:11/10),(max-width:759px){
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .team-card span:nth-of-type(1){display:none!important}
+}
+/* a phone on its side: no strip above the board but the buttons */
+@media (max-height:520px) and (min-aspect-ratio:11/10){
+  :is(html,#v31) body.game-jackaroo.game-running #game#game #livebar,
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .round-roster{display:none!important}
+  :is(html,#v31) body.game-jackaroo.game-running .bs-game-command{padding:1px 6px!important;margin:2px auto!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .game-toolbar .bs-btn{min-height:32px!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .team-rail,
+  :is(html,#v31) body.game-jackaroo.game-running #game#game details.rules{display:none!important}
+}
+/* a phone on its side: the buttons sit over the dock's corner so the board gets the height */
+@media (max-height:520px) and (min-aspect-ratio:11/10){
+  :is(html,#v31) body.game-jackaroo.game-running #game#game{position:relative!important;grid-template-rows:0 0 minmax(0,1fr)!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .game-toolbar{position:absolute!important;top:0!important;inset-inline-end:auto!important;left:6px!important;z-index:5}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .jack-layout{margin-top:0!important}
+  :is(html,#v31) body.game-jackaroo.game-running #game#game .jack-side{padding-top:38px!important}
+}
+/* the deck count and next deal ride in the room strip */
+:is(html,#v31) body.game-jackaroo.game-running #livebar #deckCount,
+:is(html,#v31) body.game-jackaroo.game-running #livebar #dealText{font-size:11.5px!important;opacity:.85;white-space:nowrap}
+
 /* assets/css/game-interaction-v34.css */
 html,body{overflow-x:clip}
 html{touch-action:pan-x pan-y}
