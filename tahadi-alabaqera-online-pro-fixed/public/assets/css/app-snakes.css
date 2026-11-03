@@ -1543,3 +1543,78 @@ html{touch-action:pan-x pan-y}
 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea,select,[contenteditable],[contenteditable] *,[data-selectable],[data-selectable] *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 img,svg,canvas{-webkit-user-drag:none}
+
+/* assets/css/room-clock-v33-7.css */
+/* Tahdia 33.7.0 — «ساعة الغرفة»: the same clear countdown in every room */
+@property --f{syntax:'<number>';inherits:true;initial-value:1}
+.bs-clock{--size:46px;--c:#3ddc97;--track:#ffffff1c;--disc:#0a1120;position:relative;display:inline-grid;place-items:center;flex:none;box-sizing:border-box;width:var(--size);height:var(--size);margin:0;border-radius:50%;background:radial-gradient(closest-side,var(--disc) calc(100% - 5px),transparent calc(100% - 4.5px)),conic-gradient(from 0deg,var(--c) calc(var(--f)*360deg),var(--track) 0);box-shadow:0 0 0 1px #ffffff12,0 6px 18px #0007;vertical-align:middle;font-style:normal;transition:--f .2s linear,box-shadow .3s}
+.bs-clock::after{content:attr(data-s);font:900 calc(var(--size)*.43)/1 Tajawal,system-ui,sans-serif;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.03em;direction:ltr}
+.bs-clock.long::after{font-size:calc(var(--size)*.32)}
+.bs-clock[data-size=sm]{--size:34px}
+.bs-clock[data-size=lg]{--size:54px}
+.bs-clock[data-tone=warn]{--c:#ffbf3c;box-shadow:0 0 0 1px #ffbf3c40,0 6px 18px #0007}
+.bs-clock:is([data-tone=danger],[data-tone=out]){--c:#ff4d5e;box-shadow:0 0 0 1px #ff4d5e70,0 0 20px #ff4d5e8c}
+.bs-clock[data-tone=danger]{animation:bs-clock-beat 1s ease-in-out infinite}
+.bs-clock[data-tone=danger]::after{color:#ffe1e3}
+.bs-clock[data-tone=out]{--track:#ff4d5e2e}
+@keyframes bs-clock-beat{0%,100%{transform:scale(1)}14%{transform:scale(1.13)}28%{transform:scale(.97)}42%{transform:scale(1.06)}60%{transform:scale(1)}}
+
+/* where the games put it (the old small «⏱ 30ث» steps aside) */
+body:has(#status.bs-clock-on) #turnTimer{display:none!important}
+#status.bs-clock-on{display:flex!important;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap}
+#status.bs-clock-on>.bs-clock{order:-1}
+#chTime.bs-clock-on,.ch-hunt-clock.bs-clock-on{display:inline-flex;align-items:center;font-size:0!important;line-height:0;padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+.ch-match-meta:has(#chTime.bs-clock-on){min-height:50px;align-items:center}
+#roundClock.bs-clock-on{display:inline-flex;align-items:center;font-size:0!important;line-height:0;padding:0!important;background:none!important;border:0!important}
+#prompt.bl-prompt.bs-clock-on{display:flex!important;align-items:center;justify-content:center;gap:9px}
+
+/* the copy that floats at the top of the screen when the clock's place is out of sight */
+.bs-clock-float{position:fixed;z-index:9400;top:calc(env(safe-area-inset-top) + 8px);left:50%;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);padding:4px 13px 4px 5px;border:1px solid #ffffff24;border-radius:99px;background:#0a1120e8;box-shadow:0 12px 30px #0009;color:#fff;font:800 14px/1.2 Tajawal,system-ui,sans-serif;white-space:nowrap;pointer-events:none;opacity:0;transform:translate(-50%,-130%);transition:transform .22s ease,opacity .22s ease;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.bs-clock-float.show{opacity:1;transform:translate(-50%,0)}
+.bs-clock-float[data-tone=danger]{border-color:#ff4d5e88}
+.bs-clock-float-text:empty{display:none}
+
+/* the red edge of the last five seconds, and the flash of «قرب يفوز» */
+.bs-tension-edge{position:fixed;inset:0;z-index:9300;pointer-events:none;opacity:0;box-shadow:inset 0 0 0 2px #ff4d5e,inset 0 0 70px #ff2d3f88;transition:opacity .3s}
+.bs-tension-edge.on{animation:bs-edge 1s ease-in-out infinite}
+.bs-tension-edge.flash{animation:bs-edge .55s ease-in-out 4}
+@keyframes bs-edge{0%,100%{opacity:.15}50%{opacity:.85}}
+
+.bs-alert-banner{position:fixed;z-index:9500;top:calc(env(safe-area-inset-top) + 58px);left:50%;max-width:min(420px,calc(100vw - 32px));box-sizing:border-box;padding:10px 18px;border-radius:16px;border:1px solid #ff4d5e99;background:linear-gradient(135deg,#3a0d16f2,#1b0a12f2);box-shadow:0 16px 40px #000a,0 0 30px #ff4d5e44;color:#fff;font:800 15px/1.5 Tajawal,system-ui,sans-serif;text-align:center;pointer-events:none;opacity:0;transform:translate(-50%,-18px) scale(.96);transition:opacity .25s ease,transform .25s ease}
+.bs-alert-banner::before{content:'⚠';margin-inline-end:8px;color:#ff8a95}
+.bs-alert-banner[data-tone=mine]{border-color:#f3cf72aa;background:linear-gradient(135deg,#3b2c0cf2,#1d160af2);box-shadow:0 16px 40px #000a,0 0 30px #f3cf7240}
+.bs-alert-banner[data-tone=mine]::before{content:'★';color:#f3cf72}
+.bs-alert-banner.show{opacity:1;transform:translate(-50%,0) scale(1)}
+
+@media (prefers-reduced-motion:reduce){.bs-clock[data-tone=danger],.bs-tension-edge.on,.bs-tension-edge.flash{animation:none}.bs-tension-edge.on{opacity:.55}.bs-clock-float,.bs-alert-banner{transition:none}}
+
+/* assets/css/player-card-v33-7.css */
+/* Tahdia 33.7.0 — «ملف اللاعب» from any room */
+.bs-pcard{position:fixed;inset:0;z-index:12500;display:none;place-items:center;padding:16px;background:#02060fcc;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.bs-pcard.open{display:grid}
+.bs-pcard-panel{--pc:#8b7cff;position:relative;box-sizing:border-box;width:min(360px,100%);display:grid;justify-items:center;gap:6px;padding:22px 18px 18px;border:1px solid #ffffff24;border-radius:24px;background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--pc) 24%,transparent),transparent 70%),linear-gradient(170deg,#161d3a,#0b1022);box-shadow:0 30px 80px #000b;color:#fff;text-align:center;font-family:Tajawal,system-ui,sans-serif;animation:bs-pcard-in .22s ease-out}
+@keyframes bs-pcard-in{from{transform:translateY(16px) scale(.97);opacity:0}}
+.bs-pcard-close{position:absolute;inset-block-start:10px;inset-inline-start:10px;width:36px;height:36px;border:1px solid #ffffff22;border-radius:12px;background:#ffffff0d;color:#fff;font-size:15px;cursor:pointer}
+.bs-pcard-face{width:96px;height:96px;border-radius:50%;padding:4px;background:conic-gradient(from 200deg,var(--pc),#ffffff55,var(--pc));box-shadow:0 10px 30px #0008}
+.bs-pcard-letter{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:#0a0f20;font:900 40px/1 Tajawal,system-ui,sans-serif;color:#fff}
+.bs-pcard-face img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#0a0f20}
+.bs-pcard-name{margin:8px 0 0;font-size:22px;font-weight:900;line-height:1.3;overflow-wrap:anywhere}
+.bs-pcard-line{margin:0;color:#a9b2cf;font-size:13.5px;font-weight:700;direction:rtl}
+.bs-pcard-line.online{color:#58e3a4}
+.bs-pcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-top:10px}
+.bs-pcard-stats:empty{display:none}
+.bs-pcard-stat{display:grid;gap:2px;padding:10px 4px;border:1px solid #ffffff18;border-radius:14px;background:#ffffff08}
+.bs-pcard-stat b{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}
+.bs-pcard-stat small{color:#a9b2cf;font-size:12px;font-weight:700}
+.bs-pcard-stats.loading .bs-pcard-stat b{color:transparent;background:linear-gradient(90deg,#ffffff12,#ffffff2a,#ffffff12);border-radius:8px;animation:bs-pcard-wait 1.1s linear infinite;background-size:200% 100%}
+@keyframes bs-pcard-wait{to{background-position:-200% 0}}
+.bs-pcard-note{margin:6px 0 0;color:#c9d0e8;font-size:13.5px;line-height:1.6}
+.bs-pcard-note:empty{display:none}
+.bs-pcard-actions{display:grid;width:100%;margin-top:10px}
+.bs-pcard-actions:empty{display:none}
+.bs-pcard-actions .bs-btn{min-height:48px;justify-content:center;font-weight:900}
+.bs-pcard .bs-pcard-actions .bs-btn:disabled{opacity:1;background:#173b30!important;border-color:#58e3a466!important;color:#8ff0c3!important;box-shadow:none!important}
+@media (max-width:520px){.bs-pcard{place-items:end center;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.bs-pcard-panel{border-radius:24px 24px 20px 20px}}
+@media (prefers-reduced-motion:reduce){.bs-pcard-panel{animation:none}}
+/* what opens a card */
+[data-pcard-seat],[data-pcard-id]{cursor:pointer}

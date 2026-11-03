@@ -24,7 +24,12 @@ export function patternSet(cards){for(let a=0;a<cards.length;a++)for(let b=a+1;b
 function cards(r){const deck=Array.from({length:27},(_,id)=>({id,attrs:[id%3,Math.floor(id/3)%3,Math.floor(id/9)]}));for(let i=deck.length-1;i>0;i--){const j=pick(r,i+1);[deck[i],deck[j]]=[deck[j],deck[i]];}const board=deck.slice(0,9);if(!patternSet(board)){const a=board[0].attrs,b=board[1].attrs,attrs=a.map((v,i)=>v===b[i]?v:3-v-b[i]);const id=attrs[0]+attrs[1]*3+attrs[2]*9;board[8]={id,attrs};}return board;}
 export function cipherHint(secret,guess){let exact=0,near=0;for(let i=0;i<4;i++)if(secret[i]===guess[i])exact++;for(let d=0;d<10;d++)near+=Math.min(secret.filter(x=>x===d).length,guess.filter(x=>x===d).length);return{exact,near:near-exact};}
 // 33.5.0: fourteen challenges. A match plays twelve of them in its own order (from its seed).
-export const FOCUS_MODES=Object.freeze(['color','opposite','sequence','count','word','parity','max','match','sum','odd','missing','flash','majority','dots']);
+// 33.7.0: six more (أبكر وقت، عكس الكلمة، أيام الأسبوع، عدد الحروف، جدول الضرب، عدّ الأشكال): twenty in all,
+// so a whole match hardly ever meets the same challenge twice
+export const FOCUS_MODES=Object.freeze(['color','opposite','sequence','count','word','parity','max','match','sum','odd','missing','flash','majority','dots','clock','antonym','days','letters','times','shape']);
+export const FOCUS_ANTONYMS=Object.freeze([['كبير','صغير'],['طويل','قصير'],['حار','بارد'],['سريع','بطيء'],['ثقيل','خفيف'],['قريب','بعيد'],['فوق','تحت'],['ليل','نهار'],['داخل','خارج'],['قوي','ضعيف'],['جديد','قديم'],['سهل','صعب'],['مفتوح','مسكّر'],['نظيف','وسخ'],['فرحان','زعلان'],['أول','آخر'],['يمين','يسار'],['صباح','مساء'],['واسع','ضيق'],['شجاع','جبان']]);
+export const FOCUS_DAYS=Object.freeze(['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']);
+export const FOCUS_SHAPES=Object.freeze(['▲','●','■','◆']);
 const shuffled=(r,values)=>{const out=[...values];for(let i=out.length-1;i>0;i--){const j=pick(r,i+1);[out[i],out[j]]=[out[j],out[i]];}return out;};
 // «الكلمة الدخيلة»: three words of one family and one from another
 export const FOCUS_FAMILIES=Object.freeze([
@@ -38,7 +43,7 @@ export const FOCUS_FAMILIES=Object.freeze([
  ['شمس','قمر','نجم','سحاب','مطر','رعد','ثلج','برق']]);
 /** The challenge of a round: the match's own order of the fourteen, from its seed. */
 export function focusModeOf(m,round=m.round){const order=shuffled(rng((m.seed^0x9e3779b9)>>>0),FOCUS_MODES);return order[round%order.length];}
-export function focusAnswer(t){return t.type==='sequence'?[...t.sequence]:t.type==='opposite'?(t.target+2)%4:t.type==='word'?t.word:t.type==='parity'?t.number%2:t.type==='majority'?t.target:['count','max','match','sum','odd','missing','flash','dots'].includes(t.type)?t.answer:t.target;}
+export function focusAnswer(t){return t.type==='sequence'?[...t.sequence]:t.type==='opposite'?(t.target+2)%4:t.type==='word'?t.word:t.type==='parity'?t.number%2:t.type==='majority'?t.target:['count','max','match','sum','odd','missing','flash','dots','clock','antonym','days','letters','times','shape'].includes(t.type)?t.answer:t.target;}
 function focusRound(m,now,r){
  const type=focusModeOf(m),target=pick(r,4),sequence=Array.from({length:Math.min(5,3+Math.floor(m.round/6))},()=>pick(r,4));
  const t={type,target,word:(target+1+pick(r,3))%4,number:1+pick(r,9),sequence,opensAt:now+1500+(type==='sequence'?sequence.length*650:type==='flash'?1400:0)};t.deadline=t.opensAt+6500;
@@ -50,6 +55,12 @@ function focusRound(m,now,r){
  if(type==='missing'){const step=2+pick(r,8),start=1+pick(r,20),terms=[0,1,2,3].map(i=>start+i*step),hole=1+pick(r,3),value=terms[hole];t.terms=terms.map((v,i)=>i===hole?null:v);const wrong=[value+1,value-1,value+step,value-step,value+2,value+step+1].filter((v,i,all)=>v>0&&v!==value&&all.indexOf(v)===i);t.options=shuffled(r,[value,...shuffled(r,wrong).slice(0,3)]);t.answer=t.options.indexOf(value);}
  if(type==='flash'){const value=100+pick(r,900),s=String(value),near=[Number(s[0]+s[2]+s[1]),value+(pick(r,2)?10:-10),value+(pick(r,2)?1:-1),value+100>999?value-100:value+100,value+(pick(r,2)?20:-20)].filter((v,i,all)=>v>=100&&v<=999&&v!==value&&all.indexOf(v)===i);t.flash=value;t.options=shuffled(r,[value,...shuffled(r,near).slice(0,3)]);while(t.options.length<4){const v=100+pick(r,900);if(!t.options.includes(v))t.options.push(v);}t.answer=t.options.indexOf(value);}
  if(type==='majority'){const others=[0,1,2,3].filter(d=>d!==target),lead=4+pick(r,2),arrows=Array(lead).fill(target);for(const d of others)for(let k=pick(r,3);k>0;k--)arrows.push(d);while(arrows.length<7)arrows.push(others[pick(r,3)]);const counts=[0,1,2,3].map(d=>arrows.filter(x=>x===d).length);for(const d of others)while(counts[d]>=counts[target]){arrows.splice(arrows.indexOf(d),1);counts[d]--;}t.arrows=shuffled(r,arrows);}
+ if(type==='clock'){const h0=5+pick(r,6),set=new Set();while(set.size<4)set.add(h0*60+pick(r,36)*5);const mins=[...set];t.options=mins.map(v=>Math.floor(v/60)+':'+String(v%60).padStart(2,'0'));t.answer=mins.indexOf(Math.min(...mins));}
+ if(type==='antonym'){const pairs=shuffled(r,FOCUS_ANTONYMS),[word,right]=pick(r,2)?pairs[0]:[pairs[0][1],pairs[0][0]],wrong=pairs.slice(1,4).map(p=>p[pick(r,2)]);t.prompt=word;t.options=shuffled(r,[right,...wrong]);t.answer=t.options.indexOf(right);}
+ if(type==='days'){const day=pick(r,7),n=1+pick(r,3),back=pick(r,3)===0,shift=back?-n:n,right=FOCUS_DAYS[(day+shift+7)%7],near=[(day-shift+7)%7,(day+shift+1+7)%7,(day+shift-1+7)%7,(day+7)%7].map(i=>FOCUS_DAYS[i]).filter((d,i,all)=>d!==right&&all.indexOf(d)===i);t.prompt='اليوم '+FOCUS_DAYS[day]+'، '+(back?'قبل':'بعد')+' '+(n===1?'يوم':n===2?'يومين':n+' أيام');t.options=shuffled(r,[right,...near.slice(0,3)]);t.answer=t.options.indexOf(right);}
+ if(type==='letters'){const family=FOCUS_FAMILIES[pick(r,FOCUS_FAMILIES.length)],word=family[pick(r,family.length)],n=[...word].length,base=Math.max(2,n-1-pick(r,2)),options=[base,base+1,base+2,base+3];t.prompt=word;t.options=shuffled(r,options);t.answer=t.options.indexOf(n);}
+ if(type==='times'){t.left=3+pick(r,7);t.right=3+pick(r,7);const v=t.left*t.right,near=[v+t.left,v-t.right,v+t.right,v-t.left,v+1,v-1,v+10].filter((x,i,all)=>x>0&&x!==v&&all.indexOf(x)===i);t.options=shuffled(r,[v,...shuffled(r,near).slice(0,3)]);t.answer=t.options.indexOf(v);}
+ if(type==='shape'){const count=1+pick(r,4),others=Array.from({length:4+pick(r,3)},()=>(target+1+pick(r,3))%4);t.shapes=shuffled(r,[...Array(count).fill(target),...others]);t.options=[1,2,3,4];t.answer=count-1;}
  if(type==='dots'){const set=new Set();while(set.size<4)set.add(4+pick(r,11));t.options=[...set];t.answer=t.options.indexOf(Math.max(...t.options));t.layouts=t.options.map(n=>{const cells=shuffled(r,Array.from({length:25},(_,i)=>i));return cells.slice(0,n);});}
  m.task=t;m.answers={};m.phaseAt=now;
 }
@@ -188,7 +199,7 @@ export function challengeView(m,id,now=Date.now()){
  if(m.game==='wordbomb')view.hunt=wordHuntView(m,id);
  if(m.game==='chaos')view.race=structuredClone(m.race);
  if(m.game==='focus'){view.answerCount=Object.keys(m.answers).length;view.task={...m.task};delete view.task.answer;if(now>=m.task.opensAt||m.phase==='finished'){delete view.task.sequence;delete view.task.flash;}view.me.answer=m.answers[id]||null;}
- if(m.game==='cipher'&&m.rules===2){view.me.secret=[...m.secrets[id]];view.me.intel=Object.fromEntries(Object.entries(p.intel).map(([id,rows])=>[id,structuredClone(rows.slice(-30))]));view.me.historyCounts={...p.historyCounts};view.revealed=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,digits:m.secrets[x.id].map((v,i)=>i<(m.overtime?4:Math.min(3,Math.floor((now-m.startedAt)/90000)))?v:null)}));}return view;
+ if(m.game==='cipher'&&m.rules===2){view.me.secret=[...m.secrets[id]];view.me.intel=Object.fromEntries(Object.entries(p.intel).map(([id,rows])=>[id,structuredClone(rows.slice(-30))]));view.me.historyCounts={...p.historyCounts};const threat=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,name:x.name,exact:Math.max(0,...((x.intel||{})[id]||[]).map(r=>r.exact||0))})).sort((a,b)=>b.exact-a.exact)[0];view.me.pressure=threat?.exact>0?threat:null;view.revealed=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,digits:m.secrets[x.id].map((v,i)=>i<(m.overtime?4:Math.min(3,Math.floor((now-m.startedAt)/90000)))?v:null)}));}return view;
 }
 export function nextChallengeAlarm(m,now=Date.now()){
  if(m.phase!=='playing')return now+60000;const times=[m.endsAt];if(m.players.some(p=>p.bot)&&m.game!=='chaos')times.push(m.nextBotAt);if(m.game==='wordbomb')times.push(wordHuntAlarm(m));if(m.game==='chaos')times.push(now<m.race.startAt?m.race.startAt:Math.min(m.race.endsAt,now+2000));if(m.game==='focus')times.push(m.task.deadline);if(m.game==='labyrinth')times.push(m.turnDeadline);if(m.game==='survival')times.push(m.board.collapsed?m.board.recoverAt:m.board.collapseAt);return Math.max(now+10,Math.min(...times));

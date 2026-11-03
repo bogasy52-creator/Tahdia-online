@@ -1,7 +1,9 @@
-/* Tahdia 33.4.0 — Jackaroo cards. The faces are the Baloot deck's (baloot-cards.js:
-   real courts, real pips, the deck you equipped), and every card carries a plate
-   with a drawing of what it does: out of the yard, steps forward, back, swap,
-   split, any stone, the king's sweep. The same plates make the card guide. */
+/* Tahdia 33.4.0 — Jackaroo cards: every card carries a plate with a drawing of what it does:
+   out of the yard, steps forward, back, swap, split, any stone, the king's sweep. The same
+   plates make the card guide.
+   33.7.0: the cards of the picture — a deck of its own for Jackaroo: white faces, the rank in
+   the corners and one big suit in the middle (a crown, a circlet or a cap for the courts),
+   drawn here as SVG so every phone shows the same shapes. */
 (function () {
   'use strict';
   const ICON = {
@@ -36,11 +38,41 @@
     el.querySelector('b').textContent = info.b; el.querySelector('small').textContent = info.s;
     return el;
   }
+  // the suits as paths in a 100 × 100 box (a font's ♥ may turn into an emoji on some phones)
+  const SUIT = {
+    S: 'M50 8C66 26 88 40 88 60C88 73 78 81 67 81C60 81 55 78 52 73C53 82 57 89 64 94H36C43 89 47 82 48 73C45 78 40 81 33 81C22 81 12 73 12 60C12 40 34 26 50 8Z',
+    H: 'M50 90C28 72 10 56 10 36C10 22 20 12 33 12C41 12 47 17 50 24C53 17 59 12 67 12C80 12 90 22 90 36C90 56 72 72 50 90Z',
+    D: 'M50 6C60 26 74 40 92 50C74 60 60 74 50 94C40 74 26 60 8 50C26 40 40 26 50 6Z',
+    C: 'M50 8C61 8 70 17 70 28C70 34 67 39 63 43C66 41 70 40 74 40C85 40 94 49 94 60C94 71 85 80 74 80C66 80 59 75 56 68C57 78 60 87 67 94H33C40 87 43 78 44 68C41 75 34 80 26 80C15 80 6 71 6 60C6 49 15 40 26 40C30 40 34 41 37 43C33 39 30 34 30 28C30 17 39 8 50 8Z',
+  };
+  const COURT = { K: 'M31 56L35 36L43 47L50 31L57 47L65 36L69 56Z', Q: 'M33 55C38 45 44 42 50 42S62 45 67 55ZM50 34A4 4 0 1 1 49.9 34ZM36 40A3 3 0 1 1 35.9 40ZM64 40A3 3 0 1 1 63.9 40Z', J: 'M30 52C29 44 37 37.5 49 37C60 36.5 69 41 69 47.5C69 50.5 66 52 61 52ZM30.5 52.5H63.5V58H30.5ZM57.5 39C59 30.5 66 25.5 75 25.5C71 29.5 67 34 63.5 40.5ZM62 33.5L70 29.2' };
+  const cache = new Map();
+  /** The face of a card as an SVG data address ('?' or 'back' is the back). */
+  function url(card) {
+    const key = String(card || 'back');
+    if (cache.has(key)) return cache.get(key);
+    let body;
+    if (key === '?' || key === 'back') {
+      body = '<rect x="1.5" y="1.5" width="97" height="137" rx="10" fill="#14275f" stroke="#5cc0ff" stroke-width="2.4"/><rect x="9" y="9" width="82" height="122" rx="6" fill="none" stroke="#5cc0ff" stroke-opacity=".55" stroke-width="1.2"/>'
+        + '<g fill="none" stroke="#8fd3ff" stroke-opacity=".28" stroke-width="1">' + Array.from({ length: 9 }, (_, i) => `<path d="M${9 + i * 10} 9L${-31 + i * 10} 131M${91 - i * 10} 9L${131 - i * 10} 131"/>`).join('') + '</g>'
+        + '<circle cx="50" cy="70" r="20" fill="#14275f" stroke="#5cc0ff" stroke-width="1.6"/><path d="' + SUIT.S + '" transform="translate(37 57) scale(.26)" fill="#e9f6ff"/>';
+    } else {
+      const rank = rankOf(key), suit = key.slice(-1), red = suit === 'H' || suit === 'D', ink = red ? '#d3263b' : '#1b2230', path = SUIT[suit] || SUIT.S;
+      const corner = `<text x="12" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="${rank === '10' ? 19 : 24}" letter-spacing="${rank === '10' ? -1.5 : 0}" fill="${ink}">${rank}</text><path d="${path}" transform="translate(4.5 32) scale(.15)" fill="${ink}"/>`;
+      const middle = COURT[rank]
+        ? `<rect x="21" y="34" width="58" height="72" rx="7" fill="${ink}" fill-opacity=".07" stroke="${ink}" stroke-opacity=".35" stroke-width="1.2"/><path d="${COURT[rank]}" fill="#e0b54a" stroke="#9b7a24" stroke-width="1" stroke-linejoin="round"/><text x="50" y="86" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="30" fill="${ink}">${rank}</text><path d="${path}" transform="translate(42 90) scale(.16)" fill="${ink}"/>`
+        : `<path d="${path}" transform="translate(${rank === 'A' ? 18 : 24} ${rank === 'A' ? 38 : 44}) scale(${rank === 'A' ? .64 : .52})" fill="${ink}"/>`;
+      body = '<defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef1f6"/></linearGradient></defs>'
+        + '<rect x="1.5" y="1.5" width="97" height="137" rx="10" fill="url(#p)" stroke="#cfd6e2" stroke-width="2"/>' + corner + `<g transform="rotate(180 50 70)">${corner}</g>` + middle;
+    }
+    const out = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140">' + body + '</svg>');
+    cache.set(key, out);
+    return out;
+  }
   function art(card) {
     const img = document.createElement('img');
     img.className = 'jk-face'; img.alt = ''; img.decoding = 'async'; img.draggable = false;
-    const cards = window.BS_CARDS;
-    if (cards?.url) { const rank = rankOf(card), suit = String(card).slice(-1); img.src = card === '?' ? cards.url('back', deck()) : cards.url((rank === '10' ? 'T' : rank) + suit, deck()); }
+    img.src = url(card);
     return img;
   }
   /** A card for the hand: the deck's face and the plate saying what it does. */
@@ -69,7 +101,7 @@
   }
   const info = (card) => INFO[rankOf(card)] || null;
   // 33.6.0: ICON also draws the badge on the card that was just played, in the middle of the board
-  window.BS_JACK_CARDS = Object.freeze({ INFO, ORDER, ICON, face, legend, info, rankOf });
+  window.BS_JACK_CARDS = Object.freeze({ INFO, ORDER, ICON, face, legend, info, rankOf, url });
   const guide = () => legend(document.getElementById('cardGuide'));
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guide, { once: true }); else guide();
 })();

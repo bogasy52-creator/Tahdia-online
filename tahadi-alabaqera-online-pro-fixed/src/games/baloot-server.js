@@ -177,7 +177,7 @@ export function balootAlarm(room, rng, now) {
 
 export function balootPlayers(room) {
   const list = [];
-  for (const p of Object.values(room.players)) list.push({ id: p.id, index: p.seat, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: false, character: p.character || '' });
+  for (const p of Object.values(room.players)) list.push({ id: p.id, index: p.seat, name: p.name, username: p.username || undefined, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: false, character: p.character || '' });
   for (const seat of room.bots || []) list.push({ id: 'bot-' + seat, index: seat, name: room.botNames?.[seat] || 'لاعب', role: 'bot', ready: true, connected: true, bot: true, level: room.botLevels?.[seat] || 'hard', character: '' });
   return list.sort((a, b) => a.index - b.index);
 }

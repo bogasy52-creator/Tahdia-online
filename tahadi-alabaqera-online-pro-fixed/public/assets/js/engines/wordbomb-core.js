@@ -1,6 +1,8 @@
 // «صيد الكلمات» (33.5.0, game id «wordbomb»): a grid of letters with hidden words. Everyone
 // hunts at once; the first to mark a word takes its points. Three rounds, the last one with
 // its words hidden and double points. Deterministic and shared by practice and the rooms.
+// 33.7.0: the first two rounds also hide «الكلمة السرية»: one more word of the theme that is on
+// the board but not in the list. It is worth double, and the round does not wait for it.
 import {HUNT_THEMES} from './wordbank-ar.js';
 export const HUNT_ROUNDS=3,HUNT_BREAK_MS=4000,HUNT_MISS_MS=1200;
 export const HUNT_ROUND_MS=Object.freeze([75000,75000,90000]);
@@ -41,19 +43,27 @@ export function huntLayout(m,round){
    for(let k=0;k<160&&!spot;k++){const [dr,dc]=dirs[pick(r,dirs.length)],row=pick(r,size-dr*(len-1)),col=pick(r,size-dc*(len-1)),cells=Array.from({length:len},(_,i)=>(row+dr*i)*size+col+dc*i);if(cells.every((c,i)=>!grid[c]||grid[c]===w.word[i])&&!placed.some(p=>p.cells.join()===cells.join()))spot=cells;}
    if(!spot)continue;spot.forEach((c,i)=>grid[c]=w.word[i]);placed.push({label:w.label,word:w.word,cells:spot});
   }
-  if(!best||placed.length>best.placed.length)best={grid,placed};
+  if(!best||placed.length>best.placed.length)best={grid,placed,pool};
   if(placed.length>=count)break;
+ }
+ const golden=round<HUNT_ROUNDS-1?pick(r,best.placed.length):-1;
+ // the secret word: any word of the theme still off the board that fits without hiding inside another
+ if(round<HUNT_ROUNDS-1)for(const w of best.pool){
+  if(best.placed.some(p=>p.word===w.word||clash(p.word,w.word)))continue;
+  const len=w.word.length;let spot=null;
+  for(let k=0;k<200&&!spot;k++){const [dr,dc]=dirs[pick(r,dirs.length)],row=pick(r,size-dr*(len-1)),col=pick(r,size-dc*(len-1)),cells=Array.from({length:len},(_,i)=>(row+dr*i)*size+col+dc*i);if(cells.every((c,i)=>!best.grid[c]||best.grid[c]===w.word[i])&&cells.some(c=>!best.grid[c]))spot=cells;}
+  if(spot){spot.forEach((c,i)=>best.grid[c]=w.word[i]);best.placed.push({label:w.label,word:w.word,cells:spot,secret:true});break;}
  }
  const letters=best.placed.map(p=>p.word).join('');
  for(let c=0;c<best.grid.length;c++)if(!best.grid[c])best.grid[c]=r()<.35?letters[pick(r,letters.length)]:FILL[pick(r,FILL.length)];
- return{size,theme:theme.name,grid:best.grid,words:best.placed,golden:round<HUNT_ROUNDS-1?pick(r,best.placed.length):-1};
+ return{size,theme:theme.name,grid:best.grid,words:best.placed,golden};
 }
 function botDelay(m,p,step){const bots=m.players.filter(x=>x.bot).length,r=rand((m.seed+m.round*131+p.slot*977+step*61)>>>0);return Math.round((9000+r()*7000)*(1+.35*Math.max(0,bots-1)));}
 function startRound(m,now,round){
  const layout=huntLayout(m,round),hidden=round===HUNT_ROUNDS-1;
  m.round=round;m.phaseAt=now;
  m.hunt={round,phase:'play',size:layout.size,theme:layout.theme,grid:layout.grid,hidden,startedAt:now,deadline:now+HUNT_ROUND_MS[round],nextAt:0,hint1At:hidden?now+HUNT_HINTS_MS[0]:0,hint2At:hidden?now+HUNT_HINTS_MS[1]:0,hint1:false,hint2:false,
-  words:layout.words.map((w,i)=>({label:w.label,word:w.word,cells:w.cells,golden:i===layout.golden,points:huntPoints(w.word,hidden||i===layout.golden),by:null,name:null,at:0,found:null})),
+  words:layout.words.map((w,i)=>({label:w.label,word:w.word,cells:w.cells,golden:i===layout.golden,...(w.secret?{secret:true}:{}),points:huntPoints(w.word,hidden||w.secret||i===layout.golden),by:null,name:null,at:0,found:null})),
   wait:{},miss:{},recent:m.hunt?.recent||[]};
  for(const p of m.players)if(p.bot)p.nextThink=now+2500+botDelay(m,p,0);
 }
@@ -74,8 +84,8 @@ export function applyWordHunt(m,p,a,now){
  // a wrong pick holds the player for a moment, so nobody can sweep the grid
  if(!w){h.wait[p.id]=now+HUNT_MISS_MS;h.miss[p.id]={at:now,cells};p.misses=(p.misses||0)+1;p.moves++;return;}
  w.by=p.id;w.name=p.name;w.at=now;w.found=cells;p.words=(p.words||0)+1;p.moves++;p.score+=w.points;
- h.recent.push({id:p.id,name:p.name,label:w.label,points:w.points,golden:w.golden,round:h.round,at:now});if(h.recent.length>8)h.recent.shift();
- if(h.words.every(x=>x.by))endRound(m,now);
+ h.recent.push({id:p.id,name:p.name,label:w.label,points:w.points,golden:w.golden,...(w.secret?{secret:true}:{}),round:h.round,at:now});if(h.recent.length>8)h.recent.shift();
+ if(h.words.every(x=>x.by||x.secret))endRound(m,now);
 }
 export function advanceWordHunt(m,now){
  const h=m.hunt;if(!h||m.phase!=='playing')return;
@@ -87,7 +97,7 @@ export function advanceWordHunt(m,now){
 }
 export function wordHuntBot(m,p,now){
  const h=m.hunt;if(!h||h.phase!=='play'||now<(p.nextThink||0))return null;
- const open=h.words.filter(w=>!w.by);if(!open.length)return null;
+ const open=h.words.filter(w=>!w.by&&!w.secret);if(!open.length)return null;
  p.nextThink=now+botDelay(m,p,(p.words||0)+1+h.words.length-open.length);
  const w=open[pick(rand((m.seed+m.version*31+p.slot*7)>>>0),open.length)];
  return{round:h.round,from:w.cells[0],to:w.cells.at(-1)};
@@ -98,8 +108,8 @@ export function wordHuntAlarm(m){const h=m.hunt;if(!h)return Infinity;if(h.phase
 export function wordHuntView(m,id){
  const h=m.hunt;if(!h)return null;const live=h.phase==='play'&&m.phase==='playing';
  return{round:h.round,rounds:HUNT_ROUNDS,phase:m.phase==='finished'?'done':h.phase,size:h.size,grid:[...h.grid],theme:h.theme,hidden:h.hidden,startedAt:h.startedAt,deadline:h.deadline,nextAt:h.nextAt,duration:HUNT_ROUND_MS[h.round],
-  words:h.words.map((w,i)=>{const open=!h.hidden||!!w.by||!live;return{i,label:open?w.label:null,length:w.word.length,mask:open?null:[...w.word].map((c,k)=>h.hint1&&k===0||h.hint2&&k===w.word.length-1?c:null),golden:w.golden,points:w.points,by:w.by,name:w.name,cells:w.by?[...w.found]:live?null:[...w.cells]};}),
-  found:h.words.filter(w=>w.by).length,recent:h.recent.map(x=>({...x})),wait:h.wait[id]||0,miss:h.miss[id]?{at:h.miss[id].at,cells:[...h.miss[id].cells]}:null,misses:m.players.find(p=>p.id===id)?.misses||0};
+  words:h.words.map((w,i)=>{const open=(!h.hidden&&!w.secret)||!!w.by||!live;return{i,label:open?w.label:null,length:w.word.length,mask:open?null:[...w.word].map((c,k)=>!w.secret&&(h.hint1&&k===0||h.hint2&&k===w.word.length-1)?c:null),golden:w.golden,...(w.secret?{secret:true}:{}),points:w.points,by:w.by,name:w.name,cells:w.by?[...w.found]:live?null:[...w.cells]};}),
+  found:h.words.filter(w=>w.by&&!w.secret).length,recent:h.recent.map(x=>({...x})),wait:h.wait[id]||0,miss:h.miss[id]?{at:h.miss[id].at,cells:[...h.miss[id].cells]}:null,misses:m.players.find(p=>p.id===id)?.misses||0};
 }
 /** Rooms saved before 33.5.0 hold a «قنبلة الكلمات» match: a live one starts over as a hunt. */
 export function upgradeWordHunt(m,now=Date.now()){

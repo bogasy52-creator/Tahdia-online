@@ -40,7 +40,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.6.0';
+const RELEASE='33.7.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -1846,7 +1846,7 @@ export class BoardRoom extends DurableObject {
       players: this.room.order.map((id, index) => {
         const p = this.room.players[id];
         const look = p.look || { ...DEFAULT_LOOK, character: p.character || DEFAULT_LOOK.character };
-        return { id: p.id, index, name: p.name, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined, look, character: look.character };
+        return { id: p.id, index, name: p.name, username: p.bot ? undefined : p.username || undefined, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined, look, character: look.character };
       }),
       me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
       publicMatch: Boolean(this.room.publicMatch),

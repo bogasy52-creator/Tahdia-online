@@ -1,7 +1,10 @@
 // «صيد الكلمات» (33.5.0): the themes and their words. Every word is written the way players
-// know it; the grid holds its plain letters (أ إ آ → ا، ؤ → و، ئ ى → ي، بلا تشكيل).
+// know it, and since 33.7.0 the grid holds it exactly the same way (أسد، شاطئ، مرمى، لؤلؤ):
+// the list under the board and the letters on it never disagree. Only تشكيل and ـ are dropped.
 export function normalizeBombWord(value){return typeof value==='string'?value.normalize('NFKC').trim().replace(/[ً-ٰٟۖ-ۭـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ى/g,'ي'):'';}
 export const normalizeHuntWord=normalizeBombWord;
+/** The letters a word is written with: no تشكيل, no ـ, every hamza and ى kept. */
+export function huntLetters(value){return typeof value==='string'?value.normalize('NFKC').trim().replace(/[ً-ٰٟۖ-ۭـ]/g,''):'';}
 const RAW=[
  ['فواكه','تفاح موز عنب رمان مشمش خوخ تمر ليمون كرز تين بطيخ مانجو جوافة فراولة أناناس'],
  ['حيوانات','أسد نمر فيل زرافة حصان غزال جمل قرد أرنب ثعلب نعامة حمار خروف ذئب'],
@@ -16,7 +19,16 @@ const RAW=[
  ['الألوان','أحمر أزرق أخضر أصفر أسود أبيض وردي رمادي بني ذهبي فضي بنفسجي'],
  ['جسم الإنسان','رأس عين أنف أذن رجل قلب كتف شعر ركبة أصبع لسان معدة ظهر'],
  ['المطبخ','صحن كوب ملعقة شوكة سكين قدر فنجان دلة إبريق صينية مقلاة طنجرة'],
- ['وسائل النقل','سيارة طائرة قطار سفينة دراجة حافلة شاحنة قارب باص مترو صاروخ']
+ ['وسائل النقل','سيارة طائرة قطار سفينة دراجة حافلة شاحنة قارب باص مترو صاروخ'],
+ // 33.7.0: eight more, so the three rounds of a match rarely meet a theme they met before
+ ['الخضار','طماطم خيار بصل ثوم جزر بطاطس فلفل شمندر كوسة ملفوف بامية فجل بقدونس نعناع'],
+ ['الطيور','صقر حمام نسر بومة ببغاء عصفور غراب بطة دجاجة طاووس هدهد حبارى نورس'],
+ ['الملابس','ثوب شماغ غترة عقال بشت عباية نعال قميص فستان طاقية جاكيت شراب حزام'],
+ ['التقنية','جوال شاشة لابتوب كاميرا سماعة شاحن تطبيق روبوت فأرة طابعة برنامج بطارية'],
+ ['البر والمخيم','خيمة نار حطب فنر رمل كثيب سدو ربيع صحراء وادي نجوم شتاء مشب فحم'],
+ ['الحلويات','كيك كعك بسكوت دونات كنافة بسبوسة بقلاوة حلاوة مهلبية كاسترد معمول تمرية'],
+ ['أسماء','محمد فهد سعد نورة ريم خالد سارة عمر علي هند مريم يوسف ليلى دانة'],
+ ['دول','مصر قطر ليبيا سوريا لبنان فلسطين العراق اليمن الأردن الهند الصين تركيا فرنسا كندا']
 ];
-/** [{name, words:[{label, word}]}] — label is what the list shows, word is what the grid holds. */
-export const HUNT_THEMES=Object.freeze(RAW.map(([name,list])=>Object.freeze({name,words:Object.freeze(list.split(' ').map(label=>Object.freeze({label,word:normalizeBombWord(label)})))})));
+/** [{name, words:[{label, word}]}] — label is what the list shows, word is what the grid holds: the same letters. */
+export const HUNT_THEMES=Object.freeze(RAW.map(([name,list])=>Object.freeze({name,words:Object.freeze(list.split(' ').map(label=>Object.freeze({label,word:huntLetters(label)})))})));

@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.6.0-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.6.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.6.0';
-import { BalootVoice } from './baloot-voice.js?v=33.6.0-baloot2';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.7.0-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.7.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.7.0';
+import { BalootVoice } from './baloot-voice.js?v=33.7.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -92,6 +92,14 @@ function isBot(seat) {
   return Boolean(playerAt(seat)?.bot);
 }
 
+// 33.7.0: a tap on a seat opens that player's card (with «أضف صديق»)
+document.addEventListener('click', (event) => {
+  const box = event.target.closest?.('.bl-seat');
+  if (!box || !ui.room || !window.BS_PLAYER_CARD || event.target.closest('button,a')) return;
+  const seat = [0, 1, 2, 3].find((s) => posOf(s) === box.dataset.pos), p = playerAt(seat);
+  if (!p) return;
+  window.BS_PLAYER_CARD.open({ name: p.name, username: p.username, character: p.look?.character || p.character, bot: p.bot, level: p.level, me: seat === ui.me });
+});
 function renderSeats(view) {
   for (let seat = 0; seat < 4; seat++) {
     const el = seatEl(seat);
@@ -996,6 +1004,8 @@ function onRoomState(room) {
     ui.view = view;
     render(view);
     paintTimer();
+    paintClock(room, view);
+    nearWin(room, view);
     if (view.phase === 'finished' && view.winner != null && $('matchEnd').hidden && $('resultSheet').hidden) showMatchEnd(view.winner, view.scores, view);
   });
 }
@@ -1053,6 +1063,28 @@ function paintLobbyRing() {
   if (left > 0) requestAnimationFrame(paintLobbyRing);
 }
 
+// 33.7.0: the room clock beside the turn line, the same one every room has
+function paintClock(room, view) {
+  const clock = ui.clock || (ui.clock = window.BS_CLOCK?.attach($('prompt')));
+  if (!clock) return;
+  if (!room || room.status !== 'playing' || !room.turnDeadline || !view || view.turn === null || view.turn === undefined || ['scored', 'finished'].includes(view.phase)) { ui.clockKey = ''; clock.clear(); return; }
+  const key = room.code + ':' + room.turnDeadline;
+  if (ui.clockKey === key) return;
+  ui.clockKey = key;
+  const base = Number(room.serverNow) || Date.now(), got = Number(room.clientReceivedAt) || Date.now(), mine = view.turn === ui.me;
+  clock.set({ end: Number(room.turnDeadline), total: Number(room.turnTotal) || 0, clock: () => base + (Date.now() - got), mine, key, label: mine ? 'دورك' : 'دور ' + seatName(view, view.turn) });
+}
+// 33.7.0: a team close to the target: a heartbeat for the other team, a gold note for the team itself
+function nearWin(room, view) {
+  if (!window.BS_CLOCK || !room || !view?.scores || view.phase === 'finished') return;
+  const target = Number(view.target) || 152, us = teamOf(ui.me);
+  for (const team of [0, 1]) {
+    const score = Number(view.scores[team]) || 0;
+    if (score >= target || score < Math.round(target * .82)) continue;
+    const ours = team === us;
+    window.BS_CLOCK.alert('baloot:' + room.code + ':' + (room.startedAt || 0) + ':' + team, ours ? 'قربتوا! عندكم ' + score + ' من ' + target : 'الخصوم وصلوا ' + score + ' من ' + target + ' — شدّوا حيلكم!', { tone: ours ? 'mine' : 'rival' });
+  }
+}
 function paintTimer() {
   const room = ui.room;
   for (const el of document.querySelectorAll('.bl-seat')) el.querySelector('.bl-timer').style.setProperty('--t', '1');

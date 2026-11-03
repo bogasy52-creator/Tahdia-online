@@ -1,0 +1,42 @@
+/* Tahdia 33.7.0 — «ساعة الغرفة»: the same clear countdown in every room */
+@property --f{syntax:'<number>';inherits:true;initial-value:1}
+.bs-clock{--size:46px;--c:#3ddc97;--track:#ffffff1c;--disc:#0a1120;position:relative;display:inline-grid;place-items:center;flex:none;box-sizing:border-box;width:var(--size);height:var(--size);margin:0;border-radius:50%;background:radial-gradient(closest-side,var(--disc) calc(100% - 5px),transparent calc(100% - 4.5px)),conic-gradient(from 0deg,var(--c) calc(var(--f)*360deg),var(--track) 0);box-shadow:0 0 0 1px #ffffff12,0 6px 18px #0007;vertical-align:middle;font-style:normal;transition:--f .2s linear,box-shadow .3s}
+.bs-clock::after{content:attr(data-s);font:900 calc(var(--size)*.43)/1 Tajawal,system-ui,sans-serif;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.03em;direction:ltr}
+.bs-clock.long::after{font-size:calc(var(--size)*.32)}
+.bs-clock[data-size=sm]{--size:34px}
+.bs-clock[data-size=lg]{--size:54px}
+.bs-clock[data-tone=warn]{--c:#ffbf3c;box-shadow:0 0 0 1px #ffbf3c40,0 6px 18px #0007}
+.bs-clock:is([data-tone=danger],[data-tone=out]){--c:#ff4d5e;box-shadow:0 0 0 1px #ff4d5e70,0 0 20px #ff4d5e8c}
+.bs-clock[data-tone=danger]{animation:bs-clock-beat 1s ease-in-out infinite}
+.bs-clock[data-tone=danger]::after{color:#ffe1e3}
+.bs-clock[data-tone=out]{--track:#ff4d5e2e}
+@keyframes bs-clock-beat{0%,100%{transform:scale(1)}14%{transform:scale(1.13)}28%{transform:scale(.97)}42%{transform:scale(1.06)}60%{transform:scale(1)}}
+
+/* where the games put it (the old small «⏱ 30ث» steps aside) */
+body:has(#status.bs-clock-on) #turnTimer{display:none!important}
+#status.bs-clock-on{display:flex!important;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap}
+#status.bs-clock-on>.bs-clock{order:-1}
+#chTime.bs-clock-on,.ch-hunt-clock.bs-clock-on{display:inline-flex;align-items:center;font-size:0!important;line-height:0;padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+.ch-match-meta:has(#chTime.bs-clock-on){min-height:50px;align-items:center}
+#roundClock.bs-clock-on{display:inline-flex;align-items:center;font-size:0!important;line-height:0;padding:0!important;background:none!important;border:0!important}
+#prompt.bl-prompt.bs-clock-on{display:flex!important;align-items:center;justify-content:center;gap:9px}
+
+/* the copy that floats at the top of the screen when the clock's place is out of sight */
+.bs-clock-float{position:fixed;z-index:9400;top:calc(env(safe-area-inset-top) + 8px);left:50%;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);padding:4px 13px 4px 5px;border:1px solid #ffffff24;border-radius:99px;background:#0a1120e8;box-shadow:0 12px 30px #0009;color:#fff;font:800 14px/1.2 Tajawal,system-ui,sans-serif;white-space:nowrap;pointer-events:none;opacity:0;transform:translate(-50%,-130%);transition:transform .22s ease,opacity .22s ease;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.bs-clock-float.show{opacity:1;transform:translate(-50%,0)}
+.bs-clock-float[data-tone=danger]{border-color:#ff4d5e88}
+.bs-clock-float-text:empty{display:none}
+
+/* the red edge of the last five seconds, and the flash of «قرب يفوز» */
+.bs-tension-edge{position:fixed;inset:0;z-index:9300;pointer-events:none;opacity:0;box-shadow:inset 0 0 0 2px #ff4d5e,inset 0 0 70px #ff2d3f88;transition:opacity .3s}
+.bs-tension-edge.on{animation:bs-edge 1s ease-in-out infinite}
+.bs-tension-edge.flash{animation:bs-edge .55s ease-in-out 4}
+@keyframes bs-edge{0%,100%{opacity:.15}50%{opacity:.85}}
+
+.bs-alert-banner{position:fixed;z-index:9500;top:calc(env(safe-area-inset-top) + 58px);left:50%;max-width:min(420px,calc(100vw - 32px));box-sizing:border-box;padding:10px 18px;border-radius:16px;border:1px solid #ff4d5e99;background:linear-gradient(135deg,#3a0d16f2,#1b0a12f2);box-shadow:0 16px 40px #000a,0 0 30px #ff4d5e44;color:#fff;font:800 15px/1.5 Tajawal,system-ui,sans-serif;text-align:center;pointer-events:none;opacity:0;transform:translate(-50%,-18px) scale(.96);transition:opacity .25s ease,transform .25s ease}
+.bs-alert-banner::before{content:'⚠';margin-inline-end:8px;color:#ff8a95}
+.bs-alert-banner[data-tone=mine]{border-color:#f3cf72aa;background:linear-gradient(135deg,#3b2c0cf2,#1d160af2);box-shadow:0 16px 40px #000a,0 0 30px #f3cf7240}
+.bs-alert-banner[data-tone=mine]::before{content:'★';color:#f3cf72}
+.bs-alert-banner.show{opacity:1;transform:translate(-50%,0) scale(1)}
+
+@media (prefers-reduced-motion:reduce){.bs-clock[data-tone=danger],.bs-tension-edge.on,.bs-tension-edge.flash{animation:none}.bs-tension-edge.on{opacity:.55}.bs-clock-float,.bs-alert-banner{transition:none}}

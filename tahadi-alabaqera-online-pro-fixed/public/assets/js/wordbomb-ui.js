@@ -61,27 +61,31 @@ function draw(){
  const picked=new Set(shown||[]),taken=new Set(h.words.flatMap(w=>w.by&&w.cells?w.cells:[]));
  for(const b of q('.ch-hunt-grid').children){const c=Number(b.dataset.cell);b.classList.toggle('sel',picked.has(c));b.classList.toggle('anchor',c===start||c===drag?.from);b.classList.toggle('hit',taken.has(c));}
  const pick=q('.ch-hunt-pick');pick.classList.toggle('live',!!shown&&shown.length>1);
- pick.textContent=shown&&shown.length>1?shown.map(c=>h.grid[c]).join(' '):note||(h.phase==='play'?(h.hidden?'دوّر كلمات من موضوع «'+h.theme+'»':'اسحب على الكلمة، أو اضغط أول حرف وآخر حرف'):'');
+ pick.textContent=shown&&shown.length>1?shown.map(c=>h.grid[c]).join(''):note||(h.phase==='play'?(h.hidden?'دوّر كلمات من موضوع «'+h.theme+'»':'اسحب على الكلمة، أو اضغط أول حرف وآخر حرف'):'');
 }
 function list(m){
  const h=m.hunt,area=$('chControls').querySelector('.ch-hunt-words');if(!area)return;
  const key=JSON.stringify([h.round,h.phase,h.words.map(w=>[w.label,w.by,w.mask])]);if(area.dataset.key===key)return;area.dataset.key=key;
- const head=el('div','ch-hunt-words-head');head.append(el('b','',h.hidden?'كلمات مخفية · نقاطها دبل':'الكلمات'),el('small','',h.found+' من '+h.words.length));
+ const regular=h.words.filter(w=>!w.secret).length,secret=h.words.find(w=>w.secret);
+ const head=el('div','ch-hunt-words-head');head.append(el('b','',h.hidden?'كلمات مخفية · نقاطها دبل':'الكلمات'),el('small','',h.found+' من '+regular));
  const rows=el('ul','ch-hunt-list');
  for(const w of h.words){
-  const row=el('li','ch-hunt-word'+(w.by?' found':'')+(w.by===hooks.me?' mine':'')+(w.golden?' golden':'')+(!w.by&&w.cells?' missed':''));if(w.by)row.style.setProperty('--hit',colorOf(w.by));
+  const row=el('li','ch-hunt-word'+(w.by?' found':'')+(w.by===hooks.me?' mine':'')+(w.golden?' golden':'')+(w.secret?' secret':'')+(!w.by&&w.cells?' missed':''));if(w.by)row.style.setProperty('--hit',colorOf(w.by));
   const name=el('b','ch-hunt-label');
-  if(w.label)name.textContent=w.label;else{name.classList.add('ch-hunt-mask');for(const c of w.mask)name.append(el('i','',c||''));const first=w.mask[0],last=w.mask.at(-1);name.setAttribute('aria-label','كلمة من '+w.length+' حروف'+(first?' تبدأ بـ'+first:'')+(last?' وتنتهي بـ'+last:''));}
-  row.append(name,w.by?el('span','ch-hunt-by',w.by===hooks.me?'أنت':w.name):el('small','ch-hunt-points',(w.golden?'★ ':'')+'+'+w.points));
+  // a hidden word is a row of crossword boxes, read from the right: the hints fill the first and the last box
+  if(w.label)name.textContent=w.label;else if(w.secret){name.classList.add('ch-hunt-secret');name.textContent='كلمة سرية';name.setAttribute('aria-label','كلمة سرية من '+w.length+' حروف، من نفس الموضوع وما هي في القائمة');}else{name.classList.add('ch-hunt-mask');name.dir='rtl';for(const c of w.mask)name.append(el('i',c?'on':'',c||''));const first=w.mask[0],last=w.mask.at(-1);name.setAttribute('aria-label','كلمة من '+w.length+' حروف'+(first?' تبدأ بـ'+first:'')+(last?' وتنتهي بـ'+last:''));}
+  row.append(name,w.by?el('span','ch-hunt-by',w.by===hooks.me?'أنت':String(w.name||'').trim().split(/\s+/)[0]):el('small','ch-hunt-points',(w.golden?'★ ':'')+(w.secret?'🔒 ':'')+'+'+w.points));
   rows.append(row);
  }
  area.replaceChildren(head,rows);
+ // 33.7.0: the secret word of the round: one more word of the theme, on the board but not in the list
+ if(secret&&!secret.by&&h.phase==='play')area.append(el('p','ch-hunt-secret-note','🔒 فيه كلمة سرية من «'+h.theme+'» مو بالقائمة، نقاطها دبل. دوّرها!'));
 }
 function feed(m){
  const h=m.hunt,area=$('chTactics').querySelector('.ch-hunt-feed');if(!area)return;const key=h.recent.map(x=>x.at+x.id).join('|');if(seenFeed===key)return;
  const fresh=seenFeed===null?[]:h.recent.filter(x=>!seenFeed.includes(x.at+x.id));seenFeed=key;
  for(const x of fresh)if(x.id!==hooks.me)sound('pop');
- area.replaceChildren(...[...h.recent].reverse().slice(0,4).map(x=>{const row=el('p','ch-hunt-news'+(x.id===hooks.me?' mine':''));row.style.setProperty('--hit',colorOf(x.id));row.append(el('i'),el('b','',x.id===hooks.me?'أنت':x.name),el('span','',(x.id===hooks.me?' لقيت':' لقى')+' «'+x.label+'»'+(x.golden?' ★':'')),el('small','',' +'+x.points));return row;}));
+ area.replaceChildren(...[...h.recent].reverse().slice(0,4).map(x=>{const row=el('p','ch-hunt-news'+(x.id===hooks.me?' mine':''));row.style.setProperty('--hit',colorOf(x.id));row.append(el('i'),el('b','',x.id===hooks.me?'أنت':x.name),el('span','',(x.id===hooks.me?' لقيت':' لقى')+(x.secret?' الكلمة السرية':'')+' «'+x.label+'»'+(x.golden?' ★':'')+(x.secret?' 🔒':'')),el('small','',' +'+x.points));return row;}));
  if(!h.recent.length)area.append(el('p','ch-hunt-news empty','أول واحد يلقى الكلمة ياخذ نقاطها، والكلمة الذهبية ★ نقاطها دبل.'));
 }
 function render(m,next){
@@ -90,7 +94,7 @@ function render(m,next){
  grid(h);
  q('.ch-hunt-round').textContent=ROUNDS[h.round]||'الجولة '+(h.round+1);
  q('.ch-hunt-theme').textContent=h.theme;
- q('.ch-hunt-count').textContent='لقيتوا '+h.found+' من '+h.words.length;
+ q('.ch-hunt-count').textContent='لقيتوا '+h.found+' من '+h.words.filter(w=>!w.secret).length;
  q('.ch-hunt-break-title').textContent=h.phase==='break'?'خلصت '+(ROUNDS[h.round]||'الجولة'):'';q('.ch-hunt-break-note').hidden=h.found>=h.words.length;
  if(seenRound&&seenRound!==round){if(h.phase==='play')sound('round');else if(h.phase==='break')sound('reveal');}seenRound=round;
  if(mine>=0&&finds>mine)sound('correct');mine=finds;

@@ -80,7 +80,7 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/login" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.login(body));
     if (url.pathname === "/validate" && request.method === "POST") return this.validateSession(body.secret);
     if (url.pathname === "/logout" && request.method === "POST") return this.logout(body.secret);
-    if (url.pathname === "/public" && request.method === "GET") return this.publicData();
+    if (url.pathname === "/public" && request.method === "GET") return this.publicData(url.searchParams.get("card") === "1");
     if (url.pathname === "/dashboard" && request.method === "POST") return this.dashboard(body.secret);
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);
     if (url.pathname === '/announcement')return json({ok:true,announcement:await this.ctx.storage.get('admin:announcement')||null});
@@ -326,12 +326,20 @@ export function createSocialUserClass(DurableObject) {
     return json({ ok: true });
   }
 
-  async publicData() {
+  async publicData(withCard = false) {
     if (!this.profile) return json({ ok: false, error: "الحساب غير موجود" }, 404);
     const visiblePresence = this.profile.settings?.showOnline === false
       ? { online: false, lastSeen: null }
       : this.presence;
-    return json({ ok: true, profile: publicProfile(this.profile, visiblePresence) });
+    const profile = publicProfile(this.profile, visiblePresence);
+    // 33.7.0: the card a player opens from a room: level, wins, games and the look, never coins
+    if (withCard) {
+      try {
+        const c = accountCareer(await this.ctx.storage.get("career") || { name: this.profile.displayName }, this.profile);
+        profile.card = { level: c.level, wins: c.wins, games: c.games, character: c.equipped?.character || null, title: c.equipped?.title || null };
+      } catch {}
+    }
+    return json({ ok: true, profile });
   }
 
   async listValues(prefix, limit = 100) {

@@ -89,7 +89,8 @@ function makeBot(seat, rng, taken) {
 function createState(game, names, variant, rng) {
   if (game === 'snakes') return createSnakesServerGame(names, { variant: variant || 'classic' });
   if (game === 'zahra') return createLudoGame(names);
-  if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length) });
+  // 33.7.0: four seats play on the board of the picture: 19 places a seat, the home lane filled
+  if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length), home: 'fill' });
   return createRaceDiceGame(names, DICE_TARGET);
 }
 

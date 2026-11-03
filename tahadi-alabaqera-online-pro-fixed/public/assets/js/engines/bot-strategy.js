@@ -24,7 +24,9 @@ export function chooseJackarooMove(state,difficulty='medium',rng=Math.random){
      for(let mi=0;mi<4;mi++){
       const before=state.players[owner].marbles[mi],after=next.players[owner].marbles[mi];
       if(before===after)continue;
-      if(after===geometry.finish)score+=sign*600;
+      // a «fill» board: deeper in the lane is better, the deepest hole best of all
+      if(geometry.fill&&after>=geometry.track)score+=sign*((after===geometry.finish?600:320+(after-geometry.track)*80)+(before<geometry.track?60:0));
+      else if(after===geometry.finish)score+=sign*600;
       else if(after===-1)score-=sign*95;
       else if(before===-1)score+=sign*55;
       else score+=sign*((after>=geometry.track?100:0)+(after-before)*2);

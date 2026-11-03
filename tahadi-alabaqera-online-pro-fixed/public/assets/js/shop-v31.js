@@ -3,14 +3,15 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.6.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.7.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
  ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في السلم والثعبان والزهرة، وتصير كرات زجاجية في الجاكارو.'],
  ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في السلم والثعبان، وتكون صورتك على طاولة البلوت.'],
  ['dice','النرد','🎲','نرد ثلاثي الأبعاد يظهر في كل ألعاب النرد.'],
- ['table','الطاولات','🪵','طاولتك في البلوت: الإطار والسطح والزخرفة. والطاولة نفسها تلبس لوحتي الجاكارو والزهرة.'],
+ ['table','الطاولات','🪵','طاولتك في البلوت: الإطار والسطح والزخرفة. والطاولة نفسها تلبس لوحة الزهرة.'],
+ ['jboard','لوحات الجاكارو','🎯','لوحة الجاكارو نفسها بممشاها وأرقامها، بلبس ثاني: ذهب، زمرد، رخام، كربون، قصر، مجلس.'],
  ['board','ألواح السلالم','🪜','لوح السلم والثعبان بخاناته وإطاره وسلالمه.'],
  ['deck','ورق البلوت','🃏','ورق اللعب على طاولة البلوت: الوجه والظهر في يدك وعلى الطاولة.'],
  ['snake','الثعابين','🐍','إطلالتك في حلبة الثعبان أمام بقية اللاعبين.'],
@@ -24,7 +25,7 @@ const CATS=[
 const TYPE_LABEL=Object.fromEntries(CATS.map(([id,label])=>[id,label]));
 const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
 const REACTION=new Set(core.REACTION_TYPES||['emote','phrase','move']);
-const SLOTS=['pawn','dice','table','board','character','deck','snake','trail','victory','title'];
+const SLOTS=['pawn','dice','table','jboard','board','character','deck','snake','trail','victory','title'];
 const TABLE_MATERIAL={'table-club':'club','table-gallery':'ivory','table-nocturne':'carbon','table-botanic':'jade','table-royal':'royal','table-walnut':'walnut','table-cyber':'reactor','table-majlis':'majlis'};
 const BOARD_LOOK={'board-forest':{cell:'#18323e',alt:'#213f4a',num:'#e0edf0',frame:'#1b303e',dark:'#0c1d28',hi:'#45606c',snake:'#52f1c5',ladder:'#8fe2ef'},'board-lava':{cell:'#1d1513',alt:'#261b17',num:'#ffb27a',frame:'#24140d',dark:'#0b0604',hi:'#ff7a2e',snake:'#ff2d55',ladder:'#ff8a3d'},'board-galaxy':{cell:'#141238',alt:'#1a1745',num:'#d6ceff',frame:'#2f2868',dark:'#0c0a22',hi:'#a59cec',snake:'#ff4fa3',ladder:'#cdc4ff'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
 const DIE_ONE={'dice-obsidian':'#ebc677','dice-crystal':'#d6fff1','dice-smoke':'#ffdf9d','dice-nebula':'#ffdf9d'};
@@ -120,9 +121,14 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
  if(item.type==='table'&&(boardGame||'baloot')==='baloot'&&window.BS_BALOOT_TABLES){
   balootArt(stage,item,live);
  }else if(item.type==='table'){
-  boardGame=boardGame==='zahra'?'zahra':'jackaroo';
+  // the tables dress the Zahra board; Jackaroo has boards of its own (jboard)
+  boardGame='zahra';
   const state={turn:0,players:Array.from({length:seats},(_,i)=>({name:['أنت','سارة','محمد','ريم','خالد','نور'][i],tokens:[i===0?3:-1,i===1?9:-1,-1,-1],marbles:[i===0?3:-1,i===1?9:-1,-1,-1]}))};
   renderPetalBoard(stage,state,{game:boardGame,material:TABLE_MATERIAL[item.id]||item.design||'walnut',preview:true,active:-1});
+ }else if(item.type==='jboard'){
+  // 33.7.0: a Jackaroo board: the board of the picture in this dress, a few marbles on the way
+  const state={turn:-1,arm:19,home:'fill',discard:['5D','8S','JH'],players:['أنت','سارة','محمد','ريم'].map((name,i)=>({name,marbles:[[0,9,-1,-1],[-1,22,-1,-1],[4,-1,-1,-1],[-1,-1,-1,13]][i]}))};
+  renderPetalBoard(stage,state,{game:'jackaroo',look:item.design||'neon',preview:true,active:-1,viewer:0});
  }else if(item.type==='dice'){
   stage.dataset.diceSkin=item.id;for(const [name,value]of Object.entries(core.COSMETIC_STYLES[item.id]||{}))stage.style.setProperty(name,value);
   if(DIE_ONE[item.id])stage.style.setProperty('--die-one',DIE_ONE[item.id]);
@@ -327,10 +333,10 @@ function characterShowcase(item){
 function openPreview(item){
  if($('bagDialog').open)$('bagDialog').close();previewCleanup();previewId=item.id;$('previewMessage').textContent='';
  const t=tier(item);$('previewType').textContent=TYPE_LABEL[item.type]+' · '+TIER[t];$('previewType').className='sx-chip tier-'+t;$('previewName').textContent=item.name;$('previewMaterial').textContent=item.type==='emote'?item.glyph+' إيموجي متحرك':item.type==='phrase'?'عبارة جاهزة':item.type==='move'?item.glyph+' حركة على اللوحة':subtitle(item);$('previewDescription').textContent=item.description;
- const art=$('previewArt'),options=$('previewOptions');art.replaceChildren();art.className='sx-preview-stage tier-'+t;options.replaceChildren();let mounted=mountCollectible(art,item,{live:true}),boardGame=item.type==='table'&&window.BS_BALOOT_TABLES?'baloot':'jackaroo',seats=4;
+ const art=$('previewArt'),options=$('previewOptions');art.replaceChildren();art.className='sx-preview-stage tier-'+t;options.replaceChildren();let mounted=mountCollectible(art,item,{live:true}),boardGame=item.type==='table'&&window.BS_BALOOT_TABLES?'baloot':'zahra',seats=4;
  const replace=extra=>{mounted.dispose();art.replaceChildren();mounted=mountCollectible(art,item,{live:true,...extra});};
  if(item.type==='pawn'&&item.id!=='pawn-character')(window.BS_PIECES?.COLORS||[]).forEach((color,i)=>{const button=make('button','sx-swatch');button.type='button';button.style.setProperty('--swatch',color);button.setAttribute('aria-label','معاينة بلون اللاعب '+(i+1));button.onclick=()=>{options.querySelectorAll('.sx-swatch').forEach(b=>b.classList.toggle('active',b===button));replace({playerColor:color});};options.append(button);});
- if(item.type==='table'){for(const [label,game]of [...(window.BS_BALOOT_TABLES?[['البلوت','baloot']]:[]),['جاكارو','jackaroo'],['الزهرة','zahra']]){const button=make('button',game===boardGame?'active':'',label);button.type='button';button.onclick=()=>{boardGame=game;options.querySelectorAll('[data-board-game]').forEach(b=>b.classList.toggle('active',b.dataset.boardGame===game));count.hidden=game==='baloot';replace({boardGame,seats});};button.dataset.boardGame=game;options.append(button);}const count=make('button',null,'6 لاعبين');count.type='button';count.hidden=boardGame==='baloot';count.onclick=()=>{seats=seats===4?6:4;count.textContent=seats===6?'4 لاعبين':'6 لاعبين';replace({boardGame,seats});};options.append(count);}
+ if(item.type==='table'){for(const [label,game]of [...(window.BS_BALOOT_TABLES?[['البلوت','baloot']]:[]),['الزهرة','zahra']]){const button=make('button',game===boardGame?'active':'',label);button.type='button';button.onclick=()=>{boardGame=game;options.querySelectorAll('[data-board-game]').forEach(b=>b.classList.toggle('active',b.dataset.boardGame===game));count.hidden=game==='baloot';replace({boardGame,seats});};button.dataset.boardGame=game;options.append(button);}const count=make('button',null,'6 لاعبين');count.type='button';count.hidden=boardGame==='baloot';count.onclick=()=>{seats=seats===4?6:4;count.textContent=seats===6?'4 لاعبين':'6 لاعبين';replace({boardGame,seats});};options.append(count);}
  if(item.type==='dice'){const roll=make('button','sx-try-button','ارمِ النرد للتجربة');roll.type='button';roll.onclick=async()=>{roll.disabled=true;try{await mounted.roll?.();}finally{roll.disabled=false;}};options.append(roll);}
  if(REACTION.has(item.type)){const play=make('button','sx-try-button',item.type==='move'?'شغّل الحركة':'جرّب على الشاشة');play.type='button';play.onclick=()=>window.BS_REACTIONS?.preview?.(item.id,$('previewDialog'));options.append(play);if(!window.BS_REACTIONS?.preview)play.hidden=true;}
  if(item.type==='victory'){const play=make('button','sx-try-button','أعد الاحتفال');play.type='button';play.onclick=()=>replace({});options.append(play);}

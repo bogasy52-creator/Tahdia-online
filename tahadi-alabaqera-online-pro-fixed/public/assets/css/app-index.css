@@ -475,7 +475,7 @@ input,textarea,select,[contenteditable],[contenteditable] *,[data-selectable],[d
 img,svg,canvas{-webkit-user-drag:none}
 
 /* assets/css/home-join-v33-6.css */
-/* Tahdia 33.6.0 — home: «ادخل غرفة برمز» — a sheet that opens only when asked */
+/* Tahdia 33.6.0 — home: «ادخل غرفة برمز» — a sheet that opens only when asked (33.7.0: above the keyboard) */
 .home-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .home-join-open{display:inline-flex;align-items:center;gap:6px;font-weight:800}
 .home-join-open span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#ffffff1a;font-weight:900}
@@ -491,4 +491,9 @@ img,svg,canvas{-webkit-user-drag:none}
 .home-join-actions{display:grid;grid-template-columns:1fr auto;gap:10px}
 .home-join-actions .bs-btn{min-height:48px}
 body.home-join-on{overflow:hidden}
-@media (max-width:520px){.home-join-sheet{place-items:end center;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.home-join-card{border-radius:22px 22px 18px 18px}}
+/* 33.7.0: on a phone the sheet drops from the top, so the keyboard that opens under it never
+   covers the box; the script also fits the sheet to the part of the screen the keyboard leaves */
+@media (max-width:520px){.home-join-sheet{place-items:start center;padding:calc(14px + env(safe-area-inset-top)) 12px 12px}.home-join-card{border-radius:18px 18px 22px 22px;animation:home-join-drop .22s ease-out}}
+@keyframes home-join-drop{from{transform:translateY(-14px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.home-join-card{animation:none}}
+.home-join-sheet.fit-keyboard{inset:auto 0;top:var(--join-top,0px);height:var(--join-height,100%)}

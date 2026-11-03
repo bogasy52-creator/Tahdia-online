@@ -2,7 +2,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';
 import{readFile}from'node:fs/promises';
 import{CHALLENGES,createChallenge,applyChallenge,advanceChallenge,challengeView,botAction,nextChallengeAlarm,FOCUS_MODES,focusAnswer,focusModeOf,upgradeFocus,upgradeChallenge,adjacent,edge}from'../public/assets/js/engines/challenge-core.js';
-import{HUNT_THEMES,normalizeBombWord}from'../public/assets/js/engines/wordbank-ar.js';
+import{HUNT_THEMES,normalizeBombWord,huntLetters}from'../public/assets/js/engines/wordbank-ar.js';
 import{HUNT_ROUNDS,HUNT_ROUND_MS,HUNT_BREAK_MS,HUNT_MISS_MS,HUNT_HINTS_MS,huntLine,huntLayout,huntPoints}from'../public/assets/js/engines/wordbomb-core.js';
 import{roomCodeFor,gameOfCode,resolveRoomCode}from'../src/rooms/room-codes.js';
 import{LINKED_GAMES,linkable}from'../src/party/party-link.js';
@@ -13,13 +13,16 @@ function make(n=2,seed=2){return createChallenge('wordbomb',ps.slice(0,n),seed,s
 const claim=(m,w,reverse=false)=>({round:m.hunt.round,from:reverse?w.cells.at(-1):w.cells[0],to:reverse?w.cells[0]:w.cells.at(-1)});
 // a straight pick of three letters that spells none of the round's words
 function wrongPick(m){const h=m.hunt;for(let a=0;a<h.size*h.size;a++)for(const b of [a+2,a+2*h.size]){const cells=huntLine(a,b,h.size);if(!cells||cells.length!==3)continue;const text=cells.map(c=>h.grid[c]).join('');if(!h.words.some(w=>w.word===text||w.word===[...text].reverse().join('')))return{round:h.round,from:a,to:b};}throw Error('no wrong pick');}
-function finishRound(m,at){for(const w of m.hunt.words)if(!w.by)applyChallenge(m,'p0',claim(m,w),at);}
+// the round ends when the listed words are found; the secret word (33.7.0) does not hold it up
+function finishRound(m,at){for(const w of m.hunt.words)if(!w.by&&!w.secret)applyChallenge(m,'p0',claim(m,w),at);}
 
-test('the theme bank: fourteen themes of plain Arabic words that fit the board',()=>{
- assert.equal(HUNT_THEMES.length,14);
+test('the theme bank: twenty-two themes of Arabic words that fit the board, spelled on it as in the list',()=>{
+ // 33.7.0: eight more themes, and the board holds every word the way the list writes it (أسد، شاطئ، مرمى)
+ assert.equal(HUNT_THEMES.length,22);
  for(const theme of HUNT_THEMES){assert.ok(theme.words.length>=11,theme.name);assert.equal(new Set(theme.words.map(w=>w.word)).size,theme.words.length,theme.name);
-  for(const w of theme.words){assert.match(w.word,/^[ء-غف-ي]{3,6}$/,w.label);assert.equal(normalizeBombWord(w.label),w.word);assert.doesNotMatch(w.word,/[أإآؤئىء]/);}}
- assert.equal(normalizeBombWord('  أَسَـد '),'اسد');assert.equal(normalizeBombWord('مرآة'),'مراة');assert.equal(normalizeBombWord(7),'');
+  for(const w of theme.words){assert.match(w.word,/^[ء-غف-ي]{3,6}$/,w.label);assert.equal(w.word,w.label);assert.equal(huntLetters(w.label),w.word);}}
+ assert.ok(HUNT_THEMES.some(t=>t.words.some(w=>/[أإآؤئى]/.test(w.word))),'hamza and ى stay on the board');
+ assert.equal(huntLetters('  أَسَـد '),'أسد');assert.equal(normalizeBombWord('  أَسَـد '),'اسد');assert.equal(normalizeBombWord('مرآة'),'مراة');assert.equal(normalizeBombWord(7),'');assert.equal(huntLetters(7),'');
 });
 test('a pick is a straight line in any of the eight directions, never bent or off the board',()=>{
  assert.deepEqual(huntLine(0,3,8),[0,1,2,3]);assert.deepEqual(huntLine(3,0,8),[3,2,1,0]);assert.deepEqual(huntLine(0,24,8),[0,8,16,24]);assert.deepEqual(huntLine(0,27,8),[0,9,18,27]);assert.deepEqual(huntLine(7,28,8),[7,14,21,28]);
@@ -28,8 +31,8 @@ test('a pick is a straight line in any of the eight directions, never bent or of
 });
 test('rooms of 2 to 20: a board of 8 or 9, six to eight words, each one spelled on a straight line',()=>{
  for(const [n,size,count] of [[2,8,6],[4,8,6],[5,8,7],[10,8,7],[11,9,8],[20,9,8]])for(let seed=0;seed<60;seed++){
-  const m=make(n,seed),h=m.hunt;assert.equal(h.size,size);assert.equal(h.grid.length,size*size);assert.equal(h.words.length,count);assert.ok(h.grid.every(c=>/^[ء-غف-ي]$/.test(c)));
-  assert.ok(m.players.every(p=>p.score===0&&p.words===0&&p.alive));assert.equal(h.words.filter(w=>w.golden).length,1);
+  const m=make(n,seed),h=m.hunt;assert.equal(h.size,size);assert.equal(h.grid.length,size*size);assert.equal(h.words.filter(w=>!w.secret).length,count);assert.ok(h.words.filter(w=>w.secret).length<=1);assert.ok(h.grid.every(c=>/^[ء-غف-ي]$/.test(c)));
+  assert.ok(m.players.every(p=>p.score===0&&p.words===0&&p.alive));assert.equal(h.words.filter(w=>w.golden).length,1);assert.ok(!h.words.find(w=>w.golden).secret,'the golden word is on the list');
   for(const w of h.words){assert.equal(w.cells.map(c=>h.grid[c]).join(''),w.word);assert.deepEqual(huntLine(w.cells[0],w.cells.at(-1),size),w.cells);const step=w.cells[1]-w.cells[0];assert.ok([1,size].includes(step),'the first round reads right to left or downwards');}
   for(const a of h.words)for(const b of h.words)if(a!==b)assert.ok(!a.word.includes(b.word)&&!a.word.includes([...b.word].reverse().join('')),'no word hides inside another');
  }
@@ -116,7 +119,8 @@ test('the hunt page: practice deals the board, a tap on the first and last lette
  const h=await client('wordbomb'),sounds=[];h.context.BS_AUDIO.play=x=>sounds.push(x);h.$('chPractice').click();
  assert.equal(h.$('chPlay').hidden,false);const cells=h.$('chBoard').querySelectorAll('.ch-hunt-cell');assert.equal(cells.length,64);
  assert.deepEqual(cells.map(c=>c.textContent),Array.from(h.probe('local.hunt.grid')));
- const chips=h.$('chControls').querySelectorAll('.ch-hunt-word');assert.equal(chips.length,6);assert.deepEqual(chips.map(c=>c.querySelector('.ch-hunt-label').textContent),Array.from(h.probe('local.hunt.words.map(w=>w.label)')));
+ const chips=h.$('chControls').querySelectorAll('.ch-hunt-word');assert.equal(chips.length,h.probe('local.hunt.words.length'));assert.deepEqual(chips.map(c=>c.querySelector('.ch-hunt-label').textContent),Array.from(h.probe("local.hunt.words.map(w=>w.secret?'كلمة سرية':w.label)")));
+ assert.equal(chips.filter(c=>!c.classList.contains('secret')).length,6,'six words on the list');
  assert.equal(h.$('chBoard').querySelector('.ch-hunt-theme').textContent,h.probe('local.hunt.theme'));
  const w=h.probe('local.hunt.words[0]'),cell=i=>h.$('chBoard').querySelector('.ch-hunt-cell[data-cell="'+i+'"]');
  cell(w.cells.at(-1)).click();assert.ok(cell(w.cells.at(-1)).classList.contains('anchor'));cell(w.cells[0]).click();
@@ -143,3 +147,20 @@ test('the hunt is «صيد الكلمات» everywhere: page, home card, party c
  const art=await read('public/assets/challenges/wordbomb.svg');assert.match(art,/WORD HUNT/);assert.doesNotMatch(art,/BOMB/);
 });
 test('new focus controls render count dots and numeric/symbol choices through actual client',async()=>{const h=await client('focus');h.$('chPractice').click();for(let i=0;i<9;i++){h.probe('clockOffset=local.task.opensAt-Date.now()+1;tick()');const type=h.probe('local.task.type');if(type==='count')assert.ok(h.$('chBoard').querySelectorAll('.ch-count-dots i').length>=6);if(['max','match','sum'].includes(type))assert.deepEqual([...h.$('chBoard').querySelectorAll('.ch-focus-button')].map(n=>n.textContent),Array.from(h.probe('local.task.options'),String));h.probe('advanceChallenge(local,local.task.deadline);localState();render()');}assert.ok(!h.html.includes('اختبار الصبر'));});
+test('33.7.0: the secret word of the first two rounds — off the list, double points, it does not hold the round up',()=>{
+ let seen=0;
+ for(let seed=0;seed<40;seed++){const m=make(3,seed),h=m.hunt,secret=h.words.find(w=>w.secret);if(!secret)continue;seen++;
+  assert.equal(secret.points,huntPoints(secret.word,true));assert.ok(!secret.golden);
+  const view=challengeView(m,'p1',start+10).hunt,hidden=view.words.find(w=>w.secret);
+  assert.equal(hidden.label,null);assert.ok(hidden.mask.every(c=>c===null),'no hint for the secret word');assert.equal(hidden.cells,null);assert.equal(view.found,0);
+  assert.ok(!JSON.stringify(view).includes(JSON.stringify(secret.cells)),'its place is not sent');
+  // the computer opponents leave it to the people
+  for(let k=0;k<20;k++){const b=botAction({...m,players:m.players.map(p=>({...p,bot:true,nextThink:0}))},'p2',start+1000+k);if(b)assert.ok(!(b.from===secret.cells[0]&&b.to===secret.cells.at(-1)));}
+  applyChallenge(m,'p1',claim(m,secret,true),start+2000);
+  assert.equal(secret.by,'p1');assert.equal(m.players[1].score,secret.points);assert.equal(h.recent.at(-1).secret,true);assert.equal(m.hunt.phase,'play');
+  assert.equal(challengeView(m,'p0',start+2100).hunt.found,0,'the count is of the listed words');
+ }
+ assert.ok(seen>=30,'most boards hide one: '+seen);
+ // the last round has hidden words already: no secret there
+ const m=make(2,5);for(let r=0;r<2;r++){finishRound(m,start+5000+r*20000);advanceChallenge(m,m.hunt.nextAt);}assert.equal(m.hunt.round,2);assert.ok(!m.hunt.words.some(w=>w.secret));
+});

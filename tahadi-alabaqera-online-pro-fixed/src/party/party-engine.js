@@ -42,7 +42,7 @@ export function addPartyPlayer(room,{name,username=null,now=Date.now()}={}){
 }
 export function partyRanking(room){
  const rows=room.order.map(id=>room.players[id]).sort((a,b)=>b.score-a.score||b.wins-a.wins||a.joinedAt-b.joinedAt||a.id.localeCompare(b.id));let last=null,rank=0;
- return rows.map((p,i)=>{const key=p.score+':'+p.wins;if(last!==key)rank=i+1;last=key;return{id:p.id,name:p.name,role:p.role,ready:p.ready,connected:p.connected,score:p.score,wins:p.wins,rank,rounds:room.history.filter(h=>h.rows.some(r=>r.id===p.id)).length};});
+ return rows.map((p,i)=>{const key=p.score+':'+p.wins;if(last!==key)rank=i+1;last=key;return{id:p.id,name:p.name,username:p.username||undefined,role:p.role,ready:p.ready,connected:p.connected,score:p.score,wins:p.wins,rank,rounds:room.history.filter(h=>h.rows.some(r=>r.id===p.id)).length};});
 }
 function choices(q,category,random){const wrong=[...new Set([...(q.distractors||[]),...shuffled(category.questions,random).map(x=>x.a)].filter(a=>a!==q.a))].slice(0,3);const options=shuffled([q.a,...wrong],random);return{...q,options,correctIndex:options.indexOf(q.a)};}
 function quizPack(game,seed,difficulty=2){const random=seeded(seed);

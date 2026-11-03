@@ -37,7 +37,7 @@ test('«صيد الكلمات» takes the place of the word bomb under the same 
 });
 
 test('the focus duel: fourteen challenges, the question and its answers in one card', async () => {
-  assert.equal(FOCUS_MODES.length, 14);
+  assert.ok(FOCUS_MODES.length >= 14, 'fourteen then, more since 33.7.0');
   for (const mode of ['odd', 'missing', 'flash', 'majority', 'dots']) assert.ok(FOCUS_MODES.includes(mode), mode);
   const css = await read('public/assets/css/challenges-v33-5.css');
   assert.match(css, /\.ch-board\.ch-focus\{min-height:0;justify-content:flex-start;/);

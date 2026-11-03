@@ -42,7 +42,7 @@
 .ch-hunt-break small{font-size:11.5px;color:var(--ch-muted)}
 .ch-hunt-break small[hidden]{display:none}
 .ch-hunt-pick{min-height:24px;margin:0;font-size:13px;line-height:24px;text-align:center;color:var(--ch-muted)}
-.ch-hunt-pick.live{font:800 20px/24px ChallengeArabic,sans-serif;letter-spacing:1px;color:var(--ch-accent)}
+.ch-hunt-pick.live{font:800 20px/24px ChallengeArabic,sans-serif;color:var(--ch-accent)}
 
 /* the words to hunt */
 .ch-hunt-words{box-sizing:border-box;width:100%;max-width:600px;margin:10px auto 0;padding:10px 12px 12px;border:1px solid var(--ch-line);border-radius:18px;background:color-mix(in srgb,var(--ch-panel) 82%,transparent)}
@@ -58,11 +58,13 @@
 .ch-hunt-word.golden{border-color:#e6c25f;box-shadow:inset 0 0 0 1px #e6c25f40}
 .ch-hunt-word.golden .ch-hunt-points{color:#e6c25f}
 .ch-hunt-word.found{border-color:color-mix(in srgb,var(--hit) 65%,transparent);background:color-mix(in srgb,var(--hit) 15%,transparent)}
-.ch-hunt-word.found .ch-hunt-label{opacity:.72;text-decoration:line-through 1.5px color-mix(in srgb,var(--hit) 80%,transparent)}
+.ch-hunt-word.found .ch-hunt-label{color:color-mix(in srgb,var(--hit) 45%,#fff)}
+.ch-hunt-word.found::after{content:'✓';position:absolute;inset-block-start:-10px;inset-inline-end:8px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--hit);color:#10161b;font:900 12px/1 system-ui,sans-serif;box-shadow:0 0 0 2px var(--ch-panel)}
 .ch-hunt-word.missed{border-style:dashed;opacity:.7}
-.ch-hunt-by{inset-inline-start:8px;background:var(--hit);color:#10161b}
-.ch-hunt-mask{display:inline-flex;gap:3px}
-.ch-hunt-mask i{display:grid;place-items:center;width:15px;height:21px;border-bottom:2px solid var(--ch-muted);font:800 15px/1 ChallengeArabic,sans-serif;font-style:normal;color:var(--ch-accent)}
+.ch-hunt-by{inset-inline-start:8px;max-width:calc(100% - 44px);background:var(--hit);color:#10161b}
+.ch-hunt-mask{display:inline-flex;max-width:100%;gap:3px;direction:rtl}
+.ch-hunt-mask i{display:grid;place-items:center;box-sizing:border-box;flex:0 1 17px;min-width:9px;height:22px;border:1.5px solid color-mix(in srgb,var(--ch-muted) 55%,transparent);border-radius:5px;background:color-mix(in srgb,var(--ch-panel) 70%,transparent);font:800 14px/1 ChallengeArabic,sans-serif;font-style:normal;color:var(--ch-accent)}
+.ch-hunt-mask i.on{border-color:color-mix(in srgb,var(--ch-accent) 70%,transparent);background:color-mix(in srgb,var(--ch-accent) 14%,transparent)}
 
 /* who found what, last first */
 .ch-hunt-feed{box-sizing:border-box;width:100%;display:grid;gap:4px;max-width:600px;margin:10px auto 0;padding:0 4px}
@@ -124,3 +126,8 @@
   .ch-hunt-word{min-height:34px;padding:6px 6px 4px}
   .ch-hunt-word.golden,.ch-hunt-word.found{padding-top:8px}
 }
+/* 33.7.0: the secret word of the round */
+.ch-hunt-word.secret:not(.found){border-style:dashed;border-color:#b98cff99;background:color-mix(in srgb,#8b5cf6 12%,transparent)}
+.ch-hunt-secret{font-size:14px;color:#cdb6ff}
+.ch-hunt-word.secret .ch-hunt-points{color:#cdb6ff}
+.ch-hunt-secret-note{margin:10px 2px 0;color:#cdb6ff;font-size:12.5px;font-weight:700;line-height:1.6;text-align:center}

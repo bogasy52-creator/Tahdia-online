@@ -5,7 +5,7 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.6.0-gameplay3';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.7.0-gameplay3';
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3};
 
@@ -24,6 +24,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     }
     window.BS_GAME_MENU?.remember(game,next.code,{status:next.status==='finished'?'finished':'playing'});
     await apply(next,{animate,signal});
+    if(!signal?.aborted){clockOf(next);nearWin(next);}
   },{onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
@@ -34,6 +35,27 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     onResume:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());}
   });
   const stopTimer=bindRoomCountdown($('#turnTimer'),()=>room?.status==='playing'&&room.turnDeadline?room:null);
+  // 33.7.0: the room clock sits in the turn line («دورك …»), big and the same in every game
+  const clock=window.BS_CLOCK?.attach($('#status'));
+  function clockOf(next){
+    if(!clock)return;
+    const s=next.state;
+    if(next.stepOf||next.status!=='playing'||!next.turnDeadline||!s||s.winner!=null||s.winnerTeam!=null){clock.clear();return;}
+    const base=Number(next.serverNow)||Date.now(),got=Number(next.clientReceivedAt)||Date.now(),seat=s.turn,mine=seat===next.me?.index;
+    const who=(next.players||[]).find(p=>p.index===seat);
+    clock.set({end:Number(next.turnDeadline),total:Number(next.turnTotal)||0,clock:()=>base+(Date.now()-got),mine,key:next.code+':'+next.turnDeadline,label:mine?'دورك':who?'دور '+who.name:''});
+  }
+  // 33.7.0: one step from winning: a heartbeat for everybody else, a gold note for the player
+  function nearWin(next){
+    const s=next.state;if(!window.BS_CLOCK||next.stepOf||next.status!=='playing'||!s?.players)return;
+    const me=next.me?.index,tag=game+':'+next.code+':'+(next.startedAt||0)+':',name=i=>(next.players||[]).find(p=>p.index===i)?.name||'لاعب';
+    const say=(key,mine,text)=>window.BS_CLOCK.alert(tag+key,text,{tone:mine?'mine':'rival'});
+    if(game==='snakes')s.players.forEach((p,i)=>{const at=Number(p.position)||0;if(at>=94&&at<100)say(i,i===me,i===me?'قربت! أنت على '+at+' وباقي لك رمية وتوصل 100':name(i)+' على '+at+' — قريب من 100!');});
+    if(game==='zahra'){const finish=(s.players.length>4?6:4)*(s.arm||13)+(s.home==='fill'?3:4);s.players.forEach((p,i)=>{const done=(p.tokens||[]).filter(t=>t===finish).length;if(done===(p.tokens||[]).length-1&&done>0)say(i,i===me,i===me?'قربت تفوز! باقي لك حجر واحد':name(i)+' باقي له حجر واحد ويفوز!');});}
+    if(game==='jackaroo'){const seats=s.players.length>4?6:4,track=seats*(s.arm||13),home=m=>s.home==='fill'?m>=track:m===track+4;
+      for(const team of [0,1]){const ms=s.players.filter((_,i)=>i%2===team).flatMap(p=>p.marbles||[]),done=ms.filter(home).length;if(ms.length&&done===ms.length-1){const ours=me!=null&&me%2===team;say('team'+team,ours,ours?'قربتوا تفوزون! باقي لفريقك كرة وحدة':'الفريق الثاني باقي له كرة وحدة ويفوز!');}}}
+    if(game==='dice'){const target=Number(s.target)||50;s.players.forEach((p,i)=>{const score=Number(p.score)||0;if(score<target&&score>=Math.ceil(target*.8))say(i,i===me,i===me?'قربت! عندك '+score+' من '+target:name(i)+' وصل '+score+' من '+target+'!');});}
+  }
 
   function connect(){
     leaving=false;client?.close();player.reset();room=null;
@@ -92,6 +114,19 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     if(room.me?.role==='host')client?.send('rematch');
     else window.BS_PLATFORM?.toast?.('المضيف يبدأ الجولة الجديدة');
   }
+  // 33.7.0: a tap on a player (a row of the list, a face on the board) opens that player's card
+  function openCard(event){
+    if(!room?.players||!window.BS_PLAYER_CARD||event.target.closest?.('button,a,input'))return;
+    const tag=event.target.closest?.('[data-player-tag]'),row=tag?null:event.target.closest?.('#players > *');
+    if(!tag&&!row)return;
+    const seat=tag?Number(tag.dataset.playerTag):[...row.parentElement.children].indexOf(row);
+    const p=room.players.find(x=>x.index===seat);if(!p)return;
+    if(event.type==='keydown'){if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();}
+    const color=row?.style.getPropertyValue('--seat')||row?.style.getPropertyValue('--pc')||'';
+    window.BS_PLAYER_CARD.open({name:p.name,username:p.username,character:p.look?.character||p.character,bot:p.bot,level:p.level,me:seat===room.me?.index,color:color.trim()});
+  }
+  document.addEventListener('click',openCard);
+  document.addEventListener('keydown',event=>{if(event.target.closest?.('[data-player-tag]'))openCard(event);});
   // a room code in the address (an invite, the party, «ارجع لمباراتك»)
   const invited=new URLSearchParams(location.search).get('room');
   if(/^\d{6}$/.test(invited||'')){
@@ -107,7 +142,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     get busy(){return player.busy;},
     send(type,payload){return Boolean(client?.send(type,payload));},
     again,leave,menu,
-    destroy(){stopTimer?.();client?.close();}
+    destroy(){stopTimer?.();clock?.destroy();client?.close();}
   };
 }
 

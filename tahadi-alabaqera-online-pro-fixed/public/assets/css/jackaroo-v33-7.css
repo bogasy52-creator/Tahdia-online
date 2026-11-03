@@ -1,0 +1,9 @@
+/* Tahdia 33.7.0 — Jackaroo: the board of the picture fills the phone from edge to edge. */
+@media (max-width:720px){
+  :is(html,#v31) body.game-jackaroo #game#game .jack-board-wrap{width:100vw!important;max-width:none!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important}
+  :is(html,#v31) body.game-jackaroo #game .jack-main{overflow:visible!important}
+}
+:is(html,#v31) body.game-jackaroo .jack-board svg [data-player-tag]{cursor:pointer}
+:is(html,#v31) body.game-jackaroo .jack-board svg [data-player-tag]:focus-visible{outline:none}
+:is(html,#v31) body.game-jackaroo .jack-board svg [data-player-tag]:focus-visible circle:first-child{stroke:#fff;stroke-width:1.4}
+.jk-look.is-armed{border-color:#f3cf72;background:#f3cf7226}

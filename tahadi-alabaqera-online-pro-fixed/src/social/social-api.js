@@ -70,10 +70,10 @@ async function requireAuth(request, env) {
   return { response: null, auth };
 }
 
-async function publicProfile(env, username) {
+async function publicProfile(env, username, card = false) {
   const stub = stubFor(env, username);
   if (!stub) return null;
-  const response = await stub.fetch("https://social.internal/public");
+  const response = await stub.fetch("https://social.internal/public" + (card ? "?card=1" : ""));
   if (!response.ok) return null;
   const data = await readJson(response);
   return data.profile || null;
@@ -191,7 +191,7 @@ export async function handleSocialRequest(request, env, options = {}) {
 
   const profileMatch = url.pathname.match(/^\/api\/social\/users\/([a-zA-Z0-9_]{3,20})$/);
   if (request.method === "GET" && profileMatch) {
-    const profile = await publicProfile(env, profileMatch[1]);
+    const profile = await publicProfile(env, profileMatch[1], true);
     return profile ? json({ ok: true, profile }) : json({ ok: false, error: "الحساب غير موجود" }, 404);
   }
 

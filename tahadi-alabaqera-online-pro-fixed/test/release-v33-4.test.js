@@ -88,14 +88,16 @@ test('Jackaroo cards are the Baloot deck with a drawing of what each card does',
 
 test('the Jackaroo board turns to you, numbers its holes from your start and has a design per table', async () => {
   const board = await read('public/assets/js/board-petals-v29.js');
-  assert.match(board, /ROT=game==='jackaroo'&&seat>=0\?/);
+  // 33.7.0: a table of four turns a quarter at a time, the board of six by its seats
+  assert.match(board, /ROT=game!=='jackaroo'\|\|seat<0\?0:g\.seats===4\?\[0,-90,180,90\]\[seat\]:/);
   assert.match(board, /'data-track-number':num/);
   assert.match(board, /'data-quarter':s/);
   for (const key of ['club', 'majlis', 'reactor']) assert.match(board, new RegExp(`  ${key}:\\{label:`), key);
   assert.match(board, /'table-club':'club'/);
   assert.match(board, /'table-majlis':'majlis'/);
-  // 33.6.0: the ring gave way to the star board of the photo; each table still dresses it its own way
-  assert.match(board, /const LOOK_OF=\{walnut:'emerald',club:'emerald',jade:'emerald',ivory:'ivory',carbon:'carbon',reactor:'carbon',royal:'royal',majlis:'majlis'\};/);
+  // 33.6.0: the ring gave way to the star board of the photo; 33.7.0: its looks are Jackaroo boards
+  // of their own from the shop (jboard), and the tables dress the Zahra board
+  assert.match(board, /const BOARD_OF_ITEM=\{'jboard-neon':'neon',/);
   assert.match(board, /const host=svg\.querySelector\('\[data-board-root\]'\)\|\|svg/);
 });
 
