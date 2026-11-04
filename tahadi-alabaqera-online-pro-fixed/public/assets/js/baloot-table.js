@@ -9,7 +9,7 @@
 import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.7.0-gameplay3';
 import { BoardOnlineClient } from './board-online.js?v=33.7.0';
 import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.7.0';
-import { BalootVoice } from './baloot-voice.js?v=33.7.0-baloot2';
+import { BalootVoice } from './baloot-voice.js?v=33.7.0-audio1';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -644,7 +644,7 @@ async function playEvents(events, after, session = ui.session, delivery = {}) {
       const [text, cls] = bidText(e);
       bubble(e.seat, text, cls);
       play(e.bid === 'pass' ? 'click' : 'balootBid', { volume: e.bid === 'pass' ? 0.35 : 0.7 });
-      speak(e.bid === 'pass' ? 'بَسْ' : e.bid === 'sun' ? 'صن' : e.bid === 'ashkal' ? 'أشكل' : (e.round === 2 ? 'ثاني ' : 'حكم ') + SUIT_SAY[e.suit], e.seat, voiceOptions);
+      speak(e.bid === 'pass' ? 'بَسْ' : e.bid === 'sun' ? 'صن' : e.bid === 'ashkal' ? 'أشكل' : (e.round === 2 ? 'ثاني ' : 'حكم ') + SUIT_SAY[e.suit], e.seat, { ...voiceOptions, group:'auction:'+session+':'+after.handNo, supersede:e.bid!=='pass' });
       await wait(e.bid === 'pass' ? 520 : 820);
     } else if (e.type === 'second_round') {
       await banner('الجولة الثانية<small>ثاني بشكل آخر، أو صن</small>', 1100);

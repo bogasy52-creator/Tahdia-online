@@ -1,7 +1,7 @@
 /* Whole-character sprite animation. Artwork, UVs and foot anchors are shipped together. */
 (function(root){
  'use strict';
- const doc=root.document,BASE='/assets/characters-v33/',REV='33.0.0-full1';
+ const doc=root.document,BASE='/assets/characters-v33/',REV='33.7.0-smooth1';
  const IDS=new Set(['fox','cat','robot','princess','fairy','astronaut','racer','diver','viking','gladiator','cyber','samurai']);
  const cache=new Map(),controllers=new WeakMap(),live=new Set(),actors=new Set();
  let raf=0,lastTick=0,paused=false;
@@ -25,9 +25,13 @@
    if(image.naturalWidth!==meta.width||image.naturalHeight!==meta.height)throw Error('Character image dimensions');entry.loaded=true;entry.data={meta,image};prune();return entry.data;
   })().catch(error=>{cache.delete(id);throw error;});return entry.promise;
  }
- function sequenceFrame(meta,state,elapsed,loop){
+ function sequenceFrame(meta,state,elapsed,loop,returnIdle=true){
   const seq=meta.states[state]||meta.states.idle,step=Math.max(0,elapsed)*seq.fps/1000,count=seq.frames.length;
-  return{index:seq.frames[loop?Math.floor(step)%count:Math.min(count-1,Math.floor(step))],done:!loop&&step>=count,duration:count/seq.fps*1000};
+  const done=!loop&&step>=count;
+  const at=loop?Math.floor(step)%count:Math.min(count-1,Math.floor(step));
+  const idle=meta.states.idle.frames[0],index=done&&returnIdle?idle:seq.frames[at];
+  const next=seq.frames[at+1]??(loop?seq.frames[0]:returnIdle?idle:index);
+  return{index,next,mix:done||index===next?0:step-Math.floor(step),done,duration:count/seq.fps*1000};
  }
  function motif(ctx,id,t,state){
   if(state==='idle'||!effects())return;const spec=root.BS_CAREER_CORE?.HERO_SIGNATURES?.[id],color=spec?.color||'#e8ba67',kind=spec?.effect||'dust',win=state==='win';
@@ -47,22 +51,54 @@
   else if(kind==='ember'){for(let i=0;i<18;i++){const p=(phase*.55+i/18)%1,a=i*2.4;ctx.globalAlpha=(1-p)*.8;line([[Math.cos(a)*(25+80*p),12-140*p],[Math.cos(a)*(25+80*p)+3,17-140*p]]);}}
   ctx.restore();
  }
- function draw(c,elapsed=0){
-  if(!c.data||!c.ctx)return;const {meta,image}=c.data,ctx=c.ctx,frame=sequenceFrame(meta,c.state,elapsed,c.loop),f=meta.frames[frame.index],scale=meta.scale;
-  ctx.clearRect(0,0,384,320);if(!reduced()||c.explicit)motif(ctx,c.id,elapsed,c.state);
-  // Clear tiny neighbouring-weapon overlaps on a local layer, never on the art master.
-  if(!c.layer){c.layer=doc.createElement('canvas');c.layer.width=384;c.layer.height=320;c.layerCtx=c.layer.getContext('2d');}
-  const layer=c.layerCtx;if(!layer)return;layer.clearRect(0,0,384,320);
-  const dx=192-f.anchorX*scale,dy=meta.viewport.baseline-f.anchorY*scale;
-  layer.drawImage(image,f.x,f.y,f.w,f.h,dx,dy,f.w*scale,f.h*scale);
-  for(const cut of f.cutouts||[])layer.clearRect(dx+cut.x*scale,dy+cut.y*scale,cut.w*scale,cut.h*scale);
-  ctx.drawImage(c.layer,0,0);c.el.dataset.frame=String(frame.index);return frame;
+ function makeLayer(){
+  const canvas=doc.createElement('canvas');canvas.width=384;canvas.height=320;
+  return{canvas,ctx:canvas.getContext('2d')};
  }
- function schedule(){if(!raf&&!paused&&!doc.hidden&&live.size)raf=root.requestAnimationFrame(tick);}
+ function drawPose(layer,meta,image,index){
+  const f=meta.frames[index],scale=meta.scale,x=192-f.anchorX*scale,y=meta.viewport.baseline-f.anchorY*scale;
+  layer.clearRect(0,0,384,320);
+  layer.drawImage(image,f.x,f.y,f.w,f.h,x,y,f.w*scale,f.h*scale);
+  for(const cut of f.cutouts||[])layer.clearRect(x+cut.x*scale,y+cut.y*scale,cut.w*scale,cut.h*scale);
+ }
+ function draw(c,elapsed=0){
+  if(!c.data||!c.ctx)return;
+  const {meta,image}=c.data,ctx=c.ctx,frame=sequenceFrame(meta,c.state,elapsed,c.loop,c.returnIdle);
+  c.layer ||= makeLayer();
+  const layer=c.layer.ctx;if(!layer)return;
+  drawPose(layer,meta,image,frame.index);
+  if(frame.mix>0){
+   c.nextLayer ||= makeLayer();
+   if(c.nextLayer.ctx){
+    drawPose(c.nextLayer.ctx,meta,image,frame.next);
+    layer.save();
+    layer.globalCompositeOperation='destination-in';
+    layer.fillStyle='rgba(0,0,0,'+(1-frame.mix)+')';
+    layer.fillRect(0,0,384,320);
+    layer.globalCompositeOperation='lighter';
+    layer.globalAlpha=frame.mix;
+    layer.drawImage(c.nextLayer.canvas,0,0);
+    layer.restore();
+   }
+  }
+  ctx.clearRect(0,0,384,320);
+  if(!reduced()||c.explicit)motif(ctx,c.id,elapsed,c.state);
+  ctx.drawImage(c.layer.canvas,0,0);
+  c.el.dataset.frame=String(frame.index);
+  c.el.dataset.blend=frame.mix.toFixed(3);
+  return frame;
+ }
+ function schedule(){
+  if(raf||paused||doc.hidden)return;
+  for(const c of live){
+   if(c.visible!==false&&c.el.isConnected){raf=root.requestAnimationFrame(tick);return;}
+  }
+  lastTick=0;
+ }
  function stop(c){live.delete(c);if(!live.size&&raf){root.cancelAnimationFrame(raf);raf=0;}}
  function dispose(el){const c=controllers.get(el);if(!c)return;c.disposed=true;c.observer?.disconnect();stop(c);actors.delete(c);if(c.entry)c.entry.users=Math.max(0,c.entry.users-1);controllers.delete(el);prune();}
  function tick(now){raf=0;const delta=lastTick?Math.max(0,Math.min(70,now-lastTick)):0;lastTick=now;
-  for(const c of [...live]){if(!c.el.isConnected){dispose(c.el);continue;}if(c.visible===false||paused||doc.hidden)continue;c.elapsed+=delta;if(now-c.drawn<1000/(c.state==='idle'?6:30))continue;c.drawn=now;
+  for(const c of [...live]){if(!c.el.isConnected){dispose(c.el);continue;}if(c.visible===false||paused||doc.hidden)continue;c.elapsed+=delta;if(now-c.drawn<1000/(c.state==='idle'||c.piece?30:60)-1)continue;c.drawn=now;
    const frame=draw(c,c.elapsed);if(frame?.done){if(c.returnIdle){c.state='idle';c.el.dataset.pose='idle';c.elapsed=0;c.loop=true;c.explicit=false;if(c.staticIdle||reduced()){draw(c,0);stop(c);}}else stop(c);}}
   schedule();
  }
@@ -74,16 +110,18 @@
  function actor(value,options={}){
   const id=identity(value),el=doc.createElement('span');el.className='character-actor'+(options.piece?' character-actor-piece':'');el.dataset.hero=id;el.dataset.pose=options.pose||'idle';el.setAttribute('aria-hidden','true');
   const img=doc.createElement('img');img.className='character-poster';img.src=poster(id);img.alt='';img.draggable=false;img.decoding='async';el.append(img);
-  const c={id,el,poster:img,state:options.pose||'idle',playOptions:options,staticIdle:options.staticIdle===true,disposed:false,visible:true,elapsed:0,drawn:0,returnIdle:true,attached:false};controllers.set(el,c);actors.add(c);
-  el.ready=options.posterOnly?Promise.resolve(el):load(id).then(data=>{
-   if(c.disposed)return el;c.entry=cache.get(id);if(c.entry)c.entry.users++;c.data=data;const canvas=doc.createElement('canvas');canvas.width=384;canvas.height=320;canvas.className='character-canvas';c.ctx=canvas.getContext?.('2d');if(!c.ctx)throw Error('Character canvas unavailable');c.canvas=canvas;el.append(canvas);if(c.cancelled)draw(c,0);else setState(el,c.state,c.playOptions);img.hidden=true;el.dataset.loaded='true';
-   c.attached=el.isConnected;if(root.IntersectionObserver){c.observer=new root.IntersectionObserver(entries=>{c.visible=entries[0]?.isIntersecting!==false;if(el.isConnected)c.attached=true;else if(c.attached)dispose(el);});c.observer.observe(el);}return el;
+  const c={id,el,poster:img,state:options.pose||'idle',playOptions:options,staticIdle:options.staticIdle===true,piece:options.piece===true,disposed:false,visible:true,elapsed:0,drawn:0,returnIdle:true,attached:false};controllers.set(el,c);actors.add(c);
+  const pending=options.posterOnly?null:load(id);
+  c.entry=pending?cache.get(id):null;if(c.entry)c.entry.users++;
+  el.ready=options.posterOnly?Promise.resolve(el):pending.then(data=>{
+   if(c.disposed)return el;c.data=data;const canvas=doc.createElement('canvas');canvas.width=384;canvas.height=320;canvas.className='character-canvas';c.ctx=canvas.getContext?.('2d');if(!c.ctx)throw Error('Character canvas unavailable');c.canvas=canvas;el.append(canvas);if(c.cancelled)draw(c,0);else setState(el,c.state,c.playOptions);img.hidden=true;el.dataset.loaded='true';
+   c.attached=el.isConnected;if(root.IntersectionObserver){c.observer=new root.IntersectionObserver(entries=>{c.visible=entries[0]?.isIntersecting!==false;if(el.isConnected)c.attached=true;else if(c.attached)dispose(el);if(c.visible)schedule();});c.observer.observe(el);}return el;
   }).catch(()=>{el.dataset.loaded='error';return el;});
   return el;
  }
  function cancel(){for(const c of [...actors]){if(!c.el.isConnected){dispose(c.el);continue;}setState(c.el,'idle');c.cancelled=true;stop(c);}}
  function suspend(){lastTick=0;if(raf){root.cancelAnimationFrame(raf);raf=0;}if(!paused&&!doc.hidden)schedule();}
  doc.addEventListener('visibilitychange',suspend);root.addEventListener('bs-match-pause',event=>{paused=event.detail?.paused===true;suspend();});root.addEventListener('pagehide',cancel);root.addEventListener('bs-social-session',cancel);root.addEventListener('bs-audio-change',()=>{if(!effects())cancel();});
- if(root.MutationObserver&&doc.body)new root.MutationObserver(()=>{for(const c of [...actors]){if(c.el.isConnected)c.attached=true;else if(c.attached)dispose(c.el);}}).observe(doc.body,{childList:true,subtree:true});
+ if(root.MutationObserver&&doc.body)new root.MutationObserver(()=>{for(const c of [...actors]){if(c.el.isConnected)c.attached=true;else if(c.attached)dispose(c.el);}schedule();}).observe(doc.body,{childList:true,subtree:true});
  root.BS_CHARACTERS=Object.freeze({actor,setState,dispose:el=>{const c=controllers.get(el);c?.observer?.disconnect();dispose(el);},poster,load,cancel,identity,validate,sequenceFrame,revision:REV});
 })(window);

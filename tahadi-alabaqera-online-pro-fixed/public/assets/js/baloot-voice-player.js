@@ -107,13 +107,14 @@ export function createVoicePlayer({ recordings, getContext, fetchClip, isAllowed
       }
     }
   }
-  function enqueue(id, { urgent = false, key, createdAt = now(), maxAge: age = maxAge } = {}) {
+  function enqueue(id, { urgent = false, key, group = null, supersede = false, createdAt = now(), maxAge: age = maxAge } = {}) {
     if (!recordings[id]?.src || !allowed()) return false;
-    const item = { id, urgent, created: Number.isFinite(createdAt) ? Math.min(now(), createdAt) : now(),
+    const item = { id, urgent, group, created: Number.isFinite(createdAt) ? Math.min(now(), createdAt) : now(),
       maxAge: Number.isFinite(age) && age >= 0 ? age : maxAge };
     const identity = key == null ? null : String(key);
     if (!fresh(item) || identity !== null && seen.has(identity)) return false;
     queue = queue.filter(fresh);
+    if (supersede && group !== null) queue = queue.filter(call => call.group !== group);
     if (queue.length >= maxQueue) {
       const expendable = queue.findIndex(item => !item.urgent);
       if (!urgent && expendable < 0) return false;

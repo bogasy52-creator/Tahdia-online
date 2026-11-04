@@ -292,6 +292,42 @@ body.release-v26.challenge-page{background:radial-gradient(ellipse at 80% 0,colo
 }
 @media (prefers-reduced-motion:reduce){.ch-race-key:active:not(:disabled),.ch-race-power:active:not(:disabled){transform:none}}
 
+/* Midnight track. The same live character actors used in the shop run here. */
+body[data-challenge=chaos] {--ch-accent:#caff77;--race-glass:#101a2dea}
+body[data-challenge=chaos] .ch-race-stage {
+ position:relative;isolation:isolate;overflow:hidden;
+ border:1px solid #96e5df75;border-radius:clamp(12px,3vw,24px);
+ box-shadow:inset 0 0 32px #74dcce29,0 14px 35px #0005;
+}
+.ch-race-runners {position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.ch-runner-body {position:absolute;display:block;aspect-ratio:1.2;transform:translate(-50%,-91%);filter:drop-shadow(0 3px 3px #000a)}
+.ch-runner-body[hidden] {display:none!important}
+.ch-runner-body .character-actor {display:block!important;width:100%!important;height:100%!important;max-width:none!important}
+.ch-runner-body :is(canvas,img) {width:100%!important;height:100%!important;object-fit:contain}
+.ch-runner-body.self {z-index:2;filter:drop-shadow(0 2px 7px #caff7766)}
+.ch-runner-body.winner {filter:drop-shadow(0 0 10px #ffdb83aa)}
+.ch-runner-name {
+ position:absolute;inset:auto auto -11px 50%;transform:translateX(-50%);
+ min-width:34px;max-width:100%;padding:1px 4px;border-radius:5px;
+ text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ color:var(--runner-color);background:#091320e8;font-size:clamp(8px,2vw,12px);
+}
+.ch-runner-body.self .ch-runner-name {background:var(--runner-color);color:#0f1b25}
+.ch-runner-fallback {display:grid;place-items:center;height:100%;color:var(--runner-color);font-weight:900}
+body[data-challenge=chaos] .ch-race-hud {z-index:3;gap:4px}
+body[data-challenge=chaos] :is(.ch-race-place,.ch-race-progress,.ch-race-banner) {
+ background:var(--race-glass);border:1px solid #92dbd450;border-radius:10px;
+ box-shadow:0 6px 14px #0005;
+}
+body[data-challenge=chaos] .ch-race-keys {gap:clamp(4px,2vw,12px)}
+body[data-challenge=chaos] :is(.ch-race-key,.ch-race-power) {
+ min-height:48px;border-color:#92dbd477;background:linear-gradient(155deg,#233c54,#121d34);
+}
+body[data-challenge=chaos] .ch-race-power:not(:disabled) {border-color:#f5d684;background:linear-gradient(155deg,#6a5021,#222534)}
+body[data-challenge=chaos] #chResult:not([hidden]) {border:1px solid #f5d684;background:radial-gradient(at top,#524123,#141b2e 75%)}
+@media(max-width:480px){body[data-challenge=chaos] .ch-race-stage{min-height:340px}}
+@media(prefers-reduced-motion:reduce){body[data-challenge=chaos] .ch-race-stage *{animation:none!important}}
+
 /* assets/css/game-interaction-v34.css */
 html,body{overflow-x:clip}
 html{touch-action:pan-x pan-y}

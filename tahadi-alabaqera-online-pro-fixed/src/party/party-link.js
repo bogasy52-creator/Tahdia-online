@@ -75,11 +75,12 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
 }
 
 /** Opens the real room. Returns { ok, code, page } or { ok: false }. */
-export async function createLinkedRoom(env, game, { settings, count, seats = count, link }) {
+export async function createLinkedRoom(env, game, { settings, count, seats = count, link, reservations }) {
   const g = linkedGame(game);
   if (!g || !linkable(game, count)) return { ok: false, error: 'not_linkable' };
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = roomCode(game), hostKey = secret(), spec = initFor(game, settings, count, code, hostKey, link, seats);
+    if (reservations) spec.body.reservations = reservations;
     const namespace = env?.[spec.ns];
     if (!namespace?.idFromName) return { ok: false, error: 'binding_missing' };
     const res = await namespace.get(namespace.idFromName(spec.name)).fetch(spec.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(spec.body) });
@@ -95,7 +96,7 @@ export function standings(rows, same = () => false) {
   return rows.map((row, i) => {
     if (!prior || !same(row, prior)) rank = i + 1;
     prior = row;
-    return { name: String(row.name || '').slice(0, 24), username: row.username || null, rank, score: Math.max(0, Math.round(Number(row.score) || 0)), won: Boolean(row.won) };
+    return { ...(row.partyId ? { partyId: row.partyId } : {}), name: String(row.name || '').slice(0, 24), username: row.username || null, rank, score: Math.max(0, Math.round(Number(row.score) || 0)), won: Boolean(row.won) };
   });
 }
 

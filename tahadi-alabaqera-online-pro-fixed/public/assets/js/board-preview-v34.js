@@ -11,11 +11,11 @@ export function previewBoardAction(game,state,action,{card='',roll=0}={}){
  return {next,changes,description};
 }
 const boardPreviewPending=new WeakMap();
-export function requestBoardPreview({board,container=board.parentElement,state,game,action,card='',roll=0,valid=()=>true,commit,toast=()=>{}}){
+export function requestBoardPreview({board,container=board.parentElement,mount=null,state,game,action,card='',roll=0,valid=()=>true,commit,toast=()=>{}}){
  boardPreviewPending.get(board)?.();const preview=previewBoardAction(game,state,action,{card,roll}),doc=board.ownerDocument,panel=doc.createElement('section');panel.className='board-preview-v34';panel.setAttribute('aria-label','معاينة الحركة');
  const previousFocus=doc.activeElement;const text=doc.createElement('p');text.textContent=preview.description+(preview.changes.length?'؛ راجع المسار المرسوم ثم أكّد.':'؛ أكّد إنهاء الدور أو ألغِ.');const buttons=doc.createElement('div');buttons.className='preview-actions';
  const confirm=doc.createElement('button'),cancel=doc.createElement('button');confirm.type=cancel.type='button';confirm.className='bs-btn primary';cancel.className='bs-btn';confirm.textContent='تأكيد الحركة';cancel.textContent='إلغاء';buttons.append(confirm,cancel);panel.append(text,buttons);
- const syncHost=()=>{const host=doc.fullscreenElement||doc.webkitFullscreenElement||doc.body||container;if(panel.parentElement!==host)host.append(panel);};
+ const syncHost=()=>{const host=mount||doc.fullscreenElement||doc.webkitFullscreenElement||doc.body||container;if(panel.parentElement!==host)host.append(panel);};
  const cleanup=()=>{clearBoardPreview(board);panel.remove();board.removeEventListener('bs-board-render',cleanup);doc.removeEventListener('fullscreenchange',syncHost);doc.removeEventListener('webkitfullscreenchange',syncHost);if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});if(boardPreviewPending.get(board)===cleanup)boardPreviewPending.delete(board);};
  cancel.onclick=cleanup;confirm.onclick=()=>{const allowed=valid();cleanup();if(allowed)commit?.();else toast('تغير الدور أو الاختيار؛ اختر حركتك من جديد.');};
  panel.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cleanup();}};boardPreviewPending.set(board,cleanup);paintBoardPreview(board,state,preview.next,{game,action});syncHost();doc.addEventListener('fullscreenchange',syncHost);doc.addEventListener('webkitfullscreenchange',syncHost);board.addEventListener('bs-board-render',cleanup,{once:true});confirm.focus({preventScroll:true});return cleanup;

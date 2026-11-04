@@ -1421,6 +1421,74 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 :is(html,#v31) body.game-jackaroo.game-running #livebar #deckCount,
 :is(html,#v31) body.game-jackaroo.game-running #livebar #dealText{font-size:11.5px!important;opacity:.85;white-space:nowrap}
 
+/* Keep the play surface and its controls together in every orientation. */
+:is(html,#v31) body.game-jackaroo.game-running :is(.bs-game-command,.game-toolbar) {display:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game {padding:0!important;gap:0!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-layout {
+ grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;gap:0!important;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-main {padding:0!important;border:0!important;background:transparent!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jack-board-wrap {
+ position:relative;isolation:isolate;margin:0!important;max-height:100%!important;
+}
+.jk-center-controls {
+ position:absolute;z-index:4;top:50%;left:50%;width:35%;
+ transform:translate(-50%,-50%);padding:clamp(3px,1cqw,10px);
+ border:1px solid #b9d5ef70;border-radius:clamp(8px,2cqw,20px);
+ background:linear-gradient(155deg,#172a45f7,#0a1425f7);box-shadow:0 8px 20px #0008;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jk-center-controls #hand {
+ display:flex!important;flex-wrap:nowrap!important;justify-content:center!important;
+ gap:clamp(2px,.7cqw,6px)!important;min-height:0!important;padding:0!important;margin:0!important;background:none!important;border:0!important;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jk-center-controls #hand .playing-card {
+ flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:20%!important;
+ height:clamp(28px,9cqw,75px)!important;min-height:0!important;
+ margin:0!important;padding:1px!important;border-radius:5px!important;
+ font-size:clamp(11px,3.2cqw,24px)!important;transform:none!important;box-shadow:none!important;
+}
+.jk-center-controls #hand .playing-card.selected {outline:2px solid #89efd2;outline-offset:-1px}
+.jk-center-controls #hand :is(.jk-card-say,.card-meaning,.card-power,.jk-card-info,.card-corner.bottom,.jk-card-hint) {display:none!important}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jk-center-controls :is(#status,#actions) {
+ min-height:0!important;margin:3px 0 0!important;padding:0!important;
+ font-size:clamp(9px,2.3cqw,13px)!important;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jk-center-controls #status {
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25;background:none;border:0;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game .jk-center-controls #actions {
+ display:flex!important;justify-content:flex-start!important;align-items:center!important;
+ max-height:34px;gap:4px!important;overflow:auto!important;scrollbar-width:thin;
+}
+.jk-center-controls #actions .action-btn {
+ min-height:29px!important;padding:3px 6px!important;white-space:nowrap;font-size:clamp(10px,2.3cqw,13px)!important;
+}
+.jk-center-controls #actions .mini-note {overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:inherit}
+.jk-board-buttons {
+ position:absolute;z-index:5;inset:2% auto auto 2%;display:flex;gap:4px;
+}
+.jk-board-buttons .bs-btn,.jk-board-info>summary {
+ min-width:36px;min-height:36px;padding:5px;border-radius:10px;
+ border:1px solid #abc3e878;background:#0c192aef;color:#f4e6ba;text-align:center;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game #livebar {
+ position:absolute;z-index:4;inset:2% 2% auto auto;max-width:36%;flex-wrap:wrap;gap:3px!important;
+ border-radius:10px;background:#0a1425dc;font-size:clamp(9px,2.1cqw,14px)!important;
+}
+.jk-board-info {position:absolute;z-index:7;bottom:2%;left:2%;text-align:right}
+.jk-board-info>summary {cursor:pointer;list-style:none;display:grid;place-items:center}
+.jk-board-info-body {
+ position:absolute;bottom:42px;left:0;width:min(72cqw,380px);max-height:67cqh;overflow:auto;
+ padding:14px;border:1px solid #abc3e878;border-radius:15px;background:#0a162a;color:#f3e9cf;
+}
+.jack-board-wrap>.board-preview-v34 {
+ position:absolute!important;z-index:8!important;inset:auto 4% 3% 4%!important;
+ width:auto!important;max-width:none!important;transform:none!important;
+}
+body.game-jackaroo.game-running .winner-card {border:1px solid #e5c27b9e;box-shadow:0 0 75px #dfac4d3d}
+@media(prefers-reduced-motion:reduce){body.game-jackaroo .winner-card{animation:none!important}}
+.jk-center-controls .hand-title{display:none!important}
+
 /* assets/css/game-interaction-v34.css */
 html,body{overflow-x:clip}
 html{touch-action:pan-x pan-y}

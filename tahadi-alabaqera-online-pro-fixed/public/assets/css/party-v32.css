@@ -225,3 +225,47 @@ body.party-app{--pv-surface:#141e33;--pv-raised:#1a2741;--pv-mint:#8fe3c3;--pv-g
 
 /* 33.3.0: the header fits narrow phones: the brand shrinks and the volume slider leaves (mute stays) */
 @media(max-width:420px){.party-header{gap:8px}.party-brand{min-width:0;flex:0 1 auto}.party-brand b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.party-header-tools{min-width:0;flex:0 1 auto}.party-volume-label{display:none!important}.party-header-tools>span{max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* Room 20 keeps the current round and the group on the same page. */
+#room[data-continuous=true][data-phase=playing] .party-main-layout {grid-template-columns:minmax(0,1fr)}
+#room[data-continuous=true][data-phase=playing] .party-session-bar,
+#room[data-continuous=true] #roundClock[hidden] {display:none!important}
+.party-embedded-game {
+ position:relative;
+ width:100%;
+ overflow:hidden;
+ border-radius:16px;
+ background:radial-gradient(ellipse at 50% 10%, #21374b, #101c29 70%);
+}
+.party-game-frame {display:block;width:100%;height:clamp(520px,82dvh,900px);border:0;visibility:hidden}
+.party-game-connected .party-game-frame {visibility:visible}
+.party-game-connected .party-game-connect {display:none}
+.party-game-connect {
+ position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:12px;margin:0;color:#b6ded8;font-weight:700;
+}
+.party-between {
+ border:1px solid #e6c88140;border-radius:20px;
+ background:radial-gradient(ellipse at 50% 0%, #b8873429, transparent 76%), #142233;
+ padding:clamp(16px,4vw,32px);
+}
+.party-between .party-countdown-number {
+ width:58px;margin:12px auto 0;border:1px solid #e6c88175;border-radius:15px;
+ background:#081420;color:#ffe4a9;font-size:32px;font-variant-numeric:tabular-nums;
+}
+.party-jack-table {position:relative;width:min(100%,680px);margin-inline:auto}
+.party-jack-dock {
+ position:absolute;top:50%;left:50%;width:34%;transform:translate(-50%,-50%);
+ border:1px solid #9fb9da65;border-radius:10px;padding:clamp(3px,.8vw,8px);
+ background:#091525f2;color:#e4efff;
+}
+.party-jack-dock .party-hand {display:flex;flex-wrap:nowrap;gap:3px;margin:0}
+.party-jack-dock .party-hand button {
+ flex:1 1 0;min-width:0;width:auto;height:clamp(28px,8vw,56px);padding:0;
+ font-size:clamp(10px,3vw,19px);border-width:1px;border-radius:5px;
+}
+.party-jack-dock .party-hand button.selected {transform:none;background:#a9ebd3}
+.party-jack-dock .party-game-stats {margin:3px 0 0;font-size:clamp(9px,2.5vw,12px)}
+.party-jack-dock .party-move-options {justify-content:flex-start;flex-wrap:nowrap;overflow:auto;max-height:35px;margin-top:3px}
+.party-jack-dock .party-move-options:empty {display:none}
+.party-jack-dock .party-move-options button {min-height:31px;flex:none;padding:2px 7px;font-size:11px}

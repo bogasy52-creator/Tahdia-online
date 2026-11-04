@@ -21,7 +21,7 @@ export class PartyRoom{
  error(ws,error,seq=null){try{ws.send(JSON.stringify({type:'error',message:String(error?.message||error||'تعذر تنفيذ الحركة'),seq}));}catch{}}
  send(ws,value){try{if(open(ws))ws.send(typeof value==='string'?value:JSON.stringify(value));}catch{}}
  members(){return this.ctx.getWebSockets().filter(ws=>{try{const a=ws.deserializeAttachment();return a?.party&&open(ws)&&this.room?.players[a.playerId]?.connection===a.connection;}catch{return false;}});}
- broadcast(privateIds=[],full=false){if(!this.room)return;this.room.revision++;const common=partySnapshot(this.room,null);if(common.round?.arena)delete common.round.arena;const payload=JSON.stringify({type:'room',state:common}),all=this.members();for(const ws of all){this.send(ws,payload);const id=ws.deserializeAttachment().playerId;if(full||privateIds.includes(id))this.send(ws,{type:'private',sessionId:this.room.sessionId,roundId:this.room.round?.id||null,revision:this.room.revision,me:partyRoundView(this.room,id)?.me||null});}}
+ broadcast(privateIds=[],full=false){if(!this.room)return;this.room.revision++;const common=partySnapshot(this.room,null);if(common.round?.arena)delete common.round.arena;const payload=JSON.stringify({type:'room',state:common}),all=this.members();for(const ws of all){this.send(ws,payload);const id=ws.deserializeAttachment().playerId;if(full||privateIds.includes(id)){const own=partyRoundView(this.room,id);this.send(ws,{type:'private',sessionId:this.room.sessionId,roundId:this.room.round?.id||null,revision:this.room.revision,me:own?.me||null,linkSeat:own?.linkSeat});}}}
  promoteHost(now){const old=Object.values(this.room.players).find(p=>p.role==='host');if(old&&!old.connected&&old.disconnectedAt&&now-old.disconnectedAt>=60000){const next=this.room.order.map(id=>this.room.players[id]).find(p=>p.connected);if(next){old.role='guest';next.role='host';return true;}}return false;}
  run(){if(this.timer!==null||this.room?.status!=='playing'||this.room.round?.game!=='serpent'||!this.room.round.arena||!Object.values(this.room.players).some(p=>p.connected))return;this.lastFrame=null;this.timer=setInterval(()=>{if(this.tickBusy)return;this.tickBusy=true;this.enqueue(()=>this.step(Date.now(),true)).catch(()=>{this.stop();return this.ctx.storage.setAlarm(Date.now()+1000).catch(()=>{});}).finally(()=>this.tickBusy=false);},50);this.timer.unref?.();}
  stop(){if(this.timer!==null)clearInterval(this.timer);this.timer=null;this.lastFrame=null;}
@@ -33,7 +33,9 @@ export class PartyRoom{
    // 33.0.0: one real room per table, opened one after the other
    for(const t of r.link.tables||[]){
     if(t.code)continue;
-    try{const res=await createLinkedRoom(this.env,r.game,{settings:r.settings,count:t.count,seats:t.seats||t.count,link:{code:this.room.code,round:r.id,token:t.token}});if(this.room?.round!==r)return false;if(res.ok)openPartyLink(this.room,res,Date.now(),t.id);else{failed=true;break;}}
+    try{
+     const reservations=t.seatTokens&&t.players.map(id=>({id,token:t.seatTokens[id],name:this.room.players[id].name,username:this.room.players[id].username}));
+     const res=await createLinkedRoom(this.env,r.game,{settings:r.settings,count:t.count,seats:t.seats||t.count,reservations,link:{code:this.room.code,round:r.id,token:t.token}});if(this.room?.round!==r)return false;if(res.ok)openPartyLink(this.room,res,Date.now(),t.id);else{failed=true;break;}}
     catch{if(this.room?.round!==r)return false;failed=true;break;}
    }
    if(failed)r.link.attempts=(r.link.attempts||0)+1;
@@ -48,7 +50,7 @@ export class PartyRoom{
  }
  if(this.room.status!=='playing'||this.room.round?.game!=='serpent'||!this.room.round.arena)this.stop();if(result.changed||promoted){await this.save();this.broadcast(result.privateIds,result.full);await this.schedule();this.run();}else if(!arenaTick)await this.schedule();}
  async fetch(request){await this.ready;const url=new URL(request.url);
-  if(url.pathname==='/init'&&request.method==='POST')return this.enqueue(async()=>{if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);try{this.room=createParty({...await request.json(),links:true});await this.save();await this.schedule();return json({ok:true,capacity:this.room.capacity},201);}catch(e){return json({ok:false,error:e.message},400);}});
+  if(url.pathname==='/init'&&request.method==='POST')return this.enqueue(async()=>{if(this.room&&this.room.expiresAt>Date.now())return json({ok:false,error:'room_exists'},409);try{this.room=createParty({...await request.json(),links:true,continuous:true});await this.save();await this.schedule();return json({ok:true,capacity:this.room.capacity},201);}catch(e){return json({ok:false,error:e.message},400);}});
   if(!this.room||this.room.expiresAt<=Date.now())return json({ok:false,error:'الغرفة انتهت أو غير موجودة'},404);
   if(url.pathname==='/status')return json({ok:true,game:'party',code:this.room.code,status:this.room.status,players:this.room.order.length,playerLimit:this.room.capacity,version:29});
   // 32.1.0: the real game's room reports its final ranking
@@ -92,7 +94,7 @@ export class PartyRoom{
   return this.enqueue(async()=>{try{const now=Date.now();if(msg.type==='sync'){if(now-(p.syncAt||0)<500)return;p.syncAt=now;this.lastFrame=null;this.send(ws,{type:'snapshot',state:partySnapshot(this.room,p.id)});return;}
    if(now-(p.messageAt||0)<35)throw Error('انتظر لحظة بين الحركات');p.messageAt=now;await this.step(now);
    if(msg.type==='leave'&&this.room.status==='lobby'){this.room.order=this.room.order.filter(id=>id!==p.id);delete this.room.players[p.id];if(p.role==='host'&&this.room.order.length)this.room.players[this.room.order[0]].role='host';ws.close(1000,'left');await this.save();this.broadcast();return;}
-   let result;if(msg.type==='action'){result=applyPartyAction(this.room,p.id,msg,now);this.send(ws,{type:'ack',roundId:this.room.round.id,seq:msg.seq,duplicate:Boolean(result.duplicate),feedback:result.feedback});}else configureParty(this.room,p.id,msg,now);
+   let result;if(msg.type==='action'){result=applyPartyAction(this.room,p.id,msg,now);this.send(ws,{type:'ack',roundId:this.room.round.id,seq:msg.seq,duplicate:Boolean(result.duplicate),feedback:result.feedback});}else{configureParty(this.room,p.id,msg,now);if(msg.type==='start'&&this.room.links)this.room.continuous=true;}
    const progress=advanceParty(this.room,now);await this.save();if(msg.type==='remove')for(const other of this.ctx.getWebSockets())if(other.deserializeAttachment()?.playerId===msg.playerId)other.close(4004,'seat_removed');this.broadcast(result?.privateIds||[],progress.full||Boolean(this.room.round?.tables));await this.schedule();this.run();
   }catch(e){this.error(ws,e,msg.type==='action'?msg.seq:null);this.send(ws,{type:'snapshot',state:partySnapshot(this.room,p.id)});}});
  }

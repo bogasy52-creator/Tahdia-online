@@ -21,7 +21,7 @@ test('«صيد الكلمات» takes the place of the word bomb under the same 
   assert.ok(!('prompt' in m) && !('usedWords' in m));
   const page = await read('public/wordbomb.html');
   assert.match(page, /data-challenge="wordbomb"/);
-  assert.match(page, /wordbomb-ui\.js\?v=33\.\d+\.\d+-hunt1"><\/script><script type="module" src="assets\/js\/challenge-client\.js\?v=33\.\d+\.\d+-hunt1"/);
+  assert.match(page, /wordbomb-ui\.js\?v=33\.\d+\.\d+-hunt1"><\/script><script type="module" src="assets\/js\/challenge-client\.js\?v=33\.\d+\.\d+-[a-z0-9]+"/);
   assert.match(await read('public/assets/js/wordbomb-ui.js'), /window\.BS_WORD_HUNT=\{render,tick,clear\}/);
   const client = await read('public/assets/js/challenge-client.js');
   assert.match(client, /window\.BS_WORD_HUNT\.render\(m,\{me:state\.me,act,now,message\}\)/);

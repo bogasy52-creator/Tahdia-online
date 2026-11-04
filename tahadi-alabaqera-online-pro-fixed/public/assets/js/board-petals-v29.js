@@ -620,7 +620,7 @@ export function renderPetalBoard(target,state,options={}){
   else if(game==='jackaroo')drawStar(root,defs,prefix,state,L,LOOKS[STAR_LOOK[lookKey]||'neon'],active,lookKey,{avatars:avatars||[],pile});else drawCross(root,defs,prefix,state,L,theme,active);
   const positions=new Map(),values=new Map(),motions=[],effects=[],traces=[],cellSize=L.c||12.8;
   // a marble a little bigger than its hole, never wider than the step between two holes
-  const marble=game==='jackaroo'?Math.min(L.hole*1.2,L.step*.49):0,marbleScale=+(marble/6.5).toFixed(3);
+  const marble=game==='jackaroo'?Math.min(L.hole*1.38,L.step*.49):0,marbleScale=+(marble/6.5).toFixed(3);
   const stoneLayer=n('g',{'data-layer':'stones'});
   // Stones further down the board are drawn later so they overlap correctly.
   const order=[];state.players.forEach((player,seat)=>(player.tokens||player.marbles).forEach((progress,index)=>order.push({seat,index,progress,p:petalStonePoint(state,seat,index,game)})));

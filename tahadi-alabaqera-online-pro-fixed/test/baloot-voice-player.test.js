@@ -122,7 +122,7 @@ test('the original event time expires both delayed animation calls and queued ch
   f.time(6900);f.finish();await flush();
   assert.deepEqual(f.started.map(x=>x.id),['a']);f.player.dispose();
 });
-test('an unapproved or missing human voice never falls back to the rejected synthesized pack',()=>{
+test('human pack approval stays strict and the original Gulf calls are available',()=>{
   assert.equal(Object.keys(VOICE_LINES).length,56);
   const fixture={kind:'human',approved:true,voice:'TEST METADATA',recordings:Object.fromEntries(Object.entries(VOICE_LINES).map(([id,text])=>[id,{text,src:'/assets/audio/baloot-human/test/'+id+'.mp3',seconds:.2,sha256:'0'.repeat(64)}]))};
   assert.equal(humanPackReady(fixture),true);
@@ -130,7 +130,18 @@ test('an unapproved or missing human voice never falls back to the rejected synt
   assert.equal(humanPackReady({...fixture,kind:'synthetic'}),false);
   assert.equal(humanPackReady({...fixture,recordings:{}}),false);
   if(!humanPackReady(VOICE_PACK)){
-    assert.equal(BalootVoice.say('بس'),false);assert.equal(BalootVoice.getStatus().state,'awaiting-recordings');assert.equal(BalootVoice.synthetic,null);
+    assert.equal(BalootVoice.say('بس'),false);assert.equal(BalootVoice.getStatus().state,'unsupported');assert.equal(BalootVoice.synthetic,true);
   }else assert.equal(BalootVoice.synthetic,false);
   for(const id of Object.keys(VOICE_LINES))assert.deepEqual(voiceLines(id),[id],id);
+});
+
+test('the purchase replaces unspoken passes from its own auction',async()=>{
+  const f=setup();
+  f.player.enqueue('a',{group:'auction'});await flush();
+  f.player.enqueue('b',{group:'auction'});
+  f.player.enqueue('c',{group:'other'});
+  f.player.enqueue('d',{group:'auction',supersede:true,urgent:true});
+  assert.equal(f.sources[0].stopped,0);
+  for(let i=0;i<3;i++){f.finish();await flush();}
+  assert.deepEqual(f.started.map(x=>x.id),['a','d','c']);f.player.dispose();
 });

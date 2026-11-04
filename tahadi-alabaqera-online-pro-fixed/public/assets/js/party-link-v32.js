@@ -10,6 +10,16 @@
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem('bs_party_link') || 'null'); } catch {}
   const room = params.get('room') || '';
+  let seat = '';
+  if (params.get('embedded') === '1' && window.parent !== window && /^\d{6}$/.test(room)) {
+    try {
+      const own = JSON.parse(sessionStorage.getItem('bs-party-seat:' + room) || 'null');
+      if (own?.room === room && own.party === params.get('party') && /^[a-f0-9]{64}$/.test(own.token)) {
+        saved = own;
+        seat = own.token;
+      }
+    } catch {}
+  }
   const recent = Boolean(saved && Date.now() - Number(saved.at || 0) < 6 * 3600000);
   // some games drop ?party from the address once seated; a reload of that room is still the party's
   const party = params.get('party') || (recent && saved.room === room ? String(saved.party || '') : '');
@@ -17,7 +27,7 @@
   const fresh = Boolean(recent && saved.party === party && saved.room === room);
   const clean = (value) => String(value || '').normalize('NFKC').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
   const back = '/party?room=' + party;
-  const link = Object.freeze({ party, room, back, game: fresh ? String(saved.game || '') : '', round: fresh ? String(saved.round || '') : '', name: fresh ? clean(saved.name) : '' });
+  const link = Object.freeze({ party, room, back, game: fresh ? String(saved.game || '') : '', round: fresh ? String(saved.round || '') : '', name: fresh ? clean(saved.name) : '', ...(seat ? { seat } : {}) });
   window.BS_PARTY_LINK = link;
 
   // A guest plays under the party name; an account keeps its own name (social-client locks it).
@@ -27,6 +37,17 @@
     });
   }
 
+  if (seat) {
+    document.documentElement.classList.add('party-embedded');
+    const css = document.createElement('style');
+    css.textContent =
+      '.party-embedded body{background:transparent;min-height:0}' +
+      '.party-embedded .ch-shell{max-width:none;padding:0;margin:0}' +
+      '.party-embedded .ch-layout{display:block}' +
+      '.party-embedded :is(#chLobby,#chSetup,#chRematch,#chLeave,.ch-topbar,.ch-heading,.ch-aside,.ch-footer){display:none!important}';
+    document.head.append(css);
+    return;
+  }
   const style = document.createElement('style');
   style.textContent = `
 .bs-party-back{position:fixed;z-index:2147483000;inset-inline-start:max(12px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:7px 14px 7px 12px;border-radius:999px;background:#13203aee;color:#f6f1e3;border:1px solid #a2e5cb70;box-shadow:0 10px 24px #0007;font-family:inherit;font-weight:700;font-size:13px;line-height:1.2;text-decoration:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}

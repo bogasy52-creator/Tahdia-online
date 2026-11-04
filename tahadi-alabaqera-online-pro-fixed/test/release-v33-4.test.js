@@ -83,7 +83,7 @@ test('Jackaroo cards are the Baloot deck with a drawing of what each card does',
   assert.match(page, /card-courts\.js\?v=[\d.]+"><\/script><script src="assets\/js\/baloot-cards\.js\?v=[\d.]+"><\/script><script src="assets\/js\/jackaroo-cards\.js/);
   assert.match(page, /window\.BS_JACK_CARDS\.face\(card, \{ button: card !== "\?" \}\)/);
   assert.match(page, /viewer: me\(\),/);
-  assert.match(page, /<summary>دليل الأوراق والقواعد<\/summary><div id="cardGuide"><\/div>/);
+  assert.match(page, /class="jk-board-info"[\s\S]*?id="cardGuide"/);
 });
 
 test('the Jackaroo board turns to you, numbers its holes from your start and has a design per table', async () => {

@@ -1,6 +1,7 @@
 import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.7.0';
 import { VOICE_LINES, VOICE_PACK } from './baloot-voice-pack.js?v=33.7.0-baloot2';
-import { createVoicePlayer } from './baloot-voice-player.js?v=33.7.0-baloot2';
+import { VOICE_RECORDINGS } from './baloot-voice-clips-v33.js?v=33.7.0';
+import { createVoicePlayer } from './baloot-voice-player.js?v=33.7.0-audio1';
 
 const KEY = 'bs_baloot_voice';
 const plain = text => String(text || '').replace(/[ً-ْٰ]/g, '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/[،,؟?!.…]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -37,12 +38,21 @@ export function humanPackReady(pack, lines = VOICE_LINES) {
         /^[a-f0-9]{64}$/.test(clip.sha256) && clip.text === lines[id] && clip.seconds > 0 && clip.seconds <= 12;
     });
 }
-const packReady = humanPackReady(VOICE_PACK);
+const existingPack = {
+  kind:'synthetic', voice:'ar-KW-FahedNeural', recordings:VOICE_RECORDINGS
+};
+const existingReady = Object.keys(VOICE_LINES).every(id => {
+  const clip = VOICE_RECORDINGS[id];
+  return clip?.src === '/assets/audio/baloot-gulf-v33/' + id + '.mp3' && clip.seconds > 0 && clip.seconds <= 12;
+});
+const activePack = humanPackReady(VOICE_PACK) ? VOICE_PACK : existingReady ? existingPack : null;
+const packReady = Boolean(activePack);
 // 33.1.0: the calls the manager records in the admin voice studio (no key, nothing
 // outside). Each one takes the place of its line; a line without one keeps the pack's.
-const recordings = packReady ? { ...VOICE_PACK.recordings } : {};
+const recordings = { ...activePack?.recordings };
 let studio = 0;
 const ready = () => packReady || studio > 0;
+const synthetic = () => ready() ? activePack?.kind === 'synthetic' && studio < Object.keys(VOICE_LINES).length : null;
 let enabled = readEnabled(), ctx = null, primed = false;
 function supported() { return typeof window !== 'undefined' && Boolean(window.AudioContext || window.webkitAudioContext); }
 function visible() { return typeof document === 'undefined' || !document.hidden; }
@@ -78,7 +88,7 @@ function getStatus() {
     s.muted || s.effects === false || Number(s.volume ?? .72) <= 0 ? 'muted' :
     detail.state === 'error' ? 'error' : !ctx || ctx.state !== 'running' ? 'locked' : detail.state;
   return { ...detail, state, available:ready() && supported(), enabled, studio,
-    lastText:detail.last ? VOICE_LINES[detail.last] : null, synthetic:ready() ? false : null };
+    lastText:recordings[detail.last]?.text ?? null, synthetic:synthetic() };
 }
 /** The studio's calls: which lines the manager recorded (one small request, cached a little). */
 async function loadStudio({ fresh = false } = {}) {
@@ -90,7 +100,7 @@ async function loadStudio({ fresh = false } = {}) {
     for (const id of Object.keys(VOICE_LINES)) {
       const at = Number(pack?.lines?.[id]?.at) || 0;
       if (at) { recordings[id] = { src:'/api/baloot/voice/clip/' + id, rev:at, text:VOICE_LINES[id] }; count++; }
-      else if (packReady) recordings[id] = VOICE_PACK.recordings[id];
+      else if (packReady) recordings[id] = activePack.recordings[id];
       else delete recordings[id];
     }
     if (count !== studio || fresh) player.forget();
@@ -103,8 +113,8 @@ function notify() {
   try { window.dispatchEvent(new CustomEvent('bs-baloot-voice-change', { detail:getStatus() })); } catch {}
 }
 export const BalootVoice = {
-  get voice() { return packReady ? VOICE_PACK.voice : studio ? 'studio' : null; },
-  get synthetic() { return ready() ? false : null; },
+  get voice() { return studio ? 'studio' : activePack?.voice ?? null; },
+  get synthetic() { return synthetic(); },
   supported, hasArabic() { return ready() && supported(); }, get enabled() { return enabled; }, getStatus,
   /** The voice studio saved or removed a call: read the set again. */
   reload() { return loadStudio({ fresh:true }); },

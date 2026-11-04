@@ -17,7 +17,20 @@ export class ChallengeRoom{
  async fetch(request){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{
   if(this.room&&!active(this.room.game))return reply({ok:false,error:'هذه اللعبة حُذفت؛ اختر الشفرة أو مواجهة التركيز'},410);
   const u=new URL(request.url),b=request.method==='POST'?await request.json().catch(()=>({})):{};
-  if(u.pathname==='/init'){if(this.room)return reply({ok:false},409);if(!active(b.game)||!/^\d{6}$/.test(b.code)||typeof b.hostKey!=='string'||b.hostKey.length<32)return reply({ok:false},400);this.room={code:b.code,game:b.game,hostKey:b.hostKey,hostId:null,players:[],round:0,quick:b.quick===true,expected:Math.min(20,Math.max(1,Number(b.expected)||0)),partyLink:cleanPartyLink(b.party),expiresAt:Date.now()+3600000};await this.save();return reply({ok:true},201);}
+  if(u.pathname==='/init'){
+   if(this.room)return reply({ok:false},409);
+   if(!active(b.game)||!/^\d{6}$/.test(b.code)||typeof b.hostKey!=='string'||b.hostKey.length<32)return reply({ok:false},400);
+   const partyLink=cleanPartyLink(b.party),reserved=b.reservations;
+   if(reserved!==undefined&&(!partyLink||!Array.isArray(reserved)||!reserved.length||reserved.length>CHALLENGES[b.game].players||
+       reserved.some(p=>!p||!/^[-a-f0-9]{36}$/i.test(p.id)||!/^[a-f0-9]{64}$/i.test(p.token))||
+       new Set(reserved.map(p=>p.id)).size!==reserved.length||new Set(reserved.map(p=>p.token)).size!==reserved.length))return reply({ok:false},400);
+   const players=reserved?.map(p=>({id:p.id,token:p.token,name:clean(p.name),username:p.username||null,hero:'fox',seq:0}))||[];
+   this.room={code:b.code,game:b.game,hostKey:b.hostKey,hostId:players[0]?.id||null,players,round:0,
+    quick:b.quick===true,expected:Math.min(20,Math.max(1,Number(b.expected)||0)),partyLink,partyReserved:Boolean(reserved),expiresAt:Date.now()+3600000};
+   if(reserved)this.start();
+   await this.save();
+   return reply({ok:true},201);
+  }
   if(!this.room||await this.expire())return reply({ok:false,error:'انتهت الغرفة؛ أنشئ غرفة جديدة'},404);
   if(this.pruneLobby())await this.save();
   if(u.pathname==='/status')return reply({ok:true,game:this.room.game,status:this.room.match?.phase||'lobby',players:this.room.players.length,playerLimit:CHALLENGES[this.room.game].players});
@@ -26,11 +39,17 @@ export class ChallengeRoom{
   const protocols=String(request.headers.get('sec-websocket-protocol')||'').split(',').map(s=>s.trim()),read=prefix=>protocols.find(s=>s.startsWith(prefix))?.slice(prefix.length)||'';
   if(!protocols.includes('tahdia-challenge-v1'))return reply({ok:false,error:'حدّث الصفحة'},426);
   const r=this.room,resume=read('rt.'),username=request.headers.get('x-bs-account')||null;let p=r.players.find(p=>p.token===resume);
-  if(resume&&!p)return reply({ok:false,error:'انتهت الجلسة'},403);
+  if(resume&&!p||r.partyReserved&&(!p||p.username!==username))return reply({ok:false,error:'انتهت الجلسة'},403);
   if(p&&r.match?.phase==='playing'&&!r.match.players.some(x=>x.id===p.id))return reply({ok:false,error:'لم تدخل قبل بداية الجولة'},409);
   if(p?.username&&p.username!==username)return reply({ok:false,error:'ارجع بالحساب نفسه'},403);
   if(!p){if(r.match?.phase==='playing')return reply({ok:false,error:'الجولة بدأت'},409);if(r.players.length>=CHALLENGES[r.game].players)return reply({ok:false,error:'الغرفة ممتلئة'},409);if(username&&r.players.some(p=>p.username===username))return reply({ok:false,error:'حسابك موجود في الغرفة'},409);if(!r.players.length&&!r.quick&&!r.partyLink&&read('hk.')!==r.hostKey)return reply({ok:false,error:'بانتظار المضيف'},403);
    const hero=request.headers.get('x-bs-character');p={id:crypto.randomUUID(),token:crypto.randomUUID()+crypto.randomUUID(),name:clean(request.headers.get('x-bs-name')||u.searchParams.get('name')),hero:HEROES.includes(hero)?hero:'fox',username,seq:0};r.players.push(p);if(!r.hostId)r.hostId=p.id;
+  }
+  if(r.partyReserved){
+   if(r.match?.phase==='playing')p.partyJoined=true;
+   const hero=request.headers.get('x-bs-character');
+   const entrant=r.match?.players.find(x=>x.id===p.id);
+   if(HEROES.includes(hero)&&entrant&&entrant.hero!==hero){p.hero=entrant.hero=hero;r.match.version++;}
   }
   if((r.quick||r.partyLink)&&!r.match&&!r.startsAt){r.startsAt=Date.now()+12000;r.firstJoinAt=Date.now();}const previous=p.connection;p.connection=crypto.randomUUID();delete p.disconnectedAt;for(const ws of this.ctx.getWebSockets())if(ws.deserializeAttachment()?.connection===previous)try{ws.close(4001,'reconnected');}catch{}
   const pair=new WebSocketPair(),ws=pair[1];this.ctx.acceptWebSocket(ws);ws.serializeAttachment({challenge:true,id:p.id,connection:p.connection});await this.save();ws.send(JSON.stringify({type:'welcome',token:p.token,seq:p.seq,state:this.snapshot(p.id)}));this.broadcast();return new Response(null,{status:101,webSocket:pair[0],headers:{'sec-websocket-protocol':'tahdia-challenge-v1'}});
@@ -56,15 +75,15 @@ export class ChallengeRoom{
  });}
  error(ws,message){try{const a=ws.deserializeAttachment(),p=this.room?.players.find(p=>p.id===a.id&&p.connection===a.connection);ws.send(JSON.stringify({type:'error',message,...(p?{serverSeq:p.seq,state:this.snapshot(p.id)}:{})}));}catch{}}
  async webSocketClose(ws){await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{if(!this.room)return;const a=ws.deserializeAttachment(),p=this.room.players.find(p=>p.id===a.id&&p.connection===a.connection);if(p){p.connection=null;p.disconnectedAt=Date.now();p.ready=false;if(this.room.hostId===p.id&&this.room.match?.phase!=='playing')this.room.hostId=this.room.players.find(p=>p.connection)?.id||p.id;await this.save();this.broadcast();}});}
- start(){const r=this.room;let players=r.players.filter(p=>p.connection||p.bot);const rivals=r.game==='chaos'?[['برق','racer'],['صقر','cyber'],['ريح','robot']]:[['المنافس الآلي','robot']],least=r.game==='chaos'?4:2;for(let i=0;players.length<least&&i<rivals.length;i++){const bot={id:'bot:'+crypto.randomUUID(),name:rivals[i][0],hero:rivals[i][1],bot:true,ready:true};r.players.push(bot);players=[...players,bot];}r.match=createChallenge(r.game,players,crypto.getRandomValues(new Uint32Array(1))[0]);r.round++;r.startsAt=null;r.expiresAt=Date.now()+3600000;for(const p of r.players)p.ready=false;}
+ start(){const r=this.room;let players=r.players.filter(p=>r.partyReserved||p.connection||p.bot);const rivals=r.game==='chaos'?[['برق','racer'],['صقر','cyber'],['ريح','robot']]:[['المنافس الآلي','robot']],least=r.game==='chaos'?4:2;for(let i=0;players.length<least&&i<rivals.length;i++){const bot={id:'bot:'+crypto.randomUUID(),name:rivals[i][0],hero:rivals[i][1],bot:true,ready:true};r.players.push(bot);players=[...players,bot];}r.match=createChallenge(r.game,players,crypto.getRandomValues(new Uint32Array(1))[0]);r.round++;r.startsAt=null;r.expiresAt=Date.now()+3600000;for(const p of r.players)p.ready=false;}
  async advance(){const r=this.room;if(!r)return;const now=Date.now();this.pruneLobby(now);if(!r.match&&r.startsAt&&now>=r.startsAt){const count=r.players.filter(p=>p.connection).length;if(!count)r.startsAt=null;else if(r.partyLink&&count<r.expected&&now-r.firstJoinAt<30000)r.startsAt=now+1000;else this.start();}if(r.match)advanceChallenge(r.match,now);await this.report();await this.reward();}
  // 33.6.0: a round two people or more played for twenty seconds counts for their careers — XP,
  // coins and the daily missions — like the board rooms; the receipt pays once, retries never twice.
- async reward(){const r=this.room,m=r?.match;if(!m||m.phase!=='finished'||r.rewardedRound===r.round||r.rewardAt&&Date.now()<r.rewardAt)return;const humans=m.players.filter(p=>!p.bot);
+ async reward(){const r=this.room,m=r?.match;if(!m||m.phase!=='finished'||r.rewardedRound===r.round||r.rewardAt&&Date.now()<r.rewardAt)return;const humans=m.players.filter(p=>!p.bot&&(!r.partyReserved||r.players.find(x=>x.id===p.id)?.partyJoined));
   if(humans.length<2||(m.finishedAt||0)-(m.startedAt||0)<20000){r.rewardedRound=r.round;r.rewardAt=null;return;}
   try{for(const p of humans){const username=r.players.find(x=>x.id===p.id)?.username;if(!username)continue;const stub=getSocialStub(this.env,username);if(!stub)continue;const res=await stub.fetch('https://social.internal/career/verified',{method:'POST',body:JSON.stringify({id:`${r.game}:${r.code}:${r.round}:${m.startedAt}:${p.id}`,game:r.game,win:m.winners.includes(p.id)})});if(!res.ok)throw Error('career_reward_failed');}r.rewardedRound=r.round;r.rewardAt=null;r.rewardTries=0;}
   catch{r.rewardTries=(r.rewardTries||0)+1;if(r.rewardTries>=6){r.rewardedRound=r.round;r.rewardAt=null;}else r.rewardAt=Date.now()+10000;}}
- async report(){const r=this.room,m=r?.match;if(!r?.partyLink||r.partyReported||m?.phase!=='finished')return;const ranked=m.players.filter(p=>!p.bot).sort((a,b)=>Number(m.winners.includes(b.id))-Number(m.winners.includes(a.id))||Number(b.alive)-Number(a.alive)||b.score-a.score||(b.eliminatedAt||0)-(a.eliminatedAt||0));const rows=standings(ranked.map(p=>({...p,username:r.players.find(x=>x.id===p.id)?.username,won:m.winners.length===1&&m.winners.includes(p.id)})),(a,b)=>a.won===b.won&&a.alive===b.alive&&a.score===b.score&&a.eliminatedAt===b.eliminatedAt);if(await reportPartyLink(this.env,r.partyLink,r.game,rows)){r.partyReported=true;r.reportAt=null;}else{r.reportTries=(r.reportTries||0)+1;r.reportAt=r.reportTries<6?Date.now()+5000:null;if(!r.reportAt)r.partyReported=true;}}
+ async report(){const r=this.room,m=r?.match;if(!r?.partyLink||r.partyReported||m?.phase!=='finished')return;const ranked=m.players.filter(p=>!p.bot&&(!r.partyReserved||r.players.find(x=>x.id===p.id)?.partyJoined)).sort((a,b)=>Number(m.winners.includes(b.id))-Number(m.winners.includes(a.id))||Number(b.alive)-Number(a.alive)||b.score-a.score||(b.eliminatedAt||0)-(a.eliminatedAt||0));const rows=standings(ranked.map(p=>({...p,partyId:r.partyReserved?p.id:undefined,username:r.players.find(x=>x.id===p.id)?.username,won:m.winners.length===1&&m.winners.includes(p.id)})),(a,b)=>a.won===b.won&&a.alive===b.alive&&a.score===b.score&&a.eliminatedAt===b.eliminatedAt);if(await reportPartyLink(this.env,r.partyLink,r.game,rows)){r.partyReported=true;r.reportAt=null;}else{r.reportTries=(r.reportTries||0)+1;r.reportAt=r.reportTries<6?Date.now()+5000:null;if(!r.reportAt)r.partyReported=true;}}
  async alarm(){await this.ready;if(this.room&&!active(this.room.game)){for(const ws of this.ctx.getWebSockets())try{ws.close(4000,'retired');}catch{}await this.ctx.storage.deleteAlarm();return;}return this.ctx.blockConcurrencyWhile(async()=>{if(!this.room||await this.expire())return;await this.advance();await this.save();this.broadcast();});}
 }
 
