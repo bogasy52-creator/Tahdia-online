@@ -143,6 +143,7 @@ bc07353c3949d71c268128e02f5f3c0dacb8560bc2e3161a3d7ee84924213dba  ./public/asset
 6d59fc16a2c746d75ec854c366b3550ba3e34f6fb8a39a8f4fd49fcb1af0bda1  ./public/assets/brand/sudoku-cover.svg
 36cdadb4cb0fdd5616fc153c7de0d60f46b8a470513d8cf634c425b053661c31  ./public/assets/brand/tahdia-hero-v15.webp
 6a127e775b35818224a1b0b12585ea6a78d2f17a55231667b7e17f373fd4fe03  ./public/assets/brand/turbo-kart-cover-v33-7.svg
+21f7fbf005571e469108c904755e92f696e6f269270633c8b9e329b1d427a463  ./public/assets/challenges/chaos-mirage.svg
 7ed00e6a9981af942776e5c6e0400d1d319144c0f0e5975da002dc120f0a48b8  ./public/assets/challenges/chaos.svg
 4d65ca936dcb2955281529c8e809736b7e8a326fa667ec3c74713b2e704635ab  ./public/assets/challenges/cipher.svg
 4a42bf35a2dae6e961a93720d3d653b5831c1377cf0dd692d5c2cf4589fad974  ./public/assets/challenges/focus.svg
@@ -201,7 +202,7 @@ e8502479f6126b4a90e48205a91916251090defe92e45799599be6e4562cef81  ./public/asset
 8289d09b4a07b415efd43b08221a7850941e6e9dc87d292d57f44795f881ea5b  ./public/assets/css/app-accuracy.css
 b955fa527e1260d8df65ced09bd1c40d5d99f9d5b0153a981f309261a51bfe9c  ./public/assets/css/app-admin.css
 6ac08998fb67148aeac6388fce6dfd2eb24ca0539524b3c5485794a89027929c  ./public/assets/css/app-baloot.css
-3d3004e5815b258c6cf4364efc8bd8aa3166b21bf5005c04a0c3e656751b064e  ./public/assets/css/app-chaos.css
+310741dd8a5cf6e2cd2139852ee98d53400e5037b237859decde6acaea494387  ./public/assets/css/app-chaos.css
 19871fb167978714561d1f468ddf1b4cf8377042cfb09e8fadee8417a756b756  ./public/assets/css/app-characters.css
 0e9ac64023e7e8a9fd9141d6f6823af9c53175131ae4e4bd72538f972bcf96f1  ./public/assets/css/app-cipher.css
 04fdfee66b9f601e866e602d2652ca2ef17f9a76218a2df078a6165d6b4bd9fd  ./public/assets/css/app-dice.css
@@ -249,7 +250,7 @@ a450c6c0a5931f00b4c4e6e44966fccf0befcda5c2dca18a67b279fc12c76c2e  ./public/asset
 f1e1dcbd371436101f22777cc0f4731bc2d7c4e88ecfa13b097d4028620a58f2  ./public/assets/css/brain-v20.css
 816e7f7d5c34658610e78e44ae9d1700adcab1a8d56cf07478c2b7afe022b911  ./public/assets/css/challenges-v33-5.css
 45f98c41c16c768547eba0bf10f8e4cc3525ef5d6aa480cdf8d1406dd3b3a495  ./public/assets/css/challenges.css
-0ec7596c0f46a9af1b594b7e4f5cb81ae95fbbffcd03ed6d48a42ec1803d21f1  ./public/assets/css/chaos-v33-6.css
+8d40908f7196bb64dde48fc5a2029ca006036b79de04995f761c3dabc976ba74  ./public/assets/css/chaos-v33-6.css
 69f7acc8a978c77f4bb24b8f75fd6ae586d1417281b0f99529d496c8ce54c476  ./public/assets/css/character-gallery.css
 83086817888dd62abc0ed077813686efb9128c409e2e3800739bb4534e565198  ./public/assets/css/cosmetics.css
 783dd57510887f83869f05ef5ede6e560312b801be444be05e3f6e2052ddbf56  ./public/assets/css/design-system.css
@@ -401,9 +402,10 @@ caac19f1681211086d8a1c4a459fc929530702a7b436318db94e52a3047f1e80  ./public/asset
 37514a6712e45a3d5a27e0771af0b9dada3e8018adc44034de042b9f775b605b  ./public/assets/js/board-table-v33.js
 16c8b31181bb14269adef4ae19a92f37e023077194e0ff2ecbdf7e6d5088b348  ./public/assets/js/card-courts.js
 1a34ebad543e874264f16c078bd60045b333bf8ed35f2644b65459b161fcd518  ./public/assets/js/career-client.js
-f5babf7b46692ee12c7e3af139718ffbeb32132927779fca85ee3a95aa9e6c2d  ./public/assets/js/challenge-client.js
+53e129e4b34e92a3a72ca98d5feb9b895882f47e14ad8900e565013c073d4b20  ./public/assets/js/challenge-client.js
 94f264744165e0c97da92526e5454bb0f7b33359ed047297c630008061d33c65  ./public/assets/js/challenge-studio.js
-fdf3cbab5d7943ec4ccdeb326b0a49bda1b274efd4a4da644f2836f6081b3baa  ./public/assets/js/chaos-ui.js
+a2a8fa714093da7978e5538048e34868577c2b68dc61b906a70158f89069c2d2  ./public/assets/js/chaos-stage.js
+02466e45b80ad1653986c46663762c69c52d7f8ee8c5f9e0e79f1ccbe7c20944  ./public/assets/js/chaos-ui.js
 3de7c35c559c3d4d2a838184005a73d92571d9b32293f18cdf283810e8cf65a3  ./public/assets/js/character-commerce.js
 e87c7754fa4ab81f5958a110009af9e9acdbdebd44f1176330abf6254c7d002c  ./public/assets/js/character-gallery.js
 afe7c220555b1954ef35ea9c71154b727acfa5c96428719363c9ede9a026ec95  ./public/assets/js/character-player.js
@@ -1169,7 +1171,7 @@ da6bbcc8b499b3ff089774e09ab558cc6c7e994817ccc2a5dfa8776ff2dcbcf6  ./public/asset
 0add9aac69930f5b055f4a9a9dc67178dc81684b3927e1f621f523c86045d396  ./public/assets/sounds/quiz-v28/timeout.wav
 153f769bf42db88368514968259d146700cda84e072407d8766af8902b329fc6  ./public/assets/sounds/quiz-v28/wrong.wav
 982dff48e1c5060b956284c620130f41d3593bc854274332d5495dff1be695f3  ./public/baloot.html
-fabb4e1426835b3906cb3fe256ed5bba2d1a29fdef10eee226d7a6d90604f73e  ./public/chaos.html
+557e2a2c6d9f24649a55dd2cdad19571364bb095dd367f61180f7a2b487b4622  ./public/chaos.html
 e9a93038d4c9f91f8bca13dce5e5ff7255bfa8f78192bd07a0a353739345c956  ./public/characters.html
 7d56dfb356023d0dee4e74bd2ccf9244d9863fd235db8220fba4280937063412  ./public/cipher.html
 60c6a1f6ea974d44a13a76de28de872b143e16ca163fcf291d9816d208adfa97  ./public/dice.html
@@ -1199,7 +1201,7 @@ c8dd1af024270d75fc8ef881a1720310c623e9707ee11e2481329519fc9ead88  ./public/quiz.
 36fddea989e832cff92abcbd66e4322c1e750d93ac880d93bbd128849b3282a2  ./public/reaction-classic.html
 464e6d3dd4824d469b525a2bf7c9a6556e3b2b802599a9d04d8a177711908d67  ./public/reaction.html
 c8e5e2fa2aafd3634734d61d7f2234cf6d32d7ad10ad4949a3993b497b1d7c86  ./public/serpent.html
-1a29ca9584c36e3e9749033370035c257ecc3a480f7290d36077eea9f1ce1eef  ./public/service-worker.js
+011e73576c356731b37357f2425c2a6b5c6beb148ff3aa107c1c24980a2a1d8d  ./public/service-worker.js
 fc3e4b6ef2c393866bfcc1889cf80f776f8ae26818b66daac5b164b68ef5fc99  ./public/shop.html
 8e7808eaa5e0039ab8f4ee04b8af6eab14f364162e29a30fae700f9d0f1bd950  ./public/snakes.html
 2911ac87d975893a7aceb267b4d5fb600f712555b0715742c10119015bbd6635  ./public/social.html
@@ -1248,7 +1250,7 @@ cf1550abe165c1692e31d66e1302e11914daa86709c0ffb546eb111bc710a0f1  ./RELEASE-CHEC
 9bf1560359d0f25d0b26dc9947cc86874742ce606485450358deb00c3f28f338  ./scripts/build-character-foley.py
 9b6842623d15c30c06ee17d9cf01655cb4247675705aef52e3e02e409b5fcb0c  ./scripts/build-character-sounds.mjs
 7a38d51c6d552aea04d5934a6873894b19552fd11f6a4d7a90cd4010e292eeef  ./scripts/build-offline.mjs
-ffd9a1817dab31eae6a924cccdda8131d169d65b0f0b622017d0c22c880f0588  ./scripts/build-styles.mjs
+4b4e09688e51278a7df876d983380e8cc0fa3bf5849f21294cb5e04a7c74a08c  ./scripts/build-styles.mjs
 3331c6879ff84e44ae9904470f3a4f74c1cf130da6cfd2652cbf22dafaf1a73d  ./scripts/create-update-patch.py
 74354a71ddfc1a5633df13751078fde681bb794f61ab03cb01d70bbd82095cdc  ./scripts/curate-quiz-v28.mjs
 b4ec045312bc27428c0f8edaada9c9668764ee72252082b5a89abeb98a25d16c  ./scripts/dev-preview.mjs
@@ -1397,7 +1399,8 @@ c1e0c6414193b014afdae071ed12190536efa245bbbab6f5920ff3df6d914572  ./test/baloot-
 5abcf3622aac5a908314c8ea29b0d896836fce869b5443d6298995907393c767  ./test/challenge-retirement.test.js
 f20e21ae1ba6bd86c6cdb03c27b91ae72243c80001806efec8fd2fbb20711556  ./test/challenge-studio.test.js
 bedb93d844db2573b52a955d3cf2b4f0f50b729caa823b9ba5099b248d285d35  ./test/challenges.test.js
-e4f7f8da555807e4851e9644953374cd387160535c2a670266fe4ece1524322b  ./test/chaos.test.js
+12c16c4c2e82ffb7cdeb620abe63ea3d7719ec7600a051538952809ee3bf9147  ./test/chaos-perspective.test.js
+a28622b7028385e388eb631d6c2b610051c8dab2d7a772ae46462242997e3239  ./test/chaos.test.js
 e4841854d2eda37e6ace4870fb73c50543318fb3cc93a32ec72562f1105675c1  ./test/character-animation-v33.test.js
 1c1ce300d36e9a5a0480f1c9ade2a299fb86bf2f95c0c89837b6522fc72371f5  ./test/character-presentation-repair.test.js
 cf5bbb94d591dd7d6aa84f823bfcf1762553828806f7b120663ab9c4324a4860  ./test/characters-expansion-v33.test.js

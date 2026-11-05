@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -16,7 +17,8 @@ for(const page of pages.filter(page=>!selection||selection.includes(page))){
  const files=[...new Set([...sources[page].filter(x=>!finalStyles.has(x)),'assets/css/design-system.css',...sources[page].filter(x=>finalStyles.has(x))])];
  const content=(await Promise.all(files.map(async file=>'/* '+file+' */\n'+await readFile(path.join(root,file),'utf8')))).join('\n');
  const bundle='assets/css/app-'+page.replace('.html','')+'.css';
- const revision=packageRevision||(['serpent.html','journey.html','paths-online.html'].includes(page)?'24.0.1':html.match(/assets\/css\/app-[^"']+\?v=([^"']+)/)?.[1]||'23.0.1');
+ const version=packageRevision||(['serpent.html','journey.html','paths-online.html'].includes(page)?'24.0.1':html.match(/assets\/css\/app-[^"']+\?v=([^"']+)/)?.[1]||'23.0.1');
+ const revision=page==='chaos.html'?version+'-'+createHash('sha256').update(content).digest('hex').slice(0,10):version;
  // Keep the standalone v25 theme stylesheet outside each generated route bundle.
  // Rebuilding the route bundle must not remove the theme, and --check must
  // compare against the SAME normalized output as the release builder.

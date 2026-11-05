@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#0d182e"/><stop offset=".48" stop-color="#593b58"/><stop offset=".71" stop-color="#d17b72"/><stop offset="1" stop-color="#ffaf80"/>
+    </linearGradient>
+    <linearGradient id="sun" x2="0" y2="1">
+      <stop stop-color="#fff0ca"/><stop offset="1" stop-color="#ffa475"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#ffbc8e" stop-opacity=".8"/><stop offset="1" stop-color="#ff996f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="road" x2=".17" y2="1">
+      <stop stop-color="#434259"/><stop offset="1" stop-color="#111e32"/>
+    </linearGradient>
+    <linearGradient id="ground" x2="0" y2="1">
+      <stop stop-color="#273348"/><stop offset="1" stop-color="#080e1e"/>
+    </linearGradient>
+    <pattern id="grid" width="37" height="17" patternUnits="userSpaceOnUse">
+      <path d="M0 0h37M0 0v17" stroke="#8195b9" opacity=".14"/>
+    </pattern>
+    <pattern id="windows" width="12" height="8" patternUnits="userSpaceOnUse">
+      <path d="M3 2h2m3 0h1" stroke="#96c8cf" opacity=".64"/>
+    </pattern>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h960v300H0z"/>
+  <ellipse cx="665" cy="145" rx="218" ry="156" fill="url(#glow)"/>
+  <circle cx="665" cy="145" r="73" fill="url(#sun)"/>
+  <path fill="none" stroke="#ecdcf3" opacity=".5" d="M48 70h2m63 54h2m49-78h2m48 52h2m89-33h2m47-18h2m68 64h2m35-66h2m71 56h2m224-50h2m56 72h2m78-55h2"/>
+  <path fill="#754e67" d="m0 233 58-37 42 5 45-25 34 5 61-31 67 35 34 4 52 34 76-8 67-46 22 3 37-22 51 22 19-3 64 32 57-44 31 1 45-24 65 39 33-12 40 21v86H0z"/>
+  <path fill="#463b55" d="m0 226 78 8 43-17 47-1 60-30 30 15 37-6 89 43 84-9 63 17 84-29 56 8 55-17 54 5 42-24 53 18 62-14 53 22v73H0z"/>
+  <path fill="#243148" d="M0 245h960v38H0z"/>
+  <path id="city" fill="#18283f" d="M0 236h20v-27h21v34h15v-18h18v-41h17v41h19v-25h22v44h14v-30h22v15h10v-37h14v14h16v26h24v-28h20v43h11v-31h18v-26h18v50h22v-34h22v18h24v-27h28v39h18v-25h23v18h22v-34h14v28h26v-21h22v30h25v-38h14v22h12v-39h16v48h17v-26h20v20h12v-25h27v38h16v-56h20v20h12v27h23v-39h18v19h11v-31h25v53h19v-29h18v-39h19v59h16v-28h29v31h16v-40h15v34h18v-11h12v38H0z"/>
+  <clipPath id="blocks"><use href="#city"/></clipPath>
+  <path fill="url(#windows)" clip-path="url(#blocks)" opacity=".7" d="M0 170h960v88H0z"/>
+  <path fill="url(#ground)" d="M0 258h960v162H0z"/>
+  <path fill="url(#grid)" d="M0 266h960v154H0z"/>
+  <path fill="#0e182a" stroke="#576279" stroke-width="3" d="M107 420c119-63 202-113 306-158 50-22 124-24 185-16l20 8c-73 3-83 9-36 23 106 33 198 67 323 143Z"/>
+  <path fill="url(#road)" d="M137 420c106-65 189-113 289-157 49-21 112-22 164-16l13 6c-60 5-65 12-19 26 107 32 199 70 294 141Z"/>
+  <path fill="none" stroke="#86eedf" stroke-width="3" d="M137 420c106-65 189-113 289-157 49-21 112-22 164-16m13 6c-60 5-65 12-19 26 107 32 199 70 294 141"/>
+  <path fill="none" stroke="#a3dfdb" stroke-width="2" stroke-dasharray="13 12" d="M386 420c19-65 52-113 101-151 25-19 65-20 107-19m33 170c-54-65-111-111-110-146 0-18 40-23 83-23" opacity=".68"/>
+  <path fill="none" stroke="#ffab84" stroke-width="3" d="m342 298 38-5m-121 47 57-9m390-4 52 8m-102-34 32 4"/>
+  <path fill="none" stroke="#718ea4" stroke-width="5" d="M240 340l20-60h46m467 67-21-60h-46M377 288l8-35h25m248 38-8-31h-23"/>
+  <path fill="none" stroke="#91f7e0" stroke-width="3" d="M260 280h46m446 7h-46m-321-34h25m240 7h-23"/>
+  <path fill="#23394a" stroke="#8af0df" stroke-width="2" d="M420 260v-32h154v32m-162-38h170v15H412z"/>
+  <text x="497" y="232" fill="#c4fff0" font-family="system-ui,sans-serif" font-weight="700" font-size="8" letter-spacing="3" text-anchor="middle">MIRAGE / 98</text>
+</svg>

@@ -181,6 +181,7 @@ async function client() {
   const h = await createDOM('chaos.html', { WebSocket: class { static OPEN = 1; } });
   Object.assign(h.context, { CHALLENGES, createChallenge, applyChallenge, advanceChallenge, challengeView, adjacent, edge, raceSim, raceTrack, raceItems, raceOrder, raceWave, gateOpen, shiftRace, raceUsePower, raceChangeLane, RACE_ROWS, RACE_LANES, CHAOS_EVERY, CHAOS_WARN, CHAOS_ZONES });
   h.context.document.body.dataset.challenge = 'chaos';
+  await h.runFile('assets/js/chaos-stage.js');
   await h.runFile('assets/js/chaos-ui.js'); await h.runFile('assets/js/challenge-studio.js'); await h.runFile('assets/js/challenge-client.js');
   return { ...h, $: (id) => h.doc.getElementById(id), probe: (s) => vm.runInContext(s, h.context) };
 }
@@ -197,5 +198,17 @@ test('the race page: practice with three computer runners, the keys move you a l
   const lane = h.probe('local.race.runners[0].lane');
   h.$('chControls').querySelector('.ch-race-right').click();
   assert.equal(h.probe('local.race.runners[0].lane'), lane + 1);
-  assert.match(h.$('chControls').querySelector('.ch-race-power').textContent, /ما عندك قدرة/);
+  assert.equal(h.$('chControls').querySelector('.ch-race-power').disabled, true);
+});
+
+test('the race keeps the official podium when the shared studio renders the finished match', async () => {
+  const h = await client();
+  h.$('chPractice').click();
+  h.probe('Date.now=(n=>()=>n)(local.race.startAt+180000);advanceChallenge(local,Date.now());localState();render()');
+  assert.equal(h.$('chResult').hidden, false);
+  const places = h.$('raceRecap').querySelectorAll('.race-podium-seat');
+  assert.ok(places.length > 0 && places.length <= 3);
+  assert.equal(places[0].dataset.place, '1');
+  assert.equal(places[0].querySelector('.race-podium-name').textContent, h.probe('local.players.find(p=>p.id===local.winners[0]).name'));
+  assert.match(places[0].querySelector('.race-podium-time').textContent, /^\d+\.\d{2} ث$/);
 });
