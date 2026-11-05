@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-7070f32cbc1f';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-972e085ab605';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -155,6 +155,7 @@ const ON_DEMAND = [
   "/assets/brand/star-reward.svg",
   "/assets/brand/sudoku-cover.svg",
   "/assets/brand/tahdia-hero-v15.webp",
+  "/assets/brand/turbo-kart-cover-v33-7.svg",
   "/assets/challenges/chaos.svg",
   "/assets/challenges/cipher.svg",
   "/assets/challenges/focus.svg",
@@ -233,6 +234,7 @@ const ON_DEMAND = [
   "/assets/css/app-picture.css",
   "/assets/css/app-puzzle.css",
   "/assets/css/app-quiz.css",
+  "/assets/css/app-race.css",
   "/assets/css/app-reaction-classic.css",
   "/assets/css/app-reaction.css",
   "/assets/css/app-serpent.css",
@@ -310,6 +312,7 @@ const ON_DEMAND = [
   "/assets/css/quiz-v19.css",
   "/assets/css/quiz-v21.css",
   "/assets/css/quiz-v28.css",
+  "/assets/css/race-v33-7.css",
   "/assets/css/reaction-challenge.css",
   "/assets/css/reactions-v31.css",
   "/assets/css/release-v30-1.css",
@@ -499,6 +502,10 @@ const ON_DEMAND = [
   "/assets/js/quiz-media.js",
   "/assets/js/quiz-team-v28.js",
   "/assets/js/quiz-visuals-v28.js",
+  "/assets/js/race/main.js",
+  "/assets/js/race/render.js",
+  "/assets/js/race/sim.js",
+  "/assets/js/race/track.js",
   "/assets/js/reactions-v31.js",
   "/assets/js/room-clock-v33-7.js",
   "/assets/js/royal-stones.js",
@@ -1114,6 +1121,7 @@ const ON_DEMAND = [
   "/picture.html",
   "/puzzle.html",
   "/quiz.html",
+  "/race.html",
   "/reaction-classic.html",
   "/reaction.html",
   "/serpent.html",

@@ -410,5 +410,9 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css"
+  ],
+  "race.html": [
+    "assets/css/race-v33-7.css",
+    "assets/css/game-interaction-v34.css"
   ]
 }
