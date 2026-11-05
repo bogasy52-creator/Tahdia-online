@@ -127,6 +127,7 @@ b63575eb1f327065a50dc1a020c0519e58e029d1d0c3d65e2561e55eb2c7c367  ./public/asset
 2d872c9cd2f190ccb072d41744ee93f0dae5b4bd770ee0c4e6134be164221120  ./public/assets/brand/baloot-cover-v32.webp
 e8d23d94b0119542883d1e0ba4606cb7215c4f7eee06c37ddc9f3079c1c20d0a  ./public/assets/brand/busraj-app-master-v29.webp
 a7e5b1304d5366c6501b6e6a17dde954b586755f6f806f4b1e20e8e0e790daef  ./public/assets/brand/busraj-maskable-master-v29.webp
+7747106b1eea947ed2d59a274eea7376d0adb88b740beb03a0978f983e879ff0  ./public/assets/brand/carrom-cover-v33-7.svg
 eb2b3a939c64ae5b5af7e4138f8417ddfc383854d22b191fea57868ae7f052f9  ./public/assets/brand/dice-studio-v26.webp
 c771d9e5a9df6f547a462f978c32d735f5312f79405f6ca02f291aad64b0dcdd  ./public/assets/brand/jewels-cover.svg
 9ddf955f45745d3920d66e1229bf2a063ae77001318de7abd719769863bb0833  ./public/assets/brand/journey-world.svg
@@ -203,13 +204,13 @@ e8502479f6126b4a90e48205a91916251090defe92e45799599be6e4562cef81  ./public/asset
 8289d09b4a07b415efd43b08221a7850941e6e9dc87d292d57f44795f881ea5b  ./public/assets/css/app-accuracy.css
 b955fa527e1260d8df65ced09bd1c40d5d99f9d5b0153a981f309261a51bfe9c  ./public/assets/css/app-admin.css
 6ac08998fb67148aeac6388fce6dfd2eb24ca0539524b3c5485794a89027929c  ./public/assets/css/app-baloot.css
-f5e63b7e048f9b80d803155907db9fd571b1251381bc62b2be0f5c4dd7be91fd  ./public/assets/css/app-chaos.css
+b65a2cfd5dc715339760b0bec7d82a5c2d6342607140e412c3a111d234fe6049  ./public/assets/css/app-chaos.css
 19871fb167978714561d1f468ddf1b4cf8377042cfb09e8fadee8417a756b756  ./public/assets/css/app-characters.css
 0e9ac64023e7e8a9fd9141d6f6823af9c53175131ae4e4bd72538f972bcf96f1  ./public/assets/css/app-cipher.css
 04fdfee66b9f601e866e602d2652ca2ef17f9a76218a2df078a6165d6b4bd9fd  ./public/assets/css/app-dice.css
 0e9ac64023e7e8a9fd9141d6f6823af9c53175131ae4e4bd72538f972bcf96f1  ./public/assets/css/app-focus.css
 88b79773a228440dde51f5896efe28fc5b05bac6085449e2818d192ade3c4d71  ./public/assets/css/app-index.css
-aa46a8f5dc4c82da23c1b3a4cf83c8c7b2e2d03a6781d489e672d25a378ad7b3  ./public/assets/css/app-jackaroo.css
+ebf32d5ab76ddd2e63e4ef45df88e836d3bdfe3280a2f6394ab6fd55d53b69dc  ./public/assets/css/app-jackaroo.css
 42ca5687a98a52d38a90b878d3ca64a163a2ecfda1d2989fadf7438deb5e5ee1  ./public/assets/css/app-journey.css
 a2135bdeb8a9c75041ac3b2b46bfdbca5432a14d60e16cf3730ffd033c9708b8  ./public/assets/css/app-labyrinth.css
 fc31c0b11ebfb3f5901882881424edd31e5cbd9f968d38e836d1b6c531f9365d  ./public/assets/css/app-leaderboard.css
@@ -223,7 +224,7 @@ a2135bdeb8a9c75041ac3b2b46bfdbca5432a14d60e16cf3730ffd033c9708b8  ./public/asset
 892b3e9f54b63af582cc8f198d6892a8def23a8aeb7e932afe6393d56e82cb67  ./public/assets/css/app-picture.css
 070d649057081f57b182b5270bbb03232e1331c8b04d6035eb347dfe725c33ed  ./public/assets/css/app-puzzle.css
 17855b805f40892728e27914a90c59bfa91d5f853f28824954daaa4422c1faa8  ./public/assets/css/app-quiz.css
-0b6349a10c9783e935e356274c4776d8752120cb3db2e7d4d58757a33c0411da  ./public/assets/css/app-race.css
+e9c0985b753679d4e889d04000270707168bad0d00671af00412f28c89f2d1c5  ./public/assets/css/app-race.css
 6c96e918d09310d0897d2f080614ae9304ef28d10fc2a119fd6bbb11b9c2ea84  ./public/assets/css/app-reaction-classic.css
 0e9ac64023e7e8a9fd9141d6f6823af9c53175131ae4e4bd72538f972bcf96f1  ./public/assets/css/app-reaction.css
 1d69038a0c5b460c90184f1ccc510e715f5ff71646829d507a2b0f87f2053987  ./public/assets/css/app-serpent.css
@@ -249,6 +250,7 @@ d2c054b76a562fda596758b3514d046e01d7cbb4d0b0617d0206d19344e4dfd1  ./public/asset
 a450c6c0a5931f00b4c4e6e44966fccf0befcda5c2dca18a67b279fc12c76c2e  ./public/assets/css/baloot-v32.css
 9068cd42ec0eb00df1f34aae3a011365a0682f13005c7d4ebbfe08aa3d49f52b  ./public/assets/css/board-premium.css
 f1e1dcbd371436101f22777cc0f4731bc2d7c4e88ecfa13b097d4028620a58f2  ./public/assets/css/brain-v20.css
+ff06185f25d4e60f36b29b8603a07a468317e4e1eb8325b28718eef655ec74c3  ./public/assets/css/carrom-v33-7.css
 816e7f7d5c34658610e78e44ae9d1700adcab1a8d56cf07478c2b7afe022b911  ./public/assets/css/challenges-v33-5.css
 45f98c41c16c768547eba0bf10f8e4cc3525ef5d6aa480cdf8d1406dd3b3a495  ./public/assets/css/challenges.css
 8d40908f7196bb64dde48fc5a2029ca006036b79de04995f761c3dabc976ba74  ./public/assets/css/chaos-v33-6.css
@@ -274,7 +276,7 @@ dd55076b06999854b842d89064780286b0a410e1615a8adf568d7746aeb833e7  ./public/asset
 bb7caa7549beccb389ac9d677814454a8d9bb783d56a56c89ba94b37abdb496b  ./public/assets/css/jackaroo-next.css
 19ac23a5b06d5b8625972f443a12e716ee033b924a7ce1ba419f7ffeb929e56c  ./public/assets/css/jackaroo-v33-4.css
 9fde1b244a3e3ed511e159da30a53d36367ed8fdae7f0f60fbec392d6c7e0300  ./public/assets/css/jackaroo-v33-6.css
-feeebd9c8528adb8a4b0b725284672421508bfb8a0ee13628766cd729d6f8cea  ./public/assets/css/jackaroo-v33-7.css
+73da44fb26b7999c8c4d6e98fc0fa5a857c288db692773f49535ab8a2fbcf729  ./public/assets/css/jackaroo-v33-7.css
 306bdaf0a20587c7cc03895e61a100fad752d5b4acc0c182811aff8fbc4475a3  ./public/assets/css/journey.css
 e8edc1cbf08975f1c4af09ed070e45172fd7e932e3c81318e7fba64354d1f060  ./public/assets/css/leaderboard-v30-1.css
 5457eca2ab5ebcea9761b3fcbf892123840e46fab35d75034f23e11c12832c6a  ./public/assets/css/luxury-game-ui.css
@@ -331,7 +333,7 @@ ab11d79ef9e9e70d0e206efe2eb9e459657a79f0339822044e5ae624f6549268  ./public/asset
 6d6540c997f795e743ba083b844a929492d208d6959497d92a5f641df9347ab5  ./public/assets/css/tables-v33.css
 fbd4ed73d5cc1f2e936d686222cc7d7657649f1389e935590c17a30c1dfb84e5  ./public/assets/css/tabletop-v30.css
 5b2f25ab7ef810dc393babf37a4c7e80602be14b4380e52637596118395519ea  ./public/assets/css/tahdia-premium-v25.css
-95313da4bdc9f799164d521dc09b9a63058b1a6c5fee16a4f8c4febcee44c89e  ./public/assets/css/uno-v33-7.css
+c6efe94adf0eb70a6c2d7ee9e7f885b6dfdaba577cef4b18fc96519393ec0347  ./public/assets/css/uno-v33-7.css
 8f7ee72d035737f026608583f44b581a74799f12bf62f722d7af72af84be8f4f  ./public/assets/css/wordhunt-v33-5.css
 2c93d9cbd9b7759aecda35c16108e084f1ca303ada3c6b7107454b9dcc1c8dde  ./public/assets/css/zahra-premium.css
 18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3  ./public/assets/fonts/LICENSE-Tajawal.txt
@@ -397,13 +399,16 @@ c4f2c90a1311d87620c2061b42e76d5ecb88198f3193488cb2c3bba065ba3f27  ./public/asset
 e0fd07ac1fb77eb5cf8b2350090f1b18f76df4b530a36669aace20721ef28e29  ./public/assets/js/baloot-voice-player.js
 9b9bf190a64cdf6d61f19c445c627092fa49fc845b040ccecf9abe7573f70492  ./public/assets/js/baloot-voice.js
 75be6ed965e15d26fc4a616a66bc35a4542102bc2dc2ef8ec0ebfbea7d49aa27  ./public/assets/js/board-online.js
-466b4e826bb4fe277498a5e4f773cbe1b9a7e26e1d81eafd43b5432b8cd70488  ./public/assets/js/board-petals-v29.js
+e925a6a22fe366b6e9db62a28a3187687d5dbb2c61ec28db116868b3da37f6b7  ./public/assets/js/board-petals-v29.js
 caac19f1681211086d8a1c4a459fc929530702a7b436318db94e52a3047f1e80  ./public/assets/js/board-piece-motion.js
 6f740e141beb7e4511e07ec3cdb16e750ea7759ca66fcf1decc390ec0903f06f  ./public/assets/js/board-preview-v34.js
 7f03a5c6f98e09743742ba60af113e25a3f715306f683b62a1bc57b4ddef79fa  ./public/assets/js/board-reactions-v30-1.js
 37514a6712e45a3d5a27e0771af0b9dada3e8018adc44034de042b9f775b605b  ./public/assets/js/board-table-v33.js
 16c8b31181bb14269adef4ae19a92f37e023077194e0ff2ecbdf7e6d5088b348  ./public/assets/js/card-courts.js
 1a34ebad543e874264f16c078bd60045b333bf8ed35f2644b65459b161fcd518  ./public/assets/js/career-client.js
+0348a08600ba0f376a3d0df0f70acd82deb6f5c532b1040680dd9b8af7cc1134  ./public/assets/js/carrom/engine.js
+8203543a0cc379c0147f0a8440066bdaaa2ead5f1af6e6f20c23ff3fa20f27a5  ./public/assets/js/carrom/main.js
+b0b192b7d8ca2bf2fea32a02edcb2aeeacdc91e2958ee12391ab6cded0a2c1b0  ./public/assets/js/carrom/render.js
 09a0ae68707a94e2d189670dfbf59931ec32f1a185c40f03b4d2c6782d7d7e66  ./public/assets/js/challenge-client.js
 94f264744165e0c97da92526e5454bb0f7b33359ed047297c630008061d33c65  ./public/assets/js/challenge-studio.js
 a2a8fa714093da7978e5538048e34868577c2b68dc61b906a70158f89069c2d2  ./public/assets/js/chaos-stage.js
@@ -423,13 +428,13 @@ f79647f4e4510a04bc2d78e0106bfa58603a8adb7bbd85750e1c53426bbdeb65  ./public/asset
 e9acefa7a0e1feb887e0a9658c3269ba47d8b504127b0e46c31bea83ca1640c3  ./public/assets/js/engines/baloot-engine.js
 e1118c0306fa59a6fe43b2d20fe7fc6766e796e6cad77ae8f0c1ee1211b3f816  ./public/assets/js/engines/baloot-talk.js
 e8fd23f21a838514c44a10b37f740a01781cf6ea5fd56b0c9281389dabb290ce  ./public/assets/js/engines/board-geometry-v29.js
-14b348e93b5073f7f09c46df74167bab04f9fa4a86feba56e2b0be889bd88d7f  ./public/assets/js/engines/bot-strategy.js
+2ddb06b0ed1017ef6faf5d4451a5efcef3fec6c8d7282e1e4fefadd0e48f7ff2  ./public/assets/js/engines/bot-strategy.js
 b6fa7839ca48e629e13a0553079ec24842e706d4f830ae0b5b1893142c7443b0  ./public/assets/js/engines/challenge-core.js
 0d14a500c0a0dac2a09586c91b5a6212d3fb8f2439cd8368f7758c47e14acc88  ./public/assets/js/engines/chaos-core.js
 198f9d5be331151c828f8c71362883240f01a423f0fbca2d1527dd8ea6c4687d  ./public/assets/js/engines/cognitive-v34.js
 74df05342226732d12be0d454e65db2aec366b6e4420c0c0a74a28d9b2bbaf44  ./public/assets/js/engines/dice-engine.js
 94639054b460b4b0ae86bb4c9bd0d6f9481b9e264515fab32991689aa493da29  ./public/assets/js/engines/image-puzzle.js
-73b939f6865cb65fb1c06bf3bfda79a92a1c1b9d4e256898cfb621c347426f41  ./public/assets/js/engines/jackaroo-engine.js
+e0752805357a6c7a98a0a19ec63653c25c9e3f134150017f2e7b43bbaebe1d5d  ./public/assets/js/engines/jackaroo-engine.js
 05b88885ccf25b83cb4669b1f949a3ab2479fd4bc803b7b06cae08f94b93a914  ./public/assets/js/engines/journey-engine.js
 4e1d9a8c501285695b7a2e76907ceb0db1d92102a55ad2bc8203a69f499ef983  ./public/assets/js/engines/ludo-engine.js
 ecf00af79c0d7cf6654d0428a5eaaa539e20c3658dc188f85670a0540f6c93d2  ./public/assets/js/engines/match3-engine.js
@@ -458,7 +463,7 @@ c55b447e0c363d9e6e40ccaef7c5c95a84f14ceae13643917da296ed9b1d443e  ./public/asset
 4d50b891d7edd61921d9dac3efc102e4cb96bc450f597de9fd82a2df7668790a  ./public/assets/js/home-return-v17.js
 5240f54a8d0ba722116143d1cf0a841133c2decee0b91e64c58b373dba6b5cbb  ./public/assets/js/home-v14.js
 6ff715a7a13674122c87fdeb6a5e0efe7d361172226942a57a343c7cc36c32b7  ./public/assets/js/home-v19.js
-af824bdb5ed3a5439cdd09bb9f1d0fd4c99d03d8f472803edf1bffd4fd02b1e4  ./public/assets/js/jackaroo-cards.js
+e293a01ef777ffbda9b1cf88ee0415d4f40dca2f27bba306e40cfe8c0d4b90bf  ./public/assets/js/jackaroo-cards.js
 87410461a3a59f2864a1aa974f62ed5e78e75cf27e0837712fb586154af4a8c9  ./public/assets/js/journey-client.js
 ae79981f49748b847322503b0795ea78fe7db5c4b3751455857090550d6ce2a8  ./public/assets/js/journey-renderer.js
 b1f67edf83ae3462f461df1443de86f3172f25b7b408e7a34952ff9ac0752e7b  ./public/assets/js/journey-ui.js
@@ -520,7 +525,7 @@ e6efb6c6248405d3c31646011e9b3bd766245d7692850827c4d2a406dbf05aa1  ./public/asset
 f1fecdf92438fcc37594082baba3b3e57c52f0daaf558b9fb324a9ca81f688b2  ./public/assets/js/sudoku-ui.js
 0ed2eeee55315c307b32450d261f3ea5c8953c267162855e9dc80cc34874460a  ./public/assets/js/tahdia-premium-v25.js
 091ab9b06dd27b6a3925bea98880059d213ab6ea231b3485cca2f88dc4626ad3  ./public/assets/js/ui-icons.js
-d994e9a0a7358b6b1bef8371256a095c972db3d17a66c6135dd59c039f777063  ./public/assets/js/uno-ui.js
+b7c0220086a2197d65a278ff725f805917f20b8b25ebf679c35fa0e05d892825  ./public/assets/js/uno-ui.js
 8c47ca36e26b848f65fd40ca90171693900fb7d9c37b74f93eff323048aac57f  ./public/assets/js/v5-ultimate-expansion.js
 babcbdbf2fb45a8f323f531d025b6d94a7a3d338c013df4150cd3f23ef3e98f4  ./public/assets/js/wordbomb-ui.js
 430cfa662a4bcf1b9a9689a478f9430d44e13b0be79857fa258d1cbbe6a1ffe8  ./public/assets/memory-v34/memory-ocean-v34.webp
@@ -1175,7 +1180,7 @@ da6bbcc8b499b3ff089774e09ab558cc6c7e994817ccc2a5dfa8776ff2dcbcf6  ./public/asset
 0add9aac69930f5b055f4a9a9dc67178dc81684b3927e1f621f523c86045d396  ./public/assets/sounds/quiz-v28/timeout.wav
 153f769bf42db88368514968259d146700cda84e072407d8766af8902b329fc6  ./public/assets/sounds/quiz-v28/wrong.wav
 982dff48e1c5060b956284c620130f41d3593bc854274332d5495dff1be695f3  ./public/baloot.html
-b67acf8ac1f07a71b4d2ca90cad34d6961c27f7c63abac7e726b439fa86bbb6c  ./public/chaos.html
+fa5652120b905d3c2b9c87a85218138bd8ec3be2535d9b26dbd47e8955b8db05  ./public/chaos.html
 e9a93038d4c9f91f8bca13dce5e5ff7255bfa8f78192bd07a0a353739345c956  ./public/characters.html
 7d56dfb356023d0dee4e74bd2ccf9244d9863fd235db8220fba4280937063412  ./public/cipher.html
 60c6a1f6ea974d44a13a76de28de872b143e16ca163fcf291d9816d208adfa97  ./public/dice.html
@@ -1184,8 +1189,8 @@ f288fbc6e3ff3fed52c087b0076823cb79e2c576484a3c6a9debb283c19451a4  ./public/favic
 ac51180272b51f5507061f9c1828ac52d02f4734f036e1bfbe0a532fe4fa6c04  ./public/icon-192.png
 a3698599fc6034a180025a063683f99fb2a1552abef6a92b67cb036ca174074b  ./public/icon-512.png
 4d3e08122248b46fe6c6d4c5598f92c09ae6ce330910fe46f6d292bd31ef2ef4  ./public/icon-maskable-512.png
-22affc2ba0808b7500ae5707195e9664145867a932eebf3fec55d255b3ca0024  ./public/index.html
-a48fb2a2bddc2466a9542c52aa24e4d1b8432268cfa9407e5e5dc905f3e723d8  ./public/jackaroo.html
+a9fe93c8acf85dbff086c642947862ddbe293dd0f9bc1223736aa79fd742ab7a  ./public/index.html
+6c0266b79ad50f27e469c8a2da4cf9a72e9342e8da9d94eac79a96b0cc74162f  ./public/jackaroo.html
 c464b74178b3ba16b2fef9991dca7c8c5ee2c0f685b04545cc72c7d9fc3e458e  ./public/journey.html
 25ee3133d8f8f2a87fb7d20a0e64a3e264cfa1c323368bb58c4f7b2b0d7aad3a  ./public/labyrinth.html
 4e1feeb0e028df09e6ce540122e666ec5635c4dcf0d3d3a87ab938e82194dab0  ./public/leaderboard.html
@@ -1201,11 +1206,11 @@ bbf185f6d0ee3ce14b933c5b412f9f82f311f315fff2e74ed347bcf3ecff211d  ./public/patte
 5a4644cf9c8af531481609702bd30418c5d6dd238e8125d9b75f35687d04a979  ./public/picture.html
 6bc65502ad895004a1e31f5704719c9a9a6e2eef0cc35b13c55bc07f3d08067e  ./public/puzzle.html
 c8dd1af024270d75fc8ef881a1720310c623e9707ee11e2481329519fc9ead88  ./public/quiz.html
-989854bce8be4fce653dfb5511b4bf51f1520a112fd1ae4bb0dfb785db4503bb  ./public/race.html
+42195415619ba6dbaeb828af870d9291dd924b1577a7e943e756af70e693761d  ./public/race.html
 36fddea989e832cff92abcbd66e4322c1e750d93ac880d93bbd128849b3282a2  ./public/reaction-classic.html
 464e6d3dd4824d469b525a2bf7c9a6556e3b2b802599a9d04d8a177711908d67  ./public/reaction.html
 c8e5e2fa2aafd3634734d61d7f2234cf6d32d7ad10ad4949a3993b497b1d7c86  ./public/serpent.html
-de0d1228038e4f48777b08511df13ac5a8fda67cb0ae4b70742ac8f6eade5646  ./public/service-worker.js
+43412f53b5e66893dc989352713fd0b85803a56bf07d696b99a90de4522a8408  ./public/service-worker.js
 fc3e4b6ef2c393866bfcc1889cf80f776f8ae26818b66daac5b164b68ef5fc99  ./public/shop.html
 8e7808eaa5e0039ab8f4ee04b8af6eab14f364162e29a30fae700f9d0f1bd950  ./public/snakes.html
 2911ac87d975893a7aceb267b4d5fb600f712555b0715742c10119015bbd6635  ./public/social.html
@@ -1287,7 +1292,7 @@ efa48dcbc08e1c3fb0ccee34ebe0cb20d968b5e084e145c835390e940739ccf5  ./scripts/play
 811c06d3180447e70ff4ce4aff246ff4460086dd5042509c849b37a1cc0b5916  ./scripts/render-quiz-audio-v28.py
 e8c3c7675d90dfa6351b853c1aea75b8fb17ed98beea4140def3afdde6bff07c  ./scripts/render-snake-eat-v31-1.py
 296108cb8e0e1293a1d1f73644dfea78d80071216bc7010237af6223ae987702  ./scripts/service-worker-runtime.txt
-02867521508ea3fa967a400197b79cb5a37d59959913768003c42803236b32b0  ./scripts/style-bundles.json
+77485ba6b833211ef0fe6df604e9546dcf8cef9ea3812eb3f4cce75aa8d49a27  ./scripts/style-bundles.json
 b425444cea982b8042b5865f0bf5553f99ba3ff7297f6c235aada1cf6255bf08  ./scripts/sync-quiz-data.mjs
 99f7d7b07c29af80e16940acad7fbcac0ddf049ac5788f3f771fbdfdc83c482b  ./scripts/test-baloot-voice-browser.mjs
 bb6e45c07114279681f4720dcf1c5097a9ff70d617c01d640db85d1bdc5f5db6  ./scripts/test-browser-v26.mjs
@@ -1308,7 +1313,7 @@ da2ad405bfee2ef48d070a449336c355254194556be92460a511b3a16ee96275  ./scripts/veri
 fca84f802d687ddffac97aaa43ecfd269c1daf00561b7d8a01365f02e07a0df8  ./scripts/verify-quiz-v28-runtime.mjs
 242e5bac5e71a7e8cd2613a10fbe1944d63ecffc077e96a674eb7c616bf3249e  ./scripts/verify-rooms20-v29.mjs
 6447ecd46c4282279c484317eaf9bc2c7bd977fa6b556e3feb9fc0292cd7d77f  ./scripts/verify-serpent-v23-runtime.mjs
-cd1485985aebce238a5b5df86919e22eec1a147e301cb44c0996fc32d2d890f9  ./scripts/verify-static.mjs
+f87820846529bdd16c46bae01195eea80810c4af7ffc52a2e0d7e2cb5e56a962  ./scripts/verify-static.mjs
 2581b7da5783ed4d322927e98191db0644e6c9b7457302f6c85454d50ab1a037  ./scripts/verify-sudoku-runtime.mjs
 37b7dbfa25768ec9b2933c1132fdad16beb4036f344219e59fb3207482da41a5  ./scripts/verify-v6.mjs
 fdcf709e9c65c90fda7eb217892820db640b1544b4afdffb3d14108c6b18a25d  ./scripts/verify-v7.mjs
@@ -1334,7 +1339,7 @@ c122c24648c485ad2b99fbce235acc22a8fd2e97e2d64c094b2f2c88318ba827  ./src/games/ba
 667a757ec1582bb3c37c9b37ca48c284b29c0b29252e46ce0867585cf7afc65b  ./src/games/snakes-server.js
 90ba6d8495c7b31586b4e84504d817a81111db34ab5e1125f1f4ff6c243d9d0d  ./src/images/generate.js
 d8d68b463c5231fc6df774b5b40f18758207c14a55ff9a64de233d1cc2851ef4  ./src/images/image-room.js
-2d7686d05cfb8619564f58fb93b393928d50e276f0de0bbe33fdb18d670236a1  ./src/index.js
+e467788941b6240f77f0c5e75996c9499772ab2d2c1c5e68a5a5c41e7d05c3d3  ./src/index.js
 67abbf9f5b87ce70a3ec6562434488ac7067f541c329331120f4c3652a468d22  ./src/leaderboard/leaderboard.js
 87628c604ed9dc232fada46636e2291c3949fee579190dfc66cff301c83e3380  ./src/party/party-engine.js
 d2251c37671ba15561574fdd28481c3691a9386b4e5941b2d2165a33090b8958  ./src/party/party-link.js
@@ -1399,6 +1404,7 @@ c1e0c6414193b014afdae071ed12190536efa245bbbab6f5920ff3df6d914572  ./test/baloot-
 820bb9ab6acfb6e4826d957877f965a31dba07cd09d7ce9d65f46d5ad4abd524  ./test/board-startup.test.js
 71b6fa9a1ac80423446e4fe1743cefa15e59ef8b12325f5302c0d89f414bd38a  ./test/board-tables-v33.test.js
 90b29205da2ade599db80dd3d95f5ba740c699a9172a5f2612fbfaf93bb1a9c9  ./test/brain-v20.test.js
+ce72bc7ba442728dfa4aa2d3cd3adb8b39c69663e3302b5b12f27d34631e71d9  ./test/carrom-v33-7.test.js
 0b5efc514e13819e3b4cbe52cdc308953fbbcf59abb5e009bc79692a4c318b66  ./test/challenge-lobby-audit.test.js
 5abcf3622aac5a908314c8ea29b0d896836fce869b5443d6298995907393c767  ./test/challenge-retirement.test.js
 f20e21ae1ba6bd86c6cdb03c27b91ae72243c80001806efec8fd2fbb20711556  ./test/challenge-studio.test.js
@@ -1429,7 +1435,8 @@ beda197db34c0df5844042d5538fb28f7d8107f001ec3080ed0238be54d6e8eb  ./test/interfa
 8924018834fcf37ca94f58471038896f5b3e850d0277b9fa9dc14269947b04b9  ./test/invites-v33-6.test.js
 4dfa89edc170f5d266038ad00851a6e1851b486b9fded06a229d961b80ff8c6e  ./test/jackaroo-board-v33-7.test.js
 d6f7c6f41ec0134b64f9aada5da8eb9a774055763cbeae206ee758f993202bc7  ./test/jackaroo-engine.test.js
-3d2ddc2cc9efd5ed0fca73581cfead4bb00ee3b2a38dc2761e0cd58ea2228f50  ./test/jackaroo-star-v33-6.test.js
+963b4700f90b7ff57d18411b950f0e44ebd46fbaa976d4e40743b45a6cb3d0ab  ./test/jackaroo-refine-v33-7.test.js
+bb43e823121ff6af929bfcbd8ba47c4be39642c28ea2264ed577b838b2a06dab  ./test/jackaroo-star-v33-6.test.js
 3f8b73e07f0df1c4bb09fb575decf524ed71ed881b5fbe961bf005bd1648b55d  ./test/journey-helpers.mjs
 954a6f2fe19946e70c14cb18edfcb1fe5189059d98233640caaef621e38cf9d7  ./test/journey-ui.test.js
 f7e142562a37a8ccdd7fd6c731e6468220ce908d3cd9829d758b62ee7ff97f13  ./test/journey.test.js
@@ -1476,7 +1483,7 @@ cac71aecf8dbdb22607b671b00b2d0a2641962794c3db8f055d9c4a2d4afb257  ./test/quiz-on
 89c2e9cffce89bcb36c0ae2d5f6b133f3a1bd3aa9b37221de0c3307b2412c827  ./test/quiz-server-v21.test.js
 9428904578aec39aa3baa70736d4b17eebefee39e27e332ef1ea63a57bc51c41  ./test/quiz-ui-v19.test.js
 8b345998af58f81f7fa3c96357495f100c8323b4a8553ff743be60b3e12815df  ./test/quiz-upgrade-v28.test.js
-80c4fc5c7fafaef3cfb432fec264c1c3d37fee62333ce60a9bace704dc1e1b7b  ./test/race-v33-7.test.js
+a064abf19913a2f8f55a98cf8a7c13b1db0dad947b4ab5b41583550950d54b33  ./test/race-v33-7.test.js
 4530b1df70be5310b4d24e509791b2fbf59838b35d45fd134938f8e98fc4e6c9  ./test/reactions-v31.test.js
 efe1ff4194518d82ac28642fb5b6c10a2fe76daa8cebe9ca2fea7402fe94a951  ./test/release-3.2-redesign.test.js
 2ea26260127363ca896063b0171ed424cc5fd64c63a2ff03d5915058e254989e  ./test/release-generated-assets-v24.test.js
@@ -1486,7 +1493,7 @@ e939e9bfc32dfd84a7c755d7815504efe838db0cf3ae73e0012abe20f4fd7c56  ./test/release
 202a163e331ac2239cd5b966b256c234fef2bd7b68d43e6801f1621330e88acf  ./test/release-v30-1-weight.test.js
 096b8848b66f9e0117a7a05166c9b5ab9f109aae79d44b9e5c6ae1889ee4ad87  ./test/release-v33-1.test.js
 8e192ae780bb0acd568b5eb45249f77d30fa71d24cd03a19ba4ca6de4cfffa88  ./test/release-v33-3.test.js
-f99c94b1f556a9841e5f1995f15e466d67aa06d28a5c7e361ff8035f1c3fb1aa  ./test/release-v33-4.test.js
+5c52042c0767cb875ddb3f1d4047329f52ebc04159637b3deb5ae5b210b2ad1f  ./test/release-v33-4.test.js
 e9e75688c125ec53aa86af6e30bf5c053c1ee25dd24db0b178a3721c40d729fb  ./test/release-v33-5.test.js
 e2449dd96791d0bac30181477f96ed724fc35ea46f6667498b62b3702c464cc0  ./test/release-v33-6.test.js
 3372dd968b4b1279a870615fd2da78c28eb5e3751a964a165e54cfc933c1204e  ./test/release-v33-7.test.js
@@ -1548,7 +1555,7 @@ a6b10c63cd41da69a5da22446ec6b98e90c573e7941c8b616a65f669a27e3d0c  ./test/v17-off
 cbbb1083378940825e27c23b9cf0030989441035a75de02b1d4a9f2dbcea6880  ./test/v6-career-runtime.test.js
 cabbbf7866c6ffbeb69fabb2d6458e22a4495c6583a0d3a94ff25fe76df01709  ./test/v6-core.test.js
 22d9290eeab4f7206c929f371d01b58fc28c46089ebc6cce6d453a392ea9856b  ./test/v6-recovery.integration.test.js
-47c78238586eae6923c010776bf6dc644e9ec3d77e7aa9ba208b9db49f155318  ./test/v6-ui-runtime.test.js
+416aba2b20047f24035d4cf192099f772f34667139cb184eae8ecdda3270c884  ./test/v6-ui-runtime.test.js
 c6bc2659b1cf90564d9d31ed1666522ddd8efd5f645401d9da82a596e41fc297  ./test/v6-worker.integration.test.js
 ab50b300b99f7e6a56a900d55748881d5ab65ec5c5ad20b3a0266d44e9d400dc  ./test/v7-career-api.test.js
 084a4277c3e52be1b58ff360ed8dd454a347fb4de264a5eaf4655cb02d7f5349  ./test/v7-rules.test.js

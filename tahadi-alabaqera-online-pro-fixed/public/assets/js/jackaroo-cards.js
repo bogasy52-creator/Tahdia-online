@@ -7,6 +7,7 @@
 (function () {
   'use strict';
   const ICON = {
+    burn: '<rect x="3" y="4" width="10" height="15" rx="2"/><path d="M16 20c-4-2-4-5-1-8 0 2 2 2 2 3 3-3 0-6 2-9 6 6 7 12-3 14Z"/>',
     exit: '<path d="M4 20h16"/><path d="M12 17V5"/><path d="M7.5 9.5 12 5l4.5 4.5"/>',
     king: '<path d="M3 19h18"/><path d="M4 16 3 7l5 4 4-6 4 6 5-4-1 9z"/>',
     step: '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/>',
@@ -21,7 +22,7 @@
     K: { act: 'king', b: 'اطلع', s: 'أو 13', say: 'الشايب: تطلّع حجر، أو تمشي 13 خطوة وتكسح كل حجر بطريقك.' },
     Q: { act: 'step', b: '12', s: 'خطوة', say: 'البنت: تمشي 12 خطوة لقدّام.' },
     J: { act: 'swap', b: 'بدّل', s: 'حجرين', say: 'الولد: تبدّل مكان حجرك مع أي حجر ثاني على الطريق.' },
-    '10': N(10), '9': N(9), '8': N(8), '6': N(6), '3': N(3), '2': N(2),
+    '10': {act:'burn',b:'10',s:'أو حرق',say:'العشرة: تحرّك 10 خطوات، أو تحرق ورقة اللاعب التالي وتتجاوز دوره.'}, '9': N(9), '8': N(8), '6': N(6), '3': N(3), '2': N(2),
     '7': { act: 'split', b: '7', s: 'تتقسّم', say: 'السبعة: 7 خطوات لحجر واحد، أو تقسمها على حجرين (مثل 3 و4).' },
     '5': { act: 'any', b: '5', s: 'لأي حجر', say: 'الخمسة: تمشّي أي حجر على الطريق 5 خطوات، حتى حجر خصمك.' },
     '4': { act: 'back', b: '4', s: 'لورا', say: 'الأربعة: ترجع 4 خطوات لورا.' },
@@ -46,6 +47,33 @@
     C: 'M50 8C61 8 70 17 70 28C70 34 67 39 63 43C66 41 70 40 74 40C85 40 94 49 94 60C94 71 85 80 74 80C66 80 59 75 56 68C57 78 60 87 67 94H33C40 87 43 78 44 68C41 75 34 80 26 80C15 80 6 71 6 60C6 49 15 40 26 40C30 40 34 41 37 43C33 39 30 34 30 28C30 17 39 8 50 8Z',
   };
   const COURT = { K: 'M31 56L35 36L43 47L50 31L57 47L65 36L69 56Z', Q: 'M33 55C38 45 44 42 50 42S62 45 67 55ZM50 34A4 4 0 1 1 49.9 34ZM36 40A3 3 0 1 1 35.9 40ZM64 40A3 3 0 1 1 63.9 40Z', J: 'M30 52C29 44 37 37.5 49 37C60 36.5 69 41 69 47.5C69 50.5 66 52 61 52ZM30.5 52.5H63.5V58H30.5ZM57.5 39C59 30.5 66 25.5 75 25.5C71 29.5 67 34 63.5 40.5ZM62 33.5L70 29.2' };
+
+  function illustration(rank, ink) {
+    const icon = (act,x,y,scale=1.3) => '<g transform="translate('+x+' '+y+') scale('+scale+')" fill="none" stroke="'+ink+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICON[act]||ICON.step)+'</g>';
+    const label = (value,x,y,size=16) => '<text x="'+x+'" y="'+y+'" fill="'+ink+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="'+size+'" font-weight="900">'+value+'</text>';
+    const marble = (x,y,color) => '<circle cx="'+x+'" cy="'+y+'" r="8" fill="'+color+'" stroke="#ffffff" stroke-width="1.5"/><circle cx="'+(x-2)+'" cy="'+(y-2)+'" r="2" fill="#ffffff" opacity=".65"/>';
+    let scene;
+    if(rank==='10'){
+      scene='<g data-card-action="move10"><rect x="20" y="43" width="60" height="31" rx="8" fill="#e6eff7"/>'+marble(32,58,'#3e82ae')+icon('step',48,46,.75)+label('10',61,67,12)+'</g>'
+        +label('أو',50,86,10)+'<g data-card-action="burn-next"><rect x="20" y="92" width="60" height="30" rx="8" fill="#fce4d9"/>'+icon('burn',26,93,1)+label('التالي',65,112,8)+'</g>';
+    }else if(rank==='A'||rank==='K'){
+      scene='<g data-card-action="enter">'+icon('exit',18,41,1.3)+marble(60,58,'#3e82ae')+'</g>'+label('أو',50,86,10)
+        +'<g data-card-action="move">'+icon(rank==='K'?'king':'step',18,92,1.05)+label(rank==='A'?'1 / 11':'13',64,112,17)+'</g>';
+      if(rank==='K')scene+='<path d="'+COURT.K+'" transform="translate(32 -1) scale(.42)" fill="#e0b54a" stroke="#9b7a24" stroke-width="1"/>';
+    }else if(rank==='J'){
+      scene='<g data-card-action="swap">'+marble(31,61,'#3e82ae')+marble(69,99,'#d46a55')+icon('swap',29,66,1.8)+'</g><path d="'+COURT.J+'" transform="translate(32 -1) scale(.42)" fill="#e0b54a" stroke="#9b7a24" stroke-width="1"/>';
+    }else if(rank==='7'){
+      scene='<g data-card-action="split">'+icon('split',29,42,1.7)+marble(30,96,'#3e82ae')+marble(70,96,'#aa74c0')+label('3',30,101,12)+label('4',70,101,12)+label('= 7',50,124,12)+'</g>';
+    }else if(rank==='5'){
+      scene='<g data-card-action="any-five">'+icon('any',23,41,2.2)+label('5',50,119,26)
+        +marble(23,50,'#3e82ae')+marble(77,50,'#d46a55')+marble(23,92,'#aa74c0')+marble(77,92,'#419b76')+'</g>';
+    }else{
+      const backwards=rank==='4';
+      scene='<g data-card-action="'+(backwards?'back-four':'forward')+'">'+icon(backwards?'back':'step',21,43,2.4)+label(rank==='Q'?'12':rank,50,118,27)+'</g>';
+      if(rank==='Q')scene+='<path d="'+COURT.Q+'" transform="translate(32 -1) scale(.42)" fill="#e0b54a" stroke="#9b7a24" stroke-width="1"/>';
+    }
+    return '<rect x="17" y="38" width="66" height="89" rx="11" fill="#f5f0e6" stroke="#cfbba0" stroke-width=".8"/>'+scene;
+  }
   const cache = new Map();
   /** The face of a card as an SVG data address ('?' or 'back' is the back). */
   function url(card) {
@@ -59,9 +87,7 @@
     } else {
       const rank = rankOf(key), suit = key.slice(-1), red = suit === 'H' || suit === 'D', ink = red ? '#d3263b' : '#1b2230', path = SUIT[suit] || SUIT.S;
       const corner = `<text x="12" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="${rank === '10' ? 19 : 24}" letter-spacing="${rank === '10' ? -1.5 : 0}" fill="${ink}">${rank}</text><path d="${path}" transform="translate(4.5 32) scale(.15)" fill="${ink}"/>`;
-      const middle = COURT[rank]
-        ? `<rect x="21" y="34" width="58" height="72" rx="7" fill="${ink}" fill-opacity=".07" stroke="${ink}" stroke-opacity=".35" stroke-width="1.2"/><path d="${COURT[rank]}" fill="#e0b54a" stroke="#9b7a24" stroke-width="1" stroke-linejoin="round"/><text x="50" y="86" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="30" fill="${ink}">${rank}</text><path d="${path}" transform="translate(42 90) scale(.16)" fill="${ink}"/>`
-        : `<path d="${path}" transform="translate(${rank === 'A' ? 18 : 24} ${rank === 'A' ? 38 : 44}) scale(${rank === 'A' ? .64 : .52})" fill="${ink}"/>`;
+      const middle = illustration(rank, ink);
       body = '<defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef1f6"/></linearGradient></defs>'
         + '<rect x="1.5" y="1.5" width="97" height="137" rx="10" fill="url(#p)" stroke="#cfd6e2" stroke-width="2"/>' + corner + `<g transform="rotate(180 50 70)">${corner}</g>` + middle;
     }
@@ -84,7 +110,7 @@
     el.className = 'playing-card jk-card' + (suit === 'H' || suit === 'D' ? ' red' : '');
     el.dataset.rank = rank;
     el.setAttribute('aria-label', `${rank} ${SUIT_NAME[suit] || ''} — ${(INFO[rank] || {}).say || ''}`);
-    el.append(art(card), plate(rank));
+    el.append(art(card));
     return el;
   }
   /** The card guide: every rank with its plate and what it does. */

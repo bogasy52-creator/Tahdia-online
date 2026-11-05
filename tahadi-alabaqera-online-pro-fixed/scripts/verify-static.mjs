@@ -23,7 +23,8 @@ function localTarget(raw, fromFile) {
   if (value.startsWith('/api/')) return null;
   const path = value.split(/[?#]/)[0];
   // The Worker serves the Uno alias from the canonical challenge page.
-  const clean = ['/uno', '/uno.html'].includes(path) ? '/chaos.html' : path;
+  const aliases = {'/uno':'/chaos.html','/uno.html':'/chaos.html','/carrom':'/race.html','/carrom.html':'/race.html'};
+  const clean = aliases[path] || path;
   if (!clean) return null;
   const base = clean.startsWith('/') ? publicDir : dirname(fromFile);
   return resolve(base, clean.replace(/^\//, ''));

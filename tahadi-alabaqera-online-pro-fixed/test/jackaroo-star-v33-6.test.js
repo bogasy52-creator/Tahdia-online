@@ -55,7 +55,7 @@ test('the rooms deal the big board, and the middle shows the last three cards pl
   assert.match(worker, /state\.deck = Array\(state\.deck\?\.length \|\| 0\)\.fill\("\?"\);/, 'the deck stays hidden');
   // the page loads the engine and its geometry at the same new address as the board
   const page = await read('public/jackaroo.html');
-  assert.match(page, /engines\/jackaroo-engine\.js\?v=33\.\d+\.\d+"/);
+  assert.match(page, /engines\/jackaroo-engine\.js\?v=33\.\d+\.\d+(?:-[a-z0-9]+)?"/);
   assert.match(await read('public/assets/js/engines/jackaroo-engine.js'), /from '\.\/board-geometry-v29\.js\?v=33\.\d+\.\d+'/);
   assert.match(await read('public/assets/js/board-petals-v29.js'), /from '\.\/engines\/board-geometry-v29\.js\?v=33\.\d+\.\d+'/);
 });

@@ -93,15 +93,9 @@ test('items: turbo boosts, shield absorbs one hit, rocket and oil put hazards on
   assert.ok(other.spin > 0, 'a kart driving over oil spins');
 });
 
-test('the page and the home card are wired', async () => {
-  const page = await read('race.html'), home = await read('index.html'), sw = await read('service-worker.js');
-  assert.match(page, /assets\/js\/race\/main\.js\?v=33\.7\.0/);
-  assert.match(page, /assets\/css\/app-race\.css\?v=33\.7\.0/);
-  for (const id of ['road', 'fx', 'mini', 'startBtn', 'itemBtn', 'bDrift', 'results', 'podium']) assert.match(page, new RegExp(`id="${id}"`));
-  assert.match(home, /href="\/race" class="home-game"/);
-  const styles = await read('assets/css/race-v33-7.css');
-  const bundle = await read('assets/css/app-race.css');
-  assert.ok(bundle.includes(styles), 'the route bundle includes the race stylesheet');
-  await read('assets/brand/turbo-kart-cover-v33-7.svg');
-  assert.match(sw, /\/race\.html|\/assets\/js\/race\/main\.js/, 'the offline list knows the game');
+test('the former racing entry now opens the Carrom table', async () => {
+ const page=await read('race.html'),home=await read('index.html');
+ assert.match(page,/assets\/js\/carrom\/main\.js\?v=/);
+ assert.match(home,/href="\/carrom" class="home-game"/);
+ assert.doesNotMatch(page,/TURBO KART/);
 });

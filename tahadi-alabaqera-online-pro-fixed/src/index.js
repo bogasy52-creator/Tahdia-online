@@ -284,6 +284,7 @@ function speedBonus(deadline, answeredAt) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if(['/carrom','/carrom.html'].includes(url.pathname)){url.pathname='/race.html';return env.ASSETS.fetch(new Request(url,request));}
     if(['/uno','/uno.html'].includes(url.pathname)){url.pathname='/chaos.html';return env.ASSETS.fetch(new Request(url,request));}
     if(/^\/(labyrinth|territory|survival|patterns)(?:\.html)?\/?$/.test(url.pathname))return Response.redirect(new URL('/#games',url).href,302);
     try {

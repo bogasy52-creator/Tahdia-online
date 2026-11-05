@@ -421,9 +421,9 @@ function jackCrossLayout(arm){
   else{const total=segs.reduce((m,s)=>m+s.len,0),step=total/arm;for(let k=0;k<arm;k++){let d=k*step,i=0;while(i<3&&d>segs[i].len+1e-9){d-=segs[i].len;i++;}put(i,d/segs[i].len,false);}}
   const place=(p,s)=>{const q=quarterTurn(p,s);return{x:+(C+q.x).toFixed(2),y:+(C+q.y).toFixed(2)};};
   const track=[],labels=[];
-  // the two numbers on either side of the corner where the diagonal meets the next arm stand a
-  // little apart (10 a little further out, 11 a little along), so «10 11» never runs together
-  if(arm===19){const t={x:-1,y:0};quarter[10].shift={x:quarter[10].n.x*.9,y:quarter[10].n.y*.9};quarter[11].shift={x:t.x*1.1,y:t.y*1.1};}
+  // Put each diagonal corner's number inside the path. Its neighbours stay outside,
+  // leaving room for two digits in portrait and for upright type in landscape.
+  if(arm===19){quarter[5].n={x:1,y:0};quarter[10].n={x:0,y:-1};}
   for(let s=0;s<4;s++)quarter.forEach((p,k)=>{track.push(place(p,s));const n=quarterTurn(p.n,s),q=quarterTurn(p,s),d=p.shift?quarterTurn(p.shift,s):{x:0,y:0};labels.push(k?{x:+(C+q.x+n.x*CROSS.label+d.x).toFixed(2),y:+(C+q.y+n.y*CROSS.label+d.y).toFixed(2),num:k}:null);});
   const g=CROSS.yardGap,[yx,yy]=CROSS.yard,step=arm===19?7.36:segs.reduce((m,s)=>m+s.len,0)/arm;
   return{kind:'cross',seats:4,arm,track,labels,step,hole:+Math.min(3.15,step*.4).toFixed(2),
@@ -455,12 +455,12 @@ function crossWeave(defs,prefix,key){if(key==='grid')return pattern(defs,prefix+
 const HOUSE_ICON='M-1.55 -.15L0 -1.45L1.55 -.15M-1.05 -.55V1.25H1.05V-.55M-.38 1.25V.35H.38V1.25';
 // the frame of each look: neon light, a gold band, walnut wood, or a gold line on marble
 function crossFrame(root,defs,prefix,look){
-  const outer=pathOf(octagon(0)),band=pathOf(octagon(5)),inner=pathOf(octagon(6.2));
+  const outer=pathOf(octagon(0)),band=pathOf(octagon(3.1)),inner=pathOf(octagon(4));
   root.append(n('path',{d:outer,fill:'#000',opacity:.35,transform:'translate(0 1.6)'}));
   if(look.frame==='neon'){
     root.append(n('path',{d:outer,fill:'#050a1c'}),n('path',{d:band,fill:radial(defs,prefix+'-surface',[[0,look.surface[0]],[.6,look.surface[1]],[1,look.surface[2]]],.5,.5,.72)}));
     const line=(d,attrs)=>root.append(n('path',{d,fill:'none','stroke-linejoin':'round',...attrs}));
-    line(pathOf(octagon(2.6)),{stroke:look.edge,'stroke-width':6,opacity:.13});line(pathOf(octagon(2.6)),{stroke:look.edge,'stroke-width':2.8,opacity:.32});
+    line(pathOf(octagon(2.6)),{stroke:look.edge,'stroke-width':3.8,opacity:.13});line(pathOf(octagon(2.6)),{stroke:look.edge,'stroke-width':1.8,opacity:.32});
     line(pathOf(octagon(2.6)),{stroke:mix(look.edge,'#ffffff',.55),'stroke-width':1.1});line(pathOf(octagon(5.6)),{stroke:look.edge,'stroke-width':.45,opacity:.75});
     // the lights along the frame, warm on the sides as in the picture
     const spark=radial(defs,prefix+'-spark',[[0,look.spark[1],1],[.35,look.spark[0],.55],[1,look.spark[0],0]]);
@@ -529,7 +529,7 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
     }
     root.append(n('circle',{cx:p.x,cy:+(p.y+.35).toFixed(2),r:L.hole+.45,fill:'#000',opacity:.28}),n('circle',{cx:p.x,cy:p.y,r:L.hole,fill:holeFill,stroke:look.holeRim,'stroke-width':.55,'data-track':i,class:'tbl-hole'}));
     const at=L.labels[i];
-    root.append(up(n('text',{x:at.x,y:+(at.y+1.42).toFixed(2),'text-anchor':'middle','font-size':5.1,'font-weight':900,'font-family':'Tajawal,Arial,sans-serif',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
+    root.append(up(n('text',{x:at.x,y:+(at.y+1.42).toFixed(2),'text-anchor':'middle','font-size':k<10?5.1:4.65,'font-weight':900,'font-family':'Arial,sans-serif',direction:'ltr',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
   });
   crossMiddle(root,defs,prefix,state,look,pile,colors);
   // the players: on the screen, each in the corner by their own yard; you at the bottom
@@ -697,7 +697,7 @@ export function fitJackarooViewport(target,width,height){
   svg.append(fit);
  }
  fit.setAttribute('transform','scale(1 '+ratio+')');
- svg.setAttribute('viewBox','3 '+(3*ratio)+' 194 '+(194*ratio));
+ svg.setAttribute('viewBox','0 0 200 '+(200*ratio));
  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
  svg.dataset.fitRatio=String(ratio);
  const root=svg.querySelector('[data-board-root]'),rot=Number(root?.getAttribute('data-rot'))||0;

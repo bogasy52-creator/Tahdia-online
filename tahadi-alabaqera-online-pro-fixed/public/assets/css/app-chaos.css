@@ -1347,3 +1347,7 @@ body.uno-page.ch-in-match .hero-entry{
     width:49px
   }
 }
+
+.uno-top-card .uo-burst{transform-origin:42px 57px;animation:uno-art-arrive .32s ease-out}
+@keyframes uno-art-arrive{from{transform:scale(.72) rotate(-12deg);opacity:.4}to{transform:scale(1) rotate(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.uno-top-card .uo-burst{animation:none}}

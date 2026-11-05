@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-1764ba29dabe';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-a7ede1230c4f';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -141,6 +141,7 @@ const ON_DEMAND = [
   "/assets/brand/baloot-cover-v32.webp",
   "/assets/brand/busraj-app-master-v29.webp",
   "/assets/brand/busraj-maskable-master-v29.webp",
+  "/assets/brand/carrom-cover-v33-7.svg",
   "/assets/brand/dice-studio-v26.webp",
   "/assets/brand/jewels-cover.svg",
   "/assets/brand/journey-world.svg",
@@ -262,6 +263,7 @@ const ON_DEMAND = [
   "/assets/css/baloot-v32.css",
   "/assets/css/board-premium.css",
   "/assets/css/brain-v20.css",
+  "/assets/css/carrom-v33-7.css",
   "/assets/css/challenges-v33-5.css",
   "/assets/css/challenges.css",
   "/assets/css/chaos-v33-6.css",
@@ -416,6 +418,9 @@ const ON_DEMAND = [
   "/assets/js/board-table-v33.js",
   "/assets/js/card-courts.js",
   "/assets/js/career-client.js",
+  "/assets/js/carrom/engine.js",
+  "/assets/js/carrom/main.js",
+  "/assets/js/carrom/render.js",
   "/assets/js/challenge-client.js",
   "/assets/js/challenge-studio.js",
   "/assets/js/chaos-stage.js",

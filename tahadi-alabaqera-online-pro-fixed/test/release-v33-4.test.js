@@ -77,7 +77,7 @@ test('Jackaroo cards are the Baloot deck with a drawing of what each card does',
   const act = (card) => J.info(card).act;
   assert.equal(act('AS'), 'exit'); assert.equal(act('KH'), 'king'); assert.equal(act('JD'), 'swap');
   assert.equal(act('7C'), 'split'); assert.equal(act('5S'), 'any'); assert.equal(act('4H'), 'back');
-  assert.equal(act('10D'), 'step'); assert.equal(act('QC'), 'step'); assert.equal(act('2S'), 'step');
+  assert.equal(act('10D'), 'burn'); assert.equal(act('QC'), 'step'); assert.equal(act('2S'), 'step');
   for (const rank of J.ORDER) assert.ok(J.INFO[rank].say.length > 10, rank);
   const page = await read('public/jackaroo.html');
   assert.match(page, /card-courts\.js\?v=[\d.]+"><\/script><script src="assets\/js\/baloot-cards\.js\?v=[\d.]+"><\/script><script src="assets\/js\/jackaroo-cards\.js/);

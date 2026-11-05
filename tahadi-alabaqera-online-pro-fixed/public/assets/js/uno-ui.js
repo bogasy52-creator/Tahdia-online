@@ -24,13 +24,34 @@
 
   function faceSVG(card) {
     const color = COLORS[card.color] || COLORS.wild;
-    const value = MARKS[card.face] || (/^[0-9]$/.test(card.face) ? card.face : '?');
-    const wild = card.color === 'wild';
-    const center = wild
-      ? '<g transform="translate(42 58) rotate(-25)"><path d="M0 0V-25A25 25 0 0 1 25 0Z" fill="#ef6970"/><path d="M0 0H25A25 25 0 0 1 0 25Z" fill="#efbe5a"/><path d="M0 0V25A25 25 0 0 1-25 0Z" fill="#40b395"/><path d="M0 0H-25A25 25 0 0 1 0-25Z" fill="#689be2"/></g>'
-      : '<ellipse cx="42" cy="58" rx="27" ry="42" transform="rotate(28 42 58)" fill="#fff8e9" opacity=".94"/><text x="42" y="72" fill="'+color+'" font-size="'+(value.length>1?29:45)+'" font-weight="900" text-anchor="middle" font-family="Arial,sans-serif">'+value+'</text>';
-    return '<svg viewBox="0 0 84 120" aria-hidden="true" direction="ltr"><rect x="1" y="1" width="82" height="118" rx="11" fill="#fff4dd"/><rect x="5" y="5" width="74" height="110" rx="8" fill="'+color+'"/><path d="M8 89 76 31M8 95 76 37" stroke="#ffffff" opacity=".10" stroke-width="2"/>'+center+'<g fill="#fff7e6" font-family="Arial,sans-serif" font-weight="900" font-size="15"><text x="12" y="24">'+value+'</text><text x="12" y="24" transform="rotate(180 42 60)">'+value+'</text></g><path d="M8 108h10M66 12h10" stroke="#fff7e6" stroke-width="1.5" opacity=".8"/></svg>';
+    const mark = MARKS[card.face] || (/^[0-9]$/.test(card.face) ? card.face : '?');
+    const id = 'uno-art-' + String(card.id).replace(/[^a-z0-9]/gi,'');
+    const eyes = '<g class="uo-eyes" fill="#172c39"><ellipse cx="36" cy="43" rx="2.6" ry="3.7"/><ellipse cx="48" cy="43" rx="2.6" ry="3.7"/><circle cx="35.3" cy="41.8" r=".9" fill="white"/><circle cx="47.3" cy="41.8" r=".9" fill="white"/></g><path d="M37 51Q42 56 47 51" fill="none" stroke="#172c39" stroke-width="2" stroke-linecap="round"/>';
+    const portrait = {
+      red:'<path d="M23 51C18 36 28 35 27 24l10 9 8-16 7 16 9-7c7 18 4 34-16 36Z" fill="#ffe2a3" stroke="#fff4d4" stroke-width="1.2"/>',
+      gold:'<path d="m42 18 6 10 12-3-3 12 11 7-11 6 3 12-12-3-6 10-6-10-12 3 3-12-11-6 11-7-3-12 12 3Z" fill="#fff1af" stroke="#fff9db" stroke-width="1.1"/>',
+      green:'<path d="M23 50C17 29 38 25 61 22c5 24-4 43-24 41Z" fill="#c9f2bb" stroke="#efffe0" stroke-width="1.3"/><path d="M30 63q12-16 25-31" stroke="#7abe83" stroke-width="2" fill="none"/>',
+      blue:'<path d="M20 51q-5-13 8-22 10-7 19-2 14-5 18 9 6 13-6 22-19 16-39-7Z" fill="#c9f2ff" stroke="#effdff" stroke-width="1.4"/><path d="M21 53q-8-6-10 1l9 7" fill="#a0e3fb"/>',
+      wild:'<path d="M21 36q20-22 42 0l-3 21q-18 11-36 0Z" fill="#fff0c4"/><path d="M21 37 33 33l9 11 10-11 11 4-3 8-9 4-9-5-10 5-10-4Z" fill="#d686c4"/>',
+    };
+    let scene;
+    if(card.face==='draw2'||card.face==='draw4'){
+      const four=card.face==='draw4';
+      const tints=four?['#f57c83','#ffd578','#7dd8ac','#8fc7fb']:['#fff0c8','#fff0c8'];
+      scene='<g class="uo-burst"><path d="m42 22 6 9 12-2-3 11 9 7-10 5 2 12-11-3-7 10-5-10-12 2 3-12-10-7 11-5-1-10 10 3Z" fill="#ffffff" opacity=".19"/></g>';
+      scene+=tints.map((t,i)=>'<g transform="translate(42 47) rotate('+((i-(tints.length-1)/2)*19)+')"><rect x="-10" y="-19" width="20" height="30" rx="4" fill="'+t+'" stroke="#fff9df" stroke-width="1.5"/><path d="M-5-10H5M-5-5H5" stroke="#243647" stroke-width="1.8"/></g>').join('');
+      scene+='<text x="42" y="97" fill="#fff4d7" stroke="#182c45" stroke-width=".9" paint-order="stroke" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="900">'+mark+'</text>';
+    }else if(card.face==='reverse'){
+      scene='<g class="uo-burst" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 51a22 22 0 0 1 38-14l-1-10m1 10-11-1" stroke="#fff4d4" stroke-width="5"/><path d="M63 60a22 22 0 0 1-38 14l1 10m-1-10 11 1" stroke="#bcf0e4" stroke-width="5"/></g><circle cx="42" cy="57" r="12" fill="#fff0c4"/><path d="M35 56h2m10 0h2M37 62q5 4 10 0" stroke="#243344" stroke-width="2.1" stroke-linecap="round" fill="none"/>';
+    }else if(card.face==='skip'){
+      scene='<path d="M42 24 63 32v24q0 19-21 29-21-10-21-29V32Z" fill="#fff1d1"/><circle cx="42" cy="53" r="16" fill="none" stroke="'+color+'" stroke-width="5"/><path d="m30 65 24-24" stroke="'+color+'" stroke-width="5" stroke-linecap="round"/><path d="m17 28-5-5m55 5 5-5M14 75l-5 4m61-4 5 4" stroke="#ffe3a6" stroke-width="2" stroke-linecap="round"/>';
+    }else{
+      scene='<g class="uo-hero">'+(portrait[card.color]||portrait.wild)+eyes+'</g>';
+      scene+='<text x="42" y="100" fill="#fff4d7" stroke="#17304b" stroke-width=".85" paint-order="stroke" text-anchor="middle" font-family="Arial,sans-serif" font-size="'+(card.color==='wild'?28:40)+'" font-weight="900">'+mark+'</text>';
+    }
+    return '<svg viewBox="0 0 84 120" aria-hidden="true" direction="ltr"><defs><linearGradient id="'+id+'" x2=".8" y2="1"><stop stop-color="'+color+'"/><stop offset="1" stop-color="#18324a"/></linearGradient></defs><rect x="1" y="1" width="82" height="118" rx="11" fill="#fff2da"/><rect x="5" y="5" width="74" height="110" rx="8" fill="url(#'+id+')"/><path d="M7 70 76 8M8 91 77 29M8 103 77 41" stroke="#ffffff" stroke-width="1" opacity=".12"/><circle cx="66" cy="78" r="18" fill="#ffffff" opacity=".035"/>'+scene+'<g fill="#fff6df" font-family="Arial,sans-serif" font-weight="900" font-size="13"><text x="11" y="21">'+mark+'</text><text x="11" y="21" transform="rotate(180 42 60)">'+mark+'</text></g><path d="M8 108h10m48-96h10" stroke="#fff1c7" stroke-width="1.4" opacity=".65"/></svg>';
   }
+
   function cardNode(card, cls = '') {
     const node = make('button','uno-card '+cls);
     node.type = 'button';

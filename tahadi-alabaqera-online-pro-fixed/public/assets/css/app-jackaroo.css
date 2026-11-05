@@ -1583,6 +1583,39 @@ body.game-jackaroo.game-running .hero-entry{
   max-inline-size:none!important
 }
 
+:is(html,#v31) body.game-jackaroo.game-running #game#game#game .jk-hand-dock #hand .playing-card{
+ width:clamp(50px,15vw,66px)!important;
+ flex:0 1 66px!important;
+ height:clamp(70px,22vw,92px)!important;
+}
+:is(html,#v31) body.game-jackaroo.game-running #game#game#game .jk-hand-dock .jk-act{display:none!important}
+/* In landscape the hand has its own column, keeping every track hole reachable. */
+@media(max-height:500px) and (orientation:landscape){
+ :is(html,#v31) body.game-jackaroo.game-running #game#game#game .jack-layout{
+  grid-template-columns:minmax(0,1fr) clamp(170px,24vw,230px)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  direction:ltr!important
+ }
+ :is(html,#v31) body.game-jackaroo.game-running #game#game#game .jk-hand-dock{
+  position:relative!important;inset:auto!important;transform:none!important;
+  grid-column:2!important;grid-row:1!important;align-content:center!important;
+  grid-template-rows:auto minmax(0,auto) auto!important;
+  width:100%!important;max-width:none!important;height:100%!important;
+  padding:7px!important;border-radius:0!important;border:0!important;
+  border-inline-end:1px solid #88b2cd55!important;direction:rtl!important
+ }
+ :is(html,#v31) body.game-jackaroo.game-running #game#game#game .jk-hand-dock #hand{
+  flex-wrap:wrap!important;gap:5px!important
+ }
+ :is(html,#v31) body.game-jackaroo.game-running #game#game#game .jk-hand-dock #hand .playing-card{
+  flex:0 1 53px!important;max-width:31%!important;
+  width:53px!important;height:74px!important
+ }
+ :is(html,#v31) body.game-jackaroo.game-running #game#game#game .jk-hand-dock #actions{
+  flex-wrap:wrap!important;max-height:100px!important;overflow:auto!important
+ }
+}
+
 /* assets/css/game-interaction-v34.css */
 html,body{overflow-x:clip}
 html{touch-action:pan-x pan-y}

@@ -14,7 +14,7 @@ export function chooseJackarooMove(state,difficulty='medium',rng=Math.random){
  const actor=state.turn,team=actor%2,scored=[],geometry=boardGeometry(state);
  state.hands[actor].forEach((_,cardIndex)=>{
   for(const action of getJackarooActions(state,cardIndex,actor)){
-   let score=action.type==='discard'?-100:0;
+   let score=action.type==='discard'?-100:action.type==='burn'?22+(state.hands[action.target].length===1?16:0):0;
    if(difficulty!=='easy'){
     // Evaluate the public piece result only: do not deal or shuffle a future
     // hand while considering a candidate card.
