@@ -400,7 +400,8 @@
     "assets/css/chaos-v33-6.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/room-clock-v33-7.css",
-    "assets/css/player-card-v33-7.css"
+    "assets/css/player-card-v33-7.css",
+    "assets/css/uno-v33-7.css"
   ],
   "wordbomb.html": [
     "assets/css/platform.css",

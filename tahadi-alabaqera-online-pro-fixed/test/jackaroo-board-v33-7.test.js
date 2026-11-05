@@ -111,3 +111,30 @@ test('the cards of the picture: white faces drawn as SVG, a crown, a circlet and
   assert.match(svg, /fill="#e0b54a" stroke="#9b7a24"/, 'the court is drawn in gold');
   assert.doesNotMatch(src, /rank === 'J' \? 'none'/, 'the jack is no longer an outline');
 });
+
+test('each Jackaroo yard sits to the local left of its own nearby house', async () => {
+  const { target } = await board(picture(), { game: 'jackaroo', viewer: 0, look: 'neon' });
+  const houses=target.querySelectorAll('[data-house]');
+  for(let seat=0;seat<4;seat++){
+    const house=houses.find(n=>Number(n.getAttribute('data-house'))===seat);
+    const circles=target.querySelector('[data-pocket="'+seat+'"]').querySelectorAll('circle');
+    const x=circles.reduce((n,c)=>n+Number(c.getAttribute('cx')),0)/4-Number(house.getAttribute('cx'));
+    const y=circles.reduce((n,c)=>n+Number(c.getAttribute('cy')),0)/4-Number(house.getAttribute('cy'));
+    const localX=x*Math.cos(seat*Math.PI/2)+y*Math.sin(seat*Math.PI/2);
+    assert.ok(localX< -12,'yard '+seat+' is on the left');
+    assert.ok(Math.hypot(x,y)<35,'yard '+seat+' stays near its house');
+  }
+});
+
+test('viewport fitting leaves the animated stone container free to move', async () => {
+ const {h,target}=await board(picture(),{game:'jackaroo',viewer:1,look:'neon'});
+ h.context.__target=target;
+ vm.runInContext('fitJackarooViewport(__target,390,720)',h.context);
+ const pieces=target.querySelectorAll('[data-stone]');
+ assert.equal(pieces.length,16);
+ for(const piece of pieces){
+  assert.match(piece.getAttribute('transform'),/^translate\(/);
+  assert.doesNotMatch(piece.getAttribute('transform'),/scale/);
+  assert.ok(piece.querySelector('[data-viewport-piece]'));
+ }
+});

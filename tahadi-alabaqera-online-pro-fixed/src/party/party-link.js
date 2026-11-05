@@ -10,7 +10,7 @@ export const PARTY_RETURN_MS = 60_000;           // after a linked game, time fo
 
 export const LINKED_GAMES = Object.freeze({
   wordbomb:{page:'/wordbomb',min:1,max:20},
-  chaos:{page:'/chaos',min:1,max:20},
+  chaos:{page:'/uno',min:1,max:8},
   focus:{page:'/focus',min:1,max:20},
   cipher:{page:'/cipher',min:1,max:20},
   quiz: { page: '/online', min: 1, max: 20 },

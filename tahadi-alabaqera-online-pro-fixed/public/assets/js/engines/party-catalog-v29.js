@@ -1,6 +1,6 @@
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=10000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
- {id:'chaos',name:'سباق الفوضى',kind:'arena',real:true,image:'assets/challenges/chaos.svg',hint:'سباق شخصيات بحواجز وفخاخ وقدرات، والمضمار يتغيّر كل 15 ثانية. حتى 20 لاعبًا.'},
+ {id:'chaos',name:'أونو',kind:'board',maxPlayers:8,real:true,image:'assets/challenges/uno-table.svg',hint:'طابق اللون والرقم، اعكس الدور، ونادِ أونو. طاولات حتى 8 لاعبين.'},
  {id:'wordbomb',name:'صيد الكلمات',kind:'reaction',real:true,image:'assets/challenges/wordbomb.svg',hint:'شبكة حروف وكلمات مخفية؛ أول من يلقى الكلمة ياخذ نقاطها، حتى 20 لاعبًا.'},
  {id:'focus',name:'مواجهة التركيز',kind:'reaction',real:true,image:'assets/challenges/focus.svg',hint:'20 لاعبًا و14 تحدي تركيز متبدّل.'},
  {id:'cipher',name:'ساحة الشفرات',kind:'puzzle',real:true,image:'assets/challenges/cipher.svg',hint:'اختر أي خصم واكشف شفرته لإقصائه؛ الفوز لآخر لاعب.'},

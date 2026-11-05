@@ -1,40 +1,44 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10192d"><meta name="description" content="سباق الفوضى — سباق سريع بين الشخصيات: حواجز وبوابات وفخاخ، مضمار يتغيّر كل 15 ثانية، وقدرات مؤقتة. تدريب وغرف حتى 20 لاعب في بوسراج للألعاب."><title>سباق الفوضى — بوسراج للألعاب</title><link rel="icon" href="/favicon-32.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="assets/css/app-chaos.css?v=33.7.0-310741dd8a"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.7.0"></head>
-<body class="release-v26 challenge-page" data-challenge="chaos"><main class="ch-shell">
-<header class="ch-topbar"><a class="ch-brand" href="/"><span class="ch-brand-mark">BS</span><b>بوسراج للألعاب</b></a><nav class="ch-topnav" aria-label="التنقل"><a href="/#games">كل الألعاب</a><a href="/party?game=chaos">غرفة 20 لاعب</a><a href="/shop">المتجر</a><button class="bs-icon-btn race-audio" data-audio-toggle data-audio-icon="vector" aria-label="كتم الصوت"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h4l5-4v14l-5-4H3Z"/><path class="race-audio-wave" d="M15 9a4 4 0 0 1 0 6m3-9a8 8 0 0 1 0 12"/><path class="race-audio-mute" d="m16 10 4 4m0-4-4 4"/></svg></button></nav></header>
-<section class="ch-heading"><div><span class="ch-kicker">CIRCUIT 98 / MIRAGE</span><h1>سباق الفوضى</h1><p>حلبة السراب · سباق شخصيات حتى 20 لاعب</p></div><span class="ch-badge" id="chConnection">اختر التحدي</span></section>
-<div class="ch-layout"><div><section class="ch-panel" id="chSetup" aria-label="إعداد التحدي"><div class="ch-setup-art race-cover">
-  <img class="race-cover-sky" src="assets/challenges/chaos-mirage.svg" alt="" width="960" height="420" fetchpriority="high">
-  <img class="race-cover-hero race-cover-rival" src="assets/characters-v33/portraits/cyber.webp" alt="" width="384" height="320">
-  <img class="race-cover-hero race-cover-lead" src="assets/characters-v33/portraits/racer.webp" alt="" width="384" height="320">
-  <div class="race-cover-mark" aria-hidden="true"><small>MIRAGE CIRCUIT</small><b>98</b></div>
-</div><div class="ch-setup-copy"><h2>ادخل حلبة السراب</h2><p>راوغ الحواجز، التقط القدرات، واسبق خصومك إلى خط النهاية. كل 15 ثانية تتغيّر مناطق الفوضى.</p><label class="ch-field">اسمك في التحدي<input id="chName" maxlength="20" autocomplete="nickname" placeholder="اكتب اسمك"></label><div id="chSetupSecret"></div><div class="ch-secret" id="chSecretArea" hidden><p>شفرتك السرية · لا تشاركها مع خصمك</p><div id="chSecretPicker"></div></div><button class="ch-button primary ch-quick" id="chQuick">سباق سريع · العب الآن</button><div class="ch-options"><button class="ch-button primary" id="chPractice">تدرّب ضد الكمبيوتر</button><button class="ch-button" id="chCreate">أنشئ غرفة</button></div><div class="ch-join"><input id="chCode" inputmode="numeric" maxlength="6" aria-label="رمز الغرفة" placeholder="رمز الغرفة"><button class="ch-button" id="chJoin">انضم</button></div></div></section>
-<section class="ch-panel" id="chLobby" aria-label="غرفة الأصدقاء" hidden><div class="ch-panel-head"><h2>جهّز خطتك</h2><button class="ch-button" id="chLobbyLeave">خروج</button></div><div class="ch-room-code" id="chRoomCode"></div><div class="ch-share"><input id="chLink" readonly aria-label="رابط دعوة الغرفة"><button class="ch-button" id="chCopy">نسخ الرابط</button><button class="ch-button" id="chInvite">دعوة صديق</button></div><div class="ch-lobby-players" id="chLobbyPlayers"></div><div id="chLobbySecret"></div><div class="ch-lobby-controls"><button class="ch-button" id="chReady">أنا جاهز</button><button class="ch-button primary" id="chRoomStart">ابدأ الجولة</button></div></section>
-<section class="ch-panel" id="chPlay" hidden aria-label="حلبة السباق">
- <div class="ch-arena-heading race-playbar">
-  <div><span class="ch-live-dot"></span><b id="chArenaLabel">مواجهة الأصدقاء</b></div>
-  <div class="race-tools">
-   <button class="ch-tool" id="chPause" hidden>إيقاف مؤقت</button>
-   <button class="ch-tool" id="chFullscreen" aria-label="تبديل ملء الشاشة">ملء الشاشة</button>
-   <button class="ch-tool" id="chLeave">خروج</button>
-  </div>
- </div>
- <div class="ch-match-meta"><span id="chRound"></span><b id="chHazard"></b><span id="chTime"></span></div>
- <p class="ch-substatus" id="chSubstatus"></p><div class="ch-studio-hud" id="chStudioHud"></div>
- <div class="ch-flow" id="chFlow" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"></div>
- <div class="ch-stage" id="chStage">
-  <div class="ch-board" id="chBoard" aria-label="لوحة اللعب"></div>
-  <div class="ch-controls" id="chControls"></div>
-  <div class="ch-tactics" id="chTactics"></div><p class="ch-log" id="chLog" aria-live="polite"></p>
-  <div class="ch-result" id="chResult" role="status" hidden>
-   <span class="race-result-kicker">MIRAGE / 98</span>
-   <h2 id="chResultTitle"></h2><p id="chResultCopy"></p>
-   <div id="raceRecap"></div>
-   <button class="ch-button primary" id="chRematch" hidden>العب مرة ثانية</button>
-  </div>
-  <div class="ch-paused" id="chPaused" hidden><div><h2>السباق متوقف</h2><button class="ch-button primary" id="chResume">كمّل السباق</button></div></div>
- </div>
- <div class="ch-players" id="chPlayers" aria-label="ترتيب المتسابقين"></div>
-</section><p id="chNotice" class="ch-notice" role="status" aria-live="polite"></p></div>
-<aside class="ch-aside"><section class="ch-side-panel"><h2>خطة الفوز</h2><div class="ch-rules"><div class="ch-rule"><i>01</i><span>بدّل المسار بالأزرار أو اسحب على المضمار (وبالكيبورد بالأسهم). الحاجز يوقفك، البوابة تنتظرها تفتح، الطين يبطّئك، والزنبرك يرجّعك.</span></div><div class="ch-rule"><i>02</i><span>التقط البلورات الذهبية عشان تحصل على قدرة: تيربو، درع، لزقة ترميها وراك، صاروخ، أو عاصفة على اللي قدامك. اللي ورا ياخذ أقوى القدرات وريح تدفّه.</span></div><div class="ch-rule"><i>03</i><span>كل 15 ثانية الفوضى تغيّر المناطق المخططة بالأحمر، وتنبهك قبلها. أول واحد يوصل يفوز، والباقين عندهم 25 ثانية يكملون.</span></div></div></section><section class="ch-side-panel"><h2>مواجهة جديدة؟</h2><nav class="ch-collection" aria-label="ألعاب التحدي"><a href="/chaos" aria-label="سباق الفوضى" aria-current="page">»</a><a href="/wordbomb" aria-label="صيد الكلمات">ح</a><a href="/focus" aria-label="مواجهة التركيز">↗</a><a href="/cipher" aria-label="ساحة الشفرات">#</a></nav><p class="ch-side-note">شخصيتك تدخل وتتحرّك وتحتفل بأسلوبها. غيّر هويتك من المتجر.</p></section></aside></div><footer class="ch-footer">بوسراج · العبها بطريقتك</footer></main><div class="bs-toast" role="status"></div>
-<script src="assets/js/party-link-v32.js?v=33.7.0-room1"></script><script src="assets/js/audio-manager.js?v=33.7.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.7.0"></script><script src="assets/js/player-card-v33-7.js?v=33.7.0"></script><script src="assets/js/platform.js?v=33.7.0"></script><script src="assets/js/social-client.js?v=33.7.0"></script><script src="assets/js/profile-core.js?v=33.7.0"></script><script src="assets/js/career-client.js?v=33.7.0"></script><script src="assets/js/character-player.js?v=33.7.0-smooth1"></script><script src="assets/js/hero-effects.js?v=33.7.0-hunt1"></script><script src="assets/js/challenge-studio.js?v=33.7.0-hunt1"></script><script src="assets/js/chaos-stage.js?v=33.7.0-mirage1"></script><script src="assets/js/chaos-ui.js?v=33.7.0-mirage1"></script><script type="module" src="assets/js/challenge-client.js?v=33.7.0-mirage1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.7.0"></script></body></html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0c252a"><meta name="description" content="أونو بوسراج. أوراق ملونة وطاولة كاملة، لعب كلاسيكي وسحب متراكم وجولة سريعة، ضد الكمبيوتر أو مع الأصدقاء.">
+<title>أونو — بوسراج للألعاب</title><link rel="icon" href="/favicon-32.png"><link rel="manifest" href="/manifest.webmanifest">
+
+<link rel="stylesheet" href="assets/css/app-chaos.css?v=33.7.0-f5e63b7e04"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.7.0"></head>
+<body class="release-v26 challenge-page uno-page" data-challenge="chaos">
+<main class="ch-shell">
+<header class="ch-topbar"><a class="ch-brand" href="/"><span class="ch-brand-mark">BS</span><b>بوسراج للألعاب</b></a><nav class="ch-topnav"><a href="/">الألعاب</a><a href="/party?game=chaos">غرفة 20</a><button class="bs-icon-btn" data-audio-toggle aria-label="إعدادات الصوت">♪</button></nav></header>
+<section class="ch-heading"><div><span class="ch-kicker">THE CARD CLUB</span><h1>أونو</h1><p>لون يغيّر الجولة. ورقة تقلب الطاولة.</p></div><span class="ch-badge" id="chConnection">اختر طاولتك</span></section>
+<div class="ch-layout"><div>
+<section class="ch-panel" id="chSetup" aria-label="إعداد أونو">
+<div class="uno-cover"><img src="assets/challenges/uno-table.svg" width="800" height="400" alt="أوراق أونو ملونة على طاولة"></div>
+<div class="ch-setup-copy">
+<h2>آخر ورقة… نادِ أونو!</h2><p>طابق اللون أو الرمز، استعمل أوراق الحركة بوقتها، وخلّص يدك أول واحد.</p>
+<label class="ch-field">اسمك<input id="chName" maxlength="20" autocomplete="nickname" placeholder="اكتب اسمك"></label>
+<div class="uno-options">
+<label class="ch-field">أسلوب الطاولة<select id="unoMode"><option value="classic">كلاسيكي · 7 أوراق</option><option value="stack">سحب متراكم · +2 على +2 و+4 على +4</option><option value="quick">جولة سريعة · 5 أوراق</option></select></label>
+<label class="ch-field">لاعبو التدريب<select id="unoPracticePlayers"><option value="2">لاعبان</option><option value="3">3 لاعبين</option><option value="4" selected>4 لاعبين</option><option value="6">6 لاعبين</option><option value="8">8 لاعبين</option></select></label>
+</div>
+<div id="chSetupSecret"></div><div id="chSecretArea" hidden><div id="chSecretPicker"></div></div>
+<button class="ch-button primary ch-quick" id="chQuick">أونلاين سريع · كلاسيكي</button>
+<div class="ch-options"><button class="ch-button primary" id="chPractice">العب ضد الكمبيوتر</button><button class="ch-button" id="chCreate">طاولة خاصة</button></div>
+<div class="ch-join"><input id="chCode" inputmode="numeric" maxlength="6" aria-label="رمز الطاولة" placeholder="رمز الطاولة"><button class="ch-button" id="chJoin">انضم</button></div>
+<details class="uno-help"><summary>قواعد الطاولة</summary><p>طابق اللون أو الرقم أو رمز الحركة. بعد سحب ورقة مسموحة تقدر تلعبها أو تمرّر. العكس بين لاعبين يرجّع الدور لك، والمنع يتجاوز اللاعب التالي.</p><p>ورقة +4 تُلعب إذا ما عندك اللون الحالي. في الكلاسيكي السحب يطبّق مباشرة ويتجاوز الدور. في المتراكم تقدر ترد بنفس نوع ورقة السحب.</p><p>اضغط UNO قبل لعب ورقتك قبل الأخيرة. إذا نسيت، يقدر الخصم يمسكك قبل الحركة التالية وتسحب ورقتين. وقت الدور 30 ثانية.</p></details>
+</div></section>
+<section class="ch-panel" id="chLobby" aria-label="طاولة الأصدقاء" hidden><div class="ch-panel-head"><h2>الكراسي جاهزة</h2><button class="ch-button" id="chLobbyLeave">خروج</button></div><div class="ch-room-code" id="chRoomCode"></div><div class="ch-share"><input id="chLink" readonly aria-label="رابط الطاولة"><button class="ch-button" id="chCopy">نسخ</button><button class="ch-button" id="chInvite">دعوة صديق</button></div><div class="ch-lobby-players" id="chLobbyPlayers"></div><div id="chLobbySecret"></div><div class="ch-lobby-controls"><button class="ch-button" id="chReady">أنا جاهز</button><button class="ch-button primary" id="chRoomStart">ابدأ الجولة</button></div></section>
+<section class="ch-panel" id="chPlay" hidden aria-label="طاولة أونو">
+<div class="ch-arena-heading uno-playbar"><b id="chArenaLabel">أونو</b><div><button class="ch-tool" id="chPause" hidden>إيقاف</button><button class="ch-tool" id="chFullscreen" aria-label="ملء الشاشة">ملء الشاشة</button><button class="ch-tool" id="chLeave">خروج</button></div></div>
+<div class="ch-match-meta"><span id="chRound"></span><b id="chHazard"></b><span id="chTime"></span></div>
+<p id="chSubstatus" class="ch-substatus"></p><div class="ch-studio-hud" id="chStudioHud"></div><div class="ch-flow" id="chFlow" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"></div>
+<div class="ch-stage" id="chStage"><div class="ch-board" id="chBoard"></div><div class="ch-controls" id="chControls"></div><div class="ch-tactics" id="chTactics"></div><p class="ch-log" id="chLog" aria-live="polite"></p>
+<div class="ch-result" id="chResult" role="status" hidden><span class="uno-result-label">THE CARD CLUB</span><h2 id="chResultTitle"></h2><p id="chResultCopy"></p><div id="unoRecap"></div><div id="raceRecap" hidden></div><button class="ch-button primary" id="chRematch" hidden>جولة جديدة</button></div>
+<div class="ch-paused" id="chPaused" hidden><div><h2>خذ وقتك</h2><button class="ch-button primary" id="chResume">كمّل أونو</button></div></div>
+</div><div class="ch-players" id="chPlayers" hidden></div>
+</section>
+<p id="chNotice" class="ch-notice" role="status" aria-live="polite"></p>
+</div></div><footer class="ch-footer">بوسراج · ورقة تغيّر كل شيء</footer>
+</main><div class="bs-toast" role="status"></div>
+<script src="assets/js/party-link-v32.js?v=33.7.0-room1"></script>
+<script src="assets/js/audio-manager.js?v=33.7.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.7.0"></script><script src="assets/js/player-card-v33-7.js?v=33.7.0"></script><script src="assets/js/platform.js?v=33.7.0"></script><script src="assets/js/social-client.js?v=33.7.0"></script><script src="assets/js/profile-core.js?v=33.7.0"></script><script src="assets/js/career-client.js?v=33.7.0"></script><script src="assets/js/character-player.js?v=33.7.0-smooth1"></script><script src="assets/js/hero-effects.js?v=33.7.0-hunt1"></script><script src="assets/js/challenge-studio.js?v=33.7.0-hunt1"></script><script src="assets/js/chaos-stage.js?v=33.7.0-mirage1"></script><script src="assets/js/chaos-ui.js?v=33.7.0-mirage1"></script><script src="assets/js/uno-ui.js?v=33.7.0-uno1"></script><script type="module" src="assets/js/challenge-client.js?v=33.7.0-uno1"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.7.0"></script></body></html>

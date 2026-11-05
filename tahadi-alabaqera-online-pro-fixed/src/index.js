@@ -284,6 +284,7 @@ function speedBonus(deadline, answeredAt) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if(['/uno','/uno.html'].includes(url.pathname)){url.pathname='/chaos.html';return env.ASSETS.fetch(new Request(url,request));}
     if(/^\/(labyrinth|territory|survival|patterns)(?:\.html)?\/?$/.test(url.pathname))return Response.redirect(new URL('/#games',url).href,302);
     try {
 
@@ -515,7 +516,7 @@ export default {
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);
         let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
         const games=['focus','cipher','wordbomb','chaos'];if(!b||typeof b!=='object'||Array.isArray(b)||!games.includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
-        for(let i=0;i<8;i++){const code=roomCodeFor(b.game),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey})});if(res.status===201)return json({ok:true,code,hostKey});}
+        for(let i=0;i<8;i++){const code=roomCodeFor(b.game),hostKey=token(),stub=env.ROOMS.get(env.ROOMS.idFromName('challenge:'+code));const res=await stub.fetch('https://challenge.internal/init',{method:'POST',body:JSON.stringify({game:b.game,code,hostKey,unoMode:b.unoMode})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذر إنشاء الغرفة'},503);
       }
       const m=url.pathname.match(/^\/api\/challenges\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);

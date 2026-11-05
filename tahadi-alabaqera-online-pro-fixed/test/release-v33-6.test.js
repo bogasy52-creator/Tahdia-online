@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Career } from '../src/career/core.js';
 import { ChallengeRoom } from '../src/challenges/challenge-room.js';
+import { createRace } from '../public/assets/js/engines/chaos-core.js';
 import { createChallenge, advanceChallenge } from '../public/assets/js/engines/challenge-core.js';
 
 const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
@@ -89,6 +90,7 @@ test('the challenge page records practice and guest rounds, and refreshes a paid
 
 test('a race advanced by the room keeps its winner for the career', () => {
   const m = createChallenge('chaos', [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], 9, 1000);
+  delete m.uno;m.race=createRace(m.players,9,1000);m.endsAt=m.race.endsAt;
   m.race.runners[0].pos = 219.6; m.race.runners[0].lane = 0;
   advanceChallenge(m, m.race.startAt + 400);
   advanceChallenge(m, m.race.startAt + 400 + 26000);

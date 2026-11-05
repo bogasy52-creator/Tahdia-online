@@ -1,5 +1,6 @@
+import {initUno,applyUno,advanceUno,unoView} from './uno-core.js';
 import {initWordHunt,applyWordHunt,advanceWordHunt,wordHuntBot,wordHuntView,wordHuntAlarm,upgradeWordHunt} from './wordbomb-core.js';
-import {createRace,raceSim,usePower,changeLane,raceResult} from './chaos-core.js';
+import {raceSim,usePower,changeLane,raceResult} from './chaos-core.js';
 export {usePower as raceUsePower,changeLane as raceChangeLane};
 export {upgradeWordHunt};
 export {raceSim,raceTrack,raceItems,raceOrder,raceWave,gateOpen,shiftRace,RACE_ROWS,RACE_LANES,RACE_DT,RACE_COUNTDOWN,RACE_GRACE,CHAOS_EVERY,CHAOS_WARN,CHAOS_ZONES,GATE_CYCLE,GATE_OPEN} from './chaos-core.js';
@@ -11,7 +12,7 @@ export const CHALLENGES=Object.freeze({
  cipher:{title:'ساحة الشفرات',tag:'كل تلميح يقرّبك',color:'#b6a0ff',players:20},
  territory:{title:'ميدان السيطرة',tag:'خطّط. توسّع. واحمِ حدودك.',color:'#f798b6',players:20},
  survival:{title:'ساحة البقاء',tag:'اقرأ الأرض. وابقَ واقفًا.',color:'#77c9ff',players:20},
- chaos:{title:'سباق الفوضى',tag:'اركض، راوغ، وخلّ الفوضى لغيرك.',color:'#c6f25e',players:20}
+ chaos:{title:'أونو',tag:'طابق اللون. اقلب الدور. ونادِ أونو.',color:'#efbd78',players:8}
 });
 export const HEROES=['fox','cat','robot','princess','fairy','astronaut','racer','diver','viking','gladiator','cyber','samurai'];
 export function rng(seed=1){let x=seed>>>0;return()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -88,7 +89,7 @@ export function createChallenge(game,players,seed=1,now=Date.now(),options={}){
  if(game==='labyrinth'){m.board={size:7,positions:[3,45],blocks:[],walls:[10,10]};m.turn=0;m.turnDeadline=now+18000;}
  if(game==='focus')focusRound(m,now,r);
  if(game==='wordbomb')initWordHunt(m,now);
- if(game==='chaos'){m.race=createRace(m.players,m.seed,now);m.endsAt=m.race.endsAt;}
+ if(game==='chaos')initUno(m,options.unoMode,now);
  if(game==='cipher'){m.digits=10;m.secrets=Object.fromEntries(m.players.map((p,i)=>[p.id,validSecret(players[i].secret)?[...players[i].secret]:Array.from({length:4},()=>pick(r,10))]));m.nextGuess=Object.fromEntries(m.players.map(p=>[p.id,0]));}
  if(game==='territory'){const size=players.length>8?11:9,positions=spawnCells(players.length,size);m.board={size,owners:Array(size*size).fill(-1),crystals:Array.from({length:Math.floor(size*size/12)},(_,i)=>(i*17+Math.floor(size*size/2))%(size*size))};positions.forEach((c,i)=>m.board.owners[c]=i);territoryScores(m);}
 
@@ -103,7 +104,7 @@ export function applyChallenge(m,id,action,now=Date.now()){
  if(!action||typeof action!=='object'||Array.isArray(action))throw Error('حركة غير صالحة');
  const r=rng(m.seed+m.version*7919);
  if(m.game==='wordbomb')applyWordHunt(m,p,action,now);
- if(m.game==='chaos')applyRace(m,p,action,now);
+ if(m.game==='chaos'){if(m.uno)applyUno(m,p,action,now);else applyRace(m,p,action,now);}
  if(m.game==='labyrinth'){
   if(m.turn!==p.slot)throw Error('انتظر دورك');const b=m.board,s=p.slot;
   if(action.type==='step'){const to=action.to;if(!adjacent(b.positions[s],to,b.size)||b.blocks.includes(edge(b.positions[s],to))||b.positions[1-s]===to)throw Error('اختر مربعًا مجاورًا مفتوحًا');b.positions[s]=to;p.moves++;if(Math.floor(to/7)===(s===0?6:0)){p.score=100;finish(m,now,[id]);}}
@@ -157,7 +158,7 @@ export function advanceChallenge(m,now=Date.now()){
  if(m.phase!=='playing')return m;
  upgradeChallenge(m,now);
  if(m.game==='wordbomb'){advanceWordHunt(m,now);if(m.phase!=='playing')return m;}
- if(m.game==='chaos'){advanceRace(m,now);return m;}
+ if(m.game==='chaos'){if(m.uno)advanceUno(m,now);else advanceRace(m,now);return m;}
  if(now>=m.endsAt&&m.game==='cipher'&&m.players.filter(p=>p.alive).length>1){m.overtime=true;m.endsAt=now+60000;m.version++;}
  if(now>=m.endsAt){if(m.game==='cipher')finish(m,now,m.players.filter(p=>p.alive).length===1?m.players.filter(p=>p.alive).map(p=>p.id):[]);else if(m.game==='survival')finish(m,now,m.players.filter(p=>p.alive).map(p=>p.id));else if(m.game==='labyrinth'){const d=m.players.map((p,i)=>mazePath(m.board.positions[i],i===0?6:0,m.board.blocks)?.length??999);finish(m,now,d[0]===d[1]?m.players.map(p=>p.id):[m.players[d[0]<d[1]?0:1].id]);}else finish(m,now);return m;}
  const r=rng(m.seed+m.round*3571+m.version);
@@ -197,12 +198,12 @@ export function botAction(m,id,now=Date.now()){
 export function challengeView(m,id,now=Date.now()){
  const p=m.players.find(p=>p.id===id);if(!p)throw Error('forbidden');const view={digits:m.digits||6,game:m.game,phase:m.phase,phaseAt:m.phaseAt,overtime:!!m.overtime,round:m.round,version:m.version,startedAt:m.startedAt,endsAt:m.endsAt,serverNow:now,winners:m.winners,log:m.log,turn:m.turn,turnDeadline:m.turnDeadline,board:m.board?structuredClone(m.board):null,players:m.players.map(x=>({id:x.id,name:x.name,hero:x.hero,bot:x.bot,score:x.score,alive:x.alive,moves:x.moves,slot:x.slot,kills:x.kills||0,eliminatedBy:x.eliminatedBy||null,eliminatedAt:x.eliminatedAt||null,solved:!!x.solvedAt,hearts:x.hearts,words:x.words,attemptCount:x.attemptCount??x.attempts.length})),me:{id,slot:p.slot,focus:p.focus?structuredClone(p.focus):null,attempts:structuredClone(p.attempts),answered:!!m.answers?.[id],energy:Math.min(3,p.energy+Math.floor((now-p.energyAt)/1200)),energyRaw:p.energy,energyAt:p.energyAt,lastDash:p.lastDash||0,nextGuess:m.nextGuess?.[id]||0}};
  if(m.game==='wordbomb')view.hunt=wordHuntView(m,id);
- if(m.game==='chaos')view.race=structuredClone(m.race);
+ if(m.game==='chaos'){if(m.uno)view.uno=unoView(m,id);else view.race=structuredClone(m.race);}
  if(m.game==='focus'){view.answerCount=Object.keys(m.answers).length;view.task={...m.task};delete view.task.answer;if(now>=m.task.opensAt||m.phase==='finished'){delete view.task.sequence;delete view.task.flash;}view.me.answer=m.answers[id]||null;}
  if(m.game==='cipher'&&m.rules===2){view.me.secret=[...m.secrets[id]];view.me.intel=Object.fromEntries(Object.entries(p.intel).map(([id,rows])=>[id,structuredClone(rows.slice(-30))]));view.me.historyCounts={...p.historyCounts};const threat=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,name:x.name,exact:Math.max(0,...((x.intel||{})[id]||[]).map(r=>r.exact||0))})).sort((a,b)=>b.exact-a.exact)[0];view.me.pressure=threat?.exact>0?threat:null;view.revealed=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,digits:m.secrets[x.id].map((v,i)=>i<(m.overtime?4:Math.min(3,Math.floor((now-m.startedAt)/90000)))?v:null)}));}return view;
 }
 export function nextChallengeAlarm(m,now=Date.now()){
- if(m.phase!=='playing')return now+60000;const times=[m.endsAt];if(m.players.some(p=>p.bot)&&m.game!=='chaos')times.push(m.nextBotAt);if(m.game==='wordbomb')times.push(wordHuntAlarm(m));if(m.game==='chaos')times.push(now<m.race.startAt?m.race.startAt:Math.min(m.race.endsAt,now+2000));if(m.game==='focus')times.push(m.task.deadline);if(m.game==='labyrinth')times.push(m.turnDeadline);if(m.game==='survival')times.push(m.board.collapsed?m.board.recoverAt:m.board.collapseAt);return Math.max(now+10,Math.min(...times));
+ if(m.phase!=='playing')return now+60000;const times=[m.endsAt];if(m.players.some(p=>p.bot)&&m.game!=='chaos')times.push(m.nextBotAt);if(m.game==='wordbomb')times.push(wordHuntAlarm(m));if(m.game==='chaos'){if(m.uno)times.push(m.players[m.uno.turn].bot?m.uno.thinkAt:m.uno.deadline);else times.push(now<m.race.startAt?m.race.startAt:Math.min(m.race.endsAt,now+2000));}if(m.game==='focus')times.push(m.task.deadline);if(m.game==='labyrinth')times.push(m.turnDeadline);if(m.game==='survival')times.push(m.board.collapsed?m.board.recoverAt:m.board.collapseAt);return Math.max(now+10,Math.min(...times));
 }
 
 export const validSecret=(s,radix=10)=>Array.isArray(s)&&s.length===4&&s.every(x=>Number.isInteger(x)&&x>=0&&x<radix);

@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-48ac1b155003';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-1764ba29dabe';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -164,6 +164,7 @@ const ON_DEMAND = [
   "/assets/challenges/patterns.svg",
   "/assets/challenges/survival.svg",
   "/assets/challenges/territory.svg",
+  "/assets/challenges/uno-table.svg",
   "/assets/challenges/wordbomb.svg",
   "/assets/characters-v33/astronaut.json",
   "/assets/characters-v33/astronaut.png",
@@ -343,6 +344,7 @@ const ON_DEMAND = [
   "/assets/css/tables-v33.css",
   "/assets/css/tabletop-v30.css",
   "/assets/css/tahdia-premium-v25.css",
+  "/assets/css/uno-v33-7.css",
   "/assets/css/wordhunt-v33-5.css",
   "/assets/css/zahra-premium.css",
   "/assets/fonts/tajawal-arabic-400.woff2",
@@ -455,6 +457,7 @@ const ON_DEMAND = [
   "/assets/js/engines/sudoku-core.js",
   "/assets/js/engines/sudoku-engine.js",
   "/assets/js/engines/sudoku-stages.js",
+  "/assets/js/engines/uno-core.js",
   "/assets/js/engines/wordbank-ar.js",
   "/assets/js/engines/wordbomb-core.js",
   "/assets/js/firebase-online.js",
@@ -529,6 +532,7 @@ const ON_DEMAND = [
   "/assets/js/sudoku-ui.js",
   "/assets/js/tahdia-premium-v25.js",
   "/assets/js/ui-icons.js",
+  "/assets/js/uno-ui.js",
   "/assets/js/v5-ultimate-expansion.js",
   "/assets/js/wordbomb-ui.js",
   "/assets/memory-v34/memory-ocean-v34.webp",

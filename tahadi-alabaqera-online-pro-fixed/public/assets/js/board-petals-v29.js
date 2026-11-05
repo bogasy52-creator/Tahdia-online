@@ -407,7 +407,7 @@ function gradientLine(defs,id,a,b,from,to){const g=n('linearGradient',{id,gradie
 export const JACK_COLORS=Object.freeze(['#8b5cf6','#f2711c','#2f86e8','#22a565','#e0474c','#f0b429']);
 // measured on the picture (1254 px → 200 units at 0.184 a pixel): arm half-width, arm end,
 // where the diagonal starts, the lane, the yard, and how far a number sits from its hole
-const CROSS=Object.freeze({a:14.72,L:77.28,c:40.48,lane:[69.1,61.3,53.5,45.7],cup:38.4,yard:[50,35.3],yardGap:3.68,label:6.9});
+const CROSS=Object.freeze({a:14.72,L:77.28,c:40.48,lane:[69.1,61.3,53.5,45.7],cup:38.4,yard:[-37,65],yardGap:4.1,label:6.9});
 const quarterTurn=(p,q)=>{let x=p.x,y=p.y;for(let i=0;i<((q%4)+4)%4;i++)[x,y]=[-y,x];return{x,y};};
 function jackCrossLayout(arm){
   const {a,L,c}=CROSS,C=100,pts=[[-a,L],[-a,c],[-c,a],[-L,a],[-L,-a]].map(([x,y])=>({x,y}));
@@ -432,7 +432,7 @@ function jackCrossLayout(arm){
     bases:[0,1,2,3].map(s=>[[-1,-1],[1,-1],[-1,1],[1,1]].map(([i,j])=>place({x:yx+i*g,y:yy+j*g},s)))};
 }
 // each player's portrait and name, in the corner of the screen by their yard (bottom = you)
-const SEAT_SPOTS=Object.freeze([[36,65,36,77],[-66,36,-66,48],[-40,-66,-40,-54],[66,-50,66,-38]]);
+const SEAT_SPOTS=Object.freeze([[-66,64,-66,77],[-64,-66,-64,-53],[66,-64,66,-51],[64,66,64,79]]);
 // the octagon of the picture: corners cut at 54 units, flat sides at 98 from the middle
 function octagon(inset){const E=98-inset,K=54.3-inset*.414;return [[-E+K,-E],[E-K,-E],[E,-E+K],[E,E-K],[E-K,E],[-E+K,E],[-E,E-K],[-E,-E+K]].map(([x,y])=>({x:+(100+x).toFixed(2),y:+(100+y).toFixed(2)}));}
 const pathOf=pts=>'M'+pts.map(p=>p.x+' '+p.y).join('L')+'Z';
@@ -529,7 +529,7 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
     }
     root.append(n('circle',{cx:p.x,cy:+(p.y+.35).toFixed(2),r:L.hole+.45,fill:'#000',opacity:.28}),n('circle',{cx:p.x,cy:p.y,r:L.hole,fill:holeFill,stroke:look.holeRim,'stroke-width':.55,'data-track':i,class:'tbl-hole'}));
     const at=L.labels[i];
-    root.append(up(n('text',{x:at.x,y:+(at.y+1.42).toFixed(2),'text-anchor':'middle','font-size':4,'font-weight':800,'font-family':'Tajawal,Arial,sans-serif',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
+    root.append(up(n('text',{x:at.x,y:+(at.y+1.42).toFixed(2),'text-anchor':'middle','font-size':5.1,'font-weight':900,'font-family':'Tajawal,Arial,sans-serif',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
   });
   crossMiddle(root,defs,prefix,state,look,pile,colors);
   // the players: on the screen, each in the corner by their own yard; you at the bottom
@@ -620,7 +620,7 @@ export function renderPetalBoard(target,state,options={}){
   else if(game==='jackaroo')drawStar(root,defs,prefix,state,L,LOOKS[STAR_LOOK[lookKey]||'neon'],active,lookKey,{avatars:avatars||[],pile});else drawCross(root,defs,prefix,state,L,theme,active);
   const positions=new Map(),values=new Map(),motions=[],effects=[],traces=[],cellSize=L.c||12.8;
   // a marble a little bigger than its hole, never wider than the step between two holes
-  const marble=game==='jackaroo'?Math.min(L.hole*1.38,L.step*.49):0,marbleScale=+(marble/6.5).toFixed(3);
+  const marble=game==='jackaroo'?Math.min(L.hole*1.38,L.step*.49):0,marbleScale=+(marble/6.5*1.35).toFixed(3);
   const stoneLayer=n('g',{'data-layer':'stones'});
   // Stones further down the board are drawn later so they overlap correctly.
   const order=[];state.players.forEach((player,seat)=>(player.tokens||player.marbles).forEach((progress,index)=>order.push({seat,index,progress,p:petalStonePoint(state,seat,index,game)})));
@@ -631,7 +631,7 @@ export function renderPetalBoard(target,state,options={}){
     piece.classList.add('petal-stone-v29','atelier-piece-v30');if(can)piece.classList.add('legal');
     piece.append(n('circle',{r:game==='jackaroo'?+Math.max(3.6,Math.min(4.6,L.step*.62)).toFixed(2):6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
     if(can)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.42,ry:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
-    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.27).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?+Math.min(2.5,marble*.72).toFixed(2):2.5,'font-weight':700,fill:'#ffffff',stroke:'#15202b','stroke-width':.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
+    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.27).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?3.6:2.5,'font-weight':700,fill:'#ffffff',stroke:'#15202b','stroke-width':.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);
     const old=previous?.positions.get(key),oldValue=previous?.values.get(key),moved=old&&(Math.abs(old.x-p.x)>.01||Math.abs(old.y-p.y)>.01);
@@ -677,4 +677,47 @@ export function paintBoardPreview(target,before,after,{game='jackaroo',action={}
   layer.append(n('circle',{cx:last.x,cy:last.y,r:game==='jackaroo'?5:6,'data-preview-destination':true}));
   layer.append(n('text',{x:last.x,y:last.y+1.3,'text-anchor':'middle','font-size':3.6,fill:'#fff5da','paint-order':'stroke',stroke:'#142632','stroke-width':.7,transform:rot?`rotate(${-rot} ${last.x} ${last.y})`:null},String(index+1)));
  }));host.append(layer);return layer;
+}
+
+// Fit the board coordinates to the viewport, preserving round marbles and upright type.
+const viewportTransforms=new WeakMap();
+function fitMark(node,ratio,rot,x=0,y=0,upright=false){
+ if(!viewportTransforms.has(node))viewportTransforms.set(node,node.getAttribute('transform')||'');
+ const base=viewportTransforms.get(node),angle=upright?0:rot,unit=Math.min(1,ratio);
+ node.setAttribute('transform',base+' translate('+x+' '+y+') rotate('+(-angle)+') scale('+unit+' '+(unit/ratio)+') rotate('+angle+') translate('+(-x)+' '+(-y)+')');
+}
+export function fitJackarooViewport(target,width,height){
+ const svg=target.querySelector('svg');
+ if(!svg||width<1||height<1)return;
+ const ratio=Math.max(.25,Math.min(3,height/width));
+ let fit=svg.querySelector('[data-board-fit]');
+ if(!fit){
+  fit=n('g',{'data-board-fit':'true'});
+  for(const child of [...svg.children])if(child.tagName.toLowerCase()!=='defs')fit.append(child);
+  svg.append(fit);
+ }
+ fit.setAttribute('transform','scale(1 '+ratio+')');
+ svg.setAttribute('viewBox','3 '+(3*ratio)+' 194 '+(194*ratio));
+ svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+ svg.dataset.fitRatio=String(ratio);
+ const root=svg.querySelector('[data-board-root]'),rot=Number(root?.getAttribute('data-rot'))||0;
+ for(const piece of svg.querySelectorAll('[data-stone]')){
+  let shape=piece.querySelector('[data-viewport-piece]');
+  if(!shape){
+   shape=n('g',{'data-viewport-piece':'true'});
+   for(const child of [...piece.children])shape.append(child);
+   piece.append(shape);
+  }
+  fitMark(shape,ratio,rot);
+ }
+ for(const group of svg.querySelectorAll('[data-pile]'))fitMark(group,ratio,rot,100,100);
+ for(const group of svg.querySelectorAll('[data-player-tag],[data-avatar]')){
+  const circle=group.querySelector('circle');
+  fitMark(group,ratio,group.getAttribute('data-avatar')!==null?rot:0,Number(circle?.getAttribute('cx'))||100,Number(circle?.getAttribute('cy'))||100);
+ }
+ for(const node of svg.querySelectorAll('circle,ellipse,text')){
+  if(node.closest('defs,[data-stone],[data-pile],[data-player-tag],[data-avatar]'))continue;
+  const text=node.tagName.toLowerCase()==='text';
+  fitMark(node,ratio,rot,Number(node.getAttribute(text?'x':'cx'))||0,Number(node.getAttribute(text?'y':'cy'))||0,text);
+ }
 }
