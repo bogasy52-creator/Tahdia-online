@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-a7ede1230c4f';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-d87cac66035f';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -137,6 +137,7 @@ const ON_DEMAND = [
   "/assets/audio/baloot-gulf-v33/wrong.mp3",
   "/assets/audio/baloot-voice-v33.mp3",
   "/assets/brand/accuracy-cover.svg",
+  "/assets/brand/air-hockey-cover-v33-7.svg",
   "/assets/brand/app-identity-v29.json",
   "/assets/brand/baloot-cover-v32.webp",
   "/assets/brand/busraj-app-master-v29.webp",
@@ -222,6 +223,7 @@ const ON_DEMAND = [
   "/assets/css/app-cipher.css",
   "/assets/css/app-dice.css",
   "/assets/css/app-focus.css",
+  "/assets/css/app-hockey.css",
   "/assets/css/app-index.css",
   "/assets/css/app-jackaroo.css",
   "/assets/css/app-journey.css",
@@ -282,6 +284,7 @@ const ON_DEMAND = [
   "/assets/css/gameplay-v135.css",
   "/assets/css/gameplay-v34.css",
   "/assets/css/hero-effects.css",
+  "/assets/css/hockey-v33-7.css",
   "/assets/css/home-join-v33-6.css",
   "/assets/css/home-pro.css",
   "/assets/css/home-v19.css",
@@ -471,6 +474,9 @@ const ON_DEMAND = [
   "/assets/js/games/jackaroo-ui.js",
   "/assets/js/games/snakes-ui.js",
   "/assets/js/hero-effects.js",
+  "/assets/js/hockey/core.js",
+  "/assets/js/hockey/main.js",
+  "/assets/js/hockey/render.js",
   "/assets/js/home-join-v33-6.js",
   "/assets/js/home-return-v17.js",
   "/assets/js/home-v14.js",
@@ -1113,6 +1119,7 @@ const ON_DEMAND = [
   "/dice.html",
   "/favicon-32.png",
   "/focus.html",
+  "/hockey.html",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-512.png",
