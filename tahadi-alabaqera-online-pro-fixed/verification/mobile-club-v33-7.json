@@ -1,0 +1,65 @@
+{
+  "release": "33.7.0",
+  "base_commit": "43ce4cbf3fb835c3e9451fd1113891c0f0a52743",
+  "source": "https://github.com/bogasy52-creator/Tahdia-online",
+  "suite": {
+    "tests": 1332,
+    "passed": 1332,
+    "failed": 0,
+    "skipped": 0
+  },
+  "updater_tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "cloudflare_dry_run": "passed; existing bindings unchanged",
+  "offline_core": {
+    "resources": 49,
+    "bytes": 952015
+  },
+  "native": {
+    "runtime": "native Workerd, SQLite and actual WebSockets",
+    "release": "33.7.0",
+    "published": false,
+    "checks": [
+      "Hockey: private host capability, two actual players, full-room rejection, code resolution and origin checks",
+      "Hockey: forged score/seat, duplicate input and non-finite coordinates cannot override the server",
+      "Hockey: authenticated resume and SQLite delegate reload retain the seat, input sequence and round",
+      "Shared reactions: free waving works, paid waving is accepted only for its actual authenticated owner",
+      "Hockey: physics registers a real goal and verified career receipts survive reload without paying twice",
+      "Hockey: quick matchmaking pairs two players and then allocates a fresh room",
+      "Snakes strategy: two native players start the third mode and spend a server-owned two-dice ability once",
+      "focus: actual online opponents and owned/free reactions share the live room without changing action sequences",
+      "cipher: actual online opponents and owned/free reactions share the live room without changing action sequences",
+      "wordbomb: actual online opponents and owned/free reactions share the live room without changing action sequences",
+      "chaos: actual online opponents and owned/free reactions share the live room without changing action sequences"
+    ]
+  },
+  "challenge_native": {
+    "passed": true,
+    "engine": "Workerd / SQLite / WebSockets",
+    "checks": [
+      "retired game, unknown quick modes and foreign origins rejected",
+      "focus: twenty concurrent answers score once without stale version conflicts",
+      "focus: resume token and SQLite reload",
+      "focus: rematch resets the round",
+      "cipher: 20 actual sockets, arbitrary targets, 19 eliminations, one survivor, private histories",
+      "cipher: resume token and SQLite reload",
+      "cipher: rematch resets the round",
+      "wordbomb (صيد الكلمات): 20 actual sockets, first finder scores once, hidden positions, SQLite reload, atomic save rollback/retry and the round break",
+      "wordbomb: resume token and SQLite reload",
+      "wordbomb: rematch resets the round",
+      "decimal cipher: 0–9 and leading zeros, 76+ attempts, private archived history, large state reload, atomic rollback and one successful retry",
+      "focus: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+      "cipher: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+      "wordbomb: public queue, server countdown, clearly labelled fallback bot and fresh next match",
+      "party20: real room creation, 20-seat child arena, automatic entry countdown, result settlement and return to standings",
+      "wordbomb (صيد الكلمات) party20: 20 real child sockets, three rounds, one champion and automatic parent standings settlement"
+    ]
+  },
+  "visual_verification": {
+    "browser": "unavailable: managed preview failed with uv_interface_addresses system error",
+    "physical_phone": "not tested"
+  },
+  "published": false
+}

@@ -13,7 +13,7 @@
       const preferredDock=clamp(Math.round(height*.27),180,310);
       const availableBoardHeight=Math.max(1,height-topStrip-gap-preferredDock);
       const boardWidth=Math.max(1,Math.floor(Math.min(width,availableBoardHeight)));
-      const boardHeight=availableBoardHeight<width
+      const boardHeight=viewport.game==='snakes'?boardWidth:availableBoardHeight<width
         ?boardWidth
         :Math.max(boardWidth,Math.round(Math.min(availableBoardHeight,width*1.22)));
       const remaining=Math.max(1,height-topStrip-gap-boardHeight);

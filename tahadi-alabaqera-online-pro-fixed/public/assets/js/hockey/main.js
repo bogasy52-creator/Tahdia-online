@@ -1,3 +1,4 @@
+import {HockeyOnline,hockeyPerspective} from './online.js';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
 import { createGame, step, W, L, STRIKER_R, WIN_SCORE } from './core.js';
 import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js';
@@ -7,6 +8,7 @@ const KEY = 'bs_hockey_v1';
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
 const save = (patch) => { try { localStorage.setItem(KEY, JSON.stringify({ ...load(), ...patch })); } catch { /* private mode */ } };
 const prefs = Object.assign({ mode: 'ai', difficulty: 'mid', target: 5, theme: 'neon', puck: 'crystal', color: STRIKER_COLORS[2], muted: false, wins: 0, played: 0, best: 0 }, load());
+if(window.BS_AUDIO?.getSettings) prefs.muted=window.BS_AUDIO.getSettings().muted===true;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PUCK_GLOW = { crystal: '#6adcf5', gold: '#ffd35a', plasma: '#b57cff', ember: '#ff7a2e' };
 
@@ -26,7 +28,7 @@ const audio = (() => {
   const click = (dur, freq, vol) => { if (!ac) return; const t = ac.currentTime, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur + 0.02); };
   return {
     init, resume: () => ac?.resume?.(), suspend: () => ac?.suspend?.(),
-    mute(m) { prefs.muted = m; save({ muted: m }); if (master) master.gain.value = m ? 0 : 0.9; },
+    mute(m) { prefs.muted = m; save({ muted: m }); if (master) master.gain.value = m ? 0 : 0.9; window.BS_AUDIO?.setMuted?.(m); },
     hit: (p) => { click(0.07, 1400 + p * 1800, 0.25 + p * 0.3); tone(220 + p * 260, 0.09, 'triangle', 0.1 + p * 0.1, -80); },
     wall: (p) => { click(0.05, 900 + p * 700, 0.12 + p * 0.12); tone(150 + p * 100, 0.06, 'sine', 0.06); },
     goal: (mine) => { (mine ? [523, 659, 784, 1047] : [392, 330, 262, 196]).forEach((f, i) => tone(f, 0.26, mine ? 'triangle' : 'sawtooth', mine ? 0.13 : 0.09, 0, i * 0.1)); },
@@ -37,9 +39,10 @@ const audio = (() => {
 
 // ---------- menu ----------
 const THEME_IDS = Object.keys(THEMES);
-function paintSeg(id, key, parse = (v) => v) { document.querySelectorAll('#' + id + ' button').forEach((b) => { b.setAttribute('aria-checked', String(parse(b.dataset.v) === prefs[key])); b.onclick = () => { prefs[key] = parse(b.dataset.v); save({ [key]: prefs[key] }); renderMenu(); }; }); }
+function paintSeg(id, key, parse = (v) => v) { document.querySelectorAll('#' + id + ' button').forEach((b) => { b.setAttribute('aria-checked', String(parse(b.dataset.v) === prefs[key])); b.onclick = () => { if(key==='mode'&&prefs[key]!==parse(b.dataset.v)){online?.close();online=null;onlineRound=0;netTarget=null;$('hkRoom').hidden=true;} prefs[key] = parse(b.dataset.v); save({ [key]: prefs[key] }); renderMenu(); }; }); }
 function renderMenu() {
   paintSeg('mode', 'mode'); paintSeg('diff', 'difficulty'); paintSeg('target', 'target', Number);
+  $('onlineControls').hidden=prefs.mode!=='online';$('startBtn').hidden=prefs.mode==='online';
   $('diffWrap').hidden = prefs.mode !== 'ai';
   const tw = $('themes'); tw.innerHTML = '';
   for (const id of THEME_IDS) { const b = document.createElement('button'); b.className = 'th'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(prefs.theme === id)); const cv = document.createElement('canvas'); drawTablePreview(cv, id, prefs.puck, prefs.color); b.appendChild(cv); const sp = document.createElement('span'); sp.textContent = 'طاولة ' + THEMES[id].name; b.appendChild(sp); b.onclick = () => { prefs.theme = id; save({ theme: id }); renderMenu(); }; tw.appendChild(b); }
@@ -54,8 +57,9 @@ $('muteBtn').onclick = () => { audio.mute(!prefs.muted); renderMenu(); $('muteBt
 
 // ---------- the game ----------
 const canvas = $('table'), conf = $('conf'), cctx = conf.getContext('2d'), renderer = createRenderer(canvas);
+let online=null,onlineRound=0,netFrame=-1,netTarget=null;
 let g = null, running = false, paused = false, raf = 0, last = 0, count = 0, countShown = 0, over = false, shake = 0, flash = 0, flashColor = '#fff', bannerT = 0;
-let fx = [], trail = [], confetti = [], elapsed = 0;
+let fx = [], trail = [], confetti = [], elapsed = 0,roundReceipt='';
 const hands = new Map(); // pointerId → striker index
 const keys = new Set();
 const activeHand = [false, false];
@@ -72,10 +76,11 @@ let fitT = 0; const refit = () => { clearTimeout(fitT); fitT = setTimeout(() => 
 addEventListener('resize', refit); addEventListener('orientationchange', refit); screen.orientation?.addEventListener?.('change', refit);
 document.addEventListener('fullscreenchange', () => { refit(); $('fsBtn').setAttribute('aria-pressed', String(!!document.fullscreenElement)); });
 
-function names() { return prefs.mode === 'ai' ? ['أنت', 'الكمبيوتر'] : ['اللاعب 1', 'اللاعب 2']; }
-function startGame() {
-  audio.init(); audio.resume();
-  g = createGame({ mode: prefs.mode, difficulty: prefs.difficulty, target: prefs.target, seed: (Date.now() & 0xffff) + 1 });
+function names() { if(online?.state){const p=online.state.players,i=online.seat;return[p[i]?.name||'أنت',p[1-i]?.name||'الخصم'];}return prefs.mode === 'ai' ? ['أنت', 'الكمبيوتر'] : ['اللاعب 1', 'اللاعب 2']; }
+function startGame(packet=null) {
+  if(prefs.mode==='online'&&!packet?.g){if(online?.send({type:'ready'})){$('againBtn').disabled=true;$('againBtn').textContent='بانتظار جاهزية خصمك…';}return;}
+  audio.init(); audio.resume();roundReceipt='practice:hockey:'+crypto.randomUUID();$('againBtn').disabled=false;$('againBtn').textContent='العب مرة ثانية';
+  g = createGame({ mode: prefs.mode==='online'?'two':prefs.mode, difficulty: prefs.difficulty, target: prefs.target, seed: (Date.now() & 0xffff) + 1 });
   if (prefs.mode === 'two') g.bot[1] = null;
   $('menu').hidden = true; $('game').hidden = false; $('result').hidden = true; $('pause').hidden = true; $('banner').className = 'banner';
   running = true; paused = false; over = false; fx = []; trail = []; confetti = []; shake = 0; flash = 0; elapsed = 0; hands.clear(); activeHand[0] = activeHand[1] = false;
@@ -83,8 +88,9 @@ function startGame() {
   fit(); count = 3.4; countShown = 4; g.phase = 'serve'; g.phaseT = 99; // held until the 3-2-1 ends
   cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop);
   $('muteBtn2').textContent = prefs.muted ? '🔇' : '🔊';
+  window.BS_LOCAL_REACTIONS={active:!online};window.dispatchEvent(new Event('bs-reaction-refresh'));document.body.classList.add('hockey-running');$('hkExit').hidden=!online;$('pauseBtn').hidden=!!online;if(packet?.g){count=0;g=Object.assign(g,hockeyPerspective(packet.g,online.seat));$('targetTxt').textContent='إلى '+g.target;elapsed=g.time||0;}
 }
-function toMenu() { running = false; cancelAnimationFrame(raf); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); $('game').hidden = true; $('menu').hidden = false; renderMenu(); }
+function toMenu() {window.BS_LOCAL_REACTIONS={active:false};window.dispatchEvent(new Event('bs-reaction-refresh'));online?.close();online=null;onlineRound=0;netTarget=null;document.body.classList.remove('hockey-running'); running = false; cancelAnimationFrame(raf); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); $('game').hidden = true; $('menu').hidden = false; renderMenu(); }
 function updateScore() { $('scoreA').textContent = String(g.score[0]); $('scoreB').textContent = String(g.score[1]); }
 
 // ----- hands -----
@@ -108,7 +114,7 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!running || paused || over) return; const idx = hands.get(e.pointerId);
-  if (idx === undefined) { if (e.pointerType === 'mouse' && prefs.mode === 'ai' && !hands.size) { const tt = targetFor(e, 0); g.strikers[0].tx = tt.x; g.strikers[0].ty = tt.y; activeHand[0] = true; } return; }
+  if (idx === undefined) { if (e.pointerType === 'mouse' && ['ai','online'].includes(prefs.mode) && !hands.size) { const tt = targetFor(e, 0); g.strikers[0].tx = tt.x; g.strikers[0].ty = tt.y; activeHand[0] = true; } return; }
   e.preventDefault(); const tt = targetFor(e, idx); g.strikers[idx].tx = tt.x; g.strikers[idx].ty = tt.y;
 });
 const release = (e) => { const idx = hands.get(e.pointerId); if (idx !== undefined) { hands.delete(e.pointerId); activeHand[idx] = false; } };
@@ -140,10 +146,10 @@ function handleEvents() {
     if (e.type === 'hit') { audio.hit(e.power); spark(e.x, e.y, 6 + Math.round(e.power * 14), PUCK_GLOW[prefs.puck], 380 + e.power * 700); ring(e.x, e.y, '#ffffff', 60 + e.power * 80); if (!reduced) shake = Math.max(shake, e.power * 10); if (e.who === 0) buzz(10 + e.power * 20); }
     else if (e.type === 'wall') { audio.wall(e.power); spark(e.x, e.y, 3, '#ffffff', 220); }
     else if (e.type === 'goal') {
-      const mine = prefs.mode === 'ai' ? e.scorer === 0 : true; audio.goal(mine); updateScore();
+      const mine = ['ai','online'].includes(prefs.mode) ? e.scorer === 0 : true; audio.goal(mine); updateScore();
       const col = e.scorer === 0 ? prefs.color : '#d8e2ff'; flashColor = e.scorer === 0 ? prefs.color : '#ffffff'; flash = reduced ? 0 : 0.55; shake = reduced ? 0 : 18; buzz(120);
       spark(e.x, e.scorer === 0 ? 0 : L, 40, PUCK_GLOW[prefs.puck], 900); ring(e.x, e.scorer === 0 ? 0 : L, col, 220);
-      banner(prefs.mode === 'ai' ? (e.scorer === 0 ? 'هدف! 🎯' : 'هدف عليك') : 'هدف!', e.scorer === 0 ? 'win' : 'lose', 1500);
+      banner(['ai','online'].includes(prefs.mode) ? (e.scorer === 0 ? 'هدف! 🎯' : 'هدف عليك') : 'هدف!', e.scorer === 0 ? 'win' : 'lose', 1500);
       if (!reduced && (mine)) burstConfetti(60, [prefs.color, '#ffffff', '#ffd35a', PUCK_GLOW[prefs.puck]]);
     }
     else if (e.type === 'play') { /* the serve is released */ }
@@ -153,14 +159,15 @@ function handleEvents() {
 
 function showResult(winner) {
   if (over) return; over = true;
-  const ai = prefs.mode === 'ai', mine = ai ? winner === 0 : true;
+  const ai = ['ai','online'].includes(prefs.mode),draw=winner<0,mine=!draw&&(ai?winner===0:true);
+  if(online)window.BS_CAREER?.refresh?.()?.catch?.(()=>{});else window.BS_CAREER?.record?.({id:roundReceipt,game:'hockey',win:winner===0})?.catch?.(()=>{});
   prefs.played++; if (ai && winner === 0) prefs.wins++; save({ played: prefs.played, wins: prefs.wins });
-  $('resTitle').textContent = ai ? (winner === 0 ? 'فزت بالمباراة! 🏆' : 'فاز الكمبيوتر') : `فاز ${names()[winner]}! 🏆`;
-  $('resEyebrow').textContent = ai ? (winner === 0 ? 'مبروك' : 'حاول مرة ثانية') : 'نهاية المباراة';
+  $('resTitle').textContent = draw?'انتهت بالتعادل':ai ? (winner === 0 ? 'فزت بالمباراة! 🏆' : (online?'فاز خصمك':'فاز الكمبيوتر')) : `فاز ${names()[winner]}! 🏆`;
+  $('resEyebrow').textContent = draw?'مواجهة متكافئة':ai ? (winner === 0 ? 'مبروك' : 'حاول مرة ثانية') : 'نهاية المباراة';
   $('resScore').textContent = `${g.score[0]} : ${g.score[1]}`;
   $('resStats').textContent = `أطول تبادل ${g.maxRally} ضربة · المدة ${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;
-  $('resCard').classList.toggle('won', mine && winner === 0 || !ai); $('result').hidden = false;
-  if (mine) { audio.win(); if (!reduced) { burstConfetti(150, [prefs.color, '#ffffff', '#ffd35a', '#7df0c9', '#ff4fd8']); setTimeout(() => burstConfetti(90, [prefs.color, '#ffd35a', '#ffffff']), 700); } buzz(200); } else audio.lose();
+  $('resCard').classList.toggle('won', !draw&&(mine && winner === 0 || !ai)); $('result').hidden = false;
+  if (mine) { audio.win(); if (!reduced) { burstConfetti(150, [prefs.color, '#ffffff', '#ffd35a', '#7df0c9', '#ff4fd8']); setTimeout(() => burstConfetti(90, [prefs.color, '#ffd35a', '#ffffff']), 700); } buzz(200); } else if(!draw)audio.lose();
 }
 
 // ----- loop -----
@@ -173,7 +180,7 @@ function loop(now) {
       count -= dt; const n = Math.ceil(count - 0.4);
       if (n !== countShown && n >= 1) { countShown = n; banner(String(n), 'count', 900); audio.count(); }
       if (count <= 0.4 && countShown !== 0) { countShown = 0; banner('انطلق!', 'go', 800); audio.go(); g.phaseT = 0.4; }
-    } else if (!over || g.phase === 'over') { if (!over) elapsed += dt; keyboardHand(dt); step(g, dt, {}); handleEvents(); }
+    } else if(online){if(!over)elapsed=netTarget?.time||elapsed;keyboardHand(dt);if(!over)online.input(g.strikers[0].tx,g.strikers[0].ty);if(netTarget){const k=1-Math.exp(-dt*24);for(const [a,b] of [[g.puck,netTarget.puck],...g.strikers.map((st,i)=>[st,netTarget.strikers[i]])]){a.x+=(b.x-a.x)*k;a.y+=(b.y-a.y)*k;a.vx=b.vx;a.vy=b.vy;}}} else if (!over || g.phase === 'over') { if (!over) elapsed += dt; keyboardHand(dt); step(g, dt, {}); handleEvents(); }
     if (count > 0) { keyboardHand(dt); for (let i = 0; i < 2; i++) { const st = g.strikers[i]; st.x += (st.tx - st.x) * Math.min(1, dt * 14); st.y += (st.ty - st.y) * Math.min(1, dt * 14); const b = i === 0 ? { y0: L / 2 + 20, y1: L - STRIKER_R } : { y0: STRIKER_R, y1: L / 2 - 20 }; st.y = Math.max(b.y0, Math.min(b.y1, st.y)); st.x = Math.max(STRIKER_R, Math.min(W - STRIKER_R, st.x)); } }
     // trail follows a fast puck
     const sp = Math.hypot(g.puck.vx, g.puck.vy); if (sp > 500 && g.phase === 'play') trail.push({ x: g.puck.x, y: g.puck.y, a: 1 });
@@ -182,12 +189,12 @@ function loop(now) {
     shake = Math.max(0, shake - dt * 40); flash = Math.max(0, flash - dt * 1.8);
     if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').className = 'banner'; }
   }
-  renderer.draw(g, { theme: prefs.theme, puck: prefs.puck, puckColor: PUCK_GLOW[prefs.puck], strikerColors: [prefs.color, prefs.mode === 'ai' ? '#d8e2ff' : '#ff8a3d'], time: now / 1000, shake, flash, flashColor, trail, fx, activeHand });
+  renderer.draw(g, { theme: prefs.theme, puck: prefs.puck, puckColor: PUCK_GLOW[prefs.puck], strikerColors: [prefs.color, ['ai','online'].includes(prefs.mode) ? '#d8e2ff' : '#ff8a3d'], time: now / 1000, shake, flash, flashColor, trail, fx, activeHand });
   drawConfetti(dt);
 }
 
 // ----- buttons -----
-function setPaused(p) { if (!running || over) return; paused = p; $('pause').hidden = !p; if (p) audio.suspend(); else { audio.resume(); last = performance.now(); } }
+function setPaused(p) { if(online)return; if (!running || over) return; paused = p; $('pause').hidden = !p; if (p) audio.suspend(); else { audio.resume(); last = performance.now(); } }
 $('pauseBtn').onclick = () => setPaused(true); $('resumeBtn').onclick = () => setPaused(false);
 $('restartBtn').onclick = startGame; $('quitBtn').onclick = toMenu; $('startBtn').onclick = startGame; $('againBtn').onclick = startGame; $('menuBtn').onclick = toMenu;
 $('muteBtn2').onclick = () => { audio.mute(!prefs.muted); $('muteBtn2').textContent = prefs.muted ? '🔇' : '🔊'; };
@@ -197,5 +204,13 @@ $('fsBtn').onclick = async () => { try { if (document.fullscreenElement) await d
 addEventListener('blur', () => { if (running && !over && count <= 0) setPaused(true); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && running && !over && count <= 0) setPaused(true); });
 
+const networkStatus=text=>{$('hkConnection').textContent=text;if(running&&online&&text!=='متصل')banner(text,'',2000);};
+async function enterOnline(kind){try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;g.events=netTarget.events||[];handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){networkStatus(e.message);}}
+$('hkQuick').onclick=()=>enterOnline('quick');$('hkCreate').onclick=()=>enterOnline('create');$('hkJoin').onclick=()=>/^95[0-9]{4}$/.test($('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)))?enterOnline('join'):networkStatus('اكتب رمز غرفة الهوكي المكوّن من 6 أرقام');
+$('hkCopy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/hockey?room='+online.code);networkStatus('تم نسخ الرابط');}catch{networkStatus('رمز غرفتك: '+online.code);}};$('hkCancel').onclick=()=>{online?.close();online=null;$('hkRoom').hidden=true;networkStatus('');};$('hkExit').onclick=toMenu;
+window.addEventListener('pagehide',()=>online?.close());
 renderMenu();
+const invited=new URLSearchParams(location.search).get('room');if(/^95[0-9]{4}$/.test(invited||'')){prefs.mode='online';$('hkCode').value=invited;renderMenu();enterOnline('join');}
 if (location.search.includes('debug')) window.__hockey = { get g() { return g; }, start: startGame, prefs, hands, renderer, setCount(v) { count = v; } };
+
+window.addEventListener('bs-audio-change',()=>{const m=window.BS_AUDIO?.getSettings?.().muted;if(typeof m==='boolean'&&m!==prefs.muted){prefs.muted=m;save({muted:m});audio.mute(m);}});

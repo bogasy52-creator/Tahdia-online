@@ -9,7 +9,7 @@ test('store shows actual bundles, earning progress and only accessible catalogue
  const h=await store(),shelf=new Set(Career.STOREFRONT),visible=Career.STOREFRONT.filter(id=>Career.CATALOG.find(i=>i.id===id).source!=='owner').length;
  assert.equal(h.doc.querySelectorAll('.atelier-set').length,Career.BUNDLES.filter(b=>b.items.every(id=>shelf.has(id))).length);assert.equal(h.doc.querySelectorAll('.atelier-product').length,visible);
  assert.ok(!h.doc.querySelector('[data-item="title-manager"]'));assert.equal(h.doc.getElementById('collectionCount').textContent,visible+' قطعة');assert.ok(h.doc.querySelector('[data-item="character-fox"]'));assert.ok(h.doc.querySelector('[data-item="pawn-monolith"]'));
- h.doc.querySelector('[data-view="rewards"]').onclick();assert.equal(h.doc.getElementById('rewardsSection').hidden,false);assert.equal(h.doc.querySelectorAll('.atelier-objective').length,14,'12 missions and achievements + the day\'s two game missions (33.2.0)');assert.equal(h.doc.querySelectorAll('.atelier-objective.is-game-mission').length,2);
+ h.doc.querySelector('[data-view="rewards"]').onclick();assert.equal(h.doc.getElementById('rewardsSection').hidden,false);assert.equal(h.doc.querySelectorAll('.atelier-objective').length,5,'daily missions have their own view');assert.equal(h.doc.querySelectorAll('.atelier-objective.is-game-mission').length,2);
 });
 test('equipping a sculpture leaves unrelated legacy appearances and player preferences intact',async()=>{
  const h=await store(),character=h.get().equipped.character;h.storage.set('bs-piece-art','original');h.doc.querySelector('[data-item="pawn-rook"] [data-control="inspect"]').onclick();await h.doc.getElementById('previewAction').onclick();

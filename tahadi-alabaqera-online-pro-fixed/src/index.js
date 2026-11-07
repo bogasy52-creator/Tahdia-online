@@ -1,3 +1,5 @@
+import {relayGameReaction} from './social/game-reactions.js';
+import {HockeyRoom} from './hockey/hockey-room.js';
 import {ChallengeRoom,ChallengeQueue} from './challenges/challenge-room.js';
 import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
 import {PartyRoom} from './party/party-room.js';
@@ -578,6 +580,15 @@ export default {
       return env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+m[1])).fetch(new Request('https://sudoku.internal/'+m[2]+url.search,{headers}));
     }
 
+    if(url.pathname.startsWith('/api/hockey/')){
+      const limited=await rateLimit(request,env,'hockey-api',120,60000);if(limited)return limited;
+      if(url.pathname==='/api/hockey/quick'&&request.method==='POST')return env.ROOMS.get(env.ROOMS.idFromName('hockey:queue')).fetch('https://hockey.internal/queue',{method:'POST',body:'{}'});
+      if(url.pathname==='/api/hockey/rooms'&&request.method==='POST'){const b=await request.json();for(let i=0;i<8;i++){const code=roomCodeFor('hockey'),hostKey=token(),r=await env.ROOMS.get(env.ROOMS.idFromName('hockey:'+code)).fetch('https://hockey.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,target:b?.target})});if(r.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر فتح الغرفة'},503);}
+      const m=url.pathname.match(/^\/api\/hockey\/rooms\/(95\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
+      const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-name');const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);if(st){const auth=await authenticate(new Request(request.url,{headers:{authorization:'Bearer '+st}}),env);if(!auth)return json({ok:false},401);headers.set('x-bs-account',auth.username);headers.set('x-bs-name',accountRoomName(auth));}
+      return env.ROOMS.get(env.ROOMS.idFromName('hockey:'+m[1])).fetch(new Request('https://hockey.internal/'+m[2]+url.search,{headers}));
+    }
+
     if(url.pathname.startsWith('/api/picture/')){
       if(url.pathname==='/api/picture/config'&&request.method==='GET')return json({ok:true,...imageGenerationConfig(env)});
       if(!env.ROOMS)return json({ok:false,error:'محرك الغرف غير مفعّل'},503);
@@ -755,7 +766,7 @@ export default {
       if (limited) return limited;
       if (!env.BOARD_ROOMS || typeof env.BOARD_ROOMS.idFromName !== "function") return json({ ok: false, code: "BOARD_BINDING_MISSING", error: "محرك الغرف غير مربوط بالسيرفر" }, 503);
       const body = await request.json().catch(() => ({}));
-      const game = String(body.game || ""), variant = game === 'snakes' && body.variant === 'adventure' ? 'adventure' : 'classic';
+      const game = String(body.game || ""), variant = game === 'snakes' && ['adventure','strategy'].includes(body.variant) ? body.variant : 'classic';
       if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       // 33.4.0: a table size the player picked (snakes: 2, 3 or 4) has its own open table
       const seats = chosenSeats(game, body.seats);
@@ -890,6 +901,8 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async hockeyDelegate(){if(!this.hockeyRoom)this.hockeyRoom=new HockeyRoom(this.ctx,this.env);await this.hockeyRoom.ready;return this.hockeyRoom;}
+
   async partyDelegate(){if(!this.partyRoom)this.partyRoom=new PartyRoom(this.ctx,this.env);await this.partyRoom.ready;return this.partyRoom;}
 
   async challengeDelegate(){if(!this.challengeRoom)this.challengeRoom=new ChallengeRoom(this.ctx,this.env);await this.challengeRoom.ready;return this.challengeRoom;}
@@ -903,6 +916,7 @@ export class GameRoom extends DurableObject {
   async serpentDelegate(){if(!this.serpentRoom)this.serpentRoom=new SerpentRoom(this.ctx,this.env);await this.serpentRoom.ready;return this.serpentRoom;}
 
   async fetch(request) {
+    if(new URL(request.url).hostname==='hockey.internal')return (await this.hockeyDelegate()).fetch(request);
     const url = new URL(request.url);
     if(url.hostname==='party.internal')return (await this.partyDelegate()).fetch(request);
     if(url.hostname==='challenge-queue.internal'){this.challengeQueue??=new ChallengeQueue(this.ctx,this.env);return this.challengeQueue.fetch(request);}
@@ -1068,6 +1082,14 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
+    if(typeof raw==='string'&&raw.length<512&&raw.includes('emote')){let m;try{m=JSON.parse(raw);}catch{}if(m?.type==='emote'){
+      const a=ws.deserializeAttachment();let d=this;
+      if(a?.hockey)d=await this.hockeyDelegate();else if(a?.challenge)d=await this.challengeDelegate();else if(a?.party)d=await this.partyDelegate();else if(a?.serpent)d=await this.serpentDelegate();else if(a?.paths)d=await this.pathsDelegate();else if(a?.sudoku)d=await this.sudokuDelegate();else if(a?.picture)d=await this.pictureDelegate();
+      const r=d.room||d.r,rows=Array.isArray(r?.players)?r.players:Object.values(r?.players||{}),id=a?.id||a?.playerId,p=rows.find(p=>p.id===id);
+      if(p&&(!a.connection||p.connection===a.connection))await relayGameReaction(d,p,m);return;
+    }}
+
+    if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketMessage(ws, raw);
@@ -1189,6 +1211,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketClose(ws);
@@ -1210,6 +1233,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketError(ws);
     if(ws.deserializeAttachment()?.paths)return (await this.pathsDelegate()).webSocketError(ws);
@@ -1604,6 +1628,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.hockeyRoom||(await this.ctx.storage.get('hockey')))return (await this.hockeyDelegate()).alarm();
     if(this.challengeRoom||await this.ctx.storage.get('challenge'))return (await this.challengeDelegate()).alarm();
     if(this.partyRoom||await this.ctx.storage.get('partyRoom'))return (await this.partyDelegate()).alarm();
     if(this.pathsRoom||await this.ctx.storage.get('pathsRoom'))return (await this.pathsDelegate()).alarm();
@@ -1957,7 +1982,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
     if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats))); }
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','adventure']});
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','adventure','strategy']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -2168,7 +2193,7 @@ export class BoardRoom extends DurableObject {
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'قدرة النردين غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
+          const messages = { wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
           return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
         return await this.settleTable(steps);

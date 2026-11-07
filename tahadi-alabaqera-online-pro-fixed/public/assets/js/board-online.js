@@ -28,7 +28,7 @@ export class BoardOnlineClient {
       const messages={BOARD_BINDING_MISSING:'محرك الغرف غير مفعّل على السيرفر. يحتاج ربط BOARD_ROOMS مع BoardRoom.',BOARD_ENGINE_OUTDATED:'محرك الغرف على السيرفر قديم. حدّث الحزمة كاملة، الواجهة والسيرفر.',BOARD_ENGINE_UNAVAILABLE:'تعذر تشغيل محرك الغرف على السيرفر. يحتاج فحص النشر والترحيلات.',ROOM_INITIALIZATION_FAILED:'تعذر حفظ الغرفة على السيرفر. أعد المحاولة؛ إذا تكرر الخطأ افحص السيرفر.'};
       const error=new Error((messages[failure.code]||([404,405].includes(res.status)?'هذا السيرفر لا يحتوي خدمة الغرف. انشر المشروع كاملًا.':data.error||'تعذر إنشاء الغرفة'))+(failure.requestId?' · رقم الفحص '+failure.requestId:''));error.code=failure.code;error.requestId=failure.requestId;throw error;
     }
-    if(this.game==='snakes'&&variant==='adventure'&&data.variant!=='adventure')throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
+    if(this.game==='snakes'&&variant!=='classic'&&data.variant!==variant)throw new Error('المطوّر يحتاج تحديث اللعبة على هذا الخادم؛ حدّث اللعبة وحاول مجددًا');
     this.hostKey=data.hostKey;this.hostCode=data.code;return this.connect(data.code,name);
   }
   // 33.0.0: «العب الحين» — the server seats you at the open public table of this game

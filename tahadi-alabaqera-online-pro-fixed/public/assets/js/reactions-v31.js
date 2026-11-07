@@ -28,7 +28,7 @@
   function signedIn(){try{return Boolean(career()?.account?.())}catch{return false}}
   function onlineMode(){return Boolean(room?.client&&room?.state?.me);}
   function table(){const t=window.BS_TABLE;try{return t&&t.active?t:null}catch{return null}}
-  function localMode(){return !onlineMode()&&Boolean(table())&&document.body?.classList?.contains('game-running')&&table().mode!=='online';}
+  function localMode(){return !onlineMode()&&(Boolean(window.BS_LOCAL_REACTIONS?.active)||Boolean(table())&&document.body?.classList?.contains('game-running')&&table().mode!=='online');}
   function active(){return onlineMode()||localMode();}
   /* What this player may send right now. Online, paid reactions need the
      signed-in account that bought them; the server checks again. */
@@ -61,7 +61,7 @@
     fireworks:[[900,.05,.04,'square',.2,300],[700,.05,.04,'square',.55,200],[1100,.05,.04,'square',.9,350]],
     hiss:[[3200,.35,.012,'sawtooth',0,2400]]
   };
-  const SOUND_FOR={clap:'clap',flame:'whoosh',shake:'pop',pop:'pop',steam:'whoosh',plead:'chime',shine:'sparkle',tears:'tears',hush:'whoosh',frost:'chime',spin:'pop',blast:'boom',devil:'low',slither:'hiss',sparkle:'sparkle',launch:'rocket',royal:'fanfare',prism:'sparkle',phrase:'pop',
+  const SOUND_FOR={'performer-wave':'chime','performer-salute':'fanfare','performer-laugh':'pop','performer-spotlight':'sparkle','face-laugh':'pop','face-smirk':'chime','face-tongue':'pop','face-sus':'pop','face-yawn':'low','face-evil':'low',clap:'clap',flame:'whoosh',shake:'pop',pop:'pop',steam:'whoosh',plead:'chime',shine:'sparkle',tears:'tears',hush:'whoosh',frost:'chime',spin:'pop',blast:'boom',devil:'low',slither:'hiss',sparkle:'sparkle',launch:'rocket',royal:'fanfare',prism:'sparkle',phrase:'pop',
     confetti:'pop',snow:'chime',hearts:'hearts',roses:'chime',lightning:'thunder',quake:'boom',fireworks:'fireworks',rocket:'rocket',gold:'coins',crown:'fanfare',sovereign:'gong'};
   function sfx(name){if(!soundOn())return;for(const args of SOUNDS[name]||[])try{window.BS_AUDIO.tone(...args)}catch{}}
 
@@ -125,7 +125,7 @@
   }
 
   /* ---------- layer, live region, banners ---------- */
-  function layerEl(){const parent=hostOverride?.isConnected?hostOverride:document.body;if(layer&&layer.parentElement===parent)return layer;if(!layer){layer=el('div','rx-layer');layer.setAttribute('aria-hidden','true');}parent.append(layer);return layer;}
+  function layerEl(){const parent=hostOverride?.isConnected?hostOverride:document.fullscreenElement||document.body;if(layer&&layer.parentElement===parent)return layer;if(!layer){layer=el('div','rx-layer');layer.setAttribute('aria-hidden','true');}parent.append(layer);return layer;}
   /* The shop plays a reaction inside its preview dialog (a modal dialog sits
      above every other layer, so the effects move into it for a moment). */
   function preview(id,host){
@@ -166,7 +166,7 @@
   };
   function showEmote(it,name,mine,from){
     const a=area(),node=el('div','rx-emote fx-'+it.fx+' tier-'+tier(it)),glyph=el('span','rx-emote-glyph',it.glyph),label=el('b','rx-emote-name',mine?'أنت':name);
-    node.append(glyph,label);layerEl().append(node);
+    const art=window.BS_REACTION_ART?.make?.(it);node.append(art||glyph,label);layerEl().append(node);while(layerEl().querySelectorAll('.rx-emote').length>4)layerEl().querySelector('.rx-emote')?.remove();
     const tx=a.cx+rand(-a.w*.18,a.w*.18),ty=a.y+Math.min(a.h*.42,a.h-70);
     const start=chipFor(mine?null:name)||from||null;
     node.style.left=Math.round(tx)+'px';node.style.top=Math.round(ty)+'px';
@@ -261,6 +261,7 @@
     }
   };
   function showMove(it,name,mine){
+    if(it.fx?.startsWith('performer-')){showEmote(it,name,mine);return;}
     banner(it,name,mine);
     if(reduced()||!effectsOn()||!ensureCanvas())return;
     MOVE_FX[it.fx]?.(area(),it);
@@ -307,7 +308,7 @@
   }
 
   /* ---------- UI: button and sheet ---------- */
-  function host(){const board=document.getElementById('board');return board?.parentElement||null;}
+  function host(){const board=document.getElementById('board')||document.getElementById('chStage')||document.getElementById('arenaPlay')||document.getElementById('game');return board?.parentElement||null;}
   function mount(){
     if(fab?.isConnected)return true;
     const h=host();if(!h)return false;
@@ -331,13 +332,13 @@
   }
   function toggle(open){
     if(!sheet)return;sheet.hidden=!open;fab?.setAttribute('aria-expanded',String(open));
-    if(open){lockNote?.remove();lockNote=null;render();sheet.querySelector('.rx-tab.is-active')?.focus?.();}
+    if(open){const parent=document.fullscreenElement||document.body;if(sheet.parentElement!==parent)parent.append(sheet);lockNote?.remove();lockNote=null;render();sheet.querySelector('.rx-tab.is-active')?.focus?.();}
   }
   function tile(it){
     const state=access(it),b=el('button','rx-item is-'+it.type+' tier-'+tier(it)+(state.ok?'':' is-locked'));b.type='button';b.dataset.reaction=it.id;
     b.setAttribute('aria-label',(it.text||it.name)+(state.ok?'':state.why==='signin'?' — يحتاج تسجيل الدخول':' — مقفل، '+it.price+' عملة'));
     if(it.type==='phrase')b.append(el('span','rx-item-text',it.text||it.name));
-    else{b.append(el('span','rx-item-glyph',it.glyph));if(it.type==='move'||!state.ok)b.append(el('small','rx-item-name',it.name));}
+    else{const art=window.BS_REACTION_ART?.make?.(it);b.append(art||el('span','rx-item-glyph',it.glyph));if(it.type==='move'||!state.ok)b.append(el('small','rx-item-name',it.name));}
     if(!state.ok)b.append(el('i','rx-lock',state.why==='signin'?'🔑':state.why==='exclusive'?'★':it.price+' ◈'));
     else if(it.type==='move')b.append(el('i','rx-tier',TIER[tier(it)]));
     if(state.ok&&cooling(it))b.disabled=true;
@@ -362,6 +363,7 @@
   addEventListener('bs-board-room',event=>{room=event.detail||null;refresh();});
   addEventListener('bs-board-emote',event=>show(event.detail));
   addEventListener('bs-board-emote-locked',event=>{const it=item(event.detail?.emote);if(it){toggle(true);tab=it.type;render();explainLock(it,signedIn()?'buy':'signin');}});
+  addEventListener('bs-reaction-refresh',refresh);
   addEventListener('bs-career-change',()=>{if(sheet&&!sheet.hidden)render();});
   addEventListener('resize',()=>{if(canvas)size();},{passive:true});
   function watch(){

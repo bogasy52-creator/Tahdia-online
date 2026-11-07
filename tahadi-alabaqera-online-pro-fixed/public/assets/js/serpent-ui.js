@@ -421,7 +421,7 @@ async function connectRoom(code, credentials = {}, attempt) {
         );
       }
     }, 9000);
-    ws.onmessage = (event) => {
+    globalThis.BS_ROOM_FX?.bind(ws);ws.onmessage = (event) => {
       if (socket !== ws || !activeAttempt(epoch)) return;
       let message;
       try {

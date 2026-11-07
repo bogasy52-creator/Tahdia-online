@@ -52,7 +52,7 @@ async function connect(candidate,resuming=false){
  let ws;try{const url=new URL('/api/paths/rooms/'+candidate.code+'/ws',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('name',$('pathName').value||'لاعب المسارات');
  ws=new WebSocket(url,protocols);socket=ws;}catch{busy(false);message('تعذر الاتصال بالغرفة. المراحل الفردية متاحة من هنا بدون غرفة.',true);return;}
  const welcomeTimer=setTimeout(()=>{if(mine===attempt&&socket===ws)ws.close(4000,'timeout');},12000);
- ws.onmessage=event=>{if(mine!==attempt||ws!==socket)return;let m;try{m=JSON.parse(event.data);}catch{return;}
+ globalThis.BS_ROOM_FX?.bind(ws);ws.onmessage=event=>{if(mine!==attempt||ws!==socket)return;let m;try{m=JSON.parse(event.data);}catch{return;}
   if(m.type==='welcome'){clearTimeout(welcomeTimer);retries=0;pending=null;queued=null;seat={code:candidate.code,playerId:m.playerId,token:m.token};write(key(),JSON.stringify(seat));busy(false);show('pathConnection',false);message('');accept(m.state);}
   else if(m.type==='state'){show('pathConnection',false);accept(m.state);}
   else if(m.type==='error'){if(m.state){pending=null;queued=null;clearGesture();accept(m.state);}message(m.message||'تعذر تنفيذ الحركة');}

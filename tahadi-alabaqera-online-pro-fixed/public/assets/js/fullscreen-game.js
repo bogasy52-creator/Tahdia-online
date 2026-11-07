@@ -40,7 +40,7 @@
 
     const computeLayout = window.BS_ADAPTIVE_BOARD_LAYOUT?.computeAdaptiveBoardLayout;
     const layout = computeLayout
-      ? computeLayout({width, height})
+      ? computeLayout({width,height,game:body.classList.contains('game-snakes')?'snakes':null})
       : {
           mode: height >= width ? 'portrait' : 'landscape',
           boardSize: Math.min(width, height),

@@ -7,6 +7,7 @@ import {renderPetalBoard} from './board-petals-v29.js?v=33.7.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
+ ['stage','هوية كل الألعاب','✦','ألوان لقوائمك وحواف الساحات وشريط معلوماتك في جميع الألعاب.'],
  ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في السلم والثعبان والزهرة، وتصير كرات زجاجية في الجاكارو.'],
  ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في السلم والثعبان، وتكون صورتك على طاولة البلوت.'],
  ['dice','النرد','🎲','نرد ثلاثي الأبعاد يظهر في كل ألعاب النرد.'],
@@ -25,11 +26,12 @@ const CATS=[
 const TYPE_LABEL=Object.fromEntries(CATS.map(([id,label])=>[id,label]));
 const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
 const REACTION=new Set(core.REACTION_TYPES||['emote','phrase','move']);
-const SLOTS=['pawn','dice','table','jboard','board','character','deck','snake','trail','victory','title'];
+const SLOTS=['pawn','dice','table','jboard','board','character','deck','snake','trail','victory','title','stage'];
 const TABLE_MATERIAL={'table-club':'club','table-gallery':'ivory','table-nocturne':'carbon','table-botanic':'jade','table-royal':'royal','table-walnut':'walnut','table-cyber':'reactor','table-majlis':'majlis'};
 const BOARD_LOOK={'board-forest':{cell:'#18323e',alt:'#213f4a',num:'#e0edf0',frame:'#1b303e',dark:'#0c1d28',hi:'#45606c',snake:'#52f1c5',ladder:'#8fe2ef'},'board-lava':{cell:'#1d1513',alt:'#261b17',num:'#ffb27a',frame:'#24140d',dark:'#0b0604',hi:'#ff7a2e',snake:'#ff2d55',ladder:'#ff8a3d'},'board-galaxy':{cell:'#141238',alt:'#1a1745',num:'#d6ceff',frame:'#2f2868',dark:'#0c0a22',hi:'#a59cec',snake:'#ff4fa3',ladder:'#cdc4ff'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
 const DIE_ONE={'dice-obsidian':'#ebc677','dice-crystal':'#d6fff1','dice-smoke':'#ffdf9d','dice-nebula':'#ffdf9d'};
-const TRY={deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في السلم والثعبان'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح السلم والثعبان'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
+const TRY={stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في السلم والثعبان'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح السلم والثعبان'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
+let missionKind='daily';
 let heroParts=null,view='shop',filter='all',query='',sort='featured',pending=false,previewId=null,previewCleanup=()=>{},bag=[],favorites=[],accountKey='',checkout=null,observer=null,clock=null,artSequence=0;
 
 /* ---------- small helpers ---------- */
@@ -147,9 +149,10 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
  }else if(item.type==='snake'){
   const img=make('img','sx-snake-art'+(item.id==='snake-sovereign'?' is-hero':''));img.src=item.id==='snake-sovereign'?'/assets/brand/sovereign-hero.webp':'/assets/previews/'+item.id+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
  }else if(item.type==='board'){miniBoard(stage,item);
- }else if(item.type==='emote'){const g=make('span','sx-glyph fx-'+(item.fx||'pop'),item.glyph);stage.append(g);
+ }else if(item.type==='stage'){stage.style.background='radial-gradient(ellipse at top,'+item.color+'44,transparent 70%),#0d1b26';stage.append(make('span','sx-stage-symbol','✦'),make('b','sx-stage-label',item.name));
+ }else if(item.type==='emote'){const g=make('span','sx-glyph fx-'+(item.fx||'pop'),item.glyph);stage.append(window.BS_REACTION_ART?.make?.(item)||g);
  }else if(item.type==='phrase'){const b=make('div','sx-bubble tier-'+tier(item));b.append(make('span',null,item.text||item.name));stage.append(b);
- }else if(item.type==='move'){stage.dataset.fx=item.fx;const scene=make('div','sx-scene');for(let i=0;i<9;i++){const d=make('i');d.style.setProperty('--i',String(i));scene.append(d);}stage.append(scene,make('span','sx-glyph',item.glyph));
+ }else if(item.type==='move'){stage.dataset.fx=item.fx;const scene=make('div','sx-scene');for(let i=0;i<9;i++){const d=make('i');d.style.setProperty('--i',String(i));scene.append(d);}const performer=window.BS_REACTION_ART?.make?.(item);if(performer)stage.append(performer);else stage.append(scene,make('span','sx-glyph',item.glyph));
  }else if(item.type==='trail')trailArt(stage,item,live);
  else if(item.type==='victory')victoryArt(stage,item,live);
  else titleArt(stage,item);
@@ -261,15 +264,15 @@ function renderSets(p){
  }
  $('setsSection').hidden=view!=='shop'||!target.children.length;
 }
-const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'سلم وثعبان',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},chaos:{name:'سباق الفوضى',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'}};
+const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'سلم وثعبان',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},hockey:{name:'هوكي الهواء',href:'/hockey'},focus:{name:'مواجهة التركيز',href:'/focus'},chaos:{name:'أونو',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'}};
 function renderRewards(p){
  const status=core.dailyStatus(p,{now:now()}),gift=$('dailyGift');gift.replaceChildren();
  const head=make('div','sx-daily-head'),copy=make('div');copy.append(make('span','sx-eyebrow','سلسلة الحضور · اليوم '+status.streak+' من 7'),make('h3',null,status.claimed?'هدية اليوم في رصيدك.':'هدية اليوم: '+status.coins+' عملة'),make('p',null,'ادخل كل يوم لترتفع الهدية حتى 120 عملة.'));
  const claim=make('button','sx-button primary',status.claimed?'تم الاستلام':'استلم هديتك');claim.type='button';claim.disabled=pending||status.claimed;claim.onclick=()=>operate(()=>api().daily(),'أُضيفت هدية اليوم إلى رصيدك.');
  head.append(copy,claim);const days=make('ol','sx-days');status.gifts.forEach((coins,i)=>{const d=make('li','sx-day'+(i+1<status.streak||i+1===status.streak&&status.claimed?' is-done':'')+(i+1===status.streak&&!status.claimed?' is-today':''));d.append(make('small',null,'يوم '+(i+1)),make('b',null,coins));days.append(d);});
  gift.append(head,days);
- const grid=$('objectivesGrid');grid.replaceChildren();
- for(const objective of core.objectives(p,{now:now()})){
+ const grid=$('objectivesGrid');grid.replaceChildren();const tabs=document.createElement('div');tabs.className='club-mission-tabs';tabs.setAttribute('role','tablist');for(const [kind,label]of[['daily','اليوم'],['weekly','الأسبوع'],['achievement','الإنجازات']]){const b=make('button','sx-button ghost',label);b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',String(kind===missionKind));b.onclick=()=>{missionKind=kind;renderRewards(profile());};tabs.append(b);}grid.append(tabs);
+ for(const objective of core.objectives(p,{now:now()}).filter(o=>o.kind===missionKind)){
   const tile=make('article','atelier-objective sx-objective'+(objective.ready?' is-ready':'')+(objective.claimed?' is-claimed':''));tile.dataset.objective=objective.id;
   const footer=make('div','sx-objective-footer'),button=make('button','sx-button '+(objective.ready?'primary':'ghost'),objective.claimed?'مستلمة':objective.ready?'استلام':Math.min(objective.current,objective.goal)+' / '+objective.goal);button.type='button';button.disabled=pending||!objective.ready;button.onclick=()=>operate(()=>api().claim(objective.id),'استلمت مكافأة '+objective.name+'.');
   // 33.2.0: a game mission opens its game until it is done

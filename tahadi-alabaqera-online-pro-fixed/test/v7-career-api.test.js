@@ -30,7 +30,7 @@ test('the server charges the daily offer price once and equips the purchased ite
  assert.equal(bought.response.status,200);assert.equal(bought.data.career.coins,before.coins-offer.price);
  assert.ok(bought.data.career.owned.includes(offer.id));
  const type=Career.CATALOG.find(item=>item.id===offer.id).type;
- assert.equal(bought.data.career.equipped[type],offer.id);
+ if(Career.REACTION_TYPES.includes(type))assert.equal(bought.data.career.equipped[type],undefined);else assert.equal(bought.data.career.equipped[type],offer.id);
  const again=await api(env,'/api/social/career/purchase',{id:offer.id},token);
  assert.equal(again.data.career.coins,bought.data.career.coins);
 });

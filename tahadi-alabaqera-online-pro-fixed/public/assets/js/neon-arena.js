@@ -129,7 +129,7 @@ import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
   function drawSnake(r,headOnly=false){
     const state=snakes.get(r.from)||{phase:'idle',at:0},elapsed=clock-state.at,ph=state.phase,still=reduce();
     const cell=width/10,species=speciesFor(r.colorIndex||0),A=art();
-    const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!still,route:r.from,layout:'ordered'});
+    const shape=snakeGeometry(r.a,r.b,{width,height},{time:clock,seed:r.index,motion:!still,route:r.from,layout:r.layout||'ordered'});
     const raw=shape.points,n=raw.length;
     // idle slither: a small travelling wave; both ends stay on their cells
     const amp=still?0:cell*(ph==='idle'?.06:.03),speed=ph==='digesting'?700:1500;

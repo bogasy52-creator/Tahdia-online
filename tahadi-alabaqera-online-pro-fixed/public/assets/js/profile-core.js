@@ -79,6 +79,11 @@
   // The previous catalogue remains readable for existing purchases and older
   // game clients. The new storefront exposes COLLECTION only.
   const COLLECTION=Object.freeze([
+    {id:'stage-club',type:'stage',name:'هوية النادي',subtitle:'كحلي ولمسات نعناع',design:'club',price:0,color:'#78d6bf'},
+    {id:'stage-aurora',type:'stage',name:'هوية الشفق',subtitle:'بنفسجي وسماوي',design:'aurora',price:280,color:'#bda0f4'},
+    {id:'stage-oasis',type:'stage',name:'هوية الواحة',subtitle:'زمرد ونحاس',design:'oasis',price:320,color:'#7ed6ac'},
+    {id:'stage-solar',type:'stage',name:'هوية الشمس',subtitle:'أسود وذهب دافئ',design:'solar',price:380,color:'#e7bd78'},
+
     {id:'pawn-atlas',type:'pawn',name:'أطلس',subtitle:'تيتانيوم مصقول',design:'spire',price:0,color:'#a5b5bb',collection:'atelier-30'},
     // 33.0.0: your hero walks the snakes & ladders board instead of a stone
     {id:'pawn-character',type:'pawn',name:'شخصيتي',subtitle:'شخصيتك المفعّلة',design:'character',price:0,color:'#d9b45a',collection:'atelier-30'},
@@ -114,12 +119,27 @@
     {id:'victory-orbit',type:'victory',name:'احتفال المدار',subtitle:'حلقات متقاطعة',design:'orbit',price:480,color:'#8dd8c5',collection:'atelier-30'},
     {id:'title-tactician',type:'title',name:'صانع الخطط',subtitle:'توقيعك على الطاولة',design:'signature',price:180,color:'#c9b38e',collection:'atelier-30'},
     {id:'title-virtuoso',type:'title',name:'مايسترو',subtitle:'هوية المجموعات',design:'signature',price:420,color:'#e5b7a4',collection:'atelier-30'}
-  ].map(item=>Object.freeze({...item,description:item.id==='pawn-character'?'في السلم والثعبان تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'. وتلبس لوحة الزهرة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+  ].map(item=>Object.freeze({...item,description:item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في السلم والثعبان تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'. وتلبس لوحة الزهرة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
   // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
   // phrases and board-wide moves. They are owned, never equipped, and the
   // first eight keep the ids older rooms already relay (`legacy`).
   const REACTION_TYPES=Object.freeze(['emote','phrase','move']);
   const REACTIONS=Object.freeze([
+    {id:'emote-wheeze',type:'emote',name:'ميت ضحك',glyph:'🤣',fx:'face-laugh',price:180,color:'#ffd166'},
+    {id:'emote-smirk',type:'emote',name:'قلتها لك',glyph:'😏',fx:'face-smirk',price:220,color:'#ffd166'},
+    {id:'emote-troll',type:'emote',name:'طقطقة',glyph:'😜',fx:'face-tongue',price:260,color:'#f8b35a'},
+    {id:'emote-sus',type:'emote',name:'متأكد؟',glyph:'🤨',fx:'face-sus',price:180,color:'#ffc56a'},
+    {id:'emote-sleepy',type:'emote',name:'خذ وقتك',glyph:'🥱',fx:'face-yawn',price:180,color:'#ffca72'},
+    {id:'emote-evilgrin',type:'emote',name:'الخطة ماشية',glyph:'😈',fx:'face-evil',price:280,color:'#ba91ed'},
+    {id:'phrase-nice-try',type:'phrase',name:'كانت قريبة',text:'كانت قريبة… حاول مرة ثانية 😏',glyph:'😏',price:120,color:'#b7e1d2'},
+    {id:'phrase-where',type:'phrase',name:'وين رحت؟',text:'وين رحت؟ أدورك على اللوحة 👀',glyph:'👀',price:140,color:'#b7e1d2'},
+    {id:'phrase-back',type:'phrase',name:'راجع لك',text:'راجع لك… خلك جاهز 🔥',glyph:'🔥',price:140,color:'#f6bd82'},
+    {id:'phrase-wave',type:'phrase',name:'هلا والله',text:'هلا والله 👋',glyph:'👋',price:0,color:'#91dcc8'},
+    {id:'move-wave',type:'move',name:'تحية الحلبة',glyph:'👋',fx:'performer-wave',price:220,color:'#78d6bf'},
+    {id:'move-salute',type:'move',name:'سلام يا بطل',glyph:'🫡',fx:'performer-salute',price:280,color:'#91bfea'},
+    {id:'move-laugh-roll',type:'move',name:'ضحكة الفوز',glyph:'🤣',fx:'performer-laugh',price:320,color:'#ffd166'},
+    {id:'move-spotlight',type:'move',name:'تحت الأضواء',glyph:'🌟',fx:'performer-spotlight',price:380,color:'#dbbaff'},
+
     {id:'emote-clap',type:'emote',name:'برافو',glyph:'👏',fx:'clap',price:0,color:'#f4c95d',legacy:'clap'},
     {id:'emote-fire',type:'emote',name:'نار',glyph:'🔥',fx:'flame',price:0,color:'#ff7a3d',legacy:'fire'},
     {id:'emote-laugh',type:'emote',name:'ضحكتني',glyph:'😂',fx:'shake',price:0,color:'#ffd54a',legacy:'laugh'},
@@ -172,6 +192,7 @@
   // What the 31.0.0 storefront shows: every design with its own look, no
   // retired pieces and no second copy of an identical shape or material.
   const STOREFRONT=Object.freeze([
+    'stage-club','stage-aurora','stage-oasis','stage-solar',
     'pawn-classic','pawn-character','pawn-atlas','pawn-rook','pawn-lance','pawn-amethyst','pawn-orb','pawn-orbit','pawn-lotus','pawn-crown','pawn-monolith',
     'character-fox','character-cat','character-racer','character-robot','character-diver','character-princess','character-viking','character-gladiator','character-fairy','character-astronaut','character-cyber','character-samurai',
     'deck-classic','deck-four','deck-night','deck-emerald','deck-royal',
@@ -187,8 +208,11 @@
   ]);
   const isReaction=item=>Boolean(item)&&REACTION_TYPES.includes(item.type);
   const reactionOf=value=>{const id=LEGACY_REACTIONS[value]||value;return REACTIONS.find(item=>item.id===id)||null;};
-  const SLOTS=['character','pawn','dice','board','table','jboard','deck','snake','trail','victory','title'];
+  const SLOTS=['character','pawn','dice','board','table','jboard','deck','snake','trail','victory','title','stage'];
   const BUNDLES=Object.freeze([
+    {id:'club-banter',name:'جلسة طقطقة',description:'ميت ضحك، طقطقة، كانت قريبة وتحية الحلبة.',color:'#ffd166',items:['emote-wheeze','emote-troll','phrase-nice-try','move-wave']},
+    {id:'club-spotlight',name:'دخول البطل',description:'هوية الشفق، تحت الأضواء وسلام يا بطل.',color:'#bda0f4',items:['stage-aurora','move-spotlight','move-salute']},
+
     {id:'atelier-club',name:'مجموعة النادي',description:'جوز داكن، حجر الحصن، نرد العقيق وأثر الشهاب.',color:'#bb865a',collection:'atelier-30',items:['pawn-rook','dice-oxblood','table-club','trail-meteor']},
     {id:'atelier-gallery',name:'مجموعة المعرض',description:'لوحة عاجية، حجر المدار، نرد مشغول واحتفال نوفا.',color:'#d4c4a3',collection:'atelier-30',items:['pawn-orbit','dice-milled','table-gallery','victory-nova']},
     {id:'atelier-botanic',name:'مجموعة الحديقة',description:'يشم وزجاج اللوتس وتموّج الضوء وبتلات الفوز.',color:'#77b7a1',collection:'atelier-30',items:['pawn-lotus','table-botanic','trail-ripple','victory-bloom']},
@@ -215,7 +239,7 @@
     {id:'collector',kind:'achievement',name:'خزانة الكنوز',description:'امتلك 10 إضافات مدفوعة مختلفة.',metric:'collection',goal:10,coins:150},
     {id:'online-winner',kind:'achievement',name:'بطل المنافسة',description:'اربح 5 مباريات أونلاين موثّقة.',metric:'rankedWins',goal:5,coins:150}
   ].map(Object.freeze));
-  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot','focus','cipher','wordbomb','chaos'];
+  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot','focus','cipher','wordbomb','chaos','hockey'];
   // 33.2.0: a Baloot mission every day and one more game that changes daily
   const GAME_MISSIONS=Object.freeze([
     ['baloot','games',2,60,'جلسة بلوت','العب صكّتين بلوت كاملة اليوم.'],['baloot','wins',1,80,'صكّة لك','اربح صكّة بلوت اليوم.'],
@@ -224,13 +248,19 @@
     ['dice','wins',1,70,'سباق النرد','اربح جولة في تحدي النرد اليوم.'],['serpent','games',3,50,'حلبة الثعابين','العب 3 جولات في حلبة الثعابين اليوم.'],
     ['snakes','wins',1,70,'أول من يوصل','اربح جولة سلم وثعبان اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.'],
     // 33.6.0: the new games have missions too
-    ['chaos','games',2,50,'سباق الفوضى','العب سباقين في سباق الفوضى اليوم.'],['wordbomb','games',2,50,'صيد الكلمات','العب مباراتين في صيد الكلمات اليوم.'],['cipher','wins',1,70,'فك الشفرة','افُز بمباراة في ساحة الشفرات اليوم.']
+    ['chaos','games',2,50,'طاولة أونو','أكمل مباراتين أونو اليوم.'],['wordbomb','games',2,50,'صيد الكلمات','العب مباراتين في صيد الكلمات اليوم.'],['cipher','wins',1,70,'فك الشفرة','افُز بمباراة في ساحة الشفرات اليوم.']
+    ,['hockey','games',2,50,'موعد الهوكي','أكمل مواجهتي هوكي اليوم.'],['focus','games',2,50,'تركيزك يصنع الفارق','أكمل مواجهتي تركيز اليوم.']
   ].map(([game,metric,goal,coins,name,description])=>Object.freeze({id:'day-'+game+(metric==='wins'?'-win':'-play'),game,metric,goal,coins,name,description})));
   function gameMissionsFor(day){
     const n=Math.floor(Date.parse(day+'T00:00:00Z')/86400000)||0,baloot=GAME_MISSIONS.filter(m=>m.game==='baloot'),others=GAME_MISSIONS.filter(m=>m.game!=='baloot');
     return [baloot[n%baloot.length],others[n%others.length]];
   }
   const COSMETIC_STYLES=Object.freeze({
+    'stage-club':{'--club-accent':'#78d6bf','--club-surface':'#112c35'},
+    'stage-aurora':{'--club-accent':'#bda0f4','--club-surface':'#292043'},
+    'stage-oasis':{'--club-accent':'#7ed6ac','--club-surface':'#143b31'},
+    'stage-solar':{'--club-accent':'#e7bd78','--club-surface':'#382d1b'},
+
     'dice-studio':{'--die-color':'#eee8da','--die-highlight':'#fffdf4','--die-shade':'#b9aa8f','--die-pip':'#182027','--die-pip-light':'#465158','--die-edge':'#b8a484','--die-radius':'18%','--die-pip-radius':'50%'},
     'dice-smoke':{'--die-color':'#39454c','--die-highlight':'#a8b8ba','--die-shade':'#10191f','--die-pip':'#f2dfb9','--die-pip-light':'#fff9e9','--die-edge':'#94a9ae','--die-radius':'12%','--die-pip-radius':'50%'},
     'dice-oxblood':{'--die-color':'#842c39','--die-highlight':'#d98489','--die-shade':'#300f1b','--die-pip':'#fff3dc','--die-pip-light':'#fff','--die-edge':'#d29b78','--die-radius':'21%','--die-pip-radius':'50%'},
@@ -264,7 +294,7 @@
     raw=raw&&typeof raw==='object'?raw:{};
     const free=CATALOG.filter(i=>i.price===0&&!i.source).map(i=>i.id);
     const owned=[...new Set([...free,...(Array.isArray(raw.owned)?raw.owned:[])])].filter(id=>CATALOG.some(i=>i.id===id));
-    const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',jboard:'jboard-neon',deck:'deck-classic',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player'};
+    const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',jboard:'jboard-neon',deck:'deck-classic',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player',stage:'stage-club'};
     // 33.7.0: a table that used to dress the Jackaroo board brings its Jackaroo board along
     for(const [table,board] of [['table-royal','jboard-royal'],['table-majlis','jboard-majlis'],['table-cyber','jboard-carbon']])if(owned.includes(table)&&!owned.includes(board))owned.push(board);
     for(const [type,id] of Object.entries(raw.equipped||{}))if(SLOTS.includes(type)&&owned.includes(id)&&CATALOG.some(i=>i.id===id&&i.type===type))equipped[type]=id;

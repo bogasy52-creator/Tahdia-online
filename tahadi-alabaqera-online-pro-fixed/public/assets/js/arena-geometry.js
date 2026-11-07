@@ -17,9 +17,9 @@ function spline(knots,t){
 // Coordinates are real board pixels. Endpoints never drift during idle motion.
 export function snakeGeometry(a,b,{width,height},{time=0,seed=0,motion=true,route=null,layout='classic'}={}){
  const cell=width/10,side=a.x>width*.55?-1:1;
- const routeKnots=(layout==='ordered'?orderedCorridors:corridors)[route];
+ const routeKnots=layout==='compact'?null:(layout==='ordered'?orderedCorridors:corridors)[route];
  let neck={x:a.x-side*cell*.31,y:a.y+cell*.23};
- if(layout==='ordered'&&routeKnots?.length){const q={x:routeKnots[0][0]*width,y:routeKnots[0][1]*height},len=Math.hypot(q.x-a.x,q.y-a.y)||1;neck={x:a.x+(q.x-a.x)/len*cell*.38,y:a.y+(q.y-a.y)/len*cell*.38};}
+ if(layout==='compact'||layout==='ordered'&&routeKnots?.length){const q=layout==='compact'?b:{x:routeKnots[0][0]*width,y:routeKnots[0][1]*height},len=Math.hypot(q.x-a.x,q.y-a.y)||1;neck={x:a.x+(q.x-a.x)/len*cell*.38,y:a.y+(q.y-a.y)/len*cell*.38};}
  const dx=b.x-neck.x,dy=b.y-neck.y,length=Math.hypot(dx,dy)||1,nx=-dy/length,ny=dx/length;
  const amplitude=cell*clamp(length/(cell*9),.30,.66),lobes=1;
  const knots=routeKnots?[neck,...routeKnots.map(([x,y])=>({x:x*width,y:y*height})),b]:null;

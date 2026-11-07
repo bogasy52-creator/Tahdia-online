@@ -9,7 +9,7 @@
     "cipher: 20 actual sockets, arbitrary targets, 19 eliminations, one survivor, private histories",
     "cipher: resume token and SQLite reload",
     "cipher: rematch resets the round",
-    "wordbomb: 20 actual sockets, actor validation, legal word, SQLite deadline restore, hidden archive, atomic save rollback/retry and one-heart timeout",
+    "wordbomb (صيد الكلمات): 20 actual sockets, first finder scores once, hidden positions, SQLite reload, atomic save rollback/retry and the round break",
     "wordbomb: resume token and SQLite reload",
     "wordbomb: rematch resets the round",
     "decimal cipher: 0–9 and leading zeros, 76+ attempts, private archived history, large state reload, atomic rollback and one successful retry",
@@ -17,6 +17,6 @@
     "cipher: public queue, server countdown, clearly labelled fallback bot and fresh next match",
     "wordbomb: public queue, server countdown, clearly labelled fallback bot and fresh next match",
     "party20: real room creation, 20-seat child arena, automatic entry countdown, result settlement and return to standings",
-    "wordbomb party20: 20 real child sockets, authoritative hearts/elimination, one champion and automatic parent standings settlement"
+    "wordbomb (صيد الكلمات) party20: 20 real child sockets, three rounds, one champion and automatic parent standings settlement"
   ]
 }

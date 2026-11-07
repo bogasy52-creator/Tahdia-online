@@ -12,3 +12,5 @@ export function playSnakesRoll(state,roll){
  next.lastRoll=roll;next.lastEvent={player:next.turn,from,landed,to:position,jumpType,extraTurn:extra,blocked,waitingEntry,entered};next.moveCount++;
  if(!extra&&next.winner===null)next.turn=(next.turn+1)%next.players.length;return next;
 }
+
+export const TACTICS_JUMPS=Object.freeze({3:22,8:29,25:44,42:61,65:84,72:91,27:6,48:31,56:37,79:62,94:75,98:81});

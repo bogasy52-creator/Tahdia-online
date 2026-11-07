@@ -40,7 +40,7 @@ test('the challenge games pay XP and coins and have daily missions', () => {
 
 test('the shop sends a mission of a new game to its game', async () => {
   const shop = await read('public/assets/js/shop-v31.js');
-  assert.match(shop, /chaos:\{name:'سباق الفوضى',href:'\/chaos'\},wordbomb:\{name:'صيد الكلمات',href:'\/wordbomb'\},cipher:\{name:'ساحة الشفرات',href:'\/cipher'\}/);
+  assert.match(shop, /chaos:\{name:'أونو',href:'\/chaos'\},wordbomb:\{name:'صيد الكلمات',href:'\/wordbomb'\},cipher:\{name:'ساحة الشفرات',href:'\/cipher'\}/);
 });
 
 function challengeRoom(fail = 0) {

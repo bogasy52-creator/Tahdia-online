@@ -9,7 +9,7 @@ async function board(){const h=await createDOM('snakes.html');h.context.requestA
 // 33.0.0: a match starts when the room sends its first state (no local presets any more)
 async function start(h,variant='classic'){const state=variant==='adventure'?adventure.createEnhancedGame(['A','B']):snakes.createSnakesGame(['A','B']);await h.context.tables.at(-1).apply({code:'401234',status:'playing',variant,version:1,me:{id:'a',index:0},players:[{id:'a',index:0,name:'A'},{id:'b',index:1,name:'B',bot:true,level:'easy'}],state});}
 test('both rule sets (عادي and مطوّر) are the menu\'s modes and reach the board from the room',async()=>{
- const modes=Array.from((await board()).context.tables.at(-1).options.modes,m=>m.id);assert.deepEqual(modes,['classic','adventure']);
+ const modes=Array.from((await board()).context.tables.at(-1).options.modes,m=>m.id);assert.deepEqual(modes,['classic','strategy','adventure']);
  for(const [variant,enhanced]of [['classic',false],['adventure',true]]){
   const h=await board();await start(h,variant);const state=h.context.playHooks.state();assert.equal(state.players.length,2);assert.equal(state.rulesVersion===2,enhanced);assert.equal(h.doc.getElementById('setup').classList.contains('hidden'),true);assert.equal(h.doc.querySelectorAll('.snake-cell').length,100);
  }

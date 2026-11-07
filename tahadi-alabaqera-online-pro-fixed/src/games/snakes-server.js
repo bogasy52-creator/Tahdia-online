@@ -1,12 +1,13 @@
-import { createSnakesGame, playSnakesRoll } from '../../public/assets/js/engines/snakes-engine.js';
-import { createEnhancedGame, playEnhancedTurn, enhancedLanding, BONUS_CELLS } from '../../public/assets/js/engines/snakes-adventure.js';
+import { createSnakesGame, playSnakesRoll, TACTICS_JUMPS } from '../../public/assets/js/engines/snakes-engine.js';
+import { createEnhancedGame, playEnhancedTurn, enhancedLanding, BONUS_CELLS, createAdventureGame, playAdventureTurn } from '../../public/assets/js/engines/snakes-adventure.js';
 
 export function normalizeSnakesVariant(variant = 'classic') {
-  if (variant !== 'classic' && variant !== 'adventure') throw new Error('invalid_variant');
+  if (!['classic','adventure','strategy'].includes(variant)) throw new Error('invalid_variant');
   return variant;
 }
 
 export function createSnakesServerGame(names, { variant = 'classic' } = {}) {
+  if(normalizeSnakesVariant(variant)==='strategy'){const s=createAdventureGame(names);s.variant='strategy';s.rulesVersion=3;s.jumps={...TACTICS_JUMPS};return s;}
   return normalizeSnakesVariant(variant) === 'adventure' ? createEnhancedGame(names) : createSnakesGame(names);
 }
 
@@ -19,6 +20,11 @@ export function serverDiceRoll(rng = Math.random) {
 export function rollSnakesServer(state, actorSeat, rng = Math.random, { power = null } = {}) {
   if (state.winner !== null) throw new Error('match_finished');
   if (actorSeat !== state.turn) throw new Error('wrong_turn');
+  if(state.variant==='strategy'){
+    const player=state.players[actorSeat];if(power&&!['shield','double'].includes(power))throw new Error('invalid_power');if(power&&!(player[power]>0))throw new Error('power_unavailable');
+    const rolls=[serverDiceRoll(rng)];if(power==='double')rolls.push(serverDiceRoll(rng));
+    const next=playAdventureTurn(state,rolls,{power,event:null});return{state:next,event:{type:'roll',roll:rolls[0],...next.lastEvent}};
+  }
   const enhanced = state.rulesVersion === 2;
   const player = state.players[actorSeat];
   if (power && (!enhanced || power !== 'double')) throw new Error('invalid_power');

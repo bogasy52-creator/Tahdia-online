@@ -80,6 +80,7 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/login" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.login(body));
     if (url.pathname === "/validate" && request.method === "POST") return this.validateSession(body.secret);
     if (url.pathname === "/logout" && request.method === "POST") return this.logout(body.secret);
+    if(url.pathname==='/reactions'&&request.method==='GET'){const p=accountCareer(await this.ctx.storage.get('career')||{},this.profile);return json({owned:p.owned.filter(id=>Career.reactionOf(id))});}
     if (url.pathname === "/public" && request.method === "GET") return this.publicData(url.searchParams.get("card") === "1");
     if (url.pathname === "/dashboard" && request.method === "POST") return this.dashboard(body.secret);
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);

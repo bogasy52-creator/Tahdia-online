@@ -122,7 +122,7 @@
 </div>
 <script src="assets/js/party-link-v32.js?v=33.7.0-room1"></script><script src="assets/js/audio-manager.js?v=33.7.0"></script>
 <script src="assets/js/quiz-audio-v29.js?v=33.7.0"></script><script src="assets/js/quiz-visuals-v28.js?v=33.7.0"></script>
-<script type="module" src="assets/js/quiz-team-v28.js?v=33.7.0"></script>
+<script src="/assets/js/reaction-performers.js?v=33.7.0-club1"></script><script src="/assets/js/club-ui.js?v=33.7.0-club1"></script><script type="module" src="assets/js/quiz-team-v28.js?v=33.7.0"></script>
 <script src="assets/js/platform.js?v=33.7.0"></script>
 
 
@@ -271,7 +271,7 @@ async function connect(){
  setNet('','جار الاتصال');
  try{ws=new WebSocket(url,protocols)}catch{scheduleReconnect();return}
  ws.onopen=()=>{setNet('ok','متصل');reconnectDelay=800};
- ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);try{localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error'){toast(m.message||'خطأ');if(state?.current?.mode==='relay')renderCurrentAction(state.current);}};
+ globalThis.BS_ROOM_FX?.bind(ws);ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='welcome'){myId=m.playerId;store('roomToken:'+roomCode,m.token);try{localStorage.removeItem('hostKey:'+roomCode)}catch{};state=m.state;render()}else if(m.type==='state'){state=m.state;render()}else if(m.type==='error'){toast(m.message||'خطأ');if(state?.current?.mode==='relay')renderCurrentAction(state.current);}};
  ws.onclose=()=>{setNet('bad','انقطع الاتصال');if(!manualClose)scheduleReconnect()};
  ws.onerror=()=>setNet('bad','مشكلة اتصال');
 }
@@ -433,4 +433,4 @@ if(roomCode){$('#entry').classList.add('hidden');$('#room').classList.remove('hi
 })();
 </script>
 <script type="module" src="assets/js/quick-match-game.js?v=33.7.0"></script>
-<script src="assets/js/profile-core.js?v=33.7.0"></script><script src="assets/js/career-client.js?v=33.7.0"></script><script defer src="assets/js/client-health.js?v=33.7.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.7.0"></script><script src="/assets/js/character-player.js?v=33.7.0-smooth1"></script><script src="/assets/js/hero-effects.js?v=33.7.0-full1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.7.0"></script></body></html>
+<script src="assets/js/profile-core.js?v=33.7.0"></script><script src="assets/js/career-client.js?v=33.7.0"></script><script defer src="assets/js/client-health.js?v=33.7.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.7.0"></script><script src="/assets/js/character-player.js?v=33.7.0-smooth1"></script><script src="/assets/js/hero-effects.js?v=33.7.0-full1"></script><script src="/assets/js/reactions-v31.js?v=33.7.0-club1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.7.0"></script></body></html>

@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-d87cac66035f';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-882b1e4339c2';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -19,12 +19,6 @@ const APP_SHELL = [
   "/assets/js/engines/sudoku-stages.js",
   "/assets/js/engines/paths-v20.js",
   "/assets/brand/sudoku-cover.svg",
-  "/quiz.html",
-  "/picture.html",
-  "/assets/css/app-quiz.css?v=33.7.0",
-  "/assets/css/app-picture.css?v=33.7.0",
-  "/assets/js/quiz-hub.js?v=33.7.0",
-  "/assets/js/picture-ui.js?v=33.7.0",
   "/assets/js/engines/image-puzzle.js?v=33.7.0",
   "/assets/js/home-v19.js?v=33.7.0",
   "/assets/quiz-catalog.json",
@@ -54,6 +48,8 @@ const APP_SHELL = [
   "/assets/brand/reaction-cover.svg",
   "/assets/brand/logic-cover.svg",
   "/assets/brand/puzzle-cover.svg",
+  "/assets/js/club-ui.js?v=33.7.0",
+  "/assets/js/reaction-performers.js?v=33.7.0",
   "/assets/css/play-experience-v25.css?v=33.7.0",
   "/assets/fonts/tajawal-arabic-700.woff2"
 ];
@@ -298,6 +294,7 @@ const ON_DEMAND = [
   "/assets/css/luxury-game-ui.css",
   "/assets/css/memory-screen-v33-4.css",
   "/assets/css/memory-v30.css",
+  "/assets/css/mobile-club-v33-7.css",
   "/assets/css/mobile-game.css",
   "/assets/css/mobile-v21.css",
   "/assets/css/neon-arena.css",
@@ -432,6 +429,7 @@ const ON_DEMAND = [
   "/assets/js/character-gallery.js",
   "/assets/js/character-player.js",
   "/assets/js/client-health.js",
+  "/assets/js/club-ui.js",
   "/assets/js/cognitive-ui-v34.js",
   "/assets/js/commercial-upgrade-engine.js",
   "/assets/js/cosmetic-art.js",
@@ -476,6 +474,7 @@ const ON_DEMAND = [
   "/assets/js/hero-effects.js",
   "/assets/js/hockey/core.js",
   "/assets/js/hockey/main.js",
+  "/assets/js/hockey/online.js",
   "/assets/js/hockey/render.js",
   "/assets/js/home-join-v33-6.js",
   "/assets/js/home-return-v17.js",
@@ -522,6 +521,7 @@ const ON_DEMAND = [
   "/assets/js/race/render.js",
   "/assets/js/race/sim.js",
   "/assets/js/race/track.js",
+  "/assets/js/reaction-performers.js",
   "/assets/js/reactions-v31.js",
   "/assets/js/room-clock-v33-7.js",
   "/assets/js/royal-stones.js",
