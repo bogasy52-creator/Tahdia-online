@@ -20,7 +20,7 @@
 :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #board{width:100%!important;height:100%!important;inline-size:100%!important;block-size:100%!important;max-width:none!important;max-height:none!important;aspect-ratio:auto!important;margin:0!important;padding:0!important;border-radius:8px!important;grid-template-rows:repeat(10,minmax(0,1fr))!important;grid-template-columns:repeat(10,minmax(0,1fr))!important}
 :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-side{display:grid!important;grid-area:dock!important;grid-template-columns:minmax(0,1fr) minmax(135px,1fr)!important;grid-template-rows:40px 23px 58px auto auto 18px!important;grid-template-areas:'players players' 'status status' 'dice roll' 'power power' 'help help' 'log log'!important;position:relative!important;inset:auto!important;min-width:0!important;min-height:0!important;height:auto!important;max-height:none!important;width:100%!important;gap:3px 7px!important;margin:0!important;padding:3px 3px 5px!important;border:0!important;border-radius:14px!important;background:#0c202dcc!important;box-shadow:none!important;align-items:center!important}
 :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players{display:flex!important;grid-area:players!important;flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none;gap:5px!important;width:100%!important;height:40px!important;min-height:0!important;margin:0!important;padding:1px!important}
-:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row{display:flex!important;align-items:center!important;gap:5px!important;flex:1 0 94px!important;min-width:0!important;max-width:none!important;width:auto!important;height:38px!important;min-height:0!important;padding:3px 7px!important;border-radius:10px!important;background:#143140!important;border:1px solid #88a5b22c!important;box-shadow:none!important}
+:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row{display:flex!important;align-items:center!important;gap:5px!important;flex:1 0 84px!important;min-width:0!important;max-width:none!important;width:auto!important;height:38px!important;min-height:0!important;padding:3px 7px!important;border-radius:10px!important;background:#143140!important;border:1px solid #88a5b22c!important;box-shadow:none!important}
 :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row.turn{border-color:var(--pc,#87dec6)!important;background:#24434e!important}.table-room.game-snakes #players .player-row::before{display:none!important}
 :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row b{font-size:10px!important;margin:0!important}.table-room.game-snakes #players .player-progress{display:none!important}
 :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .roster-crystal{display:block!important;width:23px!important;height:32px!important;flex:none}.table-room.game-snakes #players .score{font-size:15px!important}
@@ -61,7 +61,8 @@
 @media(orientation:landscape) and (max-height:620px){
  :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game{grid-template-rows:48px minmax(0,1fr)!important;gap:2px!important}
  :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-layout{grid-template-areas:'board dock'!important;grid-template-columns:minmax(0,1fr) clamp(180px,26vw,250px)!important;grid-template-rows:minmax(0,1fr)!important;gap:7px!important;direction:ltr!important}
- :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-side{grid-template-columns:1fr!important;grid-template-areas:'players' 'status' 'dice' 'roll' 'power' 'help' 'log'!important;grid-template-rows:40px 24px 58px 52px auto auto 18px!important;height:100%!important;align-content:center!important;direction:rtl!important}
+ :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-side{grid-template-columns:1fr!important;grid-template-areas:'players' 'status' 'dice' 'roll' 'power' 'help' 'log'!important;grid-template-rows:80px 24px 58px 52px auto auto 18px!important;height:100%!important;align-content:center!important;direction:rtl!important}
+ :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,38px)!important;height:80px!important;overflow:visible!important}
  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game{grid-template-rows:48px minmax(0,1fr)!important;grid-template-columns:minmax(0,1fr) clamp(190px,27vw,250px)!important;grid-template-areas:'bar bar' 'board roster'!important;direction:ltr!important}:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game>.table-topbar{grid-area:bar!important;grid-column:1/-1!important;grid-row:1!important}
  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game>.table-roster{grid-area:roster!important;grid-column:2!important;grid-row:2!important;align-self:start!important;max-height:76px!important;height:auto!important;flex-wrap:wrap!important;z-index:3!important}
  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster :is(.player-row,.player-jack){flex-basis:42%!important}
@@ -83,3 +84,31 @@
 :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .player-jack>div>b{font-size:10px!important;line-height:1.25!important;letter-spacing:0!important}
 
 :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .player-jack .mini-note{font-size:9px!important;line-height:10px!important;margin:0!important;min-height:0!important}.table-room.game-jackaroo .table-roster .home-marbles{height:2px!important;margin:1px 0!important}
+/* Keep names readable beside the position and the player's actual stone. */
+:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row{gap:3px!important;padding:3px 5px!important}
+:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row>div{flex:1;min-width:0!important}
+:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row .score{font-size:14px!important;min-width:13px!important;flex:none!important;line-height:1.2!important}
+:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game #players .player-row .roster-crystal{width:18px!important;min-width:18px!important;height:28px!important}
+
+/* The measured region is authoritative, including small screens and rotation. */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #board{width:var(--pro-board-size,320px)!important;height:var(--pro-board-size,320px)!important;inline-size:var(--pro-board-size,320px)!important;block-size:var(--pro-board-size,320px)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-focus #game#game#game{grid-template-rows:auto 0 minmax(0,1fr)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-focus #game#game#game>.table-roster{display:none!important}
+.jack-focus-control[aria-pressed=true]{outline:1px solid #f5d18f;box-shadow:0 0 12px #e0b45644!important}
+.snakes-choice-dock{grid-area:choice;min-width:0;padding:9px;border:1px solid #eac47b66;border-radius:16px;background:linear-gradient(135deg,#234b4f,#142c3b);box-shadow:0 5px 20px #0003}
+.snakes-choice-dock[hidden],.snakes-choice-dock.hidden{display:none!important}
+.snakes-choice-dock>p{margin:0 0 7px;font:800 12px/1.5 Tajawal,system-ui;color:#ffdf9d}
+.snakes-choice-dock>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.snakes-choice-dock button{display:flex;align-items:center;gap:8px;min-height:60px;padding:7px 9px;border:1px solid #b7d6cd55;border-radius:12px;background:#102c36;color:#edf8ed;text-align:start;touch-action:manipulation;cursor:pointer}
+.snakes-choice-dock button>b{display:grid;place-items:center;width:32px;height:36px;flex:none;border-radius:8px;background:linear-gradient(130deg,#fff4ce,#e8c686);color:#1b3942;font:900 22px/1 system-ui}
+.snakes-choice-dock button>span{font:700 11px/1.5 Tajawal,system-ui}
+.snakes-choice-dock button[data-route=ladder]{border-color:#88dec7}.snakes-choice-dock button[data-route=snake]{border-color:#e6a39a}.snakes-choice-dock button[data-route=blocked]{opacity:.65}
+.snakes-choice-dock button:disabled{cursor:default;filter:saturate(.4)}.snakes-choice-dock button:focus-visible{outline:2px solid #ffe2a0;outline-offset:2px}
+:is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-side:has(.snakes-choice-dock:not(.hidden)){grid-template-areas:'players players' 'status dice' 'choice choice' 'roll roll' 'power power' 'help help' 'log log'!important;grid-template-rows:38px auto auto auto auto auto auto!important}
+@media(orientation:landscape) and (max-height:620px){
+ :is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-focus #game#game#game{grid-template-rows:48px minmax(0,1fr)!important}
+ :is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-focus #game#game#game .jk-hand-dock{padding-top:8px!important}
+ :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-side:has(.snakes-choice-dock:not(.hidden)){grid-template-areas:'players' 'status' 'choice' 'roll' 'help'!important;grid-template-rows:auto 24px auto 38px auto!important;align-content:start!important;overflow-y:auto!important}
+ :is(html,#v31) body.table-room.game-snakes.game-running #game#game#game .game-side:has(.snakes-choice-dock:not(.hidden)) .dice-hero{display:none!important}
+ .snakes-choice-dock{padding:6px}.snakes-choice-dock button{display:grid;justify-items:center;text-align:center;gap:4px;min-height:66px;padding:5px}.snakes-choice-dock>p{font-size:10px}
+}

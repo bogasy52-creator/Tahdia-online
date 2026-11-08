@@ -174,8 +174,8 @@ export function createRenderer(canvas) {
 }
 
 // Menu previews: a small table, and single pucks / strikers
-export function drawTablePreview(canvas, themeId, puck, color) {
-  const c = canvas.getContext('2d'), th = THEMES[themeId], w = canvas.width = 220, h = canvas.height = 150;
+export function drawTablePreview(canvas, themeId, puck, color, size={}) {
+  const c = canvas.getContext('2d'), th = THEMES[themeId], w = canvas.width = size.width||220, h = canvas.height = size.height||150;
   const g = c.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * 0.7); g.addColorStop(0, th.bg2); g.addColorStop(1, th.bg); c.fillStyle = g; c.fillRect(0, 0, w, h);
   const s = Math.min((h - 14) / (W + 2 * FRAME), (w - 12) / (L + 2 * FRAME)); c.setTransform(0, s, -s, 0, w / 2 + (L * s) / 2, h / 2 - (W * s) / 2); paintTable(c, th);
   const light = { x: 0.55, y: -0.8 }; drawStriker(c, W / 2 - 60, L - 200, STRIKER_R, color, light); drawStriker(c, W / 2 + 90, 190, STRIKER_R, '#d8e2ff', light); drawPuck(c, W / 2 + 10, L * 0.5 + 120, PUCK_R, puck, 0, light);

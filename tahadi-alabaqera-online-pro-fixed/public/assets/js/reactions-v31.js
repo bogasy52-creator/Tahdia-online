@@ -343,7 +343,7 @@
     const state=access(it),b=el('button','rx-item is-'+it.type+' tier-'+tier(it)+(state.ok?'':' is-locked'));b.type='button';b.dataset.reaction=it.id;
     b.setAttribute('aria-label',(it.text||it.name)+(state.ok?'':state.why==='signin'?' — يحتاج تسجيل الدخول':' — مقفل، '+it.price+' عملة'));
     if(it.type==='phrase')b.append(el('span','rx-item-text',it.text||it.name));
-    else{const art=window.BS_REACTION_ART?.make?.(it);b.append(art||el('span','rx-item-glyph',it.glyph));if(it.type==='move'||!state.ok)b.append(el('small','rx-item-name',it.name));}
+    else{const art=window.BS_REACTION_ART?.make?.(it);b.append(art||el('span','rx-item-glyph',it.glyph));b.append(el('small','rx-item-name',it.name));}
     if(!state.ok)b.append(el('i','rx-lock',state.why==='signin'?'🔑':state.why==='exclusive'?'★':it.price+' ◈'));
     else if(it.type==='move')b.append(el('i','rx-tier',TIER[tier(it)]));
     if(state.ok&&cooling(it))b.disabled=true;

@@ -1,13 +1,15 @@
+import {createChoiceGame,openChoiceTurn} from '../../public/assets/js/engines/snakes-choice.js';
 import {createPortalGame,playPortalTurn} from '../../public/assets/js/engines/snakes-portals.js';
 import { createSnakesGame, playSnakesRoll, TACTICS_JUMPS } from '../../public/assets/js/engines/snakes-engine.js';
 import { createEnhancedGame, playEnhancedTurn, enhancedLanding, BONUS_CELLS, createAdventureGame, playAdventureTurn } from '../../public/assets/js/engines/snakes-adventure.js';
 
 export function normalizeSnakesVariant(variant = 'classic') {
-  if (!['classic','adventure','strategy','portals'].includes(variant)) throw new Error('invalid_variant');
+  if (!['classic','adventure','strategy','portals','choice'].includes(variant)) throw new Error('invalid_variant');
   return variant;
 }
 
 export function createSnakesServerGame(names, { variant = 'classic' } = {}) {
+  if(normalizeSnakesVariant(variant)==='choice')return createChoiceGame(names);
   if(normalizeSnakesVariant(variant)==='portals')return createPortalGame(names);
   if(normalizeSnakesVariant(variant)==='strategy'){const s=createAdventureGame(names);s.variant='strategy';s.rulesVersion=3;s.jumps={...TACTICS_JUMPS};return s;}
   return normalizeSnakesVariant(variant) === 'adventure' ? createEnhancedGame(names) : createSnakesGame(names);
@@ -22,6 +24,12 @@ export function serverDiceRoll(rng = Math.random) {
 export function rollSnakesServer(state, actorSeat, rng = Math.random, { power = null } = {}) {
   if (state.winner !== null) throw new Error('match_finished');
   if (actorSeat !== state.turn) throw new Error('wrong_turn');
+  if(state.variant==='choice'){
+    if(power)throw Error('invalid_power');
+    if(state.pendingChoice)throw Error('choose_first');
+    const next=openChoiceTurn(state,[serverDiceRoll(rng),serverDiceRoll(rng)]);
+    return {state:next,event:{type:'choice_offer',rolls:next.pendingChoice.rolls}};
+  }
   if(state.variant==='portals'){
     if(power&&!['shield','double'].includes(power))throw Error('invalid_power');
     if(power&&!(state.players[actorSeat][power]>0))throw Error('power_unavailable');

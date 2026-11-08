@@ -884,3 +884,32 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-cinema,.rx-cinema *,.rx-actor *{animation:none!important}.rx-tomato{display:none}}
 
 .rx-cinema-tomato .actor-tomato{animation:rx-held-tomato .4s both}@keyframes rx-held-tomato{to{opacity:0}}
+
+/* One original 3D atlas is shared by the store and the live game. */
+.rx-actor.rx-studio{aspect-ratio:1!important;height:auto!important}
+.rx-actor.rx-studio .rx-studio-sprite.premium-reaction-sprite{display:block!important;position:static!important;inset:auto!important;width:100%!important;height:100%!important;aspect-ratio:1;background-image:url('/assets/reactions/studio-3d-atlas-v33-7.png')!important;background-size:300% 300%!important;background-position:var(--rx-sx) var(--rx-sy)!important;background-repeat:no-repeat!important;transform-origin:50% 82%}
+.rx-studio .rx-studio-sprite{animation:rx-studio-arrive .65s cubic-bezier(.2,.85,.25,1.15) both}
+.rx-kind-wave.rx-studio .rx-studio-sprite,.rx-kind-salute.rx-studio .rx-studio-sprite{animation:rx-studio-wave .6s ease-in-out 4 alternate}
+.rx-kind-laugh.rx-studio .rx-studio-sprite,.rx-kind-cry.rx-studio .rx-studio-sprite{animation:rx-studio-laugh .25s ease-in-out 8 alternate}
+.rx-kind-peek.rx-studio .rx-studio-sprite{animation:rx-studio-taunt .7s ease-in-out 3}
+.rx-kind-clap.rx-studio .rx-studio-sprite{animation:rx-studio-clap .35s ease-in-out 8 alternate}
+.rx-kind-slow.rx-studio .rx-studio-sprite{animation:rx-studio-nod 1.4s ease-in-out 2}
+.rx-kind-trophy.rx-studio .rx-studio-sprite{animation:rx-studio-win .8s ease-in-out 3}
+.rx-cinema>.rx-studio{aspect-ratio:1!important;width:clamp(150px,34vw,245px)!important}
+.rx-cinema:has(.rx-studio)::before{content:'';position:absolute;left:1%;bottom:13%;width:36%;aspect-ratio:1;border-radius:50%;background:radial-gradient(ellipse,#ffd78444,transparent 68%);animation:rx-studio-halo 2.8s both}
+.rx-cinema:has(.rx-studio)::after{content:'';position:absolute;left:9%;bottom:35%;width:5px;height:5px;background:#ffe7a7;border-radius:1px;box-shadow:25px -24px #ffd985,94px -65px #fff5cf,135px -12px #ffe49a,61px -110px #f3cd76,-20px -76px #ffd687;animation:rx-studio-sparks 2.2s ease-out both}
+.table-reaction-face{background-image:url('/assets/reactions/studio-3d-atlas-v33-7.png')!important;background-size:300% 300%!important;background-position:0 0!important}
+@keyframes rx-studio-arrive{from{opacity:0;transform:translateY(24px) scale(.76) rotate(-8deg)}to{opacity:1;transform:none}}
+@keyframes rx-studio-wave{to{transform:rotate(7deg) translateY(-5px)}}
+@keyframes rx-studio-laugh{to{transform:rotate(-5deg) translateY(-6px) scale(1.025)}}
+@keyframes rx-studio-taunt{50%{transform:translateX(9px) rotate(5deg)}}
+@keyframes rx-studio-clap{to{transform:scale(1.04) translateY(-4px)}}
+@keyframes rx-studio-nod{50%{transform:translateY(5px) rotate(5deg)}}
+@keyframes rx-studio-win{50%{transform:translateY(-10px) scale(1.04)}}
+@keyframes rx-studio-halo{0%{opacity:0;transform:scale(.5)}30%,70%{opacity:1}100%{opacity:0;transform:scale(1.2)}}
+@keyframes rx-studio-sparks{0%{opacity:0;transform:translateY(20px) rotate(0)}25%{opacity:1}100%{opacity:0;transform:translateY(-45px) rotate(25deg)}}
+.rx-item .rx-studio-sprite,.atelier-card .rx-studio-sprite,.sx-card .rx-studio-sprite{animation:none!important}
+.rx-cinema.is-still::before,.rx-cinema.is-still::after{animation:none!important;display:none}
+@media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
+
+.rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}

@@ -7,6 +7,7 @@
 //   after it) is kept as a step, so each table animates them in order, and one
 //   player action costs one Durable Object request however many bots answer.
 // - Each seat carries its owner's dice, stone and character from the shop.
+import {chooseChoiceTurn,bestChoice} from '../../public/assets/js/engines/snakes-choice.js';
 import { createSnakesServerGame, rollSnakesServer } from './snakes-server.js';
 import { snakesTurnDisplayMs } from '../../public/assets/js/snakes-v4-fx.js';
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from '../../public/assets/js/engines/ludo-engine.js';
@@ -112,7 +113,7 @@ export function recordStep(room, steps) {
   if (steps.list.length > MAX_STEPS) steps.list.splice(0, steps.list.length - MAX_STEPS);
 }
 export const stepsTime = (room, steps) => room.game==='snakes'
-  ? (steps?.list||[]).reduce((total,step)=>total+snakesTurnDisplayMs(step.state?.lastEvent),0)
+  ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.pendingChoice?650:snakesTurnDisplayMs(step.state?.lastEvent)),0)
   : (steps?.list?.length || 0) * (STEP_MS[room.game] || 1000);
 
 /* ---------- starting a table ---------- */
@@ -174,6 +175,10 @@ export function botTurn(room, steps, rng, roll = rollWith(rng)) {
   const seat = seatOf(room), bot = room.players[room.order[seat]], level = bot?.level || 'medium';
   const s = room.state;
   if (room.game === 'snakes') {
+    if(s.variant==='choice'){
+      if(!s.pendingChoice){playSnakes(room,seat,roll);recordStep(room,steps);}
+      room.state=chooseChoiceTurn(room.state,bestChoice(room.state));recordStep(room,steps);return true;
+    }
     const want = chooseSnakePower(s, level, rng);
     playSnakes(room, seat, roll, s.variant==='portals'?(s.players[seat].double>0&&s.players[seat].position<90&&rng()<.25?'double':null):s.variant==='strategy'?want:want === 'double' && s.rulesVersion === 2 && s.players[seat].double > 0 && s.players[seat].position > 0 ? 'double' : null);
     recordStep(room, steps);
@@ -220,6 +225,13 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
   if (seat !== seatOf(room)) throw new Error('wrong_turn');
   const steps = beginSteps(room);
   if (room.game === 'snakes') {
+    if(room.state.variant==='choice'){
+      if(msg.power)throw Error('power_unavailable');
+      if(msg.type==='roll')playSnakes(room,seat,roll);
+      else if(msg.type==='snakes_choose')room.state=chooseChoiceTurn(room.state,msg.index);
+      else throw Error('invalid_action');
+      recordStep(room,steps);if(!room.state.pendingChoice)runBots(room,steps,rng,roll);return steps;
+    }
     if (msg.type !== 'roll') throw new Error('invalid_action');
     const power = msg.power ?? null, p = room.state.players[seat];
     if(power!==null){
@@ -252,7 +264,10 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
 export function timeoutMove(room, rng, roll = rollWith(rng)) {
   if (room.status !== 'playing' || !room.state || tableOver(room)) return null;
   const seat = seatOf(room), steps = beginSteps(room), s = room.state;
-  if (room.game === 'snakes') { playSnakes(room, seat, roll, null); recordStep(room, steps); }
+  if (room.game === 'snakes') {
+    if(s.variant==='choice'){if(!s.pendingChoice){playSnakes(room,seat,roll);recordStep(room,steps);}room.state=chooseChoiceTurn(room.state,bestChoice(room.state));}
+    else playSnakes(room,seat,roll,null);recordStep(room,steps);
+  }
   else if (room.game === 'zahra') {
     const value = room.pendingRoll ?? rollZahra(room, roll);
     recordStep(room, steps);

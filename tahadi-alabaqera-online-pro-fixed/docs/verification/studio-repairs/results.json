@@ -1,0 +1,65 @@
+{
+  "release": "33.7.0",
+  "baseCommit": "13e04796076e1c45106a863757231384760ce60e",
+  "unitTests": {
+    "passed": 1356,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native": {
+    "runtime": "native Workerd, SQLite and actual WebSockets",
+    "release": "33.7.0",
+    "published": false,
+    "checks": [
+      "Hockey: private host capability, two actual players, full-room rejection, code resolution and origin checks",
+      "Hockey: forged score/seat, duplicate input and non-finite coordinates cannot override the server",
+      "Hockey: authenticated resume and SQLite delegate reload retain the seat, input sequence and round",
+      "Shared reactions: free waving works, paid waving is accepted only for its actual authenticated owner",
+      "Hockey: physics registers a real goal and verified career receipts survive reload without paying twice",
+      "Hockey: quick matchmaking pairs two players and then allocates a fresh room",
+      "Snakes strategy: two native players start the third mode and spend a server-owned two-dice ability once",
+      "Time gates: two actual WebSockets enter the new mode, three paired gates, a server-owned +3 jump and no forged dice",
+      "Choice mode: two real sockets, server-owned dice, destination choice, wrong-seat/invalid/stale/replayed actions rejected without a second move",
+      "focus: actual online opponents and owned/free reactions share the live room without changing action sequences",
+      "cipher: actual online opponents and owned/free reactions share the live room without changing action sequences",
+      "wordbomb: actual online opponents and owned/free reactions share the live room without changing action sequences",
+      "chaos: actual online opponents and owned/free reactions share the live room without changing action sequences"
+    ]
+  },
+  "canvasExports": {
+    "browserVerified": false,
+    "kind": "offline Canvas exports",
+    "measurements": [
+      {
+        "game": "hockey",
+        "width": 390,
+        "height": 844,
+        "nonDarkPixels": 240045,
+        "tableDrawn": true
+      },
+      {
+        "game": "hockey",
+        "width": 375,
+        "height": 667,
+        "nonDarkPixels": 183358,
+        "tableDrawn": true
+      },
+      {
+        "game": "hockey",
+        "width": 844,
+        "height": 390,
+        "nonDarkPixels": 172186,
+        "tableDrawn": true
+      },
+      {
+        "game": "carrom",
+        "width": 378,
+        "height": 378,
+        "tableDrawn": true
+      }
+    ]
+  },
+  "browserVerified": false,
+  "browserLimitation": "Local Chromium could not create a socket in the test environment.",
+  "published": false
+}

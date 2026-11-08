@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-7ae6827f1d0a';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-ff738363f8f3';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -464,6 +464,7 @@ const ON_DEMAND = [
   "/assets/js/engines/serpent-combat-v23.js",
   "/assets/js/engines/serpent-engine.js",
   "/assets/js/engines/snakes-adventure.js",
+  "/assets/js/engines/snakes-choice.js",
   "/assets/js/engines/snakes-engine.js",
   "/assets/js/engines/snakes-portals.js",
   "/assets/js/engines/sudoku-core.js",
@@ -927,6 +928,7 @@ const ON_DEMAND = [
   "/assets/quiz_render_v32/trophy.webp",
   "/assets/quiz_render_v32/watermelon.webp",
   "/assets/reactions/premium-club-v33-7.png",
+  "/assets/reactions/studio-3d-atlas-v33-7.png",
   "/assets/sounds-v29/manifest.json",
   "/assets/sounds-v29/pattern-01.wav",
   "/assets/sounds-v29/pattern-02.wav",

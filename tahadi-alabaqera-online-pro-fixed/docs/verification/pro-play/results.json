@@ -13,5 +13,8 @@
   "browserQA": "blocked_by_automatic_approval_review",
   "hockeyOriginalBlackScreenReproduced": false,
   "offlineRendererExports": true,
-  "source": "https://github.com/bogasy52-creator/Tahdia-online"
+  "source": "https://github.com/bogasy52-creator/Tahdia-online",
+  "baseCommit": "0d24d06577bd63b9742758e915b9c5538c97fc07",
+  "compatibilityFix": true,
+  "retainedCurrentVisualUpdates": true
 }

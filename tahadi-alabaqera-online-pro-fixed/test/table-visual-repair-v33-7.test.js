@@ -25,6 +25,11 @@ test('an already connected room uses the visible header trigger and sends one fr
  h.doc.querySelector('[data-reaction="emote-laugh"]').click();assert.deepEqual(sent,['laugh']);assert.equal(h.doc.getElementById('rxSheet').hidden,true);
  h.context.dispatchEvent({type:'bs-board-emote',detail:{emote:'laugh',from:'me',name:'A'}});
  assert.ok(h.doc.querySelector('.rx-emote .premium-reaction-sprite'));assert.match(h.doc.querySelector('.rx-emote').textContent,/أنت/);
+ // A supported fullscreen surface must contain both the picker and incoming art.
+ h.doc.fullscreenElement=h.doc.getElementById('game');h.context.BS_REACTIONS.open();
+ assert.equal(h.doc.getElementById('rxSheet').parentElement,h.doc.fullscreenElement);
+ h.context.dispatchEvent({type:'bs-board-emote',detail:{emote:'laugh',from:'other',name:'B'}});
+ assert.equal(h.doc.querySelector('.rx-layer').parentElement,h.doc.fullscreenElement);
 });
 
 test('Jackaroo renders all 52 real card faces including low pips, tens and court figures in the equipped deck',async()=>{

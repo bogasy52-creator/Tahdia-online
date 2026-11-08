@@ -8,4 +8,7 @@ for(const type of ['resize','orientationchange','busraj:game-layout','bs-reactio
 window.visualViewport?.addEventListener('resize',schedule);
 if(typeof ResizeObserver==='function'){const obs=new ResizeObserver(schedule);for(const selector of ['.jack-board-wrap','.cm-playfield','.jk-hand-dock']){const el=document.querySelector(selector);if(el)obs.observe(el);}}
 if(typeof MutationObserver==='function')new MutationObserver(schedule).observe(document.body,{attributes:true,attributeFilter:['class']});
+if(document.body.classList.contains('game-jackaroo')){
+ const bar=document.querySelector('.table-topbar');if(bar){const button=document.createElement('button');button.type='button';button.className='table-control jack-focus-control';button.setAttribute('aria-label','تكبير لوحة الجاكارو');button.setAttribute('aria-pressed','false');button.textContent='⤢';button.onclick=()=>{const active=document.body.classList.toggle('jack-board-focus');button.setAttribute('aria-pressed',String(active));button.setAttribute('aria-label',active?'إظهار تفاصيل اللاعبين':'تكبير لوحة الجاكارو');schedule();};bar.append(button);}
+}
 schedule();window.BS_BOARD_FIT=Object.freeze({fit:schedule});})();

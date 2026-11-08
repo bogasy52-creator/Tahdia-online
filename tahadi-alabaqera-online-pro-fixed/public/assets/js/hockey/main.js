@@ -1,7 +1,7 @@
-import {HockeyOnline,hockeyPerspective} from './online.js?v=33.7.0-pro1';
+import {HockeyOnline,hockeyPerspective} from './online.js?v=33.7.0-studio1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
-import { createGame, step, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.7.0-pro1';
-import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.7.0-pro1';
+import { createGame, step, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.7.0-studio1';
+import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.7.0-studio1';
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';
@@ -50,6 +50,7 @@ function renderMenu() {
   paintSeg('mode', 'mode'); paintSeg('diff', 'difficulty'); paintSeg('target', 'target', Number);
   $('onlineControls').hidden=prefs.mode!=='online';$('startBtn').hidden=prefs.mode==='online';
   $('diffWrap').hidden = prefs.mode !== 'ai';
+  if($('hkHeroCanvas'))drawTablePreview($('hkHeroCanvas'),prefs.theme,prefs.puck,prefs.color,{width:960,height:660});
   const tw = $('themes'); tw.innerHTML = '';
   for (const id of THEME_IDS) { const b = document.createElement('button'); b.className = 'th'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(prefs.theme === id)); const cv = document.createElement('canvas'); drawTablePreview(cv, id, prefs.puck, prefs.color); b.appendChild(cv); const sp = document.createElement('span'); sp.textContent = 'طاولة ' + THEMES[id].name; b.appendChild(sp); b.onclick = () => { prefs.theme = id; save({ theme: id }); renderMenu(); }; tw.appendChild(b); }
   const pw = $('pucks'); pw.innerHTML = '';
@@ -84,7 +85,10 @@ document.addEventListener('fullscreenchange', () => { refit(); $('fsBtn').setAtt
 
 function names() { if(online?.state){const p=online.state.players,i=online.seat;return[p[i]?.name||'أنت',p[1-i]?.name||'الخصم'];}return prefs.mode === 'ai' ? ['أنت', 'الكمبيوتر'] : ['اللاعب 1', 'اللاعب 2']; }
 function startGame(packet=null) {
+  // A lost renderer can restart the current online round without requesting a rematch.
+  if(!packet?.g&&!running&&online?.state?.status==='playing')packet=online.state;
   if(prefs.mode==='online'&&!packet?.g){if(online?.send({type:'ready'})){$('againBtn').disabled=true;$('againBtn').textContent='بانتظار جاهزية خصمك…';}return;}
+  const retryButton=$('hkReconnect');if(retryButton)retryButton.hidden=true;
   audio.init(); audio.resume();roundReceipt='practice:hockey:'+(crypto.randomUUID?.()||Date.now()+'-'+Math.random().toString(36).slice(2));$('againBtn').disabled=false;$('againBtn').textContent='العب مرة ثانية';
   g = createGame({ mode: prefs.mode==='online'?'two':prefs.mode, difficulty: prefs.difficulty, target: prefs.target, seed: (Date.now() & 0xffff) + 1 });
   if (prefs.mode === 'two') g.bot[1] = null;
@@ -223,11 +227,16 @@ $('fsBtn').onclick = async () => { try { if (document.fullscreenElement) await d
 addEventListener('blur', () => { if (running && !over && count <= 0) setPaused(true); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && running && !over && count <= 0) setPaused(true); });
 
-const networkStatus=text=>{$('hkConnection').textContent=text;if(running&&online&&text!=='متصل')banner(text,'',2000);};
-async function enterOnline(kind){try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;g.events=netTarget.events||[];handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){networkStatus(e.message);}}
+const networkStatus=text=>{$('hkConnection').textContent=text;const live=$('hkLiveConnection');if(live){live.hidden=!text||prefs.mode!=='online';live.textContent=text;live.dataset.connected=String(text==='متصل');}const retry=$('hkReconnect');if(retry)retry.hidden=!online?.token||!running||!text||text==='متصل'||text.includes('بانتظار');if(running&&online&&text!=='متصل'&&!text.includes('بانتظار لاعب'))banner(text,'network',2000);};
+const reconnect=document.createElement('button');reconnect.id='hkReconnect';reconnect.type='button';reconnect.hidden=true;reconnect.className='hk-reconnect';reconnect.textContent='إعادة الاتصال';reconnect.onclick=()=>online?.resume({force:true})?.catch(e=>networkStatus(e.message));$('game').append(reconnect);
+let enteringOnline=false;
+async function enterOnline(kind){if(enteringOnline)return;enteringOnline=true;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=true);try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;g.events=netTarget.events||[];handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){if(e.name!=='AbortError')networkStatus(e.message);}finally{enteringOnline=false;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=false);}}
 $('hkQuick').onclick=()=>enterOnline('quick');$('hkCreate').onclick=()=>enterOnline('create');$('hkJoin').onclick=()=>/^95[0-9]{4}$/.test($('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)))?enterOnline('join'):networkStatus('اكتب رمز غرفة الهوكي المكوّن من 6 أرقام');
+$('hkCode').addEventListener('keydown',event=>{if(event.key==='Enter')$('hkJoin').click();});
 $('hkCopy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/hockey?room='+online.code);networkStatus('تم نسخ الرابط');}catch{networkStatus('رمز غرفتك: '+online.code);}};$('hkCancel').onclick=()=>{online?.close();online=null;$('hkRoom').hidden=true;networkStatus('');};$('hkExit').onclick=toMenu;
-window.addEventListener('pagehide',()=>online?.close());
+window.addEventListener('pagehide',()=>online?.close({leave:false}));
+window.addEventListener('pageshow',()=>online?.resume?.()?.catch?.(e=>networkStatus(e.message)));
+window.addEventListener('online',()=>online?.resume?.()?.catch?.(e=>networkStatus(e.message)));
 renderMenu();
 const invited=new URLSearchParams(location.search).get('room');if(/^95[0-9]{4}$/.test(invited||'')){prefs.mode='online';$('hkCode').value=invited;renderMenu();enterOnline('join');}
 if (location.search.includes('debug')) window.__hockey = { get g() { return g; }, start: startGame, prefs, hands, renderer, setCount(v) { count = v; } };

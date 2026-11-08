@@ -581,6 +581,8 @@ export default {
     }
 
     if(url.pathname.startsWith('/api/hockey/')){
+      if(url.pathname==='/api/hockey/health'&&request.method==='GET')return json({ok:!!env.ROOMS,engine:'hockey-studio-v2',online:!!env.ROOMS},env.ROOMS?200:503);
+      if(!env.ROOMS)return json({ok:false,error:'خدمة المواجهات غير متاحة الآن',code:'HOCKEY_UNAVAILABLE'},503);
       const limited=await rateLimit(request,env,'hockey-api',120,60000);if(limited)return limited;
       if(url.pathname==='/api/hockey/quick'&&request.method==='POST')return env.ROOMS.get(env.ROOMS.idFromName('hockey:queue')).fetch('https://hockey.internal/queue',{method:'POST',body:'{}'});
       if(url.pathname==='/api/hockey/rooms'&&request.method==='POST'){const b=await request.json();for(let i=0;i<8;i++){const code=roomCodeFor('hockey'),hostKey=token(),r=await env.ROOMS.get(env.ROOMS.idFromName('hockey:'+code)).fetch('https://hockey.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,target:b?.target})});if(r.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر فتح الغرفة'},503);}
@@ -1982,7 +1984,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
     if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats))); }
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','adventure','strategy']});
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -2187,13 +2189,13 @@ export class BoardRoom extends DurableObject {
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
-      if(['roll','jackaroo_play','ludo_move','dice_roll','dice_bank'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
+      if(['roll','snakes_choose','jackaroo_play','ludo_move','dice_roll','dice_bank'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
       if (TABLE_GAMES.includes(this.room.game)) {
         let steps;
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
+          const messages = { wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
           return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
         return await this.settleTable(steps);
