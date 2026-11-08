@@ -11,7 +11,7 @@
   const TABS=[['emote','إيموجي'],['phrase','عبارات'],['move','حركات']];
   const GAP={emote:1500,phrase:1500,move:6000};
   const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
-  let room=null,tab='emote',fab=null,sheet=null,live=null,layer=null,canvas=null,ctx=null,raf=0,last=0,lastSent=0,lastMove=0,coolTimer=0,observer=null,lockNote=null,hostOverride=null,areaOverride=null,previewTimer=0;
+  let room=window.BS_BOARD_ROOM||null,tab='emote',fab=null,sheet=null,live=null,layer=null,canvas=null,ctx=null,raf=0,last=0,lastSent=0,lastMove=0,coolTimer=0,observer=null,lockNote=null,hostOverride=null,areaOverride=null,previewTimer=0;
   const particles=[];
 
   /* ---------- helpers ---------- */
@@ -113,7 +113,7 @@
 
   /* ---------- geometry ---------- */
   function area(){
-    const board=areaOverride||document.getElementById('board'),r=board?.getBoundingClientRect?.();
+    const board=areaOverride||document.getElementById('boardWrap')||document.getElementById('board')||document.getElementById('chStage'),r=board?.getBoundingClientRect?.();
     const vw=VW()||390,vh=VH()||700;
     if(r&&r.width>40&&r.bottom>60&&r.top<vh-60){const top=Math.max(0,r.top),bottom=Math.min(vh,r.bottom);return {x:r.left,y:top,w:r.width,h:bottom-top,cx:r.left+r.width/2,cy:(top+bottom)/2};}
     return {x:0,y:vh*.12,w:vw,h:vh*.7,cx:vw/2,cy:vh*.47};
@@ -173,7 +173,7 @@
     const motion=!reduced()&&effectsOn();
     if(motion&&start&&node.animate){const dx=start.left+start.width/2-tx,dy=start.top+start.height/2-ty;node.animate([{transform:`translate(-50%,-50%) translate(${dx}px,${dy}px) scale(.35)`,opacity:.4},{transform:'translate(-50%,-50%) scale(1.12)',opacity:1,offset:.7},{transform:'translate(-50%,-50%) scale(1)',opacity:1}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)'});}
     if(motion&&ensureCanvas())setTimeout(()=>EMOTE_FX[it.fx]?.(tx,ty,it.color),motion&&start?420:120);
-    setTimeout(()=>node.classList.add('out'),2200);setTimeout(()=>node.remove(),2700);
+    const hold=art?3400:2200;setTimeout(()=>node.classList.add('out'),hold);setTimeout(()=>node.remove(),hold+500);
   }
 
   /* ---------- phrases ---------- */
@@ -311,12 +311,12 @@
   function host(){const board=document.getElementById('board')||document.getElementById('chStage')||document.getElementById('arenaPlay')||document.getElementById('game');return board?.parentElement||null;}
   function mount(){
     if(fab?.isConnected)return true;
-    const h=host();if(!h)return false;
-    h.classList.add('rx-host');
-    fab=el('button','rx-fab');fab.type='button';fab.hidden=true;fab.setAttribute('aria-haspopup','dialog');fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-label','تفاعل: إيموجي وعبارات وحركات');
-    fab.append(el('i','rx-fab-ring'),el('span','rx-fab-face','😊'));
+    const external=document.querySelector('[data-reactions-open]'),h=host();if(!h&&!external)return false;
+    if(h)h.classList.add('rx-host');
+    fab=external||el('button','rx-fab');fab.type='button';fab.hidden=true;fab.setAttribute('aria-haspopup','dialog');fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-label','تفاعل: إيموجي وعبارات وحركات');
+    if(!external)fab.append(el('i','rx-fab-ring'),el('span','rx-fab-face','😊'));
     fab.addEventListener('click',()=>toggle(sheet?.hidden!==false));
-    h.append(fab);
+    if(!external)h.append(fab);
     sheet=el('section','rx-sheet');sheet.id='rxSheet';sheet.hidden=true;sheet.setAttribute('role','dialog');sheet.setAttribute('aria-label','تفاعل مع اللاعبين');
     const head=el('header','rx-sheet-head'),title=el('h2',null,'تفاعل'),close=el('button','rx-close','×');close.type='button';close.setAttribute('aria-label','إغلاق');close.addEventListener('click',()=>{toggle(false);fab?.focus?.();});
     const tabs=el('div','rx-tabs');tabs.setAttribute('role','tablist');
@@ -356,7 +356,7 @@
   }
   function refresh(){
     if(!mount())return;
-    const on=active();fab.hidden=!on;if(!on)toggle(false);
+    if(window.BS_BOARD_ROOM)room=window.BS_BOARD_ROOM;const on=active();fab.hidden=fab.getAttribute('data-reactions-open')!==null?false:!on;if(!on)toggle(false);
   }
 
   /* ---------- wiring ---------- */

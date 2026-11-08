@@ -45,7 +45,8 @@
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -62,7 +63,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/home-join-v33-6.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -92,7 +94,9 @@
     "assets/css/gameplay-v34.css",
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css",
+    "assets/css/table-viewport-v33-7.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -102,7 +106,8 @@
     "assets/css/release-v31.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "local.html": [
     "assets/css/platform.css",
@@ -120,7 +125,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/gameplay-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "memory.html": [
     "assets/css/platform.css",
@@ -136,7 +142,8 @@
     "assets/css/gameplay-v34.css",
     "assets/css/memory-screen-v33-4.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "online.html": [
     "assets/css/platform.css",
@@ -153,7 +160,8 @@
     "assets/css/game-menu-v33.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "puzzle.html": [
     "assets/css/platform.css",
@@ -166,7 +174,8 @@
     "assets/css/release-v31.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "reaction.html": [
     "assets/css/platform.css",
@@ -176,7 +185,8 @@
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "serpent.html": [
     "assets/css/platform.css",
@@ -200,7 +210,8 @@
     "assets/css/serpent-v33.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "shop.html": [
     "assets/css/platform.css",
@@ -212,7 +223,8 @@
     "assets/css/shop-v32.css",
     "assets/css/baloot-tables-v33-4.css",
     "assets/css/game-interaction-v34.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -243,7 +255,9 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css",
+    "assets/css/table-viewport-v33-7.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -256,7 +270,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/player-profile.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "v5.html": [
     "assets/css/platform.css",
@@ -268,7 +283,8 @@
     "assets/css/mobile-v21.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "zahra.html": [
     "assets/css/platform.css",
@@ -295,7 +311,8 @@
     "assets/css/gameplay-v34.css",
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
@@ -305,7 +322,8 @@
     "assets/css/release-v31.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "quiz.html": [
     "assets/css/platform.css",
@@ -326,7 +344,8 @@
     "assets/css/release-v31.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "paths-online.html": [
     "assets/css/platform.css",
@@ -334,7 +353,8 @@
     "assets/css/release-v31.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "party.html": [
     "assets/css/party-v29.css",
@@ -349,7 +369,8 @@
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "leaderboard.html": [
     "assets/css/platform.css",
@@ -370,7 +391,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "characters.html": [
     "/assets/css/character-gallery.css",
@@ -390,7 +412,8 @@
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "cipher.html": [
     "assets/css/platform.css",
@@ -400,7 +423,8 @@
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "patterns.html": [
     "assets/css/platform.css",
@@ -426,7 +450,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/reaction-challenge.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "territory.html": [
     "assets/css/platform.css",
@@ -444,7 +469,8 @@
     "assets/css/player-card-v33-7.css",
     "assets/css/uno-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "wordbomb.html": [
     "assets/css/platform.css",
@@ -455,7 +481,8 @@
     "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ],
   "race.html": [
     "assets/css/race-v33-7.css",
@@ -465,6 +492,7 @@
     "assets/css/hockey-v33-7.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
-    "assets/css/mobile-club-v33-7.css"
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css"
   ]
 }

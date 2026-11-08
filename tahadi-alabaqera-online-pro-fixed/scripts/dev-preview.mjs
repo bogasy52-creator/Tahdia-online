@@ -3,6 +3,9 @@ import {spawn} from 'node:child_process';
 // Sites-style preview runners pass Vite's --strictPort flag. Wrangler already
 // fails on an occupied port, so remove that one unsupported compatibility flag.
 const args=process.argv.slice(2).filter((arg)=>arg!=='--strictPort').map(arg=>arg==='--host'?'--ip':arg.startsWith('--host=')?arg.replace('--host=','--ip='):arg);
+// The managed runner has one preview. Set its loopback inspector port explicitly:
+// Wrangler's automatic inspector-port scan requires unavailable interface enumeration.
+if(process.env.SITES_MANAGED_LINUX_CONTAINER==='1'&&!args.some(arg=>arg==='--inspector-port'||arg.startsWith('--inspector-port=')))args.push('--inspector-port=9230');
 const child=spawn('wrangler',['dev',...args],{stdio:'inherit',shell:process.platform==='win32'});
 
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>child.kill(signal));

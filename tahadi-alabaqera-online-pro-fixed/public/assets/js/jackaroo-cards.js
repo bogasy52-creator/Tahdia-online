@@ -1,9 +1,4 @@
-/* Tahdia 33.4.0 — Jackaroo cards: every card carries a plate with a drawing of what it does:
-   out of the yard, steps forward, back, swap, split, any stone, the king's sweep. The same
-   plates make the card guide.
-   33.7.0: the cards of the picture — a deck of its own for Jackaroo: white faces, the rank in
-   the corners and one big suit in the middle (a crown, a circlet or a cap for the courts),
-   drawn here as SVG so every phone shows the same shapes. */
+/* Jackaroo uses the shared 52-card deck, including court artwork and equipped palettes. Card rules remain available in the guide and legal-action controls. */
 (function () {
   'use strict';
   const ICON = {
@@ -77,15 +72,15 @@
   const cache = new Map();
   /** The face of a card as an SVG data address ('?' or 'back' is the back). */
   function url(card) {
-    const key = String(card || 'back');
+    const code=String(card||'back'),skin=deck(),key=skin+':'+code;if(window.BS_CARDS?.url){const rank=rankOf(code),suit=code.slice(-1);return window.BS_CARDS.url(code==='?'||code==='back'?'back':(rank==='10'?'T':rank)+suit,skin);}
     if (cache.has(key)) return cache.get(key);
     let body;
-    if (key === '?' || key === 'back') {
+    if (code === '?' || code === 'back') {
       body = '<rect x="1.5" y="1.5" width="97" height="137" rx="10" fill="#14275f" stroke="#5cc0ff" stroke-width="2.4"/><rect x="9" y="9" width="82" height="122" rx="6" fill="none" stroke="#5cc0ff" stroke-opacity=".55" stroke-width="1.2"/>'
         + '<g fill="none" stroke="#8fd3ff" stroke-opacity=".28" stroke-width="1">' + Array.from({ length: 9 }, (_, i) => `<path d="M${9 + i * 10} 9L${-31 + i * 10} 131M${91 - i * 10} 9L${131 - i * 10} 131"/>`).join('') + '</g>'
         + '<circle cx="50" cy="70" r="20" fill="#14275f" stroke="#5cc0ff" stroke-width="1.6"/><path d="' + SUIT.S + '" transform="translate(37 57) scale(.26)" fill="#e9f6ff"/>';
     } else {
-      const rank = rankOf(key), suit = key.slice(-1), red = suit === 'H' || suit === 'D', ink = red ? '#d3263b' : '#1b2230', path = SUIT[suit] || SUIT.S;
+      const rank = rankOf(code), suit = code.slice(-1), red = suit === 'H' || suit === 'D', ink = red ? '#d3263b' : '#1b2230', path = SUIT[suit] || SUIT.S;
       const corner = `<text x="12" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="${rank === '10' ? 19 : 24}" letter-spacing="${rank === '10' ? -1.5 : 0}" fill="${ink}">${rank}</text><path d="${path}" transform="translate(4.5 32) scale(.15)" fill="${ink}"/>`;
       const middle = illustration(rank, ink);
       body = '<defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef1f6"/></linearGradient></defs>'

@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-882b1e4339c2';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-d07b762a776e';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -318,6 +318,7 @@ const ON_DEMAND = [
   "/assets/css/quiz-v28.css",
   "/assets/css/race-v33-7.css",
   "/assets/css/reaction-challenge.css",
+  "/assets/css/reactions-premium-v33-7.css",
   "/assets/css/reactions-v31.css",
   "/assets/css/release-v30-1.css",
   "/assets/css/release-v31.css",
@@ -341,6 +342,7 @@ const ON_DEMAND = [
   "/assets/css/sudoku-feedback-v29-1.css",
   "/assets/css/sudoku-v22.css",
   "/assets/css/sudoku.css",
+  "/assets/css/table-viewport-v33-7.css",
   "/assets/css/tables-phone-v33-3.css",
   "/assets/css/tables-v31.css",
   "/assets/css/tables-v33.css",
@@ -541,6 +543,7 @@ const ON_DEMAND = [
   "/assets/js/sudoku-grid.js",
   "/assets/js/sudoku-online.js",
   "/assets/js/sudoku-ui.js",
+  "/assets/js/table-viewport-v33-7.js",
   "/assets/js/tahdia-premium-v25.js",
   "/assets/js/ui-icons.js",
   "/assets/js/uno-ui.js",
@@ -918,6 +921,7 @@ const ON_DEMAND = [
   "/assets/quiz_render_v32/tennis.webp",
   "/assets/quiz_render_v32/trophy.webp",
   "/assets/quiz_render_v32/watermelon.webp",
+  "/assets/reactions/premium-club-v33-7.png",
   "/assets/sounds-v29/manifest.json",
   "/assets/sounds-v29/pattern-01.wav",
   "/assets/sounds-v29/pattern-02.wav",

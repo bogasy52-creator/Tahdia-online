@@ -25,7 +25,7 @@
   if(!onlineOnly){const pause=document.createElement('button');pause.className='bs-btn';pause.id='pauseMatch';pause.textContent='Ⅱ';pause.setAttribute('aria-label','إيقاف اللعب');pause.onclick=()=>{if(game.querySelector('#livebar:not(.hidden)'))return window.BS_PLATFORM.toast('المباراة أونلاين مستمرة — يمكنك فتح إعدادات الصوت');setPaused(true)};
   (toolbar?.querySelector('.toolbar-actions')||toolbar||game).appendChild(pause);}
   const players=document.getElementById('players');
-  if(players){const roster=document.createElement('div');roster.className='round-roster';roster.appendChild(players);const live=game.querySelector('#livebar');if(live)live.after(roster);else toolbar.after(roster)}
+  if(players&&!document.body.classList.contains('table-room')){const roster=document.createElement('div');roster.className='round-roster';roster.appendChild(players);const live=game.querySelector('#livebar');if(live)live.after(roster);else toolbar.after(roster)}
  }
  function confetti(){
   if(reduce())return;

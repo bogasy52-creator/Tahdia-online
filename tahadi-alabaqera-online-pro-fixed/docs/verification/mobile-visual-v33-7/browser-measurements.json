@@ -1,0 +1,498 @@
+{
+  "release": "33.7.0",
+  "base": "92f84b752656a55542bbcadc59a02158e72d465c",
+  "environment": "Chrome; real local Worker and game in a resized iframe. No physical phone tested.",
+  "fullscreenApi": "Browser declined the fullscreen request; viewport-filling layout is verified separately.",
+  "cases": [
+    {
+      "game": "snakes",
+      "frame": "390,844",
+      "board": {
+        "bottom": 676,
+        "height": 622,
+        "left": 4,
+        "right": 384,
+        "top": 54,
+        "width": 380,
+        "x": 4,
+        "y": 54
+      },
+      "reactions": {
+        "bottom": 45,
+        "height": 40,
+        "left": 49,
+        "right": 125,
+        "top": 5,
+        "width": 76,
+        "x": 49,
+        "y": 5
+      },
+      "roll": {
+        "bottom": 804,
+        "height": 52,
+        "left": 7,
+        "right": 190.5,
+        "top": 752,
+        "width": 183.5,
+        "x": 7,
+        "y": 752
+      },
+      "status": {
+        "bottom": 749,
+        "height": 23,
+        "left": 7,
+        "right": 381,
+        "top": 726,
+        "width": 374,
+        "x": 7,
+        "y": 726
+      },
+      "viewport": {
+        "h": 842,
+        "scrollWidth": 388,
+        "w": 388
+      }
+    },
+    {
+      "game": "snakes",
+      "frame": "375,667",
+      "board": {
+        "bottom": 499,
+        "height": 445,
+        "left": 4,
+        "right": 369,
+        "top": 54,
+        "width": 365,
+        "x": 4,
+        "y": 54
+      },
+      "reactions": {
+        "bottom": 45,
+        "height": 40,
+        "left": 49,
+        "right": 125,
+        "top": 5,
+        "width": 76,
+        "x": 49,
+        "y": 5
+      },
+      "roll": {
+        "bottom": 627,
+        "height": 52,
+        "left": 7,
+        "right": 183,
+        "top": 575,
+        "width": 176,
+        "x": 7,
+        "y": 575
+      },
+      "status": {
+        "bottom": 572,
+        "height": 23,
+        "left": 7,
+        "right": 366,
+        "top": 549,
+        "width": 359,
+        "x": 7,
+        "y": 549
+      },
+      "viewport": {
+        "h": 665,
+        "scrollWidth": 373,
+        "w": 373
+      }
+    },
+    {
+      "game": "snakes",
+      "frame": "430,932",
+      "board": {
+        "bottom": 764,
+        "height": 710,
+        "left": 4,
+        "right": 424,
+        "top": 54,
+        "width": 420,
+        "x": 4,
+        "y": 54
+      },
+      "reactions": {
+        "bottom": 45,
+        "height": 40,
+        "left": 49,
+        "right": 125,
+        "top": 5,
+        "width": 76,
+        "x": 49,
+        "y": 5
+      },
+      "roll": {
+        "bottom": 892,
+        "height": 52,
+        "left": 7,
+        "right": 210.5,
+        "top": 840,
+        "width": 203.5,
+        "x": 7,
+        "y": 840
+      },
+      "status": {
+        "bottom": 837,
+        "height": 23,
+        "left": 7,
+        "right": 421,
+        "top": 814,
+        "width": 414,
+        "x": 7,
+        "y": 814
+      },
+      "viewport": {
+        "h": 930,
+        "scrollWidth": 428,
+        "w": 428
+      }
+    },
+    {
+      "game": "snakes",
+      "frame": "844,390",
+      "board": {
+        "bottom": 388,
+        "height": 338,
+        "left": 4,
+        "right": 612.09375,
+        "top": 50,
+        "width": 608.09375,
+        "x": 4,
+        "y": 50
+      },
+      "reactions": {
+        "bottom": 45,
+        "height": 40,
+        "left": 49,
+        "right": 125,
+        "top": 5,
+        "width": 76,
+        "x": 49,
+        "y": 5
+      },
+      "roll": {
+        "bottom": 296,
+        "height": 52,
+        "left": 622.09375,
+        "right": 835,
+        "top": 244,
+        "width": 212.90625,
+        "x": 622.09375,
+        "y": 244
+      },
+      "status": {
+        "bottom": 179.5,
+        "height": 23,
+        "left": 622.09375,
+        "right": 835,
+        "top": 156.5,
+        "width": 212.90625,
+        "x": 622.09375,
+        "y": 156.5
+      },
+      "viewport": {
+        "h": 388,
+        "scrollWidth": 842,
+        "w": 842
+      }
+    },
+    {
+      "game": "jackaroo",
+      "frame": "390,844",
+      "board": {
+        "bottom": 549.734375,
+        "height": 380,
+        "left": 4,
+        "right": 384,
+        "top": 169.734375,
+        "width": 380,
+        "x": 4,
+        "y": 169.734375
+      },
+      "cards": [
+        {
+          "bottom": 749.984375,
+          "height": 90.421875,
+          "left": 90.90625,
+          "right": 155.5,
+          "top": 659.5625,
+          "width": 64.59375,
+          "x": 90.90625,
+          "y": 659.5625
+        },
+        {
+          "bottom": 749.984375,
+          "height": 90.421875,
+          "left": 161.703125,
+          "right": 226.296875,
+          "top": 659.5625,
+          "width": 64.59375,
+          "x": 161.703125,
+          "y": 659.5625
+        },
+        {
+          "bottom": 749.984375,
+          "height": 90.421875,
+          "left": 232.5,
+          "right": 297.09375,
+          "top": 659.5625,
+          "width": 64.59375,
+          "x": 232.5,
+          "y": 659.5625
+        }
+      ],
+      "hand": {
+        "bottom": 752,
+        "height": 98.4375,
+        "left": 13,
+        "right": 375,
+        "top": 653.5625,
+        "width": 362,
+        "x": 13,
+        "y": 653.5625
+      },
+      "status": {
+        "bottom": 836,
+        "height": 32,
+        "left": 13,
+        "right": 375,
+        "top": 804,
+        "width": 362,
+        "x": 13,
+        "y": 804
+      },
+      "viewport": {
+        "h": 842,
+        "scrollWidth": 388,
+        "w": 388
+      }
+    },
+    {
+      "game": "jackaroo",
+      "frame": "375,667",
+      "board": {
+        "bottom": 444.171875,
+        "height": 341.671875,
+        "left": 15.671875,
+        "right": 357.34375,
+        "top": 102.5,
+        "width": 341.671875,
+        "x": 15.671875,
+        "y": 102.5
+      },
+      "cards": [
+        {
+          "bottom": 572.984375,
+          "height": 86.21875,
+          "left": 88.15625,
+          "right": 149.75,
+          "top": 486.765625,
+          "width": 61.59375,
+          "x": 88.15625,
+          "y": 486.765625
+        },
+        {
+          "bottom": 572.984375,
+          "height": 86.21875,
+          "left": 155.703125,
+          "right": 217.296875,
+          "top": 486.765625,
+          "width": 61.59375,
+          "x": 155.703125,
+          "y": 486.765625
+        },
+        {
+          "bottom": 572.984375,
+          "height": 86.21875,
+          "left": 223.25,
+          "right": 284.84375,
+          "top": 486.765625,
+          "width": 61.59375,
+          "x": 223.25,
+          "y": 486.765625
+        }
+      ],
+      "hand": {
+        "bottom": 575,
+        "height": 94.234375,
+        "left": 13,
+        "right": 360,
+        "top": 480.765625,
+        "width": 347,
+        "x": 13,
+        "y": 480.765625
+      },
+      "status": {
+        "bottom": 659,
+        "height": 32,
+        "left": 13,
+        "right": 360,
+        "top": 627,
+        "width": 347,
+        "x": 13,
+        "y": 627
+      },
+      "viewport": {
+        "h": 665,
+        "scrollWidth": 373,
+        "w": 373
+      }
+    },
+    {
+      "game": "jackaroo",
+      "frame": "430,932",
+      "board": {
+        "bottom": 608.546875,
+        "height": 420,
+        "left": 4,
+        "right": 424,
+        "top": 188.546875,
+        "width": 420,
+        "x": 4,
+        "y": 188.546875
+      },
+      "cards": [
+        {
+          "bottom": 838,
+          "height": 100.796875,
+          "left": 99.15625,
+          "right": 171.15625,
+          "top": 737.203125,
+          "width": 72,
+          "x": 99.15625,
+          "y": 737.203125
+        },
+        {
+          "bottom": 838,
+          "height": 100.796875,
+          "left": 178,
+          "right": 250,
+          "top": 737.203125,
+          "width": 72,
+          "x": 178,
+          "y": 737.203125
+        },
+        {
+          "bottom": 838,
+          "height": 100.796875,
+          "left": 256.84375,
+          "right": 328.84375,
+          "top": 737.203125,
+          "width": 72,
+          "x": 256.84375,
+          "y": 737.203125
+        }
+      ],
+      "hand": {
+        "bottom": 840,
+        "height": 108.796875,
+        "left": 13,
+        "right": 415,
+        "top": 731.203125,
+        "width": 402,
+        "x": 13,
+        "y": 731.203125
+      },
+      "status": {
+        "bottom": 924,
+        "height": 32,
+        "left": 13,
+        "right": 415,
+        "top": 892,
+        "width": 402,
+        "x": 13,
+        "y": 892
+      },
+      "viewport": {
+        "h": 930,
+        "scrollWidth": 428,
+        "w": 428
+      }
+    },
+    {
+      "game": "jackaroo",
+      "frame": "844,390",
+      "board": {
+        "bottom": 388,
+        "height": 336,
+        "left": 137.828125,
+        "right": 473.828125,
+        "top": 52,
+        "width": 336,
+        "x": 137.828125,
+        "y": 52
+      },
+      "cards": [
+        {
+          "bottom": 257.984375,
+          "height": 64.390625,
+          "left": 649.328125,
+          "right": 695.328125,
+          "top": 193.59375,
+          "width": 46,
+          "x": 649.328125,
+          "y": 193.59375
+        },
+        {
+          "bottom": 257.984375,
+          "height": 64.390625,
+          "left": 701.328125,
+          "right": 747.328125,
+          "top": 193.59375,
+          "width": 46,
+          "x": 701.328125,
+          "y": 193.59375
+        },
+        {
+          "bottom": 257.984375,
+          "height": 64.390625,
+          "left": 753.328125,
+          "right": 799.328125,
+          "top": 193.59375,
+          "width": 46,
+          "x": 753.328125,
+          "y": 193.59375
+        }
+      ],
+      "hand": {
+        "bottom": 278.1875,
+        "height": 108.796875,
+        "left": 618.671875,
+        "right": 830,
+        "top": 169.390625,
+        "width": 211.328125,
+        "x": 618.671875,
+        "y": 169.390625
+      },
+      "status": {
+        "bottom": 362.1875,
+        "height": 32,
+        "left": 618.671875,
+        "right": 830,
+        "top": 330.1875,
+        "width": 211.328125,
+        "x": 618.671875,
+        "y": 330.1875
+      },
+      "viewport": {
+        "h": 388,
+        "scrollWidth": 842,
+        "w": 842
+      }
+    }
+  ],
+  "checked": [
+    "Snakes quick match starts and fills seats",
+    "Snakes dice roll acknowledged",
+    "Strategy shield selected and consumed by server",
+    "Jackaroo legal burn updates hand from 4 to 3 cards",
+    "Snakes help and complete tools accessible",
+    "Reaction picker opens and premium art appears",
+    "Free reaction relayed to the rendered premium art",
+    "Shop wave preview renders atlas cell 6"
+  ]
+}
