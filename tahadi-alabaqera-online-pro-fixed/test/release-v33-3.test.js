@@ -44,7 +44,7 @@ test('snakes & ladders: one screen on a phone, big stones, quicker turns and a t
   assert.match(css, /\.snake-token > :is\(svg, canvas, img, \.crystal-sprite\) \{ scale: 1\.5;/);
   assert.match(css, /#game\.snl31 \{ align-content: start !important/);
   const walk = createBoardMovePlan(10, 16).duration;
-  assert.ok(walk >= 600 && walk <= 760, 'six cells in about two thirds of a second, was ~950 ms');
+  assert.ok(walk >= 400 && walk <= 500, 'six cells in under half a second, was ~950 ms');
   assert.ok(createReactionPlan('snake').total <= 1250 && createReactionPlan('ladder').total <= 800);
   assert.ok(snakesTurnDisplayMs({ from: 10, landed: 16, to: 16 }) < 2100, 'the server paces bots by the quicker turn');
   assert.match(await read('public/assets/js/pro-dice.js'), /const ROLL_MS=760;/);

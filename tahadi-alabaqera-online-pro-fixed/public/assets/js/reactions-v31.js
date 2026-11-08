@@ -44,6 +44,10 @@
 
   /* ---------- sounds (synthesised, no downloads) ---------- */
   const SOUNDS={
+    chuckle:[[180,.13,.045,'triangle',0,110],[210,.12,.05,'triangle',.16,130],[165,.17,.04,'triangle',.32,100],[230,.14,.04,'triangle',.53,115]],
+    splat:[[180,.24,.04,'sawtooth',.68,42],[86,.17,.045,'triangle',.73,40],[360,.06,.025,'square',.8,90]],
+    sleepy:[[340,.4,.025,'sine',0,180],[220,.5,.02,'sine',.5,90]],
+    drop:[[980,.25,.03,'triangle',.1,160],[100,.3,.05,'square',.9,42]],
     pop:[[660,.07,.05,'sine',0,990]],
     clap:[[1800,.03,.05,'square',0,900],[1700,.03,.05,'square',.12,800],[1900,.03,.05,'square',.24,950]],
     whoosh:[[260,.28,.035,'triangle',0,980]],
@@ -61,7 +65,7 @@
     fireworks:[[900,.05,.04,'square',.2,300],[700,.05,.04,'square',.55,200],[1100,.05,.04,'square',.9,350]],
     hiss:[[3200,.35,.012,'sawtooth',0,2400]]
   };
-  const SOUND_FOR={'performer-wave':'chime','performer-salute':'fanfare','performer-laugh':'pop','performer-spotlight':'sparkle','face-laugh':'pop','face-smirk':'chime','face-tongue':'pop','face-sus':'pop','face-yawn':'low','face-evil':'low',clap:'clap',flame:'whoosh',shake:'pop',pop:'pop',steam:'whoosh',plead:'chime',shine:'sparkle',tears:'tears',hush:'whoosh',frost:'chime',spin:'pop',blast:'boom',devil:'low',slither:'hiss',sparkle:'sparkle',launch:'rocket',royal:'fanfare',prism:'sparkle',phrase:'pop',
+  const SOUND_FOR={'cinema-tomato':'splat','cinema-wave':'chime','cinema-laugh':'chuckle','cinema-slow':'sleepy','cinema-clap':'clap','cinema-peek':'chuckle','cinema-micdrop':'drop','cinema-cry':'tears','cinema-trophy':'fanfare','cinema-popcorn':'pop','performer-wave':'chime','performer-salute':'fanfare','performer-laugh':'chuckle','performer-spotlight':'sparkle','face-laugh':'pop','face-smirk':'chime','face-tongue':'pop','face-sus':'pop','face-yawn':'low','face-evil':'low',clap:'clap',flame:'whoosh',shake:'pop',pop:'pop',steam:'whoosh',plead:'chime',shine:'sparkle',tears:'tears',hush:'whoosh',frost:'chime',spin:'pop',blast:'boom',devil:'low',slither:'hiss',sparkle:'sparkle',launch:'rocket',royal:'fanfare',prism:'sparkle',phrase:'pop',
     confetti:'pop',snow:'chime',hearts:'hearts',roses:'chime',lightning:'thunder',quake:'boom',fireworks:'fireworks',rocket:'rocket',gold:'coins',crown:'fanfare',sovereign:'gong'};
   function sfx(name){if(!soundOn())return;for(const args of SOUNDS[name]||[])try{window.BS_AUDIO.tone(...args)}catch{}}
 
@@ -261,6 +265,7 @@
     }
   };
   function showMove(it,name,mine){
+    if(window.BS_REACTION_CINEMA?.show?.(it,{host:layerEl(),area:area(),name,mine}))return;
     if(it.fx?.startsWith('performer-')){showEmote(it,name,mine);return;}
     banner(it,name,mine);
     if(reduced()||!effectsOn()||!ensureCanvas())return;
@@ -308,7 +313,7 @@
   }
 
   /* ---------- UI: button and sheet ---------- */
-  function host(){const board=document.getElementById('board')||document.getElementById('chStage')||document.getElementById('arenaPlay')||document.getElementById('game');return board?.parentElement||null;}
+  function host(){const board=document.getElementById('board')||document.getElementById('chStage')||document.getElementById('arenaPlay')||document.getElementById('game')||document.getElementById('carromGame');return board?.parentElement||null;}
   function mount(){
     if(fab?.isConnected)return true;
     const external=document.querySelector('[data-reactions-open]'),h=host();if(!h&&!external)return false;

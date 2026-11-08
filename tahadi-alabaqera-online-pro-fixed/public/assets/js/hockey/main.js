@@ -1,13 +1,19 @@
-import {HockeyOnline,hockeyPerspective} from './online.js';
+import {HockeyOnline,hockeyPerspective} from './online.js?v=33.7.0-pro1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
-import { createGame, step, W, L, STRIKER_R, WIN_SCORE } from './core.js';
-import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js';
+import { createGame, step, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.7.0-pro1';
+import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.7.0-pro1';
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
 const save = (patch) => { try { localStorage.setItem(KEY, JSON.stringify({ ...load(), ...patch })); } catch { /* private mode */ } };
 const prefs = Object.assign({ mode: 'ai', difficulty: 'mid', target: 5, theme: 'neon', puck: 'crystal', color: STRIKER_COLORS[2], muted: false, wins: 0, played: 0, best: 0 }, load());
+prefs.mode=['ai','two','online'].includes(prefs.mode)?prefs.mode:'ai';
+prefs.theme=Object.hasOwn(THEMES,prefs.theme)?prefs.theme:'neon';
+prefs.puck=PUCKS.some(p=>p.id===prefs.puck)?prefs.puck:'crystal';
+prefs.color=STRIKER_COLORS.includes(prefs.color)?prefs.color:STRIKER_COLORS[2];
+prefs.difficulty=['easy','mid','hard'].includes(prefs.difficulty)?prefs.difficulty:'mid';
+prefs.target=[3,5,7].includes(Number(prefs.target))?Number(prefs.target):5;
 if(window.BS_AUDIO?.getSettings) prefs.muted=window.BS_AUDIO.getSettings().muted===true;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PUCK_GLOW = { crystal: '#6adcf5', gold: '#ffd35a', plasma: '#b57cff', ember: '#ff7a2e' };
@@ -18,7 +24,7 @@ const audio = (() => {
   const init = () => {
     if (ac) { ac.resume?.(); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    ac = new AC(); master = ac.createGain(); master.gain.value = prefs.muted ? 0 : 0.9; master.connect(ac.destination);
+    try { ac = new AC(); } catch { return; } master = ac.createGain(); master.gain.value = prefs.muted ? 0 : 0.9; master.connect(ac.destination);
     noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   };
   const tone = (f, dur, type = 'sine', vol = 0.12, slide = 0, delay = 0) => {
@@ -64,9 +70,9 @@ const hands = new Map(); // pointerId → striker index
 const keys = new Set();
 const activeHand = [false, false];
 
-function topInset() { const el = $('hud'); return el ? el.getBoundingClientRect().bottom + 6 : 56; }
+function topInset() { const el = $('hud'), base=$('game').getBoundingClientRect(); return el ? Math.max(48,el.getBoundingClientRect().bottom-base.top+6) : 56; }
 function fit() {
-  const gm = $('game'), w = gm.clientWidth, h = gm.clientHeight; if (!w) return;
+  const gm = $('game'), w = gm.clientWidth || window.innerWidth || 390, h = gm.clientHeight || window.visualViewport?.height || window.innerHeight || 700;
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   renderer.resize(w, h, ratio); renderer.layout(w, h, topInset(), Math.max(8, Math.min(w, h) * 0.02));
   conf.width = Math.round(w * ratio); conf.height = Math.round(h * ratio); conf.style.width = w + 'px'; conf.style.height = h + 'px';
@@ -79,14 +85,14 @@ document.addEventListener('fullscreenchange', () => { refit(); $('fsBtn').setAtt
 function names() { if(online?.state){const p=online.state.players,i=online.seat;return[p[i]?.name||'أنت',p[1-i]?.name||'الخصم'];}return prefs.mode === 'ai' ? ['أنت', 'الكمبيوتر'] : ['اللاعب 1', 'اللاعب 2']; }
 function startGame(packet=null) {
   if(prefs.mode==='online'&&!packet?.g){if(online?.send({type:'ready'})){$('againBtn').disabled=true;$('againBtn').textContent='بانتظار جاهزية خصمك…';}return;}
-  audio.init(); audio.resume();roundReceipt='practice:hockey:'+crypto.randomUUID();$('againBtn').disabled=false;$('againBtn').textContent='العب مرة ثانية';
+  audio.init(); audio.resume();roundReceipt='practice:hockey:'+(crypto.randomUUID?.()||Date.now()+'-'+Math.random().toString(36).slice(2));$('againBtn').disabled=false;$('againBtn').textContent='العب مرة ثانية';
   g = createGame({ mode: prefs.mode==='online'?'two':prefs.mode, difficulty: prefs.difficulty, target: prefs.target, seed: (Date.now() & 0xffff) + 1 });
   if (prefs.mode === 'two') g.bot[1] = null;
   $('menu').hidden = true; $('game').hidden = false; $('result').hidden = true; $('pause').hidden = true; $('banner').className = 'banner';
   running = true; paused = false; over = false; fx = []; trail = []; confetti = []; shake = 0; flash = 0; elapsed = 0; hands.clear(); activeHand[0] = activeHand[1] = false;
   const n = names(); $('nameA').textContent = n[0]; $('nameB').textContent = n[1]; $('targetTxt').textContent = 'إلى ' + prefs.target; updateScore();
   fit(); count = 3.4; countShown = 4; g.phase = 'serve'; g.phaseT = 99; // held until the 3-2-1 ends
-  cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop);
+  cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(safeFrame);
   $('muteBtn2').textContent = prefs.muted ? '🔇' : '🔊';
   window.BS_LOCAL_REACTIONS={active:!online};window.dispatchEvent(new Event('bs-reaction-refresh'));document.body.classList.add('hockey-running');$('hkExit').hidden=!online;$('pauseBtn').hidden=!!online;if(packet?.g){count=0;g=Object.assign(g,hockeyPerspective(packet.g,online.seat));$('targetTxt').textContent='إلى '+g.target;elapsed=g.time||0;}
 }
@@ -170,9 +176,22 @@ function showResult(winner) {
   if (mine) { audio.win(); if (!reduced) { burstConfetti(150, [prefs.color, '#ffffff', '#ffd35a', '#7df0c9', '#ff4fd8']); setTimeout(() => burstConfetti(90, [prefs.color, '#ffd35a', '#ffffff']), 700); } buzz(200); } else if(!draw)audio.lose();
 }
 
+// A drawing failure leaves a recoverable screen instead of an empty canvas.
+function safeFrame(now){
+ try{loop(now);}catch(error){
+  cancelAnimationFrame(raf);running=false;
+  console.error('Hockey render failed',error);
+  $('result').hidden=false;$('resTitle').textContent='تعذّر رسم الطاولة';
+  $('resEyebrow').textContent='يمكنك إعادة المحاولة';$('resScore').textContent='';
+  $('resStats').textContent='اضغط إعادة المباراة أو ارجع إلى القائمة.';
+  $('againBtn').disabled=false;$('againBtn').textContent='إعادة المباراة';
+ }
+}
+window.addEventListener('pageshow',()=>{if(running){fit();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(safeFrame);}});
+window.visualViewport?.addEventListener('resize',refit);
 // ----- loop -----
 function loop(now) {
-  raf = requestAnimationFrame(loop);
+  raf = requestAnimationFrame(safeFrame);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (!running) return;
   if (!paused) {

@@ -78,7 +78,7 @@ test('three tables, four pucks and six striker colours are on offer', () => {
 
 test('the page works in a portrait and a landscape phone and is on the home screen', async () => {
   const page = await read('hockey.html'), home = await read('index.html'), css = await read('assets/css/app-hockey.css'), main = await read('assets/js/hockey/main.js');
-  assert.match(page, /viewport-fit=cover/); assert.match(page, /assets\/js\/hockey\/main\.js\?v=33\.7\.0/);
+  assert.match(page, /viewport-fit=cover/); assert.match(page, /assets\/js\/hockey\/boot\.js\?v=33\.7\.0/);
   for (const id of ['table', 'conf', 'menu', 'startBtn', 'pauseBtn', 'fsBtn', 'result', 'banner', 'targetTxt']) assert.equal((page.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
   assert.match(css, /safe-area-inset-top/); assert.match(css, /orientation:\s*landscape/);
   assert.match(main, /orientationchange/); assert.match(main, /setPointerCapture/);

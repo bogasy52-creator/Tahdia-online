@@ -125,6 +125,23 @@
   // first eight keep the ids older rooms already relay (`legacy`).
   const REACTION_TYPES=Object.freeze(['emote','phrase','move']);
   const REACTIONS=Object.freeze([
+    {"id": "move-tomato", "type": "move", "name": "خذ طماطم", "glyph": "✦", "fx": "cinema-tomato", "price": 320, "color": "#f17d69"},
+    {"id": "move-live-wave", "type": "move", "name": "يا هلا باللي وصل", "glyph": "✦", "fx": "cinema-wave", "price": 0, "color": "#8adccf"},
+    {"id": "move-live-laugh", "type": "move", "name": "ضحك من القلب", "glyph": "✦", "fx": "cinema-laugh", "price": 280, "color": "#ffd38c"},
+    {"id": "move-slow-motion", "type": "move", "name": "صحّوني إذا خلّص", "glyph": "✦", "fx": "cinema-slow", "price": 240, "color": "#a6c8f3"},
+    {"id": "move-slow-clap", "type": "move", "name": "تصفيق على مهلك", "glyph": "✦", "fx": "cinema-clap", "price": 300, "color": "#8dd9bf"},
+    {"id": "move-peekaboo", "type": "move", "name": "شايفك يا بطل", "glyph": "✦", "fx": "cinema-peek", "price": 260, "color": "#eeb9df"},
+    {"id": "move-mic-drop", "type": "move", "name": "انتهى الكلام", "glyph": "✦", "fx": "cinema-micdrop", "price": 480, "color": "#c4a6ec"},
+    {"id": "move-crocodile-tears", "type": "move", "name": "يا خسارة", "glyph": "✦", "fx": "cinema-cry", "price": 260, "color": "#8dd9ee"},
+    {"id": "move-cup-parade", "type": "move", "name": "الكأس عندي", "glyph": "✦", "fx": "cinema-trophy", "price": 420, "color": "#f6d189"},
+    {"id": "move-popcorn", "type": "move", "name": "كمل أنا أتابع", "glyph": "✦", "fx": "cinema-popcorn", "price": 360, "color": "#f4c9a3"},
+    {"id": "phrase-club-1", "type": "phrase", "name": "حظ ولا مهارة؟", "text": "حظ ولا مهارة؟ خلنا نشوف الرمية الجاية!", "glyph": "✦", "price": 90, "color": "#b6d6cb"},
+    {"id": "phrase-club-2", "type": "phrase", "name": "خذ راحتك", "text": "خذ راحتك… الفشار معي", "glyph": "✦", "price": 100, "color": "#b6d6cb"},
+    {"id": "phrase-club-3", "type": "phrase", "name": "تسخين", "text": "لا تستعجل، توّي أسخّن", "glyph": "✦", "price": 110, "color": "#b6d6cb"},
+    {"id": "phrase-club-4", "type": "phrase", "name": "على مهلك", "text": "على مهلك يا أسطورة", "glyph": "✦", "price": 120, "color": "#b6d6cb"},
+    {"id": "phrase-club-5", "type": "phrase", "name": "سجّلها", "text": "سجّل هاللقطة عندك", "glyph": "✦", "price": 130, "color": "#b6d6cb"},
+    {"id": "phrase-club-6", "type": "phrase", "name": "مفاجأة", "text": "قدّامك مفاجأة صغيرة", "glyph": "✦", "price": 140, "color": "#b6d6cb"},
+
     {id:'emote-wheeze',type:'emote',name:'ميت ضحك',glyph:'🤣',fx:'face-laugh',price:180,color:'#ffd166'},
     {id:'emote-smirk',type:'emote',name:'قلتها لك',glyph:'😏',fx:'face-smirk',price:220,color:'#ffd166'},
     {id:'emote-troll',type:'emote',name:'طقطقة',glyph:'😜',fx:'face-tongue',price:260,color:'#f8b35a'},

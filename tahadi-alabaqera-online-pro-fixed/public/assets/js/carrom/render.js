@@ -15,7 +15,7 @@ function line(ctx,x,y,x2,y2,color,width=1){
  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
 }
 function rounded(ctx,x,y,w,h,r,fill,stroke,width=1){
- ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+ ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);
  if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.lineWidth=width;ctx.strokeStyle=stroke;ctx.stroke();}
 }
 function ramp(ctx,a,b,colors){
@@ -28,7 +28,7 @@ function wood(ctx,theme) {
  rounded(b,15,15,970,970,39,'#37271c',theme.metal,1.7);
  rounded(b,30,30,940,940,31,ramp(b,[0,0],[1000,1000],theme.edge),'#f4e0ae66',1.3);
  rounded(b,67,67,866,866,13,ramp(b,[200,100],[800,950],theme.wood),'#2b2116',5);
- b.save();b.beginPath();b.roundRect(70,70,860,860,9);b.clip();
+ b.save();b.beginPath();if(b.roundRect)b.roundRect(70,70,860,860,9);else b.rect(70,70,860,860);b.clip();
  for(let i=0;i<140;i++){
   const y=72+i*6.2;
   b.beginPath();b.moveTo(65,y);b.bezierCurveTo(320,y+Math.sin(i*.7)*9,650,y+Math.cos(i*.3)*6,940,y+Math.sin(i)*4);
@@ -113,7 +113,7 @@ export function createCarromRenderer(canvas) {
    circle(ctx,to.x,to.y,s.striker.r,null,'#ffffffa8',1.5);
    if(guide.target) {
     const p=view(guide.target,seat),dx=p.x-to.x,dy=p.y-to.y,d=Math.hypot(dx,dy);
-    line(ctx,p.x,p.y,p.x+dx/d*125,p.y+dy/d*125,'#8bc9bb',3);
+    if(d>.001)line(ctx,p.x,p.y,p.x+dx/d*125,p.y+dy/d*125,'#8bc9bb',3);
    }
    circle(ctx,from.x,from.y,s.striker.r+9,null,'#fff4ba',2.5);
    const end={x:from.x-Math.cos(angle+(seat?Math.PI:0))*(45+power*90),y:from.y-Math.sin(angle+(seat?Math.PI:0))*(45+power*90)};

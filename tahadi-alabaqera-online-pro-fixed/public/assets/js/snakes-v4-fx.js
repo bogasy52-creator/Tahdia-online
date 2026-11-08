@@ -70,7 +70,7 @@ export function createBoardMovePlan(from,to,{reducedMotion=false}={}){
   const direction=end>=start?1:-1;
   const cells=[];
   for(let cell=start+direction;direction>0?cell<=end:cell>=end;cell+=direction)cells.push(cell);
-  const duration=reducedMotion?clamp(110+cells.length*18,130,260):clamp(170+cells.length*88,330,860);
+  const duration=reducedMotion?clamp(110+cells.length*18,130,260):clamp(130+cells.length*52,200,480);
   const pulses=cells.map((cell,index)=>Object.freeze({cell,at:Math.round((index+1)/Math.max(1,cells.length)*duration)}));
   return Object.freeze({from:start,to:end,cells:Object.freeze(cells),pulses:Object.freeze(pulses),duration});
 }
@@ -106,8 +106,8 @@ export function snakesTurnDisplayMs(event){
   if(!event)return 0;
   const walk=(from,to)=>from===to?0:createBoardMovePlan(from,to).duration;
   const reaction=kind=>['snake','ladder'].includes(kind)?createReactionPlan(kind).total:0;
-  let duration=760+180+240+walk(event.from,event.landed);
-  if(event.to!==event.landed)duration+=360+reaction(event.jumpType);
+  let duration=760+walk(event.from,event.landed);
+  if(event.to!==event.landed)duration+=(event.portal?360:80+reaction(event.jumpType));
   if(event.bonusRoll)duration+=300+760+800;
   if(event.event&&event.eventTo!==event.eventFrom)duration+=walk(event.eventFrom,event.eventLanding??event.eventTo)+reaction(event.bonusJumpType);
   return duration+100;

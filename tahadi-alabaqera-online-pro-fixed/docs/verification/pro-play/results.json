@@ -1,0 +1,17 @@
+{
+  "release": "33.7.0",
+  "published": false,
+  "unitTests": {
+    "total": 1348,
+    "passed": 1348,
+    "failed": 0,
+    "skipped": 0
+  },
+  "newTests": 12,
+  "simulatedPortalMatches": 100,
+  "staticReferences": 1061,
+  "browserQA": "blocked_by_automatic_approval_review",
+  "hockeyOriginalBlackScreenReproduced": false,
+  "offlineRendererExports": true,
+  "source": "https://github.com/bogasy52-creator/Tahdia-online"
+}

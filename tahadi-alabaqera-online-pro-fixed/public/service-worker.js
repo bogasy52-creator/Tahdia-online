@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-7-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-d07b762a776e';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-7ae6827f1d0a';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.7.0",
@@ -266,6 +266,7 @@ const ON_DEMAND = [
   "/assets/css/challenges.css",
   "/assets/css/chaos-v33-6.css",
   "/assets/css/character-gallery.css",
+  "/assets/css/club-pro-v33-7.css",
   "/assets/css/cosmetics.css",
   "/assets/css/design-system.css",
   "/assets/css/dice-refined.css",
@@ -318,6 +319,7 @@ const ON_DEMAND = [
   "/assets/css/quiz-v28.css",
   "/assets/css/race-v33-7.css",
   "/assets/css/reaction-challenge.css",
+  "/assets/css/reactions-live-v33-7.css",
   "/assets/css/reactions-premium-v33-7.css",
   "/assets/css/reactions-v31.css",
   "/assets/css/release-v30-1.css",
@@ -412,6 +414,7 @@ const ON_DEMAND = [
   "/assets/js/baloot-voice-pack.js",
   "/assets/js/baloot-voice-player.js",
   "/assets/js/baloot-voice.js",
+  "/assets/js/board-fit-pro.js",
   "/assets/js/board-online.js",
   "/assets/js/board-petals-v29.js",
   "/assets/js/board-piece-motion.js",
@@ -462,6 +465,7 @@ const ON_DEMAND = [
   "/assets/js/engines/serpent-engine.js",
   "/assets/js/engines/snakes-adventure.js",
   "/assets/js/engines/snakes-engine.js",
+  "/assets/js/engines/snakes-portals.js",
   "/assets/js/engines/sudoku-core.js",
   "/assets/js/engines/sudoku-engine.js",
   "/assets/js/engines/sudoku-stages.js",
@@ -474,6 +478,7 @@ const ON_DEMAND = [
   "/assets/js/games/jackaroo-ui.js",
   "/assets/js/games/snakes-ui.js",
   "/assets/js/hero-effects.js",
+  "/assets/js/hockey/boot.js",
   "/assets/js/hockey/core.js",
   "/assets/js/hockey/main.js",
   "/assets/js/hockey/online.js",

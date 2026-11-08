@@ -38,6 +38,17 @@
     updateButton();
     if (!dedicatedStage()) return;
 
+    // Snakes uses the actual remaining board region, including tall phone boards.
+    if(body.classList.contains('game-snakes')&&body.classList.contains('table-room')){
+      const main=document.querySelector('#game .game-main'),rect=main?.getBoundingClientRect();
+      if(!rect||rect.width<2||rect.height<2)return;
+      const boardWidth=Math.floor(rect.width),boardHeight=Math.floor(rect.height);
+      body.style.setProperty('--game-board-width',boardWidth+'px');body.style.setProperty('--game-board-height',boardHeight+'px');
+      body.style.setProperty('--game-board-size',Math.min(boardWidth,boardHeight)+'px');
+      body.dataset.gameLayoutMode=height>=width?'portrait':'landscape';
+      if(boardWidth!==lastBoardWidth||boardHeight!==lastBoardHeight){lastBoardWidth=boardWidth;lastBoardHeight=boardHeight;window.dispatchEvent(new CustomEvent('busraj:game-layout',{detail:{width,height,boardWidth,boardHeight,boardSize:Math.min(boardWidth,boardHeight),mode:body.dataset.gameLayoutMode}}));}
+      return;
+    }
     const computeLayout = window.BS_ADAPTIVE_BOARD_LAYOUT?.computeAdaptiveBoardLayout;
     const layout = computeLayout
       ? computeLayout({width,height,game:body.classList.contains('game-snakes')?'snakes':null})

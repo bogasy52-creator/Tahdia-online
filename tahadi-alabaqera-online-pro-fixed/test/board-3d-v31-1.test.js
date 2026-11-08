@@ -106,7 +106,7 @@ test('the snakes page plays a clear eating sound, keeps the growth and resets it
  assert.doesNotMatch(page,/snakeMeals\.delete\(/,'growth is kept after the stone is released');
  // 33.0.0: one place resets it — the first state of every match (a new one or a rematch)
  assert.equal(page.match(/snakeMeals\.clear\(\);\s*window\.BS_ARENA\?\.meal\?\.\(\);\s*BS_AUDIO\.prime/g).length,1);
- assert.match(page,/if \(!prev \|\| prev\.moveCount > state\.moveCount\) \{\s*journal\?\.reset\(state\);\s*snakeMeals\.clear\(\)/);
+ assert.match(page,/if \(!prev \|\| prev\.variant!==state\.variant \|\| prev\.moveCount > state\.moveCount\) \{\s*journal\?\.reset\(state\);\s*snakeMeals\.clear\(\)/);
  assert.match(page,/classList\.add\(j\s*>\s*n\s*\?\s*["']ladder-foot-cell["']\s*:\s*["']snake-head-cell["']\)/);
  for(const p of ['dice.html','snakes.html','zahra.html','jackaroo.html','shop.html'])assert.match(await read(p),/dice-3d-v31-1\.js\?v=[\d.]+"><\/script><script[^>]*pro-dice\.js/,p+' loads the GPU die before pro-dice');
 });

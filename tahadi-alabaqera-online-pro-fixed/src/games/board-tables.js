@@ -175,7 +175,7 @@ export function botTurn(room, steps, rng, roll = rollWith(rng)) {
   const s = room.state;
   if (room.game === 'snakes') {
     const want = chooseSnakePower(s, level, rng);
-    playSnakes(room, seat, roll, s.variant==='strategy'?want:want === 'double' && s.rulesVersion === 2 && s.players[seat].double > 0 && s.players[seat].position > 0 ? 'double' : null);
+    playSnakes(room, seat, roll, s.variant==='portals'?(s.players[seat].double>0&&s.players[seat].position<90&&rng()<.25?'double':null):s.variant==='strategy'?want:want === 'double' && s.rulesVersion === 2 && s.players[seat].double > 0 && s.players[seat].position > 0 ? 'double' : null);
     recordStep(room, steps);
   } else if (room.game === 'zahra') {
     const value = room.pendingRoll ?? rollZahra(room, roll);
@@ -223,7 +223,7 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
     if (msg.type !== 'roll') throw new Error('invalid_action');
     const power = msg.power ?? null, p = room.state.players[seat];
     if(power!==null){
-      const strategy=room.state.variant==='strategy';
+      const strategy=['strategy','portals'].includes(room.state.variant);
       const allowed=strategy?['shield','double'].includes(power)&&p[power]>0:power==='double'&&room.state.rulesVersion===2&&p.double>0&&p.position>0;
       if(!allowed)throw new Error('power_unavailable');
     }

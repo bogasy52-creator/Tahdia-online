@@ -14,7 +14,7 @@ test('board movement lights every traversed cell on a smooth bounded timeline', 
   const plan=createBoardMovePlan(11,17);
   assert.deepEqual(plan.cells,[12,13,14,15,16,17]);
   assert.equal(plan.pulses.length,6);
-  assert.ok(plan.duration>=600&&plan.duration<=760,'33.3.0: six cells in about two thirds of a second');
+  assert.ok(plan.duration>=400&&plan.duration<=500,'33.3.0: six cells in under half a second');
   assert.ok(plan.pulses.every((pulse,index)=>pulse.cell===12+index));
   assert.ok(plan.pulses.every((pulse,index,list)=>index===0||pulse.at>list[index-1].at));
 });

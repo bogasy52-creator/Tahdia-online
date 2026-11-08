@@ -1,12 +1,14 @@
+import {createPortalGame,playPortalTurn} from '../../public/assets/js/engines/snakes-portals.js';
 import { createSnakesGame, playSnakesRoll, TACTICS_JUMPS } from '../../public/assets/js/engines/snakes-engine.js';
 import { createEnhancedGame, playEnhancedTurn, enhancedLanding, BONUS_CELLS, createAdventureGame, playAdventureTurn } from '../../public/assets/js/engines/snakes-adventure.js';
 
 export function normalizeSnakesVariant(variant = 'classic') {
-  if (!['classic','adventure','strategy'].includes(variant)) throw new Error('invalid_variant');
+  if (!['classic','adventure','strategy','portals'].includes(variant)) throw new Error('invalid_variant');
   return variant;
 }
 
 export function createSnakesServerGame(names, { variant = 'classic' } = {}) {
+  if(normalizeSnakesVariant(variant)==='portals')return createPortalGame(names);
   if(normalizeSnakesVariant(variant)==='strategy'){const s=createAdventureGame(names);s.variant='strategy';s.rulesVersion=3;s.jumps={...TACTICS_JUMPS};return s;}
   return normalizeSnakesVariant(variant) === 'adventure' ? createEnhancedGame(names) : createSnakesGame(names);
 }
@@ -20,6 +22,11 @@ export function serverDiceRoll(rng = Math.random) {
 export function rollSnakesServer(state, actorSeat, rng = Math.random, { power = null } = {}) {
   if (state.winner !== null) throw new Error('match_finished');
   if (actorSeat !== state.turn) throw new Error('wrong_turn');
+  if(state.variant==='portals'){
+    if(power&&!['shield','double'].includes(power))throw Error('invalid_power');
+    if(power&&!(state.players[actorSeat][power]>0))throw Error('power_unavailable');
+    const roll=serverDiceRoll(rng),next=playPortalTurn(state,roll,{power});return{state:next,event:{type:'roll',roll,...next.lastEvent}};
+  }
   if(state.variant==='strategy'){
     const player=state.players[actorSeat];if(power&&!['shield','double'].includes(power))throw new Error('invalid_power');if(power&&!(player[power]>0))throw new Error('power_unavailable');
     const rolls=[serverDiceRoll(rng)];if(power==='double')rolls.push(serverDiceRoll(rng));

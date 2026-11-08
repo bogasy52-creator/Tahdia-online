@@ -1,6 +1,6 @@
 // Air Hockey — drawing. The table is painted in table units (x across 0..W, y along 0..L); a single transform turns it
 // to fit a portrait screen (goals top and bottom) or a landscape one (goals left and right), so nothing else changes.
-import { W, L, GOAL_W, PUCK_R, STRIKER_R } from './core.js';
+import { W, L, GOAL_W, PUCK_R, STRIKER_R } from './core.js?v=33.7.0-pro1';
 
 export const FRAME = 46; // rail thickness around the playfield, in table units
 export const THEMES = {
@@ -112,8 +112,9 @@ export function createRenderer(canvas) {
   let cw = 0, ch = 0, dpr = 1, cache = null, cacheKey = '', lay = null;
 
   function layout(w, h, hudTop, pad) {
+    w=Math.max(1,Number(w)||390);h=Math.max(1,Number(h)||700);hudTop=Math.min(Math.max(0,hudTop||0),h*.35);pad=Math.max(0,pad||0);
     const landscape = w > h * 1.02, uw = (landscape ? L : W) + 2 * FRAME, uh = (landscape ? W : L) + 2 * FRAME;
-    const availW = w - pad * 2, availH = h - hudTop - pad, s = Math.min(availW / uw, availH / uh);
+    const availW = w - pad * 2, availH = h - hudTop - pad, s = Math.max(.001,Math.min(availW / uw, availH / uh));
     const ox = (w - uw * s) / 2 + FRAME * s, oy = hudTop + (availH - uh * s) / 2 + FRAME * s;
     // light comes from the top-left of the *screen*; give it in table units
     const light = landscape ? { x: 0.55, y: -0.8 } : { x: -0.55, y: -0.8 };

@@ -8,7 +8,7 @@ const canvas=$('carromBoard'),renderer=createCarromRenderer(canvas);
 let state=null,running=false,paused=false,frame=0,last=0,accumulator=0,angle=-Math.PI/2,power=.55,viewSeat=0,turnSeen=-1,botAt=0,botPlan=null,pointer=null,resultTimer=0;
 let audio=null,lastSound=0;
 function tone(kind,strength=1){
- if(prefs.muted)return;
+ if(prefs.muted||window.BS_AUDIO?.getSettings?.().muted===true)return;
  try{
   audio??=new (window.AudioContext||window.webkitAudioContext)();
   if(audio.state==='suspended')audio.resume();
@@ -23,12 +23,15 @@ function tone(kind,strength=1){
  }catch{}
 }
 function canPlay(){return running&&!paused&&state?.phase==='aim'&&(state.mode==='hotseat'||state.turn===0);}
-function draw(){if(state)renderer.draw(state,{angle,power,seat:viewSeat,aim:state.phase==='aim'&&!paused});}
+function draw(){if(state)renderer.draw(state,{angle,power,seat:viewSeat,aim:canPlay()});}
 function resize(){
+ const field=$('carromSurface').parentElement.getBoundingClientRect(),size=Math.max(1,Math.floor(Math.min(field.width-12,field.height-8)));
+ if(field.width&&field.height){$('carromSurface').style.width=size+'px';$('carromSurface').style.height=size+'px';}
  const box=$('carromSurface').getBoundingClientRect();
  if(box.width&&box.height){renderer.resize(box.width,box.height);draw();}
 }
-new ResizeObserver(resize).observe($('carromSurface'));
+if(typeof ResizeObserver==='function')new ResizeObserver(resize).observe($('carromSurface'));
+addEventListener('resize',resize,{passive:true});
 function names(){return state?.mode==='hotseat'?['اللاعب الأول','اللاعب الثاني']:['أنت','الكمبيوتر'];}
 function controls(){
  const enabled=canPlay();
@@ -53,7 +56,7 @@ function onTurn(){
  turnSeen=state.turnNo;viewSeat=state.mode==='hotseat'?state.turn:0;
  angle=state.turn===0?-Math.PI/2:Math.PI/2;
  $('strikerPosition').value=String(viewSeat?1000-state.striker.x:state.striker.x);
- pointer=null;
+ pointer=null;$('shotAngle').value='-90';
  if(state.mode==='ai'&&state.turn===1&&state.phase==='aim'){
   botPlan=chooseCarromShot(state);placeStriker(state,botPlan.x);
   angle=botPlan.angle;power=botPlan.power;botAt=performance.now()+900;
@@ -65,10 +68,12 @@ function start(){
  clearTimeout(resultTimer);cancelAnimationFrame(frame);frame=0;
  prefs.mode=$('carromMode').value;prefs.theme=$('carromTheme').value;prefs.difficulty=$('carromDifficulty').value;persist();
  state=createCarrom(prefs);running=true;paused=false;turnSeen=-1;accumulator=0;pointer=null;
+ document.body.classList.add('carrom-running');window.BS_LOCAL_REACTIONS={active:true};window.dispatchEvent(new Event('bs-reaction-refresh'));
  $('carromMenu').hidden=true;$('carromGame').hidden=false;$('carromPause').hidden=true;$('carromResult').hidden=true;
  renderer.setTheme(prefs.theme);resize();onTurn();last=performance.now();frame=requestAnimationFrame(loop);
 }
 function menu(){
+ document.body.classList.remove('carrom-running');window.BS_LOCAL_REACTIONS={active:false};window.dispatchEvent(new Event('bs-reaction-refresh'));
  running=false;paused=false;clearTimeout(resultTimer);cancelAnimationFrame(frame);frame=0;
  $('carromGame').hidden=true;$('carromMenu').hidden=false;$('carromPause').hidden=true;$('carromResult').hidden=true;
  pointer=null;
@@ -116,7 +121,7 @@ function loop(now){
 function updateAim(point,pull=false){
  const dx=pull?state.striker.x-point.x:point.x-state.striker.x,dy=pull?state.striker.y-point.y:point.y-state.striker.y;
  if(Math.hypot(dx,dy)<8)return;
- angle=Math.atan2(dy,dx);
+ angle=Math.atan2(dy,dx);const viewAngle=angle-(viewSeat?Math.PI:0);$('shotAngle').value=String(Math.round(viewAngle*180/Math.PI));
  if(pull)power=Math.max(.08,Math.min(1,Math.hypot(dx,dy)/220));
  controls();draw();
 }
@@ -124,7 +129,7 @@ canvas.addEventListener('pointerdown',e=>{
  if(!canPlay())return;e.preventDefault();
  const p=renderer.point(e.clientX,e.clientY,viewSeat);
  pointer={id:e.pointerId,pull:Math.hypot(p.x-state.striker.x,p.y-state.striker.y)<100,start:p,moved:false};
- canvas.setPointerCapture(e.pointerId);
+ try{canvas.setPointerCapture(e.pointerId);}catch{}
  if(!pointer.pull)updateAim(p);
 });
 canvas.addEventListener('pointermove',e=>{
@@ -142,7 +147,8 @@ $('strikerPosition').addEventListener('input',()=>{
  if(canPlay()){const x=Number($('strikerPosition').value);placeStriker(state,viewSeat?1000-x:x);draw();}
 });
 $('shotPower').addEventListener('input',()=>{if(canPlay()){power=Number($('shotPower').value)/100;controls();draw();}});
-$('shoot').onclick=fire;$('carromStart').onclick=start;$('carromExit').onclick=menu;
+$('shotAngle').addEventListener('input',()=>{if(canPlay()){angle=Number($('shotAngle').value)*Math.PI/180+(viewSeat?Math.PI:0);draw();}});
+ $('shoot').onclick=fire;$('carromStart').onclick=start;$('carromExit').onclick=menu;
 $('carromPauseButton').onclick=()=>pause(true);$('carromResume').onclick=()=>pause(false);
 $('carromRestart').onclick=start;$('carromAgain').onclick=start;$('carromBackMenu').onclick=menu;
 $('carromMute').onclick=()=>{prefs.muted=!prefs.muted;persist();$('carromMute').setAttribute('aria-pressed',String(prefs.muted));$('carromMute').textContent=prefs.muted?'الصوت مغلق':'الصوت';};
