@@ -15,9 +15,20 @@ const message=text=>{$('stageMessage').textContent=text;};
 const text=(id,value)=>{const el=$(id),next=String(value);if(el.textContent!==next)el.textContent=next;};
 const sound=name=>window.BS_AUDIO?.play?.(name);
 const proof=()=>({game:state.game,level:state.level,daily:state.daily,...(state.engineVersion?{engineVersion:state.engineVersion}:{}),log:state.log});
-function storeResume(){clearTimeout(resumeTimer);resumeTimer=0;if(!state||account()!==initialAccount)return;try{localStorage.setItem(key(),JSON.stringify(proof()));}catch{message('مساحة الجهاز ممتلئة. اترك الجولة مفتوحة إلى أن تنتهي.');}}
+// 33.9.1: inside the group room the page opens the room's stage straight away: the same board
+// for everyone, no map and nothing saved to the player's journey; the result goes back to
+// the room as it plays (party-link-v32.js)
+const party=window.BS_PARTY_LINK?.local&&typeof window.BS_PARTY_LINK.report==='function'?window.BS_PARTY_LINK:null;
+if(party)game='jewels';
+let partySent=0,partyTimer=0;
+function partyReport(done=false){
+  if(!party||!state)return;clearTimeout(partyTimer);
+  const send=()=>{partySent=Date.now();const progress=Math.min(1,state.collected/Math.max(1,state.goal),state.colorGoal?state.colorCount/state.colorGoal:1,state.iceGoal?state.iceCleared/state.iceGoal:1);party.report({progress,score:state.score,done,won:done&&state.won===true});};
+  if(done||Date.now()-partySent>=350)send();else partyTimer=setTimeout(send,350-(Date.now()-partySent));
+}
+function storeResume(){clearTimeout(resumeTimer);resumeTimer=0;if(party||!state||account()!==initialAccount)return;try{localStorage.setItem(key(),JSON.stringify(proof()));}catch{message('مساحة الجهاز ممتلئة. اترك الجولة مفتوحة إلى أن تنتهي.');}}
 function scheduleResume(){clearTimeout(resumeTimer);resumeTimer=setTimeout(storeResume,180);}
-function removeResume(){clearTimeout(resumeTimer);resumeTimer=0;try{localStorage.removeItem(key());}catch{}}
+function removeResume(){clearTimeout(resumeTimer);resumeTimer=0;if(party)return;try{localStorage.removeItem(key());}catch{}}
 function draw(){renderer.setState(state,selected,cursor);}
 function render() {
   if(play.open){hubDirty=true;return;}hubDirty=false;
@@ -75,7 +86,7 @@ function openStage(level,daily='',resume=true){
   canvas.setAttribute('aria-label',jewel?'لوحة مطابقة الجواهر. بدّل قطعتين متجاورتين بالسحب أو بنقرتين. الأسهم للتنقل والمسافة للاختيار.':'لوحة المسارات. اسحب بين الرقمين المتماثلين. الأسهم مع Shift لمد المسار.');
   if(!play.open)play.showModal();window.BS_HERO_FX?.enter(null,{key:'journey:'+game+':'+level+':'+roundVersion});meters();draw();storeResume();canvas.focus();if(state.over||state.won)finish();
 }
-function closeStage(){if(saving)return;storeResume();roundVersion++;busy=false;renderer.cancel();play.close();chapter=Math.floor((nextStage(progress.get(),game)-1)/12);render();$('journeyContinue').focus();}
+function closeStage(){if(saving||party)return;storeResume();roundVersion++;busy=false;renderer.cancel();play.close();chapter=Math.floor((nextStage(progress.get(),game)-1)/12);render();$('journeyContinue').focus();}
 function help(textValue,action){
   if(saving)return;if(busy)renderer.snap();pointer=null;selected=[];boosting=false;draw();
   $('stageHelpPanel').classList.remove('hidden');text('stageHelpText',textValue);text('stageHelpClose',action?'ابدأ من جديد':'فهمت، نلعب ←');workspace.inert=true;topbar.inert=true;
@@ -86,6 +97,7 @@ async function finish(){
   $('stageHelpPanel').classList.add('hidden');$('stageResult').classList.remove('hidden');text('resultEyebrow',state.daily?'تحدّي اليوم':chaptersFor(game)[state.chapter]);text('resultStars',won?'★'.repeat(starsFor(state))+'☆'.repeat(3-starsFor(state)):'✧');
   text('resultTitle',won?(game==='paths'?'حل يستاهل النجوم!':'مطابقة تستاهل النجوم!'):'باقي لك خطوة!');text('resultCopy',won?(game==='jewels'?state.score+' نقطة · '+state.moves+' حركات · '+state.extraMoves+' إضافية':state.moves+' مسارات مرسومة · تغطية كاملة'):'جرّب صناعة قطعة خاصة وشحن المعزّز. تقدر تعيد المرحلة فورًا.');
   text('resultSave',won?'جارٍ حفظ نجومك…':'إعادة المحاولة متاحة بدون انتظار.');$('resultNext').classList.toggle('hidden',!won||!!state.daily||state.level>=stageCount(game));text('resultRetry',won?'أعدها وحسّن نجومك':'حاول مرة ثانية');
+  if(party){partyReport(true);text('resultSave','انحسبت نتيجتك في الجمعة.');for(const id of ['resultRetry','resultNext','resultMap'])$(id).classList.add('hidden');if(won){sound('win');window.BS_GAME_FX?.win?.(canvas);}return;}
   for(const id of ['resultRetry','resultNext','resultMap'])$(id).disabled=true;
   if(won){sound('win');window.BS_GAME_FX?.win?.(canvas);window.BS_GAME_FX?.celebrate?.(window.BS_CAREER?.get?.()?.name||'بطل المرحلة',{key:'journey:'+game+':'+state.level+':'+state.daily,subtitle:game==='paths'?'غطّيت اللوحة ووصلت كل الأرقام.':'صنعت سلسلة مطابقة تستحق النجوم.'});try{storeResume();const result=await progress.complete(proof());if(version!==roundVersion)return;removeResume();text('resultSave',result.pending?'نجومك محفوظة على الجهاز. تُزامن مع حسابك عند الاتصال.':result.first?'انحفظت نجومك. المكافأة حسب حد التدريب اليومي.':'انحفظت نجومك. مكافأة هذه المرحلة محسوبة سابقًا.');}catch(error){if(version!==roundVersion)return;text('resultSave','لم يُحفظ التقدم: '+error.message);text('resultRetry','أعد محاولة حفظ النتيجة');saving=false;$('resultRetry').disabled=false;$('resultRetry').onclick=()=>finish();$('resultRetry').focus();return;}}
   else removeResume();
@@ -98,7 +110,7 @@ async function swapAction(action){
   await renderer.animate(result.events,state,event=>{if(version!==roundVersion)return;if(event.type==='clear'){text('stageChain',event.cascade?'سلسلة × '+(event.cascade+1):event.activated.length?'انفجار خاص!':'مطابقة!');}});
   if(version!==roundVersion||state===initial)return;busy=false;text('stageChain',result.extraMove?'حركة إضافية!':result.cascades>1?'سلسلة × '+result.cascades:'');meters();draw();
   message(result.extraMove?'مطابقة قوية! كسبت حركة إضافية.':result.cascades>1?'تساقط متتابع × '+result.cascades+' · +'+(state.score-initial.score)+' نقطة':'+ '+(state.score-initial.score)+' نقطة · ابحث عن فرصة لقطعة خاصة.');
-  if(state.over||state.won)finish();
+  if(state.over||state.won)finish();else partyReport();
 }
 function commitPath(){
   if(!state||busy||saving||state.won||game!=='paths')return;const color=state.pairs.findIndex(pair=>pair.includes(selected[0])),result=movePaths(state,color,selected);
@@ -169,4 +181,4 @@ window.addEventListener('bs-social-session',()=>{if(play.open&&account()!==initi
 window.addEventListener('pagehide',()=>{storeResume();renderer.snap();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){storeResume();renderer.snap();pointer=null;}else{if(play.open)draw();else render();countdown();}});
 function countdown(){if(document.hidden)return;const date=new Date(now()+10800000),seconds=86400-(date.getUTCHours()*3600+date.getUTCMinutes()*60+date.getUTCSeconds());text('dailyCountdown',[Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':'));if(lastDaily!==progress.today()){lastDaily=progress.today();render();}}
-render();countdown();setInterval(countdown,1000);progress.ready.then(render);if(params.get('daily')==='1')openStage(1,progress.today());
+render();countdown();setInterval(countdown,1000);progress.ready.then(render);if(party){document.body.classList.add('journey-party');for(const id of ['stageClose','stageRestart'])$(id).hidden=true;openStage(party.local.stage,'',false);party.live();}else if(params.get('daily')==='1')openStage(1,progress.today());

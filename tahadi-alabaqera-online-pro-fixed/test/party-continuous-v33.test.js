@@ -9,17 +9,21 @@ function group(playlist) {
   return room;
 }
 
-test('Jackaroo plays inside the party and the next round starts at five seconds', () => {
+// 33.9.1: the group room plays every game as itself: Jackaroo on its own table, inside the room
+test('Jackaroo opens its own table in the group room and the next round starts at five seconds', () => {
   const room=group(['jackaroo','memory']);
   startPartyRound(room,1000,42);
-  assert.equal(room.round.link,undefined);
-  assert.equal(room.round.tables[0].members.length,4);
+  assert.equal(room.round.link.status,'creating');
+  assert.equal(room.round.link.page,'/jackaroo');
+  assert.equal(room.round.link.embedded,false,'a table finds its players by name, not by a seat token');
+  assert.equal(room.round.tables,undefined);
   finishPartyRound(room,2000);
   assert.equal(room.nextAt,7000);
   advanceParty(room,6999);
   assert.equal(room.status,'intermission');
   advanceParty(room,7000);
   assert.equal(room.round.game,'memory');
+  assert.equal(room.round.local.page,'/memory');
 });
 
 test('an embedded race reserves private seats and scores their verified identities once', () => {

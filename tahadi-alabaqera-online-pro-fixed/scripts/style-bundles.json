@@ -388,6 +388,7 @@
     "assets/css/memory-v30.css",
     "assets/css/dice-v31.css",
     "assets/css/party-v32.css",
+    "assets/css/party-v33-9-1.css",
     "assets/css/sudoku-feedback-v29-1.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/gameplay-v34.css",
@@ -454,7 +455,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/cipher-v33-9-1.css"
   ],
   "patterns.html": [
     "assets/css/platform.css",

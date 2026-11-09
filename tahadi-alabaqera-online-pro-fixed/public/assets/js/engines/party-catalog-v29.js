@@ -1,4 +1,5 @@
-export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=10000,PARTY_BREAK_MS=10000;
+// 33.9.1: five seconds before the first game, the same as between games
+export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=5000,PARTY_BREAK_MS=10000;
 export const PARTY_GAMES=Object.freeze([
  {id:'chaos',name:'أونو',kind:'board',maxPlayers:8,real:true,image:'assets/challenges/uno-table.svg',hint:'طابق اللون والرقم، اعكس الدور، ونادِ أونو. طاولات حتى 8 لاعبين.'},
  {id:'wordbomb',name:'صيد الكلمات',kind:'reaction',real:true,image:'assets/challenges/wordbomb.svg',hint:'شبكة حروف وكلمات مخفية؛ أول من يلقى الكلمة ياخذ نقاطها، حتى 20 لاعبًا.'},
@@ -8,15 +9,15 @@ export const PARTY_GAMES=Object.freeze([
  {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
  {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، وتكتمل المقاعد تلقائيًا.'},
  {id:'zahra',name:'الزهرة',kind:'board',maxPlayers:6,real:true,image:'assets/game-cards-v27/zahra.svg',hint:'ستة ألوان، وأربعة أحجار لكل لاعب، ستة في كل طاولة.'},
- {id:'dice',name:'تحدي النرد',kind:'board',maxPlayers:10,image:'assets/brand/dice-studio-v26.webp',hint:'ارمِ أو ثبّت رصيدك؛ الحظ والخطة يصنعان الفارق.'},
+ {id:'dice',name:'تحدي النرد',kind:'board',real:true,maxPlayers:10,image:'assets/brand/dice-studio-v26.webp',hint:'ارمِ أو ثبّت رصيدك؛ الحظ والخطة يصنعان الفارق.'},
  {id:'quiz',name:'تحدي العباقرة',kind:'quiz',real:true,image:'assets/game-cards-v27/quiz.svg',hint:'نفس الأسئلة والوقت للجميع، مع الصور والصوت والذاكرة.'},
  {id:'sudoku',name:'سودوكو',kind:'puzzle',real:true,image:'assets/game-cards-v27/sudoku.svg',hint:'نفس اللوحة للجميع، وخمس محاولات خطأ لكل لاعب.'},
- {id:'jewels',name:'ماستر الجواهر',kind:'puzzle',image:'assets/game-cards-v27/jewels.svg',hint:'بدّل الجواهر واصنع السلاسل؛ يتساوى الجميع في البداية والحركات.'},
+ {id:'jewels',name:'ماستر الجواهر',kind:'puzzle',real:true,image:'assets/game-cards-v27/jewels.svg',hint:'بدّل الجواهر واصنع السلاسل؛ يتساوى الجميع في البداية والحركات.'},
  {id:'paths-online',name:'توصيل الأرقام',kind:'puzzle',real:true,image:'assets/game-cards-v27/paths-online.svg',hint:'صِل الأرقام المتطابقة على نفس اللوحة قبل أصحابك.'},
  {id:'picture',name:'سباق الصور',kind:'puzzle',real:true,image:'assets/ai-v19/garden.webp',hint:'ركّب الصورة قطعة قطعة قبل أصحابك.'},
- {id:'memory',name:'الذاكرة',kind:'puzzle',image:'assets/game-cards-v27/memory.svg',hint:'نفس الأزواج للجميع، ولا تُكشف إلا البطاقات التي تقلبها.'},
- {id:'logic',name:'المنطق',kind:'quiz',image:'assets/game-cards-v27/logic.svg',hint:'أنماط وحساب واستنتاج، بنفس الأسئلة والوقت للجميع.'},
- {id:'puzzle',name:'ترتيب الأرقام',kind:'puzzle',image:'assets/game-cards-v27/puzzle.svg',hint:'حرّك الأرقام إلى الفراغ حتى تكتمل اللوحة.'},
+ {id:'memory',name:'الذاكرة',kind:'puzzle',real:true,image:'assets/game-cards-v27/memory.svg',hint:'نفس الأزواج للجميع، ولا تُكشف إلا البطاقات التي تقلبها.'},
+ {id:'logic',name:'المنطق',kind:'quiz',real:true,image:'assets/game-cards-v27/logic.svg',hint:'أنماط وحساب واستنتاج، بنفس الأسئلة والوقت للجميع.'},
+ {id:'puzzle',name:'ترتيب الأرقام',kind:'puzzle',real:true,image:'assets/game-cards-v27/puzzle.svg',hint:'حرّك الأرقام إلى الفراغ حتى تكتمل اللوحة.'},
 ]);
 export const partyGame=id=>PARTY_GAMES.find(game=>game.id===(id==='paths'?'paths-online':id==='reaction'?'focus':id))||null;
 // 32.1.0: every game has its own seat limit; turn games stay small enough to play.

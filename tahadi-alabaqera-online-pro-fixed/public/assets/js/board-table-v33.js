@@ -5,7 +5,7 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.0-gameplay3';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.1-gameplay3';
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2};
 
@@ -76,7 +76,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     // a table the group room (الجمعة) opened: it starts by itself when its players are in
     const party=next.party?.first?next.party:null;
     if(party)return {
-      code:next.code,isPublic:true,deadline:next.lobbyDeadline,ringSeconds:30,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
+      code:next.code,isPublic:true,deadline:next.lobbyDeadline,ringSeconds:15,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
       seats:party.expected,variant:next.variant,openSeat:['بانتظار لاعب','من الجمعة'],
       title:'طاولتك في الجمعة',
       note:'نبدأ أول ما يوصل أصحاب طاولتك ('+people.length+' من '+party.expected+'). إذا تأخر أحد نبدأ بعد العد بمنافس إضافي.',

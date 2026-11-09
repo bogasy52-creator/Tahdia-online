@@ -1,12 +1,12 @@
-import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.0';
-import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.0';
+import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.1';
+import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.1';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
 import {PARTY_GAMES,PARTY_COUNTDOWN_MS,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
-import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=33.9.0';
-import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.9.0';
+import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=33.9.1';
+import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.9.1';
 let boardSurface=null,boardSurfaceRound='';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeCode=value=>String(value||'').replace(/[٠-٩]/g,n=>'٠١٢٣٤٥٦٧٨٩'.indexOf(n)).replace(/[۰-۹]/g,n=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(n)).replace(/\D/g,'').slice(0,6);
@@ -51,8 +51,8 @@ function connect(){if(opening||closed)return;opening=true;const run=++epoch;stop
    serverOffset=state.serverNow-Date.now();if(state.round&&own&&state.round.id===roundKey){state.round.me=own;}renderRoom();}return;}
   if(m.type==='private'){if(m.sessionId!==state?.sessionId||m.roundId!==state?.round?.id||m.revision<state.revision)return;me=m.me;state.round.me=me;if(m.linkSeat)state.round.linkSeat=m.linkSeat;if(pending&&pending.roundId===m.roundId&&me?.seq>=pending.seq)pending=null;renderGame();return;}
   if(m.type==='snapshot'){setSnapshot(m.state);return;}
-  if(m.type==='ack'){if(pending?.roundId===m.roundId&&pending.seq===m.seq){if(pending.action.listen)listenPending=false;const act=pending.action,cell=act.cell;pending=null;trackDigit(act,m.feedback);feedback(m.feedback,undefined,cell);}return;}
-  if(m.type==='error'){if(m.seq&&pending?.seq===m.seq){if(pending.action.listen)stopAudio();pending=null;}listenPending=false;feedback('wrong',m.message);toast(m.message);return;}
+  if(m.type==='ack'){if(pending?.roundId===m.roundId&&pending.seq===m.seq){if(pending.action.listen)listenPending=false;const act=pending.action,cell=act.cell;pending=null;if(act.report){sendReport();return;}trackDigit(act,m.feedback);feedback(m.feedback,undefined,cell);}return;}
+  if(m.type==='error'){const report=Boolean(pending?.action?.report);if(m.seq&&pending?.seq===m.seq){if(pending.action.listen)stopAudio();pending=null;}listenPending=false;if(report&&state?.round?.local)return;feedback('wrong',m.message);toast(m.message);return;}
   if(m.type==='arena'&&m.roundId===state?.round?.id){if(m.frame.type==='state')arenaState=m.frame.state;else{const next=applySerpentFrame(arenaState,m.frame);if(!next){send('sync');return;}arenaState=next;}if(renderer&&arenaState)renderer.setGame(arenaState.game,[myId],true);return;}
   if(m.type==='pong'&&Number.isFinite(m.sentAt)){$('connection').textContent='متصل · '+Math.max(0,Date.now()-m.sentAt)+'ms';}
  };
@@ -87,7 +87,7 @@ function renderRoom(){if(!state)return;const phase=state.status,round=state.roun
  if(roundKey!==round?.id){roundKey=round?.id||'';me=round?.me||null;pending=null;selected=selectedCard=-1;lastViewKey='';quizMediaKey='';const retainedArena=arenaState?.round===round?.id?arenaState:null;stopAudio();stopArena();arenaState=retainedArena;}
  if(phase!=='playing'){
   stopEmbedded();stopArena();stopAudio();lastViewKey='';linkKey='';clearTimeout(renderLink.timer);$('stageControls').replaceChildren();if(phase==='lobby')$('gameStage').innerHTML=seatsHtml();
-  else if(phase==='countdown'){const first=state.playlist[0].game;$('gameStage').innerHTML=`<div class="party-countdown"><div class="party-countdown-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="52"/><circle class="bar" id="countdownBar" cx="60" cy="60" r="52" pathLength="100"/></svg><div id="bigCountdown" class="party-countdown-number">10</div></div><h2>على الموعد</h2><div class="party-next-game"><img src="${art(first)}" alt=""><span><small>أول لعبة</small><b>${esc(partyGame(first).name)}</b><em>${capLabel(first)}</em></span></div></div>`;}
+  else if(phase==='countdown'){const first=state.playlist[0].game;$('gameStage').innerHTML=`<div class="party-countdown"><div class="party-countdown-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="52"/><circle class="bar" id="countdownBar" cx="60" cy="60" r="52" pathLength="100"/></svg><div id="bigCountdown" class="party-countdown-number">${Math.ceil(PARTY_COUNTDOWN_MS/1000)}</div></div><h2>على الموعد</h2><div class="party-next-game"><img src="${art(first)}" alt=""><span><small>أول لعبة</small><b>${esc(partyGame(first).name)}</b><em>${capLabel(first)}</em></span></div></div>`;}
   else if(phase==='intermission'){const h=state.history.at(-1),first=h?.rows.filter(p=>p.rank===1&&p.points>0)||[],next=state.playlist[state.cursor+1];$('gameStage').innerHTML=`<div class="party-between"><span class="party-eyebrow">${h?.aborted?'جولة متجاوزة':'نتائج الجولة'}</span><div class="party-winner-name">${first.length?first.map(p=>esc(p.name)).join(' · '):'انتهت الجولة'}</div><p>${next?'التالي: '+esc(partyGame(next.game).name):'تجهيز الترتيب النهائي…'}</p>${state.returnWait?`<p class="party-return-note">رجع ${state.players.filter(p=>p.connected).length} من ${state.players.length} من صفحة اللعبة؛ نكمل أول ما يرجع الكل</p>`:''}<div id="bigCountdown" class="party-countdown-number" role="timer">${state.continuous?5:10}</div></div><div class="party-ranks-large">${h?rankTable(h.rows,'جميع المشاركين'):''}</div>`;if(lastPhase!==phase&&first.length)celebrate();}
   else if(phase==='finished'){const first=state.players.filter(p=>p.rank===1&&p.score>0);$('gameStage').innerHTML=`<div class="party-between"><span class="party-lobby-mark">✦</span><h2>بطل جمعتكم</h2><div class="party-winner-name">${first.map(p=>esc(p.name)).join(' · ')||'جولة تدريب'}</div><p>نفس الغرفة جاهزة لسلسلة جديدة.</p></div><div class="party-ranks-large">${rankTable(state.players,'من الأول إلى آخر مشارك',true)}</div>`;if(lastPhase!==phase&&first.length)celebrate();}
  }else renderGame();lastPhase=phase;tickClock();}
@@ -108,40 +108,45 @@ let linkKey='';
 function ownLink(l){const list=Array.isArray(l?.list)?l.list:[];const mine=list.find(t=>t.players?.includes(myId))||list.filter(t=>t.code).sort((a,b)=>(a.players?.length||0)-(b.players?.length||0))[0];return mine?{...l,code:mine.code||null,table:mine.id}:l;}
 function linkUrl(r){const l=ownLink(r.link);return `${l.page}?room=${l.code}&party=${state.code}`;}
 function enterLink(r){const l=ownLink(r?.link);if(l?.status!=='open'||!l.code)return;const own=state.players.find(p=>p.id===myId);try{sessionStorage.setItem('bs_party_link',JSON.stringify({party:state.code,room:l.code,game:r.game,round:r.id,name:String(own?.name||$('name').value||'').trim().slice(0,24),at:Date.now()}));sessionStorage.setItem('bs_link_go:'+r.id,'1');}catch{}location.href=linkUrl(r);}
-let embeddedFrame=null,embeddedCode='',embeddedTimer=0;
+let embeddedFrame=null,embeddedCode='',embeddedRound='',embeddedTimer=0,localReport=null;
 function stopEmbedded(){
  clearTimeout(embeddedTimer);
  embeddedFrame?.remove();
- embeddedFrame=null;
+ embeddedFrame=null;delete $('room').dataset.framed;
  if(embeddedCode)try{sessionStorage.removeItem('bs-party-seat:'+embeddedCode);}catch{}
- embeddedCode='';
+ embeddedCode='';embeddedRound='';localReport=null;
+}
+// 33.9.1: the page inside says when its game is live, and a game with no online room
+// sends its result as it plays; the newest one goes to the room, one at a time.
+function sendReport(){
+ const r=state?.round;if(!localReport||pending||!r?.local||localReport.round!==r.id||!me||me.done||state.status!=='playing'||!roomReady)return;
+ const report=localReport.report;localReport=null;action({report});
 }
 window.addEventListener('message',event=>{
- if(event.origin!==location.origin||event.source!==embeddedFrame?.contentWindow||
-    event.data?.type!=='tahdia-party-live'||event.data.room!==embeddedCode)return;
- clearTimeout(embeddedTimer);
- embeddedFrame.parentElement.classList.add('party-game-connected');
- embeddedFrame.inert=false;
+ if(event.origin!==location.origin||!embeddedFrame||event.source!==embeddedFrame.contentWindow)return;
+ const data=event.data;if(!data||typeof data!=='object')return;
+ if(data.type==='tahdia-party-live'&&(embeddedCode&&data.room===embeddedCode||embeddedRound&&data.round===embeddedRound)){
+  clearTimeout(embeddedTimer);
+  embeddedFrame.parentElement.classList.add('party-game-connected');
+  embeddedFrame.inert=false;
+  return;
+ }
+ if(data.type==='tahdia-party-report'&&embeddedRound&&data.round===embeddedRound&&data.report&&typeof data.report==='object'){
+  localReport={round:data.round,report:{progress:Number(data.report.progress)||0,score:Number(data.report.score)||0,mistakes:Number(data.report.mistakes)||0,done:data.report.done===true,won:data.report.won===true}};
+  sendReport();
+ }
 });
-function renderEmbedded(r){
- const link=ownLink(r.link),ready=link.status==='open'&&link.code&&r.linkSeat;
- const key=r.id+':embedded:'+link.status+':'+(ready?link.code:'');
- if(linkKey===key)return;
- stopEmbedded();stopArena();stopAudio();linkKey=key;
+function frameStage(text){
  const stage=$('gameStage');
  stage.classList.remove('party-quiz');$('stageControls').replaceChildren();
  const wrap=document.createElement('div');wrap.className='party-embedded-game';
  const notice=document.createElement('p');notice.className='party-game-connect';notice.setAttribute('role','status');
- notice.textContent='نجهّز اللعبة…';wrap.append(notice);stage.replaceChildren(wrap);
- if(!ready)return;
- const player=state.players.find(p=>p.id===myId);
- try{
-  sessionStorage.setItem('bs-party-seat:'+link.code,JSON.stringify({party:state.code,room:link.code,game:r.game,round:r.id,
-   name:player?.name||'',token:r.linkSeat,at:Date.now()}));
- }catch{notice.textContent='تعذّر حفظ مقعد الجولة. أعد تحميل الصفحة.';return;}
- const frame=document.createElement('iframe');frame.className='party-game-frame';frame.title=r.name;
- frame.inert=true;frame.setAttribute('allow','fullscreen');
- const url=linkUrl(r)+'&embedded=1';
+ notice.textContent=text;wrap.append(notice);stage.replaceChildren(wrap);
+ return {wrap,notice};
+}
+function openFrame(wrap,notice,url,title){
+ const frame=document.createElement('iframe');frame.className='party-game-frame';frame.title=title;
+ frame.inert=true;frame.setAttribute('allow','fullscreen; autoplay');
  const arm=()=>{
   clearTimeout(embeddedTimer);
   embeddedTimer=setTimeout(()=>{
@@ -149,9 +154,39 @@ function renderEmbedded(r){
    notice.append(button('إعادة الاتصال',()=>{
     notice.textContent='نجهّز اللعبة…';frame.src=url;arm();
    }));
-  },10000);
+  },12000);
  };
- embeddedFrame=frame;embeddedCode=link.code;frame.src=url;wrap.append(frame);arm();
+ embeddedFrame=frame;frame.src=url;wrap.append(frame);arm();
+ // the game takes the screen: the slim bar on top, the game under it
+ $('room').dataset.framed='true';requestAnimationFrame(()=>{const stage=$('gameStage').closest('.party-stage');if(stage)scrollTo({top:Math.max(0,stage.getBoundingClientRect().top+scrollY),behavior:'instant'});});
+}
+function renderEmbedded(r){
+ const link=ownLink(r.link),seat=Boolean(r.link?.embedded),ready=link.status==='open'&&link.code&&(!seat||r.linkSeat);
+ const key=r.id+':embedded:'+link.status+':'+(ready?link.code:'');
+ if(linkKey===key)return;
+ stopEmbedded();stopArena();stopAudio();linkKey=key;
+ const {wrap,notice}=frameStage(link.status==='open'||link.status==='creating'?'نجهّز اللعبة…':'رجعت النتيجة لترتيب الجمعة.');
+ if(!ready)return;
+ const player=state.players.find(p=>p.id===myId),name=String(player?.name||$('name').value||'').trim().slice(0,24);
+ try{
+  // a challenge seats its players by token; every other game finds them by name (or account)
+  if(seat)sessionStorage.setItem('bs-party-seat:'+link.code,JSON.stringify({party:state.code,room:link.code,game:r.game,round:r.id,name,token:r.linkSeat,at:Date.now()}));
+  else sessionStorage.setItem('bs_party_link',JSON.stringify({party:state.code,room:link.code,game:r.game,round:r.id,name,at:Date.now()}));
+ }catch{notice.textContent='تعذّر حفظ مقعد الجولة. أعد تحميل الصفحة.';return;}
+ embeddedCode=link.code;openFrame(wrap,notice,linkUrl(r)+'&embedded=1',r.name);
+}
+// 33.9.1: a game with no online room plays its own page here, everyone on the same board
+function renderLocal(r){
+ const l=r.local,key=r.id+':local';
+ if(linkKey===key)return;
+ stopEmbedded();stopArena();stopAudio();linkKey=key;
+ const {wrap,notice}=frameStage('نجهّز اللعبة…');
+ if(!l?.page||me?.done&&!embeddedFrame){if(me?.done)notice.textContent='انحسبت نتيجتك؛ ننتظر البقية.';return;}
+ const player=state.players.find(p=>p.id===myId),name=String(player?.name||$('name').value||'').trim().slice(0,24);
+ try{sessionStorage.setItem('bs_party_link',JSON.stringify({party:state.code,room:'',game:r.game,round:r.id,name,at:Date.now()}));}catch{}
+ const query=new URLSearchParams({party:state.code,round:r.id,local:'1',embedded:'1',seed:String(l.seed),level:l.level||'standard'});
+ if(l.mode)query.set('mode',l.mode);if(l.theme)query.set('theme',l.theme);if(l.stage)query.set('stage',String(l.stage));
+ embeddedRound=r.id;openFrame(wrap,notice,l.page+'?'+query,r.name);
 }
 function renderLink(r){
  if(state.continuous)return renderEmbedded(r);
@@ -165,7 +200,7 @@ function renderLink(r){
  stage.innerHTML=`<div class="party-link-card" data-status="${esc(l.status)}"><img src="${art(r.game)}" alt=""><div><small>${head}</small><h3>${esc(g.name)}</h3><p>${text}</p>${l.code?`<span class="party-link-code">${several?'رمز طاولتك':'رمز الغرفة'} <b dir="ltr">${esc(l.code)}</b></span>`:''}</div></div>`;
  if(open){controls.append(button(went?'ارجع للعبة':'ادخل اللعبة',()=>enterLink(state.round),'party-primary party-link-go'));if(!went){clearTimeout(renderLink.timer);renderLink.timer=setTimeout(()=>{if(state?.round?.id===r.id&&state.round.link?.status==='open')enterLink(state.round);},2200);}}
 }
-function renderGame(){const r=state?.round;if(state?.status!=='playing'||!r)return;if(r.link&&r.link.status!=='failed'){renderLink(r);return;}if(embeddedFrame)stopEmbedded();linkKey='';me=r.me||me;if(!me)return;const viewKey=r.id+':'+JSON.stringify(me)+':'+JSON.stringify(r.quiz||r.reaction||r.tables||'');if(lastViewKey===viewKey)return;lastViewKey=viewKey;const stage=$('gameStage'),controls=$('stageControls');if(r.game==='serpent'){renderArena(r);return;}if(r.game==='memory'){stage.classList.remove('party-quiz');controls.replaceChildren();renderPartyMemory(stage,me,me.done||!roomReady,r.id);return;}stage.classList.remove('party-quiz');stage.replaceChildren();controls.replaceChildren();if(me.done){stage.innerHTML=`<div class="party-complete">${me.won?'أكملت التحدّي ✦':'انتهت محاولاتك'} · نتيجتك ${me.score}. تابع ترتيب أصحابك؛ الانتقال تلقائي بعد نهاية الجولة.</div>`;}
+function renderGame(){const r=state?.round;if(state?.status!=='playing'||!r)return;if(r.link&&r.link.status!=='failed'){renderLink(r);return;}if(r.local){me=r.me||me;renderLocal(r);sendReport();return;}if(embeddedFrame)stopEmbedded();linkKey='';me=r.me||me;if(!me)return;const viewKey=r.id+':'+JSON.stringify(me)+':'+JSON.stringify(r.quiz||r.reaction||r.tables||'');if(lastViewKey===viewKey)return;lastViewKey=viewKey;const stage=$('gameStage'),controls=$('stageControls');if(r.game==='serpent'){renderArena(r);return;}if(r.game==='memory'){stage.classList.remove('party-quiz');controls.replaceChildren();renderPartyMemory(stage,me,me.done||!roomReady,r.id);return;}stage.classList.remove('party-quiz');stage.replaceChildren();controls.replaceChildren();if(me.done){stage.innerHTML=`<div class="party-complete">${me.won?'أكملت التحدّي ✦':'انتهت محاولاتك'} · نتيجتك ${me.score}. تابع ترتيب أصحابك؛ الانتقال تلقائي بعد نهاية الجولة.</div>`;}
  const locked=me.done||!roomReady;
  if(r.game==='sudoku'){
   stage.append(stats(`<span>أخطاء <b>${me.mistakes}/5</b></span><span>الإنجاز <b>${Math.round(me.progress*100)}%</b></span>`));const board=grid(9,'sudoku');me.board.forEach((v,i)=>{const bad=Boolean(v)&&badDigitsRound===r.id&&badDigits.get(i)===v,b=button(v||'',()=>{selected=i;lastViewKey='';renderGame();},'party-cell '+(me.initial[i]?'given ':'')+(selected===i?'selected':'')+(bad?' bad-digit':''));b.dataset.sudokuCell=String(i);if(i===errorFlash.cell&&Date.now()<errorFlash.until){b.dataset.sudokuError='true';b.classList.add('sudoku-error-pulse');setTimeout(()=>{delete b.dataset.sudokuError;b.classList.remove('sudoku-error-pulse');},Math.max(0,errorFlash.until-Date.now()));}b.disabled=Boolean(me.initial[i])||locked;b.setAttribute('aria-label','صف '+(Math.floor(i/9)+1)+' عمود '+(i%9+1)+' قيمة '+(v||'فارغ'));board.append(b);});stage.append(board);const pad=grid(5);pad.className='party-num-pad';for(let v=1;v<=9;v++)pad.append(button(v,()=>{if(selected<0)return toast('اختر خانة أولًا');action({cell:selected,value:v});},''));pad.append(button('مسح',()=>{if(selected>=0)action({cell:selected,value:0});},''));if(!locked)stage.append(pad);

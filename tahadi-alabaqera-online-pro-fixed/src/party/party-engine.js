@@ -12,7 +12,7 @@ import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn} from '../..
 import {createJackarooGame,getJackarooActions,playJackarooAction} from '../../public/assets/js/engines/jackaroo-engine.js';
 import {createRaceDiceGame,rollRaceDice,bankRaceDice} from '../../public/assets/js/engines/dice-engine.js';
 import {createSerpentGame,steerSerpent,stepSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
-import {linkedGame,linkable,linkTables,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
+import {linkedGame,linkable,linkTables,localGame,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
 
 export const PARTY_VERSION=29;
 export const CONTINUOUS_BREAK_MS=5000;
@@ -66,9 +66,11 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
  for(const p of Object.values(r.participants)){p.updatedAt=now;p.finishedAt=0;}
  // 32.1.0: a game that has its own online room is played there, unchanged; the party
  // waits for its result. With too few players for that game, it stays in the party.
+ // 33.9.1: the group room plays every game as itself: that room opens inside the group
+ // room's page, and a game with no online room plays its own page there (r.local).
  const embedded=room.continuous&&embeddedGames.has(game);
  const playing=embedded?room.roster:room.roster.filter(id=>room.players[id]?.connected);
- if(room.links&&(!room.continuous||embedded)&&linkedGame(game)&&linkable(game,playing.length)){
+ if(room.links&&linkedGame(game)&&linkable(game,playing.length)){
   const token=()=>uuid().replaceAll('-','')+uuid().replaceAll('-','');
   const groups=linkTables(game,shuffled(playing,random));
   const tables=groups.map((players,id)=>({id,players,count:players.length,
@@ -79,8 +81,19 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
   r.deadline=now+PARTY_LINK_WAIT_MS;
   return;
  }
+ if(room.continuous&&localGame(game)){r.local=localRound(r);return;}
  setupRoundGame(room,r,now);
 }
+// 33.9.1: what a game's own page needs to play the round: everyone the same board.
+// The level follows the playlist's difficulty (2, the default, is the game's usual level).
+function localRound(r){
+ const d=r.settings.difficulty,level=d<=1?'casual':d>=4?'expert':'standard';
+ const local={page:localGame(r.game),seed:r.seed>>>0,level};
+ if(r.game==='memory'){local.mode=r.settings.memoryMode||'pairs';local.theme=r.settings.memoryTheme||['wildlife','space','vehicles','ocean'][r.seed%4];}
+ if(r.game==='jewels')local.stage=Math.min(60,1+(d-1)*12+r.seed%6);
+ return local;
+}
+const finite=(value,min,max)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):min;};
 // The game itself inside the party (also the fallback when its real room cannot open).
 export function setupRoundGame(room,r,now=Date.now()){
  const settings=r.settings,game=r.game,seed=r.seed,random=seeded(seed);
@@ -150,7 +163,12 @@ export function applyPartyAction(room,id,message,now=Date.now()){
  const action=message.action;if(!action||typeof action!=='object'||Array.isArray(action))throw Error('حركة غير صالحة');
  if(p.done)throw Error('اكتملت نتيجتك؛ تابع أصحابك من الترتيب');
  const game=r.game;let feedback='move';
- if(game==='sudoku'){
+ if(r.local){
+  // 33.9.1: the game's own page reports how far its player got; a result never goes back
+  const report=action.report;if(!report||typeof report!=='object'||Array.isArray(report))throw Error('حركة غير صالحة');
+  p.progress=Math.max(p.progress||0,finite(report.progress,0,1));p.score=Math.max(p.score||0,Math.floor(finite(report.score,0,1000000)));p.mistakes=Math.floor(finite(report.mistakes,0,999));
+  if(report.done===true)completed(p,now,report.won===true);feedback='silent';
+ }else if(game==='sudoku'){
   const cell=requireActionIndex(action.cell,81),value=requireActionIndex(action.value,10);if(p.state.initial[cell]||p.state.board[cell]===value)throw Error('اختر خانة قابلة للتعديل');
   if(value&&SUDOKU_PEERS[cell].some(i=>p.state.board[i]===value)){p.mistakes++;feedback='wrong';}
   else{const result=moveSudoku(p.state,{cell,value});if(!result.accepted)throw Error('لا يمكن تنفيذ الإدخال');p.state=result.state;if(value&&r.solution[cell]!==value){p.mistakes++;feedback='wrong';}else feedback=value?'correct':'move';}
@@ -236,6 +254,8 @@ export function advanceParty(room,now=Date.now()){
  if(room.status!=='playing')return{changed,full,privateIds:[...privateIds]};
  const r=room.round;
  if(r.link&&r.link.status!=='failed'){if(now>=r.deadline){finishPartyRound(room,now);full=changed=true;}return{changed,full,privateIds:[...privateIds]};}
+ // 33.9.1: a round on the games' own pages ends once everyone who is here has finished
+ if(r.local){const here=room.roster.filter(id=>room.players[id]?.connected).map(id=>r.participants[id]).filter(Boolean);if(now>=r.deadline||here.length&&here.every(p=>p.done)){finishPartyRound(room,now);full=changed=true;}return{changed,full,privateIds:[...privateIds]};}
  if(r.game==='serpent'){
   const elapsed=Math.max(0,Math.min(200,now-r.lastSimulationAt));r.lastSimulationAt=now;r.stepCarry=Math.min(200,r.stepCarry+elapsed);const count=Math.floor(r.stepCarry/50);r.stepCarry-=count*50;
   for(let i=0;i<count&&r.arena.status==='playing';i++)stepSerpent(r.arena,.05);changed=changed||count>0;
@@ -288,7 +308,7 @@ export function configureParty(room,id,message,now=Date.now()){
 }
 function publicParticipant(r,p,now){
  if(!p)return null;const base={id:p.id,seq:p.seq,score:p.score,progress:p.progress,done:p.done,won:p.won,mistakes:p.mistakes,faults:p.faults,actions:p.actions,finishedAt:p.finishedAt};
- if(r.link&&r.link.status!=='failed')return base;
+ if(r.link&&r.link.status!=='failed'||r.local)return base;
  if(r.game==='sudoku')return{...base,board:p.state.board,initial:p.state.initial};
  if(['paths','paths-online'].includes(r.game)){const s=p.state;return{...base,paths:s.paths,size:s.size,pairs:s.pairs,walls:s.walls,gates:s.gates};}
  if(r.game==='jewels'){const {log,history,seed,...state}=p.state;return{...base,state};}
@@ -304,10 +324,11 @@ function publicParticipant(r,p,now){
 // (`link.list`), so each page finds its own table; `code` is the viewer's own table.
 export function partyRoundView(room,id=null,now=Date.now()){
  const r=room.round;if(!r)return null;const view={id:r.id,game:r.game,name:partyGame(r.game)?.name||'لعبة محذوفة',startedAt:r.startedAt,deadline:r.deadline,settings:r.settings,revision:r.revision,me:publicParticipant(r,r.participants[id],now)};
- if(r.link){const tables=r.link.tables||[],mine=tables.find(t=>t.players.includes(id))||[...tables].filter(t=>t.code).sort((a,b)=>a.players.length-b.players.length)[0];view.link={status:r.link.status,page:r.link.page,code:mine?.code||r.link.code||null,count:r.link.count||0,tables:tables.length,table:mine?mine.id:null,list:tables.map(t=>({id:t.id,code:t.code||null,players:[...(t.players||[])]}))};
+ if(r.link){const tables=r.link.tables||[],mine=tables.find(t=>t.players.includes(id))||[...tables].filter(t=>t.code).sort((a,b)=>a.players.length-b.players.length)[0];view.link={status:r.link.status,page:r.link.page,code:mine?.code||r.link.code||null,count:r.link.count||0,tables:tables.length,table:mine?mine.id:null,embedded:Boolean(r.link.embedded),list:tables.map(t=>({id:t.id,code:t.code||null,players:[...(t.players||[])]}))};
   if(r.link.embedded&&r.link.status==='open'&&mine?.seatTokens?.[id])view.linkSeat=mine.seatTokens[id];
  }
- if(r.link&&r.link.status!=='failed')return view;
+ if(r.local)view.local={...r.local};
+ if(r.link&&r.link.status!=='failed'||r.local)return view;
  if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,category:q.category||null,visual:Boolean(q.visual),sequence:q.sequence||null,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
  if(r.game==='reaction')view.reaction={trial:r.trial,trials:r.trials,signal:r.signal};
  if(r.tables)view.tables=r.tables.map(t=>({id:t.id,members:t.members.map(id=>({id,name:room.players[id]?.name||'لاعب',connected:room.players[id]?.connected??true})),finished:t.finished,turn:t.state.turn,turnDeadline:t.turnDeadline,pendingRoll:t.pendingRoll,players:t.state.players,jumps:t.state.jumps,bonusCells:t.state.bonusCells,lastRoll:t.state.lastRoll,lastEvent:t.state.lastEvent,winner:t.state.winner,winnerTeam:t.state.winnerTeam,turnTotal:t.state.turnTotal,target:t.state.target,actions:t.actions||0,moveCount:t.state.moveCount,history:r.game==='dice'?(t.state.history||[]).slice(-8):undefined}));

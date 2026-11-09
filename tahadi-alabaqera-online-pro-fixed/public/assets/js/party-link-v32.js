@@ -3,15 +3,89 @@
    address it keeps the way back to the party in reach, hands a guest the same
    name they carry in the party (that is how their result finds them), and when
    the match ends offers the return with a short countdown. Without ?party it
-   does nothing at all. */
+   does nothing at all.
+   33.9.1: inside the group room (embedded=1, in its frame) every game is shown as
+   itself: the page leaves its own way around to the group room, tells the room when
+   its game is live, and a game with no online room (local=1) plays the same board as
+   everyone and sends its result to the room. */
 (function () {
   'use strict';
   const params = new URLSearchParams(location.search);
+  const framed = params.get('embedded') === '1' && window.parent !== window;
+  const clean = (value) => String(value || '').normalize('NFKC').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+  const say = (type, data) => { try { window.parent.postMessage({ type, ...data }, location.origin); } catch {} };
+  // A guest plays under the party name; an account keeps its own name (social-client locks it).
+  const fillName = (name) => {
+    if (!name) return;
+    document.querySelectorAll('input[data-account-name]').forEach((input) => {
+      if (!input.readOnly) input.value = name.slice(0, input.maxLength > 0 ? input.maxLength : 24);
+    });
+  };
+  // Inside the group room the page keeps its game and drops its own way around.
+  function embed(seat) {
+    document.documentElement.classList.add('party-embedded');
+    if (seat) document.documentElement.classList.add('party-embedded-seat');
+    const css = document.createElement('style');
+    css.textContent =
+      '.party-embedded body{min-height:0}' +
+      '.party-embedded-seat body{background:transparent}' +
+      '.party-embedded :is(#bsGameCommand,.bs-party-back,.bs-party-return,.bs-party-nav){display:none!important}' +
+      // the way out of a game is the group room itself, and the site's own header stays out
+      '.party-embedded :is(#leaveGame,#soLeave,#pathLeave,#pathCopy,#arenaExit,#arenaLeaveLobby,#arenaPauseExit,#arenaResultExit,.gm33-leave,.bs-topbar,.paths-header,.arcade-info){display:none!important}' +
+      '.party-embedded body.picture-page:not(.sudoku-page) #leave{display:none!important}' +
+      ':is(html,#v31).party-embedded body #game#game#game#game #leaveGame{display:none!important}' +
+      '.party-embedded body.quiz-v19 :is(.top,#roomHeader,.footer){display:none!important}' +
+      '.party-embedded body.quiz-v19 #lobby :is(.roomHead,#cats,#modePicker,#relayOnlineSetting,#hostActions,#startWrap){display:none!important}' +
+      // a round on a game's own page plays the room's level: no menu
+      '.party-embedded body[data-arcade] :is(.arcade-shell>.eyebrow,.arcade-shell>h1,.arcade-shell>p,.arcade-options-v16,#best){display:none!important}' +
+      '.party-embedded .ch-shell{max-width:none;padding:0;margin:0}' +
+      '.party-embedded .ch-layout{display:block}' +
+      '.party-embedded :is(#chLobby,#chSetup,#chRematch,#chLeave,.ch-topbar,.ch-heading,.ch-aside,.ch-footer){display:none!important}';
+    document.head.append(css);
+  }
+  // Watch only this room's socket; the game keeps using it exactly as before.
+  function watch(room, onMessage) {
+    const Native = window.WebSocket;
+    if (typeof Native !== 'function' || Native.bsPartyLink) return;
+    class PartyLinkSocket extends Native {
+      constructor(url, protocols) {
+        if (protocols === undefined) super(url); else super(url, protocols);
+        try { if (String(url).includes('/' + room + '/')) this.addEventListener('message', onMessage); } catch {}
+      }
+    }
+    Object.defineProperty(PartyLinkSocket, 'bsPartyLink', { value: true });
+    try { window.WebSocket = PartyLinkSocket; } catch {}
+  }
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem('bs_party_link') || 'null'); } catch {}
+
+  // 33.9.1: a game with no online room, on its own page inside the group room. The seed
+  // gives every player the same board; the page reports with BS_PARTY_LINK.report().
+  if (framed && params.get('local') === '1') {
+    const party = params.get('party') || '', round = params.get('round') || '', seed = Number(params.get('seed'));
+    if (!/^\d{6}$/.test(party) || !/^[0-9a-f-]{36}$/i.test(round) || !Number.isInteger(seed) || seed < 0) { window.BS_PARTY_LINK = null; return; }
+    const own = saved?.party === party && saved.round === round ? saved : null, level = params.get('level');
+    const local = Object.freeze({
+      seed: seed >>> 0,
+      level: ['casual', 'standard', 'expert'].includes(level) ? level : 'standard',
+      mode: params.get('mode') === 'sequence' ? 'sequence' : 'pairs',
+      theme: String(params.get('theme') || '').replace(/[^a-z]/g, '').slice(0, 20),
+      stage: Math.max(1, Math.min(60, Math.floor(Number(params.get('stage')) || 1))),
+    });
+    const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
+    window.BS_PARTY_LINK = Object.freeze({
+      party, room: '', back: '', round, game: String(own?.game || ''), name: clean(own?.name), embedded: true, local,
+      live: () => say('tahdia-party-live', { round }),
+      report: (result = {}) => say('tahdia-party-report', { round, report: { progress: number(result.progress), score: number(result.score), mistakes: number(result.mistakes), done: result.done === true, won: result.won === true } }),
+    });
+    fillName(window.BS_PARTY_LINK.name);
+    embed(false);
+    return;
+  }
+
   const room = params.get('room') || '';
   let seat = '';
-  if (params.get('embedded') === '1' && window.parent !== window && /^\d{6}$/.test(room)) {
+  if (framed && /^\d{6}$/.test(room)) {
     try {
       const own = JSON.parse(sessionStorage.getItem('bs-party-seat:' + room) || 'null');
       if (own?.room === room && own.party === params.get('party') && /^[a-f0-9]{64}$/.test(own.token)) {
@@ -25,27 +99,18 @@
   const party = params.get('party') || (recent && saved.room === room ? String(saved.party || '') : '');
   if (!/^\d{6}$/.test(party) || !/^\d{6}$/.test(room)) { window.BS_PARTY_LINK = null; return; }
   const fresh = Boolean(recent && saved.party === party && saved.room === room);
-  const clean = (value) => String(value || '').normalize('NFKC').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
   const back = '/party?room=' + party;
-  const link = Object.freeze({ party, room, back, game: fresh ? String(saved.game || '') : '', round: fresh ? String(saved.round || '') : '', name: fresh ? clean(saved.name) : '', ...(seat ? { seat } : {}) });
+  const link = Object.freeze({ party, room, back, game: fresh ? String(saved.game || '') : '', round: fresh ? String(saved.round || '') : '', name: fresh ? clean(saved.name) : '', ...(seat ? { seat } : {}), ...(framed ? { embedded: true } : {}) });
   window.BS_PARTY_LINK = link;
+  fillName(link.name);
 
-  // A guest plays under the party name; an account keeps its own name (social-client locks it).
-  if (link.name) {
-    document.querySelectorAll('input[data-account-name]').forEach((input) => {
-      if (!input.readOnly) input.value = link.name.slice(0, input.maxLength > 0 ? input.maxLength : 24);
-    });
-  }
-
-  if (seat) {
-    document.documentElement.classList.add('party-embedded');
-    const css = document.createElement('style');
-    css.textContent =
-      '.party-embedded body{background:transparent;min-height:0}' +
-      '.party-embedded .ch-shell{max-width:none;padding:0;margin:0}' +
-      '.party-embedded .ch-layout{display:block}' +
-      '.party-embedded :is(#chLobby,#chSetup,#chRematch,#chLeave,.ch-topbar,.ch-heading,.ch-aside,.ch-footer){display:none!important}';
-    document.head.append(css);
+  if (framed) {
+    embed(Boolean(seat));
+    // the group room shows the game the moment its room answers (a challenge page says so itself)
+    if (!seat) {
+      let told = false;
+      watch(room, () => { if (told) return; told = true; say('tahdia-party-live', { room }); });
+    }
     return;
   }
   const style = document.createElement('style');
@@ -118,17 +183,6 @@
       setTimeout(offerReturn, 3500); // the game shows its own result first
     }
   }
-  // Watch only this room's socket; the game keeps using it exactly as before.
-  const Native = window.WebSocket;
-  if (typeof Native === 'function' && !Native.bsPartyLink) {
-    class PartyLinkSocket extends Native {
-      constructor(url, protocols) {
-        if (protocols === undefined) super(url); else super(url, protocols);
-        try { if (String(url).includes('/' + room + '/')) this.addEventListener('message', peek); } catch {}
-      }
-    }
-    Object.defineProperty(PartyLinkSocket, 'bsPartyLink', { value: true });
-    try { window.WebSocket = PartyLinkSocket; } catch {}
-  }
+  watch(room, peek);
   window.addEventListener('pagehide', () => clearInterval(timer));
 })();

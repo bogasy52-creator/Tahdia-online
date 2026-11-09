@@ -23,7 +23,15 @@ export const LINKED_GAMES = Object.freeze({
   snakes: { page: '/snakes', min: 1, max: 10, tables: true },
   zahra: { page: '/zahra', min: 1, max: 6, tables: true },
   jackaroo: { page: '/jackaroo', min: 1, max: 6, tables: true },
+  // 33.9.1: the dice race is played on its own table too, ten to a table
+  dice: { page: '/dice', min: 1, max: 10, tables: true },
 });
+
+// 33.9.1: the games with no online room are played on their own page inside the group
+// room: every player gets the same board (one seed for all) and each page sends its
+// result back to the room as it plays.
+export const LOCAL_GAMES = Object.freeze({ memory: '/memory', logic: '/logic', puzzle: '/puzzle', jewels: '/journey' });
+export function localGame(game) { return LOCAL_GAMES[game] || null; }
 
 export function linkedGame(game) { return LINKED_GAMES[game] || null; }
 /** Can this many players start the real game? (board games need their table full) */
@@ -46,7 +54,7 @@ export function cleanPartyLink(value) {
 }
 
 // 33.0.0: the code carries the game (see rooms/room-codes.js)
-const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo' };
+const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo', dice: 'dice' };
 const roomCode = (game) => roomCodeFor(FAMILY[game] || game);
 const secret = () => crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
 
@@ -62,15 +70,16 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
     const playerLimit = Math.min(20, Math.max(2, [4, 6].includes(room) ? room + 1 : room));
     return { ns: 'ROOMS', name: code, url: 'https://room.internal/init', body: { code, hostKey, name: 'party', playerLimit, expected: count, party } };
   }
-  if (game === 'sudoku') return { ns: 'ROOMS', name: 'sudoku:' + code, url: 'https://sudoku.internal/init', body: { code, hostKey, difficulty, capacity: room, party } };
-  if (game === 'paths-online') return { ns: 'ROOMS', name: 'paths:' + code, url: 'https://paths.internal/init', body: { code, hostKey, difficulty, capacity: room, party } };
-  if (game === 'picture') return { ns: 'ROOMS', name: 'picture:' + code, url: 'https://picture.internal/init', body: { code, hostKey, capacity: room, party } };
+  // 33.9.1: these start by themselves too, once the players the room sent are in
+  if (game === 'sudoku') return { ns: 'ROOMS', name: 'sudoku:' + code, url: 'https://sudoku.internal/init', body: { code, hostKey, difficulty, capacity: room, expected: count, party } };
+  if (game === 'paths-online') return { ns: 'ROOMS', name: 'paths:' + code, url: 'https://paths.internal/init', body: { code, hostKey, difficulty, capacity: room, expected: count, party } };
+  if (game === 'picture') return { ns: 'ROOMS', name: 'picture:' + code, url: 'https://picture.internal/init', body: { code, hostKey, capacity: room, expected: count, size: difficulty <= 2 ? 3 : difficulty === 3 ? 4 : 5, party } };
   if (game === 'serpent') {
     const duration = [60, 120, 180].includes(Number(settings?.duration)) ? Number(settings.duration) : 120;
     const playerLimit = Math.max(2, room), botCount = count < 2 ? 1 : 0;
     return { ns: 'ROOMS', name: '__serpent__:' + code, url: 'https://serpent.internal/init', body: { code, hostKey, playerLimit, duration, botCount, difficulty: 'mixed', matchMode: 'timed', worldId: settings?.worldId || 'classic', expected: count, party } };
   }
-  // snakes, zahra, jackaroo: a board room for the players of this table (bots fill the rest)
+  // snakes, zahra, jackaroo, dice: a board room for the players of this table (bots fill the rest)
   return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game, playerLimit: game === 'jackaroo' ? (count > 4 ? 6 : 4) : count, expected: count, name: '', variant: 'classic', party } };
 }
 

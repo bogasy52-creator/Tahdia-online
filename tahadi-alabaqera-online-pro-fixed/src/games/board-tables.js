@@ -23,7 +23,8 @@ export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice
 export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3, billiards: 2 });
 export const TABLE_LOBBY_MS = 10_000;
 // a group room's table starts when all its players are in, or this long after the first one came
-export const PARTY_TABLE_WAIT_MS = 30_000;
+// 33.9.1: the group room's players come straight in, so a missing one is waited for 15 seconds
+export const PARTY_TABLE_WAIT_MS = 15_000;
 export const DICE_TARGET = 50;
 // how long a table needs on screen for one step (dice, walk, ladder or snake…)
 export const STEP_MS = Object.freeze({ snakes: 2700, zahra: 1250, jackaroo: 1500, dice: 900, billiards: 900 });

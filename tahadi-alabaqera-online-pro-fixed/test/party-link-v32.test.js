@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LINKED_GAMES, linkable, linkTables, cleanPartyLink, standings, createLinkedRoom, reportPartyLink, settlePartyLink, PARTY_LINK_WAIT_MS, PARTY_RETURN_MS } from '../src/party/party-link.js';
+import { LINKED_GAMES, LOCAL_GAMES, linkable, linkTables, cleanPartyLink, standings, createLinkedRoom, reportPartyLink, settlePartyLink, PARTY_LINK_WAIT_MS, PARTY_RETURN_MS } from '../src/party/party-link.js';
 import { createParty, addPartyPlayer, startPartyRound, applyPartyAction, advanceParty, openPartyLink, failPartyLink, applyLinkResult, partySnapshot, nameKey, PARTY_BACK_MS } from '../src/party/party-engine.js';
 import { PartyRoom } from '../src/party/party-room.js';
 import { SudokuRoom } from '../src/sudoku/sudoku-room.js';
@@ -33,7 +33,9 @@ test('every linked game exists in the party catalog and opens its own page', () 
     assert.match(spec.page, /^\/[a-z-]+$/);
     assert.equal(PARTY_GAMES.find((g) => g.id === game).real, true, game + ' is marked as played in the real game');
   }
-  for (const g of PARTY_GAMES) if (!LINKED_GAMES[g.id]) assert.notEqual(g.real, true, g.id + ' has no room of its own');
+  // 33.9.1: a game with no online room plays its own page in the group room, so it is real too
+  for (const g of PARTY_GAMES) assert.equal(g.real, true, g.id + ' is played as itself');
+  for (const g of PARTY_GAMES) assert.ok(LINKED_GAMES[g.id] || LOCAL_GAMES[g.id], g.id + ' has its own room or its own page');
 });
 
 test('a game links with whoever is here: table games fill with bots and split a big party into tables', () => {
@@ -155,12 +157,12 @@ test('a linked round waits for the real room; actions inside the party are refus
   assert.equal(r.deadline, 5000 + PARTY_LINK_WAIT_MS);
   assert.equal(r.solution, undefined, 'no party copy of the game is prepared');
   const view = partySnapshot(room, room.order[0], 5100).round;
-  assert.deepEqual(view.link, { status: 'creating', page: '/sudoku', code: null, count: 3, tables: 1, table: 0, list: [{ id: 0, code: null, players: r.link.tables[0].players }] });
+  assert.deepEqual(view.link, { status: 'creating', page: '/sudoku', code: null, count: 3, tables: 1, table: 0, embedded: false, list: [{ id: 0, code: null, players: r.link.tables[0].players }] });
   assert.equal(JSON.stringify(partySnapshot(room, room.order[0], 5100)).includes(r.link.tables[0].token), false, 'the report token never reaches a page');
   assert.throws(() => applyPartyAction(room, room.order[0], { sessionId: room.sessionId, roundId: r.id, seq: 1, action: { cell: 0, value: 1 } }, 5200), /صفحتها الأصلية/);
   assert.equal(openPartyLink(room, { code: '777777', page: '/sudoku' }, 6000), true);
   assert.equal(openPartyLink(room, { code: '888888', page: '/sudoku' }, 6001), false, 'opens once');
-  assert.deepEqual(partySnapshot(room, room.order[0], 6100).round.link, { status: 'open', page: '/sudoku', code: '777777', count: 3, tables: 1, table: 0, list: [{ id: 0, code: '777777', players: r.link.tables[0].players }] });
+  assert.deepEqual(partySnapshot(room, room.order[0], 6100).round.link, { status: 'open', page: '/sudoku', code: '777777', count: 3, tables: 1, table: 0, embedded: false, list: [{ id: 0, code: '777777', players: r.link.tables[0].players }] });
   assert.equal(partySnapshot(room, room.order[3], 6100).round.link.code, '777777', 'a player who was away is sent to a table too');
 });
 

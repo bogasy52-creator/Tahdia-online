@@ -1073,7 +1073,7 @@ let lobbyFrame = 0;
 function lobbyCountdown() {
   lobbyFrame = 0;
   if (!(room?.publicMatch || room?.party?.first) || room.status !== "lobby") return;
-  const total = room.party?.first ? 30000 : LOBBY_MS,
+  const total = room.party?.first ? 15000 : LOBBY_MS,
     left = room.lobbyDeadline
       ? Math.max(
           0,

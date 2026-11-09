@@ -434,7 +434,7 @@
   const HEROES=Object.freeze(CATALOG.filter(i=>i.type==='character').map(i=>Object.freeze({id:i.id.slice(10),item:i.id,name:i.name,art:i.asset})));
   const heroOf=value=>{const id=String(value||'').replace(/^character-/,'');return HEROES.find(h=>h.id===id)||null;};
   const heroArt=value=>{const h=heroOf(value);return h?'/assets/heroes/'+h.art+'.webp':'';};
-  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.9.0-full1':'';};
+  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.9.1-full1':'';};
   const heroFace=value=>{const h=heroOf(value);return h?'/assets/heroes/face/'+h.art+'.webp':'';};
   const BOT_HEROES=['robot','princess','samurai','viking','cyber','diver','racer','gladiator'];
   const botHeroFace=seat=>heroFace(BOT_HEROES[Math.abs(Math.floor(Number(seat)||0))%BOT_HEROES.length]);

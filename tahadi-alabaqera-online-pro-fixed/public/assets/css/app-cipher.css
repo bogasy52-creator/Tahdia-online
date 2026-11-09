@@ -570,3 +570,15 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/cipher-v33-9-1.css */
+/* 33.9.1 — ساحة الشفرات: whoever is caught leaves the hunt; the rest carry on until one is left */
+.ch-cipher-hunt .ch-out{display:none}
+.ch-cipher-hunt.ch-cipher-gone>:not(.ch-out){display:none!important}
+#chControls.ch-cipher-gone,#chTactics.ch-cipher-gone{display:none!important}
+.ch-cipher-hunt.ch-cipher-gone .ch-out{display:grid;justify-items:center;gap:6px;padding:22px 16px 18px;border:1px solid color-mix(in srgb,#ff6b7a 45%,var(--ch-line));border-radius:18px;background:color-mix(in srgb,#ff6b7a 9%,transparent);text-align:center}
+.ch-out .ch-out-mark{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:#ff6b7a;color:#1a0d10;font-size:26px;font-weight:900;line-height:1}
+.ch-out b{font-size:21px;color:var(--ch-ink)}
+.ch-out p{margin:0;font-size:14.5px;line-height:1.7;color:var(--ch-muted)}
+.ch-out .ch-out-left{font-weight:800;color:var(--ch-accent);font-variant-numeric:tabular-nums}
+.ch-out .ch-button{margin-top:8px;min-width:170px}

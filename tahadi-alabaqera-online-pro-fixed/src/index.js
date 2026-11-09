@@ -42,7 +42,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.9.0';
+const RELEASE='33.9.1';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -1390,7 +1390,7 @@ export class GameRoom extends DurableObject {
     return null;
   }
 
-  // A quiz the group room opened starts by itself: once everyone it sent is in, or 30 seconds
+  // A quiz the group room opened starts by itself: once everyone it sent is in, or 15 seconds
   // after the first came (with whoever is here).
   async partyQuizArrival() {
     const r = this.room;
@@ -2224,7 +2224,7 @@ export class BoardRoom extends DurableObject {
   }
 
   // 33.0.0: a table the group room opened starts by itself: the moment all its players
-  // are in, or 30 seconds after the first one came (bots take the seats of the missing).
+  // are in, or 15 seconds after the first one came (bots take the seats of the missing).
   async partyTableArrival() {
     const r = this.room;
     if (!r?.partyLink || r.status !== 'lobby' || r.startedAt || !TABLE_GAMES.includes(r.game)) return;

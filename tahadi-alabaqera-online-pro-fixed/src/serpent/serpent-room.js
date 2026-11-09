@@ -7,7 +7,7 @@ import {cleanPartyLink,settlePartyLink,standings} from '../party/party-link.js';
 
 const TTL=30*60_000,PROTOCOL='busraj-serpent-v1';
 // 33.0.0: a group room's arena starts when all its players are in, or this long after the first came
-export const PARTY_ARENA_WAIT_MS=30_000;
+export const PARTY_ARENA_WAIT_MS=15_000; // 33.9.1: was 30 seconds
 const DIFFICULTIES=['easy','medium','hard','mixed'];
 // «متنوع»: every bot gets its own strength, some easy, some hard
 const botLevels=count=>Array.from({length:count},()=>{const x=crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;return x<.35?'easy':x<.75?'medium':'hard';});
@@ -125,7 +125,7 @@ export class SerpentRoom {
   r.status='playing';r.rewardsComplete=false;
   await this.save();await this.schedule();this.broadcast(true);this.run();
  }
- // A group room's arena: starts once everyone it sent is in, or 30 seconds after the first came.
+ // A group room's arena: starts once everyone it sent is in, or 15 seconds after the first came.
  async partyArrival(){
   const r=this.room;if(!r?.partyLink||r.status!=='lobby'||r.round)return;
   this.syncConnections();const here=r.players.filter(p=>p.connected).length;

@@ -1,7 +1,7 @@
-import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.0-studio1';
+import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.1-studio1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
-import { createGame, step, carryPuck, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.9.0-studio1';
-import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.0-studio1';
+import { createGame, step, carryPuck, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.9.1-studio1';
+import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.1-studio1';
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';

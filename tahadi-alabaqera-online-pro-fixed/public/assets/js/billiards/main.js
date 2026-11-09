@@ -5,8 +5,8 @@
    60 frames a second with its sounds; online, the server's shot replays here to the same end.
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
-import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.0-pool1';
-import { createTable } from '../board-table-v33.js?v=33.9.0';
+import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.1-pool1';
+import { createTable } from '../board-table-v33.js?v=33.9.1';
 
 const { L, W, R } = POOL;
 const RAIL = 14, CUSHION = 4;

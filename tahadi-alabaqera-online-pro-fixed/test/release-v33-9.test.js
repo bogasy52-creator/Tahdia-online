@@ -13,9 +13,9 @@ import { HAND_SPEED, createGame, step } from '../public/assets/js/hockey/core.js
 const read = (file) => readFile(new URL('../' + file, import.meta.url), 'utf8');
 const seeded = (seed = 9) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 
-test('the release is 33.9.0 with its notes', async () => {
+test('the release is 33.9 or later with its notes', async () => {
   const pkg = JSON.parse(await read('package.json'));
-  assert.equal(pkg.version, '33.9.0');
+  assert.match(pkg.version, /^33\.(?:9|\d{2,})\.\d+$/);
   const notes = await read('RELEASE_V33_9_AR.md');
   for (const word of ['البلوت', 'الجاكارو', 'الهوكي', 'الفيسات', 'أونو', 'الكيرم', 'سباق الصور', 'بلياردو']) assert.match(notes, new RegExp(word));
   assert.doesNotMatch(notes, /بوت(?!ن)/);

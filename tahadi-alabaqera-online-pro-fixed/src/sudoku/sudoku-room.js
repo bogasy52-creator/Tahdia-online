@@ -4,6 +4,9 @@ import {createSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
 
 const TTL=60*60000,GRACE=45000,LOBBY_MS=10000,MAX_MISTAKES=5;
+// 33.9.1: a round the group room opened starts by itself: a short count once everyone it
+// sent is in, or 15 seconds after the first one came (with whoever is there)
+export const PARTY_LOBBY_MS=3000,PARTY_WAIT_MS=15000;
 const DURATIONS=[10,15,20,25,30].map(n=>n*60000);
 const secret=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','');
 const json=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -26,7 +29,7 @@ export class SudokuRoom{
   snapshot(id){
     const r=this.room,p=r.players[id],live=['playing','finished'].includes(r.status);
     const players=r.order.map(id=>r.players[id]).sort((a,b)=>(b.finishedAt>0)-(a.finishedAt>0)||(a.finishedAt&&b.finishedAt?a.finishedAt-b.finishedAt:0)||(a.eliminatedAt>0)-(b.eliminatedAt>0)||(b.correct||0)-(a.correct||0)||a.joinedAt-b.joinedAt);
-    return {code:r.code,status:r.status,difficulty:r.difficulty,capacity:r.capacity,round:r.round,startsAt:r.startsAt||0,deadline:r.deadline||0,serverNow:Date.now(),lobbyMs:LOBBY_MS,winnerId:r.winnerId||null,finishedAt:r.finishedAt||0,
+    return {code:r.code,status:r.status,difficulty:r.difficulty,capacity:r.capacity,round:r.round,startsAt:r.startsAt||0,deadline:r.deadline||0,serverNow:Date.now(),lobbyMs:r.partyLink?PARTY_LOBBY_MS:LOBBY_MS,winnerId:r.winnerId||null,finishedAt:r.finishedAt||0,
       initial:live?r.initial:[],total:live?r.initial.filter(v=>!v).length:0,
       maxMistakes:MAX_MISTAKES,
       players:players.map((x,i)=>({id:x.id,name:x.name,role:x.role,connected:x.connected,correct:x.correct||0,mistakes:x.mistakes||0,eliminatedAt:x.eliminatedAt||0,finishedAt:x.finishedAt||0,rank:i+1})),
@@ -41,6 +44,7 @@ export class SudokuRoom{
     const r=this.room;if(!r)return;
     const now=Date.now(),times=[r.expiresAt];
     if(r.status==='countdown')times.push(r.startsAt);
+    if(r.status==='lobby'&&r.partyLink&&!r.partyStarted&&r.lobbyDeadline)times.push(r.lobbyDeadline);
     if(r.status==='playing')times.push(r.deadline);
     if(['lobby','finished'].includes(r.status))for(const p of Object.values(r.players))if(!p.connected&&p.disconnectedAt)times.push(p.disconnectedAt+GRACE);
     if(r.status==='finished'&&r.rewardsComplete===false)times.push(Math.max(now+1000,r.rewardRetryAt||0));
@@ -56,6 +60,7 @@ export class SudokuRoom{
   async advance(){
     const r=this.room;if(!r)return;
     if(Date.now()>=r.expiresAt){for(const ws of this.ctx.getWebSockets())try{ws.close(4000,'expired');}catch{}await this.ctx.storage.deleteAll();this.room=null;return;}
+    if(r.status==='lobby'&&r.partyLink&&!r.partyStarted&&r.lobbyDeadline&&Date.now()>=r.lobbyDeadline){this.sync();if(r.order.some(id=>r.players[id].connected))this.partyBegin();else r.lobbyDeadline=0;await this.save();this.broadcast();}
     if(r.status==='countdown'&&Date.now()>=r.startsAt){
       this.sync();
       if(!r.order.some(id=>r.players[id].connected)){r.status='lobby';r.startsAt=0;}
@@ -79,6 +84,7 @@ export class SudokuRoom{
       if(this.room)return json({ok:false},409);
       const b=await request.json().catch(()=>null);if(!sudokuSettings(b)||!/^\d{6}$/.test(b.code)||typeof b.hostKey!=='string'||b.hostKey.length<32)return json({ok:false,error:'إعدادات الغرفة غير صالحة'},400);
       this.room={code:b.code,hostKey:b.hostKey,difficulty:b.difficulty,capacity:b.capacity,status:'lobby',players:{},order:[],round:'',createdAt:Date.now(),expiresAt:Date.now()+TTL,partyLink:cleanPartyLink(b.party)};
+      if(this.room.partyLink)this.room.partyExpected=Math.max(1,Math.min(b.capacity,Number(b.expected)||b.capacity));
       await this.save();await this.schedule();return json({ok:true},201);
     });
     return this.ctx.blockConcurrencyWhile(async()=>{
@@ -111,7 +117,18 @@ export class SudokuRoom{
     const pair=new WebSocketPair(),server=pair[1];this.ctx.acceptWebSocket(server);
     server.serializeAttachment({sudoku:true,playerId:p.id,connection:p.connection});
     await this.save();server.send(JSON.stringify({type:'welcome',playerId:p.id,token:p.token,state:this.snapshot(p.id)}));this.broadcast();await this.schedule();
+    await this.partyArrival();
     return new Response(null,{status:101,webSocket:pair[0],headers:{'sec-websocket-protocol':'tahdia-sudoku-v1'}});
+  }
+  // 33.9.1: the group room's round needs no «ابدأ»
+  partyBegin(){const r=this.room;r.partyStarted=true;r.lobbyDeadline=0;r.status='countdown';r.finishedAt=0;r.startsAt=Date.now()+PARTY_LOBBY_MS;r.round=crypto.randomUUID();r.winnerId=null;}
+  async partyArrival(){
+    const r=this.room;if(!r?.partyLink||r.partyStarted||r.status!=='lobby')return;this.sync();
+    const here=r.order.filter(id=>r.players[id].connected).length;
+    if(here>=(r.partyExpected||r.capacity))this.partyBegin();
+    else if(here&&!r.lobbyDeadline)r.lobbyDeadline=Date.now()+PARTY_WAIT_MS;
+    else return;
+    await this.save();this.broadcast();await this.schedule();
   }
   async webSocketMessage(ws,raw){
     await this.ready;return this.ctx.blockConcurrencyWhile(async()=>{
@@ -130,7 +147,7 @@ export class SudokuRoom{
         r.difficulty=m.difficulty;r.capacity=m.capacity;
       }else if(m.type==='start'&&p.role==='host'&&r.status==='lobby'){
         if(m.difficulty!==undefined||m.capacity!==undefined){if(!sudokuSettings(m)||m.capacity<r.order.length)return this.error(ws,'إعدادات البداية غير صالحة');r.difficulty=m.difficulty;r.capacity=m.capacity;}
-        r.status='countdown';r.finishedAt=0;r.startsAt=Date.now()+LOBBY_MS;r.round=crypto.randomUUID();r.winnerId=null;
+        r.status='countdown';r.finishedAt=0;r.startsAt=Date.now()+(r.partyLink?PARTY_LOBBY_MS:LOBBY_MS);r.round=crypto.randomUUID();r.winnerId=null;if(r.partyLink){r.partyStarted=true;r.lobbyDeadline=0;}
       }else if(m.type==='cancel'&&p.role==='host'&&r.status==='countdown'){
         r.status='lobby';r.startsAt=0;r.round='';
       }else if(m.type==='rematch'&&p.role==='host'&&r.status==='finished'&&r.rewardsComplete===false){return this.error(ws,'جاري حفظ نتيجة المباراة؛ أعد المحاولة بعد لحظات');

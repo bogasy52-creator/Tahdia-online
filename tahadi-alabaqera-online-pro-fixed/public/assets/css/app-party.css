@@ -608,6 +608,21 @@ body.party-app{--pv-surface:#141e33;--pv-raised:#1a2741;--pv-mint:#8fe3c3;--pv-g
 .party-jack-dock .party-move-options:empty {display:none}
 .party-jack-dock .party-move-options button {min-height:31px;flex:none;padding:2px 7px;font-size:11px}
 
+/* assets/css/party-v33-9-1.css */
+/* 33.9.1 — every round in the friends room is the game's own page. While it plays, the page
+   gives it the whole screen under a slim bar (the game, the round, its clock), and the
+   room's standings stay a scroll away below it. */
+#room[data-framed=true] .party-room-heading{display:none}
+#room[data-framed=true] .party-stage{padding:0;border:0;border-radius:0;background:none;box-shadow:none;min-height:0}
+#room[data-framed=true] .party-stage-header{position:sticky;top:0;z-index:6;min-height:52px;margin:0;padding:6px 2px;background:#0c1324f2;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#room[data-framed=true] .party-stage-header h2{font-size:17px}
+#room[data-framed=true] .party-stage-header .party-stage-art{width:32px;height:32px}
+#room[data-framed=true] #feedback{display:none}
+#room[data-framed=true] .party-embedded-game{border-radius:14px;background:#0b1220}
+#room[data-framed=true] .party-game-frame{height:calc(100dvh - 58px);min-height:480px}
+#room[data-framed=true] .party-roster{margin-top:14px}
+@media(min-width:900px){#room[data-framed=true] .party-game-frame{height:calc(100dvh - 70px)}}
+
 /* assets/css/sudoku-feedback-v29-1.css */
 /* Keep user Sudoku styles intact; expose errors even when optional effects are off. */
 .sudoku-page button.sudoku-cell[data-sudoku-error="true"],
