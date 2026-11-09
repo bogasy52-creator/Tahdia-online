@@ -8,21 +8,22 @@ function table(){
  s.turn=0;s.hands=[['10S','AS'],['2H','KH'],['4S','5S'],['7D','9C']];
  s.players[0].marbles=[1,-1,-1,-1];return s;
 }
+// 33.9.0: the turn passes to the right — the next player after seat 0 is seat 3
 test('ten offers independent movement and next-card burn choices',()=>{
  const s=table(),actions=getJackarooActions(s,0);
  assert.ok(actions.some(a=>a.type==='move'&&a.steps===10));
- const burn=actions.find(a=>a.type==='burn');assert.deepEqual(burn,{type:'burn',target:1});
+ const burn=actions.find(a=>a.type==='burn');assert.deepEqual(burn,{type:'burn',target:3});
  const before=structuredClone(s),preview=previewJackarooAction(s,burn,'10S');
  assert.deepEqual(preview.hands,s.hands);
  const next=playJackarooAction(s,0,burn);
- assert.deepEqual(s,before);assert.deepEqual(next.hands[1],['KH']);assert.equal(next.turn,2);
- assert.deepEqual(next.discard.slice(-2),['2H','10S']);
+ assert.deepEqual(s,before);assert.deepEqual(next.hands[3],['9C']);assert.equal(next.turn,2);
+ assert.deepEqual(next.discard.slice(-2),['7D','10S']);
  assert.deepEqual(next.players,s.players);
 });
 test('burn requires a ten and a next-player card and is consumed only once',()=>{
  const s=table();s.hands[0]=['8S','AS'];
  assert.throws(()=>playJackarooAction(s,0,{type:'burn',target:1}),/illegal/);
- s.hands[0]=['10S','AS'];s.hands[1]=[];
+ s.hands[0]=['10S','AS'];s.hands[3]=[];
  assert.ok(!getJackarooActions(s,0).some(a=>a.type==='burn'));
 });
 test('aces, sevens, fives and fours retain their distinct action alternatives',()=>{

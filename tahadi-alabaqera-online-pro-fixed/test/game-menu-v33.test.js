@@ -43,7 +43,7 @@ test('the page and the server agree on which game every code belongs to', async 
   assert.equal(api.roomUrl('quiz', '104321'), '/online?room=104321');
   assert.equal(api.roomUrl('snakes', '401234'), '/snakes?room=401234');
   assert.equal(api.roomUrl('jewels', '851234'), '/journey?game=jewels&room=851234');
-  assert.equal(api.gameOfCode('991234'), null);assert.equal(api.gameOfCode('091234'),'wordbomb','09 identifies the word hunt');
+  assert.equal(api.gameOfCode('991234'), 'billiards');assert.equal(api.gameOfCode('051234'), null);assert.equal(api.gameOfCode('091234'),'wordbomb','09 identifies the word hunt');
 });
 
 test('you play under your account name, then the party name, then your own guest name', async () => {

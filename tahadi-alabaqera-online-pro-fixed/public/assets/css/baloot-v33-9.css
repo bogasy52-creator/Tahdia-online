@@ -1,0 +1,9 @@
+/* Tahdia 33.9.0 — the Hokm mark: the cards' own suit on a little white card, red or black exactly as on
+   the cards, wherever it shows: the bid bubble, the «اشترى» banner, the bid buttons, the contract chip,
+   the prompt, the hand's result and the score log. It used to take the bubble's dark text colour, so a
+   Hokm of hearts or diamonds showed black. */
+.suit[data-suit]{--suit:#17181d;display:inline-grid;place-items:center;box-sizing:border-box;width:1.12em;height:1.28em;margin:0 .16em;padding:0;vertical-align:-.28em;border-radius:.2em;background:linear-gradient(180deg,#fffefa,#efe7d6);box-shadow:0 0 0 1px #0000002e,0 .08em .22em #0007;color:var(--suit)!important;line-height:1}
+.suit[data-suit].suit-red{--suit:#cc1b34}
+.suit[data-suit] svg{display:block;width:.84em;height:.84em;fill:currentColor}
+.bl-act .suit[data-suit]{font-size:17px;margin-inline-start:6px}
+.bl-banner .suit[data-suit]{margin-inline-end:.22em}

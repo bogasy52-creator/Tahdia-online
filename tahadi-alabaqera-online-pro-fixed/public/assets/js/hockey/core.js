@@ -8,6 +8,10 @@ export const MAX_PUCK = 2000;             // units per second
 export const WIN_SCORE = 7;
 const FRICTION = 0.5;                    // fraction of speed kept per second (the air cushion is slick)
 const WALL_BOUNCE = 0.92, STRIKER_BOUNCE = 1.0;
+// 33.9.0: a hand's striker is where the hand is — it reaches it by the end of every frame, at the
+// hand's own speed (spread over the sub-steps, so it still meets the puck on the way). Only a jump
+// across the table (a finger put down somewhere else) is spread over a few frames.
+export const HAND_SPEED = 6500;
 
 export const DIFFICULTY = {
   easy: { speed: 520, react: 0.34, aim: 0.5, error: 80, attack: 0.5, slip: 0.22 },
@@ -46,6 +50,14 @@ function bounds(i) {
     : { x0: STRIKER_R, x1: W - STRIKER_R, y0: STRIKER_R, y1: L / 2 - STRIKER_R * 0.35 };
 }
 
+/** The step a hand's striker takes on each of `sub` sub-steps to reach the hand by the end of `dt`. */
+function handStep(g, i, dt, sub) {
+  const st = g.strikers[i], b = bounds(i), tx = clamp(Number.isFinite(st.tx) ? st.tx : st.x, b.x0, b.x1), ty = clamp(Number.isFinite(st.ty) ? st.ty : st.y, b.y0, b.y1);
+  if (!(dt > 0) || !Number.isFinite(st.x) || !Number.isFinite(st.y)) { if (!Number.isFinite(st.x) || !Number.isFinite(st.y)) { st.x = tx; st.y = ty; } return { dx: 0, dy: 0, vx: 0, vy: 0 }; }
+  let dx = tx - st.x, dy = ty - st.y; const d = Math.hypot(dx, dy), max = HAND_SPEED * dt;
+  if (d > max) { dx *= max / d; dy *= max / d; }
+  return { dx: dx / sub, dy: dy / sub, vx: dx / dt, vy: dy / dt };
+}
 function moveStriker(g, i, dt, maxSpeed) {
   const st = g.strikers[i], b = bounds(i);
   const tx = clamp(st.tx, b.x0, b.x1), ty = clamp(st.ty, b.y0, b.y1);
@@ -126,22 +138,29 @@ function runAI(g, idx, dt, level) {
   moveStriker(g, idx, dt, d.speed * (a.mode === 'attack' ? 1.2 : 1));
 }
 
-export function step(g, dt, controls = {}) {
+/**
+ * One frame. `predict` is the online page between two words of the room: the puck and the hands move
+ * and meet as here, but the room alone scores, serves and ends the match (its phase is left alone).
+ */
+export function step(g, dt, controls = {}, { predict = false } = {}) {
   g.events.length = 0;
+  // a frame of no time (or a clock that stepped back) moves nothing
+  if (!(dt > 0)) return g;
   dt = Math.min(dt, 1 / 20);
   g.time += dt;
   // hands first: the page writes strikers[i].tx / ty directly; `controls` lets tests drive them
   if (controls.p0) { g.strikers[0].tx = controls.p0.x; g.strikers[0].ty = controls.p0.y; }
   if (controls.p1) { g.strikers[1].tx = controls.p1.x; g.strikers[1].ty = controls.p1.y; }
+  if (predict && g.phase !== 'play') { for (const i of [0, 1]) { const m = handStep(g, i, dt, 1), st = g.strikers[i]; st.x += m.dx; st.y += m.dy; st.vx = m.vx; st.vy = m.vy; } return g; }
   if (g.phase === 'over') return g;
   if (g.phase === 'goal') { g.phaseT -= dt; for (const i of [0, 1]) { if (g.bot[i]) { g.strikers[i].tx = W / 2; g.strikers[i].ty = i ? 150 : L - 150; } moveStriker(g, i, dt, 1000); }
     if (g.phaseT <= 0) { if (g.score[0] >= g.target || g.score[1] >= g.target) { g.phase = 'over'; g.winner = g.score[0] > g.score[1] ? 0 : 1; g.events.push({ type: 'over', winner: g.winner }); } else placeServe(g, g.conceded); }
     return g; }
   if (g.phase === 'serve') { g.phaseT -= dt; if (g.phaseT <= 0) { g.phase = 'play'; g.events.push({ type: 'play' }); } }
   const sub = Math.max(1, Math.ceil(dt / (1 / 240)));
-  const h = dt / sub;
+  const h = dt / sub, hand = [0, 1].map((i) => (g.bot[i] ? null : handStep(g, i, dt, sub)));
   for (let k = 0; k < sub; k++) {
-    for (const i of [0, 1]) { if (g.bot[i]) runAI(g, i, h, g.bot[i]); else moveStriker(g, i, h, 2800); }
+    for (const i of [0, 1]) { if (g.bot[i]) runAI(g, i, h, g.bot[i]); else { const st = g.strikers[i], m = hand[i]; st.x += m.dx; st.y += m.dy; st.vx = m.vx; st.vy = m.vy; } }
     const p = g.puck;
     if (g.phase === 'play' || g.phase === 'serve') {
       if (g.phase === 'play') { p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h); p.vx += p.spin * p.vy * 0.0004; }
@@ -151,13 +170,26 @@ export function step(g, dt, controls = {}) {
       if (g.phase === 'play' && Math.hypot(p.vx, p.vy) < 25) { g.idle = (g.idle || 0) + h; if (g.idle > 5 && g.rally === 0) { p.vy += (p.y < L / 2 ? 1 : -1) * 60; } } else g.idle = 0;
       if (g.phase === 'play') {
         const gx0 = (W - GOAL_W) / 2, gx1 = (W + GOAL_W) / 2;
-        if (p.y > L + PUCK_R * 0.5 && p.x > gx0 && p.x < gx1) scoreGoal(g, 1, 0);
+        // a prediction leaves the goal to the room: the puck stops in the mouth of the goal
+        if (predict) { if (p.y > L + PUCK_R * 0.5 || p.y < -PUCK_R * 0.5) { p.y = clamp(p.y, -PUCK_R, L + PUCK_R); p.vx = p.vy = 0; } }
+        else if (p.y > L + PUCK_R * 0.5 && p.x > gx0 && p.x < gx1) scoreGoal(g, 1, 0);
         else if (p.y < -PUCK_R * 0.5 && p.x > gx0 && p.x < gx1) scoreGoal(g, 0, 1);
       }
     }
     if (g.phase === 'goal') break;
   }
   return g;
+}
+
+/** 33.9.0: a puck alone on the table for `t` seconds — the walls and the air, no strikers. The online
+    page carries the room's puck on to "now" with it before it compares it with its own. */
+export function carryPuck(puck, t) {
+  const g = { puck: { ...puck, spin: puck.spin || 0 }, events: [] }, p = g.puck, sub = Math.max(1, Math.ceil(Math.max(0, t) / (1 / 240))), h = Math.max(0, t) / sub;
+  for (let k = 0; k < sub && h > 0; k++) {
+    p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h); p.vx += p.spin * p.vy * 0.0004;
+    collideWalls(g); p.y = clamp(p.y, -PUCK_R, L + PUCK_R);
+  }
+  return p;
 }
 
 function scoreGoal(g, scorer, conceded) {

@@ -42,7 +42,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.8.0';
+const RELEASE='33.9.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -50,7 +50,9 @@ const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['
 // bought them (sent by the Worker at the WebSocket upgrade, never the client).
 const FREE_REACTIONS=new Set(Career.REACTIONS.filter(item=>item.price===0&&!item.source).map(item=>item.id));
 const PAID_REACTIONS=new Set(Career.REACTIONS.filter(item=>item.price>0||item.source).map(item=>item.id));
-const EMOTE_GAP_MS=1500,EMOTE_PER_MINUTE=12,MOVE_GAP_MS=6000,MOVE_PER_MINUTE=4;
+// 33.9.0: reactions one after another (a short breath between two), and moves thrown at a player
+const EMOTE_GAP_MS=450,EMOTE_PER_MINUTE=40,MOVE_GAP_MS=1400,MOVE_PER_MINUTE=20;
+const reactionTarget=to=>typeof to==='string'&&/^[\w:.-]{1,80}$/.test(to)?to:undefined;
 const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.id, c]));
 const ROOM_RE = /^\d{6}$/;
 const DISCONNECT_GRACE_MS = 45_000;
@@ -790,7 +792,7 @@ export default {
         let body = {};
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
-        if (!["snakes", "zahra", "jackaroo", "dice", "baloot"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        if (!["snakes", "zahra", "jackaroo", "dice", "baloot", "billiards"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
         let variant = 'classic';
         if (game === 'snakes') {
           try { variant = normalizeSnakesVariant(body.variant); }
@@ -1734,7 +1736,7 @@ export class BoardRoom extends DurableObject {
 
   async initializeRoom(body){
     if(this.room)return json({ok:false,error:'room_exists'},409);
-    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot'].includes(game))return json({ok:false,error:'invalid_game'},400);
+    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot','billiards'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
@@ -1967,7 +1969,8 @@ export class BoardRoom extends DurableObject {
     if (tableOver(this.room)) this.finishGame();
     else {
       const seat = this.room.state.turn, id = this.room.order[seat], person = this.room.players[id];
-      const ms = person && !person.connected ? TABLE_TURN_MS.away : this.room.publicMatch ? TABLE_TURN_MS.quick : TABLE_TURN_MS.room;
+      // 33.9.0: a computer player still on turn (billiards plays a few shots at a time) goes on right after the animation
+      const ms = person?.bot ? 700 : person && !person.connected ? TABLE_TURN_MS.away : this.room.publicMatch ? TABLE_TURN_MS.quick : TABLE_TURN_MS.room;
       this.room.turnTotal = ms;
       this.room.turnDeadline = Date.now() + stepsTime(this.room, steps) + ms;
     }
@@ -1984,7 +1987,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
     if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats))); }
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot','billiards'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -2100,7 +2103,7 @@ export class BoardRoom extends DurableObject {
 
   // Reactions are relayed to everyone in the room and never touch the game
   // state, its version or storage. Each player is limited in memory.
-  relayEmote(player,emote,ws){
+  relayEmote(player,emote,ws,to){
     const item=typeof emote==='string'?Career.reactionOf(emote):null;if(!item)return;
     if(!FREE_REACTIONS.has(item.id)&&!(player.reactions||[]).includes(item.id)){try{ws?.send(JSON.stringify({type:'emote-locked',emote:item.id}))}catch{}return;}
     const move=item.type==='move',now=Date.now(),log=(this.emoteLog??=new Map()),recent=(log.get(player.id)||[]).filter(t=>now-t<60000),moves=(this.moveLog??=new Map()),recentMoves=(moves.get(player.id)||[]).filter(t=>now-t<60000);
@@ -2108,8 +2111,20 @@ export class BoardRoom extends DurableObject {
     if(move&&(recentMoves.length>=MOVE_PER_MINUTE||recentMoves.length&&now-recentMoves.at(-1)<MOVE_GAP_MS))return;
     recent.push(now);log.set(player.id,recent);if(move){recentMoves.push(now);moves.set(player.id,recentMoves);}
     // Older pages know the first eight by their short ids.
-    const packet=JSON.stringify({type:'emote',from:player.id,name:player.name,emote:item.legacy||item.id,at:now});
+    const target=item.target?reactionTarget(to):undefined,packet=JSON.stringify({type:'emote',from:player.id,name:player.name,emote:item.legacy||item.id,at:now,...(target?{to:target}:{})});
     for(const socket of this.ctx.getWebSockets()){try{if(socket.deserializeAttachment()?.playerId)socket.send(packet);}catch{}}
+  }
+
+  // 33.9.0: billiards — the player on turn shows where the cue points while aiming. Relayed to the
+  // other player only (no storage, no version), a few times a second at most.
+  relayAim(player,msg){
+    const r=this.room;if(r?.game!=='billiards'||r.status!=='playing'||!r.state||r.order[r.state.turn]!==player.id)return;
+    const now=Date.now();if(now-(player.aimAt||0)<180)return;player.aimAt=now;
+    const num=(v,lo,hi)=>{const n=Number(v);return Number.isFinite(n)?Math.max(lo,Math.min(hi,Math.round(n*1000)/1000)):null};
+    const dx=num(msg.dir?.[0],-1,1),dy=num(msg.dir?.[1],-1,1);if(dx===null||dy===null)return;
+    const cue=Array.isArray(msg.cue)?[num(msg.cue[0],0,254),num(msg.cue[1],0,127)]:null;
+    const packet=JSON.stringify({type:'pool_aim',seat:r.state.turn,dir:[dx,dy],power:num(msg.power,0,1)||0,cue:cue&&cue[0]!==null&&cue[1]!==null?cue:null,at:now});
+    for(const socket of this.ctx.getWebSockets()){try{const id=socket.deserializeAttachment()?.playerId;if(id&&id!==player.id)socket.send(packet);}catch{}}
   }
 
   // 32.1.0: Baloot table talk — only the catalogue's phrases and emoji, by id,
@@ -2135,8 +2150,9 @@ export class BoardRoom extends DurableObject {
     let msg; try { msg = JSON.parse(text); } catch { return this.sendError(ws, "رسالة غير صالحة"); }
     if(msg.type==='ping'){try{ws.send(JSON.stringify({type:'pong',serverNow:Date.now()}))}catch{}return;}
     if(msg.type==='resync'){try{ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)}))}catch{}return;}
-    if(msg.type==='emote')return this.relayEmote(player,msg.emote,ws);
+    if(msg.type==='emote')return this.relayEmote(player,msg.emote,ws,msg.to);
     if(msg.type==='talk')return this.relayTalk(player,msg);
+    if(msg.type==='pool_aim')return this.relayAim(player,msg);
     try {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);
@@ -2189,13 +2205,13 @@ export class BoardRoom extends DurableObject {
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
-      if(['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
+      if(['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank','pool_shot'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
       if (TABLE_GAMES.includes(this.room.game)) {
         let steps;
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { hand_can_move: 'عندك ورقة تقدر تلعبها، ما تقدر تحرق الكل', wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
+          const messages = { hand_can_move: 'عندك ورقة تقدر تلعبها، ما تقدر تحرق الكل', wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة', bad_place: 'ما تقدر تحط البيضاء هنا', place_first: 'حط الكرة البيضاء أول', invalid_shot: 'الضربة غير صالحة', match_over: 'المباراة خلصت' };
           return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
         return await this.settleTable(steps);

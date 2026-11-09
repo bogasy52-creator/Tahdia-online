@@ -33,6 +33,15 @@ function resize(){
 if(typeof ResizeObserver==='function')new ResizeObserver(resize).observe($('carromSurface'));
 addEventListener('resize',resize,{passive:true});
 function names(){return state?.mode==='hotseat'?['اللاعب الأول','اللاعب الثاني']:['أنت','الكمبيوتر'];}
+// 33.9.0: each player's nine coins fill in as they drop, and what a shot did pops over the board
+function pips(i,count){let box=$('player'+i).querySelector('.cm-pips');if(!box){box=document.createElement('span');box.className='cm-pips';box.setAttribute('aria-hidden','true');for(let k=0;k<9;k++)box.append(document.createElement('i'));$('player'+i).querySelector('span')?.append(box);}[...box.children].forEach((pip,k)=>pip.classList.toggle('on',k<count));}
+let bannerTimer=0,lastMessage='';
+function banner(text){
+ if(!text||text===lastMessage||text==='الأحجار تتحرك…')return;lastMessage=text;
+ let node=document.querySelector('.cm-banner');if(!node){node=document.createElement('div');node.className='cm-banner';node.setAttribute('aria-hidden','true');document.querySelector('.cm-playfield')?.append(node);}
+ node.textContent=text;node.className='cm-banner '+(/خطأ|رجع|جزاء|ما تغطّت/.test(text)?'bad':/الملكة/.test(text)?'queen':/دخل|غطّيت|فاز/.test(text)?'good':'');
+ void node.offsetWidth;node.classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>node.classList.remove('show'),1900);
+}
 function controls(){
  const enabled=canPlay();
  for(const id of ['strikerPosition','shotPower','shoot'])$(id).disabled=!enabled;
@@ -44,7 +53,7 @@ function controls(){
  for(let i=0;i<2;i++){
   $('player'+i).classList.toggle('active',state.turn===i&&state.phase!=='finished');
   $('name'+i).textContent=labels[i];
-  $('score'+i).textContent=scores[i].coins+' / 9';
+  $('score'+i).textContent=scores[i].coins+' / 9';pips(i,scores[i].coins);
   $('due'+i).textContent=scores[i].due?'جزاء '+scores[i].due:scores[i].queen?'الملكة +3':i===0?'أبيض':'أسود';
  }
  $('carromStatus').textContent=state.message;
@@ -65,7 +74,7 @@ function onTurn(){
  controls();
 }
 function start(){
- clearTimeout(resultTimer);cancelAnimationFrame(frame);frame=0;
+ lastMessage='';clearTimeout(resultTimer);cancelAnimationFrame(frame);frame=0;
  prefs.mode=$('carromMode').value;prefs.theme=$('carromTheme').value;prefs.difficulty=$('carromDifficulty').value;persist();
  state=createCarrom(prefs);running=true;paused=false;turnSeen=-1;accumulator=0;pointer=null;
  document.body.classList.add('carrom-running');window.BS_LOCAL_REACTIONS={active:true};window.dispatchEvent(new Event('bs-reaction-refresh'));
@@ -109,7 +118,7 @@ function loop(now){
    stepCarrom(state,FIXED_DT);accumulator-=FIXED_DT;
    for(const e of state.events)if(['collision','pocket'].includes(e.type))tone(e.type,e.strength||.8);
   }
-  if(state.phase==='aim'){accumulator=0;onTurn();controls();}
+  if(state.phase==='aim'){accumulator=0;banner(state.message);onTurn();controls();}
   if(state.phase==='finished'){controls();finish();}
  }else if(state.phase==='aim'&&botPlan&&now>=botAt){
   try{shootCarrom(state,botPlan);tone('strike',botPlan.power);botPlan=null;controls();}

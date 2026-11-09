@@ -1,6 +1,6 @@
 /* Original 3D reaction cast shared by the shop and the live room. */
 (()=>{'use strict';
-const old={'performer-wave':'wave','performer-salute':'salute','performer-laugh':'laugh','performer-spotlight':'trophy','face-laugh':'laugh','face-smirk':'peek','face-tongue':'peek','face-sus':'peek','face-yawn':'slow','face-evil':'peek'},cells={'face-laugh':0,'face-smirk':1,'face-tongue':2,'face-sus':3,'face-yawn':4,'face-evil':5,'performer-wave':6,'performer-salute':7,'performer-laugh':0,'performer-spotlight':7};
+const old={'performer-wave':'wave','performer-salute':'salute','performer-laugh':'laugh','performer-spotlight':'trophy','face-laugh':'laugh','face-smirk':'peek','face-tongue':'peek','face-sus':'peek','face-yawn':'slow','face-evil':'peek','face-giggle':'laugh','face-cackle':'laugh','face-point':'laugh','face-rage':'peek','face-explode':'peek','face-grumpy':'slow','face-fume':'peek'},cells={'face-laugh':0,'face-smirk':1,'face-tongue':2,'face-sus':3,'face-yawn':4,'face-evil':5,'performer-wave':6,'performer-salute':7,'performer-laugh':0,'performer-spotlight':7};
 const kinds=new Set(['wave','salute','laugh','tomato','slow','clap','peek','micdrop','cry','trophy','popcorn']);
 const legacy={clap:'clap',flame:'trophy',shake:'laugh',pop:'wave',steam:'peek',plead:'cry',shine:'popcorn',tears:'cry',hush:'micdrop',frost:'slow',spin:'peek',blast:'wave',devil:'peek',slither:'peek',sparkle:'trophy',launch:'trophy',royal:'trophy',prism:'trophy'};
 const kindOf=it=>old[it?.fx]||({'emote-laugh':'laugh','emote-wink':'peek'}[it?.id])||(it?.type==='emote'?legacy[it.fx]:null)||(it?.fx?.startsWith('cinema-')?it.fx.slice(7):null);
@@ -12,4 +12,4 @@ function show(it,{host,area,name,mine}={}){const kind=kindOf(it);if(!kinds.has(k
 window.BS_REACTION_ART=Object.freeze({make});window.BS_REACTION_CINEMA=Object.freeze({show});})();
 
 /* 33.8.0: the drawn, animated emoji live in their own file (outside the offline core): it loads with the page */
-(()=>{try{if(window.BS_EMOJI_ART||document.querySelector('script[data-bs-emoji]'))return;const s=document.createElement('script');s.src='/assets/js/emoji-faces-v33-8.js?v=33.8.0';s.async=true;s.dataset.bsEmoji='1';(document.head||document.documentElement).append(s);}catch{}})();
+(()=>{try{if(window.BS_EMOJI_ART||document.querySelector('script[data-bs-emoji]'))return;const s=document.createElement('script');s.src='/assets/js/emoji-faces-v33-8.js?v=33.9.0';s.async=true;s.dataset.bsEmoji='1';(document.head||document.documentElement).append(s);}catch{}})();

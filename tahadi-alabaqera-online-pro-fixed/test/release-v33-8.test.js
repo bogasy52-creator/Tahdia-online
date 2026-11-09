@@ -17,12 +17,11 @@ import { VOICE_LINES, STUDIO_LINES } from '../public/assets/js/baloot-voice-pack
 
 const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('the release is 33.8.0 and its notes say what changed', async () => {
-  assert.equal(JSON.parse(await read('package.json')).version, '33.8.0');
+test('the 33.8.0 notes say what changed (the release itself has moved on)', async () => {
+  assert.match(JSON.parse(await read('package.json')).version, /^33\.(?:[89]|\d{2,})\.\d+$/);
   const notes = await read('RELEASE_V33_8_AR.md');
   for (const words of ['جاكارو', 'احرق الكل', 'العشرة', 'السلام عليكم', 'الهوكي', 'منافس آلي', 'الصدام', 'الإيموجي', 'الرئيسية', 'صيد الكلمات', 'الاقتراح اللي نفذته']) assert.ok(notes.includes(words), words);
-  assert.match(await read('README-AR.md'), /آخر تحديث: 33\.8\.0/);
-  assert.match(await read('public/service-worker.js'), /const CACHE_NAME = 'busraj-games-v66-release-33-8-0';/);
+  assert.match(await read('public/service-worker.js'), /const CACHE_NAME = 'busraj-games-v66-release-33-\d+-\d+';/);
 });
 
 /* ---------- Jackaroo ---------- */
@@ -32,21 +31,22 @@ test('a hand that cannot move anything may be burnt at once; a hand that can, ma
   assert.equal(jackarooHandDead(s, 0), true);
   const after = burnJackarooHand(s, 0);
   assert.equal(after.hands[0].length, 0); assert.equal(after.lastEvent.action.type, 'burnAll'); assert.equal(after.lastEvent.burnt, 4);
-  assert.equal(after.discard.slice(-4).join(), '2S,3H,9D,6C'); assert.equal(after.turn, 1);
+  assert.equal(after.discard.slice(-4).join(), '2S,3H,9D,6C'); assert.equal(after.turn, 3, '33.9.0: the turn goes to the right');
   assert.throws(() => burnJackarooHand(s, 1), /wrong_turn/);
   s = jack(); s.players[0].marbles = [-1, -1, -1, -1]; s.hands[0] = ['AS', '3H'];
   assert.equal(jackarooHandDead(s, 0), false); assert.throws(() => burnJackarooHand(s, 0), /hand_can_move/);
 });
 test('the burnt hand is skipped until the next deal, and the ten still burns the next card and skips that player', () => {
   let s = jack(); s.players[0].marbles = [-1, -1, -1, -1]; s.hands[0] = ['2S', '3H'];
-  s = burnJackarooHand(s, 0); s.turn = 3; s.hands[3] = ['2C']; s.players[3].marbles = [-1, -1, -1, -1];
-  s = playJackarooAction(s, 0, { type: 'discard' }, 3);
-  assert.equal(s.turn, 1, 'the player with no cards is passed over');
-  let t = jack(); t.hands[0] = ['10C', '2S']; t.hands[1] = ['5H', '6H'];
+  // 33.9.0: the turn goes to the right (seat − 1)
+  s = burnJackarooHand(s, 0); s.turn = 1; s.hands[1] = ['2C']; s.players[1].marbles = [-1, -1, -1, -1];
+  s = playJackarooAction(s, 0, { type: 'discard' }, 1);
+  assert.equal(s.turn, 3, 'the player with no cards is passed over');
+  let t = jack(); t.hands[0] = ['10C', '2S']; t.hands[3] = ['5H', '6H'];
   const burn = getJackarooActions(t, 0, 0).find((a) => a.type === 'burn');
-  assert.deepEqual(burn, { type: 'burn', target: 1 });
+  assert.deepEqual(burn, { type: 'burn', target: 3 });
   t = playJackarooAction(t, 0, burn, 0);
-  assert.equal(t.hands[1].length, 1); assert.equal(t.turn, 2, 'the next player is skipped');
+  assert.equal(t.hands[3].length, 1); assert.equal(t.turn, 2, 'the next player is skipped');
 });
 test('the room takes «احرق الكل» only from the player whose turn it is', () => {
   const s = jack(); s.players[0].marbles = [-1, -1, -1, -1]; s.hands[0] = ['2S', '3H', '9D'];
@@ -66,8 +66,8 @@ test('the choices of a marble: the ace one or eleven, the seven a split in two s
 });
 test('the Jackaroo page: moves chosen on the board, a faded card that can only burn, both burns and their question', async () => {
   const page = await read('public/jackaroo.html');
-  assert.match(page, /import \{ createChooser, createJackFx \} from "\.\/assets\/js\/jackaroo-play-v33-8\.js\?v=/);
-  assert.match(page, /if \(!chooser\.pick\(state, actions, pi, mi,/);
+  // 33.9.0: the menu by the marble gave way to taps on the board (release-v33-9)
+  assert.match(page, /import \{ createBoardPicker, createJackFx[^}]*\} from "\.\/assets\/js\/jackaroo-play-v33-8\.js\?v=/);
   assert.match(page, /b\.textContent = "🔥 احرق الورقة";/);
   assert.match(page, /all\.textContent = "🔥 احرق الكل \(" \+ myHand\(\)\.length \+ "\)";/);
   assert.match(page, /<b>تحرق كل أوراقك؟<\/b>/);
@@ -76,7 +76,6 @@ test('the Jackaroo page: moves chosen on the board, a faded card that can only b
   assert.match(page, /"🔥 احرق ورقة " \+ \(state\.players\[burnNext\.target\]\?\.name \|\| "التالي"\) \+ " وتخطّاه"/);
   const css = await read('public/assets/css/jackaroo-v33-8.css');
   assert.match(css, /--jk-card:clamp\(48px,min\(calc\(\(100vw - 30px - \(var\(--jk-n\) - 1\) \* 8px\) \/ var\(--jk-n\)\),11\.5svh\),94px\)/);
-  assert.match(css, /\.jk-menu\.grid \.jk-menu-list\{grid-template-columns:repeat\(4,1fr\)\}/);
   assert.ok(JSON.parse(await read('scripts/style-bundles.json'))['jackaroo.html'].includes('assets/css/jackaroo-v33-8.css'));
   assert.match(await read('public/assets/js/board-fit-pro.js'), /Math\.min\(r\.height,r\.width\*1\.1\)/);
 });

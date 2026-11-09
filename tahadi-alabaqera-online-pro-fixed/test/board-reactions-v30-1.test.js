@@ -26,9 +26,10 @@ test('reactions are a fixed vocabulary and are rate limited per player',async t=
  for(const emote of ['<b>hi</b>','free text',42,null])await r.send(r.host,{type:'emote',emote});
  assert.equal(r.inbox[r.guest.id].length,0,'unknown reactions are dropped');
  await r.send(r.host,{type:'emote',emote:'clap'});now+=200;await r.send(r.host,{type:'emote',emote:'clap'});
- assert.equal(r.inbox[r.guest.id].length,1,'a second reaction within 1.5 s is dropped');
- for(let i=0;i<20;i++){now+=1600;await r.send(r.host,{type:'emote',emote:'gg'});}
- assert.equal(r.inbox[r.guest.id].length,12,'at most twelve reactions a minute');
+ assert.equal(r.inbox[r.guest.id].length,1,'a second reaction within 0.45 s is dropped');
+ // 33.9.0: one after another — up to forty a minute
+ for(let i=0;i<50;i++){now+=600;await r.send(r.host,{type:'emote',emote:'gg'});}
+ assert.equal(r.inbox[r.guest.id].length,40,'at most forty reactions a minute');
  await r.send(r.guest,{type:'emote',emote:'wow'});assert.equal(r.inbox[r.host.id].filter(m=>m.from===r.guest.id).length,1,'limits are per player');
 });
 

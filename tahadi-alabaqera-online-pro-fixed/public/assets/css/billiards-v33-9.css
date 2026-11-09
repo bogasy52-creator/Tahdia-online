@@ -1,0 +1,129 @@
+/* Tahdia 33.9.0 — billiards: a pool hall at night. The table is the one bright thing on the page: green
+   cloth under a lamp, walnut rails with brass sights. Everything around it stays dark and quiet. */
+.billiards-page{--bi-night:#030d0a;--bi-deep:#071a14;--bi-panel:#0a231b;--bi-line:#1d4335;--bi-ink:#eef6f1;--bi-mute:#9fbcae;--bi-felt:#0d6a4b;--bi-brass:#e3b961;--bi-brass-hi:#f6dc96;--bi-red:#e5483c;--bi-cue:#58a6ff;margin:0;min-height:100dvh;background:radial-gradient(120% 60% at 50% 0%,#0c2a20 0%,var(--bi-night) 62%) fixed,var(--bi-night);color:var(--bi-ink);font-family:Tajawal,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+.billiards-page *{box-sizing:border-box}
+.bi-app{max-width:560px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom))}
+.bi-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;border:1px solid var(--bi-line);background:#0a2119cc;color:var(--bi-ink);font:700 17px/1 Tajawal,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.bi-icon:focus-visible,.bi-cta:focus-visible,.bi-ghost:focus-visible,.bi-modes button:focus-visible,.bi-seg button:focus-visible{outline:3px solid var(--bi-brass);outline-offset:2px}
+
+/* ---------- the menu ---------- */
+.bi-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.bi-brand{font-size:16px;letter-spacing:0}.bi-brand small{color:var(--bi-mute);font-weight:400;font-size:13px}
+.bi-hero{position:relative;border-radius:24px;overflow:hidden;border:1px solid #2a5a45;background:#05140f;box-shadow:0 24px 60px #000a}
+.bi-hero canvas{display:block;width:100%;height:auto;aspect-ratio:760/420}
+.bi-hero-copy{position:absolute;inset:0 0 0 auto;width:58%;display:grid;align-content:end;padding:18px 18px 16px;background:linear-gradient(270deg,#020a07f2 0%,#020a07cc 55%,transparent)}
+.bi-hero-copy h1{margin:0;font-size:clamp(34px,10vw,46px);line-height:1;font-weight:700;color:#fff;text-shadow:0 2px 0 #0007}
+.bi-hero-copy p{margin:8px 0 0;color:#d6e8de;font-size:15px}
+.bi-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 12px}
+.bi-modes button{display:grid;gap:4px;justify-items:center;padding:13px 6px 11px;border-radius:18px;border:1px solid var(--bi-line);background:linear-gradient(180deg,#0d2a20,#081b15);color:var(--bi-ink);font-family:inherit;cursor:pointer;transition:border-color .2s,background .2s}
+.bi-modes b{font-size:15px}.bi-modes small{color:var(--bi-mute);font-size:12px}
+.bi-modes button[aria-checked="true"]{border-color:var(--bi-brass);background:linear-gradient(180deg,#1d3a2a,#0d2219);box-shadow:inset 0 0 0 1px #e3b96155}
+.bi-modes button[aria-checked="true"] small{color:var(--bi-brass-hi)}
+.bi-panel{padding:14px;border-radius:20px;border:1px solid var(--bi-line);background:var(--bi-panel)}
+.bi-panel h2{margin:0 0 10px;font-size:15px;color:var(--bi-mute);font-weight:700}
+.bi-panel-note{margin:0 0 12px;color:var(--bi-mute);font-size:14px;line-height:1.6}
+.bi-panel[data-panel="online"]{padding:0;border:0;background:none}
+.bi-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px;border-radius:16px;background:#061510;border:1px solid var(--bi-line);margin-bottom:12px}
+.bi-seg button{min-height:44px;border:0;border-radius:12px;background:none;color:var(--bi-mute);font:700 15px Tajawal,system-ui,sans-serif;cursor:pointer}
+.bi-seg button[aria-checked="true"]{background:linear-gradient(180deg,#f3d58a,#d9a744);color:#2a1a04}
+.bi-names{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.bi-names label{display:grid;gap:5px;color:var(--bi-mute);font-size:13px}
+.bi-names input{width:100%;min-height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--bi-line);background:#061510;color:var(--bi-ink);font:700 15px Tajawal,system-ui,sans-serif}
+.bi-cta{width:100%;min-height:52px;border:0;border-radius:16px;background:linear-gradient(180deg,#f6dc96,#d7a240);color:#271703;font:700 17px Tajawal,system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 26px #d7a24033,inset 0 -3px 0 #0002}
+.bi-cta:active{transform:translateY(1px)}
+.bi-ghost{min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--bi-line);background:#0a2119;color:var(--bi-ink);font:700 15px Tajawal,system-ui,sans-serif;cursor:pointer}
+.bi-rules{margin-top:12px;padding:12px 14px;border-radius:18px;border:1px solid var(--bi-line);background:#06150f}
+.bi-rules summary{cursor:pointer;font-weight:700;color:var(--bi-ink)}
+.bi-rules ul{margin:10px 0 0;padding:0 18px 0 0;color:#cfe2d8;font-size:14px;line-height:1.75}
+.bi-rules b{color:var(--bi-brass-hi)}
+
+/* ---------- the game ---------- */
+.bi-game{position:fixed;inset:0;z-index:5;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:6px;padding:max(8px,env(safe-area-inset-top)) 10px max(8px,env(safe-area-inset-bottom));background:radial-gradient(90% 55% at 50% 45%,#0f2a20 0%,#030c09 70%),var(--bi-night);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.bi-game[hidden]{display:none}
+body.bi-playing{overflow:hidden}
+.bi-bar{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;gap:8px}
+.bi-plates{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
+.bi-plate{display:grid;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto auto;column-gap:7px;align-items:center;min-width:0;padding:5px 8px 6px 6px;border-radius:16px;border:1px solid #173a2d;background:#08190fcc;transition:border-color .25s,box-shadow .25s,opacity .25s}
+.bi-plate.turn{border-color:var(--bi-brass);box-shadow:0 0 0 1px #e3b96144,0 0 22px #e3b96133}
+.bi-plate:not(.turn){opacity:.78}
+.bi-face{grid-row:1 / span 2;position:relative;width:44px;height:44px}
+.bi-face svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.bi-ring-bg{fill:none;stroke:#ffffff14;stroke-width:3}
+.bi-ring{fill:none;stroke:var(--bi-brass);stroke-width:3;stroke-linecap:round;stroke-dasharray:125.7;stroke-dashoffset:125.7;transition:stroke .3s}
+.bi-plate.late .bi-ring{stroke:var(--bi-red)}
+.bi-face i{position:absolute;inset:5px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(160deg,#2b5a47,#0e261d);color:#fff;font:700 15px/1 Tajawal,system-ui,sans-serif;font-style:normal}
+.bi-who{display:flex;align-items:baseline;gap:6px;min-width:0}
+.bi-who b{min-width:2.6em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px}
+.bi-who small{flex:none;max-width:52%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--bi-mute);font-size:11px}
+.bi-rack{display:flex;gap:2px;min-height:14px}
+.bi-rack i{width:13px;height:13px;border-radius:50%;flex:none;background:var(--c,#555);box-shadow:inset -2px -2px 3px #0006,inset 1px 1px 2px #fff6}
+.bi-rack i.stripe{background:radial-gradient(circle at 50% 50%,var(--c) 0 38%,#f3efe4 40%)}
+.bi-rack i.gone{opacity:.16;filter:grayscale(1)}
+.bi-rack i.open{background:#ffffff1a;box-shadow:none}
+.bi-rack i.eight{background:#111;box-shadow:0 0 0 2px var(--bi-brass),0 0 8px var(--bi-brass)}
+.bi-status{min-height:24px;text-align:center;font-size:14px;font-weight:700;color:var(--bi-ink)}
+.bi-status small{color:var(--bi-mute);font-weight:400}
+.bi-stage{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 36px 58px;gap:7px;min-height:0}
+.bi-wrap{position:relative;min-width:0;min-height:0;display:grid;place-items:center}
+.bi-wrap canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;outline:none}
+.bi-wrap canvas:focus-visible{box-shadow:0 0 0 3px var(--bi-brass);border-radius:18px}
+.bi-dock{display:grid;grid-template-columns:58px minmax(0,1fr);gap:8px;min-height:0}
+/* the power: a cue in a groove; pull it and let go */
+.bi-power{position:relative;border-radius:29px;border:1px solid #2a4b3e;background:linear-gradient(180deg,#071711,#0c2219 50%,#071711);overflow:hidden;cursor:ew-resize;touch-action:none;outline:none}
+.bi-power:focus-visible{box-shadow:0 0 0 3px var(--bi-brass)}
+.bi-power-fill{position:absolute;top:0;bottom:0;right:0;width:calc(var(--p,0) * 100%);background:linear-gradient(270deg,#3ddc84,#f2c94c 55%,#ff5b45);opacity:.85}
+.bi-power-cue{position:absolute;top:50%;right:calc(10px + var(--p,0) * (100% - 150px));width:130px;height:11px;margin-top:-5.5px;border-radius:3px 6px 6px 3px;background:linear-gradient(270deg,#5aa0ff 0 7px,#f4efe4 7px 14px,#e7c78f 14px 64%,#3a1d10 64%);box-shadow:0 4px 10px #0009;pointer-events:none}
+.bi-power b{position:absolute;inset:0;display:grid;place-items:center;padding-right:150px;font-size:12px;color:var(--bi-mute);pointer-events:none}
+.bi-power.on b{color:#fff;font-size:15px}
+.bi-power.off{opacity:.45;cursor:default}
+.bi-spin-btn{position:relative;width:58px;height:58px;border-radius:50%;border:2px solid #2a4b3e;background:radial-gradient(circle at 36% 30%,#fff 0,#ece7da 45%,#b9b2a2 100%);cursor:pointer;box-shadow:0 8px 18px #000a}
+.bi-spin-btn i{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;left:calc(50% + var(--sx,0) * 19px);top:calc(50% - var(--sy,0) * 19px);border-radius:50%;background:var(--bi-red);box-shadow:0 0 0 2px #fff}
+.bi-fine{position:relative;display:grid;place-items:center;border-radius:14px;border:1px solid #1f4436;background:repeating-linear-gradient(90deg,#ffffff1c 0 1px,transparent 1px 9px),linear-gradient(180deg,#0b2119,#06130e);background-position:var(--fine,0px) 0,0 0;cursor:ew-resize;touch-action:none;outline:none}
+.bi-fine:focus-visible{box-shadow:0 0 0 3px var(--bi-brass)}
+.bi-fine span{padding:2px 10px;border-radius:10px;background:#06130ee6;font-size:12px;color:var(--bi-mute);pointer-events:none}
+.bi-game.idle .bi-power,.bi-game.idle .bi-fine,.bi-game.idle .bi-spin-btn{opacity:.4;pointer-events:none}
+.bi-toast{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);max-width:84%;padding:10px 18px;border-radius:16px;background:#04100ce8;border:1px solid #e3b96166;color:#fff;font:700 18px/1.35 Tajawal,system-ui,sans-serif;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;box-shadow:0 18px 40px #000b}
+.bi-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.bi-toast.foul{border-color:#ff8a7a;background:#3a0c0ae8}
+.bi-toast.good{border-color:#6be3a4;background:#0a2a1ce8}
+.bi-toast small{display:block;font-size:13px;font-weight:400;color:#e4efe9}
+
+/* ---------- sheets ---------- */
+.bi-sheet{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:18px;background:#010605b3;backdrop-filter:blur(3px)}
+.bi-sheet[hidden]{display:none}
+.bi-sheet-card{width:min(360px,100%);padding:20px 18px 18px;border-radius:24px;border:1px solid #2b5a45;background:linear-gradient(180deg,#0e2a20,#071711);text-align:center;box-shadow:0 30px 70px #000c}
+.bi-sheet-card h2{margin:0 0 12px;font-size:19px}
+.bi-sheet-card p{margin:12px 0;color:var(--bi-mute);font-size:14px;line-height:1.6}
+.bi-sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bi-spin-ball{position:relative;width:200px;height:200px;margin:4px auto;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff 0,#f1ecdf 40%,#b7b0a0 100%);box-shadow:0 18px 40px #000b,inset -10px -14px 30px #0003;touch-action:none;cursor:crosshair;outline:none}
+.bi-spin-ball:focus-visible{box-shadow:0 0 0 4px var(--bi-brass)}
+.bi-spin-ball::before,.bi-spin-ball::after{content:"";position:absolute;background:#0000001f}
+.bi-spin-ball::before{left:50%;top:10%;bottom:10%;width:1px}
+.bi-spin-ball::after{top:50%;left:10%;right:10%;height:1px}
+.bi-spin-ball i{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;left:calc(50% + var(--sx,0) * 78px);top:calc(50% - var(--sy,0) * 78px);border-radius:50%;background:radial-gradient(circle at 40% 35%,#ff9a8a,var(--bi-red));box-shadow:0 0 0 3px #fff,0 4px 10px #0007}
+.bi-end-card .bi-end-ball{width:74px;height:74px;margin:-56px auto 8px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555 0,#111 55%,#000 100%);box-shadow:0 14px 30px #000c;position:relative;color:#111;font:700 24px/1 Tajawal,system-ui,sans-serif}
+.bi-end-card .bi-end-ball::before{content:"";position:absolute;width:34px;height:34px;border-radius:50%;background:#f7f4ea}
+.bi-end-card .bi-end-ball{z-index:0}
+.bi-end-card .bi-end-ball::after{content:"8";position:relative;z-index:1;color:#111}
+.bi-end-card.won h2{color:var(--bi-brass-hi)}
+
+/* landscape and large screens: the table lies along its length, the cue stands at the side */
+@media (min-aspect-ratio:1/1){
+  .bi-game{grid-template-rows:auto minmax(0,1fr)}
+  .bi-status{position:absolute;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 5px);left:50%;transform:translateX(-50%);z-index:2;min-height:0;padding:3px 14px;border-radius:12px;background:#06130ef2;pointer-events:none;white-space:nowrap}
+  .bi-fine span{visibility:hidden}
+  .bi-stage{grid-template-columns:minmax(0,1fr) 66px;grid-template-rows:minmax(0,1fr) 34px;max-width:1240px;width:100%;margin:0 auto}
+  .bi-wrap{grid-row:1;grid-column:1}
+  .bi-fine{grid-row:2;grid-column:1}
+  .bi-dock{grid-row:1 / span 2;grid-column:2;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 62px;justify-items:center}
+  .bi-dock .bi-power{order:-1;width:62px;border-radius:31px;cursor:ns-resize;background:linear-gradient(90deg,#071711,#0c2219 50%,#071711)}
+  .bi-dock .bi-power-fill{top:0;right:0;left:0;bottom:auto;width:auto;height:calc(var(--p,0) * 100%);background:linear-gradient(180deg,#3ddc84,#f2c94c 55%,#ff5b45)}
+  .bi-dock .bi-power-cue{top:calc(8px + var(--p,0) * (100% - 124px));right:auto;left:50%;width:12px;height:104px;margin:0 0 0 -6px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,#5aa0ff 0 7px,#f4efe4 7px 14px,#e7c78f 14px 62%,#3a1d10 62%)}
+  .bi-dock .bi-power b{inset:auto 0 12px;display:block;padding:0;text-align:center;font-size:11px}
+  .bi-plates{max-width:640px;margin:0 auto;width:100%}
+}
+/* the reactions button sits at the end of the fine-aim strip, clear of the pockets */
+body.billiards-page.bi-playing .rx-fab{position:fixed!important;z-index:25;top:auto!important;right:auto!important;left:10px!important;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 65px)!important;width:36px!important;height:36px!important}
+body.bi-playing:has(.rx-fab:not([hidden])) .bi-fine{margin-left:44px}
+@media (min-aspect-ratio:1/1){body.billiards-page.bi-playing .rx-fab{left:auto!important;right:10px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;width:34px!important;height:34px!important}body.bi-playing:has(.rx-fab:not([hidden])) .bi-fine{margin-left:0;margin-right:42px}}
+@media (prefers-reduced-motion:reduce){.bi-toast,.bi-plate,.bi-ring{transition:none}}

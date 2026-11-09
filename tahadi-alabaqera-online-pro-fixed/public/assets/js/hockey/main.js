@@ -1,7 +1,7 @@
-import {HockeyOnline,hockeyPerspective} from './online.js?v=33.8.0-studio1';
+import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.0-studio1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
-import { createGame, step, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.8.0-studio1';
-import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.8.0-studio1';
+import { createGame, step, carryPuck, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.9.0-studio1';
+import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.0-studio1';
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';
@@ -64,7 +64,35 @@ $('muteBtn').onclick = () => { audio.mute(!prefs.muted); renderMenu(); $('muteBt
 
 // ---------- the game ----------
 const canvas = $('table'), conf = $('conf'), cctx = conf.getContext('2d'), renderer = createRenderer(canvas);
-let online=null,onlineRound=0,netFrame=-1,netTarget=null;
+let online=null,onlineRound=0,netFrame=-1,netTarget=null,netAt=0,myHitAt=-1e9;
+// 33.9.0: online, the table is played here and set right by the room. Your striker is under your finger
+// at once; the puck moves, bounces and meets your striker here between the room's words; each word of
+// the room is carried on to "now" and the puck is pulled to it (a little at a time when it is close).
+const netFix={x:0,y:0,rate:10};
+const netAge=()=>Math.min(.22,((online?.rtt||110)/2+20)/1000);
+function netWord(){
+  if(!netTarget||!g)return;
+  const room=netTarget.puck,p=g.puck,ev=netTarget.events||[];
+  if(netTarget.phase!=='play'){Object.assign(p,{x:room.x,y:room.y,vx:room.vx,vy:room.vy,spin:room.spin||0});netFix.x=netFix.y=0;return;}
+  const theirs=ev.some(e=>e.type==='hit'&&e.who===1),mine=ev.some(e=>e.type==='hit'&&e.who===0);
+  // your own strike was seen here first: until the room has it, the puck here is the right one
+  if(!theirs&&!mine&&performance.now()-myHitAt<(online?.rtt||110)+90)return;
+  const now=carryPuck(room,netAge()),dx=now.x-p.x,dy=now.y-p.y,far=Math.hypot(dx,dy);
+  if(theirs||far>120){p.vx=now.vx;p.vy=now.vy;p.spin=now.spin;netFix.x=dx;netFix.y=dy;netFix.rate=26;}
+  else{p.vx+=(now.vx-p.vx)*.6;p.vy+=(now.vy-p.vy)*.6;netFix.x=dx;netFix.y=dy;netFix.rate=10;}
+}
+function netStep(dt){
+  if(!netTarget)return;
+  const o=netTarget.strikers[1],age=Math.min(.25,netAge()+(performance.now()-netAt)/1000),opp=g.strikers[1];
+  opp.tx=o.x+(o.vx||0)*Math.min(age,.1);opp.ty=o.y+(o.vy||0)*Math.min(age,.1);
+  g.phase=netTarget.phase;g.bot={0:null,1:null};
+  step(g,dt,{},{predict:true});
+  // here: your strikes and the walls; the room: the goals and the other side's strikes
+  g.events=g.events.filter(e=>e.type==='wall'||(e.type==='hit'&&e.who===0));
+  if(g.events.some(e=>e.type==='hit'))myHitAt=performance.now();
+  handleEvents();
+  const k=1-Math.exp(-dt*netFix.rate);g.puck.x+=netFix.x*k;g.puck.y+=netFix.y*k;netFix.x-=netFix.x*k;netFix.y-=netFix.y*k;
+}
 let g = null, running = false, paused = false, raf = 0, last = 0, count = 0, countShown = 0, over = false, shake = 0, flash = 0, flashColor = '#fff', bannerT = 0;
 let fx = [], trail = [], confetti = [], elapsed = 0,roundReceipt='';
 const hands = new Map(); // pointerId → striker index
@@ -105,13 +133,10 @@ function updateScore() { $('scoreA').textContent = String(g.score[0]); $('scoreB
 
 // ----- hands -----
 const isTouch = (e) => e.pointerType === 'touch' || e.pointerType === 'pen';
-function targetFor(e, idx) {
-  const rect = canvas.getBoundingClientRect(), px = e.clientX - rect.left, py = e.clientY - rect.top; let t = renderer.toTable(px, py);
-  if (isTouch(e)) { // the striker rides a little ahead of the finger so the finger does not hide it
-    const a = renderer.toTable(px, py), b = renderer.toTable(px + (renderer.lay.landscape ? 1 : 0), py + (renderer.lay.landscape ? 0 : -1));
-    const dx = b.x - a.x, dy = b.y - a.y, sign = idx === 0 ? 1 : -1; t = { x: t.x + dx * sign * 64, y: t.y + dy * sign * 64 };
-  }
-  return t;
+// 33.9.0: the striker is exactly where the finger is (it used to ride a little ahead of it)
+function targetFor(e) {
+  const rect = canvas.getBoundingClientRect();
+  return renderer.toTable(e.clientX - rect.left, e.clientY - rect.top);
 }
 canvas.addEventListener('pointerdown', (e) => {
   if (!running || paused || over) return; e.preventDefault(); audio.init();
@@ -196,15 +221,15 @@ window.visualViewport?.addEventListener('resize',refit);
 // ----- loop -----
 function loop(now) {
   raf = requestAnimationFrame(safeFrame);
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = Math.max(last, now);
   if (!running) return;
   if (!paused) {
     if (count > 0) { // 3, 2, 1, go
       count -= dt; const n = Math.ceil(count - 0.4);
       if (n !== countShown && n >= 1) { countShown = n; banner(String(n), 'count', 900); audio.count(); }
       if (count <= 0.4 && countShown !== 0) { countShown = 0; banner('انطلق!', 'go', 800); audio.go(); g.phaseT = 0.4; }
-    } else if(online){if(!over)elapsed=netTarget?.time||elapsed;keyboardHand(dt);if(!over)online.input(g.strikers[0].tx,g.strikers[0].ty);if(netTarget){const k=1-Math.exp(-dt*24);for(const [a,b] of [[g.puck,netTarget.puck],...g.strikers.map((st,i)=>[st,netTarget.strikers[i]])]){a.x+=(b.x-a.x)*k;a.y+=(b.y-a.y)*k;a.vx=b.vx;a.vy=b.vy;}}} else if (!over || g.phase === 'over') { if (!over) elapsed += dt; keyboardHand(dt); step(g, dt, {}); handleEvents(); }
-    if (count > 0) { keyboardHand(dt); for (let i = 0; i < 2; i++) { const st = g.strikers[i]; st.x += (st.tx - st.x) * Math.min(1, dt * 14); st.y += (st.ty - st.y) * Math.min(1, dt * 14); const b = i === 0 ? { y0: L / 2 + 20, y1: L - STRIKER_R } : { y0: STRIKER_R, y1: L / 2 - 20 }; st.y = Math.max(b.y0, Math.min(b.y1, st.y)); st.x = Math.max(STRIKER_R, Math.min(W - STRIKER_R, st.x)); } }
+    } else if(online){if(!over)elapsed=netTarget?.time||elapsed;keyboardHand(dt);if(!over)online.input(g.strikers[0].tx,g.strikers[0].ty);netStep(dt);} else if (!over || g.phase === 'over') { if (!over) elapsed += dt; keyboardHand(dt); step(g, dt, {}); handleEvents(); }
+    if (count > 0) { keyboardHand(dt); for (let i = 0; i < 2; i++) { const st = g.strikers[i], k = g.bot?.[i] || (online && i === 1) ? Math.min(1, dt * 14) : 1; st.x += (st.tx - st.x) * k; st.y += (st.ty - st.y) * k; const b = i === 0 ? { y0: L / 2 + 20, y1: L - STRIKER_R } : { y0: STRIKER_R, y1: L / 2 - 20 }; st.y = Math.max(b.y0, Math.min(b.y1, st.y)); st.x = Math.max(STRIKER_R, Math.min(W - STRIKER_R, st.x)); } }
     // trail follows a fast puck
     const sp = Math.hypot(g.puck.vx, g.puck.vy); if (sp > 500 && g.phase === 'play') trail.push({ x: g.puck.x, y: g.puck.y, a: 1 });
     for (const t of trail) t.a -= dt * 3.2; trail = trail.filter((t) => t.a > 0).slice(-18);
@@ -236,7 +261,7 @@ const NAME_KEY='bs-player-name-v33';
 try{const saved=localStorage.getItem(NAME_KEY);if(saved&&!$('hkName').value)$('hkName').value=saved.slice(0,20);}catch{}
 $('hkName').addEventListener('change',()=>{const v=$('hkName').value.trim().slice(0,20);try{if(v)localStorage.setItem(NAME_KEY,v);}catch{}});
 let enteringOnline=false;
-async function enterOnline(kind){if(enteringOnline)return;enteringOnline=true;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=true);try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{showSearch(packet);if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.bot?' · منافس آلي':p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;g.events=netTarget.events||[];handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){if(e.name!=='AbortError')networkStatus(e.message);}finally{enteringOnline=false;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=false);}}
+async function enterOnline(kind){if(enteringOnline)return;enteringOnline=true;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=true);try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{showSearch(packet);if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.bot?' · منافس آلي':p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);netAt=performance.now();netFix.x=netFix.y=0;myHitAt=-1e9;updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);netAt=performance.now();g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;if(count<=0)netWord();g.events=(netTarget.events||[]).filter(e=>e.type!=='wall'&&!(e.type==='hit'&&e.who===0));handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){if(e.name!=='AbortError')networkStatus(e.message);}finally{enteringOnline=false;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=false);}}
 $('hkQuick').onclick=()=>enterOnline('quick');$('hkCreate').onclick=()=>enterOnline('create');$('hkJoin').onclick=()=>/^95[0-9]{4}$/.test($('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)))?enterOnline('join'):networkStatus('اكتب رمز غرفة الهوكي المكوّن من 6 أرقام');
 $('hkCode').addEventListener('keydown',event=>{if(event.key==='Enter')$('hkJoin').click();});
 $('hkCopy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/hockey?room='+online.code);networkStatus('تم نسخ الرابط');}catch{networkStatus('رمز غرفتك: '+online.code);}};$('hkCancel').onclick=()=>{online?.close();online=null;showSearch(null);$('hkRoom').hidden=true;networkStatus('');};$('hkExit').onclick=toMenu;

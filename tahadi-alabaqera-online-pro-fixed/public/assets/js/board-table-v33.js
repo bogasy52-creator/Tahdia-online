@@ -1,13 +1,13 @@
-/* Tahdia 33.0.0 — one online flow for the four table games (السلم والثعبان،
+/* Tahdia 33.0.0 — one online flow for the table games (الثعبان والسلالم،
    الزهرة، جاكارو، تحدي النرد). Every match is online: «العب الحين» seats you at
    a public table that starts ten seconds after it opened, a friends' room
    starts with whoever came, and bots of every strength take the empty seats.
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.8.0-gameplay3';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.0-gameplay3';
 
-const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3};
+const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2};
 
 export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
   const $=selector=>document.querySelector(selector);

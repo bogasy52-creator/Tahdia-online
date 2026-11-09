@@ -1,0 +1,25 @@
+/* Tahdia 33.9.0 — سباق الصور arranged for a phone: during the race the board and the pieces fill the
+   screen (the time, the state and «عرض الصورة» share one short row; the character card stays away
+   from the pieces), and in the lobby the start button speaks for itself and the image studio stays
+   small under it. */
+body.picture-page.picture-playing .hero-entry{display:none!important}
+/* the reactions button keeps off the pieces: it waits at the top corner during the race */
+body.picture-page.picture-playing .rx-fab{top:calc(env(safe-area-inset-top) + 10px)!important;bottom:auto!important}
+@media (max-width:700px){
+  .picture-playing .picture-match-layout{gap:10px}
+  .picture-playing .picture-match-info{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"label status ref" "clock status ref" "meter meter meter";align-items:center;gap:2px 12px;padding:9px 12px!important;border-radius:16px}
+  .picture-playing .picture-match-info>.step{grid-area:label;margin:0;font-size:10px}
+  .picture-playing .picture-match-info>.picture-clock{grid-area:clock;font-size:30px!important;line-height:1}
+  .picture-playing .picture-match-info>.picture-meter{grid-area:meter;margin:6px 0 0}
+  .picture-playing .picture-match-info>#gameStatus{grid-area:status;margin:0;font-size:13px;line-height:1.4}
+  .picture-playing .picture-match-info>.picture-actions{grid-area:ref;margin:0}
+  .picture-playing .picture-match-info>.picture-actions button{min-height:38px;padding:0 12px;font-size:12.5px;white-space:nowrap}
+  .picture-playing .picture-match-info>.picture-hint,.picture-playing .picture-match-info>small{display:none}
+  .picture-playing .picture-match-info>.picture-result{grid-column:1/-1}
+  .picture-playing .picture-players{gap:8px;margin:4px 0 8px}
+  .picture-playing .picture-player{padding:7px 10px!important}
+  .picture-preview{max-height:210px;width:100%;object-fit:cover;border-radius:16px}
+  .picture-lobby .picture-ai p{font-size:13px}
+}
+.picture-page #start:not(:disabled){box-shadow:0 0 0 3px #8ff3ce33,0 10px 22px #0009}
+.picture-page #start:disabled{opacity:.75;font-size:13px}

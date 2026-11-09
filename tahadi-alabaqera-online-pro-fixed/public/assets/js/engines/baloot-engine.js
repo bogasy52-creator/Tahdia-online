@@ -211,11 +211,22 @@ function biddingPosition(state, seat) {
 }
 
 // What the player on turn may say during bidding.
+/** 33.9.0: «كوش» — the first five cards hold no ace or ten, no picture, and no three in a row of a suit. */
+export function canKosh(state, seat) {
+  const hand = state.hands?.[seat] || [];
+  if (state.phase !== 'bidding' || state.bidding?.round !== 1 || state.bidding?.hokm || state.bidding?.sunAsk || hand.length !== 5) return false;
+  if (!hand.every((card) => ['7', '8', '9'].includes(rankOf(card)))) return false;
+  return !SUITS.some((suit) => ['7', '8', '9'].every((rank) => hand.includes(rank + suit)));
+}
+
 export function biddingOptions(state, seat = state.turn) {
   if (state.phase !== 'bidding' || seat !== state.turn) return [];
   const b = state.bidding;
+  // 33.9.0: a player who passed before the Hokm was called may still take it Sun
+  if (b.sunAsk?.[0] === seat) return [{ bid: 'sun' }, { bid: 'pass' }];
   if (b.confirm === seat) return [{ bid: 'hokm', suit: b.hokm.suit }, { bid: 'sun' }];
   const out = [{ bid: 'pass' }, { bid: 'sun' }];
+  if (canKosh(state, seat)) out.push({ bid: 'kosh' });
   const pos = biddingPosition(state, seat);
   if (b.round === 1) {
     if (!b.hokm) out.push({ bid: 'hokm', suit: suitOf(state.exposed) });
@@ -273,15 +284,7 @@ function nextBidder(state, events, rng) {
     state.turn = nextSeat(state.turn);
     return;
   }
-  if (b.hokm) {
-    if (b.round === 1) {
-      b.confirm = b.hokm.seat;
-      state.turn = b.hokm.seat;
-      return;
-    }
-    setContract(state, events, { type: 'hokm', trump: b.hokm.suit, buyer: b.hokm.seat });
-    return;
-  }
+  if (b.hokm) return afterHokm(state, events);
   if (b.round === 1) {
     b.round = 2;
     b.spoken = 0;
@@ -297,10 +300,51 @@ function nextBidder(state, events, rng) {
   events.push({ type: 'deal', dealer: state.dealer, exposed: state.exposed });
 }
 
+// Everyone has spoken and a Hokm stands. Before it is confirmed, the players who passed before it
+// was called are asked once, in order: «تسحبها صن؟» (Sun beats Hokm, as long as nobody has doubled).
+function afterHokm(state, events) {
+  const b = state.bidding;
+  if (b.sunAsk == null) {
+    const at = b.bids.findIndex((x) => x.round === b.round && x.bid === 'hokm');
+    b.sunAsk = b.bids.slice(0, Math.max(0, at)).filter((x) => x.round === b.round && x.bid === 'pass').map((x) => x.seat).filter((seat) => seat !== b.hokm.seat);
+  }
+  if (b.sunAsk.length) {
+    state.turn = b.sunAsk[0];
+    events.push({ type: 'sun_ask', seat: b.sunAsk[0], hokm: clone(b.hokm) });
+    return;
+  }
+  if (b.round === 1) {
+    b.confirm = b.hokm.seat;
+    state.turn = b.hokm.seat;
+    return;
+  }
+  setContract(state, events, { type: 'hokm', trump: b.hokm.suit, buyer: b.hokm.seat });
+}
+
 function applyBid(state, seat, action, events, rng) {
   const option = { bid: action.bid, suit: action.suit };
   if (!biddingOptions(state, seat).some((o) => sameOption(o, option))) throw new Error('illegal_bid');
   const b = state.bidding;
+  if (option.bid === 'kosh') {
+    // the cards are shown and dealt again by the same dealer
+    events.push({ type: 'kosh', seat, cards: state.hands[seat].slice() });
+    state.history.push({ handNo: state.handNo, redeal: true, kosh: seat });
+    startHand(state, rng);
+    events.push({ type: 'deal', dealer: state.dealer, exposed: state.exposed });
+    return;
+  }
+  if (b.sunAsk?.[0] === seat) {
+    b.bids.push({ seat, round: b.round, bid: option.bid, suit: null, late: true });
+    events.push({ type: 'bid', seat, round: b.round, bid: option.bid, suit: null, late: true });
+    if (option.bid === 'sun') {
+      b.sunAsk = [];
+      setContract(state, events, { type: 'sun', buyer: seat });
+      return;
+    }
+    b.sunAsk.shift();
+    afterHokm(state, events);
+    return;
+  }
   b.bids.push({ seat, round: b.round, bid: option.bid, suit: option.bid === 'hokm' ? option.suit : null });
   events.push({ type: 'bid', seat, round: b.round, bid: option.bid, suit: option.bid === 'hokm' ? option.suit : null });
   if (b.confirm === seat) {

@@ -3,17 +3,17 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.8.0';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.9.0';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
  ['stage','هوية كل الألعاب','✦','ألوان لقوائمك وحواف الساحات وشريط معلوماتك في جميع الألعاب.'],
- ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في السلم والثعبان والزهرة، وتصير كرات زجاجية في الجاكارو.'],
- ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في السلم والثعبان، وتكون صورتك على طاولة البلوت.'],
+ ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في الثعبان والسلالم والزهرة، وتصير كرات زجاجية في الجاكارو.'],
+ ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في الثعبان والسلالم، وتكون صورتك على طاولة البلوت.'],
  ['dice','النرد','🎲','نرد ثلاثي الأبعاد يظهر في كل ألعاب النرد.'],
  ['table','الطاولات','🪵','طاولتك في البلوت: الإطار والسطح والزخرفة. والطاولة نفسها تلبس لوحة الزهرة.'],
  ['jboard','لوحات الجاكارو','🎯','لوحة الجاكارو نفسها بممشاها وأرقامها، بلبس ثاني: ذهب، زمرد، رخام، كربون، قصر، مجلس.'],
- ['board','ألواح السلالم','🪜','لوح السلم والثعبان بخاناته وإطاره وسلالمه.'],
+ ['board','ألواح السلالم','🪜','لوح الثعبان والسلالم بخاناته وإطاره وسلالمه.'],
  ['deck','ورق البلوت','🃏','ورق اللعب على طاولة البلوت: الوجه والظهر في يدك وعلى الطاولة.'],
  ['snake','الثعابين','🐍','إطلالتك في حلبة الثعبان أمام بقية اللاعبين.'],
  ['emote','إيموجي','😎','إيموجي متحرك تطلقه داخل الغرف، ويظهر لكل اللاعبين.'],
@@ -30,7 +30,7 @@ const SLOTS=['pawn','dice','table','jboard','board','character','deck','snake','
 const TABLE_MATERIAL={'table-club':'club','table-gallery':'ivory','table-nocturne':'carbon','table-botanic':'jade','table-royal':'royal','table-walnut':'walnut','table-cyber':'reactor','table-majlis':'majlis'};
 const BOARD_LOOK={'board-forest':{cell:'#18323e',alt:'#213f4a',num:'#e0edf0',frame:'#1b303e',dark:'#0c1d28',hi:'#45606c',snake:'#52f1c5',ladder:'#8fe2ef'},'board-lava':{cell:'#1d1513',alt:'#261b17',num:'#ffb27a',frame:'#24140d',dark:'#0b0604',hi:'#ff7a2e',snake:'#ff2d55',ladder:'#ff8a3d'},'board-galaxy':{cell:'#141238',alt:'#1a1745',num:'#d6ceff',frame:'#2f2868',dark:'#0c0a22',hi:'#a59cec',snake:'#ff4fa3',ladder:'#cdc4ff'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
 const DIE_ONE={'dice-obsidian':'#ebc677','dice-crystal':'#d6fff1','dice-smoke':'#ffdf9d','dice-nebula':'#ffdf9d'};
-const TRY={stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في السلم والثعبان'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح السلم والثعبان'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
+const TRY={stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في الثعبان والسلالم'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح الثعبان والسلالم'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
 let missionKind='daily';
 let heroParts=null,view='shop',filter='all',query='',sort='featured',pending=false,previewId=null,previewCleanup=()=>{},bag=[],favorites=[],accountKey='',checkout=null,observer=null,clock=null,artSequence=0;
 
@@ -264,7 +264,7 @@ function renderSets(p){
  }
  $('setsSection').hidden=view!=='shop'||!target.children.length;
 }
-const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'سلم وثعبان',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},hockey:{name:'هوكي الهواء',href:'/hockey'},focus:{name:'مواجهة التركيز',href:'/focus'},chaos:{name:'أونو',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'}};
+const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'الثعبان والسلالم',href:'/snakes'},zahra:{name:'الزهرة',href:'/zahra'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},hockey:{name:'هوكي الهواء',href:'/hockey'},focus:{name:'مواجهة التركيز',href:'/focus'},chaos:{name:'أونو',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'},billiards:{name:'بلياردو',href:'/billiards'}};
 function renderRewards(p){
  const status=core.dailyStatus(p,{now:now()}),gift=$('dailyGift');gift.replaceChildren();
  const head=make('div','sx-daily-head'),copy=make('div');copy.append(make('span','sx-eyebrow','سلسلة الحضور · اليوم '+status.streak+' من 7'),make('h3',null,status.claimed?'هدية اليوم في رصيدك.':'هدية اليوم: '+status.coins+' عملة'),make('p',null,'ادخل كل يوم لترتفع الهدية حتى 120 عملة.'));

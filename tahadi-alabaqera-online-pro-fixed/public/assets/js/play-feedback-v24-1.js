@@ -3,7 +3,7 @@
   const root = window, doc = document;
   const colors = ['#62f4c8', '#53b7ff', '#c98cff', '#ffd166', '#ff6e91', '#ffffff'];
   const gameRoutes = new Set(['dice', 'jackaroo', 'journey', 'local', 'logic', 'memory', 'online', 'paths-online', 'picture', 'puzzle', 'quiz', 'reaction', 'serpent', 'snakes', 'sudoku', 'zahra']);
-  const titles = {dice:'تحدي النرد',jackaroo:'جاكارو',journey:'رحلة النجوم',local:'تحدي العباقرة',logic:'تحدي المنطق',memory:'تحدي الذاكرة',online:'العباقرة أونلاين','paths-online':'توصيل الأرقام',picture:'سباق الصور',puzzle:'ترتيب الأرقام',quiz:'تحدي العباقرة',reaction:'سرعة الاستجابة',serpent:'حلبة الثعبان',snakes:'سلم وثعبان',sudoku:'سودوكو',zahra:'الزهرة'};
+  const titles = {dice:'تحدي النرد',jackaroo:'جاكارو',journey:'رحلة النجوم',local:'تحدي العباقرة',logic:'تحدي المنطق',memory:'تحدي الذاكرة',online:'العباقرة أونلاين','paths-online':'توصيل الأرقام',picture:'سباق الصور',puzzle:'ترتيب الأرقام',quiz:'تحدي العباقرة',reaction:'سرعة الاستجابة',serpent:'حلبة الثعبان',snakes:'الثعبان والسلالم',billiards:'بلياردو',sudoku:'سودوكو',zahra:'الزهرة'};
   const inviteGames = {'paths-online':'paths',online:'quiz'};
   const route = new URL(location.href).pathname.replace(/\.html$/, '').replace(/^\//, '') || 'index';
   const enabled = () => root.BS_AUDIO?.getSettings?.().effects !== false;
@@ -11,7 +11,7 @@
   const effectHost = () => doc.querySelector('dialog[open]') || doc.fullscreenElement || doc.querySelector('body.serpent-active #arenaPlay') || doc.body;
   let layer = null, context = null, socialLoader = null, celebrationKey = '';
 
-  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=33.8.0'; doc.head?.appendChild(css);
+  const css = doc.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/css/play-experience-v25.css?v=33.9.0'; doc.head?.appendChild(css);
 
   function effectLayer() {
     const parent = effectHost();
@@ -75,7 +75,7 @@
     const journeyGame=context?.journeyGame||url.searchParams.get('game')||'jewels';
     const joinable=context?.joinable!==false&&/^\d{6}$/.test(code);url.search='';url.hash='';if(joinable)url.searchParams.set('room',code);if(cleanRoute==='journey')url.searchParams.set('game',journeyGame==='paths'?'paths':'jewels');return{game,variant:cleanRoute==='journey'?(journeyGame==='paths'?'paths':'jewels'):undefined,code:joinable?code:'',roundClosed:context?.joinable===false&&!!context?.code,url:url.href,joinable,title:cleanRoute==='journey'?(journeyGame==='paths'?'مسارات الألوان':'ماستر الجواهر'):titles[cleanRoute]||'تحدي العباقرة'};
   }
-  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=33.8.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);}).catch(error=>{socialLoader=null;throw error;});return socialLoader;}
+  function loadSocial(){if(root.BS_SOCIAL?.openInvitePicker)return Promise.resolve(root.BS_SOCIAL);if(socialLoader)return socialLoader;socialLoader=new Promise((resolve,reject)=>{const script=doc.createElement('script');script.src='/assets/js/social-client.js?v=33.9.0';script.onload=()=>root.BS_SOCIAL?.openInvitePicker?resolve(root.BS_SOCIAL):reject(Error('تعذر تشغيل قائمة الأصدقاء'));script.onerror=()=>reject(Error('تعذر تحميل قائمة الأصدقاء'));doc.head.appendChild(script);}).catch(error=>{socialLoader=null;throw error;});return socialLoader;}
   let inviteOpening=false;
   async function openInvite(){
     if(inviteOpening)return;inviteOpening=true;

@@ -119,7 +119,7 @@
     {id:'victory-orbit',type:'victory',name:'احتفال المدار',subtitle:'حلقات متقاطعة',design:'orbit',price:480,color:'#8dd8c5',collection:'atelier-30'},
     {id:'title-tactician',type:'title',name:'صانع الخطط',subtitle:'توقيعك على الطاولة',design:'signature',price:180,color:'#c9b38e',collection:'atelier-30'},
     {id:'title-virtuoso',type:'title',name:'مايسترو',subtitle:'هوية المجموعات',design:'signature',price:420,color:'#e5b7a4',collection:'atelier-30'}
-  ].map(item=>Object.freeze({...item,description:item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في السلم والثعبان تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'. وتلبس لوحة الزهرة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+  ].map(item=>Object.freeze({...item,description:item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في الثعبان والسلالم تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'. وتلبس لوحة الزهرة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
   // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
   // phrases and board-wide moves. They are owned, never equipped, and the
   // first eight keep the ids older rooms already relay (`legacy`).
@@ -175,6 +175,22 @@
     {id:'emote-rocket',type:'emote',name:'طيران',glyph:'🚀',fx:'launch',price:340,color:'#ff8a5c'},
     {id:'emote-crown',type:'emote',name:'الملك',glyph:'👑',fx:'royal',price:480,color:'#ffd36b'},
     {id:'emote-diamond',type:'emote',name:'ألماسة',glyph:'💎',fx:'prism',price:520,color:'#7ff0ff'},
+    // 33.9.0: faces that laugh and faces that rage, and moves thrown at a player you pick (target)
+    {id:'emote-cackle',type:'emote',name:'هههههه',glyph:'😆',fx:'face-cackle',price:0,color:'#ffd54a'},
+    {id:'emote-giggle',type:'emote',name:'ضحكة مكتومة',glyph:'🤭',fx:'face-giggle',price:0,color:'#ffd54a'},
+    {id:'emote-rage',type:'emote',name:'معصّب',glyph:'😡',fx:'face-rage',price:0,color:'#ff5a4a'},
+    {id:'emote-grumpy',type:'emote',name:'زعلان',glyph:'😒',fx:'face-grumpy',price:0,color:'#ffc35a'},
+    {id:'emote-pointlaugh',type:'emote',name:'أضحك عليك',glyph:'🫵',fx:'face-point',price:200,color:'#ffd166'},
+    {id:'emote-fume',type:'emote',name:'يغلي',glyph:'🥵',fx:'face-fume',price:180,color:'#ff7a4a'},
+    {id:'emote-explode',type:'emote',name:'يتفجّر',glyph:'🤬',fx:'face-explode',price:240,color:'#ff4a3a'},
+    {id:'move-hit-tomato',type:'move',name:'طماطم عليه',glyph:'🍅',fx:'duel-tomato',price:0,color:'#f17d69',target:true},
+    {id:'move-hit-slipper',type:'move',name:'نعال طاير',glyph:'🩴',fx:'duel-slipper',price:0,color:'#5ab8ff',target:true},
+    {id:'move-hit-kiss',type:'move',name:'بوسة',glyph:'💋',fx:'duel-kiss',price:0,color:'#ff6f93',target:true},
+    {id:'move-hit-water',type:'move',name:'بالون ماي',glyph:'💦',fx:'duel-water',price:180,color:'#5ec8ff',target:true},
+    {id:'move-hit-snow',type:'move',name:'كرة ثلج',glyph:'⛄',fx:'duel-snow',price:200,color:'#cfe6ff',target:true},
+    {id:'move-hit-cake',type:'move',name:'كيكة بوجهه',glyph:'🥧',fx:'duel-cake',price:240,color:'#fff1d6',target:true},
+    {id:'move-hit-roses',type:'move',name:'ورد له',glyph:'💐',fx:'duel-roses',price:260,color:'#ff5f7a',target:true},
+    {id:'move-hit-punch',type:'move',name:'بوكس',glyph:'🥊',fx:'duel-punch',price:300,color:'#e3242c',target:true},
     {id:'phrase-hello',type:'phrase',name:'السلام عليكم',glyph:'👋',text:'السلام عليكم 👋',price:0,color:'#9fd8c7',voice:'p17'},
     {id:'phrase-gg',type:'phrase',name:'لعب نظيف',glyph:'🤝',text:'لعب نظيف 🤝',price:0,color:'#9fd8c7',legacy:'gg',voice:'p20'},
     {id:'phrase-luck',type:'phrase',name:'حظ أوفر',glyph:'🍀',text:'حظ أوفر 🍀',price:0,color:'#9fd8c7',legacy:'luck',voice:'p21'},
@@ -216,7 +232,7 @@
     {id:'move-goldrain',type:'move',name:'مطر ذهبي',glyph:'💰',fx:'gold',price:520,color:'#ffd36b'},
     {id:'move-crown',type:'move',name:'تتويج',glyph:'👑',fx:'crown',price:600,color:'#ffc94d'},
     {id:'move-sovereign',type:'move',name:'هيبة المدير',glyph:'🐍',fx:'sovereign',price:0,color:'#e7c376',source:'owner'}
-  ].map(item=>Object.freeze({...item,collection:'reactions-31',description:item.type==='emote'?'إيموجي متحرك يظهر فوق اللوحة لكل اللاعبين، مع صوت خفيف.':item.type==='phrase'?'عبارة جاهزة تظهر باسمك في فقاعة داخل الغرفة.':item.source==='owner'?'حركة المدير: هالة ذهبية وثعبان ملكي يلتف حول اللوحة.':'حركة استعراضية تملأ اللوحة بمؤثرات وأصوات لكل اللاعبين.',rarity:item.source?'exclusive':item.price>=450?'legendary':item.price>=300?'epic':item.price>=150?'rare':'common',retired:false})));
+  ].map(item=>Object.freeze({...item,collection:'reactions-31',description:item.type==='emote'?'إيموجي متحرك يظهر فوق اللوحة لكل اللاعبين، مع صوت خفيف.':item.type==='phrase'?'عبارة جاهزة تظهر باسمك في فقاعة داخل الغرفة.':item.source==='owner'?'حركة المدير: هالة ذهبية وثعبان ملكي يلتف حول اللوحة.':item.target?'ترميها على لاعب تختاره: تطير له وتنزل عليه، ووجهه يرد عليك، ويقدر يرد لك.':'حركة استعراضية تملأ اللوحة بمؤثرات وأصوات لكل اللاعبين.',rarity:item.source?'exclusive':item.price>=450?'legendary':item.price>=300?'epic':item.price>=150?'rare':'common',retired:false})));
   const LEGACY_REACTIONS=Object.freeze(Object.fromEntries(REACTIONS.filter(item=>item.legacy).map(item=>[item.legacy,item.id])));
   const CATALOG=Object.freeze([...LEGACY_CATALOG,...COLLECTION,...REACTIONS]);
   // What the 31.0.0 storefront shows: every design with its own look, no
@@ -269,17 +285,19 @@
     {id:'collector',kind:'achievement',name:'خزانة الكنوز',description:'امتلك 10 إضافات مدفوعة مختلفة.',metric:'collection',goal:10,coins:150},
     {id:'online-winner',kind:'achievement',name:'بطل المنافسة',description:'اربح 5 مباريات أونلاين موثّقة.',metric:'rankedWins',goal:5,coins:150}
   ].map(Object.freeze));
-  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot','focus','cipher','wordbomb','chaos','hockey'];
+  const GAME_IDS=['snakes','jackaroo','quiz','memory','reaction','logic','puzzle','accuracy','dice','zahra','serpent','jewels','paths','sudoku','baloot','focus','cipher','wordbomb','chaos','hockey','billiards'];
   // 33.2.0: a Baloot mission every day and one more game that changes daily
   const GAME_MISSIONS=Object.freeze([
     ['baloot','games',2,60,'جلسة بلوت','العب صكّتين بلوت كاملة اليوم.'],['baloot','wins',1,80,'صكّة لك','اربح صكّة بلوت اليوم.'],
-    ['snakes','games',2,50,'سلم وثعبان','العب جولتين سلم وثعبان اليوم.'],['zahra','games',2,50,'طاولة الزهرة','العب جولتين زهرة اليوم.'],
+    ['snakes','games',2,50,'الثعبان والسلالم','العب جولتين في الثعبان والسلالم اليوم.'],['zahra','games',2,50,'طاولة الزهرة','العب جولتين زهرة اليوم.'],
     ['quiz','games',2,50,'تحدي الأسئلة','العب مباراتين في تحدي الأسئلة اليوم.'],['jackaroo','games',2,50,'جاكارو','العب جولتين جاكارو اليوم.'],
     ['dice','wins',1,70,'سباق النرد','اربح جولة في تحدي النرد اليوم.'],['serpent','games',3,50,'حلبة الثعابين','العب 3 جولات في حلبة الثعابين اليوم.'],
-    ['snakes','wins',1,70,'أول من يوصل','اربح جولة سلم وثعبان اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.'],
+    ['snakes','wins',1,70,'أول من يوصل','اربح جولة في الثعبان والسلالم اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.'],
     // 33.6.0: the new games have missions too
     ['chaos','games',2,50,'طاولة أونو','أكمل مباراتين أونو اليوم.'],['wordbomb','games',2,50,'صيد الكلمات','العب مباراتين في صيد الكلمات اليوم.'],['cipher','wins',1,70,'فك الشفرة','افُز بمباراة في ساحة الشفرات اليوم.']
     ,['hockey','games',2,50,'موعد الهوكي','أكمل مواجهتي هوكي اليوم.'],['focus','games',2,50,'تركيزك يصنع الفارق','أكمل مواجهتي تركيز اليوم.']
+    // 33.9.0: billiards
+    ,['billiards','games',2,50,'طاولة البلياردو','العب مباراتين بلياردو اليوم.']
   ].map(([game,metric,goal,coins,name,description])=>Object.freeze({id:'day-'+game+(metric==='wins'?'-win':'-play'),game,metric,goal,coins,name,description})));
   function gameMissionsFor(day){
     const n=Math.floor(Date.parse(day+'T00:00:00Z')/86400000)||0,baloot=GAME_MISSIONS.filter(m=>m.game==='baloot'),others=GAME_MISSIONS.filter(m=>m.game!=='baloot');
@@ -416,7 +434,7 @@
   const HEROES=Object.freeze(CATALOG.filter(i=>i.type==='character').map(i=>Object.freeze({id:i.id.slice(10),item:i.id,name:i.name,art:i.asset})));
   const heroOf=value=>{const id=String(value||'').replace(/^character-/,'');return HEROES.find(h=>h.id===id)||null;};
   const heroArt=value=>{const h=heroOf(value);return h?'/assets/heroes/'+h.art+'.webp':'';};
-  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.8.0-full1':'';};
+  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.9.0-full1':'';};
   const heroFace=value=>{const h=heroOf(value);return h?'/assets/heroes/face/'+h.art+'.webp':'';};
   const BOT_HEROES=['robot','princess','samurai','viking','cyber','diver','racer','gladiator'];
   const botHeroFace=seat=>heroFace(BOT_HEROES[Math.abs(Math.floor(Number(seat)||0))%BOT_HEROES.length]);

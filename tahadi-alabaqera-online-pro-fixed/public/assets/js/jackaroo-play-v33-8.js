@@ -1,13 +1,14 @@
 /* Tahdia 33.8.0 — Jackaroo played on the board itself.
-   Pick a card, then tap the marble on the board: a marble with one move goes at once. When the
-   card offers that marble more than one move (the ace: one or eleven, the seven: split it, the
-   jack: which marble to swap with), its choices appear on the board: a small menu by the marble
-   and a glowing mark on every hole it can reach — tap either. The seven is played in two taps:
-   where the first marble stops, then which marble walks the rest.
+   33.9.0: played the way a real board is played, with no hints. Pick a card, then tap your
+   marble: a marble with one move goes at once. When the card gives it more than one (the ace:
+   one or eleven; the seven: all of it or a part of it), tap the hole where it should stop — the
+   seven's rest is walked by the next marble you tap. The jack: tap your marble, then the one to
+   swap with (or that one first). Nothing on the board shows what can move or where a move lands;
+   a tap that cannot be played says why, by the place you tapped.
    It also draws the table's effects: the card flying to the middle, a kill, a swap, a marble
    coming home, a burnt card. Sounds come from the shared audio manager. */
-import { boardGeometry } from './engines/board-geometry-v29.js?v=33.8.0';
-import { globalJackarooPosition } from './engines/jackaroo-engine.js?v=33.8.0-rules2';
+import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.0';
+import { globalJackarooPosition } from './engines/jackaroo-engine.js?v=33.9.0-rules3';
 
 const jkReduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 function jkEl(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
@@ -52,90 +53,160 @@ export function choicesFor(state, actions, pi, mi, nameOf = (i) => state.players
   }
   return out;
 }
-/** The menu and the marks on the board. */
-export function createChooser({ board, onCommit, onCancel = () => {}, sound = () => {} }) {
-  let layer = null, live = null;
-  function host() {
-    if (!layer) { layer = jkEl('div', 'jk-choose'); layer.addEventListener('click', (e) => { if (e.target === layer) cancel(); }); }
-    if (layer.parentElement !== board) board.append(layer);
-    return layer;
+/** Where a tap on the board landed: the nearest marble and the nearest hole (yard, walk, lane). */
+function jkNearest(board, selector, x, y, reach) {
+  let best = null, gap = Infinity;
+  for (const el of board.querySelectorAll(selector)) {
+    const shape = el.matches('circle') ? el : el.querySelector('circle') || el;
+    const r = shape.getBoundingClientRect();
+    if (!r.width) continue;
+    const d = Math.hypot(r.left + r.width / 2 - x, r.top + r.height / 2 - y);
+    if (d < Math.max(reach, r.width * 0.75) && d < gap) { gap = d; best = el; }
   }
-  function clear() { live = null; if (layer) { layer.replaceChildren(); layer.classList.remove('on'); } }
-  function cancel() { if (!live) return; clear(); onCancel(); }
-  function mark(at, text, title, fn, tone = '') {
-    const b = jkEl('button', 'jk-mark' + (tone ? ' ' + tone : ''), text); b.type = 'button';
-    b.style.left = at.x + '%'; b.style.top = at.y + '%'; b.setAttribute('aria-label', title);
-    b.addEventListener('click', (e) => { e.stopPropagation(); fn(); });
-    return b;
+  return best;
+}
+function jkHole(el) {
+  if (!el) return null;
+  const d = el.dataset || {};
+  if (d.track != null) return { kind: 'track', at: Number(d.track) };
+  if (d.home != null) { const [o, h] = d.home.split(':').map(Number); return { kind: 'lane', owner: o, at: h }; }
+  if (d.finishCup != null) return { kind: 'lane', owner: Number(d.finishCup), at: 4 };
+  if (d.yard != null) return { kind: 'yard', owner: Number(d.yard.split(':')[0]) };
+  return null;
+}
+/** The hole an option leaves its marble on, as a place on the board. */
+export function landingSpot(state, owner, marble, steps = 0, backward = false, enter = false) {
+  const g = boardGeometry(state), pos = state.players[owner].marbles[marble];
+  if (enter || pos < 0) return { kind: 'track', at: globalJackarooPosition(owner, 0, state) };
+  const end = backward ? (pos - steps >= 0 ? pos - steps : g.track + (pos - steps)) : pos + steps;
+  if (end < g.track) return { kind: 'track', at: globalJackarooPosition(owner, end, state) };
+  return { kind: 'lane', owner, at: Math.min(4, end - g.track) };
+}
+const jkSame = (a, b) => Boolean(a && b && a.kind === b.kind && a.at === b.at && (a.kind !== 'lane' || a.owner === b.owner));
+const JK_STEPS = { A: [1, 11], K: [13], Q: [12], '10': [10], '4': [4], '5': [5], '7': [7] };
+/** 33.9.0: a house with its owner's marble on it (board-petals draws «مقفل» by it). */
+export const JK_LOCK = 'مقفل — صاحب البيت، لا يمكن المرور';
+/** The board as the hand that plays it: taps on marbles and holes, no hints. */
+export function createBoardPicker({ board, fx = null, context = () => null, onCommit, tell = () => {}, sound = () => {}, shut = () => false }) {
+  let pick = null, layer = null;
+  const host = () => { if (!layer) layer = jkEl('div', 'jk-pick'); if (layer.parentElement !== board) board.append(layer); return layer; };
+  const keyOf = (el) => el ? el.getAttribute('data-stone').split(':').map(Number) : null;
+  const same = (a, b) => Boolean(a && b && a[0] === b[0] && a[1] === b[1]);
+  function paint() {
+    const box = host(); box.replaceChildren();
+    if (!pick) return;
+    const at = jkCenterIn(board, jkStoneEl(board, pick.from[0], pick.from[1]));
+    if (at) { const ring = jkEl('i', 'jk-picked'); ring.style.left = at.x + '%'; ring.style.top = at.y + '%'; box.append(ring); }
+    if (pick.stop) {
+      const spot = jkCenterIn(board, pick.stop.kind === 'track' ? board.querySelector(`[data-track="${pick.stop.at}"]`) : board.querySelector(`[data-home="${pick.stop.owner}:${pick.stop.at}"]`));
+      if (spot) { const stop = jkEl('i', 'jk-stop', String(pick.steps)); stop.style.left = spot.x + '%'; stop.style.top = spot.y + '%'; box.append(stop); }
+    }
   }
-  function choose(option, state) {
-    if (option.act) { sound('select'); clear(); onCommit(option.act); return; }
-    if (option.then?.length === 1) { sound('select'); clear(); onCommit(option.then[0].act); return; }
+  function clear() { pick = null; if (layer) layer.replaceChildren(); }
+  function nope(text, at, stone) {
+    sound('error');
+    if (text && fx && at) fx.say(at, text, 'warn');
+    const el = stone && jkStoneEl(board, stone[0], stone[1]);
+    if (el) { el.classList.remove('jk-nope'); void el.getBBox?.(); el.classList.add('jk-nope'); setTimeout(() => el.classList.remove('jk-nope'), 420); }
+  }
+  function commit(act) { sound('select'); clear(); onCommit(act); }
+  function base(ctx) { tell(ctx?.hint || 'اختر الحجر'); }
+  /** Why the tapped marble has nothing with this card. */
+  function explain(ctx, stone, at) {
+    const { state, me } = ctx, rank = String(ctx.card || '').replace(/[SHDC]$/, '');
+    const [o, m] = stone, pos = state.players[o]?.marbles?.[m];
+    const g = boardGeometry(state), home = (v) => (g.fill ? v >= g.track : v === g.finish);
+    const own = o === me || (o % 2 === me % 2 && state.players[me].marbles.every(home));
+    if (own && pos < 0) return nope(rank === 'A' || rank === 'K' ? 'خانة البداية مسكّرة' : 'يطلع من الحوش بالآس أو الشايب', at, stone);
+    if (own && (JK_STEPS[rank] || [Number(rank)]).every((n) => n > 0 && shut(state, o, m, n, rank === '4'))) return nope(JK_LOCK, at, stone);
+    if (own) return nope('هالحجر ما يمشي بهالورقة', at, stone);
+    if (pos === 0 && (rank === 'J' || rank === '5')) return nope(JK_LOCK, at, stone);
+    if (rank === 'J') return nope('ما تقدر تبدّل مع هالحجر', at, stone);
+    if (rank === '5') return nope('هالحجر ما يمشي 5', at, stone);
+    return nope('هذا مو حجرك', at, stone);
+  }
+  function begin(ctx, from, options, at) {
+    if (options.length === 1 && options[0].act) return commit(options[0].act);
+    if (options.length === 1 && options[0].then?.length === 1) return commit(options[0].then[0].act);
     sound('select');
-    open(state, option.then, option.from, 'السبعة: أي حجر يمشي ' + (option.then[0] ? option.then[0].label.slice(1) : '') + '؟', option);
+    if (options.every((o) => o.key.startsWith('swap:'))) { pick = { kind: 'swap', from, options }; paint(); return tell('الولد: اضغط الحجر اللي تبدّل معه'); }
+    // a marble with a single stop for the seven's first part goes straight to its rest
+    if (options.length === 1 && options[0].then) return stopAt(ctx, from, options[0]);
+    pick = { kind: 'move', from, options }; paint();
+    tell(options.some((o) => o.then) ? 'السبعة: اضغط الخانة اللي يوقف فيها هالحجر' : 'اضغط الخانة اللي يوقف فيها');
   }
-  /** Keeps the menu on the screen: inside the board and inside the window. */
-  function keepInView(menu) {
-    const wrap = (board.closest?.('.jack-board-wrap') || board).getBoundingClientRect(), r = menu.getBoundingClientRect();
-    if (!r.width) return;
-    const vw = window.innerWidth || wrap.right, vh = window.innerHeight || wrap.bottom;
-    const left = Math.max(wrap.left, 0) + 6, right = Math.min(wrap.right, vw) - 6, top = Math.max(wrap.top, 0) + 6, bottom = Math.min(wrap.bottom, vh) - 6;
-    let dx = 0, dy = 0;
-    if (r.left < left) dx = left - r.left; else if (r.right > right) dx = right - r.right;
-    if (r.top < top) dy = top - r.top; else if (r.bottom > bottom) dy = bottom - r.bottom;
-    if (dx || dy) menu.style.translate = Math.round(dx) + 'px ' + Math.round(dy) + 'px';
+  function stopAt(ctx, from, option) {
+    pick = { kind: 'rest', from, options: pick?.options || [option], rest: option.then, steps: option.land.steps, stop: landingSpot(ctx.state, from[0], from[1], option.land.steps) };
+    paint();
+    tell('السبعة: باقي ' + (7 - option.land.steps) + ' — اضغط الحجر اللي يمشيها');
   }
-  /** Shows the choices of a marble: a menu by it and a mark where each one lands. A few choices are
-      tapped on the board too; many (the seven) only light up where they land, and the menu chooses. */
-  function open(state, options, from, title, parent = null) {
-    const box = host(); box.replaceChildren(); box.classList.add('on');
-    live = { options, from };
-    const origin = jkCenterIn(board, jkStoneEl(board, from[0], from[1]));
-    if (!origin) { onCancel(); return; }
-    const ring = jkEl('i', 'jk-from'); ring.style.left = origin.x + '%'; ring.style.top = origin.y + '%'; box.append(ring);
-    // the swaps sit on different marbles: always tapped there; many holes in a row (the seven) only light up
-    const many = options.filter((o) => o.label !== '⇄').length > 3;
-    for (const o of options) {
-      const target = o.stone && !o.land ? jkStoneEl(board, o.stone[0], o.stone[1]) : o.land ? landingOf(board, state, o.land.owner, o.land.marble, o.land.steps, o.land.backward) : null;
-      const at = jkCenterIn(board, target);
-      const tone = o.label === '⇄' ? 'swap' : o.then ? 'split' : '';
-      if (at && many && o.label !== '⇄') { const dot = jkEl('i', 'jk-mark dot' + (tone ? ' ' + tone : ''), o.label.replace('+', '')); dot.style.left = at.x + '%'; dot.style.top = at.y + '%'; dot.setAttribute('aria-hidden', 'true'); box.append(dot); }
-      else if (at) box.append(mark(at, o.label === '⇄' ? '⇄' : o.label, o.sub, () => choose({ ...o, from: o.stone || from }, state), tone));
-      // the second marble of a split: tap the marble itself too
-      if (parent && o.stone) { const s = jkCenterIn(board, jkStoneEl(board, o.stone[0], o.stone[1])); if (s) box.append(mark(s, '●', o.sub, () => choose(o, state), 'stone')); }
+  function fresh(ctx, stone, hole, at) {
+    if (stone) {
+      const options = choicesFor(ctx.state, ctx.actions, stone[0], stone[1]);
+      if (options.length) return begin(ctx, stone, options, at);
+      const swaps = ctx.actions.filter((a) => a.type === 'swap' && a.otherOwner === stone[0] && a.otherMarble === stone[1]);
+      if (swaps.length === 1) return commit(swaps[0]);
+      if (swaps.length > 1) { sound('select'); pick = { kind: 'swapFrom', from: stone, swaps }; paint(); return tell('الولد: اضغط حجرك اللي يتبدّل معه'); }
     }
-    // the menu, by the marble, kept on the screen
-    const menu = jkEl('div', 'jk-menu' + (many ? ' grid' : '')); menu.setAttribute('role', 'menu'); menu.setAttribute('aria-label', title || 'اختر الحركة');
-    if (title) menu.append(jkEl('b', 'jk-menu-title', title));
-    const list = jkEl('div', 'jk-menu-list');
-    for (const o of options.slice(0, 8)) {
-      const b = jkEl('button', 'jk-menu-item'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.setAttribute('aria-label', o.label + ' ' + o.sub);
-      b.append(jkEl('strong', '', o.label), jkEl('small', '', many && o.then ? 'والباقي ' + (7 - Number(o.label.replace('+', ''))) : many && o.key === '+7' ? 'كاملة' : o.sub));
-      b.addEventListener('click', (e) => { e.stopPropagation(); choose({ ...o, from: o.stone || from }, state); });
-      list.append(b);
+    // a tap on your yard, or on your start, brings a marble out
+    const enter = hole && ctx.actions.find((a) => a.type === 'enter' && ((hole.kind === 'yard' && hole.owner === a.owner) || jkSame(hole, landingSpot(ctx.state, a.owner, a.marble, 0, false, true))));
+    if (enter) return commit(enter);
+    if (stone) return explain(ctx, stone, at);
+    if (hole) nope('اضغط حجرك أول', at);
+  }
+  function next(ctx, stone, hole, at) {
+    if (pick.kind === 'swap') {
+      if (same(stone, pick.from)) { clear(); return base(ctx); }
+      const hit = stone && pick.options.find((o) => same(o.stone, stone));
+      if (hit) return commit(hit.act);
+      pick = null; paint();
+      return fresh(ctx, stone, hole, at);
     }
-    menu.append(list);
-    if (options.length > 8) menu.append(jkEl('small', 'jk-menu-more', 'وباقي الخيارات على اللوحة'));
-    const x = jkEl('button', 'jk-menu-close', '✕'); x.type = 'button'; x.setAttribute('aria-label', 'إلغاء'); x.addEventListener('click', (e) => { e.stopPropagation(); cancel(); });
-    menu.append(x);
-    menu.style.left = Math.min(80, Math.max(20, origin.x)) + '%';
-    menu.style.top = origin.y + '%';
-    menu.classList.toggle('below', origin.y < 45);
-    box.append(menu);
-    keepInView(menu);
-    setTimeout(() => menu.querySelector('.jk-menu-item')?.focus({ preventScroll: true }), 30);
+    if (pick.kind === 'swapFrom') {
+      if (same(stone, pick.from)) { clear(); return base(ctx); }
+      const hit = stone && pick.swaps.find((a) => a.owner === stone[0] && a.marble === stone[1]);
+      if (hit) return commit(hit);
+      return nope('اضغط حجرك اللي يتبدّل معه', at, stone);
+    }
+    if (pick.kind === 'rest') {
+      const hit = stone && pick.rest.find((r) => same(r.stone, stone));
+      if (hit) return commit(hit.act);
+      if (same(stone, pick.from)) { const options = pick.options; pick = { kind: 'move', from: stone, options }; paint(); return tell('السبعة: اضغط الخانة اللي يوقف فيها هالحجر'); }
+      return nope('هالحجر ما يقدر يمشي ' + (7 - pick.steps), at, stone);
+    }
+    // a move with several stops: the hole tapped says which
+    const hit = hole && pick.options.find((o) => o.land && jkSame(hole, landingSpot(ctx.state, o.land.owner, o.land.marble, o.land.steps, o.land.backward, o.key === 'enter')));
+    if (hit) { if (hit.act) return commit(hit.act); if (hit.then.length === 1) return commit(hit.then[0].act); return stopAt(ctx, pick.from, hit); }
+    if (same(stone, pick.from)) { clear(); return base(ctx); }
+    if (stone && choicesFor(ctx.state, ctx.actions, stone[0], stone[1]).length) { pick = null; return fresh(ctx, stone, hole, at); }
+    return nope('ما يوقف هنا بهالورقة', at, stone);
   }
-  /** The tapped marble: one move goes at once, more open the menu. Returns false when it has none. */
-  function pick(state, actions, pi, mi, nameOf) {
-    const options = choicesFor(state, actions, pi, mi, nameOf);
-    if (!options.length) return false;
-    if (options.length === 1 && options[0].act) { clear(); onCommit(options[0].act); return true; }
-    if (options.length === 1 && options[0].then?.length === 1) { clear(); onCommit(options[0].then[0].act); return true; }
-    const swaps = options.every((o) => o.label === '⇄');
-    open(state, options, [pi, mi], swaps ? 'اختر الحجر اللي تبدّل معه' : options.some((o) => o.then) ? 'السبعة: كم يمشي هالحجر؟' : 'اختر الحركة');
-    return true;
+  function tap(stone, hole, at) {
+    const ctx = context();
+    if (!ctx || ctx.waiting) return;
+    if (!ctx.card) { if (stone) nope('اختر ورقة أول', at, stone); return; }
+    if (pick) return next(ctx, stone, hole, at);
+    return fresh(ctx, stone, hole, at);
   }
-  return { pick, clear, cancel, get open() { return Boolean(live); }, reattach() { if (layer && live) host(); } };
+  board.addEventListener('click', (e) => {
+    // the plate by a locked house says what it means
+    const lock = e.target.closest?.('[data-lock-badge]');
+    if (lock) { if (fx) fx.say(lock, JK_LOCK, 'gold'); return; }
+    if (e.target.closest?.('[data-player-tag],button,a,.jk-fx b,.jk-confirm')) return;
+    const at = jkCenterIn(board, { getBoundingClientRect: () => ({ left: e.clientX, top: e.clientY, width: 1, height: 1 }) });
+    const stone = keyOf(jkNearest(board, '[data-stone]', e.clientX, e.clientY, 15));
+    const hole = jkHole(jkNearest(board, '[data-track],[data-home],[data-yard],[data-finish-cup]', e.clientX, e.clientY, 12));
+    if (!stone && !hole) { if (pick) { clear(); base(context()); } return; }
+    tap(stone, hole, at);
+  });
+  board.addEventListener('bs-board-render', () => { if (pick) paint(); });
+  return {
+    clear,
+    /** The keyboard: Enter on a marble. */
+    tapStone(pi, mi) { const el = jkStoneEl(board, pi, mi); tap([pi, mi], null, jkCenterIn(board, el)); },
+    reattach() { if (pick) paint(); else if (layer && layer.parentElement !== board) host(); },
+    get busy() { return Boolean(pick); },
+  };
 }
 
 /* ---------- the table's effects ---------- */
@@ -159,10 +230,11 @@ export function createJackFx(board) {
   function say(target, text, tone = '') {
     const at = typeof target?.x === 'number' ? target : spot(target); if (!at) return;
     // a word by a player at the edge stays on the screen
-    const t = put(jkEl('b', 'jk-say ' + tone, text), { x: Math.min(78, Math.max(22, at.x)), y: Math.max(12, at.y) }); gone(t, 1300);
-    const r = t.getBoundingClientRect(), vw = window.innerWidth || r.right, pad = 8;
-    if (r.width && r.left < pad) t.style.marginLeft = Math.round(pad - r.left) + 'px';
-    else if (r.width && r.right > vw - pad) t.style.marginLeft = Math.round(vw - pad - r.right) + 'px';
+    const x = Math.min(78, Math.max(22, at.x)), t = put(jkEl('b', 'jk-say ' + tone, text), { x, y: Math.max(12, at.y) }); gone(t, tone === 'warn' ? 1700 : 1300);
+    // measured without its animation (offsetWidth), so a long word never leaves the screen
+    const b = board.getBoundingClientRect(), w = t.offsetWidth, mid = b.left + (x / 100) * b.width, vw = window.innerWidth || b.right, pad = 8;
+    if (w && mid - w / 2 < pad) t.style.marginLeft = Math.round(pad - (mid - w / 2)) + 'px';
+    else if (w && mid + w / 2 > vw - pad) t.style.marginLeft = Math.round(vw - pad - (mid + w / 2)) + 'px';
   }
   function toss(card, fromSeat) {
     const from = spot(`[data-player-tag="${fromSeat}"]`) || { x: 50, y: 92 }, to = spot('[data-pile-cards]') || { x: 50, y: 50 };

@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.8.0-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.8.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.8.0';
-import { BalootVoice } from './baloot-voice.js?v=33.8.0-audio1';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.9.0-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.9.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.9.0';
+import { BalootVoice } from './baloot-voice.js?v=33.9.0-audio1';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -80,7 +80,15 @@ function cardName(card) {
   const rank = { A: 'إكة', K: 'شايب', Q: 'بنت', J: 'ولد', T: '10', 9: '9', 8: '8', 7: '7' }[card[0]];
   return rank + ' ' + SUIT[card[1]];
 }
-function suitHtml(suit) { return `<span class="suit ${RED[suit] ? 'red suit-red' : 'suit-black'}">${SUIT[suit]}</span>`; }
+// 33.9.0: the Hokm mark is the cards' own suit shape on a little white card: hearts and diamonds
+// red, spades and clubs black, as on the cards (it used to take the bubble's dark text colour, so a
+// red Hokm showed black). A four-colour deck keeps its blue diamonds and green clubs.
+function suitHtml(suit) {
+  const d = window.BS_CARDS?.suitPath?.(suit), deck = window.BS_CARDS?.DECKS?.[ui.deck];
+  const tint = deck?.four && (suit === 'D' || suit === 'C') ? ` style="--suit:${suit === 'D' ? deck.blue : deck.green}"` : '';
+  const shape = d ? `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="${d}"/></svg>` : SUIT[suit];
+  return `<span class="suit ${RED[suit] ? 'red suit-red' : 'suit-black'}" data-suit="${suit}" role="img" aria-label="${SUIT_SAY[suit] || ''}"${tint}>${shape}</span>`;
+}
 
 /* ---------- Seats ---------- */
 const posOf = (seat) => POS[(seat - ui.me + 4) % 4];
@@ -316,7 +324,8 @@ function setScore(el, value) {
 /* ---------- Actions & prompt ---------- */
 function bidLabel(o, view) {
   if (o.bid === 'pass') return { text: 'بس', cls: 'pass' };
-  if (o.bid === 'sun') return { text: view.bidding?.confirm === ui.me ? 'أحوّلها صن' : 'صن', cls: 'sun' };
+  if (o.bid === 'sun') return { text: view.bidding?.confirm === ui.me ? 'أحوّلها صن' : view.bidding?.sunAsk?.[0] === ui.me ? 'أسحبها صن ☀️' : 'صن', cls: 'sun' };
+  if (o.bid === 'kosh') return { text: 'كوش 🔄', cls: 'pass kosh' };
   if (o.bid === 'ashkal') return { text: 'أشكل', cls: 'sun' };
   const second = view.bidding?.round === 2;
   return { html: `${view.bidding?.confirm === ui.me ? 'أثبّت حكم' : second ? 'ثاني' : 'حكم'}${suitHtml(o.suit)}`, cls: 'hokm' };
@@ -345,6 +354,7 @@ function renderPrompt(view) {
   if (view.phase === 'scored') { p.textContent = 'انتهت الجولة'; return; }
   const mine = view.turn === ui.me;
   if (view.phase === 'bidding') {
+    if (mine && view.bidding?.sunAsk?.[0] === ui.me) { p.innerHTML = `<b>${esc(seatName(view, view.bidding.hokm.seat))} اشترى حكم ${suitHtml(view.bidding.hokm.suit)}</b> — تسحبها صن؟`; return; }
     if (mine) p.innerHTML = view.bidding?.confirm === ui.me ? 'ثبّت الحكم أو حوّلها صن' : view.bidding?.round === 2 ? '<b>الجولة الثانية</b>: ثاني بشكل آخر، أو صن، أو بس' : 'دورك في الشراء';
     else p.textContent = `${seatName(view, view.turn)} يقرر…`;
     return;
@@ -612,7 +622,7 @@ function celebrate() {
 
 function bidText(e) {
   if (e.bid === 'pass') return ['بس', 'pass'];
-  if (e.bid === 'sun') return ['صن ☀️', 'hot'];
+  if (e.bid === 'sun') return [e.late ? 'سحبها صن ☀️' : 'صن ☀️', 'hot'];
   if (e.bid === 'ashkal') return ['أشكل', 'hot'];
   return [`${e.round === 2 ? 'ثاني' : 'حكم'} ${suitHtml(e.suit)}`, 'hot'];
 }
@@ -650,6 +660,11 @@ async function playEvents(events, after, session = ui.session, delivery = {}) {
       await banner('الجولة الثانية<small>ثاني بشكل آخر، أو صن</small>', 1100);
     } else if (e.type === 'redeal') {
       await banner('ما أحد اشترى<small>توزيع جديد</small>', 1200);
+    } else if (e.type === 'kosh') {
+      // 33.9.0: «كوش» — the low cards are shown, then a new deal
+      bubble(e.seat, 'كوش 🔄', 'hot', 1700);
+      play('balootBid', { volume: 0.7 });
+      await banner(`كوش<small>${esc(e.seat === ui.me ? 'أنت' : seatName(after, e.seat))}: ${(e.cards || []).map((c) => esc(c[0])).join(' ')} — توزيع جديد</small>`, 1600);
     } else if (e.type === 'contract') {
       const c = e.contract;
       const who = c.buyer === ui.me ? 'أنت' : seatName(after, c.buyer);

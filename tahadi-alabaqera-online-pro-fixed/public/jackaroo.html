@@ -1,12 +1,12 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#080b17"><title>جاكارو — بوسراج</title><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-jackaroo.css?v=33.8.0-c6d42d5c8c"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.8.0"></head><body class="release-v26 bs-page board-game game-jackaroo release-v14 suite-v16 suite-v17"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>جاكارو</b><span>فريقان · أربعة لاعبين</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop" aria-label="المتجر">◈</a><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap tbl-setup"><div class="tbl-hero"><div><span class="tbl-kicker">طاولة بوسراج</span><h1>جاكارو</h1><p>أنت وشريكك ضد الفريق الثاني. العب ورقتك بذكاء، بدّل الكرات، وأدخل كرات فريقك كلها إلى الأمان.</p></div><div id="tblHeroArt" class="tbl-hero-art" aria-hidden="true"></div></div><div id="jackLooks" class="jk-looks" role="radiogroup" aria-label="شكل اللوحة"><b class="jk-looks-title">شكل اللوحة</b><div class="jk-looks-row"></div></div><div id="gameMenu"></div></section>
-<section id="game" class="hidden tbl31" aria-label="جاكارو"><div class="jack-layout"><section class="jack-main"><div class="jack-board-wrap"><div id="board" class="jack-board"></div><div class="jk-board-buttons"><button id="leaveGame" class="bs-btn" aria-label="خروج من جاكارو">↩</button><button id="jackLookNext" class="bs-btn jk-look-next" type="button" aria-label="غيّر شكل اللوحة">🎨</button><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span><span id="deckCount"></span><span id="dealText"></span></div><details class="jk-board-info"><summary aria-label="المقاعد والقواعد">؟</summary><div class="jk-board-info-body"><p id="modeHint"></p><div class="team-rail"><div id="team0" class="team-card"></div><div id="team1" class="team-card"></div></div><div id="players" class="player-list"></div><div id="cardGuide"></div><ul><li>كل لاعب له ربع الممشى على جهته: خاناته مرقّمة من 1 (خانة انطلاقه الملوّنة عند رأس الإصبع) إلى 18، والكرات تمشي مع الأرقام.</li><li>بيتك (أربع خانات) في الإصبع اللي يبدأ منه دورك، وتدخله بعد ما تلف اللوحة كلها.</li><li>حجر البداية محمي.</li><li>الفريق الذي ينهي أحجاره كلها يفوز؛ 8 أحجار عند 4 لاعبين و12 حجرًا عند 6.</li></ul></div></details></div></section><div class="jk-center-controls jk-hand-dock" aria-label="أوراقك وحركاتك"><div class="hand-title"><b>أوراقك</b><span id="handHint" class="mini-note">اختر ورقة</span></div><div id="hand" class="hand"></div><div id="actions" class="action-list"></div><div id="status" class="game-status"></div></div></div></section></main>
-<div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🃏</div><h2 id="winnerName"></h2><p>الفريق أدخل أحجاره كلها إلى الأمان.</p><div class="winner-actions-v33"><button id="again" class="bs-btn gold">مباراة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div><script src="assets/js/party-link-v32.js?v=33.8.0-room1"></script><script src="assets/js/audio-manager.js?v=33.8.0"></script><script src="assets/js/fullscreen-game.js?v=33.8.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.8.0"></script><script src="assets/js/player-card-v33-7.js?v=33.8.0"></script><script src="assets/js/platform.js?v=33.8.0"></script><script src="assets/js/social-client.js?v=33.8.0"></script><script src="assets/js/profile-core.js?v=33.8.0-pro1"></script><script src="assets/js/career-client.js?v=33.8.0"></script><script src="assets/js/royal-stones.js?v=33.8.0"></script><script src="assets/js/serpent-art-v16.js?v=33.8.0"></script><script src="assets/js/cosmetic-art.js?v=33.8.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.8.0"></script><script src="assets/js/pro-dice.js?v=33.8.0"></script><script src="assets/js/game-menu-v33.js?v=33.8.0"></script><script src="/assets/js/reaction-performers.js?v=33.8.0-studio1"></script><script src="/assets/js/table-viewport-v33-7.js?v=33.8.0-pro2"></script><script src="/assets/js/club-ui.js?v=33.8.0-club1"></script><script type="module" src="assets/js/neon-arena.js?v=33.8.0"></script><script src="assets/js/pieces-v31.js?v=33.8.0"></script><script src="assets/js/card-courts.js?v=33.8.0"></script><script src="assets/js/baloot-cards.js?v=33.8.0"></script><script src="assets/js/jackaroo-cards.js?v=33.8.0-art2"></script><script type="module">
-import {boardGeometry} from "./assets/js/engines/board-geometry-v29.js?v=33.8.0";
-import { fitJackarooViewport, renderPetalBoard, JACK_COLORS, JACK_LOOKS, JACK_LOOK_SWATCH, jackLook, jackLookOpen, setJackLook } from "./assets/js/board-petals-v29.js?v=33.8.0-refine1";
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#080b17"><title>جاكارو — بوسراج</title><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-jackaroo.css?v=33.9.0-cd40ba8edf"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.9.0"></head><body class="release-v26 bs-page board-game game-jackaroo release-v14 suite-v16 suite-v17"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>جاكارو</b><span>فريقان · أربعة لاعبين</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="/shop" aria-label="المتجر">◈</a><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap tbl-setup"><div class="tbl-hero"><div><span class="tbl-kicker">طاولة بوسراج</span><h1>جاكارو</h1><p>أنت وشريكك ضد الفريق الثاني. العب ورقتك بذكاء، بدّل الكرات، وأدخل كرات فريقك كلها إلى الأمان.</p></div><div id="tblHeroArt" class="tbl-hero-art" aria-hidden="true"></div></div><div id="jackLooks" class="jk-looks" role="radiogroup" aria-label="شكل اللوحة"><b class="jk-looks-title">شكل اللوحة</b><div class="jk-looks-row"></div></div><div id="gameMenu"></div></section>
+<section id="game" class="hidden tbl31" aria-label="جاكارو"><div class="jack-layout"><section class="jack-main"><div class="jack-board-wrap"><div id="board" class="jack-board"></div><div class="jk-board-buttons"><button id="leaveGame" class="bs-btn" aria-label="خروج من جاكارو">↩</button><button id="jackLookNext" class="bs-btn jk-look-next" type="button" aria-label="غيّر شكل اللوحة">🎨</button><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span><span id="deckCount"></span><span id="dealText"></span></div><details class="jk-board-info"><summary aria-label="المقاعد والقواعد">؟</summary><div class="jk-board-info-body"><p id="modeHint"></p><div class="team-rail"><div id="team0" class="team-card"></div><div id="team1" class="team-card"></div></div><div id="players" class="player-list"></div><div id="cardGuide"></div><ul><li>كل لاعب له ربع الممشى على جهته: خاناته مرقّمة من 1 (خانة انطلاقه الملوّنة عند رأس الإصبع) إلى 18، والكرات تمشي مع الأرقام.</li><li>بيتك (أربع خانات) في الإصبع اللي يبدأ منه دورك، وتدخله بعد ما تلف اللوحة كلها.</li><li>الدور يمشي لليمين: اللي يلعب بعدك هو اللي على يمينك.</li><li>إذا صاحب البيت واقف في بيته (خانة بدايته) يصير البيت 🔒 مقفل: لا يمكن المرور ولا الوقوف عليه ولا التبديل معه لين يتحرك.</li><li>تختار الورقة، وتضغط حجرك. إذا الورقة لها أكثر من وقفة (الإكة 1 أو 11، السبعة) تضغط الخانة اللي يوقف فيها. اللوحة ما تأشر لك — شغّل مخك.</li><li>الفريق الذي ينهي أحجاره كلها يفوز؛ 8 أحجار عند 4 لاعبين و12 حجرًا عند 6.</li></ul></div></details></div></section><div class="jk-center-controls jk-hand-dock" aria-label="أوراقك وحركاتك"><div class="hand-title"><b>أوراقك</b><span id="handHint" class="mini-note">اختر ورقة</span></div><div id="hand" class="hand"></div><div id="actions" class="action-list"></div><div id="status" class="game-status"></div></div></div></section></main>
+<div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🃏</div><h2 id="winnerName"></h2><p>الفريق أدخل أحجاره كلها إلى الأمان.</p><div class="winner-actions-v33"><button id="again" class="bs-btn gold">مباراة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div><script src="assets/js/party-link-v32.js?v=33.9.0-room1"></script><script src="assets/js/audio-manager.js?v=33.9.0"></script><script src="assets/js/fullscreen-game.js?v=33.9.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.9.0"></script><script src="assets/js/player-card-v33-7.js?v=33.9.0"></script><script src="assets/js/platform.js?v=33.9.0"></script><script src="assets/js/social-client.js?v=33.9.0"></script><script src="assets/js/profile-core.js?v=33.9.0-pro1"></script><script src="assets/js/career-client.js?v=33.9.0"></script><script src="assets/js/royal-stones.js?v=33.9.0"></script><script src="assets/js/serpent-art-v16.js?v=33.9.0"></script><script src="assets/js/cosmetic-art.js?v=33.9.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.9.0"></script><script src="assets/js/pro-dice.js?v=33.9.0"></script><script src="assets/js/game-menu-v33.js?v=33.9.0"></script><script src="/assets/js/reaction-performers.js?v=33.9.0-studio1"></script><script src="/assets/js/table-viewport-v33-7.js?v=33.9.0-pro2"></script><script src="/assets/js/club-ui.js?v=33.9.0-club1"></script><script type="module" src="assets/js/neon-arena.js?v=33.9.0"></script><script src="assets/js/pieces-v31.js?v=33.9.0"></script><script src="assets/js/card-courts.js?v=33.9.0"></script><script src="assets/js/baloot-cards.js?v=33.9.0"></script><script src="assets/js/jackaroo-cards.js?v=33.9.0-art2"></script><script type="module">
+import {boardGeometry} from "./assets/js/engines/board-geometry-v29.js?v=33.9.0";
+import { fitJackarooViewport, renderPetalBoard, JACK_COLORS, JACK_LOOKS, JACK_LOOK_SWATCH, jackLook, jackLookOpen, setJackLook } from "./assets/js/board-petals-v29.js?v=33.9.0-refine1";
 
-import { getJackarooActions, globalJackarooPosition, cardRank, jackarooHome, jackarooHandDead } from "./assets/js/engines/jackaroo-engine.js?v=33.8.0-rules2";
-import { createChooser, createJackFx } from "./assets/js/jackaroo-play-v33-8.js?v=33.8.0";
-import { createTable, seatLook, botTag } from "./assets/js/board-table-v33.js?v=33.8.0";
+import { getJackarooActions, cardRank, jackarooHome, jackarooHandDead, jackarooRoadShut, jackarooNext } from "./assets/js/engines/jackaroo-engine.js?v=33.9.0-rules3";
+import { createBoardPicker, createJackFx, JK_LOCK } from "./assets/js/jackaroo-play-v33-8.js?v=33.9.0-board2";
+import { createTable, seatLook, botTag } from "./assets/js/board-table-v33.js?v=33.9.0";
 // 33.0.0: جاكارو is played online only. The first two people in sit as partners;
 // bots of every strength take the other seats (four, or six when five or six came).
 // Every card played (yours and the bots') is shown in turn.
@@ -28,17 +28,25 @@ let state = null,
   stepping = false;
 const me = () => room?.me?.index ?? -1;
 const playerAt = (seat) => (room?.players || []).find((p) => p.index === seat) || null;
-// 33.8.0: the card, then the marble on the board; a marble with several moves shows them on the board
-const chooser = createChooser({
+const fx = createJackFx($("#board"));
+// 33.9.0: the card, then the marble, then (when the card gives it more than one stop) the hole —
+// all tapped on the board, with nothing on it that shows what can move or where it lands
+const picker = createBoardPicker({
   board: $("#board"),
+  fx,
+  context: () => {
+    if (!state || room?.status !== "playing") return null;
+    if (!isMyTurn() || pendingAction) return { waiting: true };
+    const card = selectedCard === null ? null : myHand()[selectedCard];
+    return { state, me: me(), card, actions: card ? getJackarooActions(state, selectedCard, state.turn) : [], hint: cardHint() };
+  },
   onCommit: (a) => commitPlay(a),
-  onCancel: () => {
-    selectedMarble = null;
-    highlightMoves();
+  tell: (text) => {
+    $("#status").textContent = text;
   },
   sound: (name) => BS_AUDIO.play(name),
+  shut: jackarooRoadShut,
 });
-const fx = createJackFx($("#board"));
 function buildBoard() {
   const b = $("#board");
   for (const id of ["deckCount", "dealText"]) {
@@ -59,14 +67,19 @@ function renderPieces() {
     game: "jackaroo",
     active: state.turn,
     legalStones: keys,
+    quiet: true,
     onSelect: (pi, mi) => chooseMarble(pi, mi),
     looks: state.players.map((_, i) => seatLook(room, i).pawn),
     // 33.6.0: every player's character sits on their own side of the board
     avatars: state.players.map((_, i) => seatLook(room, i).character),
     viewer: me(),
   });
-  const wrap=document.querySelector('.jack-board-wrap');
-  if(wrap)fitJackarooViewport($("#board"),Math.min(wrap.clientWidth,wrap.clientHeight),Math.min(wrap.clientWidth,wrap.clientHeight));
+  fitBoard();
+}
+// 33.9.0: the board is drawn to its own box — taller than wide on a phone, the marbles still round
+function fitBoard() {
+  const b = $("#board");
+  if (state && b?.clientWidth && b.clientHeight) fitJackarooViewport(b, b.clientWidth, b.clientHeight);
 }
 function jackMotionKeys(action) {
   if (!action) return [];
@@ -95,7 +108,10 @@ function renderTeams() {
 function renderPlayers() {
   const box = $("#players");
   box.innerHTML = "";
-  state.players.forEach((p, i) => {
+  // 33.9.0: in the order of play from you — the next one (on your right) comes after you
+  const from = me() >= 0 ? me() : 0;
+  state.players.map((_, k) => jackarooNext(state, from, k)).forEach((i) => {
+    const p = state.players[i];
     // 33.8.0: a slim chip — the marble, the name, and a pip for each marble (in the yard, on the track, home)
     const row = document.createElement("div");
     row.className = "player-jack jk-chip" + (state.turn === i && state.winnerTeam === null ? " turn" : "") + (i === me() ? " is-me" : "");
@@ -103,7 +119,7 @@ function renderPlayers() {
     const pips = p.marbles.map((x) => `<i class="${jackarooHome(state, x) ? "home" : x >= 0 ? "track" : "yard"}"></i>`).join("");
     const out = p.marbles.filter((x) => x >= 0 && !jackarooHome(state, x)).length,
       home = p.marbles.filter((x) => jackarooHome(state, x)).length;
-    row.setAttribute("aria-label", `${p.name}${i === me() ? " (أنت)" : ""}: ${out} على الممشى، ${home} في البيت`);
+    row.setAttribute("aria-label", `${p.name}${i === me() ? " (أنت)" : ""}: ${out} على الممشى، ${home} في الأمان`);
     row.innerHTML = `<div class="jk-chip-text"><b>${escHtml(p.name)}${i === me() ? " · أنت" : ""}</b><span class="jk-pips" aria-hidden="true">${pips}</span></div>`;
     const tag = botTag(playerAt(i));
     if (tag) row.querySelector(".jk-chip-text b")?.append(tag);
@@ -168,7 +184,7 @@ function actionLabel(a) {
 }
 function selectCard(index) {
   if (!isMyTurn() || pendingAction) return;
-  chooser.clear();
+  picker.clear();
   selectedMarble = null;
   // 33.8.0: tapping the chosen card again puts it back
   if (selectedCard === index) {
@@ -182,10 +198,15 @@ function selectCard(index) {
   renderHand();
   renderActions();
   highlightMoves();
-  const actions = getJackarooActions(state, index, state.turn),
-    said = window.BS_JACK_CARDS?.info(myHand()[index])?.say,
-    onBoard = actions.some((a) => a.type !== "discard" && a.type !== "burn");
-  $("#status").textContent = actions[0]?.type === "discard" ? "هالورقة ما لها حركة — احرقها" : said || (onBoard ? "اختر الحجر على اللوحة" : "اختر من تحت");
+  $("#status").textContent = cardHint();
+}
+// what the chosen card does, and what to tap — never which marble can go or where it lands
+function cardHint() {
+  if (selectedCard === null) return "دورك — اختر ورقة، وبعدها الحجر";
+  const actions = getJackarooActions(state, selectedCard, state.turn),
+    said = window.BS_JACK_CARDS?.info(myHand()[selectedCard])?.say;
+  if (actions[0]?.type === "discard") return "هالورقة ما لها حركة — احرقها";
+  return said ? said + " — اضغط الحجر" : "اضغط الحجر على اللوحة";
 }
 function myHand() {
   return state?.hands?.[me()] || [];
@@ -205,29 +226,15 @@ function legalActions() {
     (a) => jackMotionKeys(a).some(([pi, mi]) => pi === selectedMarble[0] && mi === selectedMarble[1]) || (a.type === "enter" && a.owner === selectedMarble[0] && a.marble === selectedMarble[1]),
   );
 }
+// a marble chosen from the keyboard (Enter on it) is the same as a tap on it
 function chooseMarble(pi, mi) {
   if (pendingAction || selectedCard === null || !isMyTurn()) return;
-  const actions = getJackarooActions(state, selectedCard, state.turn);
-  selectedMarble = [pi, mi];
-  // one move goes at once; more open a small menu by the marble and a mark on every hole it can reach
-  if (!chooser.pick(state, actions, pi, mi, (i) => state.players[i]?.name || "")) selectedMarble = null;
+  picker.tapStone(pi, mi);
 }
+// 33.9.0: no glow on the marbles that can go and no mark where they land — the board is read by the player
 function highlightMoves() {
   renderPieces();
-  chooser.reattach();
-  document.querySelectorAll(".legal-piece,.legal-destination").forEach((e) => e.classList.remove("legal-piece", "legal-destination"));
-  if (selectedCard === null || pendingAction) return;
-  for (const a of legalActions()) {
-    const keys = a.type === "enter" ? [[a.owner, a.marble]] : jackMotionKeys(a);
-    for (const [pi, mi] of keys) document.querySelector(`[data-stone="${pi}:${mi}"]`)?.classList.add("legal-piece");
-    if (a.type === "move" || a.type === "moveAny5") {
-      const pos = state.players[a.owner].marbles[a.marble],
-        end = a.backward ? (pos - a.steps + boardGeometry(state).track) % boardGeometry(state).track : pos + a.steps;
-      const target =
-        end < boardGeometry(state).track ? document.querySelector(`#board [data-track="${globalJackarooPosition(a.owner, end, state)}"]`) : end - boardGeometry(state).track < 4 ? document.querySelector(`#board [data-safe="${a.owner}:${end - boardGeometry(state).track}"]`) : null;
-      target?.classList.add("legal-destination");
-    }
-  }
+  picker.reattach();
 }
 function renderActions() {
   const box = $("#actions");
@@ -266,7 +273,7 @@ function renderActions() {
     all.onclick = () => burnAll();
     box.appendChild(all);
   }
-  if (!box.children.length) box.innerHTML = `<div class="mini-note">${selectedCard === null ? (dead ? "ما عندك حركة — اختر ورقة تحرقها" : "اختر ورقة، وبعدها الحجر على اللوحة") : "اضغط الحجر اللي يضوي على اللوحة"}</div>`;
+  if (!box.children.length && dead && selectedCard === null) box.innerHTML = `<div class="mini-note">ما عندك حركة — اختر ورقة تحرقها</div>`;
 }
 // «احرق الكل» asks first: the hand is gone until the next deal
 function burnAll() {
@@ -294,7 +301,7 @@ function burnAll() {
       close();
       if (!isMyTurn() || pendingAction) return;
       pendingAction = true;
-      chooser.clear();
+      picker.clear();
       const sent = table.send("jackaroo_burn_all", {});
       if (!sent) pendingAction = false;
       else {
@@ -334,7 +341,7 @@ function render() {
     }
     return;
   }
-  $("#status").textContent = isMyTurn() ? (selectedCard !== null && window.BS_JACK_CARDS?.info(myHand()[selectedCard])?.say) || "دورك — اختر ورقة، وبعدها الحجر" : `دور ${state.players[state.turn].name}…`;
+  if (!picker.busy) $("#status").textContent = isMyTurn() ? cardHint() : `دور ${state.players[state.turn].name}…`;
   renderHand();
   renderActions();
   highlightMoves();
@@ -346,7 +353,7 @@ function play(a) {
 function commitPlay(a) {
   if (!isMyTurn() || selectedCard === null || pendingAction) return;
   const index = selectedCard;
-  chooser.clear();
+  picker.clear();
   pendingAction = true;
   selectedMarble = null;
   highlightMoves();
@@ -416,7 +423,7 @@ async function apply(next, { animate }) {
   const event = state.lastEvent;$("#hand").style.setProperty("--hand-count",String(state.hands?.[me()]?.length||5));
   if (animate && prev && event && JSON.stringify(event) !== JSON.stringify(prev.lastEvent)) {
     stepping = true;
-    chooser.clear();
+    picker.clear();
     if(event.player===me())window.BS_HERO_FX?.move($("#board"));
     try {
       const t = event.action?.type;
@@ -447,10 +454,12 @@ async function apply(next, { animate }) {
           now = state.players[o]?.marbles[m];
         if (!at) continue;
         if (t === "enter") fx.burst(at, colors[o], 10);
+        // 33.9.0: the owner is on their house: it is locked
+        if (now === 0 && before !== 0) fx.say(at, "🔒 " + JK_LOCK, "gold");
         else if (t === "swap") fx.burst(at, "#9fd8ff", 8);
         if (before < g.track && now >= g.track) {
           fx.burst(at, "#ffd36b", 16);
-          fx.say(at, "دخلت البيت!", "gold");
+          fx.say(at, "دخلت الأمان!", "gold");
           BS_AUDIO.play("reward");
         }
       }
@@ -602,11 +611,9 @@ $("#jackLookNext").onclick = () => {
 paintHero();
 paintLooks();
 if(typeof ResizeObserver!=="undefined"){
- const observer=new ResizeObserver(()=>{
-  const wrap=document.querySelector('.jack-board-wrap');
-  if(state&&wrap)fitJackarooViewport($("#board"),Math.min(wrap.clientWidth,wrap.clientHeight),Math.min(wrap.clientWidth,wrap.clientHeight));
- });
+ const observer=new ResizeObserver(()=>fitBoard());
  observer.observe(document.querySelector('.jack-board-wrap'));
+ observer.observe($("#board"));
 }
 window.addEventListener("bs-career-change", () => {
   paintHero();
@@ -626,4 +633,4 @@ window.BS_TABLE = Object.freeze({
     return (state?.players || []).map((p, i) => ({ index: i, name: String(p?.name || "لاعب " + (i + 1)) }));
   },
 });
-</script><script src="assets/js/ui-icons.js?v=33.8.0"></script><script src="assets/js/pro-experience.js?v=33.8.0-visual2"></script><script defer src="assets/js/client-health.js?v=33.8.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.8.0"></script><script src="assets/js/reactions-v31.js?v=33.8.0-studio1"></script><script src="/assets/js/character-player.js?v=33.8.0-smooth1"></script><script src="/assets/js/hero-effects.js?v=33.8.0-full1"></script><script src="/assets/js/board-fit-pro.js?v=33.8.0-studio1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.8.0"></script></body></html>
+</script><script src="assets/js/ui-icons.js?v=33.9.0"></script><script src="assets/js/pro-experience.js?v=33.9.0-visual2"></script><script defer src="assets/js/client-health.js?v=33.9.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.9.0"></script><script src="assets/js/reactions-v31.js?v=33.9.0-studio1"></script><script src="/assets/js/character-player.js?v=33.9.0-smooth1"></script><script src="/assets/js/hero-effects.js?v=33.9.0-full1"></script><script src="/assets/js/board-fit-pro.js?v=33.9.0-studio1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.9.0"></script></body></html>

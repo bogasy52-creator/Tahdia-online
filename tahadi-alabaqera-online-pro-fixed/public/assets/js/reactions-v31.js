@@ -9,9 +9,10 @@
   if(window.__BS_REACTIONS_V31__)return;window.__BS_REACTIONS_V31__=true;
   const core=()=>window.BS_CAREER_CORE,career=()=>window.BS_CAREER;
   const TABS=[['emote','إيموجي'],['phrase','كلام'],['move','حركات']];
-  const GAP={emote:1500,phrase:1500,move:6000};
+  // 33.9.0: one after another — a short breath between two, and the sheet stays open
+  const GAP={emote:500,phrase:1200,move:1500};
   const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
-  let room=window.BS_BOARD_ROOM||null,tab='emote',fab=null,sheet=null,live=null,layer=null,canvas=null,ctx=null,raf=0,last=0,lastSent=0,lastMove=0,coolTimer=0,observer=null,lockNote=null,hostOverride=null,areaOverride=null,previewTimer=0;
+  let aiming=null,room=window.BS_BOARD_ROOM||null,tab='emote',fab=null,sheet=null,live=null,layer=null,canvas=null,ctx=null,raf=0,last=0,lastSent=0,lastMove=0,coolTimer=0,observer=null,lockNote=null,hostOverride=null,areaOverride=null,previewTimer=0;
   const particles=[];
 
   /* ---------- helpers ---------- */
@@ -71,7 +72,7 @@
   /* 33.8.0: a phrase with a recorded line («السلام عليكم», «كفو»…) is spoken whole, in the voice of the
      voice studio — the same voice and the same player the Baloot table uses (one module on the page). */
   let voiceModule=null,voicePrimed=false,voiceApi=null;
-  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.8.0-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
+  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.0-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
   function speak(it){if(!it?.voice)return;voice().then(v=>{try{v?.say?.(it.voice,0,{maxAge:6000});}catch{}});}
   function primeVoices(){if(voicePrimed)return;voicePrimed=true;voice().then(v=>{if(!v)return;voiceApi=v;if(sheet&&!sheet.hidden)render();Promise.resolve(v.unlock?.()).then(()=>{try{v.prime?.(all().filter(it=>it.voice).map(it=>it.voice));}catch{}}).catch(()=>{});});}
   // a phrase shows the speaker only when its line is recorded (the voice studio fills the new ones)
@@ -284,29 +285,52 @@
   function show(detail){
     const it=item(detail?.reaction||detail?.emote);if(!it)return;
     const myId=room?.state?.me?.id,mine=Boolean(detail.mine||myId&&detail.from===myId),name=String(detail.name||'لاعب').slice(0,20),origin=detail.origin||(mine?fab?.getBoundingClientRect?.():null);
-    announce((mine?'أنت':name)+': '+(it.text||it.glyph+' '+it.name));
-    if(it.voice)speak(it);else sfx(it.type==='phrase'?'phrase':SOUND_FOR[it.fx]||'pop');
+    const duelKind=String(it.fx||'').startsWith('duel-')?it.fx.slice(5):'',toMe=Boolean(detail.to&&myId&&detail.to===myId)||detail.toMe===true,toName=toMe?'أنت':detail.toName||nameOf(detail.to)||'لاعب';
+    announce((mine?'أنت':name)+(duelKind?' ← '+toName:'')+': '+(it.text||it.glyph+' '+it.name));
+    if(it.voice)speak(it);else if(!duelKind)sfx(it.type==='phrase'?'phrase':SOUND_FOR[it.fx]||'pop');
+    if(duelKind){showDuel(it,duelKind,detail,name,mine,toMe,toName);return;}
     if(it.type==='emote')showEmote(it,name,mine,origin);else if(it.type==='phrase')showPhrase(it,name,mine);else showMove(it,name,mine);
+  }
+  /* 33.9.0: a move thrown at a player — both faces answer it, and the one it hit may throw it back */
+  function nameOf(id){if(!id)return '';const rows=room?.state?.players;const list=Array.isArray(rows)?rows:Object.values(rows||{});return String(list.find(p=>p?.id===id)?.name||'').slice(0,20);}
+  function showDuel(it,kind,detail,name,mine,toMe,toName){
+    const a=area(),at={x:a.cx,y:a.y+Math.max(96,Math.min(a.h*.38,a.h-96)),w:Math.min(a.w*.96,VW()-16)};
+    const reply=toMe&&!mine&&detail.from?()=>{const back=send(it,{id:detail.from,name});if(!back&&access(it).ok===false)toggle(true);}:null;
+    const ok=effectsOn()&&window.BS_EMOJI_ART?.duel?.(kind,{host:layerEl(),at,from:name,to:toName,mine,toMe,sound:sfx,onReply:reply});
+    if(!ok)banner(it,(mine?'أنت':name)+' ← '+toName,false);
+  }
+  /* The players a move can be thrown at: everyone at the table but you. */
+  function targets(){
+    if(onlineMode()){const me=room.state.me?.id,rows=room.state.players,list=Array.isArray(rows)?rows:Object.values(rows||{});return list.filter(p=>p&&p.id&&p.id!==me).map(p=>({id:String(p.id),name:String(p.name||'لاعب').slice(0,20)}));}
+    const t=table();if(t)return (t.players||[]).filter(p=>p.index!==(t.me??0)).map(p=>({id:'seat-'+p.index,name:p.name,bot:(t.bots||[]).includes(p.index)}));
+    return [{id:'cpu',name:'المنافس',bot:true}];
   }
 
   /* ---------- sending ---------- */
-  function cooling(it){const now=Date.now();return now-lastSent<GAP.emote||it?.type==='move'&&now-lastMove<GAP.move;}
-  function send(it){
+  function cooling(it){const now=Date.now();return now-lastSent<(it?.type==='phrase'?GAP.phrase:GAP.emote)||it?.type==='move'&&now-lastMove<GAP.move;}
+  function send(it,target=null){
     const ok=access(it);if(!ok.ok){explainLock(it,ok.why);return false;}
     if(cooling(it))return false;
+    // a move thrown at someone: with one other player it goes to them, with more you pick
+    if(it.target&&!target){const list=targets();if(list.length===1)target=list[0];else if(list.length>1){aiming=it;render();return false;}}
     let sent=false;
-    if(onlineMode())sent=Boolean(room.client.react?.(it.legacy||it.id));
-    else if(localMode()){sent=true;show({emote:it.id,mine:true,origin:fab?.getBoundingClientRect?.()});botAnswer(it);}
+    if(onlineMode())sent=Boolean(room.client.react?.(it.legacy||it.id,target?.id||undefined));
+    else if(localMode()){sent=true;show({emote:it.id,mine:true,origin:fab?.getBoundingClientRect?.(),to:target?.id,toName:target?.name});botAnswer(it,target);}
     if(!sent)return false;
-    lastSent=Date.now();if(it.type==='move')lastMove=lastSent;
-    toggle(false);startCooldown(it.type==='move'?GAP.move:GAP.emote);
+    aiming=null;lastSent=Date.now();if(it.type==='move')lastMove=lastSent;
+    // a face or a phrase: the sheet stays open for the next one; a move: it closes so the move is seen
+    if(it.type==='move')toggle(false);
+    startCooldown(it.type==='move'?GAP.move:it.type==='phrase'?GAP.phrase:GAP.emote);if(sheet&&!sheet.hidden)render();
     return true;
   }
   function startCooldown(ms){if(!fab)return;fab.style.setProperty('--rx-cool-ms',ms+'ms');fab.classList.remove('is-cooling');void fab.offsetWidth;fab.classList.add('is-cooling');clearTimeout(coolTimer);coolTimer=setTimeout(()=>{fab.classList.remove('is-cooling');if(sheet&&!sheet.hidden)render();},ms);}
   /* Bots answer now and then with a free reaction that fits. */
   const REPLIES={emote:['emote-laugh','emote-wow','emote-clap','phrase-gg','emote-fire'],phrase:['phrase-gg','phrase-luck','emote-laugh','emote-angry','phrase-fast'],move:['emote-wow','emote-clap','phrase-gg','emote-fire']};
-  function botAnswer(it){
-    const t=table();const bots=(t?.bots||[]).filter(i=>Number.isInteger(i));if(!bots.length||Math.random()>.6)return;
+  function botAnswer(it,target=null){
+    const t=table();const bots=(t?.bots||[]).filter(i=>Number.isInteger(i));
+    // a bot hit by a thrown move often throws it straight back
+    if(it.target&&target){const seat=Number(String(target.id).replace('seat-',''));if((target.bot||bots.includes(seat))&&Math.random()<.55)setTimeout(()=>{if(localMode())show({emote:it.id,name:target.name,from:target.id,toMe:true});},rand(1500,2400));return;}
+    if(!bots.length||Math.random()>.6)return;
     const index=pick(bots),name=t.players?.[index]?.name||'المنافس',reply=item(pick(REPLIES[it.type]||REPLIES.emote));
     setTimeout(()=>{if(localMode()&&reply)show({emote:reply.id,name,from:'bot-'+index});},rand(1100,2400));
   }
@@ -353,7 +377,7 @@
     if(it.type==='phrase'){b.append(el('span','rx-item-text',it.text||it.name));if(speaks(it))b.append(el('i','rx-voice','🔊'));}
     else{const art=window.BS_REACTION_ART?.make?.(it);b.append(art||el('span','rx-item-glyph',it.glyph));b.append(el('small','rx-item-name',it.name));}
     if(!state.ok)b.append(el('i','rx-lock',state.why==='signin'?'🔑':state.why==='exclusive'?'★':it.price+' ◈'));
-    else if(it.type==='move')b.append(el('i','rx-tier',TIER[tier(it)]));
+    else if(it.type==='move')b.append(el('i','rx-tier',it.target?'🎯 على لاعب':TIER[tier(it)]));
     if(state.ok&&cooling(it))b.disabled=true;
     b.addEventListener('click',()=>send(it));
     return b;
@@ -362,8 +386,13 @@
     if(!sheet)return;
     sheet.querySelectorAll('.rx-tab').forEach(b=>{const on=b.dataset.tab===tab;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',String(on));});
     const body=sheet.querySelector('.rx-sheet-body');for(const child of [...body.children])if(child!==lockNote)child.remove();
-    const list=visibleItems(tab),ready=list.filter(it=>access(it).ok).sort((a,b)=>(b.voice?1:0)-(a.voice?1:0)),locked=list.filter(it=>!access(it).ok);
+    const list=visibleItems(tab),ready=list.filter(it=>access(it).ok).sort((a,b)=>(b.voice?1:0)-(a.voice?1:0)||(b.target?1:0)-(a.target?1:0)),locked=list.filter(it=>!access(it).ok);
     if(tab==='phrase')primeVoices();
+    if(aiming&&tab==='move'){
+      const aim=el('div','rx-aim'),head=el('b','rx-aim-title',aiming.glyph+' '+aiming.name+' — على مين؟'),row=el('div','rx-aim-row'),back=el('button','rx-aim-cancel','إلغاء');back.type='button';back.addEventListener('click',()=>{aiming=null;render();});
+      for(const t of targets()){const b=el('button','rx-aim-player',t.name);b.type='button';b.addEventListener('click',()=>send(aiming,t));row.append(b);}
+      aim.append(head,row,back);body.append(aim);
+    }
     const grid=el('div','rx-grid rx-grid-'+tab);for(const it of [...ready,...locked])grid.append(tile(it));body.append(grid);
     const hint=sheet.querySelector('.rx-hint');if(hint)hint.textContent=ready.length+' من '+list.length+' جاهزة'+(onlineMode()?'':' · طاولة على هذا الجهاز');
     const link=sheet.querySelector('.rx-shop-link');if(link)link.href='/shop?filter='+tab+'#collection';

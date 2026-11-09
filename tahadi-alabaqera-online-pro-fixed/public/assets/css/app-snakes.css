@@ -1240,6 +1240,14 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 /* 33.8.0: a phrase that speaks shows a small speaker in its corner */
 .rx-item.is-phrase{position:relative}
 .rx-item .rx-voice{position:absolute;inset-block-start:5px;inset-inline-end:6px;font-size:11px;font-style:normal;opacity:.75;pointer-events:none}
+/* 33.9.0: a move thrown at a player — who gets it */
+.rx-aim{display:grid;gap:8px;margin:0 0 10px;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,#2a1d08f2,#1a1206f2);border:1px solid #f6c25c77}
+.rx-aim-title{color:#ffe3a1;font:800 14px/1.35 Tajawal,system-ui,sans-serif}
+.rx-aim-row{display:flex;flex-wrap:wrap;gap:8px}
+.rx-aim-player{min-height:40px;padding:0 16px;border-radius:99px;border:1px solid #ffd36b;background:linear-gradient(180deg,#ffdc84,#f0a52c);color:#2b1903;font:900 14px/1.2 Tajawal,system-ui,sans-serif;cursor:pointer}
+.rx-aim-player:focus-visible,.rx-aim-cancel:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.rx-aim-cancel{justify-self:start;min-height:32px;padding:0 12px;border-radius:99px;border:1px solid #ffffff33;background:#ffffff12;color:#e8edf8;font:700 12.5px/1.2 Tajawal,system-ui,sans-serif;cursor:pointer}
+.rx-item.is-move .rx-tier{white-space:nowrap}
 
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,

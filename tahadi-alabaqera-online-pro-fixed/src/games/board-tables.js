@@ -1,4 +1,4 @@
-// Tahdia 33.0.0 — the board tables (السلم والثعبان، الزهرة، جاكارو، تحدي النرد)
+// Tahdia 33.0.0 — the board tables (الثعبان والسلالم، الزهرة، جاكارو، تحدي النرد، والبلياردو من 33.9.0)
 // inside the BoardRoom Durable Object.
 // - A table starts with whoever is in the room. Seats nobody took are given to
 //   bots, a mix of easy, medium and hard; a quick table (العب الحين) is filled
@@ -13,18 +13,22 @@ import { snakesTurnDisplayMs } from '../../public/assets/js/snakes-v4-fx.js';
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from '../../public/assets/js/engines/ludo-engine.js';
 import { createJackarooGame, getJackarooActions, playJackarooAction, jackarooArm, burnJackarooHand } from '../../public/assets/js/engines/jackaroo-engine.js';
 import { createRaceDiceGame, rollRaceDice, bankRaceDice } from '../../public/assets/js/engines/dice-engine.js';
+import { createPoolGame, playPoolShot, poolTimeout, choosePoolShot, poolProgress } from '../../public/assets/js/engines/pool-engine.js';
 import { chooseJackarooMove, chooseLudoMove, chooseSnakePower, shouldBankDice } from '../../public/assets/js/engines/bot-strategy.js';
 import { Career } from '../career/core.js';
 
-export const TABLE_GAMES = Object.freeze(['snakes', 'zahra', 'jackaroo', 'dice']);
-export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10 });
-export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3 });
+// 33.9.0: billiards (8-ball pool) is a table of two: a quick table gives you a person or a computer player
+export const TABLE_GAMES = Object.freeze(['snakes', 'zahra', 'jackaroo', 'dice', 'billiards']);
+export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10, billiards: 2 });
+export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3, billiards: 2 });
 export const TABLE_LOBBY_MS = 10_000;
 // a group room's table starts when all its players are in, or this long after the first one came
 export const PARTY_TABLE_WAIT_MS = 30_000;
 export const DICE_TARGET = 50;
 // how long a table needs on screen for one step (dice, walk, ladder or snake…)
-export const STEP_MS = Object.freeze({ snakes: 2700, zahra: 1250, jackaroo: 1500, dice: 900 });
+export const STEP_MS = Object.freeze({ snakes: 2700, zahra: 1250, jackaroo: 1500, dice: 900, billiards: 900 });
+// a computer player at the billiards table takes at most this many shots at once; the rest follow on the alarm
+export const POOL_BOT_SHOTS = 2;
 export const TURN_MS = Object.freeze({ room: 60_000, quick: 35_000, away: 9_000 });
 export const MAX_STEPS = 60;
 export const BOT_NAMES = Object.freeze(['سلطان', 'نايف', 'بندر', 'مشعل', 'تركي', 'فيصل', 'ريان', 'فهد', 'عبدالله', 'خالد', 'نورة', 'ريم', 'سارة', 'هيا', 'لمى', 'جود', 'منيرة', 'عبير']);
@@ -62,6 +66,7 @@ export function chosenSeats(game, value) {
 /** How many seats the table gets for this many players (and the size picked, if any). */
 export function seatsFor(game, humans, quick = false, chosen = null) {
   if (game === 'jackaroo') return humans > 4 ? 6 : 4;
+  if (game === 'billiards') return 2;
   const picked = chosenSeats(game, chosen);
   const least = picked || (quick ? QUICK_SEATS[game] : 2);
   return Math.min(MAX_SEATS[game], Math.max(least, humans));
@@ -92,6 +97,7 @@ function createState(game, names, variant, rng) {
   if (game === 'zahra') return createLudoGame(names);
   // 33.7.0: four seats play on the board of the picture: 19 places a seat, the home lane filled
   if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length), home: 'fill' });
+  if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
   return createRaceDiceGame(names, DICE_TARGET);
 }
 
@@ -114,6 +120,8 @@ export function recordStep(room, steps) {
 }
 export const stepsTime = (room, steps) => room.game==='snakes'
   ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.pendingChoice?650:snakesTurnDisplayMs(step.state?.lastEvent)),0)
+  // a billiards shot takes as long as its balls roll, and a moment to read what happened
+  : room.game==='billiards' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?(step.state.last.ms||0)+STEP_MS.billiards:300),0)
   : (steps?.list?.length || 0) * (STEP_MS[room.game] || 1000);
 
 /* ---------- starting a table ---------- */
@@ -191,6 +199,10 @@ export function botTurn(room, steps, rng, roll = rollWith(rng)) {
     if (!move) return false;
     room.state = playJackarooAction(s, move.cardIndex, move.action, seat);
     recordStep(room, steps);
+  } else if (room.game === 'billiards') {
+    try { room.state = playPoolShot(s, seat, choosePoolShot(s, level, rng)); }
+    catch { room.state = poolTimeout(s); }
+    recordStep(room, steps);
   } else {
     if (s.turnTotal > 0 && shouldBankDice(s, level)) room.state = bankRaceDice(s);
     else room.state = rollRaceDice(s, roll());
@@ -213,7 +225,8 @@ const trimDice = (room) => { if (room.state?.history?.length > 30) room.state.hi
 /** Bots act until a person must, or the match ends. */
 export function runBots(room, steps, rng, roll = rollWith(rng)) {
   let guard = 0;
-  while (room.status === 'playing' && !tableOver(room) && seatIsBot(room, seatOf(room)) && guard++ < 500) {
+  const limit = room.game === 'billiards' ? POOL_BOT_SHOTS : 500;
+  while (room.status === 'playing' && !tableOver(room) && seatIsBot(room, seatOf(room)) && guard++ < limit) {
     if (!botTurn(room, steps, rng, roll)) break;
   }
   return steps;
@@ -244,6 +257,9 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
     if (msg.type === 'roll') { if (room.pendingRoll !== null) throw new Error('move_first'); rollZahra(room, roll); }
     else if (msg.type === 'ludo_move') { if (room.pendingRoll === null) throw new Error('roll_first'); moveZahra(room, Number(msg.token)); }
     else throw new Error('invalid_action');
+  } else if (room.game === 'billiards') {
+    if (msg.type !== 'pool_shot') throw new Error('invalid_action');
+    room.state = playPoolShot(room.state, seat, { dir: msg.dir, power: msg.power, spin: msg.spin, cue: msg.cue });
   } else if (room.game === 'jackaroo') {
     // 33.8.0: a hand that cannot move anything may be burnt at once (the player asked and confirmed)
     if (msg.type === 'jackaroo_burn_all') room.state = burnJackarooHand(room.state, seat);
@@ -281,6 +297,10 @@ export function timeoutMove(room, rng, roll = rollWith(rng)) {
     if (!move) return null;
     room.state = playJackarooAction(s, move.cardIndex, move.action, seat);
     recordStep(room, steps);
+  } else if (room.game === 'billiards') {
+    // a computer player whose shots were left for the alarm plays on; a person out of time gives a foul
+    if (seatIsBot(room, seat)) { botTurn(room, steps, rng, roll); }
+    else { room.state = poolTimeout(s); recordStep(room, steps); }
   } else {
     room.state = s.turnTotal > 0 ? bankRaceDice(s) : rollRaceDice(s, roll());
     trimDice(room);
@@ -304,5 +324,6 @@ export function seatProgress(room, seat) {
   if (room.game === 'snakes') return Number(sp.position) || 0;
   if (room.game === 'zahra') return (sp.tokens || []).reduce((n, t) => n + Math.max(0, t + 1), 0);
   if (room.game === 'jackaroo') return (sp.marbles || []).reduce((n, t) => n + Math.max(0, t + 1), 0);
+  if (room.game === 'billiards') return poolProgress(room.state, seat);
   return Number(sp.score) || 0;
 }

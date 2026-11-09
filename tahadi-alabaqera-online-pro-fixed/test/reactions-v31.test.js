@@ -45,11 +45,11 @@ test('a room relays a bought reaction only for the account that owns it, and kee
 
 test('board-wide moves have their own slower limit and never pass for free when bought ones are missing',async t=>{
  const r=await boardRoom('jackaroo');let now=7_000_000;t.mock.method(Date,'now',()=>now);r.host.reactions=['move-fireworks'];
- await r.send(r.host,{type:'emote',emote:'move-confetti'});now+=2000;await r.send(r.host,{type:'emote',emote:'move-fireworks'});
- assert.equal(r.inbox[r.guest.id].length,1,'a second move within six seconds is dropped');
+ await r.send(r.host,{type:'emote',emote:'move-confetti'});now+=1000;await r.send(r.host,{type:'emote',emote:'move-fireworks'});
+ assert.equal(r.inbox[r.guest.id].length,1,'33.9.0: a second move within 1.4 seconds is dropped');
  now+=2000;await r.send(r.host,{type:'emote',emote:'emote-wow'});assert.equal(r.inbox[r.guest.id].length,2,'emoji are not slowed by moves');
- for(let i=0;i<10;i++){now+=6500;await r.send(r.host,{type:'emote',emote:'move-confetti'});}
- const recent=r.inbox[r.guest.id].filter(m=>m.emote==='move-confetti'&&m.at>now-60000).length;assert.ok(recent<=4,'at most four moves a minute');
+ for(let i=0;i<40;i++){now+=1500;await r.send(r.host,{type:'emote',emote:'move-confetti'});}
+ const recent=r.inbox[r.guest.id].filter(m=>m.emote==='move-confetti'&&m.at>now-60000).length;assert.ok(recent<=20,'at most twenty moves a minute');
  now+=10000;await r.send(r.guest,{type:'emote',emote:'move-goldrain'});assert.equal(r.inbox[r.host.id].filter(m=>m.emote==='move-goldrain').length,0);
 });
 
@@ -91,7 +91,7 @@ test('a local table shows the reaction button on the board, free reactions first
 test('sending on a local table shows it at once, starts the cool-down and a bot may answer',async t=>{
  const {h,q,all}=await page();local(h);t.mock.method(Math,'random',()=>.1);
  h.context.BS_REACTIONS.open();q('[data-reaction="emote-laugh"]').click();
- assert.equal(q('#rxSheet').hidden,true);assert.ok(q('.rx-fab').classList.contains('is-cooling'));
+ assert.equal(q('#rxSheet').hidden,false,'33.9.0: the sheet stays open for the next one');assert.ok(q('.rx-fab').classList.contains('is-cooling'));
  assert.equal(all('.rx-emote').length,1);assert.match(q('.rx-emote').textContent,/😂/);assert.match(q('.rx-emote').textContent,/أنت/);
  assert.equal(h.context.BS_REACTIONS.send('emote-fire'),false,'a second reaction inside the cool-down is ignored');
  for(const timer of [...h.timers.values()].filter(t=>t.ms>=1100&&t.ms<=2400))timer.fn();

@@ -89,7 +89,7 @@ test('heartbeats reach the registry; only the owner reads who is here', async ()
   assert.equal(live.data.people, 3);
   assert.equal(live.data.signed, 1);
   assert.equal(live.data.rooms[0].room, '222222');
-  assert.ok(live.data.list.some((row) => row.user === 'fahad_7' && row.label === 'السلم والثعبان'));
+  assert.ok(live.data.list.some((row) => row.user === 'fahad_7' && row.label === 'الثعبان والسلالم'));
   const wrongMethod = await Worker.default.fetch(new Request('https://game.test/api/presence', { headers: { Origin: 'https://game.test' } }), env);
   assert.equal(wrongMethod.status, 405);
 });

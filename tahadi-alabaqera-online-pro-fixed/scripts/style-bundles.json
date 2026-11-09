@@ -102,7 +102,8 @@
     "assets/css/table-viewport-v33-7.css",
     "assets/css/club-pro-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/jackaroo-v33-8.css"
+    "assets/css/jackaroo-v33-8.css",
+    "assets/css/jackaroo-v33-9.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -344,7 +345,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/picture-v33-9.css"
   ],
   "quiz.html": [
     "assets/css/platform.css",
@@ -417,7 +419,8 @@
     "assets/css/player-card-v33-7.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/baloot-v33-9.css"
   ],
   "characters.html": [
     "/assets/css/character-gallery.css",
@@ -499,7 +502,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/uno-v33-9.css"
   ],
   "wordbomb.html": [
     "assets/css/platform.css",
@@ -515,12 +519,13 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "race.html": [
-    "assets/css/race-v33-7.css",
+    "assets/css/carrom-v33-7.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/club-pro-v33-7.css",
     "assets/css/reactions-v31.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/carrom-v33-9.css"
   ],
   "hockey.html": [
     "assets/css/hockey-v33-7.css",
@@ -531,5 +536,19 @@
     "assets/css/club-pro-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/hockey-v33-8.css"
+  ],
+  "billiards.html": [
+    "assets/css/platform.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/room-clock-v33-7.css",
+    "assets/css/player-card-v33-7.css",
+    "assets/css/reactions-v31.css",
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css",
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/billiards-v33-9.css",
+    "/assets/css/tahdia-premium-v25.css"
   ]
 }

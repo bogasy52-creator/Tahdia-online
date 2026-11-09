@@ -109,6 +109,9 @@ export class BoardOnlineClient {
           announce('bs-board-emote-locked',{emote:msg.emote});
         }else if(msg.type==='talk'){
           announce('bs-board-talk',{from:msg.from,seat:msg.seat,kind:msg.kind,id:msg.id,at:msg.at});
+        }else if(msg.type==='pool_aim'){
+          // 33.9.0: billiards — where the other player's cue points while aiming
+          announce('bs-pool-aim',{seat:msg.seat,dir:msg.dir,power:msg.power,cue:msg.cue,at:msg.at});
         }else if(msg.type==='error'){
           const message=msg.message||'تعذر دخول الغرفة';this.onError(message);
           if(!settled){this.terminal=true;fail(message);this.stopTransport();this.onStatus({online:false,reconnecting:false,text:message});}
@@ -145,9 +148,9 @@ export class BoardOnlineClient {
     try{this.ws.send(JSON.stringify({type:'talk',kind:String(kind),id:String(id)}));return true}catch{return false}
   }
   // Quick reactions are best effort: never an error toast, never a resend.
-  react(emote){
+  react(emote,to){
     if(!this.ws||this.ws.readyState!==WebSocket.OPEN)return false;
-    try{this.ws.send(JSON.stringify({type:'emote',emote:String(emote)}));return true}catch{return false}
+    try{this.ws.send(JSON.stringify({type:'emote',emote:String(emote),...(to?{to:String(to)}:{})}));return true}catch{return false}
   }
   close(){
     if(globalThis.BS_BOARD_ROOM?.client===this)announceRoom(null,null);

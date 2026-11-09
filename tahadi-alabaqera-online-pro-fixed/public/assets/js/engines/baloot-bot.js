@@ -69,6 +69,8 @@ function bid(view, seat, options, level) {
   const sun = sunStrength(withCard);
   const sunNeed = level.sun * level.bid;
   const hokmNeed = 4.6 * level.bid;
+  // 33.9.0: five low cards with nothing in them are dealt again («كوش»)
+  if (has('kosh')) return { type: 'bid', bid: 'kosh' };
   if (b.confirm === seat) {
     return sun >= sunNeed + 0.6 && sun > hokmStrength(withCard, b.hokm.suit) * 0.9 ? { type: 'bid', bid: 'sun' } : { type: 'bid', bid: 'hokm', suit: b.hokm.suit };
   }

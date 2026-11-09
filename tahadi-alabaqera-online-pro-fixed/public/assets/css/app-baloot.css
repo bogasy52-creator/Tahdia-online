@@ -270,6 +270,14 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 /* 33.8.0: a phrase that speaks shows a small speaker in its corner */
 .rx-item.is-phrase{position:relative}
 .rx-item .rx-voice{position:absolute;inset-block-start:5px;inset-inline-end:6px;font-size:11px;font-style:normal;opacity:.75;pointer-events:none}
+/* 33.9.0: a move thrown at a player — who gets it */
+.rx-aim{display:grid;gap:8px;margin:0 0 10px;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,#2a1d08f2,#1a1206f2);border:1px solid #f6c25c77}
+.rx-aim-title{color:#ffe3a1;font:800 14px/1.35 Tajawal,system-ui,sans-serif}
+.rx-aim-row{display:flex;flex-wrap:wrap;gap:8px}
+.rx-aim-player{min-height:40px;padding:0 16px;border-radius:99px;border:1px solid #ffd36b;background:linear-gradient(180deg,#ffdc84,#f0a52c);color:#2b1903;font:900 14px/1.2 Tajawal,system-ui,sans-serif;cursor:pointer}
+.rx-aim-player:focus-visible,.rx-aim-cancel:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.rx-aim-cancel{justify-self:start;min-height:32px;padding:0 12px;border-radius:99px;border:1px solid #ffffff33;background:#ffffff12;color:#e8edf8;font:700 12.5px/1.2 Tajawal,system-ui,sans-serif;cursor:pointer}
+.rx-item.is-move .rx-tier{white-space:nowrap}
 
 /* assets/css/baloot-v32.css */
 /* Tahdia 32.0.0 — Baloot: a night majlis table. Dark walnut and brass, a
@@ -1096,3 +1104,14 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/baloot-v33-9.css */
+/* Tahdia 33.9.0 — the Hokm mark: the cards' own suit on a little white card, red or black exactly as on
+   the cards, wherever it shows: the bid bubble, the «اشترى» banner, the bid buttons, the contract chip,
+   the prompt, the hand's result and the score log. It used to take the bubble's dark text colour, so a
+   Hokm of hearts or diamonds showed black. */
+.suit[data-suit]{--suit:#17181d;display:inline-grid;place-items:center;box-sizing:border-box;width:1.12em;height:1.28em;margin:0 .16em;padding:0;vertical-align:-.28em;border-radius:.2em;background:linear-gradient(180deg,#fffefa,#efe7d6);box-shadow:0 0 0 1px #0000002e,0 .08em .22em #0007;color:var(--suit)!important;line-height:1}
+.suit[data-suit].suit-red{--suit:#cc1b34}
+.suit[data-suit] svg{display:block;width:.84em;height:.84em;fill:currentColor}
+.bl-act .suit[data-suit]{font-size:17px;margin-inline-start:6px}
+.bl-banner .suit[data-suit]{margin-inline-end:.22em}

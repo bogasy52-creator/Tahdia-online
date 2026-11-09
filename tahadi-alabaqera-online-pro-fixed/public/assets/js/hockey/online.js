@@ -1,9 +1,9 @@
-import {W,L} from './core.js?v=33.8.0-studio1';
+import {W,L} from './core.js?v=33.9.0-studio1';
 const session=()=>{try{return localStorage.getItem('bs_social_session')||'';}catch{return '';}};
 const abort=()=>Object.assign(new Error('تم إلغاء الاتصال السابق'),{name:'AbortError'});
 export function hockeyPerspective(source,seat){const g=structuredClone(source);if(seat!==1)return g;for(const p of[g.puck,...g.strikers]){p.x=W-p.x;p.y=L-p.y;p.vx=-p.vx;p.vy=-p.vy;if(Number.isFinite(p.tx))p.tx=W-p.tx;if(Number.isFinite(p.ty))p.ty=L-p.ty;}g.strikers.reverse();g.score.reverse();if(g.winner>=0)g.winner=1-g.winner;g.server=1-g.server;g.events=g.events.map(e=>({...e,...(Number.isFinite(e.x)?{x:W-e.x}:{}),...(Number.isFinite(e.y)?{y:L-e.y}:{}),...(e.scorer!==undefined?{scorer:1-e.scorer}:{}),...(e.who!==undefined?{who:1-e.who}:{}),...(e.winner>=0?{winner:1-e.winner}:{})}));return g;}
 export class HockeyOnline{
- constructor({onState,onStatus}={}){this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.epoch=0;this.seq=0;this.retry=0;this.closed=true;this.lastInput=0;this.state=null;this.status='';}
+ constructor({onState,onStatus}={}){this.onState=onState||(()=>{});this.onStatus=onStatus||(()=>{});this.epoch=0;this.seq=0;this.retry=0;this.closed=true;this.lastInput=0;this.state=null;this.status='';this.sentAt=new Map();this.rtt=0;}
  statusOf(text){if(this.status!==text){this.status=text;this.onStatus(text);}}
  storage(){try{return session()?localStorage:sessionStorage;}catch{return null;}}
  loadToken(code){try{const saved=JSON.parse(this.storage()?.getItem('hockey:'+code)||'null');return saved?.account===session()?saved.token||'':'';}catch{return '';}}
@@ -42,8 +42,10 @@ export class HockeyOnline{
     if(!next||!Array.isArray(next.players)||!Number.isInteger(next.me)||next.me<0||next.me>=next.players.length)return;
     if(message.type!=='welcome'&&this.state&&(next.round<this.state.round||next.round===this.state.round&&next.frame<this.state.frame))return;
     if(this.state?.round!==next.round||message.type==='welcome')this.seq=next.seq||0;
+    // 33.9.0: how long a move takes to come back (the room's word carries the last input it took)
+    const sent=this.sentAt.get(next.seq);if(sent){const sample=performance.now()-sent;this.rtt=this.rtt?this.rtt*.8+sample*.2:sample;this.sentAt.delete(next.seq);}
     this.state=next;this.seat=next.me;this.statusOf(next.paused?'بانتظار عودة خصمك · 20 ثانية':next.status==='lobby'?'بانتظار لاعب آخر':'متصل');this.onState(next);
-    window.dispatchEvent(new CustomEvent('bs-board-room',{detail:{client:{react:id=>this.send({type:'emote',emote:id})},state:{me:{id:next.players[this.seat]?.id},players:next.players,status:next.status}}}));
+    window.dispatchEvent(new CustomEvent('bs-board-room',{detail:{client:{react:(id,to)=>this.send({type:'emote',emote:id,...(to?{to:String(to)}:{})})},state:{me:{id:next.players[this.seat]?.id},players:next.players,status:next.status}}}));
    };
    ws.onerror=()=>{if(this.ws===ws)this.statusOf('نتحقق من الاتصال…');};
    ws.onclose=event=>{
@@ -57,7 +59,10 @@ export class HockeyOnline{
   });
  }
  send(data){if(this.closed||this.ws?.readyState!==1||(this.ws.bufferedAmount||0)>65536)return false;try{this.ws.send(JSON.stringify(data));return true;}catch{return false;}}
- input(x,y){if(!this.state||this.state.paused||!Number.isFinite(x)||!Number.isFinite(y)||performance.now()-this.lastInput<33)return;this.lastInput=performance.now();this.send({type:'input',seq:++this.seq,x:this.seat===1?W-x:x,y:this.seat===1?L-y:y});}
+ input(x,y){const now=performance.now();if(!this.state||this.state.paused||!Number.isFinite(x)||!Number.isFinite(y)||now-this.lastInput<33)return;
+  // 33.9.0: a hand that has not moved says nothing (a word every half second keeps the round trip known)
+  if(Math.abs(x-(this.lastX??-1e9))<.5&&Math.abs(y-(this.lastY??-1e9))<.5&&now-this.lastInput<500)return;
+  this.lastInput=now;this.lastX=x;this.lastY=y;const seq=++this.seq;if(this.send({type:'input',seq,x:this.seat===1?W-x:x,y:this.seat===1?L-y:y})){this.sentAt.set(seq,now);if(this.sentAt.size>40)this.sentAt.delete(this.sentAt.keys().next().value);}}
  resume({force=false}={}){if(!this.code||!this.token||!force&&this.ws?.readyState===1)return;this.closed=false;const epoch=++this.epoch;this.retry=0;return this.connect(epoch);}
  close({leave=true}={}){if(leave)this.send({type:'leave'});this.closed=true;this.epoch++;clearTimeout(this.retryTimer);this.drop();window.dispatchEvent(new CustomEvent('bs-board-room',{detail:null}));}
 }

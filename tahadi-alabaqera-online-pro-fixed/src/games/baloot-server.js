@@ -17,7 +17,7 @@ const TURN_MS = { bidding: 20_000, doubling: 15_000, playing: 25_000 };
 const BOT_NAMES = ['سلطان', 'نايف', 'بندر', 'مشعل', 'تركي', 'فيصل', 'ريان', 'فهد', 'عبدالله', 'خالد'];
 // How long a table needs to show each event, so a human is never timed out
 // while the moves before their turn are still on screen.
-const SHOW_MS = { deal: 2300, bid: 1000, second_round: 1300, redeal: 1500, contract: 3000, double: 1300, declare: 0, play: 650, baloot: 600, trick: 1500, projects: 350, play_started: 0, claim: 3300 };
+const SHOW_MS = { deal: 2300, bid: 1000, second_round: 1300, redeal: 1500, kosh: 1900, sun_ask: 500, contract: 3000, double: 1300, declare: 0, play: 650, baloot: 600, trick: 1500, projects: 350, play_started: 0, claim: 3300 };
 
 export function freeBalootSeat(room) {
   const taken = new Set(Object.values(room.players).map((p) => p.seat));

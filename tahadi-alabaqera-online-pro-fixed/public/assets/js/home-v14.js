@@ -13,7 +13,8 @@
       card.classList.toggle('hidden', !matches);
       if (matches) count++;
     }
-    $('gameResults').textContent = count + ' ألعاب جاهزة للعب';
+    // 33.9.0: the number agrees with its noun (3–10 «ألعاب», 11 and more «لعبة»)
+    $('gameResults').textContent = count === 1 ? 'لعبة وحدة جاهزة للعب' : count === 2 ? 'لعبتين جاهزة للعب' : count <= 10 ? count + ' ألعاب جاهزة للعب' : count + ' لعبة جاهزة للعب';
     $('gameEmpty').classList.toggle('hidden', count > 0);
   }
   search.addEventListener('input', filterGames);
