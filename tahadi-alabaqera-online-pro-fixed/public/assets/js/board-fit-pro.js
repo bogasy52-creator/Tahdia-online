@@ -1,6 +1,6 @@
 (()=>{'use strict';let pending=0;function fit(){pending=0;
  const jack=document.body.classList.contains('game-jackaroo'),running=document.body.classList.contains('game-running');
- if(jack&&running){const box=document.querySelector('.jack-board-wrap'),board=document.getElementById('board');if(box&&board){const r=box.getBoundingClientRect();const size=Math.max(1,Math.floor(Math.min(r.width,r.height)));board.style.setProperty('--pro-board-size',size+'px');}}
+ if(jack&&running){const box=document.querySelector('.jack-board-wrap'),board=document.getElementById('board');if(box&&board){const r=box.getBoundingClientRect();const tall=r.height>r.width*1.06&&r.width<700&&!document.fullscreenElement?.matches?.('.jk-no-zoom');const size=Math.max(1,Math.floor(tall?Math.min(r.height,r.width*1.1):Math.min(r.width,r.height)));board.style.setProperty('--pro-board-size',size+'px');document.body.classList.toggle('jack-board-wide',tall&&size>r.width+2);}}
  const field=document.querySelector('.cm-playfield'),surface=document.getElementById('carromSurface');if(field&&surface){const r=field.getBoundingClientRect(),size=Math.max(1,Math.floor(Math.min(r.width-12,r.height-8)));if(r.width&&r.height){surface.style.width=size+'px';surface.style.height=size+'px';}}
 }
 function schedule(){if(!pending)pending=requestAnimationFrame(fit);}

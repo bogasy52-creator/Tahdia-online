@@ -123,7 +123,7 @@ test('the original event time expires both delayed animation calls and queued ch
   assert.deepEqual(f.started.map(x=>x.id),['a']);f.player.dispose();
 });
 test('human pack approval stays strict and the original Gulf calls are available',()=>{
-  assert.equal(Object.keys(VOICE_LINES).length,56);
+  assert.equal(Object.keys(VOICE_LINES).length,62);
   const fixture={kind:'human',approved:true,voice:'TEST METADATA',recordings:Object.fromEntries(Object.entries(VOICE_LINES).map(([id,text])=>[id,{text,src:'/assets/audio/baloot-human/test/'+id+'.mp3',seconds:.2,sha256:'0'.repeat(64)}]))};
   assert.equal(humanPackReady(fixture),true);
   assert.equal(humanPackReady({...fixture,approved:false}),false);

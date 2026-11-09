@@ -55,8 +55,17 @@ export const VOICE_LINES = Object.freeze({
   "p13": "يا ساتر!",
   "p14": "كبوت يا حبيبي.",
   "p15": "أبشر بالخير.",
-  "p16": "معليش، الجاية لنا."
+  "p16": "معليش، الجاية لنا.",
+  "p17": "السلام عليكم.",
+  "p18": "وعليكم السلام.",
+  "p19": "كفو!",
+  "p20": "لعب نظيف.",
+  "p21": "حظ أوفر.",
+  "p22": "بسرعة شوي."
 });
+/** 33.8.0: the lines added after the archived Gulf calls (the table talk of every game). They speak
+    once the manager records them in the voice studio; until then the phrase shows without a voice. */
+export const STUDIO_LINES = Object.freeze(['p17', 'p18', 'p19', 'p20', 'p21', 'p22']);
 export const VOICE_PACK = Object.freeze({
   "id": "human-pending-v1",
   "kind": "human",

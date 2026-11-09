@@ -262,6 +262,9 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
  .rx-emote-glyph{animation:none!important}
  .rx-fab.is-cooling .rx-fab-ring{animation:none;--rx-p:1}
 }
+/* 33.8.0: a phrase that speaks shows a small speaker in its corner */
+.rx-item.is-phrase{position:relative}
+.rx-item .rx-voice{position:absolute;inset-block-start:5px;inset-inline-end:6px;font-size:11px;font-style:normal;opacity:.75;pointer-events:none}
 
 /* assets/css/mobile-club-v33-7.css */
 /* Phone tables, shared arena identities and original reaction performances. */

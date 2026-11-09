@@ -28,9 +28,10 @@ test('a take is cut to the voice, evened out and kept as a small WAV', () => {
   const take = new Float32Array(quiet.length + voice.length + quiet.length);
   take.set(voice, quiet.length);
   const { from, to } = trimOf(take, 22050, 0.02);
-  assert.ok(from > 21000 && to < 22050 + 11025 + 2500, 'the quiet before and after is left out');
+  // 33.8.0: 0.12 s kept before the voice and 0.25 s after it, so a soft start or end is never cut
+  assert.ok(from > 22050 - 2700 && from < 22050 - 2500 && to < 22050 + 11025 + 5600 && to > 22050 + 11025 + 5400, 'the quiet before and after is left out, with a margin');
   const shaped = shapeTake(take);
-  assert.ok(shaped.length < 11025 + 4000);
+  assert.ok(shaped.length < 11025 + 8300);
   assert.ok(Math.max(...shaped.map(Math.abs)) > 0.8, 'the level is evened out');
   assert.throws(() => shapeTake(new Float32Array(22050)), /silent/);
   const bytes = new Uint8Array(encodeWav(shaped));

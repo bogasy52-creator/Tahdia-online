@@ -47,6 +47,8 @@ export async function createDOM(file,globals={}){
  }
  if(['jackaroo.html','zahra.html','party.html','shop.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/board-petals-v29.js',import.meta.url),'utf8')),vmContext);
  if(['jackaroo.html','zahra.html','party.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/board-preview-v34.js',import.meta.url),'utf8')),vmContext);
+ // 33.8.0: Jackaroo is played on the board (the chooser and the table's effects)
+ if(file==='jackaroo.html')vm.runInContext(clean(await readFile(new URL('../public/assets/js/jackaroo-play-v33-8.js',import.meta.url),'utf8')),vmContext);
  if(['memory.html','party.html'].includes(file))vm.runInContext(clean(await readFile(new URL('../public/assets/js/memory-art-v30.js',import.meta.url),'utf8')),vmContext);
  if(file==='party.html')vm.runInContext('(()=>{'+clean(await readFile(new URL('../public/assets/js/party-boards-v32.js',import.meta.url),'utf8'))+'\nObject.assign(window,{SEAT_COLORS,renderPartySnakes,renderPartyDice});})();',vmContext);
  return {html,doc,context,records,timers,storage,setTime:t=>{clock=t},async runInline(hooks=''){const script=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];if(!script)throw new Error('missing inline module');const cleaned=clean(script).replace(/wait\s*=\s*\(?ms\)?\s*=>\s*new Promise\(\(?r\)?\s*=>\s*setTimeout\(r,\s*ms\)\)/,'wait=ms=>Promise.resolve()');vm.runInContext(cleaned+'\n'+hooks,vmContext);await Promise.resolve();return context},async runFile(path,imports={}){Object.assign(context,imports);const source=await readFile(new URL('../public/'+path,import.meta.url),'utf8');vm.runInContext(clean(source),vmContext)}};

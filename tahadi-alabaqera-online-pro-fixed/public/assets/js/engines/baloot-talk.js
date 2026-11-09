@@ -1,4 +1,5 @@
-/* Tahdia 32.1.0 — table talk for Baloot: ready phrases and emoji.
+/* Tahdia 32.1.0 — table talk for Baloot: ready phrases and emoji (33.8.0: «السلام عليكم» and more;
+   the other rooms say the same lines through their reactions, in the same recorded voice).
    Shared by the table (offline and online) and the BoardRoom, which relays
    only these ids (no free text), so a room never carries anything else. */
 export const BALOOT_PHRASES = Object.freeze([
@@ -18,6 +19,13 @@ export const BALOOT_PHRASES = Object.freeze([
   { id: 'p14', text: 'كبوت يا حبيبي 🔥', say: 'كبوت يا حبيبي' },
   { id: 'p15', text: 'أبشر بالخير ✨', say: 'أبشر بالخير' },
   { id: 'p16', text: 'معليش، الجاية لنا 🙏', say: 'معليش، الجاية لنا' },
+  // 33.8.0: the greetings and a few more (they speak once the manager records them in the voice studio)
+  { id: 'p17', text: 'السلام عليكم 👋', say: 'السلام عليكم', first: true },
+  { id: 'p18', text: 'وعليكم السلام 🤝', say: 'وعليكم السلام', first: true },
+  { id: 'p19', text: 'كفو! 💪', say: 'كفو' },
+  { id: 'p20', text: 'لعب نظيف 🤝', say: 'لعب نظيف' },
+  { id: 'p21', text: 'حظ أوفر 🍀', say: 'حظ أوفر' },
+  { id: 'p22', text: 'بسرعة شوي ⚡', say: 'بسرعة شوي' },
 ]);
 
 export const BALOOT_EMOJI = Object.freeze([

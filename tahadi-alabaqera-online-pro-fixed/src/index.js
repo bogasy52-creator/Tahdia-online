@@ -42,7 +42,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.7.0';
+const RELEASE='33.8.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -768,7 +768,7 @@ export default {
       if (limited) return limited;
       if (!env.BOARD_ROOMS || typeof env.BOARD_ROOMS.idFromName !== "function") return json({ ok: false, code: "BOARD_BINDING_MISSING", error: "محرك الغرف غير مربوط بالسيرفر" }, 503);
       const body = await request.json().catch(() => ({}));
-      const game = String(body.game || ""), variant = game === 'snakes' && ['adventure','strategy'].includes(body.variant) ? body.variant : 'classic';
+      const game = String(body.game || ""), variant = game === 'snakes' && ['adventure','strategy','clash'].includes(body.variant) ? body.variant : 'classic';
       if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       // 33.4.0: a table size the player picked (snakes: 2, 3 or 4) has its own open table
       const seats = chosenSeats(game, body.seats);
@@ -1984,7 +1984,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
     if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats))); }
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','choice','adventure','strategy','portals']});
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -2189,13 +2189,13 @@ export class BoardRoom extends DurableObject {
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
-      if(['roll','snakes_choose','jackaroo_play','ludo_move','dice_roll','dice_bank'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
+      if(['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
       if (TABLE_GAMES.includes(this.room.game)) {
         let steps;
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
+          const messages = { hand_can_move: 'عندك ورقة تقدر تلعبها، ما تقدر تحرق الكل', wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة' };
           return this.sendError(ws, messages[code] || 'تعذر تنفيذ الحركة');
         }
         return await this.settleTable(steps);

@@ -66,7 +66,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/home-v33-8.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -100,7 +101,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/table-viewport-v33-7.css",
     "assets/css/club-pro-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/jackaroo-v33-8.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -271,7 +273,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/table-viewport-v33-7.css",
     "assets/css/club-pro-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/snakes-v33-8.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -526,6 +529,7 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/club-pro-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/hockey-v33-8.css"
   ]
 }

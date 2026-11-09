@@ -110,6 +110,8 @@ export function snakesTurnDisplayMs(event){
   if(event.to!==event.landed)duration+=(event.portal?360:80+reaction(event.jumpType));
   if(event.bonusRoll)duration+=300+760+800;
   if(event.event&&event.eventTo!==event.eventFrom)duration+=walk(event.eventFrom,event.eventLanding??event.eventTo)+reaction(event.bonusJumpType);
+  // 33.8.0: «الصدام» — each player pushed back walks home after a short beat
+  for(const hit of event.bumped||[])duration+=260+walk(hit.from,hit.to);
   return duration+100;
 }
 

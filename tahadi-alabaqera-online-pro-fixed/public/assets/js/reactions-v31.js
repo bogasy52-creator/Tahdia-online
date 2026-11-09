@@ -8,7 +8,7 @@
   'use strict';
   if(window.__BS_REACTIONS_V31__)return;window.__BS_REACTIONS_V31__=true;
   const core=()=>window.BS_CAREER_CORE,career=()=>window.BS_CAREER;
-  const TABS=[['emote','إيموجي'],['phrase','عبارات'],['move','حركات']];
+  const TABS=[['emote','إيموجي'],['phrase','كلام'],['move','حركات']];
   const GAP={emote:1500,phrase:1500,move:6000};
   const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
   let room=window.BS_BOARD_ROOM||null,tab='emote',fab=null,sheet=null,live=null,layer=null,canvas=null,ctx=null,raf=0,last=0,lastSent=0,lastMove=0,coolTimer=0,observer=null,lockNote=null,hostOverride=null,areaOverride=null,previewTimer=0;
@@ -68,6 +68,14 @@
   const SOUND_FOR={'cinema-tomato':'splat','cinema-wave':'chime','cinema-laugh':'chuckle','cinema-slow':'sleepy','cinema-clap':'clap','cinema-peek':'chuckle','cinema-micdrop':'drop','cinema-cry':'tears','cinema-trophy':'fanfare','cinema-popcorn':'pop','performer-wave':'chime','performer-salute':'fanfare','performer-laugh':'chuckle','performer-spotlight':'sparkle','face-laugh':'pop','face-smirk':'chime','face-tongue':'pop','face-sus':'pop','face-yawn':'low','face-evil':'low',clap:'clap',flame:'whoosh',shake:'pop',pop:'pop',steam:'whoosh',plead:'chime',shine:'sparkle',tears:'tears',hush:'whoosh',frost:'chime',spin:'pop',blast:'boom',devil:'low',slither:'hiss',sparkle:'sparkle',launch:'rocket',royal:'fanfare',prism:'sparkle',phrase:'pop',
     confetti:'pop',snow:'chime',hearts:'hearts',roses:'chime',lightning:'thunder',quake:'boom',fireworks:'fireworks',rocket:'rocket',gold:'coins',crown:'fanfare',sovereign:'gong'};
   function sfx(name){if(!soundOn())return;for(const args of SOUNDS[name]||[])try{window.BS_AUDIO.tone(...args)}catch{}}
+  /* 33.8.0: a phrase with a recorded line («السلام عليكم», «كفو»…) is spoken whole, in the voice of the
+     voice studio — the same voice and the same player the Baloot table uses (one module on the page). */
+  let voiceModule=null,voicePrimed=false,voiceApi=null;
+  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.8.0-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
+  function speak(it){if(!it?.voice)return;voice().then(v=>{try{v?.say?.(it.voice,0,{maxAge:6000});}catch{}});}
+  function primeVoices(){if(voicePrimed)return;voicePrimed=true;voice().then(v=>{if(!v)return;voiceApi=v;if(sheet&&!sheet.hidden)render();Promise.resolve(v.unlock?.()).then(()=>{try{v.prime?.(all().filter(it=>it.voice).map(it=>it.voice));}catch{}}).catch(()=>{});});}
+  // a phrase shows the speaker only when its line is recorded (the voice studio fills the new ones)
+  const speaks=it=>Boolean(it?.voice)&&(!voiceApi||voiceApi.hasRecording?.(it.voice)!==false);
 
   /* ---------- particle canvas ---------- */
   function ensureCanvas(){
@@ -277,7 +285,7 @@
     const it=item(detail?.reaction||detail?.emote);if(!it)return;
     const myId=room?.state?.me?.id,mine=Boolean(detail.mine||myId&&detail.from===myId),name=String(detail.name||'لاعب').slice(0,20),origin=detail.origin||(mine?fab?.getBoundingClientRect?.():null);
     announce((mine?'أنت':name)+': '+(it.text||it.glyph+' '+it.name));
-    sfx(it.type==='phrase'?'phrase':SOUND_FOR[it.fx]||'pop');
+    if(it.voice)speak(it);else sfx(it.type==='phrase'?'phrase':SOUND_FOR[it.fx]||'pop');
     if(it.type==='emote')showEmote(it,name,mine,origin);else if(it.type==='phrase')showPhrase(it,name,mine);else showMove(it,name,mine);
   }
 
@@ -342,7 +350,7 @@
   function tile(it){
     const state=access(it),b=el('button','rx-item is-'+it.type+' tier-'+tier(it)+(state.ok?'':' is-locked'));b.type='button';b.dataset.reaction=it.id;
     b.setAttribute('aria-label',(it.text||it.name)+(state.ok?'':state.why==='signin'?' — يحتاج تسجيل الدخول':' — مقفل، '+it.price+' عملة'));
-    if(it.type==='phrase')b.append(el('span','rx-item-text',it.text||it.name));
+    if(it.type==='phrase'){b.append(el('span','rx-item-text',it.text||it.name));if(speaks(it))b.append(el('i','rx-voice','🔊'));}
     else{const art=window.BS_REACTION_ART?.make?.(it);b.append(art||el('span','rx-item-glyph',it.glyph));b.append(el('small','rx-item-name',it.name));}
     if(!state.ok)b.append(el('i','rx-lock',state.why==='signin'?'🔑':state.why==='exclusive'?'★':it.price+' ◈'));
     else if(it.type==='move')b.append(el('i','rx-tier',TIER[tier(it)]));
@@ -354,7 +362,8 @@
     if(!sheet)return;
     sheet.querySelectorAll('.rx-tab').forEach(b=>{const on=b.dataset.tab===tab;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',String(on));});
     const body=sheet.querySelector('.rx-sheet-body');for(const child of [...body.children])if(child!==lockNote)child.remove();
-    const list=visibleItems(tab),ready=list.filter(it=>access(it).ok),locked=list.filter(it=>!access(it).ok);
+    const list=visibleItems(tab),ready=list.filter(it=>access(it).ok).sort((a,b)=>(b.voice?1:0)-(a.voice?1:0)),locked=list.filter(it=>!access(it).ok);
+    if(tab==='phrase')primeVoices();
     const grid=el('div','rx-grid rx-grid-'+tab);for(const it of [...ready,...locked])grid.append(tile(it));body.append(grid);
     const hint=sheet.querySelector('.rx-hint');if(hint)hint.textContent=ready.length+' من '+list.length+' جاهزة'+(onlineMode()?'':' · طاولة على هذا الجهاز');
     const link=sheet.querySelector('.rx-shop-link');if(link)link.href='/shop?filter='+tab+'#collection';
@@ -362,6 +371,7 @@
   function refresh(){
     if(!mount())return;
     if(window.BS_BOARD_ROOM)room=window.BS_BOARD_ROOM;const on=active();fab.hidden=fab.getAttribute('data-reactions-open')!==null?false:!on;if(!on)toggle(false);
+    if(on)addEventListener('pointerdown',primeVoices,{once:true,passive:true});
   }
 
   /* ---------- wiring ---------- */
@@ -370,6 +380,8 @@
   addEventListener('bs-board-emote-locked',event=>{const it=item(event.detail?.emote);if(it){toggle(true);tab=it.type;render();explainLock(it,signedIn()?'buy':'signin');}});
   addEventListener('bs-reaction-refresh',refresh);
   addEventListener('bs-career-change',()=>{if(sheet&&!sheet.hidden)render();});
+  addEventListener('bs-emoji-ready',()=>{if(sheet&&!sheet.hidden)render();});
+  addEventListener('bs-baloot-voice-change',()=>{if(sheet&&!sheet.hidden&&tab==='phrase')render();});
   addEventListener('resize',()=>{if(canvas)size();},{passive:true});
   function watch(){
     refresh();

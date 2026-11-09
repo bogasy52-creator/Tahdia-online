@@ -1,4 +1,4 @@
-import {W,L} from './core.js?v=33.7.0-studio1';
+import {W,L} from './core.js?v=33.8.0-studio1';
 const session=()=>{try{return localStorage.getItem('bs_social_session')||'';}catch{return '';}};
 const abort=()=>Object.assign(new Error('تم إلغاء الاتصال السابق'),{name:'AbortError'});
 export function hockeyPerspective(source,seat){const g=structuredClone(source);if(seat!==1)return g;for(const p of[g.puck,...g.strikers]){p.x=W-p.x;p.y=L-p.y;p.vx=-p.vx;p.vy=-p.vy;if(Number.isFinite(p.tx))p.tx=W-p.tx;if(Number.isFinite(p.ty))p.ty=L-p.ty;}g.strikers.reverse();g.score.reverse();if(g.winner>=0)g.winner=1-g.winner;g.server=1-g.server;g.events=g.events.map(e=>({...e,...(Number.isFinite(e.x)?{x:W-e.x}:{}),...(Number.isFinite(e.y)?{y:L-e.y}:{}),...(e.scorer!==undefined?{scorer:1-e.scorer}:{}),...(e.who!==undefined?{who:1-e.who}:{}),...(e.winner>=0?{winner:1-e.winner}:{})}));return g;}

@@ -151,7 +151,7 @@
     {id:'phrase-nice-try',type:'phrase',name:'كانت قريبة',text:'كانت قريبة… حاول مرة ثانية 😏',glyph:'😏',price:120,color:'#b7e1d2'},
     {id:'phrase-where',type:'phrase',name:'وين رحت؟',text:'وين رحت؟ أدورك على اللوحة 👀',glyph:'👀',price:140,color:'#b7e1d2'},
     {id:'phrase-back',type:'phrase',name:'راجع لك',text:'راجع لك… خلك جاهز 🔥',glyph:'🔥',price:140,color:'#f6bd82'},
-    {id:'phrase-wave',type:'phrase',name:'هلا والله',text:'هلا والله 👋',glyph:'👋',price:0,color:'#91dcc8'},
+    {id:'phrase-wave',type:'phrase',name:'هلا والله',text:'هلا والله 👋',glyph:'👋',price:0,color:'#91dcc8',voice:'p1'},
     {id:'move-wave',type:'move',name:'تحية الحلبة',glyph:'👋',fx:'performer-wave',price:220,color:'#78d6bf'},
     {id:'move-salute',type:'move',name:'سلام يا بطل',glyph:'🫡',fx:'performer-salute',price:280,color:'#91bfea'},
     {id:'move-laugh-roll',type:'move',name:'ضحكة الفوز',glyph:'🤣',fx:'performer-laugh',price:320,color:'#ffd166'},
@@ -175,10 +175,23 @@
     {id:'emote-rocket',type:'emote',name:'طيران',glyph:'🚀',fx:'launch',price:340,color:'#ff8a5c'},
     {id:'emote-crown',type:'emote',name:'الملك',glyph:'👑',fx:'royal',price:480,color:'#ffd36b'},
     {id:'emote-diamond',type:'emote',name:'ألماسة',glyph:'💎',fx:'prism',price:520,color:'#7ff0ff'},
-    {id:'phrase-hello',type:'phrase',name:'السلام عليكم',glyph:'👋',text:'السلام عليكم 👋',price:0,color:'#9fd8c7'},
-    {id:'phrase-gg',type:'phrase',name:'لعب نظيف',glyph:'🤝',text:'لعب نظيف 🤝',price:0,color:'#9fd8c7',legacy:'gg'},
-    {id:'phrase-luck',type:'phrase',name:'حظ أوفر',glyph:'🍀',text:'حظ أوفر 🍀',price:0,color:'#9fd8c7',legacy:'luck'},
-    {id:'phrase-fast',type:'phrase',name:'بسرعة شوي',glyph:'⚡',text:'بسرعة شوي ⚡',price:0,color:'#9fd8c7',legacy:'fast'},
+    {id:'phrase-hello',type:'phrase',name:'السلام عليكم',glyph:'👋',text:'السلام عليكم 👋',price:0,color:'#9fd8c7',voice:'p17'},
+    {id:'phrase-gg',type:'phrase',name:'لعب نظيف',glyph:'🤝',text:'لعب نظيف 🤝',price:0,color:'#9fd8c7',legacy:'gg',voice:'p20'},
+    {id:'phrase-luck',type:'phrase',name:'حظ أوفر',glyph:'🍀',text:'حظ أوفر 🍀',price:0,color:'#9fd8c7',legacy:'luck',voice:'p21'},
+    {id:'phrase-fast',type:'phrase',name:'بسرعة شوي',glyph:'⚡',text:'بسرعة شوي ⚡',price:0,color:'#9fd8c7',legacy:'fast',voice:'p22'},
+    // 33.8.0: the talk of the Baloot table in every room — free, and spoken in the voice of the voice studio
+    {id:'phrase-salam-back',type:'phrase',name:'وعليكم السلام',glyph:'🤝',text:'وعليكم السلام 🤝',price:0,color:'#9fd8c7',voice:'p18'},
+    {id:'phrase-kafu',type:'phrase',name:'كفو',glyph:'💪',text:'كفو! 💪',price:0,color:'#9fd8c7',voice:'p19'},
+    {id:'phrase-tawfeeq',type:'phrase',name:'بالتوفيق',glyph:'🤝',text:'بالتوفيق 🤝',price:0,color:'#9fd8c7',voice:'p2'},
+    {id:'phrase-hilw',type:'phrase',name:'يا حلو اللعب',glyph:'🔥',text:'يا حلو اللعب 🔥',price:0,color:'#9fd8c7',voice:'p3'},
+    {id:'phrase-tatawwil',type:'phrase',name:'لا تطوّل',glyph:'😅',text:'لا تطوّل 😅',price:0,color:'#9fd8c7',voice:'p6'},
+    {id:'phrase-hadh',type:'phrase',name:'وش ذا الحظ',glyph:'😳',text:'وش ذا الحظ! 😳',price:0,color:'#9fd8c7',voice:'p7'},
+    {id:'phrase-gahwa',type:'phrase',name:'قهوة',glyph:'☕',text:'قهوة؟ ☕',price:0,color:'#9fd8c7',voice:'p9'},
+    {id:'phrase-alaina',type:'phrase',name:'خلها علينا',glyph:'💪',text:'خلها علينا 💪',price:0,color:'#9fd8c7',voice:'p10'},
+    {id:'phrase-halal',type:'phrase',name:'حلال عليكم',glyph:'👏',text:'حلال عليكم 👏',price:0,color:'#9fd8c7',voice:'p12'},
+    {id:'phrase-sater',type:'phrase',name:'يا ساتر',glyph:'😬',text:'يا ساتر 😬',price:0,color:'#9fd8c7',voice:'p13'},
+    {id:'phrase-abshir',type:'phrase',name:'أبشر بالخير',glyph:'✨',text:'أبشر بالخير ✨',price:0,color:'#9fd8c7',voice:'p15'},
+    {id:'phrase-maalesh',type:'phrase',name:'الجاية لنا',glyph:'🙏',text:'معليش، الجاية لنا 🙏',price:0,color:'#9fd8c7',voice:'p16'},
     {id:'phrase-lucky',type:'phrase',name:'يا حظك',glyph:'😏',text:'يا حظك! 😏',price:120,color:'#86c8ff'},
     {id:'phrase-help',type:'phrase',name:'الله يعين',glyph:'😂',text:'الله يعين 😂',price:120,color:'#86c8ff'},
     {id:'phrase-mine',type:'phrase',name:'خلها علي',glyph:'😎',text:'خلها علي 😎',price:140,color:'#86c8ff'},
@@ -403,7 +416,7 @@
   const HEROES=Object.freeze(CATALOG.filter(i=>i.type==='character').map(i=>Object.freeze({id:i.id.slice(10),item:i.id,name:i.name,art:i.asset})));
   const heroOf=value=>{const id=String(value||'').replace(/^character-/,'');return HEROES.find(h=>h.id===id)||null;};
   const heroArt=value=>{const h=heroOf(value);return h?'/assets/heroes/'+h.art+'.webp':'';};
-  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.7.0-full1':'';};
+  const heroPoster=value=>{const h=heroOf(value);return h?'/assets/characters-v33/portraits/'+h.id+'.webp?v=33.8.0-full1':'';};
   const heroFace=value=>{const h=heroOf(value);return h?'/assets/heroes/face/'+h.art+'.webp':'';};
   const BOT_HEROES=['robot','princess','samurai','viking','cyber','diver','racer','gladiator'];
   const botHeroFace=seat=>heroFace(BOT_HEROES[Math.abs(Math.floor(Number(seat)||0))%BOT_HEROES.length]);

@@ -8,12 +8,9 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('the release is 33.7.0 and its notes say what changed', async () => {
-  assert.equal(JSON.parse(await read('package.json')).version, '33.7.0');
+test('the 33.7.0 notes say what changed', async () => {
   const notes = await read('RELEASE_V33_7_AR.md');
   for (const words of ['جاكارو', 'لوحات الجاكارو', 'عداد واحد واضح', 'قرب يفوز', 'أضف صديق', 'مواجهة التركيز', 'الكلمة السرية', 'إظهار شفرتي', 'ادخل رمز الغرفة', 'الاقتراح اللي نفذته']) assert.ok(notes.includes(words), words);
-  assert.match(await read('README-AR.md'), /آخر تحديث: 33\.7\.0/);
-  assert.match(await read('public/service-worker.js'), /const CACHE_NAME = 'busraj-games-v66-release-33-7-0';/);
 });
 
 test('the cipher shows your own code in the order you picked it, even on a page written right to left', async () => {
@@ -21,10 +18,10 @@ test('the cipher shows your own code in the order you picked it, even on a page 
   assert.match(client, /code=el\('bdi','ch-secret-digits',secretVisible\?\(m\.me\.secret\|\|\[\]\)\.map\(x=>x\+offset\)\.join\(' '\):'• • • •'\);code\.dir='ltr';/);
 });
 
-test('the word-hunt list: the words as the board spells them, a tick for a found word, boxes for a hidden one', async () => {
+test('the word-hunt list: the words as the board spells them, a found word struck through, boxes for a hidden one', async () => {
   const css = await read('public/assets/css/wordhunt-v33-5.css'), ui = await read('public/assets/js/wordbomb-ui.js');
-  assert.doesNotMatch(css, /line-through/, 'no line through a found word');
-  assert.match(css, /\.ch-hunt-word\.found::after\{content:'✓';/);
+  // 33.8.0: the strike is back (drawn across, in the finder's colour), in place of the tick
+  assert.match(css, /\.ch-hunt-word\.found \.ch-hunt-label::after\{content:'';/);
   assert.match(css, /\.ch-hunt-mask i\{display:grid;place-items:center;box-sizing:border-box;flex:0 1 17px;/);
   assert.match(ui, /pick\.textContent=shown&&shown\.length>1\?shown\.map\(c=>h\.grid\[c\]\)\.join\(''\):/, 'the letters you drag over read as one word');
   assert.match(await read('public/assets/js/engines/wordbank-ar.js'), /word:huntLetters\(label\)/);

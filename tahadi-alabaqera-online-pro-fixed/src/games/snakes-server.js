@@ -1,14 +1,16 @@
 import {createChoiceGame,openChoiceTurn} from '../../public/assets/js/engines/snakes-choice.js';
 import {createPortalGame,playPortalTurn} from '../../public/assets/js/engines/snakes-portals.js';
+import {createClashGame,playClashTurn} from '../../public/assets/js/engines/snakes-clash.js';
 import { createSnakesGame, playSnakesRoll, TACTICS_JUMPS } from '../../public/assets/js/engines/snakes-engine.js';
 import { createEnhancedGame, playEnhancedTurn, enhancedLanding, BONUS_CELLS, createAdventureGame, playAdventureTurn } from '../../public/assets/js/engines/snakes-adventure.js';
 
 export function normalizeSnakesVariant(variant = 'classic') {
-  if (!['classic','adventure','strategy','portals','choice'].includes(variant)) throw new Error('invalid_variant');
+  if (!['classic','adventure','strategy','portals','choice','clash'].includes(variant)) throw new Error('invalid_variant');
   return variant;
 }
 
 export function createSnakesServerGame(names, { variant = 'classic' } = {}) {
+  if(normalizeSnakesVariant(variant)==='clash')return createClashGame(names);
   if(normalizeSnakesVariant(variant)==='choice')return createChoiceGame(names);
   if(normalizeSnakesVariant(variant)==='portals')return createPortalGame(names);
   if(normalizeSnakesVariant(variant)==='strategy'){const s=createAdventureGame(names);s.variant='strategy';s.rulesVersion=3;s.jumps={...TACTICS_JUMPS};return s;}
@@ -24,6 +26,12 @@ export function serverDiceRoll(rng = Math.random) {
 export function rollSnakesServer(state, actorSeat, rng = Math.random, { power = null } = {}) {
   if (state.winner !== null) throw new Error('match_finished');
   if (actorSeat !== state.turn) throw new Error('wrong_turn');
+  // 33.8.0: «الصدام» — a plain roll; landing on an opponent pushes them back
+  if(state.variant==='clash'){
+    if(power)throw Error('invalid_power');
+    const roll=serverDiceRoll(rng),next=playClashTurn(state,roll);
+    return{state:next,event:{type:'roll',roll,...next.lastEvent}};
+  }
   if(state.variant==='choice'){
     if(power)throw Error('invalid_power');
     if(state.pendingChoice)throw Error('choose_first');

@@ -1,7 +1,7 @@
-import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.7.0';
-import { VOICE_LINES, VOICE_PACK } from './baloot-voice-pack.js?v=33.7.0-baloot2';
-import { VOICE_RECORDINGS } from './baloot-voice-clips-v33.js?v=33.7.0';
-import { createVoicePlayer } from './baloot-voice-player.js?v=33.7.0-audio1';
+import { BALOOT_PHRASES } from './engines/baloot-talk.js?v=33.8.0';
+import { VOICE_LINES, VOICE_PACK, STUDIO_LINES } from './baloot-voice-pack.js?v=33.8.0-baloot2';
+import { VOICE_RECORDINGS } from './baloot-voice-clips-v33.js?v=33.8.0';
+import { createVoicePlayer } from './baloot-voice-player.js?v=33.8.0-audio1';
 
 const KEY = 'bs_baloot_voice';
 const plain = text => String(text || '').replace(/[ً-ْٰ]/g, '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/[،,؟?!.…]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -41,7 +41,8 @@ export function humanPackReady(pack, lines = VOICE_LINES) {
 const existingPack = {
   kind:'synthetic', voice:'ar-KW-FahedNeural', recordings:VOICE_RECORDINGS
 };
-const existingReady = Object.keys(VOICE_LINES).every(id => {
+// the archived calls cover every line but the newer studio-only ones
+const existingReady = Object.keys(VOICE_LINES).filter(id => !STUDIO_LINES.includes(id)).every(id => {
   const clip = VOICE_RECORDINGS[id];
   return clip?.src === '/assets/audio/baloot-gulf-v33/' + id + '.mp3' && clip.seconds > 0 && clip.seconds <= 12;
 });
@@ -121,6 +122,8 @@ export const BalootVoice = {
   /** The voice studio: say one call as the tables say it now. */
   async previewLine(id) { await this.unlock(); return player.enqueue(id, { urgent:true }); },
   hasRecording(id) { return Boolean(recordings[id]?.src); },
+  /** 33.8.0: fetch and decode recorded lines before they are needed (the table phrases), so each plays whole. */
+  prime(ids = []) { if (!allowed()) return; try { void player.prime(ids.filter((id) => recordings[id]?.src)); } catch {} },
   setEnabled(on) {
     enabled = Boolean(on);
     try { localStorage.setItem(KEY, enabled ? 'on' : 'off'); } catch {}

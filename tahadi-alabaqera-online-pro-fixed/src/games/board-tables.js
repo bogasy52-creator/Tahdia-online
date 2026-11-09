@@ -11,7 +11,7 @@ import {chooseChoiceTurn,bestChoice} from '../../public/assets/js/engines/snakes
 import { createSnakesServerGame, rollSnakesServer } from './snakes-server.js';
 import { snakesTurnDisplayMs } from '../../public/assets/js/snakes-v4-fx.js';
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from '../../public/assets/js/engines/ludo-engine.js';
-import { createJackarooGame, getJackarooActions, playJackarooAction, jackarooArm } from '../../public/assets/js/engines/jackaroo-engine.js';
+import { createJackarooGame, getJackarooActions, playJackarooAction, jackarooArm, burnJackarooHand } from '../../public/assets/js/engines/jackaroo-engine.js';
 import { createRaceDiceGame, rollRaceDice, bankRaceDice } from '../../public/assets/js/engines/dice-engine.js';
 import { chooseJackarooMove, chooseLudoMove, chooseSnakePower, shouldBankDice } from '../../public/assets/js/engines/bot-strategy.js';
 import { Career } from '../career/core.js';
@@ -245,10 +245,14 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
     else if (msg.type === 'ludo_move') { if (room.pendingRoll === null) throw new Error('roll_first'); moveZahra(room, Number(msg.token)); }
     else throw new Error('invalid_action');
   } else if (room.game === 'jackaroo') {
-    if (msg.type !== 'jackaroo_play') throw new Error('invalid_action');
-    const cardIndex = Number(msg.cardIndex), legal = getJackarooActions(room.state, cardIndex, seat), sig = JSON.stringify(msg.action);
-    if (!legal.some((a) => JSON.stringify(a) === sig)) throw new Error('illegal_move');
-    room.state = playJackarooAction(room.state, cardIndex, msg.action, seat);
+    // 33.8.0: a hand that cannot move anything may be burnt at once (the player asked and confirmed)
+    if (msg.type === 'jackaroo_burn_all') room.state = burnJackarooHand(room.state, seat);
+    else {
+      if (msg.type !== 'jackaroo_play') throw new Error('invalid_action');
+      const cardIndex = Number(msg.cardIndex), legal = getJackarooActions(room.state, cardIndex, seat), sig = JSON.stringify(msg.action);
+      if (!legal.some((a) => JSON.stringify(a) === sig)) throw new Error('illegal_move');
+      room.state = playJackarooAction(room.state, cardIndex, msg.action, seat);
+    }
   } else {
     if (msg.type === 'dice_roll') room.state = rollRaceDice(room.state, roll());
     else if (msg.type === 'dice_bank') { if (!(room.state.turnTotal > 0)) throw new Error('roll_first'); room.state = bankRaceDice(room.state); }

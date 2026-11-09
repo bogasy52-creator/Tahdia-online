@@ -973,6 +973,9 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
  .rx-emote-glyph{animation:none!important}
  .rx-fab.is-cooling .rx-fab-ring{animation:none;--rx-p:1}
 }
+/* 33.8.0: a phrase that speaks shows a small speaker in its corner */
+.rx-item.is-phrase{position:relative}
+.rx-item .rx-voice{position:absolute;inset-block-start:5px;inset-inline-end:6px;font-size:11px;font-style:normal;opacity:.75;pointer-events:none}
 
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,
@@ -1958,3 +1961,109 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/jackaroo-v33-8.css */
+/* Tahdia 33.8.0 — Jackaroo on a phone: the board as wide as the screen, big cards under it with the
+   turn and the clock above them, slim player chips, and every choice of a move made on the board. */
+
+/* ---------- the players: one slim chip each — the marble, the name and a pip for every marble ---------- */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game{grid-template-rows:auto 40px minmax(0,1fr)!important;gap:3px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-focus #game#game#game{grid-template-rows:auto 0 minmax(0,1fr)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster{max-height:40px!important;gap:5px!important;padding:0 4px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .player-jack.jk-chip{position:relative!important;display:flex!important;align-items:center!important;flex:1 1 0!important;gap:6px!important;height:38px!important;min-width:0!important;padding:3px 8px 3px 6px!important;border-radius:12px!important;border:1px solid #ffffff1c!important;background:linear-gradient(180deg,#ffffff10,#ffffff06)!important;box-shadow:none!important;overflow:hidden!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .player-jack.jk-chip.turn{border-color:var(--seat)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--seat) 26%,transparent),#ffffff08)!important;box-shadow:0 0 0 1px var(--seat),0 0 14px color-mix(in srgb,var(--seat) 45%,transparent)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .player-jack.jk-chip.turn::after{content:'';position:absolute;inset:auto 8px 2px;height:2px;border-radius:2px;background:var(--seat);animation:jk-chip-turn 1.4s ease-in-out infinite}
+@keyframes jk-chip-turn{50%{opacity:.35}}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .jk-chip .chip-piece{width:22px!important;height:24px!important;flex:none!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .jk-chip .jk-chip-text{display:grid!important;gap:3px!important;min-width:0!important;flex:1!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .jk-chip .jk-chip-text>b{display:block!important;max-width:100%!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;font:800 12px/1.15 Tajawal,system-ui,sans-serif!important;color:#f4f7ff!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .jk-chip.is-me .jk-chip-text>b{color:#ffe7a6!important}
+.jk-pips{display:flex;gap:3px;align-items:center;height:8px}
+.jk-pips i{width:8px;height:8px;border-radius:50%;box-sizing:border-box;border:1.5px solid var(--seat,#9fb3d9);background:transparent;opacity:.75}
+.jk-pips i.track{background:var(--seat,#9fb3d9);opacity:1;box-shadow:0 0 5px color-mix(in srgb,var(--seat) 60%,transparent)}
+.jk-pips i.home{background:#ffd36b;border-color:#fff3c4;opacity:1;box-shadow:0 0 6px #ffd36baa}
+.jk-chip .botTag,.jk-chip .bot-tag{display:none!important}
+
+/* ---------- the table: the board takes the room the cards leave ---------- */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jack-layout{grid-template-rows:minmax(0,1fr) auto!important;gap:2px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jack-main{place-items:center!important}
+
+/* ---------- the hand: the turn and the clock, then the cards, then the burning ---------- */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock{gap:4px!important;padding:4px 6px calc(6px + env(safe-area-inset-bottom))!important;border-radius:18px 18px 0 0!important;background:linear-gradient(180deg,#0b1a2bcc,#08121ef2)!important;border:1px solid #ffffff14!important;border-bottom:0!important;box-shadow:0 -10px 30px #0006!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock .hand-title{display:none!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #status{grid-row:1!important;min-height:34px!important;max-height:44px!important;overflow:hidden!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;font:800 13.5px/1.4 Tajawal,system-ui,sans-serif!important;color:#f4f7ff!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #status.bs-clock-on{min-height:36px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #status>.bs-clock{--size:32px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #hand{--jk-n:var(--hand-count,5);--jk-card:clamp(48px,min(calc((100vw - 30px - (var(--jk-n) - 1) * 8px) / var(--jk-n)),11.5svh),94px);grid-row:2!important;gap:8px!important;padding:12px 0 4px!important;min-height:calc(var(--jk-card) * 1.4 + 16px)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card{flex:0 0 var(--jk-card)!important;width:var(--jk-card)!important;border-radius:clamp(7px,calc(var(--jk-card) * .12),11px)!important;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease!important;box-shadow:0 6px 14px #0008!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card .jk-face{border-radius:inherit!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card.selected{transform:translateY(-9px) scale(1.04)!important;box-shadow:0 0 0 3px #ffd36b,0 0 22px #ffd36b88,0 14px 26px #000a!important;z-index:2}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card:not(:disabled):active{transform:translateY(-4px) scale(.98)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #actions{grid-row:3!important;min-height:44px!important;max-height:none!important;flex-wrap:wrap!important;gap:8px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #actions .mini-note{font:600 12.5px/1.4 Tajawal,system-ui,sans-serif!important;color:#b9c6e4!important;text-align:center}
+
+/* phones in landscape keep the side column, with cards you can read */
+@media (orientation:landscape) and (max-height:620px){
+  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game{grid-template-rows:48px minmax(0,1fr)!important}
+  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card{flex-basis:58px!important;width:58px!important}
+  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #hand{min-height:0!important;padding-top:8px!important}
+  :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .table-roster .player-jack.jk-chip{flex:1 1 42%!important}
+}
+
+/* ---------- the burn buttons and the question before burning the whole hand ---------- */
+.jk-burn,.jk-burn-all{min-height:44px;padding:0 18px;border-radius:14px;font:900 14px/1 Tajawal,system-ui,sans-serif}
+.jk-burn{background:linear-gradient(135deg,#ff8a3d,#d9481c)!important;border-color:#ffb27a!important;color:#fff!important;box-shadow:0 6px 18px #d9481c55!important}
+.jk-burn-all{background:#2a1410!important;border-color:#ff7a3d88!important;color:#ffcfb0!important}
+.jk-confirm{position:fixed;inset:0;z-index:12600;display:grid;place-items:center;padding:16px;background:#02060fcc;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.jk-confirm-card{width:min(340px,100%);display:grid;gap:10px;padding:20px;border-radius:20px;border:1px solid #ff7a3d66;background:linear-gradient(160deg,#2a1610,#120a10);color:#fff;text-align:center;font-family:Tajawal,system-ui,sans-serif;box-shadow:0 24px 60px #000c}
+.jk-confirm-card b{font-size:19px}.jk-confirm-card p{margin:0;color:#e9c7b4}
+.jk-confirm-card div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.jk-confirm-card button{min-height:46px}
+
+/* ---------- the choices on the board: a menu by the marble and a mark where each move lands ---------- */
+.jk-choose{position:absolute;inset:0;z-index:6;display:none}
+.jk-choose.on{display:block}
+.jk-from{position:absolute;width:12%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff;box-shadow:0 0 0 4px #f3cf7288,0 0 22px #f3cf72;pointer-events:none;animation:jk-pulse 1s ease-in-out infinite}
+.jk-mark{position:absolute;z-index:2;display:grid;place-items:center;min-width:34px;height:34px;padding:0 6px;transform:translate(-50%,-50%);border:2px solid #fff;border-radius:99px;background:#f3cf72;color:#1b1406;font:900 14px/1 Tajawal,system-ui,sans-serif;box-shadow:0 0 0 3px #00000055,0 0 18px #f3cf72cc;cursor:pointer;animation:jk-pop .22s ease-out}
+.jk-mark.swap{background:#7fd0ff;box-shadow:0 0 0 3px #00000055,0 0 18px #7fd0ffcc}
+.jk-mark.split{background:#c6a4ff;box-shadow:0 0 0 3px #00000055,0 0 18px #c6a4ffcc}
+.jk-mark.stone{min-width:30px;height:30px;background:#ffffffe6;color:#5b3fa3}
+.jk-mark:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.jk-menu{position:absolute;z-index:3;display:grid;gap:4px;min-width:150px;max-width:62%;padding:8px;transform:translate(-50%,calc(-100% - 26px));border:1px solid #ffffff38;border-radius:16px;background:#0b1226f0;box-shadow:0 18px 40px #000c;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:jk-menu-in .2s ease-out}
+.jk-menu.below{transform:translate(-50%,26px)}
+.jk-menu-title{padding:2px 30px 4px 4px;color:#f3cf72;font:800 12.5px/1.3 Tajawal,system-ui,sans-serif}
+.jk-menu-list{display:grid;gap:4px}
+.jk-menu.grid{min-width:0;width:min(232px,86vw);max-width:none}
+.jk-menu.grid .jk-menu-list{grid-template-columns:repeat(4,1fr)}
+.jk-menu.grid .jk-menu-item{display:grid;justify-items:center;gap:2px;min-height:50px;padding:5px 2px;text-align:center}
+.jk-menu.grid .jk-menu-item strong{min-width:0;font-size:18px}
+.jk-menu.grid .jk-menu-item small{font-size:10px;line-height:1.15;color:#c9d2ec}
+.jk-mark.dot{min-width:0;width:15px;height:15px;padding:0;border-width:1.5px;font-size:9px;pointer-events:none;box-shadow:0 0 0 2px #00000055,0 0 10px #f3cf72aa}
+.jk-mark.dot.split{background:#c6a4ff}
+.jk-menu-item{display:flex;align-items:center;gap:8px;min-height:40px;padding:4px 10px;border:1px solid #ffffff22;border-radius:11px;background:#ffffff0d;color:#fff;text-align:start;cursor:pointer}
+.jk-menu-item strong{min-width:38px;font:900 17px/1 Tajawal,system-ui,sans-serif;color:#f3cf72;direction:ltr;text-align:center}
+.jk-menu-item small{font:700 12.5px/1.3 Tajawal,system-ui,sans-serif;color:#d6dcf0}
+.jk-menu-item:focus-visible,.jk-menu-item:hover{background:#f3cf7222;border-color:#f3cf72aa}
+.jk-menu-more{color:#a9b2cf;font-size:11.5px;text-align:center}
+.jk-menu-close{position:absolute;inset-block-start:6px;inset-inline-end:6px;width:26px;height:26px;border:0;border-radius:8px;background:#ffffff14;color:#fff;cursor:pointer}
+@keyframes jk-pop{from{transform:translate(-50%,-50%) scale(.6);opacity:0}}
+@keyframes jk-menu-in{from{opacity:0}}
+@keyframes jk-pulse{50%{box-shadow:0 0 0 7px #f3cf7244,0 0 30px #f3cf72}}
+
+/* ---------- the table's effects ---------- */
+.jk-fx{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:visible}
+.jk-ring{position:absolute;width:9%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);border:3px solid var(--c,#ffd36b);animation:jk-ring .65s ease-out forwards}
+@keyframes jk-ring{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
+.jk-spark{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--c,#ffd36b);box-shadow:0 0 8px var(--c,#ffd36b);transform:translate(-50%,-50%)}
+.jk-say{position:absolute;transform:translate(-50%,-160%);padding:4px 10px;border-radius:99px;background:#0b1226e6;border:1px solid #ffffff44;color:#fff;font:900 14px/1.2 Tajawal,system-ui,sans-serif;white-space:nowrap;animation:jk-say 1.25s ease-out forwards}
+.jk-say.red{border-color:#ff5a6a;color:#ffd0d5}.jk-say.gold{border-color:#ffd36b;color:#ffe9a8}.jk-say.fire{border-color:#ff7a3d;color:#ffd2b5;font-size:15px}
+@keyframes jk-say{0%{opacity:0;transform:translate(-50%,-110%) scale(.8)}15%{opacity:1;transform:translate(-50%,-160%) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-230%)}}
+.jk-toss{position:absolute;width:11%;transform:translate(-50%,-50%);border-radius:6px;box-shadow:0 10px 24px #000a}
+@media (prefers-reduced-motion:reduce){.jk-from,.jk-mark,.jk-menu,.jk-ring,.jk-say,.table-roster .jk-chip.turn::after{animation:none!important}.jk-ring{display:none}}
+/* on a tall phone the board is a little wider than the screen: only the outer edge of its frame is cut */
+:is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-wide #game#game#game #board{max-width:none!important;max-height:none!important;margin:0 calc((100cqw - var(--pro-board-size,320px)) / 2)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-wide #game#game#game :is(.jack-main,.jack-board-wrap){overflow:visible!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running.jack-board-wide #game#game#game .jack-layout{overflow:visible!important}
+/* a card with no move on your turn: faded, with a small flame — it can only be burnt */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card.jk-dead:not(.selected){filter:saturate(.35) brightness(.72)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #hand .playing-card.jk-dead::after{content:'🔥';position:absolute;inset-block-start:-8px;inset-inline-start:-6px;z-index:3;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#2a1410;border:1px solid #ff7a3d;font-size:12px;line-height:1;box-shadow:0 3px 8px #000a}

@@ -4,9 +4,10 @@
    kept as a small WAV on the server; every table then plays it for that call.
    «سجّل الكل» walks through the calls one by one: say it, listen, keep it, next.
    A call can also come from a sound file (a voice note someone with a clear Gulf
-   voice recorded): it goes through the same trimming and evening out. */
-import { VOICE_LINES } from './baloot-voice-pack.js?v=33.7.0-baloot2';
-import { BalootVoice } from './baloot-voice.js?v=33.7.0-baloot2';
+   voice recorded): it goes through the same trimming and evening out.
+   33.8.0: no noise gate on the microphone and a gentler cut, so no word loses its first or last sound. */
+import { VOICE_LINES } from './baloot-voice-pack.js?v=33.8.0-baloot2';
+import { BalootVoice } from './baloot-voice.js?v=33.8.0-baloot2';
 
 const $ = (id) => document.getElementById(id);
 const RATE = 22050, MAX_SECONDS = 5, MAX_FILE_BYTES = 12 * 1024 * 1024, MAX_KEPT_SECONDS = 6.5;
@@ -46,7 +47,8 @@ export function trimOf(samples, rate, threshold) {
   while (a < b && Math.abs(samples[a]) < threshold) a++;
   while (b > a && Math.abs(samples[b]) < threshold) b--;
   if (b <= a) return { from: 0, to: samples.length };
-  return { from: Math.max(0, a - Math.round(rate * 0.04)), to: Math.min(samples.length, b + Math.round(rate * 0.09)) };
+  // 33.8.0: a longer margin on both sides: the soft start (هـ، ال) and the fading end of a word stay whole
+  return { from: Math.max(0, a - Math.round(rate * 0.12)), to: Math.min(samples.length, b + Math.round(rate * 0.25)) };
 }
 /** 16-bit mono PCM WAV. */
 export function encodeWav(samples, rate = RATE) {
@@ -63,7 +65,7 @@ export function shapeTake(mono) {
   let peak = 0;
   for (const x of mono) peak = Math.max(peak, Math.abs(x));
   if (peak < 0.02) throw new Error('silent');
-  const { from, to } = trimOf(mono, RATE, Math.max(0.015, peak * 0.08));
+  const { from, to } = trimOf(mono, RATE, Math.max(0.006, peak * 0.035));
   const clip = mono.slice(from, to), gain = 0.89 / peak, fade = Math.max(1, Math.min(clip.length / 4, RATE * 0.015));
   for (let i = 0; i < clip.length; i++) clip[i] = clip[i] * gain * Math.max(0, Math.min(1, i / fade, (clip.length - 1 - i) / fade));
   return clip;
@@ -71,7 +73,7 @@ export function shapeTake(mono) {
 async function startRecording() {
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('mic');
   try { await context()?.resume?.(); } catch {}
-  try { stream ||= await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+  try { stream ||= await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: true } }); }
   catch { throw new Error('mic'); }
   parts = [];
   recorder = new MediaRecorder(stream);

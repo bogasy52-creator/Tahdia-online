@@ -634,6 +634,9 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
  .rx-emote-glyph{animation:none!important}
  .rx-fab.is-cooling .rx-fab-ring{animation:none;--rx-p:1}
 }
+/* 33.8.0: a phrase that speaks shows a small speaker in its corner */
+.rx-item.is-phrase{position:relative}
+.rx-item .rx-voice{position:absolute;inset-block-start:5px;inset-inline-end:6px;font-size:11px;font-style:normal;opacity:.75;pointer-events:none}
 
 /* assets/css/mobile-club-v33-7.css */
 /* Phone tables, shared arena identities and original reaction performances. */
@@ -740,3 +743,63 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/home-v33-8.css */
+/* Tahdia 33.8.0 — the home page as a game lobby: tonight's tables on a strip of big covers you
+   swipe, the daily missions on one short row, and a library of compact game cards. */
+html body.hub-index.home-v26{--lobby-gold:#f6c25c;--lobby-ink:#f3f6fb;--lobby-mut:#9fb2c6;--lobby-line:#ffffff17;--lobby-card:#0f1b2b}
+
+/* ---------- tonight's tables ---------- */
+html body.hub-index.home-v26 .home-stage,html body.hub-index.home-v26 .home-lead{display:block!important;grid-template-columns:none!important}
+html body.hub-index.home-v26 .home-hero{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px;height:auto!important;min-height:0!important;padding:4px 0 0!important;border:0!important;border-radius:0!important;background:none!important;overflow:visible!important}
+html body.hub-index.home-v26 .home-hero .hero-copy{display:flex!important;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;width:auto!important;max-width:none!important;padding:0 2px!important;margin:0!important;position:static!important}
+html body.hub-index.home-v26 .home-hero h1{margin:0!important;font-size:clamp(22px,6vw,34px)!important;line-height:1.25!important;letter-spacing:0!important}
+html body.hub-index.home-v26 .home-hero p{font-size:13px!important;line-height:1.5!important;color:var(--lobby-mut)!important}
+.home-featured{display:flex;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:16px;margin:0 -16px;padding:2px 16px 10px;scrollbar-width:none}
+.home-featured::-webkit-scrollbar{display:none}
+.home-feature{position:relative;isolation:isolate;flex:0 0 min(84vw,440px);height:clamp(188px,52vw,250px);scroll-snap-align:start;overflow:hidden;border-radius:22px;border:1px solid var(--lobby-line);background:#0b1626;color:var(--lobby-ink);text-decoration:none;box-shadow:0 14px 30px #0009;transition:transform .18s ease,border-color .18s ease}
+.home-feature img{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.home-feature::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#050b1600 30%,#050b16d9 88%)}
+.home-feature-copy{position:absolute;inset:auto 14px 13px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:2px 12px}
+.home-feature-copy small{grid-column:1;font-size:12px;color:#d3deec;text-shadow:0 1px 6px #000}
+.home-feature-copy b{grid-column:1;font-size:clamp(22px,6.4vw,30px);font-weight:900;line-height:1.15;text-shadow:0 2px 12px #000a}
+.home-feature-copy i{grid-column:2;grid-row:1/3;align-self:end;padding:9px 20px;border-radius:99px;background:linear-gradient(180deg,#ffd987,#ef9f2c);color:#2b1903;font:900 15px/1.2 Tajawal,system-ui,sans-serif;font-style:normal;box-shadow:0 8px 20px #ef9f2c59}
+.home-feature:hover,.home-feature:focus-visible{border-color:#f6c25c99}
+.home-feature:hover img{transform:scale(1.04)}
+.home-feature:active{transform:scale(.985)}
+.home-feature:focus-visible{outline:3px solid var(--lobby-gold);outline-offset:2px}
+html body.hub-index.home-v26 .home-hero .home-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;margin:0!important;max-width:none!important}
+html body.hub-index.home-v26 .home-hero .home-actions .bs-btn{justify-content:center;min-height:46px!important;font-size:14px!important;padding:8px 12px!important;border-radius:14px!important}
+
+/* ---------- the daily missions: one short row ---------- */
+html body.hub-index.home-v26 .club-daily{margin:18px 0 6px;padding:14px 14px 12px;border-radius:20px}
+html body.hub-index.home-v26 .club-daily-head h2{font-size:19px;margin:0}
+html body.hub-index.home-v26 .club-daily-note{display:none}
+html body.hub-index.home-v26 .club-daily-grid{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;margin:10px -14px 0;padding:0 14px 4px;scrollbar-width:none}
+html body.hub-index.home-v26 .club-daily-grid::-webkit-scrollbar{display:none}
+html body.hub-index.home-v26 .club-daily-card{flex:0 0 min(210px,62vw);padding:12px;border-radius:15px;scroll-snap-align:start}
+html body.hub-index.home-v26 .club-daily-card h3{font-size:14.5px;margin:6px 0 4px}
+html body.hub-index.home-v26 .club-daily-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;margin:0 0 10px}
+html body.hub-index.home-v26 .club-daily-footer :is(a,button){min-height:38px}
+
+/* ---------- the library: compact cards, two by two on a phone ---------- */
+html body.hub-index.home-v26 .home-games{margin-top:18px!important}
+html body.hub-index.home-v26 .game-filter-list{display:flex!important;flex-wrap:nowrap!important;gap:8px!important;overflow-x:auto;margin-inline:-16px;padding:2px 16px 6px;scrollbar-width:none}
+html body.hub-index.home-v26 .game-filter-list::-webkit-scrollbar{display:none}
+html body.hub-index.home-v26 .game-filter-list button{flex:none!important;min-height:38px;padding:0 15px;border-radius:99px;white-space:nowrap}
+@media (max-width:700px){
+  html body.hub-index.home-v26 .home-section-heading p{display:none}
+  html body.hub-index.home-v26 .home-game-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  html body.hub-index.home-v26 .home-game{min-height:0!important;padding:0 0 11px!important;border-radius:16px!important;border-color:var(--lobby-line)!important;background:var(--lobby-card)!important}
+  html body.hub-index.home-v26 .home-game .game-cover{height:auto!important;aspect-ratio:16/10;margin:0 0 8px!important}
+  html body.hub-index.home-v26 .home-game .game-cover img{object-fit:cover!important}
+  html body.hub-index.home-v26 .home-game>small{order:2;padding:0 11px!important;font-size:10.5px!important;min-height:0!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}
+  html body.hub-index.home-v26 .home-game h3{order:1;margin:0 11px 2px!important;font-size:15.5px!important;line-height:1.35!important}
+  html body.hub-index.home-v26 .home-game>p,html body.hub-index.home-v26 .home-game>b,html body.hub-index.home-v26 .home-game .game-number{display:none!important}
+  html body.hub-index.home-v26 .home-game .game-cover{order:0}
+}
+@media (min-width:701px){
+  .home-featured{margin:0;padding:2px 0 10px;scroll-padding-inline:0}
+  .home-feature{flex-basis:min(420px,40vw)}
+}
+@media (prefers-reduced-motion:reduce){.home-feature,.home-feature img{transition:none}}

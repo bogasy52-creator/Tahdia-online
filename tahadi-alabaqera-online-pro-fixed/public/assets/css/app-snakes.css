@@ -1237,6 +1237,9 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
  .rx-emote-glyph{animation:none!important}
  .rx-fab.is-cooling .rx-fab-ring{animation:none;--rx-p:1}
 }
+/* 33.8.0: a phrase that speaks shows a small speaker in its corner */
+.rx-item.is-phrase{position:relative}
+.rx-item .rx-voice{position:absolute;inset-block-start:5px;inset-inline-end:6px;font-size:11px;font-style:normal;opacity:.75;pointer-events:none}
 
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,
@@ -1871,3 +1874,13 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/snakes-v33-8.css */
+/* Tahdia 33.8.0 — «الصدام»: on your turn a ring glows on every opponent a roll would push back, with
+   the roll that gets there; the cell of a push flashes. */
+.clash-ring{position:absolute;z-index:80;width:9.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:12px;border:2px solid #ff5a6a;box-shadow:0 0 0 2px #ff5a6a44,0 0 18px #ff5a6aaa,inset 0 0 12px #ff5a6a66;pointer-events:none;animation:clash-ring 1.1s ease-in-out infinite}
+.clash-ring b{position:absolute;inset-block-start:-13px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:99px;background:#2a0b12;border:1px solid #ff5a6a;color:#ffd3d8;font:900 10px/1.35 Tajawal,system-ui,sans-serif;white-space:nowrap;box-shadow:0 3px 8px #0008}
+@keyframes clash-ring{50%{box-shadow:0 0 0 4px #ff5a6a22,0 0 26px #ff5a6acc,inset 0 0 16px #ff5a6a88}}
+.snake-cell.clash-hit{animation:clash-hit .9s ease-out}
+@keyframes clash-hit{0%{box-shadow:inset 0 0 0 3px #fff,0 0 30px #ff5a6a}100%{box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.clash-ring,.snake-cell.clash-hit{animation:none}}

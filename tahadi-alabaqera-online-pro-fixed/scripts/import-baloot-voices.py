@@ -19,8 +19,8 @@ def catalog(path):
     if source.count(marker) != 1:
         raise ValueError("Cannot read the recording catalog")
     lines, _ = json.JSONDecoder().raw_decode(source.split(marker, 1)[1])
-    if not isinstance(lines, dict) or len(lines) != 56:
-        raise ValueError("The complete 56-call catalog is required")
+    if not isinstance(lines, dict) or len(lines) != 62:
+        raise ValueError("The complete 62-call catalog is required")
     if any(not key.replace("_", "").isalnum() for key in lines):
         raise ValueError("Invalid recording identifier")
     return lines
@@ -159,7 +159,7 @@ def main():
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--recordings", type=Path, required=True)
     parser.add_argument("--speaker", required=True)
-    parser.add_argument("--reviewed", action="store_true", help="Confirm a human reviewed all 56 complete takes")
+    parser.add_argument("--reviewed", action="store_true", help="Confirm a human reviewed all 62 complete takes")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and convert without changing the project")
     args = parser.parse_args()
     try:

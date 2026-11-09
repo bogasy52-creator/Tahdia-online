@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.7.0-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.7.0';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.7.0';
-import { BalootVoice } from './baloot-voice.js?v=33.7.0-audio1';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.8.0-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.8.0';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.8.0';
+import { BalootVoice } from './baloot-voice.js?v=33.8.0-audio1';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.
@@ -774,7 +774,8 @@ function showTalk(seat, kind, id, options = {}) {
   if (kind === 'phrase') {
     const p = talkPhrase(id); if (!p) return;
     bubble(seat, esc(p.text), 'talk', 2600);
-    speak(p.id, seat, { maxAge:1800, ...options });
+    // 33.8.0: a phrase may wait for its clip a little longer: it plays whole instead of being dropped
+    speak(p.id, seat, { maxAge:6000, ...options });
   } else if (kind === 'emoji') {
     const em = talkEmoji(id); if (!em) return;
     floatEmoji(seat, em.glyph);
@@ -827,7 +828,8 @@ function renderTalk() {
   const grid = $('talkGrid');
   grid.className = 'bl-talk-grid ' + tab;
   grid.innerHTML = '';
-  for (const it of tab === 'phrase' ? BALOOT_PHRASES : BALOOT_EMOJI) {
+  // 33.8.0: the greetings («السلام عليكم», «وعليكم السلام») come first
+  for (const it of tab === 'phrase' ? [...BALOOT_PHRASES].sort((a, b) => (b.first ? 1 : 0) - (a.first ? 1 : 0)) : BALOOT_EMOJI) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'bl-talk-item';
@@ -857,7 +859,7 @@ function renderVoiceStatus() {
   $('voiceLast').hidden = !status.lastText;
   $('voiceLast').textContent = status.lastText ? 'آخر نداء: ' + status.lastText : '';
 }
-function openTalk() { renderTalk(); $('talkSheet').hidden = false; BalootVoice.unlock(); }
+function openTalk() { renderTalk(); $('talkSheet').hidden = false; Promise.resolve(BalootVoice.unlock?.()).then(() => BalootVoice.prime?.(BALOOT_PHRASES.map((p) => p.id))).catch(() => {}); }
 function closeTalk() { $('talkSheet').hidden = true; }
 
 /* ---------- Results ---------- */
