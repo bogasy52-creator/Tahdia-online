@@ -33,7 +33,7 @@
   for(const p of data.list){
    const tr=node('tr',p.state==='background'?'is-away':''),who=node('td');
    who.append(node('b',null,p.signed?p.name:(p.name||'ضيف')));
-   const tag=node('small',p.signed?'is-signed':'is-guest',p.signed?'@'+p.user:'ضيف');if(p.signed)tag.dir='ltr';who.append(tag);
+   const tag=node('small',p.signed?'is-signed':'is-guest',p.signed?'@'+p.user:'ضيف');if(p.signed){tag.dir='ltr';who.classList.add('is-link');who.tabIndex=0;who.title='افتح الحساب';const open=()=>{const u=document.getElementById('adminUsername');if(u){u.value=p.user;u.scrollIntoView({block:'center',behavior:'smooth'});window.BS_ADMIN?.search?.()}};who.onclick=open;who.onkeydown=e=>{if(e.key==='Enter')open()}}who.append(tag);
    const room=node('td',null,p.room||'—');if(p.room)room.dir='ltr';
    tr.append(who,node('td',null,p.label),room,node('td',null,DEVICES[p.device]||'—'),node('td',null,p.country?flag(p.country)+' '+p.country:'—'),node('td',null,ago(data.now-p.since)),node('td',null,p.state==='background'?'في الخلفية':'نشط'));
    body.append(tr);

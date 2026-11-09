@@ -54,7 +54,7 @@ f97741acdb5b8a04c5a7727eb755362a4c03da22cd63213a26b2bc79224057bf  ./PATCH_AIR_HO
 13bcfc1dc8f058b2a567cb75118d9dc47a1a53b9d1d2c77d8e03a15ec125437a  ./PATCH_JACKAROO_FULLSCREEN_33_7_0_AR.md
 74aec2e6c6e8ac33875cdcbaf0e9bd8db2fc5f358065e66277ac4a63b481d92c  ./PATCH_REFINEMENT_AR.md
 adc8e0f3a818ac4e8da5f6ef8bd0fe2f714554939ec2da80c9ea8bdf03b1b509  ./public/accuracy.html
-64b34d57853783d490ad700aec02285050f7f0b74ba72ead340778567d1538a2  ./public/admin.html
+f1a2dbc358c397834792f3fa980b8b39511ecc2c5d0ef8ced13c7f09eb4b3945  ./public/admin.html
 935df80f5c94d1802f64ae39d2de596f4c5011437e3b9cb273980ec242a5228f  ./public/apple-touch-icon.png
 dc34fe24382d0f83b0d21b95db61c68d7052ee667518218d35cba6c125c605e8  ./public/assets/ai-v19/garden.webp
 5a6d1733c94b3f30db44d8594bb5750b006c20ccdcea3daf5d3f4460cf9dbcac  ./public/assets/ai-v19/hero.webp
@@ -211,10 +211,10 @@ e035372e8660ac35e252eb9abd83d1d127959767d2d9f982b598e5082c882bde  ./public/asset
 fe52f8165292b9dfe9c8157e2d6c636c403fc45eeba2d6c1123c982559de10d1  ./public/assets/characters/robot.webp
 9a0b75b3d9ab29aaf674719f0ac346decf9a68b9c5e67b9b901d88fbdf268035  ./public/assets/css/admin-live-v32.css
 a21784205eceba78388b9999346854730c1910e7d2b080d54c92e95cda2e4d51  ./public/assets/css/admin-voice-studio.css
-e8502479f6126b4a90e48205a91916251090defe92e45799599be6e4562cef81  ./public/assets/css/admin-workspace.css
+4e8889560f285a5709630eb12b8ade7a21bbcb484bb8757f4e41315b54ea5a69  ./public/assets/css/admin-workspace.css
 9674449ab7b714fb050cc9dc11186eecc5f6610e0d4d8eeebcce2aebc71053ea  ./public/assets/css/admin.css
 8289d09b4a07b415efd43b08221a7850941e6e9dc87d292d57f44795f881ea5b  ./public/assets/css/app-accuracy.css
-b955fa527e1260d8df65ced09bd1c40d5d99f9d5b0153a981f309261a51bfe9c  ./public/assets/css/app-admin.css
+c26f72a659625ac3a04ab5fd570018c5076009209f8018365a61a697de83b55f  ./public/assets/css/app-admin.css
 017c2e5dfdd1a050415a5e33ea7288419255ff6607a52290ab47414ba6c8304c  ./public/assets/css/app-baloot.css
 d20d7980b85d91b107b9051dccd7b841e9c830c06b6b8ede48529805ebe0cdc2  ./public/assets/css/app-chaos.css
 19871fb167978714561d1f468ddf1b4cf8377042cfb09e8fadee8417a756b756  ./public/assets/css/app-characters.css
@@ -398,11 +398,11 @@ b3470daef3739a3a826a7237e8aba749d65fc3b2e1c7a61451671e259e43b54c  ./public/asset
 805b86e9ca66f8de2c6d53830c6d2f553b86fd32e484e38ec6ea0a5a889a22a5  ./public/assets/heroes/samurai.webp
 00b054de80efb723f7533f136842c8356b8d1e2014ad9742cc493a38367077d7  ./public/assets/heroes/viking.webp
 e1037f913688bb76ef9c095cc852e2960115914b726c0181c133b4c569398f08  ./public/assets/js/adaptive-board-layout.js
-92bf9e2f8785e13ae6fb04cb2efb9ee06db2ab9eda6c02a877a0aedc0642bb84  ./public/assets/js/admin-live-v32.js
+4a36f622c48db4c374f6505ec295839b45949af42304ef97c3f4c5cb8bd9bb40  ./public/assets/js/admin-live-v32.js
 1ac96a4ccb966a4e68944169e259d721b44897308d210ee469bd612be59dd28c  ./public/assets/js/admin-quiz-ai-v31.js
 82554f2d11ab3c1f2cb8d519fa754f87a0921a25fb813777d756ba37b5874e14  ./public/assets/js/admin-voice-studio.js
 a23b098d853548ae704389a1f0d9731b8c4163e6cc7696a72770287585a4cc24  ./public/assets/js/admin-workspace.js
-5e11541e6e98cde790f0d04cd970d3cb94900841eb0ff15a36fa30cc8f84bd9e  ./public/assets/js/admin.js
+45c031ca921946c31f5704aaaf2ecd722b0e8a808d29dc676ae4f9dd9ddb1a6d  ./public/assets/js/admin.js
 82757da58cdc6b9f6f79e80f4ab805f7f56e99aedf0bd74e7d192f16a65e8ce6  ./public/assets/js/arcade-games.js
 3838da39094de42ca8f15c2262ccd5118907ba34f7da98b178fb81f4c043cb99  ./public/assets/js/arena-art-v23.js
 b5e05a8878046e0736381aa0ecf318e03528c1b2cfa0aff239f6677c640f702b  ./public/assets/js/arena-experience-v27.js
@@ -1250,7 +1250,7 @@ af169bbabfbf7434634ced4b257f1626a85b1109a7067f3936989d5b0ac751ac  ./public/quiz.
 454db481bdbd74aca8bdb9e81a952e26d1a2c81754054506e0587d8caf3fe004  ./public/reaction-classic.html
 3c52e6fcc6d86d3bc8144cfb4b1fa28dab240d168b1fbb7144e1fe62b685b874  ./public/reaction.html
 84ecfdb1c0a1c1f9b3d8004f90616fd315255b05769b55b6fa9486087ebdd837  ./public/serpent.html
-22c1d6ce79ec0c7e18af036ef6446ff3e84d423dc9377ba48511d3acebabc7b8  ./public/service-worker.js
+ef462b5915d5b01c77686a8fdffb0bcd7d987e570b51a668bce143aac42c1517  ./public/service-worker.js
 6588c7236749259888cb07a21b5ca2ca8c8cf5ae6267a7aeaa9d1b9689af4b3c  ./public/shop.html
 2111f8c8c276653fa28a85567c12a48ec7dda40ccca3056be56cc6c907bcb647  ./public/snakes.html
 26b1fdb936f9f47431331760f34e149ab5fb940f5e39ae7cab7587a2b5dd43c6  ./public/social.html
@@ -1403,11 +1403,11 @@ d2251c37671ba15561574fdd28481c3691a9386b4e5941b2d2165a33090b8958  ./src/party/pa
 c96aee73350c3733ecd8088ec0b354920441ea9bfc9424787ad35fa0c6f00c3f  ./src/rooms/verified-results.js
 634226e0b20d114fa7c456bc9b7404562a580af6dea4eedff7b65b862ef56adc  ./src/serpent/serpent-matchmaker.js
 96e7b7befaf50fd25fc6eff68ac1605bd2af9e3444be983e1abb17d5e5846946  ./src/serpent/serpent-room.js
-35c10938728e1144f1ee01d38897dc82455f2404fc6650fa38523a796e388928  ./src/social/account-policy.js
+65df9dae08c4535c4fbe3395dee7cc49979b81e29dae1841980d061aeb9488c4  ./src/social/account-policy.js
 2edaf6957b0444575f5a03d5a64b27eab99bd47653009ade22c6c8c02c7b9833  ./src/social/game-reactions.js
 878dec7e34347ec2b11bbb84b93164a4b37e84fbf348543005d975c337b4e61a  ./src/social/social-api.js
 9811377041f2afaf077b5b31fe8526efab621a28d1e2bc6dc01980d8ebf87a17  ./src/social/social-core.js
-a3895798f7c32e3670238d2cd54a087109254c4788f281c4867c3fa8a5cf17c1  ./src/social/social-user.js
+b69520823bde291b59b4fbe0883a30c4723b5d19941c39291f7b2cac20ce115f  ./src/social/social-user.js
 a9cecb355f4d567ae257dfa8ca80b603f68ba9fed714965d3f178e9c8c649d91  ./src/sudoku/sudoku-room.js
 4e0d18560ae67bc281dab395a55d9a8e77af183d1aa2790c5b34752e3956c05a  ./START-HERE-AR.txt
 b79964fcd7c59f280b0991a20d0e1001b74d6bd09a148646be41c52d7ae5459e  ./START-LOCAL.cmd
@@ -1517,6 +1517,7 @@ a630d16d60986803a4e5f38d754489122923ddf222a828afce9c2df2d9fe961b  ./test/paths-r
 f6b222ca4cf278b30cfe30b388c7c46ab3a4ba1f8761fe42f791c58cfeaf57b6  ./test/play-feedback-v24-1.test.js
 897c3d8a275bc61875af93f07dd6f6002763ac3d8b57de5483f6884eb31f1f80  ./test/player-copy-stability.test.js
 eeb345af9193c325459fe4c4f12ed85289b6e3f73544912d0944d43f0440f30c  ./test/premium-v25.test.js
+5d602747dc4f59b462026483fce0f69c7b7b8867890d1fa9ca0b56cff1fa15e1  ./test/presence-admin-v33-7.test.js
 22e787b19e756044e3872fad23089a5b723910e78c4b3bdf501406751d95f96c  ./test/presence-v32.test.js
 c282fc772ca3b6055b06930265a17fc6c7732a51c6f5a6e957f5d88f57e26ec2  ./test/profiles-v33-7.test.js
 f74489d54fc43f23ce13e39bb0dfaa92c85612d0c4cd17f2f9bfbb3db97af8c8  ./test/quick-match-firestore.test.js

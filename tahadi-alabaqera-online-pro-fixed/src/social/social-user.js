@@ -34,6 +34,10 @@ function json(data, status = 200) {
   });
 }
 
+// 33.7.0: someone is "online" only while their page is still beating. The page pings every 25 seconds while it is open;
+// a phone that lost its signal or closed the app never says goodbye, so an open socket alone proves nothing.
+const LIVE_MS = 75_000;
+
 function nowKey(prefix = "notification") {
   return `${prefix}:${String(Date.now()).padStart(14, "0")}:${crypto.randomUUID()}`;
 }
@@ -58,14 +62,14 @@ export function createSocialUserClass(DurableObject) {
       }
       this.presence = (await this.ctx.storage.get("presence")) || { online: false, lastSeen: null };
       if (this.profile) {
-        const hasSocialSockets = this.ctx.getWebSockets().some((ws) => {
-          try { return Boolean(ws.deserializeAttachment()?.username); } catch { return false; }
-        });
-        if (this.presence.online !== hasSocialSockets) {
-          this.presence.online = hasSocialSockets;
-          if (!hasSocialSockets && !this.presence.lastSeen) this.presence.lastSeen = Date.now();
+        this.lastPing = Number(this.presence.lastActiveAt) || 0;
+        const live = this.liveSockets() && this.beatFresh();
+        if (this.presence.online !== live) {
+          this.presence.online = live;
+          if (!live) this.presence.lastSeen = this.lastBeatAt() || this.presence.lastSeen || Date.now();
           await this.ctx.storage.put("presence", this.presence);
         }
+        if (this.liveSockets() && !live) this.defer(this.ctx.storage.setAlarm(Date.now() + 1000));
       }
     });
   }
@@ -84,7 +88,7 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/public" && request.method === "GET") return this.publicData(url.searchParams.get("card") === "1");
     if (url.pathname === "/dashboard" && request.method === "POST") return this.dashboard(body.secret);
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);
-    if (url.pathname === '/announcement')return json({ok:true,announcement:await this.ctx.storage.get('admin:announcement')||null});
+    if (url.pathname === '/announcement')return json({ok:true,announcement:await this.activeAnnouncement()});
     if (url.pathname.startsWith('/admin/')) {
       if(!(await this.sessionValid(body.secret)))return json({ok:false,error:'unauthorized'},401);
       if(!isOwner(this.profile))return json({ok:false,error:'forbidden'},403);
@@ -145,6 +149,7 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/friend/add" && request.method === "POST") return this.addFriend(body);
     if (url.pathname === "/friend/remove" && request.method === "POST") return this.removeFriend(body.username);
     if (url.pathname === "/friend/presence" && request.method === "POST") return this.friendPresence(body);
+    if (url.pathname === "/live" && request.method === "GET") return this.liveStatus();
     if (url.pathname === "/friend/block" && request.method === "POST") return this.blockUser(body.username);
     if (url.pathname === "/friend/unblock" && request.method === "POST") return this.unblockUser(body.username);
 
@@ -222,6 +227,12 @@ export function createSocialUserClass(DurableObject) {
     return ns&&validUsername(name)?ns.get(ns.idFromName(this.env.SOCIAL_USERS?'user:'+name:'social:user:'+name)):null;
   }
 
+  async activeAnnouncement() {
+    const a = (await this.ctx.storage.get('admin:announcement')) || null;
+    if (a && a.expiresAt && Date.now() >= a.expiresAt) { await this.ctx.storage.delete('admin:announcement'); return null; }
+    return a;
+  }
+
   async managedAccount() {
     const career=accountCareer(await this.ctx.storage.get('career')||{name:this.profile.displayName},this.profile);
     return json({ok:true,account:{profile:publicProfile(this.profile,this.presence),career,suspended:Boolean(this.profile.suspended),access:accountAccess(this.profile)}});
@@ -243,18 +254,30 @@ export function createSocialUserClass(DurableObject) {
       const item=Career.CATALOG.find(i=>i.id===body.item);
       if(!item||item.source==='owner'&&!isOwner(this.profile))return json({ok:false,error:'invalid_item'},400);
       p=Career.normalize({...p,owned:[...p.owned,item.id]});
+    }else if(action==='lock-item'){
+      // take back one item (a gift by mistake, a refund); the free starter items cannot be taken away
+      const item=Career.CATALOG.find(i=>i.id===body.item);
+      if(!item||isOwner(this.profile)||(item.price===0&&!item.source))return json({ok:false,error:'invalid_item'},400);
+      if(!p.owned.includes(item.id))return json({ok:false,error:'not_owned'},409);
+      p=Career.normalize({...p,owned:p.owned.filter(id=>id!==item.id)});
+    }else if(action==='rename'){
+      // a name that breaks the rules is replaced by the owner; the account keeps everything else
+      const name=cleanDisplayName(body.text);
+      if(isOwner(this.profile)||!name||name.length<2)return json({ok:false,error:'invalid_name'},400);
+      nextProfile.displayName=name;nextProfile.updatedAt=Date.now();p=Career.normalize({...p,name});
     }else if(['suspend','restore','revoke'].includes(action)){
       if(action!=='revoke'){nextProfile.suspended=action==='suspend';nextProfile.updatedAt=Date.now()}
       if(action!=='restore'){nextPresence.online=false;nextPresence.lastSeen=Date.now()}
     }else return json({ok:false,error:'invalid_action'},400);
     await this.ctx.storage.transaction(async tx=>{
       await tx.put('career',p);await tx.put(key,{fingerprint:body.fingerprint,at:Date.now()});
-      if(['suspend','restore','revoke'].includes(action)){
+      if(['suspend','restore','revoke','rename'].includes(action)){
         await tx.put('profile',nextProfile);await tx.put('presence',nextPresence);
-        if(action!=='restore'){const sessions=await tx.list({prefix:'session:'});if(sessions.size)await tx.delete([...sessions.keys()])}
+        if(['suspend','revoke'].includes(action)){const sessions=await tx.list({prefix:'session:'});if(sessions.size)await tx.delete([...sessions.keys()])}
       }
     });
     this.profile=nextProfile;this.presence=nextPresence;
+    if(action==='rename')this.defer(this.notifyFriendsPresence());
     if(['suspend','revoke'].includes(action))for(const ws of this.ctx.getWebSockets())try{if(ws.deserializeAttachment()?.username)ws.close(1008,'session_revoked')}catch{}
     return this.managedAccount();
   }
@@ -262,7 +285,7 @@ export function createSocialUserClass(DurableObject) {
   async adminRequest(action,body) {
     if(action==='get'){
       const records=await this.ctx.storage.list({prefix:'admin:audit:',reverse:true,limit:100});
-      return json({ok:true,access:accountAccess(this.profile),audit:[...records.values()],announcement:await this.ctx.storage.get('admin:announcement')||null});
+      return json({ok:true,access:accountAccess(this.profile),audit:[...records.values()],announcement:await this.activeAnnouncement()});
     }
     const username=normalizeUsername(body.username),stub=this.userStub(username);
     if(action==='account'){
@@ -274,11 +297,12 @@ export function createSocialUserClass(DurableObject) {
     const requestId=String(body.requestId||'');if(!/^[a-zA-Z0-9:_-]{8,80}$/.test(requestId))return json({ok:false,error:'invalid_request_id'},400);
     const reason=String(body.reason||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,140);
     const text=String(body.text||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,240);
-    const command={actor:OWNER_USERNAME,username,action:body.action,amount:body.amount,item:body.item,requestId,reason,text};
+    const hours=Number.isFinite(body.hours)?Math.max(0,Math.min(720,Math.floor(body.hours))):0,level=['info','warn','success'].includes(body.level)?body.level:'info';
+    const command={actor:OWNER_USERNAME,username,action:body.action,amount:body.amount,item:body.item,requestId,reason,text,...(['announcement'].includes(body.action)?{hours,level}:{})};
     const fingerprint=await sha256(JSON.stringify(command)),key='admin:receipt:'+requestId,previous=await this.ctx.storage.get(key);
     if(previous){
       if(previous.fingerprint!==fingerprint)return json({ok:false,error:'request_conflict'},409);
-      if(['announcement','clear-announcement'].includes(body.action))return json({ok:true,announcement:await this.ctx.storage.get('admin:announcement')||null,replayed:true});
+      if(['announcement','clear-announcement'].includes(body.action))return json({ok:true,announcement:await this.activeAnnouncement(),replayed:true});
       const response=username===this.profile.username?await this.managedAccount():await stub.fetch('https://social.internal/management/get',{method:'POST',body:JSON.stringify({actor:OWNER_USERNAME})});
       return json({...await response.json(),replayed:true},response.status);
     }
@@ -286,7 +310,7 @@ export function createSocialUserClass(DurableObject) {
     if(body.action==='clear-announcement')result={ok:true,announcement:null};
     else if(body.action==='announcement'){
       if(!text)return json({ok:false,error:'invalid_announcement'},400);
-      const announcement={text,at:Date.now(),by:OWNER_USERNAME};result={ok:true,announcement};
+      const at0=Date.now(),announcement={text,at:at0,by:OWNER_USERNAME,level,expiresAt:hours?at0+hours*3600000:null};result={ok:true,announcement};
     }else{
       if(!stub)return json({ok:false,error:'invalid_username'},400);
       let response;
@@ -294,7 +318,7 @@ export function createSocialUserClass(DurableObject) {
       else response=await stub.fetch('https://social.internal/management/apply',{method:'POST',body:JSON.stringify({...command,fingerprint})});
       result=await response.json();if(!response.ok)return json(result,response.status);
     }
-    const at=Date.now(),entry={requestId,action:body.action,username:['announcement','clear-announcement'].includes(body.action)?null:username,amount:body.amount||null,item:body.item||null,reason,at,actor:OWNER_USERNAME};
+    const at=Date.now(),entry={requestId,action:body.action,username:['announcement','clear-announcement'].includes(body.action)?null:username,amount:body.amount||null,item:body.item||null,reason,at,actor:OWNER_USERNAME,...(['rename','announcement'].includes(body.action)?{text:text.slice(0,80)}:{}),...(body.action==='announcement'&&hours?{hours}:{})};
     await this.ctx.storage.transaction(async tx=>{
       if(result.announcement)await tx.put('admin:announcement',result.announcement);
       if(body.action==='clear-announcement')await tx.delete('admin:announcement');
@@ -329,6 +353,7 @@ export function createSocialUserClass(DurableObject) {
 
   async publicData(withCard = false) {
     if (!this.profile) return json({ ok: false, error: "الحساب غير موجود" }, 404);
+    if (this.presence.online) await this.confirmOnline();
     const visiblePresence = this.profile.settings?.showOnline === false
       ? { online: false, lastSeen: null }
       : this.presence;
@@ -350,13 +375,14 @@ export function createSocialUserClass(DurableObject) {
 
   async dashboard(secret) {
     if (!(await this.sessionValid(secret))) return json({ ok: false, error: "unauthorized" }, 401);
-    const [friends, incoming, outgoing, blocks, notificationsMap] = await Promise.all([
+    const [friendsRaw, incoming, outgoing, blocks, notificationsMap] = await Promise.all([
       this.listValues("friend:", SOCIAL_MAX_FRIENDS + 1),
       this.listValues("incoming:", SOCIAL_MAX_REQUESTS + 1),
       this.listValues("outgoing:", SOCIAL_MAX_REQUESTS + 1),
       this.listValues("block:", SOCIAL_MAX_FRIENDS + 1),
       this.ctx.storage.list({ prefix: "notification:", reverse: true, limit: SOCIAL_MAX_NOTIFICATIONS }),
     ]);
+    const friends = await this.verifyFriendsOnline(friendsRaw);
     const now = Date.now();
     const notifications = [...notificationsMap.values()]
       .filter((item) => !item.expiresAt || item.expiresAt > now)
@@ -454,6 +480,35 @@ export function createSocialUserClass(DurableObject) {
     return json({ ok: true });
   }
 
+  // 33.7.0: asked by a friend before it shows this account as online
+  async liveStatus() {
+    if (!this.profile) return json({ ok: false, online: false }, 404);
+    const shown = this.profile.settings?.showOnline !== false;
+    const online = shown && (await this.confirmOnline());
+    return json({ ok: true, online, lastSeen: shown ? this.presence.lastSeen || null : null });
+  }
+
+  // The copy of a friend's status kept here only changes when that friend tells us. If a "goodbye" never arrived
+  // (the phone lost its signal) the copy would say online for ever, so every friend marked online is checked now.
+  async verifyFriendsOnline(list) {
+    const ns = this.env?.SOCIAL_USERS || this.env?.BOARD_ROOMS, flagged = (list || []).filter((f) => f?.online && f.username);
+    if (!ns || !flagged.length) return list;
+    const results = await Promise.allSettled(flagged.slice(0, 60).map(async (f) => {
+      const stub = ns.get(ns.idFromName(this.env?.SOCIAL_USERS ? `user:${f.username}` : `social:user:${f.username}`));
+      const res = await stub.fetch("https://social.internal/live");
+      return [f, await res.json()];
+    }));
+    for (const r of results) {
+      if (r.status !== "fulfilled") continue;
+      const [friend, live] = r.value;
+      if (live && live.ok && !live.online) {
+        friend.online = false; friend.lastSeen = live.lastSeen || friend.lastSeen || Date.now();
+        try { await this.ctx.storage.put(`friend:${friend.username}`, friend); } catch { /* try again on the next look */ }
+      }
+    }
+    return list;
+  }
+
   async friendPresence(body) {
     const username = normalizeUsername(body.username);
     const key = `friend:${username}`;
@@ -547,6 +602,46 @@ export function createSocialUserClass(DurableObject) {
     return json({ ok: true, updated: updates.length });
   }
 
+  defer(promise) { const p = Promise.resolve(promise).catch(() => {}); if (typeof this.ctx.waitUntil === 'function') this.ctx.waitUntil(p); return p; }
+  socialSockets() {
+    return this.ctx.getWebSockets().filter((ws) => { try { return Boolean(ws.deserializeAttachment()?.username); } catch { return false; } });
+  }
+  liveSockets() { return this.socialSockets().length > 0; }
+  // the newest sign of life: a ping, or the moment a socket was opened
+  lastBeatAt() {
+    let t = Number(this.lastPing) || 0;
+    for (const ws of this.socialSockets()) { try { t = Math.max(t, Number(ws.deserializeAttachment()?.connectedAt) || 0); } catch { /* gone */ } }
+    return t;
+  }
+  beatFresh(now = Date.now()) { return now - this.lastBeatAt() < LIVE_MS; }
+  // true when this account is really there right now; sweeps a dead connection if it finds one
+  async confirmOnline() {
+    if (!this.profile || !this.presence.online) return false;
+    if (this.liveSockets() && this.beatFresh()) return true;
+    await this.expireStale();
+    return false;
+  }
+  async expireStale() {
+    for (const ws of this.socialSockets()) { try { ws.close(4004, 'stale'); } catch { /* gone */ } }
+    const at = this.lastBeatAt() || Date.now();
+    if (this.presence.online) {
+      this.presence = { ...this.presence, online: false, lastSeen: Math.min(Date.now(), at) };
+      await this.ctx.storage.put("presence", this.presence);
+      this.defer(this.notifyFriendsPresence());
+    }
+  }
+  async alarm() {
+    await this.ready;
+    if (!this.profile) return;
+    if (this.liveSockets() && this.beatFresh()) { await this.ctx.storage.setAlarm(this.lastBeatAt() + LIVE_MS + 3000); return; }
+    await this.expireStale();
+  }
+  armSweep(now = Date.now()) {
+    if (now - (this.sweepArmedAt || 0) < 20000) return;
+    this.sweepArmedAt = now;
+    this.defer(this.ctx.storage.setAlarm(now + LIVE_MS + 3000));
+  }
+
   async openWebSocket(request) {
     if (request.headers.get("Upgrade") !== "websocket") return json({ ok: false, error: "WebSocket required" }, 426);
     if (request.headers.get("x-social-auth") !== "1" || !this.profile) return json({ ok: false, error: "unauthorized" }, 401);
@@ -556,7 +651,9 @@ export function createSocialUserClass(DurableObject) {
     const wasOnline = this.ctx.getWebSockets().length > 0;
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ username: this.profile.username, connectedAt: Date.now() });
-    if (!wasOnline) await this.setPresence(true);
+    this.lastPing = Date.now();
+    if (!wasOnline || !this.presence.online) await this.setPresence(true);
+    this.armSweep();
     try {
       server.send(JSON.stringify({
         type: "social_welcome",
@@ -574,7 +671,9 @@ export function createSocialUserClass(DurableObject) {
     let data;
     try { data = JSON.parse(String(message)); } catch { return; }
     if (data.type === "ping") {
-      const now=Date.now();if(now-(this.presence.lastActiveAt||0)>=60000){this.presence.lastActiveAt=now;await this.ctx.storage.put("presence",this.presence);}
+      const now=Date.now();this.lastPing=now;if(now-(this.presence.lastActiveAt||0)>=60000){this.presence.lastActiveAt=now;await this.ctx.storage.put("presence",this.presence);}
+      if(!this.presence.online)await this.setPresence(true);
+      this.armSweep(now);
       try { ws.send(JSON.stringify({ type: "pong", at: Date.now() })); } catch {}
     }
   }

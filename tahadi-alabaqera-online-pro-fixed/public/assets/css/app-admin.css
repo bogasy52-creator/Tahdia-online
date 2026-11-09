@@ -370,6 +370,13 @@ body.suite-v16{--s-bg:#080e18;--s-panel:#121e30;--s-raised:#192941;--s-line:#304
 /* assets/css/admin-workspace.css */
 .admin-page{background:radial-gradient(ellipse at 10% 0,#28485466,transparent 55%),#0a1421}.admin-navigation{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 20px}.admin-navigation button{min-height:44px;padding:9px 15px;border:1px solid #426071;border-radius:12px;background:#142737;color:#cce0ec;font:700 12px Tahoma;cursor:pointer}.admin-navigation [aria-pressed=true]{background:#d6c292;color:#202c32;border-color:#eddbac}.admin-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}.admin-overview>div{display:grid;gap:12px;padding:21px;background:linear-gradient(135deg,#243b4b,#122534);border:1px solid #476676;border-radius:18px}.admin-overview small{font-size:11px;color:#adc6d4}.admin-overview b{font-size:33px;color:#e4c98f}.admin-page [data-admin-section][hidden]{display:none!important}.admin-layout:has([data-admin-section][hidden]){grid-template-columns:1fr}.admin-audit-filter{display:flex;gap:12px;align-items:center;margin-bottom:18px;color:#a9c2d0}.admin-audit-filter input{min-height:44px;width:min(100%,340px);padding:10px;border:1px solid #567285;border-radius:12px;background:#0c1c2b;color:#e6eff7;font:inherit}.admin-last-seen{padding:9px 0;color:#a9c9d5;font-size:12px}.admin-live-head,.admin-audit-head{align-items:center}@media(max-width:650px){.admin-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-overview>div{padding:15px}.admin-overview b{font-size:28px}.admin-navigation{flex-wrap:nowrap;overflow:auto}.admin-navigation button{white-space:nowrap}.admin-audit-filter{display:grid}}
 
+/* 33.7.0 — owner panel: announcement length and tone side by side, a signed-in name in the live list opens that account */
+.admin-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.admin-row{grid-template-columns:1fr}}
+#adminAuditExport{margin-inline-start:8px}
+.admin-live td.is-link,#adminLivePeople td.is-link{cursor:pointer}
+#adminLivePeople td.is-link:hover b,#adminLivePeople td.is-link:focus-visible b{text-decoration:underline}
+
 /* assets/css/design-system.css */
 /* V17 shared product system. Board coordinates remain owned by each game. */
 :root{--bs-bg:#0b1522;--bs-bg2:#112131;--bs-surface:#142738;--bs-surface2:#1a3043;--bs-line:#355061;--bs-text:#f0f4ed;--bs-muted:#abc0cd;--bs-purple:#87c6b0;--bs-pink:#b6a5d9;--bs-gold:#eed093;--bs-cyan:#8cc9d5;--bs-green:#a4d6a7;--bs-radius:18px;--bs-shadow:0 14px 40px #020a1533}

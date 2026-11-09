@@ -1,7 +1,7 @@
 (function(){
  'use strict';
- const $=id=>document.getElementById(id),actionNames={coins:'تعديل العملات',xp:'إضافة الخبرة','unlock-item':'فتح إضافة','unlock-all':'فتح المقتنيات',suspend:'إيقاف الحساب',restore:'تفعيل الحساب',revoke:'إنهاء الجلسات',announcement:'نشر إعلان','clear-announcement':'إزالة الإعلان'};
- const PENDING='busraj-admin-pending-v11:bosrag';let allowed=false,busy=false,selected=null;
+ const $=id=>document.getElementById(id),actionNames={coins:'تعديل العملات',xp:'إضافة الخبرة','unlock-item':'فتح إضافة','unlock-all':'فتح المقتنيات',suspend:'إيقاف الحساب',restore:'تفعيل الحساب',revoke:'إنهاء الجلسات',announcement:'نشر إعلان','clear-announcement':'إزالة الإعلان','lock-item':'سحب إضافة',rename:'تغيير الاسم'};
+ const PENDING='busraj-admin-pending-v11:bosrag';let allowed=false,busy=false,selected=null,lastAudit=[];
  const token=()=>localStorage.getItem('bs_social_session')||'';
  function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
  function tell(text){$('adminMessage').textContent=text}
@@ -16,14 +16,20 @@
  function paintAccount(account){
   selected=account;$('adminUsername').value=account.profile.username;const box=$('adminAccount');box.replaceChildren();box.append(node('h3',null,account.profile.displayName),node('span','account-handle','@'+account.profile.username),node('span','account-status'+(account.suspended?' suspended':''),account.suspended?'موقوف':'نشط'));
   const stats=node('div','account-values');for(const [label,value]of [['العملات',account.career.coins],['الخبرة',account.career.xp],['المستوى',account.career.level],['المقتنيات',account.career.owned.length]]){const e=node('div');e.append(node('b',null,value),node('small',null,label));stats.appendChild(e)}box.appendChild(stats);box.append(node('p','admin-last-seen',window.BS_PLAYER_PROFILE?.seen(account.profile)|| (account.profile.online?'متصل الآن':account.profile.lastSeen?'آخر ظهور '+new Date(account.profile.lastSeen).toLocaleString('ar-SA'):'آخر ظهور غير متاح')));$('adminActionForm').classList.remove('hidden');
-  const items=$('adminItem');items.replaceChildren();for(const item of window.BS_CAREER_CORE?.CATALOG||[]){if(item.source==='owner'&&account.profile.username!=='bosrag')continue;const o=node('option',null,item.name+(account.career.owned.includes(item.id)?' · مملوك':''));o.value=item.id;items.appendChild(o)}paintAction();
+  fillItems();paintAction();
+ }
+ function fillItems(){
+  if(!selected)return;const items=$('adminItem'),lock=$('adminAction').value==='lock-item',keep=items.value;items.replaceChildren();
+  for(const item of window.BS_CAREER_CORE?.CATALOG||[]){const owned=selected.career.owned.includes(item.id);if(item.source==='owner'&&selected.profile.username!=='bosrag')continue;if(lock&&(!owned||(item.price===0&&!item.source)))continue;const o=node('option',null,item.name+(owned&&!lock?' · مملوك':''));o.value=item.id;items.appendChild(o)}
+  if(keep&&[...items.options].some(o=>o.value===keep))items.value=keep;
  }
  function paintAction(){
-  const action=$('adminAction').value;$('adminAmountField').classList.toggle('hidden',!['coins','xp'].includes(action));$('adminItemField').classList.toggle('hidden',action!=='unlock-item');$('adminAmountLabel').textContent=action==='xp'?'خبرة التقدم · رقم موجب':'العملات · رقم موجب للإضافة، وسالب للخصم';$('adminAmount').min=action==='xp'?'1':'-100000';
-  const help={coins:'من 1 إلى 100000 عملة في العملية. الخصم لا يجعل الرصيد سالبًا.',xp:'خبرة التقدم ترفع المستوى. رتبة الأونلاين تُكتسب بالمباريات الموثّقة.',suspend:'يمنع تسجيل الدخول ويُنهي جلسات الحساب حتى تعيد تفعيله.',restore:'يعيد الدخول للحساب مع الحفاظ على تقدمه ومقتنياته.',revoke:'ينهي جلسات الدخول الحالية. يستطيع اللاعب تسجيل الدخول مرة أخرى.', 'unlock-all':'يفتح كل المقتنيات للاعب دون تغيير رصيده.', 'unlock-item':'يفتح الإضافة المختارة دون خصم عملات.'};$('adminActionHelp').textContent=help[action]||'';
+  fillItems();const action=$('adminAction').value;$('adminNameField').classList.toggle('hidden',action!=='rename');$('adminAmountField').classList.toggle('hidden',!['coins','xp'].includes(action));$('adminItemField').classList.toggle('hidden',!['unlock-item','lock-item'].includes(action));$('adminAmountLabel').textContent=action==='xp'?'خبرة التقدم · رقم موجب':'العملات · رقم موجب للإضافة، وسالب للخصم';$('adminAmount').min=action==='xp'?'1':'-100000';
+  const help={'lock-item':'يسحب إضافة اشتراها أو أُعطيت للاعب بالخطأ. المقتنيات المجانية الأساسية لا تُسحب، وقد يعيد النظام قطعة مرتبطة بها (مثل لوحة جاكارو مع طاولتها).',rename:'يستبدل اسم العرض المخالف باسمك. يظهر الاسم الجديد عند الأصدقاء وفي الغرف، والحساب يحتفظ ببقية بياناته.',coins:'من 1 إلى 100000 عملة في العملية. الخصم لا يجعل الرصيد سالبًا.',xp:'خبرة التقدم ترفع المستوى. رتبة الأونلاين تُكتسب بالمباريات الموثّقة.',suspend:'يمنع تسجيل الدخول ويُنهي جلسات الحساب حتى تعيد تفعيله.',restore:'يعيد الدخول للحساب مع الحفاظ على تقدمه ومقتنياته.',revoke:'ينهي جلسات الدخول الحالية. يستطيع اللاعب تسجيل الدخول مرة أخرى.', 'unlock-all':'يفتح كل المقتنيات للاعب دون تغيير رصيده.', 'unlock-item':'يفتح الإضافة المختارة دون خصم عملات.'};$('adminActionHelp').textContent=help[action]||'';
  }
+
  function paintAudit(data){
-  const list=$('adminAudit');list.replaceChildren();for(const entry of data.audit||[]){const row=node('tr');const date=new Date(entry.at).toLocaleString('ar-SA-u-nu-latn',{timeZone:'Asia/Riyadh',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});const detail=[entry.amount?String(entry.amount):'',entry.item?window.BS_CAREER_CORE?.CATALOG.find(i=>i.id===entry.item)?.name||entry.item:'',entry.reason||''].filter(Boolean).join(' · ');for(const value of [date,entry.username||'الحلبة',actionNames[entry.action]||entry.action,detail||'—'])row.appendChild(node('td',null,value));list.appendChild(row)}$('adminAuditEmpty').classList.toggle('hidden',Boolean(data.audit?.length));$('adminCurrentAnnouncement').textContent=data.announcement?.text||'لا يوجد إعلان حالي.';window.dispatchEvent(new CustomEvent('bs-admin-data',{detail:{auditCount:(data.audit||[]).length}}));
+  lastAudit=data.audit||[];const list=$('adminAudit');list.replaceChildren();for(const entry of data.audit||[]){const row=node('tr');const date=new Date(entry.at).toLocaleString('ar-SA-u-nu-latn',{timeZone:'Asia/Riyadh',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});const detail=[entry.text||'',entry.amount?String(entry.amount):'',entry.item?window.BS_CAREER_CORE?.CATALOG.find(i=>i.id===entry.item)?.name||entry.item:'',entry.reason||''].filter(Boolean).join(' · ');for(const value of [date,entry.username||'الحلبة',actionNames[entry.action]||entry.action,detail||'—'])row.appendChild(node('td',null,value));list.appendChild(row)}$('adminAuditEmpty').classList.toggle('hidden',Boolean(data.audit?.length));$('adminCurrentAnnouncement').textContent=data.announcement?.text||'لا يوجد إعلان حالي.';window.dispatchEvent(new CustomEvent('bs-admin-data',{detail:{auditCount:(data.audit||[]).length}}));
  }
  async function load(){
   const session=token();allowed=false;$('adminWorkspace').classList.add('hidden');$('adminAccess').classList.remove('hidden');
@@ -39,10 +45,16 @@
   finally{setBusy(false)}
  }
  $('adminSearchForm').onsubmit=e=>{e.preventDefault();return search()};$('adminAction').onchange=paintAction;
- $('adminActionForm').onsubmit=e=>{e.preventDefault();if(!selected||!allowed)return;tell('');const action=$('adminAction').value;return run({username:selected.profile.username,action,amount:['coins','xp'].includes(action)?Number($('adminAmount').value):undefined,item:action==='unlock-item'?$('adminItem').value:undefined,reason:$('adminReason').value.trim()})};
- $('adminAnnouncementForm').onsubmit=e=>{e.preventDefault();return run({action:'announcement',text:$('adminAnnouncement').value.trim()})};$('adminRetry').onclick=()=>{const command=outstanding();if(command)return run(command)};
+ $('adminActionForm').onsubmit=e=>{e.preventDefault();if(!selected||!allowed)return;tell('');const action=$('adminAction').value;const dangerous={suspend:'إيقاف هذا الحساب وإنهاء جلساته؟','lock-item':'سحب هذه الإضافة من اللاعب؟',revoke:'إنهاء جميع جلسات تسجيل الدخول لهذا الحساب؟',rename:'استبدال اسم العرض؟'};if(dangerous[action]&&!confirm(dangerous[action]+'\n@'+selected.profile.username))return;if(action==='rename'&&$('adminNewName').value.trim().length<2){tell('اكتب الاسم الجديد (حرفان على الأقل)');return}return run({username:selected.profile.username,action,amount:['coins','xp'].includes(action)?Number($('adminAmount').value):undefined,item:['unlock-item','lock-item'].includes(action)?$('adminItem').value:undefined,text:action==='rename'?$('adminNewName').value.trim():undefined,reason:$('adminReason').value.trim()})};
+ $('adminAnnouncementForm').onsubmit=e=>{e.preventDefault();return run({action:'announcement',text:$('adminAnnouncement').value.trim(),hours:Number($('adminAnnounceHours').value)||0,level:$('adminAnnounceLevel').value})};$('adminRetry').onclick=()=>{const command=outstanding();if(command)return run(command)};
  $('adminClearAnnouncement').onclick=()=>run({action:'clear-announcement'});
  $('adminAccessRetry').onclick=()=>load();
+ $('adminAuditExport').onclick=()=>{
+  const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"',rows=[['التاريخ','العملية','الحساب','الكمية','الإضافة','النص','السبب']];
+  for(const e of lastAudit)rows.push([new Date(e.at).toISOString(),actionNames[e.action]||e.action,e.username||'',e.amount||'',e.item||'',e.text||'',e.reason||'']);
+  const blob=new Blob(['\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='audit-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);tell('تم تصدير '+lastAudit.length+' عملية');
+ };
  $('adminRefresh').onclick=async()=>{if(!allowed||busy)return;setBusy(true);try{paintAudit(await request(''));tell('السجل محدث')}catch(error){tell(errorLabel(error))}finally{setBusy(false)}};
  window.addEventListener('bs-social-session',()=>{selected=null;load()});window.addEventListener('storage',e=>{if(e.key==='bs_social_session'){selected=null;load()}});
  window.BS_ADMIN={ready:load(),search,refresh:load};
