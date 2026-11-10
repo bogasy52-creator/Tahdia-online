@@ -1,6 +1,6 @@
 // Air Hockey — drawing. The table is painted in table units (x across 0..W, y along 0..L); a single transform turns it
 // to fit a portrait screen (goals top and bottom) or a landscape one (goals left and right), so nothing else changes.
-import { W, L, GOAL_W, PUCK_R, STRIKER_R } from './core.js?v=33.9.8-pro1';
+import { W, L, GOAL_W, PUCK_R, STRIKER_R } from './core.js?v=33.9.9-pro1';
 
 export const FRAME = 46; // rail thickness around the playfield, in table units
 export const THEMES = {

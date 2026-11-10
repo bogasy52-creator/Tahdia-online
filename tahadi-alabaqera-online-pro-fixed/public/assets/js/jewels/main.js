@@ -1,8 +1,8 @@
 /* Tahdia 33.9.5 — «ماستر الجواهر»: the duel page. The engine decides; this file draws the board on a
    canvas, animates every move from the state's own record (swap, breaks, special gems, falls), and
    runs the three ways to play: online (a BoardRoom table), against the computer, two on one phone. */
-import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.8-jw1';
-import { createTable } from '../board-table-v33.js?v=33.9.8';
+import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.9-jw1';
+import { createTable } from '../board-table-v33.js?v=33.9.9';
 
 const $ = (s) => document.querySelector(s);
 const W = JD.W, H = JD.H, N = W * H;
@@ -93,32 +93,52 @@ function drawBall(g, r) {
   sparkle(g, 0, 0, r * 0.42); sparkle(g, -r * 0.4, -r * 0.42, r * 0.14, 0.9);
 }
 const sprites = new Map();
+// 33.9.9: the gems are painted ahead (cut, bevelled and lit) on one sheet: six gems, six bombs, the light orb
+const SHEET = { img: null, cell: 160 };
+{
+  const im = new Image(); im.decoding = 'async';
+  im.onload = () => { SHEET.img = im; sprites.clear(); invalidate?.(); };
+  im.src = '/assets/jewels/gems-v33-9-9.webp';
+}
+function fromSheet(g, col, row, px) { const k = SHEET.cell; g.drawImage(SHEET.img, col * k, row * k, k, k, -px / 2, -px / 2, px, px); }
+function rocketMarks(g, c, r, vertical) {
+  g.save(); if (vertical) g.rotate(Math.PI / 2);
+  const gr = g.createLinearGradient(0, -r * 0.3, 0, r * 0.3); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,.95)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(-r * 0.86, -r * 0.24, r * 1.72, r * 0.48);
+  g.fillStyle = '#fff'; g.strokeStyle = '#1b0b4a'; g.lineWidth = Math.max(1.5, r * 0.07); g.lineJoin = 'round'; g.shadowColor = GEMS[c].glow; g.shadowBlur = r * 0.4;
+  for (const s of [-1, 1]) { poly(g, [[s * r * 1.08, 0], [s * r * 0.64, -r * 0.36], [s * r * 0.64, r * 0.36]]); g.stroke(); g.fill(); }
+  g.restore();
+}
 function sprite(c, s, px) {
-  const key = c + ':' + s + ':' + px;
+  const key = c + ':' + s + ':' + px + ':' + (SHEET.img ? 1 : 0);
   if (sprites.has(key)) return sprites.get(key);
   const cv = document.createElement('canvas'); cv.width = cv.height = px;
   const g = cv.getContext('2d'); g.translate(px / 2, px / 2); const r = px * 0.4;
-  if (s === 'ball') drawBall(g, r); else if (s === 'bomb') drawBomb(g, c, r); else if (s === 'rh' || s === 'rv') drawRocket(g, c, r, s === 'rv'); else drawGem(g, c, r);
+  if (SHEET.img) {
+    if (s === 'ball') fromSheet(g, 6, 0, px);
+    else if (s === 'bomb') fromSheet(g, c, 1, px);
+    else { fromSheet(g, c, 0, px); if (s === 'rh' || s === 'rv') rocketMarks(g, c, r, s === 'rv'); }
+  } else if (s === 'ball') drawBall(g, r); else if (s === 'bomb') drawBomb(g, c, r); else if (s === 'rh' || s === 'rv') drawRocket(g, c, r, s === 'rv'); else drawGem(g, c, r);
   sprites.set(key, cv); return cv;
 }
 function boosterIcon(cv, k, px = 60) {
-  const b = BOOSTERS[k], G = GEMS[b.color], g = cv.getContext('2d'); cv.width = cv.height = px; g.clearRect(0, 0, px, px); g.translate(px / 2, px / 2); const r = px * 0.44;
-  const gr = g.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.1, 0, 0, r); gr.addColorStop(0, G.light); gr.addColorStop(0.5, G.base); gr.addColorStop(1, G.dark);
-  g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fillStyle = gr; g.fill(); g.lineWidth = px * 0.05; g.strokeStyle = 'rgba(255,255,255,.7)'; g.stroke();
-  g.fillStyle = '#fff'; g.strokeStyle = '#fff'; g.lineCap = 'round'; g.lineJoin = 'round';
-  if (b.id === 'hammer') { g.save(); g.rotate(-0.6); g.fillRect(-r * 0.09, -r * 0.2, r * 0.18, r * 0.85); g.fillRect(-r * 0.45, -r * 0.5, r * 0.9, r * 0.34); g.restore(); }
-  else if (b.id === 'cross') { g.lineWidth = r * 0.16; g.beginPath(); g.moveTo(-r * 0.62, 0); g.lineTo(r * 0.62, 0); g.moveTo(0, -r * 0.62); g.lineTo(0, r * 0.62); g.stroke(); for (const [x, y, a] of [[r * 0.62, 0, 0], [-r * 0.62, 0, Math.PI], [0, r * 0.62, Math.PI / 2], [0, -r * 0.62, -Math.PI / 2]]) { g.save(); g.translate(x, y); g.rotate(a); poly(g, [[r * 0.16, 0], [-r * 0.08, -r * 0.18], [-r * 0.08, r * 0.18]]); g.fill(); g.restore(); } }
-  else { poly(g, [[r * 0.12, -r * 0.72], [-r * 0.36, r * 0.08], [-r * 0.02, r * 0.08], [-r * 0.14, r * 0.72], [r * 0.38, -r * 0.12], [r * 0.04, -r * 0.12]]); g.fill(); }
+  const b = BOOSTERS[k], g = cv.getContext('2d'); cv.width = cv.height = px; g.clearRect(0, 0, px, px); g.translate(px / 2, px / 2); const r = px * 0.46;
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  const ink = (paint) => { g.save(); g.strokeStyle = '#1b0b4a'; g.lineWidth = r * 0.2; paint(true); g.restore(); g.save(); g.fillStyle = '#fff'; g.strokeStyle = '#fff'; paint(false); g.restore(); };
+  g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowOffsetY = r * 0.06;
+  if (b.id === 'hammer') ink((out) => { g.rotate(-0.6); const pad = out ? r * 0.08 : 0; g.beginPath(); g.roundRect?.(-r * 0.1 - pad, -r * 0.18 - pad, r * 0.2 + pad * 2, r * 0.95 + pad * 2, r * 0.08); if (!g.roundRect) g.rect(-r * 0.1 - pad, -r * 0.18 - pad, r * 0.2 + pad * 2, r * 0.95 + pad * 2); out ? g.stroke() : g.fill(); g.beginPath(); g.roundRect?.(-r * 0.55 - pad, -r * 0.62 - pad, r * 1.1 + pad * 2, r * 0.46 + pad * 2, r * 0.12); if (!g.roundRect) g.rect(-r * 0.55 - pad, -r * 0.62 - pad, r * 1.1 + pad * 2, r * 0.46 + pad * 2); out ? g.stroke() : g.fill(); });
+  else if (b.id === 'cross') ink((out) => { g.lineWidth = out ? r * 0.36 : r * 0.18; g.beginPath(); g.moveTo(-r * 0.62, 0); g.lineTo(r * 0.62, 0); g.moveTo(0, -r * 0.62); g.lineTo(0, r * 0.62); g.stroke(); for (const a2 of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) { g.save(); g.rotate(a2); poly(g, [[r * 0.92, 0], [r * 0.56, -r * 0.26], [r * 0.56, r * 0.26]]); if (out) { g.lineWidth = r * 0.18; g.stroke(); } g.fill(); g.restore(); } });
+  else ink((out) => { poly(g, [[r * 0.14, -r * 0.86], [-r * 0.46, r * 0.1], [-r * 0.04, r * 0.1], [-r * 0.18, r * 0.86], [r * 0.46, -r * 0.14], [r * 0.04, -r * 0.14]]); if (out) g.stroke(); g.fill(); });
 }
 
 /* ---------- the board view ---------- */
 const canvas = $('#jwBoard'), g = canvas.getContext('2d'), wrap = $('#jwWrap');
 const view = { size: 320, cell: 40, pad: 8, dpr: 1, tiles: new Map(), grid: Array(N).fill(null), fx: [], parts: [], sel: -1, hint: null, hintAt: 0, aimCell: -1, shake: 0, raf: 0 };
 function fitBoard() {
-  const vw = Math.min(window.innerWidth, 560) - 24;
+  const vw = Math.min(window.innerWidth, 560) - 12;
   const used = ['#game .jw-bar', '.jw-hud', '#status', '#jwBoostBar'].reduce((n, s) => n + ($(s)?.offsetHeight || 0), 0) + 54;
   const size = Math.max(240, Math.min(vw, window.innerHeight - used, 520));
-  view.dpr = Math.min(3, window.devicePixelRatio || 1); view.pad = Math.round(size * 0.025); view.cell = (size - view.pad * 2) / W; view.size = size;
+  view.dpr = Math.min(3, window.devicePixelRatio || 1); view.pad = Math.round(size * 0.042); view.cell = (size - view.pad * 2) / W; view.size = size;
   canvas.width = Math.round(size * view.dpr); canvas.height = Math.round(size * view.dpr); canvas.style.width = canvas.style.height = size + 'px';
   sprites.clear(); invalidate();
 }
@@ -140,12 +160,21 @@ function draw(now) {
   let sx = 0, sy = 0; if (view.shake > 0) { sx = (Math.random() - 0.5) * view.shake; sy = (Math.random() - 0.5) * view.shake; view.shake *= 0.86; if (view.shake < 0.3) view.shake = 0; }
   g.translate(sx, sy);
   // the board
-  let gr = g.createLinearGradient(0, 0, 0, S); gr.addColorStop(0, 'rgba(18,58,150,.92)'); gr.addColorStop(1, 'rgba(10,30,96,.95)');
-  roundRect(2, 2, S - 4, S - 4, 22); g.fillStyle = gr; g.fill();
-  g.lineWidth = 4; g.strokeStyle = '#ffffff'; g.stroke();
-  roundRect(5, 5, S - 10, S - 10, 19); g.lineWidth = 2; g.strokeStyle = 'rgba(120,220,255,.65)'; g.stroke();
-  const p = view.pad, c = view.cell;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = (x + y) % 2 ? 'rgba(255,255,255,.13)' : 'rgba(255,255,255,.06)'; roundRect(p + x * c + 1.5, p + y * c + 1.5, c - 3, c - 3, c * 0.18); g.fill(); }
+  // 33.9.9: a thick gold frame with a dark rim, a deep violet floor and raised tiles
+  const p = view.pad, c = view.cell, f = p * 0.92;
+  roundRect(1.5, 1.5, S - 3, S - 3, 26); g.fillStyle = '#1b0b4a'; g.fill();
+  let gr = g.createLinearGradient(0, 0, 0, S); gr.addColorStop(0, '#fff3a6'); gr.addColorStop(0.18, '#ffd23f'); gr.addColorStop(0.55, '#f0a915'); gr.addColorStop(1, '#b86400');
+  roundRect(4, 4, S - 8, S - 8, 23); g.fillStyle = gr; g.fill();
+  g.save(); roundRect(4, 4, S - 8, S - 8, 23); g.clip(); g.fillStyle = 'rgba(255,255,255,.45)'; g.fillRect(0, 4, S, 3); g.restore();
+  roundRect(f - 1, f - 1, S - 2 * f + 2, S - 2 * f + 2, 17); g.fillStyle = '#1b0b4a'; g.fill();
+  gr = g.createLinearGradient(0, f, 0, S - f); gr.addColorStop(0, '#3a1d9a'); gr.addColorStop(1, '#22105e');
+  roundRect(f + 1.5, f + 1.5, S - 2 * f - 3, S - 2 * f - 3, 15); g.fillStyle = gr; g.fill();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const tx = p + x * c + 1.6, ty = p + y * c + 1.6, tw = c - 3.2;
+    roundRect(tx, ty, tw, tw, c * 0.2); g.fillStyle = (x + y) % 2 ? '#4a2bb8' : '#3d22a0'; g.fill();
+    roundRect(tx, ty + tw * 0.55, tw, tw * 0.45, c * 0.2); g.fillStyle = 'rgba(20,6,60,.22)'; g.fill();
+    g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(tx + c * 0.18, ty + 1, tw - c * 0.36, Math.max(1, c * 0.05));
+  }
   // booster aim
   if (ctl.aim >= 0) {
     const cells = aimCells(BOOSTERS[ctl.aim].id, view.aimCell);
@@ -154,12 +183,12 @@ function draw(now) {
   }
   // gems
   g.save(); roundRect(p, p, c * W, c * H, 14); g.clip();
-  const px = Math.round(c * d * 1.1);
+  const px = Math.round(c * d * 1.12);
   const hintPulse = view.hint ? 1 + 0.08 * Math.sin(now / 120) : 1;
   for (const t of view.tiles.values()) {
     if (t.alpha <= 0) continue;
     let sc = t.scale; if (view.hint && (view.grid[view.hint[0]] === t.id || view.grid[view.hint[1]] === t.id)) sc *= hintPulse;
-    const [cx, cy] = cellXY(t.x, t.y), sz = c * 1.1 * sc;
+    const [cx, cy] = cellXY(t.x, t.y), sz = c * 1.12 * sc;
     g.globalAlpha = Math.max(0, Math.min(1, t.alpha));
     g.drawImage(sprite(t.c, t.s, px), cx - sz / 2, cy - sz / 2, sz, sz);
     if (t.s === 'ball') { g.save(); g.translate(cx, cy); g.rotate(now / 700); sparkle(g, c * 0.32, 0, c * 0.08, 0.8); g.restore(); }
@@ -290,9 +319,9 @@ async function animateLast(last, { skipSwap = false } = {}) {
     await tween(Math.min(420, 150 + far * 45), (t) => { for (const m of moves) { if (m.t.made) { m.t.scale = easeOut(Math.min(1, t * 1.6)) * (1 + 0.15 * Math.sin(Math.min(1, t * 1.6) * Math.PI)); continue; } const e = fallEase(t); m.t.x = m.x0 + (m.x1 - m.x0) * e; m.t.y = m.y0 + (m.y1 - m.y0) * e; } });
     for (const m of moves) { m.t.x = m.x1; m.t.y = m.y1; m.t.scale = 1; }
     view.grid = ph.board.map((t) => t.i);
-    if (k >= 2) banner(COMBO_WORDS[Math.min(COMBO_WORDS.length - 1, k)], last.seat !== mySeat());
+    if (k >= 2) banner(COMBO_WORDS[Math.min(COMBO_WORDS.length - 1, k)], false, 800, 'combo');
   }
-  if (last.extra) { floatText('حركة زيادة!', view.size / 2, view.size * 0.42, '#ffd25e', true); play('combo', 0.5); }
+  if (last.extra) { banner('حركة زيادة!', false, 900, 'gold'); play('combo', 0.5); }
   return shown;
 }
 function fxOf([kind, cell, color]) {
@@ -327,8 +356,9 @@ function floatText(text, x, y, color, big = false) {
   $('#jwFloat').append(el); setTimeout(() => el.remove(), 1000);
 }
 let bannerTimer = 0;
-function banner(text, foe = false, ms = 900) {
-  if (!text) return; const b = $('#jwBanner'); b.textContent = text; b.classList.toggle('foe', foe); b.classList.add('show');
+function banner(text, foe = false, ms = 900, kind = '') {
+  if (!text) return; const b = $('#jwBanner'); b.textContent = text;
+  b.className = 'jw-banner' + (foe ? ' foe' : '') + (kind ? ' ' + kind : ''); void b.offsetWidth; b.classList.add('show');
   clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove('show'), ms);
 }
 
@@ -342,23 +372,28 @@ const bottomSeat = () => (ctl.mode === 'online' ? ctl.me : 0);
 
 // 33.9.7: a duel head-up display like the big duel games: both players across the top (you first),
 // the round between them, and your boosters as big round buttons under the board
+// 33.9.9: a bright card for each player (face, name, score), the moves between them, and the
+// boosters as charge tanks that fill with their gem's colour
 function plateHTML(seat) {
   return `<span class="jw-face" data-player-tag="${seat}" role="button" tabindex="0" aria-label="ملف اللاعب"><span class="jw-pic"></span></span>
-  <b class="jw-score">0</b><span class="jw-who"><b></b><small></small></span>
-  <div class="jw-mini">${BOOSTERS.map((b, k) => `<i data-k="${k}" style="--bc:${GEMS[b.color].base}"></i>`).join('')}</div>`;
+  <span class="jw-who"><b></b><small></small></span><b class="jw-score">0</b>
+  <div class="jw-mini" aria-hidden="true">${BOOSTERS.map((b, k) => `<i data-k="${k}" style="--bc:${GEMS[b.color].base}"></i>`).join('')}</div>`;
 }
 function boostHTML() {
-  return BOOSTERS.map((b, k) => `<button type="button" class="jw-boost" data-k="${k}" style="--bc:${GEMS[b.color].base}"><span class="ring"><canvas></canvas></span><b>${b.name}</b><small></small></button>`).join('');
+  return BOOSTERS.map((b, k) => `<button type="button" class="jw-boost" data-k="${k}" style="--bc:${GEMS[b.color].base};--bd:${GEMS[b.color].dark}"><span class="mm-tank"><i class="mm-liquid"></i><canvas></canvas></span><b>${b.name}</b><small></small></button>`).join('');
+}
+function faceOf(seat) {
+  const user = ctl.users[seat], P = window.BS_PROFILE_PRO;
+  if (P && (user?.username || user?.photo || user?.fallback)) return P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '' });
+  return Object.assign(document.createElement('span'), { className: 'jw-letter', textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) });
 }
 function buildPlates() {
   for (const [id, seat] of [['#plateBottom', bottomSeat()], ['#plateTop', 1 - bottomSeat()]]) {
     const el = $(id); el.dataset.seat = seat; el.innerHTML = plateHTML(seat); el.classList.toggle('foe', seat !== bottomSeat()); el.classList.toggle('me', seat === bottomSeat());
-    const pic = el.querySelector('.jw-pic'), user = ctl.users[seat], P = window.BS_PROFILE_PRO;
-    if (P && (user?.username || user?.photo || user?.fallback)) pic.replaceWith(P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '' }));
-    else pic.replaceWith(Object.assign(document.createElement('span'), { className: 'jw-letter', textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) }));
+    el.querySelector('.jw-pic').replaceWith(faceOf(seat));
   }
   const bar = $('#jwBoostBar'); bar.innerHTML = boostHTML();
-  bar.querySelectorAll('.jw-boost canvas').forEach((cv, k) => boosterIcon(cv, k, 84));
+  bar.querySelectorAll('.jw-boost canvas').forEach((cv, k) => boosterIcon(cv, k, 120));
   bar.querySelectorAll('.jw-boost').forEach((b) => b.addEventListener('click', () => boosterTap(barSeat(), Number(b.dataset.k))));
   ctl.scores = ctl.state ? ctl.state.players.map((p) => p.score) : [0, 0];
 }
@@ -375,7 +410,7 @@ function renderPlates() {
     const seat = Number(el.dataset.seat), p = s.players[seat], on = s.winner === null && s.turn === seat;
     el.classList.toggle('on', on);
     el.querySelector('.jw-who b').textContent = ctl.names[seat] || p.name;
-    el.querySelector('.jw-who small').innerHTML = on ? `<span class="jw-pips">${Array.from({ length: Math.max(JD.MOVES, s.moves) }, (_, i) => `<i class="${i < s.moves ? 'full' : ''}"></i>`).join('')}</span>` : '';
+    el.querySelector('.jw-who small').innerHTML = on ? `<span>${ctl.mode !== 'two' && seat === mySeat() ? 'دورك' : 'يلعب'}</span>` : '';
     if (!ctl.busy) { ctl.scores[seat] = p.score; el.querySelector('.jw-score').textContent = p.score; }
     el.querySelectorAll('.jw-mini i').forEach((m, k) => { const need = BOOSTERS[k].need; m.style.setProperty('--c', Math.round(Math.min(need, p.charge[k]) / need * 100) + '%'); m.classList.toggle('ready', p.charge[k] >= need); });
   }
@@ -389,6 +424,14 @@ function renderPlates() {
     const mine = ctl.mode === 'two' || !ctl.bots[seat];
     b.disabled = !(ready && mine && s.turn === seat && s.winner === null);
   });
+  // the moves left, between the two players, in the colour of the one playing
+  const mv = $('#jwMoves');
+  if (mv) {
+    const n = s.winner !== null ? 0 : Math.max(JD.MOVES, s.moves), had = mv.querySelectorAll('i.full').length;
+    mv.className = 'mm-moves ' + (s.turn === bottomSeat() ? 'me' : 'foe');
+    mv.innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < s.moves ? 'full' : had > s.moves && i < had ? 'used' : ''}"></i>`).join('');
+    mv.setAttribute('aria-label', s.winner !== null ? '' : 'باقي ' + s.moves + ' حركات');
+  }
   const r = $('#jwRound'), last = s.round === JD.ROUNDS;
   r.textContent = s.winner !== null ? 'انتهت المواجهة' : 'الجولة ' + s.round + ' من ' + JD.ROUNDS;
   r.parentElement.classList.toggle('last', last && s.winner === null);
@@ -410,7 +453,7 @@ function renderStatus() {
 function turnBanner(prev) {
   const s = ctl.state; if (!s || s.winner !== null || !prev) return;
   if (prev.turn !== s.turn) {
-    if (s.round === JD.ROUNDS && prev.round !== JD.ROUNDS) banner('الجولة الأخيرة · النقاط دبل!', false, 1300);
+    if (s.round === JD.ROUNDS && prev.round !== JD.ROUNDS) banner('الجولة الأخيرة · النقاط ×2', false, 1400, 'gold');
     else if (ctl.mode === 'two') banner('دور ' + (ctl.names[s.turn] || ''), s.turn === 1);
     else if (humanTurn()) { banner('دورك!'); if (ctl.mode !== 'online') play('yourTurn', 0.6); }
     else banner('دور ' + (ctl.names[s.turn] || 'الخصم'), true);
@@ -419,7 +462,7 @@ function turnBanner(prev) {
 function flashBooster(seat, id) {
   const k = BOOSTERS.findIndex((b) => b.id === id), el = document.querySelector(`#jwBoostBar[data-seat="${seat}"] .jw-boost[data-k="${k}"]`) || document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-mini i[data-k="${k}"]`);
   if (el) { el.classList.add('aim'); setTimeout(() => el.classList.remove('aim'), 700); }
-  banner(BOOSTERS[k]?.name + '!', seat !== mySeat()); play('levelUp', 0.45);
+  banner(BOOSTERS[k]?.name + '!', seat !== mySeat(), 900, 'gold'); play('levelUp', 0.45);
 }
 function scheduleHint() {
   clearTimeout(ctl.idleTimer); view.hint = null;
@@ -516,8 +559,25 @@ canvas.addEventListener('pointerup', (ev) => {
 canvas.addEventListener('pointercancel', () => { drag = null; });
 
 /* ---------- start, end and the online table ---------- */
+// 33.9.9: the meeting — both players slide in and VS lands, then the board drops in
+let introTimer = 0;
+function showIntro() {
+  const box = $('#jwIntro'); if (!box || reduced()) return 0;
+  const sides = [['.mm-side.me', bottomSeat()], ['.mm-side.foe', 1 - bottomSeat()]];
+  for (const [sel, seat] of sides) {
+    const side = box.querySelector(sel); side.querySelector('.mm-ava').replaceChildren(faceOf(seat));
+    side.querySelector(':scope > b').textContent = ctl.names[seat] || 'لاعب';
+    let note = '';
+    if (ctl.mode === 'ai' && ctl.bots[seat]) note = { easy: 'سهل', medium: 'متوسط', hard: 'محترف' }[ctl.level] || '';
+    else if (seat === bottomSeat() && ctl.mode !== 'two') { const L = window.BS_PROFILE_PRO?.levelInfo?.(window.BS_CAREER?.get?.() || {}); if (L) note = 'المستوى ' + L.level + ' · ' + L.tier; }
+    side.querySelector(':scope > small').textContent = note;
+  }
+  clearTimeout(introTimer); box.classList.remove('out'); box.hidden = false; play('open', 0.5); setTimeout(() => play('hit', 0.5), 450);
+  introTimer = setTimeout(() => { box.classList.add('out'); introTimer = setTimeout(() => { box.hidden = true; box.classList.remove('out'); }, 360); }, 1600);
+  return 1900;
+}
 function showGame() { $('#menu').hidden = true; $('#game').hidden = false; $('#jwEnd').hidden = true; buildPlates(); requestAnimationFrame(fitBoard); renderPlates(); renderStatus(); document.body.classList.add('game-running'); }
-function showMenu() { clearTimeout(ctl.aiTimer); clearTimeout(ctl.idleTimer); ctl.state = null; ctl.pending = null; $('#game').hidden = true; $('#menu').hidden = false; $('#jwEnd').hidden = true; document.body.classList.remove('game-running'); }
+function showMenu() { clearTimeout(ctl.aiTimer); clearTimeout(ctl.idleTimer); clearTimeout(introTimer); if ($('#jwIntro')) $('#jwIntro').hidden = true; ctl.state = null; ctl.pending = null; $('#game').hidden = true; $('#menu').hidden = false; $('#jwEnd').hidden = true; document.body.classList.remove('game-running'); }
 function myUser() {
   const me = window.BS_SOCIAL?.isLoggedIn?.() ? window.BS_SOCIAL.profile?.() : null;
   return me ? { username: me.username, photo: me.photo || null } : null;
@@ -532,19 +592,20 @@ function startLocal(mode) {
   ctl.users = mode === 'ai' ? [myUser(), { photo: { kind: 'preset', id: 'h-robot' } }] : [null, null];
   ctl.state = createJewelsDuel(ctl.names, { first: mode === 'ai' ? (Math.random() < 0.5 ? 0 : 1) : 0 });
   ctl.shownSeq = 0; setBoard(ctl.state.board); showGame();
-  play('go', 0.6);
-  banner(mode === 'two' ? 'يبدأ ' + ctl.names[ctl.state.turn] : ctl.state.turn === 0 ? 'أنت تبدأ!' : 'الكمبيوتر يبدأ', ctl.state.turn === 1, 1200);
+  const wait = showIntro();
+  setTimeout(() => { if (ctl.state?.winner !== null) return; play('go', 0.6); banner(mode === 'two' ? 'يبدأ ' + ctl.names[ctl.state.turn] : ctl.state.turn === 0 ? 'أنت تبدأ!' : 'الكمبيوتر يبدأ', ctl.state.turn === 1, 1200); }, wait);
   scheduleHint();
-  if (mode === 'ai' && ctl.state.turn === 1) ctl.aiTimer = setTimeout(aiMove, 1400);
+  if (mode === 'ai' && ctl.state.turn === 1) ctl.aiTimer = setTimeout(aiMove, 1400 + wait);
 }
 function showEnd() {
   if (ctl.endShown) return; ctl.endShown = true;
   const s = ctl.state, w = s.winner, card = $('#jwEnd .jw-sheet-card');
   const iWon = ctl.mode === 'two' ? true : w === mySeat();
   const name = esc(ctl.names[w] || s.players[w]?.name || 'لاعب');
-  $('#jwEndTitle').innerHTML = ctl.mode === 'two' ? `${name} فاز` : iWon ? 'فزت!' : `${name} فاز`;
+  $('#jwEndTitle').innerHTML = ctl.mode === 'two' ? `${name} فاز!` : iWon ? 'فزت!' : 'خسرت';
   const a = bottomSeat(), b = 1 - a, diff = Math.abs(s.players[0].score - s.players[1].score);
-  $('#jwEndScores').innerHTML = `<div><b>${s.players[a].score}</b><small>${esc(ctl.names[a])}</small></div><i>ضد</i><div><b>${s.players[b].score}</b><small>${esc(ctl.names[b])}</small></div>`;
+  const card2 = (seat, side) => { const d = document.createElement('div'); d.className = 'mm-endp ' + side + (seat === w ? ' win' : ''); d.append(faceOf(seat)); d.insertAdjacentHTML('beforeend', `<b>${s.players[seat].score}</b><small>${esc(ctl.names[seat])}</small>`); return d; };
+  const scoresBox = $('#jwEndScores'); scoresBox.replaceChildren(card2(a, 'me'), Object.assign(document.createElement('i'), { textContent: 'ضد' }), card2(b, 'foe'));
   $('#jwEndText').textContent = diff === 0 ? 'تعادل في النقاط، وحسمها صاحب أكبر ضربة.' : (ctl.mode === 'two' ? 'بفرق ' + diff + ' نقطة.' : iWon ? 'بفرق ' + diff + ' نقطة. أكبر ضربة لك: ' + s.players[mySeat()].best + ' نقطة.' : 'الفرق ' + diff + ' نقطة. المرة الجاية لك.');
   card.classList.toggle('won', iWon);
   $('#jwAgain').textContent = ctl.mode === 'online' ? (room?.publicMatch ? 'مواجهة جديدة' : room?.me?.role === 'host' ? 'جولة جديدة' : 'بانتظار المضيف') : 'مواجهة جديدة';
@@ -580,7 +641,7 @@ async function apply(next, { animate }) {
     ctl.shownSeq = s.last ? s.last.seq - (next.stepOf ? 1 : 0) : 0;
     ctl.state = next.stepOf && s.last ? { ...s, players: s.players } : s;
     setBoard(next.stepOf && s.last ? s.last.before : s.board); showGame();
-    if (!s.last) { play('go', 0.6); banner(s.turn === ctl.me ? 'أنت تبدأ!' : (ctl.names[s.turn] || 'الخصم') + ' يبدأ', s.turn !== ctl.me, 1200); }
+    if (!s.last) { const wait = showIntro(); setTimeout(() => { play('go', 0.6); banner(s.turn === ctl.me ? 'أنت تبدأ!' : (ctl.names[s.turn] || 'الخصم') + ' يبدأ', s.turn !== ctl.me, 1200); }, wait); }
   }
   const prev = ctl.state;
   if (s.last && s.last.seq > ctl.shownSeq) {
@@ -639,7 +700,7 @@ addEventListener('resize', () => { if (!$('#game').hidden) fitBoard(); });
   function paint(now) {
     if ($('#menu').hidden) { requestAnimationFrame(paint); last = now; return; }
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    const gr = h.createRadialGradient(380, 120, 40, 380, 230, 520); gr.addColorStop(0, '#5fd0ff'); gr.addColorStop(0.5, '#2a6be0'); gr.addColorStop(1, '#16216e'); h.fillStyle = gr; h.fillRect(0, 0, 760, 460);
+    const gr = h.createRadialGradient(380, 120, 40, 380, 230, 520); gr.addColorStop(0, '#c37bff'); gr.addColorStop(0.45, '#6a28d8'); gr.addColorStop(1, '#22096a'); h.fillStyle = gr; h.fillRect(0, 0, 760, 460);
     for (const q of gems) {
       if (!reduced()) { q.y += q.v * dt; q.a += q.spin * dt; if (q.y > 500) { q.y = -40; q.x = Math.random() * 760; } }
       h.save(); h.translate(q.x, q.y); h.rotate(Math.sin(q.a) * 0.25); h.globalAlpha = 0.55 + 0.45 * Math.min(1, q.r / 60);

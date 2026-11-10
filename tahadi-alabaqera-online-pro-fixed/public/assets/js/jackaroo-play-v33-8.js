@@ -7,8 +7,8 @@
    a tap that cannot be played says why, by the place you tapped.
    It also draws the table's effects: the card flying to the middle, a kill, a swap, a marble
    coming home, a burnt card. Sounds come from the shared audio manager. */
-import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.8';
-import { globalJackarooPosition, jackarooGateSteps } from './engines/jackaroo-engine.js?v=33.9.8-rules4';
+import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.9';
+import { globalJackarooPosition, jackarooGateSteps } from './engines/jackaroo-engine.js?v=33.9.9-rules4';
 
 const jkReduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 function jkEl(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
