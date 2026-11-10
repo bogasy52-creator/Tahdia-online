@@ -1,4 +1,4 @@
-import {CHALLENGES,createChallenge,applyChallenge,advanceChallenge,challengeView,adjacent,edge,raceSim,raceTrack,raceItems,raceOrder,raceWave,gateOpen,shiftRace,raceUsePower,raceChangeLane,RACE_ROWS,RACE_LANES,CHAOS_EVERY,CHAOS_WARN,CHAOS_ZONES} from './engines/challenge-core.js?v=33.9.3-uno1';
+import {CHALLENGES,createChallenge,applyChallenge,advanceChallenge,challengeView,adjacent,edge,raceSim,raceTrack,raceItems,raceOrder,raceWave,gateOpen,shiftRace,raceUsePower,raceChangeLane,RACE_ROWS,RACE_LANES,CHAOS_EVERY,CHAOS_WARN,CHAOS_ZONES} from './engines/challenge-core.js?v=33.9.4-uno1';
 // «سباق الفوضى»: the race screen runs the same simulation as the room between two snapshots
 // (built on the first race only, so the other challenge pages never touch it)
 let raceEngine=null;const RACE=()=>raceEngine||(raceEngine=Object.freeze({raceSim,raceTrack,raceItems,raceOrder,raceWave,gateOpen,changeLane:raceChangeLane,usePower:raceUsePower,RACE_ROWS,RACE_LANES,CHAOS_EVERY,CHAOS_WARN,CHAOS_ZONES}));

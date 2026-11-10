@@ -51,6 +51,11 @@
     if (sheet.parentElement !== parent) parent.append(sheet);
     return sheet;
   }
+  // 33.9.4: pictures, levels and trophies come from profile-pro
+  function pro() {
+    if (window.BS_PROFILE_PRO) return Promise.resolve(window.BS_PROFILE_PRO);
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/profile-pro-v33-9-4.js?v=33.9.4'; s.onload = () => ok(window.BS_PROFILE_PRO || null); s.onerror = () => ok(null); doc.head.append(s); setTimeout(() => ok(window.BS_PROFILE_PRO || null), 4000); });
+  }
   function stat(label, value) { const box = node('div', 'bs-pcard-stat'); box.append(node('b', '', value == null ? '—' : fmt.format(value)), node('small', '', label)); return box; }
   function button(text, cls = 'bs-btn') { const b = node('button', cls, text); b.type = 'button'; return b; }
   /** info: {name, username, character, bot, level, me, color} — whatever the room knows. */
@@ -81,9 +86,10 @@
     }
     { const handle = node('bdi', '', '@' + info.username); handle.dir = 'ltr'; line.replaceChildren(handle); }
     stats.append(stat('المستوى', null), stat('الانتصارات', null), stat('المباريات', null)); stats.classList.add('loading');
-    const [profile, rel] = await Promise.all([
+    const [profile, rel, P] = await Promise.all([
       Promise.resolve(window.BS_SOCIAL?.user?.(info.username)).then((d) => d?.profile || null).catch(() => null),
       relation(info.username),
+      pro(),
     ]);
     if (ticket !== opened || !panel.isConnected) return;
     stats.classList.remove('loading');
@@ -95,12 +101,19 @@
       const card = profile.card || {};
       if (card.character && !info.character) { const art2 = poster(card.character); if (art2) { img.src = art2; face.replaceChildren(img); } }
       stats.replaceChildren(stat('المستوى', card.level), stat('الانتصارات', card.wins), stat('المباريات', card.games));
+      if (P) {
+        if (profile.photo) { const pic = P.avatar({ username: profile.username, photo: profile.photo, fallback: img.src || '', name: profile.displayName }, 'bs-avatar bs-pcard-photo'); face.replaceChildren(pic); face.classList.add('has-photo'); }
+        stats.replaceChildren(stat('الكؤوس', P.earned(card).length), stat('الانتصارات', card.wins), stat('المباريات', card.games));
+        const extra = node('div', 'bs-pcard-pro'); extra.append(P.levelBar({ ...card, xp: card.xp }), P.shelf(card, { limit: 4 }));
+        stats.after(extra);
+        if (profile.photo?.kind === 'upload' && rel !== 'self') { const rp = button('بلّغ عن الصورة', 'bs-pcard-report'); rp.addEventListener('click', () => P.report(profile.username, profile.displayName)); actions.after(rp); }
+      }
       const title = titleName(card.title), heroNow = heroName(info.character || card.character);
       note.textContent = [title && 'لقبه «' + title + '»', heroNow && 'يلعب بشخصية ' + heroNow].filter(Boolean).join(' · ');
     }
     const add = button('أضف صديق', 'bs-btn primary');
     const set = (text, done = true) => { add.textContent = text; add.disabled = done; };
-    if (rel === 'self') { const a = node('a', 'bs-btn', 'هذا ملفك · افتحه'); a.href = '/social'; actions.append(a); return; }
+    if (rel === 'self') { const a = node('a', 'bs-btn', 'هذا ملفك · افتحه'); a.href = '/social'; actions.append(a); if (P) { const ch = button('غيّر صورتك', 'bs-btn'); ch.addEventListener('click', () => { close(); P.openPicker(); }); actions.append(ch); } return; }
     if (rel === 'guest') { const a = node('a', 'bs-btn primary', 'سجّل دخولك عشان تضيفه'); a.href = '/social?next=' + encodeURIComponent(location.pathname + location.search); actions.append(a); return; }
     if (rel === 'friend') set('صديقك ✓');
     else if (rel === 'sent') set('طلبك مرسل ✓');

@@ -32,7 +32,7 @@
   function pointsLabel(value){const p=node('span','lb-points',points.format(value));p.append(node('small',null,' نقطة'));return p;}
 
   function step(rank,row,me){
-    const card=node('div','lb-step'+(row?'':' is-empty')+(row&&row.username===me?' is-me':''));card.dataset.rank=rank;
+    const card=node('div','lb-step'+(row?'':' is-empty')+(row&&row.username===me?' is-me':''));card.dataset.rank=rank;if(row?.username){card.dataset.playerUsername=row.username;card.dataset.playerName=row.name||row.displayName||row.username;}
     const person=node('div','lb-person'),block=node('div','lb-block'),numeral=node('span','lb-numeral',NUMERALS[rank]);
     numeral.setAttribute('aria-hidden','true');block.append(numeral);person.append(avatar(row));card.append(person,block);
     if(!row){person.append(node('span','lb-name','بانتظار بطل'));card.setAttribute('aria-label',`المركز ${rank} شاغر`);return card;}
@@ -42,7 +42,7 @@
     return card;
   }
   function line(row,me){
-    const li=node('li','lb-row'+(row.username===me?' is-me':'')+(row.owner?' is-owner':''));
+    const li=node('li','lb-row'+(row.username===me?' is-me':'')+(row.owner?' is-owner':''));if(row.username){li.dataset.playerUsername=row.username;li.dataset.playerName=row.name||row.displayName||row.username;}
     if(row.username===me)li.setAttribute('aria-current','true');
     const rank=node('span','lb-rank',String(row.rank));rank.setAttribute('aria-hidden','true');
     const who=node('span','lb-who'),name=node('b');name.append(node('span',null,row.name));if(row.owner)name.append(crown());

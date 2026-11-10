@@ -52,6 +52,6 @@
   const has=name=>Boolean(samples[name]);const context=()=>{graph();return ctx};const musicBus=()=>graph()?.music||null;const recent=(ms=400)=>Date.now()-lastCue<ms;
   window.BS_AUDIO={play,timerTick,timerEnd,vibrate,setMuted,toggleMuted,update,getSettings,unlock,dispose,tone,registerContent,contentActive,prime,has,context,musicBus,recent};
   // Music and the sounds of play load on their own, after the page.
-  try{if(document&&!document.querySelector('script[data-bs-sound]')){const s=document.createElement('script');s.src='/assets/js/sound-v33-9-3.js?v=33.9.3';s.defer=true;s.dataset.bsSound='1';(document.head||document.documentElement).appendChild(s)}}catch{}
+  try{if(document&&!document.querySelector('script[data-bs-sound]')){const s=document.createElement('script');s.src='/assets/js/sound-v33-9-3.js?v=33.9.4';s.defer=true;s.dataset.bsSound='1';(document.head||document.documentElement).appendChild(s)}}catch{}
   const starter=()=>unlock();window.addEventListener('pointerdown',starter,{once:true,passive:true});window.addEventListener('keydown',starter,{once:true})
 })();

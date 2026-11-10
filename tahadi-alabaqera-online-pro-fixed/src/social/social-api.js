@@ -113,7 +113,8 @@ export async function handleSocialRequest(request, env, options = {}) {
   if (!socialNamespace(env)) return json({ ok: false, error: "نظام الأصدقاء غير مفعّل على السيرفر" }, 503);
 
   const authPath = ["/api/social/signup", "/api/social/login"].includes(url.pathname);
-  const limited = options.rateLimit
+  const photoView = request.method === "GET" && /^\/api\/social\/photo\/[a-zA-Z0-9_]{3,20}$/.test(url.pathname);
+  const limited = options.rateLimit && !photoView
     ? await options.rateLimit(request, env, authPath ? "social-auth" : "social-api", authPath ? 30 : 180, 60_000)
     : null;
   if (limited) return limited;
@@ -187,6 +188,49 @@ export async function handleSocialRequest(request, env, options = {}) {
     const body=action==='get'?{}:await request.json().catch(()=>({}));
     const result=await call(auth.stub,'/career/'+action,{...body,secret:auth.secret});
     return json({...result.data,username:auth.username},result.response.status);
+  }
+
+  // 33.9.4: pictures — set your own, see anyone's, report one, and the owner's review list
+  const photoMatch = url.pathname.match(/^\/api\/social\/photo\/([a-zA-Z0-9_]{3,20})$/);
+  if (request.method === "GET" && photoMatch) {
+    const stub = stubFor(env, photoMatch[1]);
+    if (!stub) return new Response(null, { status: 404 });
+    const res = await stub.fetch("https://social.internal/photo/get");
+    return new Response(res.body, { status: res.status, headers: res.headers });
+  }
+  if (request.method === "POST" && url.pathname === "/api/social/photo") {
+    const { response, auth } = await requireAuth(request, env);
+    if (response) return response;
+    const body = await request.json().catch(() => ({}));
+    const result = await call(auth.stub, "/photo/set", { secret: auth.secret, photo: body.photo });
+    return json(result.data, result.response.status);
+  }
+  if (request.method === "POST" && url.pathname === "/api/social/report") {
+    const { response, auth } = await requireAuth(request, env);
+    if (response) return response;
+    const body = await request.json().catch(() => ({}));
+    const other = normalizeUsername(body.username);
+    const stub = validUsername(other) && other !== auth.username ? stubFor(env, other) : null;
+    if (!stub) return json({ ok: false, error: "اسم المستخدم غير صالح" }, 400);
+    const result = await call(stub, "/photo/report", { reporter: auth.username });
+    if (result.response.ok && result.data.first) {
+      const owner = stubFor(env, OWNER_USERNAME);
+      if (owner) await call(owner, "/moderation/add", { username: other, reports: result.data.reports, hidden: result.data.hidden }).catch(() => null);
+    }
+    return json(result.response.ok ? { ok: true } : result.data, result.response.status);
+  }
+  if (url.pathname === "/api/social/moderation") {
+    const { response, auth } = await requireAuth(request, env);
+    if (response) return response;
+    if (!isOwner(auth.profile)) return json({ ok: false, error: "forbidden" }, 403);
+    if (request.method === "GET") { const result = await call(auth.stub, "/moderation/list", { secret: auth.secret }); return json(result.data, result.response.status); }
+    if (request.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
+    const body = await request.json().catch(() => ({}));
+    const other = normalizeUsername(body.username), stub = validUsername(other) ? stubFor(env, other) : null;
+    if (!stub || !["remove", "keep"].includes(body.action)) return json({ ok: false, error: "invalid" }, 400);
+    await call(stub, "/photo/moderate", { actor: OWNER_USERNAME, action: body.action });
+    await call(auth.stub, "/moderation/done", { username: other });
+    return json({ ok: true });
   }
 
   const profileMatch = url.pathname.match(/^\/api\/social\/users\/([a-zA-Z0-9_]{3,20})$/);

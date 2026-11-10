@@ -38,6 +38,28 @@ function json(data, status = 200) {
 // a phone that lost its signal or closed the app never says goodbye, so an open socket alone proves nothing.
 const LIVE_MS = 75_000;
 
+// 33.9.4: ready pictures a player can pick, and the rules for an uploaded photo
+export const PHOTO_PRESET_IDS = Object.freeze(["h-falcon", "h-desert", "g-princess", "g-fairy", "h-knight", "h-samurai", "g-princess-pink", "g-fairy-pink", "h-ninja", "h-viking", "g-princess-blue", "g-fairy-blue", "h-gladiator", "h-astronaut", "g-cat", "g-fox", "h-diver", "h-racer", "h-cyber", "h-robot"]);
+export const photoPresetUrl = (id) => /^h-[a-z]+$/.test(id) ? "/assets/heroes/face/" + id.slice(2) + ".webp" : /^g-[a-z-]+$/.test(id) ? "/assets/avatars-v33-9-4/" + id.slice(2) + ".webp" : "";
+export const PHOTO_PRESETS = Object.freeze(Object.fromEntries(PHOTO_PRESET_IDS.map((id) => [id, photoPresetUrl(id)])));
+export const PHOTO_MAX_BYTES = 90_000;
+export const PHOTO_REPORTS_TO_HIDE = 3;
+export function decodePhoto(data, type) {
+  if (!["image/webp", "image/jpeg"].includes(type) || typeof data !== "string" || data.length > PHOTO_MAX_BYTES * 1.4) return null;
+  let bytes;
+  try { bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0)); } catch { return null; }
+  if (bytes.length < 200 || bytes.length > PHOTO_MAX_BYTES) return null;
+  const webp = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+  const jpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if ((type === "image/webp" && !webp) || (type === "image/jpeg" && !jpeg)) return null;
+  return bytes;
+}
+export function publicPhoto(profile) {
+  const p = profile?.photo;
+  if (!p || p.hidden) return null;
+  return p.kind === "preset" ? { kind: "preset", id: p.id } : { kind: "upload", v: p.v };
+}
+
 function nowKey(prefix = "notification") {
   return `${prefix}:${String(Date.now()).padStart(14, "0")}:${crypto.randomUUID()}`;
 }
@@ -86,6 +108,12 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/logout" && request.method === "POST") return this.logout(body.secret);
     if(url.pathname==='/reactions'&&request.method==='GET'){const p=accountCareer(await this.ctx.storage.get('career')||{},this.profile);return json({owned:p.owned.filter(id=>Career.reactionOf(id))});}
     if (url.pathname === "/public" && request.method === "GET") return this.publicData(url.searchParams.get("card") === "1");
+    // 33.9.4: the player's picture: a ready one or an uploaded photo, reports and the owner's review
+    if (url.pathname === "/photo/get" && request.method === "GET") return this.photoGet();
+    if (url.pathname === "/photo/set" && request.method === "POST") return this.ctx.blockConcurrencyWhile(() => this.photoSet(body));
+    if (url.pathname === "/photo/report" && request.method === "POST") return this.ctx.blockConcurrencyWhile(() => this.photoReport(body));
+    if (url.pathname === "/photo/moderate" && request.method === "POST") return this.ctx.blockConcurrencyWhile(() => this.photoModerate(body));
+    if (url.pathname.startsWith("/moderation/") && request.method === "POST") return this.ctx.blockConcurrencyWhile(() => this.moderationQueue(url.pathname.split("/")[2], body));
     if (url.pathname === "/dashboard" && request.method === "POST") return this.dashboard(body.secret);
     if (url.pathname === "/settings" && request.method === "POST") return this.updateSettings(body);
     if (url.pathname === '/announcement')return json({ok:true,announcement:await this.activeAnnouncement()});
@@ -358,14 +386,88 @@ export function createSocialUserClass(DurableObject) {
       ? { online: false, lastSeen: null }
       : this.presence;
     const profile = publicProfile(this.profile, visiblePresence);
+    profile.photo = publicPhoto(this.profile);
     // 33.7.0: the card a player opens from a room: level, wins, games and the look, never coins
     if (withCard) {
       try {
         const c = accountCareer(await this.ctx.storage.get("career") || { name: this.profile.displayName }, this.profile);
-        profile.card = { level: c.level, wins: c.wins, games: c.games, character: c.equipped?.character || null, title: c.equipped?.title || null };
+        profile.card = { level: c.level, xp: c.xp, wins: c.wins, games: c.games, rankedWins: c.rankedWins, streak: c.dailyStreak, stats: c.stats || {}, character: c.equipped?.character || null, title: c.equipped?.title || null };
       } catch {}
     }
     return json({ ok: true, profile });
+  }
+
+  async photoGet() {
+    const photo = this.profile?.photo;
+    if (!photo || photo.hidden) return new Response(null, { status: 404, headers: { "cache-control": "public, max-age=120" } });
+    if (photo.kind === "preset") return new Response(null, { status: 302, headers: { location: PHOTO_PRESETS[photo.id] || "", "cache-control": "public, max-age=300" } });
+    const data = await this.ctx.storage.get("photo-data");
+    if (!data?.bytes) return new Response(null, { status: 404 });
+    return new Response(data.bytes, { headers: { "content-type": data.type, "cache-control": "public, max-age=300", "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'" } });
+  }
+
+  async photoSet(body) {
+    if (!(await this.sessionValid(body.secret))) return json({ ok: false, error: "unauthorized" }, 401);
+    const photo = body.photo || {};
+    if (photo.kind === "none") { this.profile.photo = null; await this.ctx.storage.delete(["photo-data", "photo-reports"]); }
+    else if (photo.kind === "preset") {
+      if (!PHOTO_PRESETS[photo.id]) return json({ ok: false, error: "الصورة غير موجودة" }, 400);
+      this.profile.photo = { kind: "preset", id: photo.id };
+      await this.ctx.storage.delete(["photo-data", "photo-reports"]);
+    } else if (photo.kind === "upload") {
+      const bytes = decodePhoto(photo.data, photo.type);
+      if (!bytes) return json({ ok: false, error: "الصورة لازم تكون JPG أو WebP وحجمها صغير" }, 400);
+      const at = Date.now();
+      await this.ctx.storage.put({ "photo-data": { type: photo.type, bytes }, "photo-reports": [] });
+      this.profile.photo = { kind: "upload", v: at };
+    } else return json({ ok: false, error: "invalid_photo" }, 400);
+    this.profile.updatedAt = Date.now();
+    await this.ctx.storage.put("profile", this.profile);
+    return json({ ok: true, photo: publicPhoto(this.profile) });
+  }
+
+  async photoReport(body) {
+    const reporter = normalizeUsername(body.reporter);
+    const photo = this.profile?.photo;
+    if (!photo || photo.kind !== "upload") return json({ ok: false, error: "ما عنده صورة مرفوعة" }, 404);
+    if (!validUsername(reporter) || reporter === this.profile.username) return json({ ok: false, error: "invalid_reporter" }, 400);
+    const reports = (await this.ctx.storage.get("photo-reports")) || [];
+    const first = !reports.includes(reporter);
+    if (first && reports.length < 50) reports.push(reporter);
+    const hide = reports.length >= PHOTO_REPORTS_TO_HIDE && !photo.hidden && !photo.kept;
+    if (hide) { photo.hidden = true; await this.ctx.storage.put("profile", this.profile); }
+    await this.ctx.storage.put("photo-reports", reports);
+    return json({ ok: true, first, reports: reports.length, hidden: Boolean(photo.hidden) });
+  }
+
+  async photoModerate(body) {
+    if (body.actor !== OWNER_USERNAME) return json({ ok: false, error: "forbidden" }, 403);
+    const photo = this.profile?.photo;
+    if (photo?.kind === "upload") {
+      if (body.action === "remove") { this.profile.photo = null; await this.ctx.storage.delete(["photo-data", "photo-reports"]); }
+      else { photo.hidden = false; photo.kept = true; await this.ctx.storage.put("photo-reports", []); }
+      await this.ctx.storage.put("profile", this.profile);
+    }
+    return json({ ok: true });
+  }
+
+  // kept by the owner's account: the photos players reported
+  async moderationQueue(action, body) {
+    if (!isOwner(this.profile)) return json({ ok: false, error: "forbidden" }, 403);
+    const list = (await this.ctx.storage.get("moderation")) || [];
+    const who = normalizeUsername(body.username);
+    if (action === "add" && validUsername(who)) {
+      const row = list.find((x) => x.username === who);
+      if (row) { row.reports = Number(body.reports) || row.reports; row.at = Date.now(); row.hidden = Boolean(body.hidden); }
+      else list.unshift({ username: who, reports: Number(body.reports) || 1, hidden: Boolean(body.hidden), at: Date.now() });
+      await this.ctx.storage.put("moderation", list.slice(0, 200));
+    }
+    if (action === "done") await this.ctx.storage.put("moderation", list.filter((x) => x.username !== who));
+    if (action === "list") {
+      if (!(await this.sessionValid(body.secret))) return json({ ok: false, error: "unauthorized" }, 401);
+      return json({ ok: true, reports: list });
+    }
+    return json({ ok: true });
   }
 
   async listValues(prefix, limit = 100) {
@@ -389,7 +491,7 @@ export function createSocialUserClass(DurableObject) {
       .map(clone);
     return json({
       ok: true,
-      profile: publicProfile(this.profile, this.presence),
+      profile: { ...publicProfile(this.profile, this.presence), photo: publicPhoto(this.profile) },
       settings: clone(this.profile.settings || { allowInvites: "friends", showOnline: true }),
       friends,
       incoming,

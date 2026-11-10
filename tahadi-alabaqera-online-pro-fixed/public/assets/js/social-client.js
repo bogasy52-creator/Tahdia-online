@@ -341,12 +341,16 @@
     panel.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();dismiss();}if(event.key==='Tab'){const controls=[...panel.querySelectorAll('button,a,input')].filter(n=>!n.disabled),first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}};close.focus();
   }
 
+  // 33.9.4: pictures and reports
+  async function setPhoto(photo) { const data = await api('/api/social/photo', { method: 'POST', body: JSON.stringify({ photo }) }); state.dashboard = null; try { const p = cachedProfile(); if (p) { p.photo = data.photo || null; writeStorage(PROFILE_KEY, JSON.stringify(p)); } } catch {} window.dispatchEvent(new CustomEvent('bs-photo-change', { detail: data.photo || null })); return data; }
+  async function reportPhoto(username) { return api('/api/social/report', { method: 'POST', body: JSON.stringify({ username }) }); }
+  async function moderation(username, action) { return username ? api('/api/social/moderation', { method: 'POST', body: JSON.stringify({ username, action }) }) : api('/api/social/moderation'); }
   const apiPublic = {
     version: '25.3.0',
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
     isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,
-    accountName: () => accountName(), gameLabel,
+    accountName: () => accountName(), gameLabel, setPhoto, reportPhoto, moderation,
   };
   window.BS_SOCIAL = apiPublic;
   decorate();

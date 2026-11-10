@@ -41,7 +41,8 @@ test('the public card of an account: level, wins, games and the look — never t
   const res = await api(env, '/api/social/users/card_owner');
   assert.equal(res.response.status, 200);
   const card = res.data.profile.card;
-  assert.deepEqual(Object.keys(card).sort(), ['character', 'games', 'level', 'title', 'wins']);
+  // 33.9.4: plus what the level bar and the trophies need
+  assert.deepEqual(Object.keys(card).sort(), ['character', 'games', 'level', 'rankedWins', 'stats', 'streak', 'title', 'wins', 'xp']);
   assert.equal(card.level, 1); assert.equal(card.wins, 0); assert.equal(card.character, 'character-fox');
   assert.equal(JSON.stringify(res.data).includes('coins'), false);
   assert.ok(me.data.token);

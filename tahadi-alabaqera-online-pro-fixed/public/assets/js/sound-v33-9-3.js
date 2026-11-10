@@ -116,5 +116,8 @@
     if (typeof now === 'number') coins = now;
   });
 
+  // 33.9.4: pictures, levels and trophies on every page
+  if (!document.querySelector('script[src*="profile-pro-v33-9-4"]')) { const p = document.createElement('script'); p.src = '/assets/js/profile-pro-v33-9-4.js?v=33.9.4'; p.defer = true; document.head.append(p); }
+
   window.BS_SOUND = { track, play, stop, sync, ending, tracks: TRACKS, position };
 })();

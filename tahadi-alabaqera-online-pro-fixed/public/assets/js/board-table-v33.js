@@ -5,7 +5,7 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.3-gameplay3';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.4-gameplay3';
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2};
 
