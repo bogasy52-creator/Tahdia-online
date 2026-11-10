@@ -21,9 +21,11 @@
     words: ['wordbomb', 'cipher'],
     arcade: ['serpent', 'reaction'],
     party: ['party'],
+    jewels: ['jewels'],
+    jewels: ['jewels'],
   };
   // length of each loop in seconds and the wrap-around kept before and after it in the file
-  const LOOPS = {lobby:{lead:1.0,loop:39.183673},baloot:{lead:1.0,loop:46.829274},jackaroo:{lead:1.0,loop:36.923084},chaos:{lead:1.0,loop:48.81356},snakes:{lead:1.0,loop:36.226417},zahra:{lead:1.0,loop:38.4},dice:{lead:1.0,loop:51.428571},hockey:{lead:1.0,loop:45.714286},billiards:{lead:1.0,loop:43.636372},carrom:{lead:1.0,loop:40.851066},focus:{lead:1.0,loop:50.526327},quiz:{lead:1.0,loop:34.909093},words:{lead:1.0,loop:50.526327},arcade:{lead:1.0,loop:46.45161},party:{lead:1.0,loop:51.428571}};
+  const LOOPS = {jewels:{lead:1.0,loop:49.65517},lobby:{lead:1.0,loop:39.183673},baloot:{lead:1.0,loop:46.829274},jackaroo:{lead:1.0,loop:36.923084},chaos:{lead:1.0,loop:48.81356},snakes:{lead:1.0,loop:36.226417},zahra:{lead:1.0,loop:38.4},dice:{lead:1.0,loop:51.428571},hockey:{lead:1.0,loop:45.714286},billiards:{lead:1.0,loop:43.636372},carrom:{lead:1.0,loop:40.851066},focus:{lead:1.0,loop:50.526327},quiz:{lead:1.0,loop:34.909093},words:{lead:1.0,loop:50.526327},arcade:{lead:1.0,loop:46.45161},party:{lead:1.0,loop:51.428571},jewels:{lead:1.0,loop:49.65517}};
   const trackFor = (name) => Object.keys(TRACKS).find((k) => TRACKS[k].includes(name)) || null;
   const track = trackFor(route);
   const settings = () => { try { return A()?.getSettings?.() || {}; } catch { return {}; } };
@@ -117,7 +119,7 @@
   });
 
   // 33.9.4: pictures, levels and trophies on every page
-  if (!document.querySelector('script[src*="profile-pro-v33-9-4"]')) { const p = document.createElement('script'); p.src = '/assets/js/profile-pro-v33-9-4.js?v=33.9.4'; p.defer = true; document.head.append(p); }
+  if (!document.querySelector('script[src*="profile-pro-v33-9-4"]')) { const p = document.createElement('script'); p.src = '/assets/js/profile-pro-v33-9-4.js?v=33.9.5'; p.defer = true; document.head.append(p); }
 
   window.BS_SOUND = { track, play, stop, sync, ending, tracks: TRACKS, position };
 })();

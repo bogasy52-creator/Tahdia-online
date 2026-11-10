@@ -18,7 +18,7 @@ export const ROOM_FAMILIES = Object.freeze({
   logic: { from: 70, to: 74, page: '/logic' },
   puzzle: { from: 75, to: 79, page: '/puzzle' },
   reaction: { from: 80, to: 84, page: '/reaction' },
-  jewels: { from: 85, to: 89, page: '/journey' },
+  jewels: { from: 85, to: 89, page: '/jewels' },
   colors: { from: 90, to: 94, page: '/journey' },
   wordbomb: { from: 9, to: 9, page: '/wordbomb' },
   hockey: { from: 95, to: 95, page: '/hockey' },
@@ -58,7 +58,7 @@ function probeFor(kind, env, code) {
   const [name, url] = names[kind] || [];
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }
-const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot', 'billiards']);
+const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot', 'billiards', 'jewels']);
 const kindOf = (game) => (['focus','cipher','wordbomb','chaos'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
 
 async function probe(kind, env, code) {

@@ -1,4 +1,4 @@
-import {drawNeonBody,drawNeonHead} from './neon-snakes-v33.js?v=33.9.4';
+import {drawNeonBody,drawNeonHead} from './neon-snakes-v33.js?v=33.9.5';
 import {snakeGeometry} from './arena-geometry.js?v=29.1.0';
 /* Tahdia 31.1.0 — the living snakes and ladders of the snakes & ladders board.
    The snakes are the arena's own species (serpent-art-v16.js): painted heads

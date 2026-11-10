@@ -552,5 +552,19 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/billiards-v33-9.css",
     "/assets/css/tahdia-premium-v25.css"
+  ],
+  "jewels.html": [
+    "assets/css/platform.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/room-clock-v33-7.css",
+    "assets/css/player-card-v33-7.css",
+    "assets/css/reactions-v31.css",
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css",
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/jewels-v33-9-5.css",
+    "/assets/css/tahdia-premium-v25.css"
   ]
 }
