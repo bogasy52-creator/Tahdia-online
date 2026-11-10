@@ -1,4 +1,4 @@
-import {boardGeometry,boardStonePosition} from './board-geometry-v29.js?v=33.9.2';
+import {boardGeometry,boardStonePosition} from './board-geometry-v29.js?v=33.9.3';
 export const JACKAROO_STARTS=Object.freeze([0,13,26,39]);
 // 33.6.0: the rooms deal a table of four on the big board; six seats keep thirteen. A game
 // without `arm` is the old board.

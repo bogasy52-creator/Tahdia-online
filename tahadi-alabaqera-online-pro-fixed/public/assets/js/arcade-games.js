@@ -1,10 +1,10 @@
-import {createReactionRun,nextReactionTarget,revealReactionTarget,pressReactionTarget,expireReactionTarget,reactionRunSummary} from './engines/reaction-challenge.js?v=33.9.2-signatures1';
+import {createReactionRun,nextReactionTarget,revealReactionTarget,pressReactionTarget,expireReactionTarget,reactionRunSummary} from './engines/reaction-challenge.js?v=33.9.3-signatures1';
 import {createMemorySequence,stepMemorySequence} from './engines/cognitive-v34.js';
 import {MEMORY_THEMES} from './memory-themes-v34.js';
 import {createLogicQuestion} from './cognitive-ui-v34.js';
 import {createPuzzleTiles,createReactionPad,createAnswerChoices} from './native-play-v33.js';
-import {generatePuzzle,movePuzzle,memoryPair,shuffled,logicQuestion,arcadeRules} from './engines/arcade-engine.js?v=33.9.2';
-import {createMemoryTile,updateMemoryTile,MEMORY_FACES} from './memory-art-v30.js?v=33.9.2';
+import {generatePuzzle,movePuzzle,memoryPair,shuffled,logicQuestion,arcadeRules} from './engines/arcade-engine.js?v=33.9.3';
+import {createMemoryTile,updateMemoryTile,MEMORY_FACES} from './memory-art-v30.js?v=33.9.3';
 const game=document.body.dataset.arcade,$=id=>document.getElementById(id),now=()=>performance.now();
 const names={casual:'مريح',standard:'متوازن',expert:'محترف'};
 let active=false,paused=false,generation=0,receipt='',clock=null,delay=null,round=null,level='standard',rules={},pauseAt=0,pauseOffset=0,started=0,returnFocus=null;

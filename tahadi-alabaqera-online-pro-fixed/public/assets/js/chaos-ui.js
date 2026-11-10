@@ -184,7 +184,7 @@ function mineEvents(before){
   else if(SAY[e.kind]&&e.kind!=='power'){sound('wrong');say(SAY[e.kind],'bad');if(navigator.vibrate)try{navigator.vibrate(40);}catch{}}
  }
 }
-function countdown(t){const race=predicted;if(t>=race.startAt+900){return;}const n=Math.min(3,Math.ceil((race.startAt-t)/1000));if(n!==countdownSaid){countdownSaid=n;if(n>0){sound('tick');say(String(n),'count',1000);}else{sound('turn');say('انطلق!','go',900);}}}
+function countdown(t){const race=predicted;if(t>=race.startAt+900){return;}const n=Math.min(3,Math.ceil((race.startAt-t)/1000));if(n!==countdownSaid){countdownSaid=n;if(n>0){sound('count');say(String(n),'count',1000);}else{sound('go');say('انطلق!','go',900);}}}
 function write(node,text){if(node.textContent!==text)node.textContent=text;}
 function timeText(seconds){
  return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');

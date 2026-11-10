@@ -28,7 +28,8 @@
   let title = '', titled = false;
   function yourTurn() {
     const a = audio();
-    if (a?.tone && !quiet()) { try { a.unlock?.(); a.tone(523, .09, .045, 'sine', 0); a.tone(784, .14, .05, 'sine', .1); } catch {} }
+    if (a?.has?.('yourTurn') && !quiet()) { try { a.unlock?.(); a.play('yourTurn', { volume: .75 }); } catch {} }
+    else if (a?.tone && !quiet()) { try { a.unlock?.(); a.tone(523, .09, .045, 'sine', 0); a.tone(784, .14, .05, 'sine', .1); } catch {} }
     try { a?.vibrate?.(28); } catch {}
     if (document.hidden && !titled) { title = document.title; titled = true; document.title = '⏰ دورك! · ' + title; }
   }
