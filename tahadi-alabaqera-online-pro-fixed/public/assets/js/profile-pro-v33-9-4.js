@@ -7,7 +7,7 @@
   const doc = document, fmt = new Intl.NumberFormat('en-US');
   const node = (tag, cls, text) => { const el = doc.createElement(tag); if (cls) el.className = cls; if (text != null) el.textContent = text; return el; };
   const css = (href) => { if (doc.querySelector('link[href^="' + href.split('?')[0] + '"]')) return; const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = href; doc.head?.appendChild(l); };
-  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.7');
+  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.8');
 
   // ------------------------------------------------------------ pictures
   // the same list the server accepts: hero faces (h-) and cartoon girls and friends (g-)
@@ -187,8 +187,8 @@
   // ------------------------------------------------------------ tap any player
   function needCard() {
     if (window.BS_PLAYER_CARD) return Promise.resolve(window.BS_PLAYER_CARD);
-    css('/assets/css/player-card-v33-7.css?v=33.9.7');
-    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.7'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
+    css('/assets/css/player-card-v33-7.css?v=33.9.8');
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.8'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
   }
   doc.addEventListener('click', async (e) => {
     const el = e.target?.closest?.('[data-player-username]');

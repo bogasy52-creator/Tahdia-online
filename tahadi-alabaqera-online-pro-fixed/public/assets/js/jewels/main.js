@@ -1,8 +1,8 @@
 /* Tahdia 33.9.5 — «ماستر الجواهر»: the duel page. The engine decides; this file draws the board on a
    canvas, animates every move from the state's own record (swap, breaks, special gems, falls), and
    runs the three ways to play: online (a BoardRoom table), against the computer, two on one phone. */
-import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.7-jw1';
-import { createTable } from '../board-table-v33.js?v=33.9.7';
+import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.8-jw1';
+import { createTable } from '../board-table-v33.js?v=33.9.8';
 
 const $ = (s) => document.querySelector(s);
 const W = JD.W, H = JD.H, N = W * H;

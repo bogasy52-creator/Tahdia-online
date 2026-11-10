@@ -22,7 +22,7 @@ test('an already connected room uses the visible header trigger and sends one fr
  await h.runFile('assets/js/reaction-performers.js');await h.runFile('assets/js/reactions-v31.js');
  const trigger=h.doc.getElementById('tableReactions');assert.equal(trigger.hidden,false);assert.equal(h.doc.querySelector('.rx-fab'),null);
  trigger.click();assert.equal(h.doc.getElementById('rxSheet').hidden,false);
- h.doc.querySelector('[data-reaction="emote-laugh"]').click();assert.deepEqual(sent,['laugh']);assert.equal(h.doc.getElementById('rxSheet').hidden,false,'33.9.0: the sheet stays open for the next one');
+ h.doc.querySelector('[data-reaction="emote-laugh"]').click();assert.deepEqual(sent,['laugh']);assert.equal(h.doc.getElementById('rxSheet').hidden,true,'33.9.8: the sheet closes so the reaction is seen');
  h.context.dispatchEvent({type:'bs-board-emote',detail:{emote:'laugh',from:'me',name:'A'}});
  assert.ok(h.doc.querySelector('.rx-emote .premium-reaction-sprite'));assert.match(h.doc.querySelector('.rx-emote').textContent,/أنت/);
  // A supported fullscreen surface must contain both the picker and incoming art.

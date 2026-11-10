@@ -1788,6 +1788,21 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 /* Prices and names remain readable on locked items. */
 .rx-grid-emote .is-locked .rx-item-name{display:block!important}.rx-item .rx-lock{color:#f8e1a8!important}.rx-item.is-move .rx-item-name{color:#e4eeeb!important}.rx-item.is-locked{opacity:1}.rx-item:focus-visible{outline:2px solid #f1d79b;outline-offset:2px}
 
+/* 33.9.8: a compact sheet that leaves the table in sight, and a «sent» note by the button */
+.rx-sheet{max-height:min(46dvh,420px)!important;width:min(520px,calc(100% - 16px))!important;padding:10px 10px max(10px,env(safe-area-inset-bottom))!important}
+.rx-sheet .rx-sheet-body{max-height:calc(min(46dvh,420px) - 104px);overflow:auto;overscroll-behavior:contain}
+.rx-sheet .rx-grid-emote{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}
+.rx-sheet .rx-grid-move{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+.rx-sheet .rx-item:not(.is-phrase){min-height:72px!important;padding:5px 3px 14px!important;border-radius:13px!important}
+.rx-sheet .rx-item .premium-reaction{width:48px!important;height:48px!important}
+.rx-sheet .rx-item .rx-item-glyph{font-size:28px!important}
+.rx-sheet .rx-grid-phrase .rx-item{min-height:44px!important;padding:7px!important;font-size:13px!important}
+.rx-sent{position:fixed;z-index:10060;transform:translate(-50%,0);display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:linear-gradient(180deg,#2bd47f,#14a35b);color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 24px #0007,inset 0 1px 0 #fff6;white-space:nowrap;pointer-events:none;animation:rxSent 1.5s ease-out both}
+.rx-sent .rx-sent-glyph{font-size:22px;line-height:1}.rx-sent .rx-sent-text{font-weight:700;max-width:140px;overflow:hidden;text-overflow:ellipsis}.rx-sent small{opacity:.9;font-weight:700}
+@keyframes rxSent{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}12%{opacity:1;transform:translate(-50%,0) scale(1.05)}20%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}
+.rx-fab.is-sent{box-shadow:0 0 0 4px #2bd47f99,0 6px 18px #0006!important}
+@media (prefers-reduced-motion:reduce){.rx-sent{animation:none}}
+
 /* assets/css/table-viewport-v33-7.css */
 /* A measurable board region and a separate control dock. No contents boxes. */
 :is(html,#v31) body.table-room.game-running{margin:0!important;padding:0!important;min-height:0!important;height:100dvh!important;overflow:hidden!important;background:#0b1b25!important}

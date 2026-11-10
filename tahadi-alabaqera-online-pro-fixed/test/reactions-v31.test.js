@@ -91,7 +91,7 @@ test('a local table shows the reaction button on the board, free reactions first
 test('sending on a local table shows it at once, starts the cool-down and a bot may answer',async t=>{
  const {h,q,all}=await page();local(h);t.mock.method(Math,'random',()=>.1);
  h.context.BS_REACTIONS.open();q('[data-reaction="emote-laugh"]').click();
- assert.equal(q('#rxSheet').hidden,false,'33.9.0: the sheet stays open for the next one');assert.ok(q('.rx-fab').classList.contains('is-cooling'));
+ assert.equal(q('#rxSheet').hidden,true,'33.9.8: the sheet closes so the reaction is seen');assert.ok(q('.rx-fab').classList.contains('is-cooling'));
  assert.equal(all('.rx-emote').length,1);assert.match(q('.rx-emote').textContent,/😂/);assert.match(q('.rx-emote').textContent,/أنت/);
  assert.equal(h.context.BS_REACTIONS.send('emote-fire'),false,'a second reaction inside the cool-down is ignored');
  for(const timer of [...h.timers.values()].filter(t=>t.ms>=1100&&t.ms<=2400))timer.fn();

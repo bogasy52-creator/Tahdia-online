@@ -1,7 +1,7 @@
-import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.7-studio1';
+import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.8-studio1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
-import { createGame, step, carryPuck, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.9.7-studio1';
-import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.7-studio1';
+import { createGame, step, carryPuck, W, L, STRIKER_R, PUCK_R, WIN_SCORE } from './core.js?v=33.9.8-studio1';
+import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.8-studio1';
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';
@@ -64,24 +64,40 @@ $('muteBtn').onclick = () => { audio.mute(!prefs.muted); renderMenu(); $('muteBt
 
 // ---------- the game ----------
 const canvas = $('table'), conf = $('conf'), cctx = conf.getContext('2d'), renderer = createRenderer(canvas);
-let online=null,onlineRound=0,netFrame=-1,netTarget=null,netAt=0,myHitAt=-1e9;
+let online=null,onlineRound=0,netFrame=-1,netTarget=null,netAt=0,myHitAt=-1e9,myHitId=0,netHits=[0,0],claimAt=-1e9,netShow=null,netHold=null,netDebt=0;const claimV={x:0,y:0};
 // 33.9.0: online, the table is played here and set right by the room. Your striker is under your finger
 // at once; the puck moves, bounces and meets your striker here between the room's words; each word of
 // the room is carried on to "now" and the puck is pulled to it (a little at a time when it is close).
+// 33.9.8: what your striker does to the puck is decided here and told to the room, which plays on from
+// it — so the puck goes where you sent it and keeps a straight line (it bent when the room, seeing your
+// hand late, struck it a little differently, and it jumped when the room missed it). Until the room has
+// your strike, this page leads; after it the two agree, and only the other side's strikes move it here.
 const netFix={x:0,y:0,rate:10};
 const netAge=()=>Math.min(.22,((online?.rtt||110)/2+20)/1000);
 function netWord(){
   if(!netTarget||!g)return;
-  const room=netTarget.puck,p=g.puck,ev=netTarget.events||[];
+  const room=netTarget.puck,p=g.puck,ev=netTarget.events||[],echo=netHits?.[online?.seat||0]||0;
+  // your strike is still on its way to the room: the puck here is the right one
+  if(myHitId>echo&&performance.now()-myHitAt<700)return;
   if(netTarget.phase!=='play'){Object.assign(p,{x:room.x,y:room.y,vx:room.vx,vy:room.vy,spin:room.spin||0});netFix.x=netFix.y=0;return;}
-  const theirs=ev.some(e=>e.type==='hit'&&e.who===1),mine=ev.some(e=>e.type==='hit'&&e.who===0);
-  // your own strike was seen here first: until the room has it, the puck here is the right one
-  if(!theirs&&!mine&&performance.now()-myHitAt<(online?.rtt||110)+90)return;
+  const word=[...ev].reverse().find(e=>(e.type==='hit'||e.type==='touch')&&e.who===1),theirs=Boolean(word),away=p.y<L*.5;
+  // 33.9.8: the other player's strike starts here where it started there, and this page plays a little
+  // faster for a moment to catch up with the time the word took (it jumped ahead to "now" before)
+  if(word&&Number.isFinite(word.vx)&&Number.isFinite(word.px)){
+    const turn=online?.seat===1,f=turn?-1:1,ago=Math.max(0,((netTarget.serverNow||0)-(word.at||netTarget.serverNow||0))/1000)+(word.lag||0);
+    Object.assign(p,{x:turn?W-word.px:word.px,y:turn?L-word.py:word.py,vx:word.vx*f,vy:word.vy*f});netHold=null;netFix.x=netFix.y=0;netDebt=Math.min(.4,netAge()+ago);return;
+  }
+  // the puck rests on the other striker: only that player's word moves it on (or a long silence: a miss)
+  if(netHold&&!theirs&&performance.now()-netHold.at<(online?.rtt||110)+160)return;
+  if(netDebt>.02)return;
+  if(netHold){p.vx=netHold.vx;p.vy=netHold.vy;netHold=null;}
   const now=carryPuck(room,netAge()),dx=now.x-p.x,dy=now.y-p.y,far=Math.hypot(dx,dy);
-  if(theirs||far>120){p.vx=now.vx;p.vy=now.vy;p.spin=now.spin;netFix.x=dx;netFix.y=dy;netFix.rate=26;}
-  // 33.9.7: after your own strike the room's word is folded in gently, so the puck does not wobble
-  else if(mine){p.vx+=(now.vx-p.vx)*.3;p.vy+=(now.vy-p.vy)*.3;netFix.x=dx;netFix.y=dy;netFix.rate=6;}
-  else{p.vx+=(now.vx-p.vx)*.45;p.vy+=(now.vy-p.vy)*.45;netFix.x=dx;netFix.y=dy;netFix.rate=8;}
+  // the two sides of one wall: the room has bounced and this page is about to (or the other way): wait a word
+  if(!theirs&&far<90&&((Math.sign(now.vx)!==Math.sign(p.vx)&&Math.abs(Math.abs(now.vx)-Math.abs(p.vx))<60&&Math.abs(now.vy-p.vy)<60)||(Math.sign(now.vy)!==Math.sign(p.vy)&&Math.abs(Math.abs(now.vy)-Math.abs(p.vy))<60&&Math.abs(now.vx-p.vx)<60)))return;
+  // the same straight line as the room: its speed is taken whole (no blending, which bent the path)
+  // and a small gap is closed gently along the way; a big one (the other side's strike) quickly
+  if(window.__hockey)(window.__netlog||=[]).push([Math.round(performance.now()),Math.round(far),theirs?1:0,Math.round(Math.hypot(now.vx-p.vx,now.vy-p.vy))]);
+  p.vx=now.vx;p.vy=now.vy;p.spin=now.spin||0;netFix.x=dx;netFix.y=dy;netFix.rate=theirs?18:away||far>160?30:far<14?4:8;
 }
 function netStep(dt){
   if(!netTarget)return;
@@ -91,12 +107,30 @@ function netStep(dt){
   const wx=o.x+(o.vx||0)*Math.min(age,.06),wy=o.y+(o.vy||0)*Math.min(age,.06),ease=1-Math.exp(-dt*22);
   opp.tx=opp.x+(wx-opp.x)*ease;opp.ty=opp.y+(wy-opp.y)*ease;
   g.phase=netTarget.phase;g.bot={0:null,1:null};
-  step(g,dt,{},{predict:true});
+  const extra=netDebt>0?Math.min(netDebt,dt*.7):0;netDebt=Math.max(0,netDebt-extra);
+  step(g,dt+extra,{},{predict:true});
   // here: your strikes and the walls; the room: the goals and the other side's strikes
   g.events=g.events.filter(e=>e.type==='wall'||(e.type==='hit'&&e.who===0));
-  if(g.events.some(e=>e.type==='hit'))myHitAt=performance.now();
+  const strike=g.events.some(e=>e.type==='hit'),now=performance.now();
+  // 33.9.8: every touch of your striker is told to the room (a strike at once, a push a few times a second)
+  if(g.touched?.[0]===g.time&&(strike||now-claimAt>45||Math.hypot(g.puck.vx-claimV.x,g.puck.vy-claimV.y)>120)){const id=online?.hit(g.puck,strike);if(id){claimV.x=g.puck.vx;claimV.y=g.puck.vy;myHitId=id;myHitAt=now;claimAt=now;netFix.x=netFix.y=0;if(window.__hockey)(window.__netlog||=[]).push([Math.round(now),'claim',strike?1:0,Math.round(g.puck.vx),Math.round(g.puck.vy)]);}}
   handleEvents();
   const k=1-Math.exp(-dt*netFix.rate);g.puck.x+=netFix.x*k;g.puck.y+=netFix.y*k;netFix.x-=netFix.x*k;netFix.y-=netFix.y*k;
+  netShow=netShowPuck();
+}
+// 33.9.8: the puck you see is the one played here. It does not meet the other striker here (this page
+// would only guess that strike, and the guess made it jump beside the striker when it was wrong): it rests
+// against that striker until the other player's own word of the strike comes, then glides to its path.
+function netShowPuck(){
+  if(!g||g.phase!=='play'){netHold=null;return null;}
+  const P=g.puck,o=g.strikers[1],dx=P.x-o.x,dy=P.y-o.y,d=Math.hypot(dx,dy),min=PUCK_R+STRIKER_R;
+  if(d<min&&d>0){
+    // it reached the other striker: it waits against it for that player's word
+    if(!netHold&&(P.vx*dx+P.vy*dy)<0)netHold={at:performance.now(),vx:P.vx,vy:P.vy};
+    P.x=o.x+dx/d*min;P.y=o.y+dy/d*min;
+  }
+  if(netHold){P.vx=0;P.vy=0;}
+  return null;
 }
 let g = null, running = false, paused = false, raf = 0, last = 0, count = 0, countShown = 0, over = false, shake = 0, flash = 0, flashColor = '#fff', bannerT = 0;
 let fx = [], trail = [], confetti = [], elapsed = 0,roundReceipt='';
@@ -133,7 +167,7 @@ function startGame(packet=null) {
   $('muteBtn2').textContent = prefs.muted ? '🔇' : '🔊';
   window.BS_LOCAL_REACTIONS={active:!online};window.dispatchEvent(new Event('bs-reaction-refresh'));document.body.classList.add('hockey-running');$('hkExit').hidden=!online;$('pauseBtn').hidden=!!online;if(packet?.g){count=0;g=Object.assign(g,hockeyPerspective(packet.g,online.seat));$('targetTxt').textContent='إلى '+g.target;elapsed=g.time||0;}
 }
-function toMenu() {window.BS_LOCAL_REACTIONS={active:false};window.dispatchEvent(new Event('bs-reaction-refresh'));online?.close();online=null;onlineRound=0;netTarget=null;showSearch(null);if($('hkRoom'))$('hkRoom').hidden=true;document.body.classList.remove('hockey-running'); running = false; cancelAnimationFrame(raf); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); $('game').hidden = true; $('menu').hidden = false; renderMenu(); }
+function toMenu() {netShow=null;window.BS_LOCAL_REACTIONS={active:false};window.dispatchEvent(new Event('bs-reaction-refresh'));online?.close();online=null;onlineRound=0;netTarget=null;showSearch(null);if($('hkRoom'))$('hkRoom').hidden=true;document.body.classList.remove('hockey-running'); running = false; cancelAnimationFrame(raf); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); $('game').hidden = true; $('menu').hidden = false; renderMenu(); }
 function updateScore() { $('scoreA').textContent = String(g.score[0]); $('scoreB').textContent = String(g.score[1]); }
 
 // ----- hands -----
@@ -236,13 +270,15 @@ function loop(now) {
     } else if(online){if(!over)elapsed=netTarget?.time||elapsed;keyboardHand(dt);if(!over)online.input(g.strikers[0].tx,g.strikers[0].ty);netStep(dt);} else if (!over || g.phase === 'over') { if (!over) elapsed += dt; keyboardHand(dt); step(g, dt, {}); handleEvents(); }
     if (count > 0) { keyboardHand(dt); for (let i = 0; i < 2; i++) { const st = g.strikers[i], k = g.bot?.[i] || (online && i === 1) ? Math.min(1, dt * 14) : 1; st.x += (st.tx - st.x) * k; st.y += (st.ty - st.y) * k; const b = i === 0 ? { y0: L / 2 + 20, y1: L - STRIKER_R } : { y0: STRIKER_R, y1: L / 2 - 20 }; st.y = Math.max(b.y0, Math.min(b.y1, st.y)); st.x = Math.max(STRIKER_R, Math.min(W - STRIKER_R, st.x)); } }
     // trail follows a fast puck
-    const sp = Math.hypot(g.puck.vx, g.puck.vy); if (sp > 500 && g.phase === 'play') trail.push({ x: g.puck.x, y: g.puck.y, a: 1 });
+    const sp = Math.hypot(g.puck.vx, g.puck.vy), seen = online && netShow ? netShow : g.puck; if (sp > 500 && g.phase === 'play') trail.push({ x: seen.x, y: seen.y, a: 1 });
     for (const t of trail) t.a -= dt * 3.2; trail = trail.filter((t) => t.a > 0).slice(-18);
     for (const p of fx) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.94; p.vy *= 0.94; } fx = fx.filter((p) => p.life > 0);
     shake = Math.max(0, shake - dt * 40); flash = Math.max(0, flash - dt * 1.8);
     if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').className = 'banner'; }
   }
+  const real = online && netShow && g ? { x: g.puck.x, y: g.puck.y } : null; if (real) { g.puck.x = netShow.x; g.puck.y = netShow.y; }
   renderer.draw(g, { theme: prefs.theme, puck: prefs.puck, puckColor: PUCK_GLOW[prefs.puck], strikerColors: [prefs.color, ['ai','online'].includes(prefs.mode) ? '#d8e2ff' : '#ff8a3d'], time: now / 1000, shake, flash, flashColor, trail, fx, activeHand });
+  if (real) { g.puck.x = real.x; g.puck.y = real.y; }
   drawConfetti(dt);
 }
 
@@ -266,7 +302,7 @@ const NAME_KEY='bs-player-name-v33';
 try{const saved=localStorage.getItem(NAME_KEY);if(saved&&!$('hkName').value)$('hkName').value=saved.slice(0,20);}catch{}
 $('hkName').addEventListener('change',()=>{const v=$('hkName').value.trim().slice(0,20);try{if(v)localStorage.setItem(NAME_KEY,v);}catch{}});
 let enteringOnline=false;
-async function enterOnline(kind){if(enteringOnline)return;enteringOnline=true;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=true);try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{showSearch(packet);if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.bot||p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);netAt=performance.now();netFix.x=netFix.y=0;myHitAt=-1e9;updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);netAt=performance.now();g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;if(count<=0)netWord();g.events=(netTarget.events||[]).filter(e=>e.type!=='wall'&&!(e.type==='hit'&&e.who===0));handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){if(e.name!=='AbortError')networkStatus(e.message);}finally{enteringOnline=false;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=false);}}
+async function enterOnline(kind){if(enteringOnline)return;enteringOnline=true;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=true);try{audio.init();online?.close();onlineRound=0;online=new HockeyOnline({onStatus:networkStatus,onState:packet=>{showSearch(packet);if(packet.status==='lobby'||packet.status==='finished'&&!packet.g){$('hkRoom').hidden=false;$('hkRoomCode').textContent=packet.code;$('hkPeople').textContent=packet.players.map(p=>p.name+(p.bot||p.connected?' · متصل':' · انقطع')).join(' × ');}if(packet.g){if(packet.round!==onlineRound){onlineRound=packet.round;netFrame=packet.frame;startGame(packet);netTarget=hockeyPerspective(packet.g,online.seat);netTarget.serverNow=packet.serverNow;netHits=packet.hits||[0,0];netAt=performance.now();netShow=null;netHold=null;netDebt=0;g.remote=[false,true];netFix.x=netFix.y=0;myHitAt=-1e9;myHitId=0;claimAt=-1e9;updateScore();}else{netTarget=hockeyPerspective(packet.g,online.seat);netTarget.serverNow=packet.serverNow;netHits=packet.hits||[0,0];netAt=performance.now();g.remote=[false,true];g.score=[...netTarget.score];g.phase=netTarget.phase;g.winner=netTarget.winner;g.maxRally=netTarget.maxRally;if(packet.frame!==netFrame){netFrame=packet.frame;if(count<=0)netWord();g.events=(netTarget.events||[]).filter(e=>e.type!=='wall'&&!(e.type==='hit'&&e.who===0));handleEvents();}updateScore();}if(packet.status==='finished'&&!over)showResult(g.winner);}}});await online.enter(kind,{name:window.BS_SOCIAL?.accountName?.()||$('hkName').value||'لاعب',target:prefs.target,code:$('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632))});}catch(e){if(e.name!=='AbortError')networkStatus(e.message);}finally{enteringOnline=false;['hkQuick','hkCreate','hkJoin'].forEach(id=>$(id).disabled=false);}}
 $('hkQuick').onclick=()=>enterOnline('quick');$('hkCreate').onclick=()=>enterOnline('create');$('hkJoin').onclick=()=>/^95[0-9]{4}$/.test($('hkCode').value.normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)))?enterOnline('join'):networkStatus('اكتب رمز غرفة الهوكي المكوّن من 6 أرقام');
 $('hkCode').addEventListener('keydown',event=>{if(event.key==='Enter')$('hkJoin').click();});
 $('hkCopy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/hockey?room='+online.code);networkStatus('تم نسخ الرابط');}catch{networkStatus('رمز غرفتك: '+online.code);}};$('hkCancel').onclick=()=>{online?.close();online=null;showSearch(null);$('hkRoom').hidden=true;networkStatus('');};$('hkExit').onclick=toMenu;
@@ -275,6 +311,6 @@ window.addEventListener('pageshow',()=>online?.resume?.()?.catch?.(e=>networkSta
 window.addEventListener('online',()=>online?.resume?.()?.catch?.(e=>networkStatus(e.message)));
 renderMenu();
 const invited=new URLSearchParams(location.search).get('room');if(/^95[0-9]{4}$/.test(invited||'')){prefs.mode='online';$('hkCode').value=invited;renderMenu();enterOnline('join');}
-if (location.search.includes('debug')) window.__hockey = { get g() { return g; }, start: startGame, prefs, hands, renderer, setCount(v) { count = v; } };
+if (location.search.includes('debug')) window.__hockey = { get g() { return g; }, get shown() { return netShow || g?.puck; }, start: startGame, prefs, hands, renderer, setCount(v) { count = v; } };
 
 window.addEventListener('bs-audio-change',()=>{const m=window.BS_AUDIO?.getSettings?.().muted;if(typeof m==='boolean'&&m!==prefs.muted){prefs.muted=m;save({muted:m});audio.mute(m);}});

@@ -7,8 +7,8 @@
    a tap that cannot be played says why, by the place you tapped.
    It also draws the table's effects: the card flying to the middle, a kill, a swap, a marble
    coming home, a burnt card. Sounds come from the shared audio manager. */
-import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.7';
-import { globalJackarooPosition } from './engines/jackaroo-engine.js?v=33.9.7-rules3';
+import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.8';
+import { globalJackarooPosition, jackarooGateSteps } from './engines/jackaroo-engine.js?v=33.9.8-rules4';
 
 const jkReduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 function jkEl(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
@@ -19,9 +19,11 @@ function jkCenterIn(board, target) {
   return { x: (r.left + r.width / 2 - b.left) / b.width * 100, y: (r.top + r.height / 2 - b.top) / b.height * 100 };
 }
 /** The hole (or marble) an action leaves the given marble on. */
-export function landingOf(board, state, owner, marble, steps, backward = false) {
+export function landingOf(board, state, owner, marble, steps, backward = false, skip = true) {
   const g = boardGeometry(state), pos = state.players[owner].marbles[marble];
   if (pos < 0) return board.querySelector(`[data-track="${globalJackarooPosition(owner, 0, state)}"]`);
+  // 33.9.8: the hole before the house is stepped over by its owner on the way in
+  if (!backward) steps = jackarooGateSteps(state, pos, steps, skip);
   const end = backward ? (pos - steps >= 0 ? pos - steps : g.track + (pos - steps)) : pos + steps;
   if (end < g.track) return board.querySelector(`[data-track="${globalJackarooPosition(owner, end, state)}"]`);
   const lane = Math.min(3, end - g.track);
@@ -33,7 +35,7 @@ export function choicesFor(state, actions, pi, mi, nameOf = (i) => state.players
   const out = [];
   for (const a of actions) {
     if (a.type === 'enter' && a.owner === pi && a.marble === mi) out.push({ key: 'enter', label: 'اطلع', sub: 'لخانة البداية', act: a, land: { owner: pi, marble: mi, steps: 0 } });
-    else if ((a.type === 'move' || a.type === 'moveAny5') && a.owner === pi && a.marble === mi) out.push({ key: (a.backward ? '-' : '+') + a.steps, label: (a.backward ? '−' : '+') + a.steps, sub: a.backward ? 'لورا' : a.steps === 7 ? 'السبعة كاملة' : 'لقدّام', act: a, land: { owner: pi, marble: mi, steps: a.steps, backward: Boolean(a.backward) } });
+    else if ((a.type === 'move' || a.type === 'moveAny5') && a.owner === pi && a.marble === mi) out.push({ key: (a.backward ? '-' : '+') + a.steps, label: (a.backward ? '−' : '+') + a.steps, sub: a.backward ? 'لورا' : a.steps === 7 ? 'السبعة كاملة' : 'لقدّام', act: a, land: { owner: pi, marble: mi, steps: a.steps, backward: Boolean(a.backward), skip: a.type !== 'moveAny5' || pi % 2 === state.turn % 2 } });
     else if (a.type === 'swap' && a.owner === pi && a.marble === mi) out.push({ key: 'swap:' + a.otherOwner + ':' + a.otherMarble, label: '⇄', sub: 'بدّل مع ' + nameOf(a.otherOwner) + ' · ' + (a.otherMarble + 1), act: a, stone: [a.otherOwner, a.otherMarble] });
   }
   // the seven: a split leaves this marble k holes on, then another marble walks the rest
@@ -75,9 +77,10 @@ function jkHole(el) {
   return null;
 }
 /** The hole an option leaves its marble on, as a place on the board. */
-export function landingSpot(state, owner, marble, steps = 0, backward = false, enter = false) {
+export function landingSpot(state, owner, marble, steps = 0, backward = false, enter = false, skip = true) {
   const g = boardGeometry(state), pos = state.players[owner].marbles[marble];
   if (enter || pos < 0) return { kind: 'track', at: globalJackarooPosition(owner, 0, state) };
+  if (!backward) steps = jackarooGateSteps(state, pos, steps, skip);
   const end = backward ? (pos - steps >= 0 ? pos - steps : g.track + (pos - steps)) : pos + steps;
   if (end < g.track) return { kind: 'track', at: globalJackarooPosition(owner, end, state) };
   return { kind: 'lane', owner, at: Math.min(4, end - g.track) };
@@ -175,7 +178,7 @@ export function createBoardPicker({ board, fx = null, context = () => null, onCo
       return nope('هالحجر ما يقدر يمشي ' + (7 - pick.steps), at, stone);
     }
     // a move with several stops: the hole tapped says which
-    const hit = hole && pick.options.find((o) => o.land && jkSame(hole, landingSpot(ctx.state, o.land.owner, o.land.marble, o.land.steps, o.land.backward, o.key === 'enter')));
+    const hit = hole && pick.options.find((o) => o.land && jkSame(hole, landingSpot(ctx.state, o.land.owner, o.land.marble, o.land.steps, o.land.backward, o.key === 'enter', o.land.skip !== false)));
     if (hit) { if (hit.act) return commit(hit.act); if (hit.then.length === 1) return commit(hit.then[0].act); return stopAt(ctx, pick.from, hit); }
     if (same(stone, pick.from)) { clear(); return base(ctx); }
     if (stone && choicesFor(ctx.state, ctx.actions, stone[0], stone[1]).length) { pick = null; return fresh(ctx, stone, hole, at); }

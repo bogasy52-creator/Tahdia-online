@@ -54,7 +54,7 @@
   // 33.9.4: pictures, levels and trophies come from profile-pro
   function pro() {
     if (window.BS_PROFILE_PRO) return Promise.resolve(window.BS_PROFILE_PRO);
-    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/profile-pro-v33-9-4.js?v=33.9.7'; s.onload = () => ok(window.BS_PROFILE_PRO || null); s.onerror = () => ok(null); doc.head.append(s); setTimeout(() => ok(window.BS_PROFILE_PRO || null), 4000); });
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/profile-pro-v33-9-4.js?v=33.9.8'; s.onload = () => ok(window.BS_PROFILE_PRO || null); s.onerror = () => ok(null); doc.head.append(s); setTimeout(() => ok(window.BS_PROFILE_PRO || null), 4000); });
   }
   function stat(label, value) { const box = node('div', 'bs-pcard-stat'); box.append(node('b', '', value == null ? '—' : fmt.format(value)), node('small', '', label)); return box; }
   function button(text, cls = 'bs-btn') { const b = node('button', cls, text); b.type = 'button'; return b; }

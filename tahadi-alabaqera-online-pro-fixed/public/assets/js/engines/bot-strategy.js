@@ -1,4 +1,4 @@
-import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=29.1.0';
+import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=33.9.8-rules4';
 import {getLegalLudoMoves,applyLudoMove,globalLudoPosition} from './ludo-engine.js?v=29.1.0';
 import {boardGeometry} from './board-geometry-v29.js';
 

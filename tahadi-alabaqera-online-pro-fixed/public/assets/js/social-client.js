@@ -265,7 +265,10 @@
   function accountName(profile = cachedProfile()) { return token() ? String(profile?.displayName || '').trim() : ''; }
   function bindAccountNames(profile) {
     const name = accountName(profile);
+    // 33.9.8: signed in, the field is not asked at all: the account's name is used and the field hides
     document.querySelectorAll('input[data-account-name]').forEach((el) => {
+      const box = el.closest('label,.bs-name-field');
+      if (box && box.querySelectorAll('input').length === 1) box.style.display = name ? 'none' : '';
       if (name) {
         if (!el.classList.contains('bs-account-name')) el.dataset.guestName = el.value;
         el.value = name.slice(0, el.maxLength > 0 ? el.maxLength : 24);

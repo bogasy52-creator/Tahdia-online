@@ -1,4 +1,4 @@
-import {W,L} from './core.js?v=33.9.7-studio1';
+import {W,L} from './core.js?v=33.9.8-studio1';
 const session=()=>{try{return localStorage.getItem('bs_social_session')||'';}catch{return '';}};
 const abort=()=>Object.assign(new Error('تم إلغاء الاتصال السابق'),{name:'AbortError'});
 export function hockeyPerspective(source,seat){const g=structuredClone(source);if(seat!==1)return g;for(const p of[g.puck,...g.strikers]){p.x=W-p.x;p.y=L-p.y;p.vx=-p.vx;p.vy=-p.vy;if(Number.isFinite(p.tx))p.tx=W-p.tx;if(Number.isFinite(p.ty))p.ty=L-p.ty;}g.strikers.reverse();g.score.reverse();if(g.winner>=0)g.winner=1-g.winner;g.server=1-g.server;g.events=g.events.map(e=>({...e,...(Number.isFinite(e.x)?{x:W-e.x}:{}),...(Number.isFinite(e.y)?{y:L-e.y}:{}),...(e.scorer!==undefined?{scorer:1-e.scorer}:{}),...(e.who!==undefined?{who:1-e.who}:{}),...(e.winner>=0?{winner:1-e.winner}:{})}));return g;}
@@ -41,7 +41,7 @@ export class HockeyOnline{
     }
     if(!next||!Array.isArray(next.players)||!Number.isInteger(next.me)||next.me<0||next.me>=next.players.length)return;
     if(message.type!=='welcome'&&this.state&&(next.round<this.state.round||next.round===this.state.round&&next.frame<this.state.frame))return;
-    if(this.state?.round!==next.round||message.type==='welcome')this.seq=next.seq||0;
+    if(this.state?.round!==next.round||message.type==='welcome'){this.seq=next.seq||0;this.hitId=next.hits?.[next.me]||0;}
     // 33.9.0: how long a move takes to come back (the room's word carries the last input it took)
     const sent=this.sentAt.get(next.seq);if(sent){const sample=performance.now()-sent;this.rtt=this.rtt?this.rtt*.8+sample*.2:sample;this.sentAt.delete(next.seq);}
     this.state=next;this.seat=next.me;this.statusOf(next.paused?'بانتظار عودة خصمك · 20 ثانية':next.status==='lobby'?'بانتظار لاعب آخر':'متصل');this.onState(next);
@@ -63,6 +63,9 @@ export class HockeyOnline{
   // 33.9.0: a hand that has not moved says nothing (a word every half second keeps the round trip known)
   if(Math.abs(x-(this.lastX??-1e9))<.5&&Math.abs(y-(this.lastY??-1e9))<.5&&now-this.lastInput<500)return;
   this.lastInput=now;this.lastX=x;this.lastY=y;const seq=++this.seq;if(this.send({type:'input',seq,x:this.seat===1?W-x:x,y:this.seat===1?L-y:y})){this.sentAt.set(seq,now);if(this.sentAt.size>40)this.sentAt.delete(this.sentAt.keys().next().value);}}
+ /** 33.9.8: your striker sent the puck — the room plays it on from what this page saw. */
+ hit(p,strike=false){if(!this.state||this.state.paused||this.state.status!=='playing'||!p)return 0;const f=this.seat===1,id=(this.hitId=(this.hitId||0)+1);
+  return this.send({type:'hit',id,strike:!!strike,x:f?W-p.x:p.x,y:f?L-p.y:p.y,vx:f?-p.vx:p.vx,vy:f?-p.vy:p.vy,spin:p.spin||0,lag:Math.round(Math.min(300,(this.rtt||110)/2+8))})?id:0;}
  resume({force=false}={}){if(!this.code||!this.token||!force&&this.ws?.readyState===1)return;this.closed=false;const epoch=++this.epoch;this.retry=0;return this.connect(epoch);}
  close({leave=true}={}){if(leave)this.send({type:'leave'});this.closed=true;this.epoch++;clearTimeout(this.retryTimer);this.drop();window.dispatchEvent(new CustomEvent('bs-board-room',{detail:null}));}
 }

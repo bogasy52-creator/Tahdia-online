@@ -70,6 +70,7 @@ function moveStriker(g, i, dt, maxSpeed) {
 function collideStriker(g, i) {
   const p = g.puck, st = g.strikers[i], dx = p.x - st.x, dy = p.y - st.y, d = Math.hypot(dx, dy), min = PUCK_R + STRIKER_R;
   if (d >= min || d === 0) return false;
+  (g.touched ||= [-1, -1])[i] = g.time; // 33.9.8: the online page tells the room of every touch of its own striker
   const nx = dx / d, ny = dy / d;
   p.x = st.x + nx * min; p.y = st.y + ny * min; // push the puck out of the striker
   const rel = (p.vx - st.vx) * nx + (p.vy - st.vy) * ny; // approach speed along the normal
@@ -84,7 +85,7 @@ function collideStriker(g, i) {
   // a real strike, not the puck resting against a striker: it must be approaching, and not just have been struck
   if (rel < -60 && g.time - (g.hitAt?.[i] || -1) > 0.12) {
     (g.hitAt ||= [-1, -1])[i] = g.time; g.rally++; g.maxRally = Math.max(g.maxRally, g.rally);
-    g.events.push({ type: 'hit', who: i, power: clamp(Math.hypot(p.vx, p.vy) / MAX_PUCK, 0, 1), x: p.x - nx * PUCK_R, y: p.y - ny * PUCK_R });
+    g.events.push({ type: 'hit', who: i, power: clamp(Math.hypot(p.vx, p.vy) / MAX_PUCK, 0, 1), x: p.x - nx * PUCK_R, y: p.y - ny * PUCK_R, px: p.x, py: p.y, vx: p.vx, vy: p.vy });
   }
   return true;
 }
@@ -166,7 +167,10 @@ export function step(g, dt, controls = {}, { predict = false } = {}) {
     if (g.phase === 'play' || g.phase === 'serve') {
       if (g.phase === 'play') { p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h); }
       collideWalls(g);
-      collideStriker(g, 0); collideStriker(g, 1);
+      // 33.9.8: online, a player's own page decides where its striker sends the puck (`remote`): the room
+      // takes the word of that page instead of meeting the puck with a striker it only sees late
+      if (!g.remote?.[0]) collideStriker(g, 0);
+      if (!g.remote?.[1]) collideStriker(g, 1);
       // keep a stalled puck from sitting in a corner for ever
       if (g.phase === 'play' && Math.hypot(p.vx, p.vy) < 25) { g.idle = (g.idle || 0) + h; if (g.idle > 5 && g.rally === 0) { p.vy += (p.y < L / 2 ? 1 : -1) * 60; } } else g.idle = 0;
       if (g.phase === 'play') {
@@ -197,4 +201,29 @@ function scoreGoal(g, scorer, conceded) {
   g.score[scorer]++; g.conceded = conceded; g.phase = 'goal'; g.phaseT = 1.8; g.lastScorer = scorer;
   g.events.push({ type: 'goal', scorer, score: g.score.slice(), x: g.puck.x, speed: Math.hypot(g.puck.vx, g.puck.vy) });
   g.puck.vx *= 0.15; g.puck.vy *= 0.15;
+}
+
+/**
+ * 33.9.8: a player's page says its striker sent the puck: where it was and how fast, `lag` seconds ago.
+ * The room checks the word is possible (its own half, near where the puck is, not faster than a strike can
+ * make it) and then plays the puck on from there. Returns the event to tell (a strike or a touch), or
+ * false when the word is refused.
+ */
+export function remoteHit(g, seat, word, lag = 0) {
+  if (!g || !(seat === 0 || seat === 1) || !(g.phase === 'play' || g.phase === 'serve')) return false;
+  const n = (v) => Number.isFinite(v) ? v : NaN, x = n(word?.x), y = n(word?.y), vx = n(word?.vx), vy = n(word?.vy);
+  if (![x, y, vx, vy].every(Number.isFinite)) return false;
+  const speed = Math.hypot(vx, vy); if (speed > MAX_PUCK * 1.02) return false;
+  if (x < PUCK_R - 2 || x > W - PUCK_R + 2 || y < -PUCK_R || y > L + PUCK_R) return false;
+  const reach = PUCK_R + STRIKER_R + 60;
+  if (seat === 0 ? y < L / 2 - reach : y > L / 2 + reach) return false;
+  const p = g.puck; if (Math.hypot(p.x - x, p.y - y) > 460) return false;
+  const t = clamp(Number(lag) || 0, 0, 0.15), now = g.phase === 'play' ? carryPuck({ x, y, vx, vy, spin: clamp(Number(word.spin) || 0, -8, 8) }, t) : { x, y, vx, vy, spin: 0 };
+  Object.assign(p, { x: now.x, y: now.y, vx: now.vx, vy: now.vy, spin: now.spin || 0 });
+  g.last = seat; g.idle = 0;
+  if (word.strike && g.time - (g.hitAt?.[seat] ?? -1) > 0.12) {
+    (g.hitAt ||= [-1, -1])[seat] = g.time; g.rally++; g.maxRally = Math.max(g.maxRally, g.rally);
+    return { type: 'hit', who: seat, power: clamp(speed / MAX_PUCK, 0, 1), x, y, px: x, py: y, vx, vy, lag: t };
+  }
+  return { type: 'touch', who: seat, x, y, px: x, py: y, vx, vy, lag: t };
 }

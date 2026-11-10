@@ -72,7 +72,7 @@
   /* 33.8.0: a phrase with a recorded line («السلام عليكم», «كفو»…) is spoken whole, in the voice of the
      voice studio — the same voice and the same player the Baloot table uses (one module on the page). */
   let voiceModule=null,voicePrimed=false,voiceApi=null;
-  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.7-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
+  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.8-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
   function speak(it){if(!it?.voice)return;voice().then(v=>{try{v?.say?.(it.voice,0,{maxAge:6000});}catch{}});}
   function primeVoices(){if(voicePrimed)return;voicePrimed=true;voice().then(v=>{if(!v)return;voiceApi=v;if(sheet&&!sheet.hidden)render();Promise.resolve(v.unlock?.()).then(()=>{try{v.prime?.(all().filter(it=>it.voice).map(it=>it.voice));}catch{}}).catch(()=>{});});}
   // a phrase shows the speaker only when its line is recorded (the voice studio fills the new ones)
@@ -318,10 +318,17 @@
     else if(localMode()){sent=true;show({emote:it.id,mine:true,origin:fab?.getBoundingClientRect?.(),to:target?.id,toName:target?.name});botAnswer(it,target);}
     if(!sent)return false;
     aiming=null;lastSent=Date.now();if(it.type==='move')lastMove=lastSent;
-    // a face or a phrase: the sheet stays open for the next one; a move: it closes so the move is seen
-    if(it.type==='move')toggle(false);
+    // 33.9.8: every reaction closes the sheet so the table and the reaction flying over it are seen,
+    // and the button says it went
+    toggle(false);sentNote(it,target);
     startCooldown(it.type==='move'?GAP.move:it.type==='phrase'?GAP.phrase:GAP.emote);if(sheet&&!sheet.hidden)render();
     return true;
+  }
+  function sentNote(it,target){
+    if(!fab)return;try{document.querySelector('.rx-sent')?.remove();const n=el('div','rx-sent'),g=it.type==='phrase'?el('span','rx-sent-text',it.text||it.name):el('span','rx-sent-glyph',it.glyph||'😀');
+    n.append(el('b','rx-sent-ok','✓ انرسل'),g);if(target?.name)n.append(el('small','rx-sent-to','← '+target.name));
+    const r=fab.getBoundingClientRect(),parent=document.fullscreenElement||document.body;n.style.top=Math.max(8,r.top-52)+'px';n.style.left=Math.min(innerWidth-8,Math.max(8,r.left+r.width/2))+'px';parent.append(n);
+    window.BS_AUDIO?.play?.('send',{volume:.5});fab.classList.remove('is-sent');void fab.offsetWidth;fab.classList.add('is-sent');setTimeout(()=>{n.remove();fab?.classList.remove('is-sent');},1500);}catch{}
   }
   function startCooldown(ms){if(!fab)return;fab.style.setProperty('--rx-cool-ms',ms+'ms');fab.classList.remove('is-cooling');void fab.offsetWidth;fab.classList.add('is-cooling');clearTimeout(coolTimer);coolTimer=setTimeout(()=>{fab.classList.remove('is-cooling');if(sheet&&!sheet.hidden)render();},ms);}
   /* Bots answer now and then with a free reaction that fits. */
