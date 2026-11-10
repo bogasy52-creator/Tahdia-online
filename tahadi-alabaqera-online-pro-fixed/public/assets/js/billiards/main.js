@@ -5,8 +5,8 @@
    60 frames a second with its sounds; online, the server's shot replays here to the same end.
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
-import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.9-pool1';
-import { createTable } from '../board-table-v33.js?v=33.9.9';
+import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.10-pool1';
+import { createTable } from '../board-table-v33.js?v=33.9.10';
 
 const { L, W, R } = POOL;
 const RAIL = 12, CUSHION = 4;
@@ -329,13 +329,17 @@ class TableView {
     const [s0, t0] = at(0, 0.7), [s1, t1] = at(146, 1.5); g.beginPath(); g.moveTo(...s0); g.lineTo(...s1); g.lineTo(...t1); g.lineTo(...t0); g.closePath(); g.fillStyle = '#000'; g.fill(); g.restore();
     g.globalAlpha = alpha;
     const w = (d) => 0.62 + (d / 146) * 0.85;
-    piece(0, 0.9, w(0), w(0.9), ['#2c64c9', '#6aa4ff', '#2c64c9']);
-    piece(0.9, 3.2, w(0.9), w(3.2), ['#cfc8b6', '#fffdf6', '#cfc8b6']);
-    piece(3.2, 92, w(3.2), w(92), ['#b98f55', '#f1d9a8', '#b98f55']);
-    piece(92, 94, w(92), w(94), ['#a8822e', '#f7df93', '#a8822e']);
-    piece(94, 128, w(94), w(128), ['#120a06', '#5a2f18', '#120a06']);
-    piece(128, 131, w(128), w(131), ['#a8822e', '#f7df93', '#a8822e']);
-    piece(131, 146, w(131), w(146), ['#0b0705', '#2b170c', '#0b0705']);
+    // 33.9.10: the cue you equipped in the shop
+    const L = window.BS_LOOKS?.cue?.().look || { tip: ['#2c64c9', '#6aa4ff', '#2c64c9'], ferrule: ['#cfc8b6', '#fffdf6', '#cfc8b6'], shaft: ['#b98f55', '#f1d9a8', '#b98f55'], ring: ['#a8822e', '#f7df93', '#a8822e'], butt: ['#120a06', '#5a2f18', '#120a06'], end: ['#0b0705', '#2b170c', '#0b0705'] };
+    if (L.glow) { g.shadowColor = L.glow; g.shadowBlur = 10 * (this.dpr || 1); }
+    piece(0, 0.9, w(0), w(0.9), L.tip);
+    piece(0.9, 3.2, w(0.9), w(3.2), L.ferrule);
+    piece(3.2, 92, w(3.2), w(92), L.shaft);
+    piece(92, 94, w(92), w(94), L.ring);
+    piece(94, 128, w(94), w(128), L.butt);
+    piece(128, 131, w(128), w(131), L.ring);
+    piece(131, 146, w(131), w(146), L.end);
+    g.shadowBlur = 0; g.shadowColor = 'transparent';
     g.globalAlpha = 1;
   }
 }

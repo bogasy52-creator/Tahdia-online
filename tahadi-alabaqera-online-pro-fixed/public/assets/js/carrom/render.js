@@ -1,4 +1,4 @@
-import {SIZE,POCKETS,aimCarrom} from './engine.js';
+import {SIZE,POCKETS,aimCarrom} from './engine.js?v=33.9.10-club10';
 // 33.9.6: a real club board — a lacquered rosewood frame, a maple surface with its grain under a lamp,
 // red-and-black markings, netted pockets — and coins turned from wood with grooves and a shine.
 const THEMES={
@@ -101,7 +101,10 @@ function wood(ctx,theme) {
 }
 const sprites=new Map();
 function disc(kind) {
- if(sprites.has(kind))return sprites.get(kind);
+ // 33.9.10: the striker you equipped in the shop
+ const look=kind==='striker'&&typeof window!=='undefined'&&window.BS_LOOKS?window.BS_LOOKS.striker():'';
+ if(sprites.has(kind+look))return sprites.get(kind+look);
+ if(look){const cv=document.createElement('canvas');cv.width=cv.height=160;window.BS_LOOKS.drawStriker(cv.getContext('2d'),80,78,62,look);sprites.set(kind+look,cv);return cv;}
  const canvas=document.createElement('canvas');canvas.width=canvas.height=160;
  const c=canvas.getContext('2d'),X=80,Y=78,r=62;
  const tone={light:['#fff8e0','#ead09a','#b38a4f','#8a6332'],dark:['#6b7076','#26292e','#101215','#000'],queen:['#ffb3b8','#e0283f','#8e0f22','#4a0612'],striker:['#ffffff','#eef2f2','#c4d0d0','#8aa0a0']}[kind]||['#fff','#eee','#ccc','#999'];
@@ -155,6 +158,10 @@ export function createCarromRenderer(canvas) {
     const back=angle+(seat?Math.PI:0),len=40+power*130,ex=from.x-Math.cos(back)*len,ey=from.y-Math.sin(back)*len;
     const pg=ctx.createLinearGradient(from.x,from.y,ex,ey);pg.addColorStop(0,'#3ddc84');pg.addColorStop(.55,'#f2c94c');pg.addColorStop(1,'#ff5b45');
     ctx.save();ctx.lineCap='round';line(ctx,from.x,from.y,ex,ey,pg,10);ctx.restore();
+    // 33.9.10: the strength as a ring round the striker, green to red
+    const col=power<.45?'#3ddc84':power<.75?'#f2c94c':'#ff5b45';
+    ctx.save();ctx.lineCap='round';ctx.beginPath();ctx.arc(from.x,from.y,s.striker.r+15,0,Math.PI*2);ctx.strokeStyle='#00000055';ctx.lineWidth=9;ctx.stroke();
+    ctx.beginPath();ctx.arc(from.x,from.y,s.striker.r+15,-Math.PI/2,-Math.PI/2+Math.PI*2*power);ctx.strokeStyle=col;ctx.lineWidth=7;ctx.shadowColor=col;ctx.shadowBlur=12;ctx.stroke();ctx.restore();
    }
   }
   for(const b of [...s.coins,s.striker]){

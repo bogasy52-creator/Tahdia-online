@@ -112,6 +112,9 @@ export class BoardOnlineClient {
         }else if(msg.type==='pool_aim'){
           // 33.9.0: billiards — where the other player's cue points while aiming
           announce('bs-pool-aim',{seat:msg.seat,dir:msg.dir,power:msg.power,cue:msg.cue,at:msg.at});
+        }else if(msg.type==='carrom_aim'){
+          // 33.9.10: carrom — the other player's striker and aim while they set the shot
+          announce('bs-carrom-aim',{seat:msg.seat,x:msg.x,angle:msg.angle,power:msg.power,at:msg.at});
         }else if(msg.type==='error'){
           const message=msg.message||'تعذر دخول الغرفة';this.onError(message);
           if(!settled){this.terminal=true;fail(message);this.stopTransport();this.onStatus({online:false,reconnecting:false,text:message});}

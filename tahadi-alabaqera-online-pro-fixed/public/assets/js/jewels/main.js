@@ -1,8 +1,8 @@
 /* Tahdia 33.9.5 — «ماستر الجواهر»: the duel page. The engine decides; this file draws the board on a
    canvas, animates every move from the state's own record (swap, breaks, special gems, falls), and
    runs the three ways to play: online (a BoardRoom table), against the computer, two on one phone. */
-import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.9-jw1';
-import { createTable } from '../board-table-v33.js?v=33.9.9';
+import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.10-jw1';
+import { createTable } from '../board-table-v33.js?v=33.9.10';
 
 const $ = (s) => document.querySelector(s);
 const W = JD.W, H = JD.H, N = W * H;
@@ -383,9 +383,10 @@ function boostHTML() {
   return BOOSTERS.map((b, k) => `<button type="button" class="jw-boost" data-k="${k}" style="--bc:${GEMS[b.color].base};--bd:${GEMS[b.color].dark}"><span class="mm-tank"><i class="mm-liquid"></i><canvas></canvas></span><b>${b.name}</b><small></small></button>`).join('');
 }
 function faceOf(seat) {
-  const user = ctl.users[seat], P = window.BS_PROFILE_PRO;
-  if (P && (user?.username || user?.photo || user?.fallback)) return P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '' });
-  return Object.assign(document.createElement('span'), { className: 'jw-letter', textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) });
+  const user = ctl.users[seat], P = window.BS_PROFILE_PRO, self = ctl.mode !== 'two' && seat === bottomSeat();
+  if (P && (user?.username || user?.photo || user?.fallback)) return P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '', self });
+  // 33.9.10: your frame from the shop goes round your letter too
+  return Object.assign(document.createElement('span'), { className: 'jw-letter' + (self && P?.frameClass?.() ? ' bs-avatar ' + P.frameClass() : ''), textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) });
 }
 function buildPlates() {
   for (const [id, seat] of [['#plateBottom', bottomSeat()], ['#plateTop', 1 - bottomSeat()]]) {

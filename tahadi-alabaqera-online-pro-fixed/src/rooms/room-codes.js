@@ -26,6 +26,7 @@ export const ROOM_FAMILIES = Object.freeze({
   cipher: { from: 97, to: 97, page: '/cipher' },
   chaos: { from: 98, to: 98, page: '/chaos' },
   billiards: { from: 99, to: 99, page: '/billiards' },
+  carrom: { from: 8, to: 8, page: '/carrom' },
 });
 
 const random = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
@@ -58,7 +59,7 @@ function probeFor(kind, env, code) {
   const [name, url] = names[kind] || [];
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }
-const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot', 'billiards', 'jewels']);
+const BOARD_GAMES = new Set(['snakes', 'zahra', 'jackaroo', 'dice', 'baloot', 'billiards', 'jewels', 'carrom']);
 const kindOf = (game) => (['focus','cipher','wordbomb','chaos'].includes(game)?'challenge':BOARD_GAMES.has(game) ? 'board' : ['memory', 'logic', 'puzzle', 'reaction', 'jewels', 'colors'].includes(game) ? 'duel' : game);
 
 async function probe(kind, env, code) {

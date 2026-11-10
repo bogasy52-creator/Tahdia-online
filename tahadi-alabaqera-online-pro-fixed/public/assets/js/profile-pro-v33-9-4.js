@@ -7,7 +7,7 @@
   const doc = document, fmt = new Intl.NumberFormat('en-US');
   const node = (tag, cls, text) => { const el = doc.createElement(tag); if (cls) el.className = cls; if (text != null) el.textContent = text; return el; };
   const css = (href) => { if (doc.querySelector('link[href^="' + href.split('?')[0] + '"]')) return; const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = href; doc.head?.appendChild(l); };
-  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.9');
+  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.10');
 
   // ------------------------------------------------------------ pictures
   // the same list the server accepts: hero faces (h-) and cartoon girls and friends (g-)
@@ -19,8 +19,10 @@
     return '/api/social/photo/' + encodeURIComponent(username) + (photo?.kind === 'upload' ? '?v=' + Number(photo.v || 0) : '');
   }
   /** a round picture: the photo, else the given fallback picture, else the first letter */
-  function avatar({ username = '', photo = null, fallback = '', name = '' } = {}, cls = 'bs-avatar') {
-    const box = node('span', cls), letter = node('b', '', String(name || username || '؟').trim().slice(0, 1) || '؟');
+  // 33.9.10: the frame you equipped in the shop, round your own picture
+  function frameClass() { let id = ''; try { id = window.BS_CAREER?.get?.()?.equipped?.frame || ''; } catch {} return id && id !== 'frame-none' ? 'bs-frame bs-frame-' + id.replace(/^frame-/, '') : ''; }
+  function avatar({ username = '', photo = null, fallback = '', name = '', self = false } = {}, cls = 'bs-avatar') {
+    const box = node('span', cls + (self && frameClass() ? ' ' + frameClass() : '')), letter = node('b', '', String(name || username || '؟').trim().slice(0, 1) || '؟');
     box.append(letter);
     const src = photoUrl(username, photo) || fallback;
     if (src) { const img = node('img'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy'; img.onerror = () => { if (fallback && img.src.indexOf(fallback) < 0) img.src = fallback; else img.remove(); }; img.src = src; box.append(img); }
@@ -141,13 +143,13 @@
     const me = social.profile?.() || {};
     openSheet('صورتك', (panel, done) => {
       const now = node('div', 'bs-pp-current');
-      now.append(avatar({ username: me.username, photo: me.photo, name: me.displayName }, 'bs-avatar xl'));
+      now.append(avatar({ username: me.username, photo: me.photo, name: me.displayName, self: true }, 'bs-avatar xl'));
       const note = node('p', 'bs-pp-note', 'اختر صورة جاهزة (أبطال وبنات وغيرهم) أو ارفع صورتك. أول تغيير مجانًا، وبعدها 250 عملة.');
       const grid = node('div', 'bs-pp-grid');
       const busy = (on) => panel.classList.toggle('busy', on);
       async function save(photo, label) {
         busy(true); note.textContent = 'نحفظ صورتك…';
-        try { const r = await social.setPhoto(photo); me.photo = r.photo || null; now.replaceChildren(avatar({ username: me.username, photo: me.photo, name: me.displayName }, 'bs-avatar xl')); note.textContent = label; window.BS_AUDIO?.play?.('combo', { volume: .5 }); setTimeout(done, 700); }
+        try { const r = await social.setPhoto(photo); me.photo = r.photo || null; now.replaceChildren(avatar({ username: me.username, photo: me.photo, name: me.displayName, self: true }, 'bs-avatar xl')); note.textContent = label; window.BS_AUDIO?.play?.('combo', { volume: .5 }); setTimeout(done, 700); }
         catch (e) { note.textContent = e?.message || 'ما انحفظت، جرّب مرة ثانية.'; }
         finally { busy(false); }
       }
@@ -187,8 +189,8 @@
   // ------------------------------------------------------------ tap any player
   function needCard() {
     if (window.BS_PLAYER_CARD) return Promise.resolve(window.BS_PLAYER_CARD);
-    css('/assets/css/player-card-v33-7.css?v=33.9.9');
-    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.9'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
+    css('/assets/css/player-card-v33-7.css?v=33.9.10');
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.10'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
   }
   doc.addEventListener('click', async (e) => {
     const el = e.target?.closest?.('[data-player-username]');
@@ -213,7 +215,7 @@
     const me = meNow(), L = levelInfo(me.card);
     for (const brand of doc.querySelectorAll('.bs-topbar .bs-brand')) {
       brand.classList.add('bs-playerbar'); brand.setAttribute('href', '#profile'); brand.setAttribute('aria-label', 'ملفك: ' + me.name);
-      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '' }, 'bs-avatar bs-pb-pic');
+      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '', self: true }, 'bs-avatar bs-pb-pic');
       const copy = node('span', 'bs-pb-copy');
       copy.append(node('b', '', me.name), node('span', '', 'المستوى ' + L.level + ' · ' + L.tier));
       const bar = node('i', 'bs-pb-xp'); bar.style.setProperty('--x', L.pct + '%'); bar.style.setProperty('--tier', L.color); copy.append(bar);
@@ -226,7 +228,7 @@
     openSheet('ملفك', (panel, done) => {
       panel.classList.add('bs-pp-profile');
       const top = node('div', 'bs-pp-top');
-      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '' }, 'bs-avatar xl');
+      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '', self: true }, 'bs-avatar xl');
       const side = node('div', 'bs-pp-side');
       const nm = node('div', 'bs-pp-name'); nm.append(node('b', '', me.name)); if (me.username) nm.append(node('small', '', '@' + me.username));
       side.append(nm, levelBar(card));
@@ -295,5 +297,5 @@
   });
   setTimeout(() => { const card = myCard(); if (card && !before) before = { level: levelInfo(card).level, cups: new Map(earned(card).map((t) => [t.id, t.tier])) }; }, 1200);
 
-  window.BS_PROFILE_PRO = Object.freeze({ openProfile, renderBar, photoUrl, presetUrl, avatar, levelInfo, levelBar, trophies, earned, shelf, openPicker, report, PRESETS });
+  window.BS_PROFILE_PRO = Object.freeze({ openProfile, renderBar, photoUrl, presetUrl, avatar, frameClass, levelInfo, levelBar, trophies, earned, shelf, openPicker, report, PRESETS });
 })();

@@ -72,7 +72,7 @@
   /* 33.8.0: a phrase with a recorded line («السلام عليكم», «كفو»…) is spoken whole, in the voice of the
      voice studio — the same voice and the same player the Baloot table uses (one module on the page). */
   let voiceModule=null,voicePrimed=false,voiceApi=null;
-  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.9-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
+  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.10-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
   function speak(it){if(!it?.voice)return;voice().then(v=>{try{v?.say?.(it.voice,0,{maxAge:6000});}catch{}});}
   function primeVoices(){if(voicePrimed)return;voicePrimed=true;voice().then(v=>{if(!v)return;voiceApi=v;if(sheet&&!sheet.hidden)render();Promise.resolve(v.unlock?.()).then(()=>{try{v.prime?.(all().filter(it=>it.voice).map(it=>it.voice));}catch{}}).catch(()=>{});});}
   // a phrase shows the speaker only when its line is recorded (the voice studio fills the new ones)

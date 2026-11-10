@@ -15,15 +15,10 @@ test('carrom: the new board and coins, and the new cover on the page and the hom
   for (const page of ['public/race.html', 'public/index.html']) { const html = await read(page); assert.match(html, /carrom-cover-v33-9-6\.webp/, page); assert.doesNotMatch(html, /carrom-cover-v33-7\.svg/, page); }
 });
 
-test('carrom: slide the striker, aim by dragging or tapping a coin, fine strip, pull-down power', async () => {
-  const [html, main, css] = await Promise.all(['public/race.html', 'public/assets/js/carrom/main.js', 'public/assets/css/carrom-v33-9.css'].map(read));
-  assert.match(html, /id="cmFine"/); assert.match(html, /id="cmPower"/);
-  assert.doesNotMatch(html, /id="strikerPosition"|id="shotPower"|id="shoot"/, 'the old sliders and button are gone');
-  assert.match(main, /if\(pointer\.place\)\{placeStriker\(state,p\.x\)/);
-  assert.match(main, /a tap on a coin: aim at its centre/);
-  assert.match(main, /power=Math\.max\(0,Math\.min\(1,\(e\.clientY-from\)\/170\)\)/);
-  assert.match(main, /if\(power>=\.06\)fire\(power\)/);
-  assert.match(css, /\.cm-power\{/); assert.match(css, /\.cm-fine\{/);
+test('carrom: the striker rail and the slingshot replaced the fine strip and the pull-down bar (33.9.10)', async () => {
+  const [html, main] = await Promise.all(['public/race.html', 'public/assets/js/carrom/main.js'].map(read));
+  assert.match(html, /id="cmSlider"/); assert.doesNotMatch(html, /id="cmFine"|id="cmPower"/);
+  assert.match(main, /h\.kind === 'sling' && power >= 0\.08/);
 });
 
 test('billiards: a richer table, tap a ball to aim at a pocket, the loupe and a pull-down power', async () => {

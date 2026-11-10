@@ -1,195 +1,363 @@
-import {createCarrom,placeStriker,shootCarrom,stepCarrom,chooseCarromShot,carromScore,FIXED_DT} from './engine.js';
-import {createCarromRenderer} from './render.js';
-const $=id=>document.getElementById(id),KEY='bs-carrom-settings-v1';
-let saved={};try{saved=JSON.parse(localStorage.getItem(KEY))||{};}catch{}
-const prefs={mode:saved.mode==='hotseat'?'hotseat':'ai',theme:saved.theme==='club'?'club':'walnut',difficulty:saved.difficulty==='expert'?'expert':'normal',muted:!!saved.muted,wins:Number(saved.wins)||0};
-const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(prefs));}catch{}};
-const canvas=$('carromBoard'),renderer=createCarromRenderer(canvas);
-let state=null,running=false,paused=false,frame=0,last=0,accumulator=0,angle=-Math.PI/2,power=.55,viewSeat=0,turnSeen=-1,botAt=0,botPlan=null,pointer=null,resultTimer=0;
-let audio=null,lastSound=0;
-function tone(kind,strength=1){
- if(prefs.muted||window.BS_AUDIO?.getSettings?.().muted===true)return;
- try{
-  audio??=new (window.AudioContext||window.webkitAudioContext)();
-  if(audio.state==='suspended')audio.resume();
-  const now=audio.currentTime;
-  if(kind==='collision'&&now-lastSound<.045)return;
-  lastSound=now;
-  const osc=audio.createOscillator(),gain=audio.createGain();
-  osc.type=kind==='win'?'sine':'triangle';osc.frequency.setValueAtTime(kind==='pocket'?260:kind==='win'?660:kind==='strike'?145:420,now);
-  osc.frequency.exponentialRampToValueAtTime(kind==='pocket'?95:kind==='win'?880:90,now+.11);
-  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.045*Math.max(.15,strength),now+.005);gain.gain.exponentialRampToValueAtTime(.0001,now+.15);
-  osc.connect(gain);gain.connect(audio.destination);osc.start(now);osc.stop(now+.17);
- }catch{}
+/* Tahdia 33.9.10 — «نادي الكيرم». Three ways to play: online against a real player (a BoardRoom table:
+   the room plays every shot to its end and the pages replay it), against the computer, or two on one
+   phone. One pair of hands: the striker slides on the rail under the board (or is dragged on its line),
+   and the shot is a slingshot — touch the board anywhere, pull back, let go. The line shows where the
+   striker goes and what it hits; the ring round the striker shows the strength. */
+import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, FIXED_DT } from './engine.js?v=33.9.10-club10';
+import { createCarromRenderer } from './render.js?v=33.9.10-club10';
+import { createTable } from '../board-table-v33.js?v=33.9.10';
+
+const $ = (id) => document.getElementById(id), KEY = 'bs-carrom-settings-v1';
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+const prefs = { mode: ['online', 'ai', 'hotseat'].includes(saved.mode) ? saved.mode : 'online', theme: saved.theme === 'club' ? 'club' : 'walnut', level: ['easy', 'normal', 'expert'].includes(saved.level) ? saved.level : saved.difficulty === 'expert' ? 'expert' : 'normal', wins: Number(saved.wins) || 0 };
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {} };
+const play = (name, volume) => { try { window.BS_AUDIO?.play?.(name, volume ? { volume } : undefined); } catch {} };
+const reduced = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+const canvas = $('carromBoard'), renderer = createCarromRenderer(canvas);
+
+const ctl = { mode: 'ai', state: null, anim: null, animDone: null, names: ['أنت', 'الكمبيوتر'], users: [null, null], bots: [false, true], me: 0, viewSeat: 0, pending: null, shownSeq: 0, match: 0, endShown: false, rewarded: false, receipt: '', turnSeen: -1, bot: null, running: false, paused: false };
+let angle = -Math.PI / 2, power = 0, remote = null, table = null, room = null, frame = 0, last = 0, acc = 0;
+
+/* ---------- who may play ---------- */
+function canPlay() {
+  const s = ctl.state;
+  if (!ctl.running || ctl.paused || !s || s.phase !== 'aim' || ctl.anim || ctl.pending || ctl.bot) return false;
+  if (ctl.mode === 'hotseat') return true;
+  if (ctl.mode === 'ai') return s.turn === 0;
+  return s.turn === ctl.me && room?.status === 'playing' && !room?.stepOf;
 }
-function canPlay(){return running&&!paused&&state?.phase==='aim'&&(state.mode==='hotseat'||state.turn===0);}
-function draw(){if(state)renderer.draw(state,{angle,power,seat:viewSeat,aim:canPlay()});}
-function resize(){
- const field=$('carromSurface').parentElement.getBoundingClientRect(),size=Math.max(1,Math.floor(Math.min(field.width-12,field.height-8)));
- if(field.width&&field.height){$('carromSurface').style.width=size+'px';$('carromSurface').style.height=size+'px';}
- const box=$('carromSurface').getBoundingClientRect();
- if(box.width&&box.height){renderer.resize(box.width,box.height);draw();}
-}
-if(typeof ResizeObserver==='function')new ResizeObserver(resize).observe($('carromSurface'));
-addEventListener('resize',resize,{passive:true});
-function names(){return state?.mode==='hotseat'?['اللاعب الأول','اللاعب الثاني']:['أنت','الكمبيوتر'];}
-// 33.9.0: each player's nine coins fill in as they drop, and what a shot did pops over the board
-function pips(i,count){let box=$('player'+i).querySelector('.cm-pips');if(!box){box=document.createElement('span');box.className='cm-pips';box.setAttribute('aria-hidden','true');for(let k=0;k<9;k++)box.append(document.createElement('i'));$('player'+i).querySelector('span')?.append(box);}[...box.children].forEach((pip,k)=>pip.classList.toggle('on',k<count));}
-let bannerTimer=0,lastMessage='';
-function banner(text){
- if(!text||text===lastMessage||text==='الأحجار تتحرك…')return;lastMessage=text;
- let node=document.querySelector('.cm-banner');if(!node){node=document.createElement('div');node.className='cm-banner';node.setAttribute('aria-hidden','true');document.querySelector('.cm-playfield')?.append(node);}
- node.textContent=text;node.className='cm-banner '+(/خطأ|رجع|جزاء|ما تغطّت/.test(text)?'bad':/الملكة/.test(text)?'queen':/دخل|غطّيت|فاز/.test(text)?'good':'');
- void node.offsetWidth;node.classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>node.classList.remove('show'),1900);
-}
-function controls(){
- const enabled=canPlay();
- document.querySelector('.cm-dock')?.classList.toggle('idle',!enabled);
- paintPower();
- if(!state)return;
- const scores=carromScore(state),labels=names();
- for(let i=0;i<2;i++){
-  $('player'+i).classList.toggle('active',state.turn===i&&state.phase!=='finished');
-  $('name'+i).textContent=labels[i];
-  $('score'+i).textContent=scores[i].coins+' / 9';pips(i,scores[i].coins);
-  $('due'+i).textContent=scores[i].due?'جزاء '+scores[i].due:scores[i].queen?'الملكة +3':i===0?'أبيض':'أسود';
- }
- $('carromStatus').textContent=state.message;
- $('queenStatus').textContent=state.queen.status==='covered'?'الملكة مغطّاة':state.queen.pending!==null?'بانتظار التغطية':'الملكة';
- $('queenStatus').classList.toggle('pending',state.queen.pending!==null);
-}
-function onTurn(){
- if(state.turnNo===turnSeen)return;
- turnSeen=state.turnNo;viewSeat=state.mode==='hotseat'?state.turn:0;
- angle=state.turn===0?-Math.PI/2:Math.PI/2;
- pointer=null;pull=0;
- if(state.mode==='ai'&&state.turn===1&&state.phase==='aim'){
-  botPlan=chooseCarromShot(state);placeStriker(state,botPlan.x);
-  angle=botPlan.angle;power=botPlan.power;botAt=performance.now()+900;
-  state.message='الكمبيوتر يجهّز ضربته…';
- }else{botPlan=null;power=0;}
- controls();
-}
-function start(){
- lastMessage='';clearTimeout(resultTimer);cancelAnimationFrame(frame);frame=0;
- prefs.mode=$('carromMode').value;prefs.theme=$('carromTheme').value;prefs.difficulty=$('carromDifficulty').value;persist();
- state=createCarrom(prefs);running=true;paused=false;turnSeen=-1;accumulator=0;pointer=null;
- document.body.classList.add('carrom-running');window.BS_LOCAL_REACTIONS={active:true};window.dispatchEvent(new Event('bs-reaction-refresh'));
- $('carromMenu').hidden=true;$('carromGame').hidden=false;$('carromPause').hidden=true;$('carromResult').hidden=true;
- renderer.setTheme(prefs.theme);resize();onTurn();last=performance.now();frame=requestAnimationFrame(loop);
-}
-function menu(){
- document.body.classList.remove('carrom-running');window.BS_LOCAL_REACTIONS={active:false};window.dispatchEvent(new Event('bs-reaction-refresh'));
- running=false;paused=false;clearTimeout(resultTimer);cancelAnimationFrame(frame);frame=0;
- $('carromGame').hidden=true;$('carromMenu').hidden=false;$('carromPause').hidden=true;$('carromResult').hidden=true;
- pointer=null;
-}
-function pause(value){
- if(!running||state?.phase==='finished')return;
- paused=value;$('carromPause').hidden=!value;pointer=null;
- cancelAnimationFrame(frame);frame=0;
- if(!value){last=performance.now();botAt=last+700;accumulator=0;frame=requestAnimationFrame(loop);}
- controls();
-}
-function fire(strength=power){
- if(!canPlay()||strength<.06)return;
- try{shootCarrom(state,{x:state.striker.x,angle,power:Math.max(.08,Math.min(1,strength))});tone('strike',strength);window.BS_AUDIO?.vibrate?.(14);pointer=null;power=0;controls();}
- catch(e){$('carromStatus').textContent=e.message;}
-}
-function finish(){
- if(resultTimer||!running)return;
- const winner=names()[state.winner],scores=carromScore(state);
- if(state.mode==='ai'&&state.winner===0){prefs.wins++;persist();}
- $('carromWinner').textContent=winner+' فاز بالطاولة';
- $('carromResultCopy').textContent='9 أحجار'+(scores[state.winner].queen?' · الملكة مغطّاة +3':'')+' · '+state.shots[state.winner]+' ضربات';
- $('carromWinnerDisc').className='cm-winner-disc '+(state.winner===0?'light':'dark');
- tone('win');
- resultTimer=setTimeout(()=>{$('carromResult').hidden=false;resultTimer=0;},550);
-}
-function loop(now){
- frame=0;if(!running||paused)return;
- const delta=Math.max(0,Math.min(.08,(now-last)/1000));last=now;
- if(state.phase==='moving'){
-  accumulator=Math.min(.15,accumulator+delta);
-  while(accumulator>=FIXED_DT&&state.phase==='moving'){
-   stepCarrom(state,FIXED_DT);accumulator-=FIXED_DT;
-   for(const e of state.events)if(['collision','pocket'].includes(e.type))tone(e.type,e.strength||.8);
+
+/* ---------- drawing ---------- */
+function draw() {
+  const s = ctl.anim || ctl.state; if (!s) return;
+  let shown = s, aim = canPlay(), a = angle, p = power;
+  // online: the other player's striker and aim as they set the shot
+  if (!aim && ctl.mode === 'online' && remote && s === ctl.state && s.phase === 'aim' && remote.seat === s.turn && performance.now() - remote.t < 2500) {
+    shown = { ...s, striker: { ...s.striker, x: remote.x } }; aim = true; a = remote.angle; p = remote.power;
   }
-  if(state.phase==='aim'){accumulator=0;banner(state.message);onTurn();controls();}
-  if(state.phase==='finished'){controls();finish();}
- }else if(state.phase==='aim'&&botPlan&&now>=botAt){
-  try{shootCarrom(state,botPlan);tone('strike',botPlan.power);botPlan=null;controls();}
-  catch{botPlan=chooseCarromShot(state);placeStriker(state,botPlan.x);botAt=now+500;}
- }
- draw();
- if(state.phase!=='finished')frame=requestAnimationFrame(loop);
+  // the computer setting its shot
+  if (ctl.bot && s === ctl.state) { aim = true; a = ctl.bot.angle; p = ctl.bot.power * Math.min(1, ctl.bot.t); }
+  renderer.draw(shown, { angle: a, power: p, seat: ctl.viewSeat, aim });
+  paintSlider(); paintPowerTag(shown, p, aim);
 }
-// 33.9.6: easier hands: touch the striker and slide it on its line; drag anywhere else on the board
-// and the aim follows your finger (a tap on a coin aims straight at it); the strip under the board
-// turns the aim a hair; the power bar is pulled down and let go to strike (back up cancels).
-let pull=0;
-function updateAim(point){
- const dx=point.x-state.striker.x,dy=point.y-state.striker.y;
- if(Math.hypot(dx,dy)<8)return;
- angle=Math.atan2(dy,dx);controls();draw();
+function resize() {
+  const field = document.querySelector('.cm-playfield'); if (!field) return;
+  const r = field.getBoundingClientRect(), size = Math.max(1, Math.floor(Math.min(r.width, r.height)));
+  if (r.width && r.height) { $('carromSurface').style.width = size + 'px'; $('carromSurface').style.height = size + 'px'; renderer.resize(size, size); draw(); }
 }
-function nudge(rad){angle+=rad*(viewSeat?-1:1);draw();}
-canvas.addEventListener('pointerdown',e=>{
- if(!canPlay())return;e.preventDefault();window.BS_AUDIO?.unlock?.();
- const p=renderer.point(e.clientX,e.clientY,viewSeat),near=Math.hypot(p.x-state.striker.x,p.y-state.striker.y)<state.striker.r*2.1;
- pointer={id:e.pointerId,place:near,start:p};
- try{canvas.setPointerCapture(e.pointerId);}catch{}
- if(!near)updateAim(p);
-});
-canvas.addEventListener('pointermove',e=>{
- if(!pointer||pointer.id!==e.pointerId||!canPlay())return;
- const p=renderer.point(e.clientX,e.clientY,viewSeat);
- if(pointer.place){placeStriker(state,p.x);draw();}else updateAim(p);
-});
-canvas.addEventListener('pointerup',e=>{
- if(!pointer||pointer.id!==e.pointerId)return;
- // a tap on a coin: aim at its centre
- const p=renderer.point(e.clientX,e.clientY,viewSeat);
- if(!pointer.place&&Math.hypot(p.x-pointer.start.x,p.y-pointer.start.y)<14){const coin=state.coins.find(c=>!c.pocketed&&Math.hypot(c.x-p.x,c.y-p.y)<c.r*1.8);if(coin)updateAim(coin);}
- pointer=null;
-});
-canvas.addEventListener('pointercancel',()=>{pointer=null;});
-canvas.addEventListener('lostpointercapture',()=>{pointer=null;});
-// fine aim
+if (typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(document.querySelector('.cm-playfield'));
+addEventListener('resize', resize, { passive: true });
+
+/* ---------- the cards ---------- */
+function faceOf(seat) {
+  const user = ctl.users[seat], P = window.BS_PROFILE_PRO, self = ctl.mode !== 'hotseat' && seat === (ctl.mode === 'online' ? ctl.me : 0);
+  if (P && (user?.username || user?.photo || user?.fallback)) return P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '', self });
+  return Object.assign(document.createElement('span'), { className: 'cc-letter' + (self && P?.frameClass?.() ? ' bs-avatar ' + P.frameClass() : ''), textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) });
+}
+function buildCards() {
+  for (const seat of [0, 1]) {
+    const card = $('player' + seat); card.querySelector('.cm-face').replaceChildren(faceOf(seat));
+    const pips = card.querySelector('.cm-pips'); if (!pips.children.length) for (let k = 0; k < 9; k++) pips.append(document.createElement('i'));
+  }
+}
+function renderCards() {
+  const s = ctl.state; if (!s) return;
+  const scores = carromScore(s);
+  for (const seat of [0, 1]) {
+    const card = $('player' + seat), sc = scores[seat];
+    card.classList.toggle('active', s.turn === seat && s.winner === null);
+    $('name' + seat).textContent = ctl.names[seat] || 'لاعب';
+    $('score' + seat).textContent = String(sc.coins + sc.queen);
+    $('due' + seat).textContent = sc.due ? 'عليه جزاء ' + sc.due : sc.queen ? 'الملكة +3' : seat === 0 ? 'الأبيض' : 'الأسود';
+    [...card.querySelector('.cm-pips').children].forEach((pip, k) => pip.classList.toggle('on', k < sc.coins));
+  }
+  const q = $('queenStatus');
+  q.textContent = s.queen.status === 'covered' ? 'الملكة مغطّاة' : s.queen.pending !== null ? 'غطّ الملكة!' : 'الملكة على الطاولة';
+  q.classList.toggle('pending', s.queen.pending !== null);
+}
+function statusText() {
+  const s = ctl.state; if (!s) return '';
+  if (s.winner !== null) return 'انتهت الطاولة';
+  if (ctl.anim) return 'الأحجار تتحرك…';
+  if (ctl.pending) return 'الضربة طايرة…';
+  if (ctl.bot) return 'الكمبيوتر يصوّب…';
+  if (canPlay()) return ctl.mode === 'hotseat' ? 'دور ' + ctl.names[s.turn] + ' · اسحب لورا وأفلت' : 'دورك · اسحب لورا وأفلت';
+  return 'دور ' + (ctl.names[s.turn] || 'الخصم') + '…';
+}
+function renderStatus() {
+  $('carromStatus').textContent = statusText();
+  $('status').classList.toggle('mine', canPlay());
+  document.querySelector('.cm-dock')?.classList.toggle('idle', !canPlay());
+}
+let bannerTimer = 0, lastBanner = '';
+function banner(text) {
+  if (!text || text === 'الأحجار تتحرك…' || text === lastBanner) return; lastBanner = text;
+  let node = document.querySelector('.cm-banner'); if (!node) { node = document.createElement('div'); node.className = 'cm-banner'; node.setAttribute('aria-hidden', 'true'); $('carromSurface').append(node); }
+  node.textContent = text; node.className = 'cm-banner ' + (/خطأ|رجع|جزاء|ما تغطّت|الوقت/.test(text) ? 'bad' : /الملكة/.test(text) ? 'queen' : /دخل|غطّيت|فاز/.test(text) ? 'good' : '');
+  void node.offsetWidth; node.classList.add('show'); clearTimeout(bannerTimer); bannerTimer = setTimeout(() => { node.classList.remove('show'); lastBanner = ''; }, 1800);
+}
+
+/* ---------- the rail ---------- */
+const slider = $('cmSlider');
+const viewX = (x) => (ctl.viewSeat ? 1000 - x : x);
+function paintSlider() {
+  const s = ctl.state; if (!s) return;
+  const x = ctl.bot && ctl.state === (ctl.anim || ctl.state) ? s.striker.x : remote && ctl.mode === 'online' && !canPlay() && remote.seat === s.turn ? remote.x : s.striker.x;
+  const f = Math.max(0, Math.min(1, (viewX(x) - 220) / 560));
+  slider.style.setProperty('--x', (f * 100).toFixed(2)); slider.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+}
+function slideTo(clientX) {
+  const r = slider.getBoundingClientRect(), f = Math.max(0, Math.min(1, (clientX - r.left - 20) / Math.max(1, r.width - 40)));
+  const vx = 220 + f * 560; placeStriker(ctl.state, ctl.viewSeat ? 1000 - vx : vx); sendAim(); draw();
+}
 {
- const el=$('cmFine');let lastX=null,off=0;
- el.addEventListener('pointerdown',e=>{if(!canPlay())return;lastX=e.clientX;try{el.setPointerCapture(e.pointerId);}catch{}});
- el.addEventListener('pointermove',e=>{if(lastX===null||!canPlay())return;const dx=e.clientX-lastX;lastX=e.clientX;off+=dx;el.style.setProperty('--fine',off+'px');nudge(dx*.0016);});
- const up=()=>{lastX=null;};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
- el.addEventListener('keydown',e=>{if(!canPlay())return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();nudge((e.key==='ArrowRight'?1:-1)*(e.shiftKey?.003:.012));}});
+  let id = null;
+  slider.addEventListener('pointerdown', (e) => { if (!canPlay()) return; e.preventDefault(); window.BS_AUDIO?.unlock?.(); id = e.pointerId; slider.classList.add('drag'); try { slider.setPointerCapture(id); } catch {} slideTo(e.clientX); });
+  slider.addEventListener('pointermove', (e) => { if (e.pointerId !== id || !canPlay()) return; slideTo(e.clientX); });
+  const up = (e) => { if (e.pointerId !== id) return; id = null; slider.classList.remove('drag'); };
+  slider.addEventListener('pointerup', up); slider.addEventListener('pointercancel', up);
+  slider.addEventListener('keydown', (e) => { if (!canPlay() || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); const vx = viewX(ctl.state.striker.x) + (e.key === 'ArrowLeft' ? -15 : 15); placeStriker(ctl.state, ctl.viewSeat ? 1000 - vx : vx); sendAim(); draw(); });
 }
-// the power: pull down, let go
-function paintPower(){const el=$('cmPower');if(!el)return;const shown=canPlay()?power:0;el.style.setProperty('--p',shown.toFixed(3));el.setAttribute('aria-valuenow',String(Math.round(power*100)));el.classList.toggle('on',shown>.02);el.querySelector('b').textContent=shown>.02?'القوة '+Math.round(power*100)+'%':canPlay()?'اسحب لتحت وأفلت عشان تضرب':state?.phase==='moving'?'الأحجار تتحرك…':state?.mode==='ai'&&state?.turn===1?'الكمبيوتر يصوّب…':'';}
-{
- const el=$('cmPower');let from=null;
- el.addEventListener('pointerdown',e=>{if(!canPlay())return;window.BS_AUDIO?.unlock?.();from=e.clientY;try{el.setPointerCapture(e.pointerId);}catch{}});
- el.addEventListener('pointermove',e=>{if(from===null||!canPlay())return;power=Math.max(0,Math.min(1,(e.clientY-from)/170));paintPower();draw();});
- const up=()=>{if(from===null)return;from=null;if(power>=.06)fire(power);else{power=0;paintPower();draw();}};
- el.addEventListener('pointerup',up);el.addEventListener('pointercancel',()=>{from=null;power=0;paintPower();draw();});
- el.addEventListener('keydown',e=>{if(!canPlay())return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();power=Math.max(0,Math.min(1,power+(e.key==='ArrowDown'?.05:-.05)));paintPower();draw();}else if(e.key==='Enter'||e.key===' '){e.preventDefault();fire(power||.55);}});
+
+/* ---------- the slingshot ---------- */
+let hand = null;
+const tag = $('cmPowerTag');
+function paintPowerTag(s, p, aim) {
+  if (!tag) return;
+  if (!aim || !(p > 0.02) || !s) { tag.hidden = true; return; }
+  const r = canvas.getBoundingClientRect(), box = $('carromSurface').getBoundingClientRect(), scale = Math.min(r.width, r.height) / 1000;
+  const v = ctl.viewSeat ? { x: 1000 - s.striker.x, y: 1000 - s.striker.y } : s.striker;
+  tag.hidden = false; tag.textContent = 'القوة ' + Math.round(p * 100) + '%';
+  tag.style.left = (r.left - box.left + (r.width - 1000 * scale) / 2 + v.x * scale) + 'px'; tag.style.top = (r.top - box.top + (r.height - 1000 * scale) / 2 + (v.y - s.striker.r - 30) * scale) + 'px';
+  tag.style.setProperty('--pc', p < 0.45 ? '#3ddc84' : p < 0.75 ? '#f2c94c' : '#ff6b55');
 }
-$('carromStart').onclick=start;$('carromExit').onclick=menu;
-$('carromPauseButton').onclick=()=>pause(true);$('carromResume').onclick=()=>pause(false);
-$('carromRestart').onclick=start;$('carromAgain').onclick=start;$('carromBackMenu').onclick=menu;
-$('carromMute').onclick=()=>{prefs.muted=!prefs.muted;persist();$('carromMute').setAttribute('aria-pressed',String(prefs.muted));$('carromMute').textContent=prefs.muted?'الصوت مغلق':'الصوت';};
-$('carromFullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('carromGame').requestFullscreen();}catch{}};
-for(const [id,value] of [['carromMode',prefs.mode],['carromTheme',prefs.theme],['carromDifficulty',prefs.difficulty]])$(id).value=value;
-$('carromMute').setAttribute('aria-pressed',String(prefs.muted));
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause(true);});
-document.addEventListener('keydown',e=>{
- if(!running||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;
- if(e.key==='Escape'||e.key.toLowerCase()==='p'){e.preventDefault();pause(!paused);return;}
- if(!canPlay())return;
- if((e.key==='Enter'||e.key===' ')&&e.target.closest('button,a'))return;
- if(['ArrowLeft','ArrowRight'].includes(e.key)){
-  e.preventDefault();const viewX=(viewSeat?1000-state.striker.x:state.striker.x)+(e.key==='ArrowLeft'?-15:15);
-  placeStriker(state,viewSeat?1000-viewX:viewX);draw();
- }else if(['a','d'].includes(e.key.toLowerCase())){angle+=(e.key.toLowerCase()==='a'?-.045:.045);draw();}
- else if(e.key==='Enter'||e.key===' '){e.preventDefault();fire(power||.55);}
+canvas.addEventListener('pointerdown', (e) => {
+  if (!canPlay()) return; e.preventDefault(); window.BS_AUDIO?.unlock?.();
+  const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), s = ctl.state;
+  const onStriker = Math.hypot(p.x - s.striker.x, p.y - s.striker.y) < s.striker.r * 1.9;
+  hand = { id: e.pointerId, sx: e.clientX, sy: e.clientY, p0: p, kind: onStriker ? 'maybe' : 'sling', moved: false };
+  try { canvas.setPointerCapture(e.pointerId); } catch {}
 });
-if(new URLSearchParams(location.search).has('debug'))window.BS_CARROM={get state(){return state;},start,fire,pause,renderer,get angle(){return angle;},setAim(a,p){angle=a;power=p;controls();draw();},fire};
+canvas.addEventListener('pointermove', (e) => {
+  if (!hand || hand.id !== e.pointerId || !canPlay()) return;
+  const dx = e.clientX - hand.sx, dy = e.clientY - hand.sy, far = Math.hypot(dx, dy);
+  if (far > 6) hand.moved = true;
+  // on the striker: sideways moves it on its line, anything else pulls it back
+  if (hand.kind === 'maybe' && far > 10) hand.kind = Math.abs(dx) > Math.abs(dy) * 1.4 ? 'place' : 'sling';
+  if (hand.kind === 'place') { const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat); placeStriker(ctl.state, p.x); sendAim(); draw(); return; }
+  if (hand.kind !== 'sling') return;
+  const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), bx = hand.p0.x - p.x, by = hand.p0.y - p.y;
+  const full = Math.max(120, Math.min(200, canvas.getBoundingClientRect().width * 0.42));
+  if (far < 12) { power = 0; draw(); return; }
+  angle = Math.atan2(by, bx); power = Math.max(0, Math.min(1, (far - 12) / full));
+  if (Math.round(power * 20) !== hand.step) { hand.step = Math.round(power * 20); if (hand.step % 4 === 0) play('tap', 0.12); }
+  sendAim(); draw();
+});
+function release(e) {
+  if (!hand || (e && hand.id !== e.pointerId)) return;
+  const h = hand; hand = null;
+  if (h.kind === 'maybe' && !h.moved) {
+    // a tap: on a coin, aim straight at it
+    const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), coin = ctl.state.coins.find((c) => !c.pocketed && Math.hypot(c.x - p.x, c.y - p.y) < c.r * 1.8);
+    if (coin) { angle = Math.atan2(coin.y - ctl.state.striker.y, coin.x - ctl.state.striker.x); draw(); }
+    return;
+  }
+  if (h.kind === 'sling' && !h.moved) {
+    const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), coin = ctl.state.coins.find((c) => !c.pocketed && Math.hypot(c.x - p.x, c.y - p.y) < c.r * 1.8);
+    if (coin) { angle = Math.atan2(coin.y - ctl.state.striker.y, coin.x - ctl.state.striker.x); power = 0; draw(); }
+    return;
+  }
+  if (h.kind === 'sling' && power >= 0.08) fire(angle, power);
+  else { power = 0; draw(); }
+}
+canvas.addEventListener('pointerup', release);
+canvas.addEventListener('pointercancel', () => { hand = null; power = 0; draw(); });
+
+let aimSent = 0;
+function sendAim() {
+  if (ctl.mode !== 'online' || !canPlay()) return;
+  const now = Date.now(); if (now - aimSent < 150) return; aimSent = now;
+  table?.send('carrom_aim', { x: Math.round(ctl.state.striker.x * 10) / 10, angle: Math.round(angle * 1000) / 1000, power: Math.round(power * 100) / 100 });
+}
+addEventListener('bs-carrom-aim', (e) => { const d = e.detail || {}; if (!Number.isFinite(d.x)) return; remote = { seat: d.seat, x: d.x, angle: d.angle, power: d.power || 0, t: performance.now() }; });
+
+/* ---------- shots ---------- */
+function animate(sim) { return new Promise((resolve) => { ctl.anim = sim; ctl.animDone = resolve; acc = 0; renderStatus(); }); }
+function fire(a, p) {
+  if (!canPlay()) return;
+  const s = ctl.state, x = s.striker.x;
+  power = 0; play('hit', 0.35 + p * 0.6); window.BS_AUDIO?.vibrate?.(14);
+  if (ctl.mode === 'online') {
+    const sim = structuredClone(s);
+    try { shootCarrom(sim, { x, angle: a, power: p }, s.turn); } catch (error) { banner(error.message); return; }
+    if (!table?.send('carrom_shot', { x, angle: a, power: p })) { banner('ما وصلت الضربة، جرّب مرة ثانية'); return; }
+    ctl.pending = { seq: (s.seq || 0) + 1, done: animate(sim) };
+    ctl.pending.timer = setTimeout(() => { if (ctl.pending) { ctl.pending = null; ctl.anim = null; window.BS_PLATFORM?.toast?.('ما وصلت الضربة، جرّب مرة ثانية'); renderStatus(); draw(); } }, 15000);
+    renderStatus(); return;
+  }
+  try { shootCarrom(s, { x, angle: a, power: p }, s.turn); } catch (error) { banner(error.message); return; }
+  animate(s).then(afterLocalShot);
+}
+function afterLocalShot() {
+  const s = ctl.state; banner(s.message);
+  if (s.winner !== null) { renderCards(); finish(); return; }
+  onTurn();
+}
+function onTurn() {
+  const s = ctl.state; if (!s) return;
+  renderCards(); renderStatus();
+  if (s.turnNo === ctl.turnSeen) { draw(); return; }
+  ctl.turnSeen = s.turnNo;
+  if (ctl.mode === 'hotseat') ctl.viewSeat = s.turn;
+  angle = s.turn === 0 ? -Math.PI / 2 : Math.PI / 2; power = 0; hand = null;
+  if (ctl.mode === 'ai' && s.turn === 1 && s.phase === 'aim' && s.winner === null) {
+    const plan = chooseCarromShot(s, prefs.level); placeStriker(s, plan.x);
+    ctl.bot = { ...plan, t: 0, at: performance.now() };
+  }
+  if (canPlay() && ctl.mode !== 'online') play('yourTurn', 0.35);
+  renderStatus(); draw();
+}
+
+/* ---------- the loop ---------- */
+function loop(now) {
+  frame = 0; if (!ctl.running) return;
+  const dt = Math.max(0, Math.min(0.08, (now - last) / 1000)); last = now;
+  if (!ctl.paused) {
+    if (ctl.anim) {
+      acc = Math.min(0.15, acc + dt); let collide = 0, pocket = 0;
+      while (acc >= FIXED_DT && ctl.anim.phase === 'moving') {
+        stepCarrom(ctl.anim, FIXED_DT); acc -= FIXED_DT;
+        for (const e of ctl.anim.events) { if (e.type === 'collision') collide = Math.max(collide, e.strength || 0.5); if (e.type === 'pocket') pocket++; if (e.type === 'foul') play('error', 0.5); }
+      }
+      if (collide && now - (loop.click || 0) > 55) { loop.click = now; play('tap', 0.2 + collide * 0.7); }
+      if (pocket) { play('capture', 0.8); window.BS_AUDIO?.vibrate?.(20); }
+      if (ctl.anim.phase !== 'moving') { const done = ctl.animDone; ctl.anim = null; ctl.animDone = null; done?.(); }
+    } else if (ctl.bot) {
+      // the computer turns its aim to the shot, then strikes
+      const b = ctl.bot; b.t = Math.min(1.2, (now - b.at) / 900);
+      angle = b.angle;
+      if (b.t >= 1.2) { ctl.bot = null; const s = ctl.state; try { shootCarrom(s, b, 1); play('hit', 0.4 + b.power * 0.5); animate(s).then(afterLocalShot); } catch { const plan = chooseCarromShot(s, prefs.level); placeStriker(s, plan.x); ctl.bot = { ...plan, t: 0, at: now }; } }
+    }
+  }
+  draw();
+  frame = requestAnimationFrame(loop);
+}
+function run() { if (!frame) { last = performance.now(); frame = requestAnimationFrame(loop); } }
+
+/* ---------- start, pause, end ---------- */
+function myUser() { const me = window.BS_SOCIAL?.isLoggedIn?.() ? window.BS_SOCIAL.profile?.() : null; return me ? { username: me.username, photo: me.photo || null } : null; }
+function showGame() {
+  $('carromMenu').hidden = true; $('carromGame').hidden = false; $('carromPause').hidden = true; $('carromResult').hidden = true;
+  document.body.classList.add('carrom-running', 'game-running');
+  window.BS_LOCAL_REACTIONS = { active: ctl.mode !== 'online' }; window.dispatchEvent(new Event('bs-reaction-refresh'));
+  $('carromPauseButton').hidden = ctl.mode === 'online';
+  renderer.setTheme(prefs.theme); buildCards(); ctl.running = true; ctl.paused = false; resize(); run();
+}
+function startLocal(mode) {
+  ctl.mode = mode; prefs.mode = mode; persist();
+  ctl.names = mode === 'ai' ? [window.BS_GAME_MENU?.playerName?.() || 'أنت', 'الكمبيوتر'] : ['اللاعب الأول', 'اللاعب الثاني'];
+  ctl.users = mode === 'ai' ? [myUser(), { photo: { kind: 'preset', id: 'h-robot' } }] : [null, null];
+  ctl.bots = mode === 'ai' ? [false, true] : [false, false];
+  ctl.state = createCarrom({ mode: mode === 'hotseat' ? 'hotseat' : 'ai', difficulty: prefs.level === 'expert' ? 'expert' : 'normal', seed: (Math.random() * 4294967296) >>> 0 });
+  ctl.anim = null; ctl.pending = null; ctl.bot = null; ctl.endShown = false; ctl.rewarded = false; ctl.turnSeen = -1; ctl.viewSeat = 0; lastBanner = '';
+  ctl.receipt = 'carrom:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  showGame(); onTurn(); play('go', 0.5);
+}
+function showMenu() {
+  ctl.running = false; ctl.anim = null; ctl.pending = null; ctl.bot = null; cancelAnimationFrame(frame); frame = 0;
+  document.body.classList.remove('carrom-running', 'game-running');
+  window.BS_LOCAL_REACTIONS = { active: false }; window.dispatchEvent(new Event('bs-reaction-refresh'));
+  $('carromGame').hidden = true; $('carromMenu').hidden = false; $('carromPause').hidden = true; $('carromResult').hidden = true;
+}
+function pause(value) {
+  if (!ctl.running || ctl.mode === 'online' || ctl.state?.winner !== null) return;
+  ctl.paused = value; $('carromPause').hidden = !value; hand = null; last = performance.now();
+  if (ctl.bot && !value) ctl.bot.at = performance.now();
+}
+function finish() {
+  if (ctl.endShown) return; ctl.endShown = true;
+  const s = ctl.state, w = s.winner, scores = carromScore(s), mine = ctl.mode === 'online' ? ctl.me : 0, won = ctl.mode === 'hotseat' || w === mine;
+  $('carromWinner').textContent = ctl.mode === 'hotseat' ? ctl.names[w] + ' فاز!' : won ? 'فزت بالطاولة!' : (ctl.names[w] || 'الخصم') + ' فاز';
+  $('carromResultCopy').textContent = '9 أحجار' + (scores[w].queen ? ' · الملكة مغطّاة +3' : '') + ' · ' + s.shots[w] + ' ضربات';
+  $('carromWinnerDisc').className = 'cm-winner-disc ' + (w === 0 ? 'light' : 'dark');
+  $('carromAgain').textContent = ctl.mode === 'online' ? (room?.publicMatch ? 'مباراة جديدة' : room?.me?.role === 'host' ? 'جولة جديدة' : 'بانتظار المضيف') : 'العب مرة ثانية';
+  $('carromAgain').disabled = ctl.mode === 'online' && !room?.publicMatch && room?.me?.role !== 'host';
+  play(won ? 'victory' : 'defeat', 0.8);
+  if (!ctl.rewarded) {
+    ctl.rewarded = true;
+    if (ctl.mode === 'online') window.BS_CAREER?.refresh?.()?.catch?.(() => {});
+    else if (ctl.mode === 'ai') { if (w === 0) { prefs.wins++; persist(); } window.BS_CAREER?.record?.({ id: ctl.receipt, game: 'carrom', win: w === 0 })?.catch?.(() => {}); }
+  }
+  setTimeout(() => { if (ctl.endShown) $('carromResult').hidden = false; }, 700);
+}
+
+/* ---------- online ---------- */
+async function apply(next, { animate: moving }) {
+  room = next;
+  const s = next.state; if (!s || !Array.isArray(s.coins)) return;
+  const fresh = ctl.mode !== 'online' || $('carromGame').hidden || ctl.match !== (next.startedAt || 0);
+  ctl.me = next.me?.index ?? 0;
+  ctl.names = [0, 1].map((i) => next.players?.find((p) => p.index === i)?.name || s.players?.[i]?.name || 'لاعب');
+  ctl.bots = [0, 1].map((i) => Boolean(next.players?.find((p) => p.index === i)?.bot));
+  ctl.users = [0, 1].map((i) => { const p = next.players?.find((x) => x.index === i); const hero = p?.look?.character; return p?.username ? { username: p.username, fallback: hero ? '/assets/heroes/face/' + hero + '.webp' : '' } : hero ? { photo: null, fallback: '/assets/heroes/face/' + hero + '.webp', username: '' } : null; });
+  if (fresh) {
+    ctl.mode = 'online'; ctl.match = next.startedAt || 0; ctl.endShown = false; ctl.rewarded = false; ctl.pending = null; ctl.anim = null; ctl.bot = null; ctl.turnSeen = -1; lastBanner = '';
+    ctl.viewSeat = ctl.me;
+    ctl.shownSeq = s.last ? s.last.seq - (next.stepOf ? 1 : 0) : 0;
+    ctl.state = next.stepOf && s.shotRec ? structuredClone(s.shotRec.before) : s;
+    showGame(); renderCards();
+    if (!s.last) { banner(s.turn === ctl.me ? 'أنت تبدأ!' : (ctl.names[s.turn] || 'الخصم') + ' يبدأ'); play('go', 0.5); }
+  }
+  if (s.last && s.last.seq > ctl.shownSeq) {
+    const mine = ctl.pending && ctl.pending.seq === s.last.seq;
+    if (mine) { clearTimeout(ctl.pending.timer); await ctl.pending.done; ctl.pending = null; }
+    else if (s.shotRec && s.shotRec.seq === s.last.seq && moving && !document.hidden) { remote = null; play('hit', 0.3 + (s.shotRec.power || 0.5) * 0.6); await animate(replayCarromShot(s.shotRec)); }
+    ctl.shownSeq = s.last.seq;
+    banner(s.last.message);
+  }
+  ctl.state = s; ctl.anim = null; onTurn();
+  if (s.winner !== null) finish();
+}
+try {
+  table = createTable({
+    game: 'carrom',
+    quickNote: 'مواجهة 1 ضد 1: نلقى لك منافس خلال ثواني.',
+    roomNote: 'أنشئ غرفة وارسل الرمز لخويّك.',
+    lobbyNote: (next, isPublic) => (isPublic ? 'تبدأ بعد العد.' : 'أرسل الرمز لخويّك. تبدأ إذا ضغطت «ابدأ».'),
+    apply,
+    onLobby: () => { if (!$('carromGame').hidden) showMenu(); setMode('online'); },
+    onMenu: () => { if (!$('carromGame').hidden) showMenu(); },
+    onStatus: () => {},
+    onError: (message) => { if (ctl.pending) { clearTimeout(ctl.pending.timer); ctl.pending = null; ctl.anim = null; renderStatus(); draw(); } window.BS_PLATFORM?.toast?.(message); },
+  });
+} catch (error) { console.error('carrom online unavailable', error); }
+
+/* ---------- the menu ---------- */
+function setMode(mode) {
+  for (const b of document.querySelectorAll('.cm-modes button')) b.setAttribute('aria-checked', String(b.dataset.mode === mode));
+  for (const p of document.querySelectorAll('.cm-panel')) p.hidden = p.dataset.panel !== mode;
+  prefs.mode = mode; persist();
+}
+for (const b of document.querySelectorAll('.cm-modes button')) b.addEventListener('click', () => setMode(b.dataset.mode));
+function setLevel(v) { prefs.level = v; for (const b of document.querySelectorAll('#carromLevel button')) b.setAttribute('aria-checked', String(b.dataset.v === v)); persist(); }
+for (const b of document.querySelectorAll('#carromLevel button')) b.addEventListener('click', () => setLevel(b.dataset.v));
+function setTheme(v) { prefs.theme = v; for (const b of document.querySelectorAll('.cm-themes button')) b.setAttribute('aria-checked', String(b.dataset.theme === v)); persist(); }
+for (const b of document.querySelectorAll('.cm-themes button')) b.addEventListener('click', () => setTheme(b.dataset.theme));
+for (const b of document.querySelectorAll('[data-start]')) b.addEventListener('click', () => { window.BS_AUDIO?.unlock?.(); startLocal(b.dataset.start); });
+setMode(/[?&]room=\d{6}/.test(location.search) ? 'online' : prefs.mode); setLevel(prefs.level); setTheme(prefs.theme);
+$('carromExit').onclick = () => { if (ctl.mode === 'online') table?.leave(); showMenu(); };
+$('carromPauseButton').onclick = () => pause(true); $('carromResume').onclick = () => pause(false);
+$('carromRestart').onclick = () => startLocal(ctl.mode); $('carromBackMenu').onclick = () => { if (ctl.mode === 'online') table?.leave(); showMenu(); };
+$('carromAgain').onclick = () => { $('carromResult').hidden = true; if (ctl.mode === 'online') table?.again(); else startLocal(ctl.mode); };
+function paintMute() { const muted = Boolean(window.BS_AUDIO?.getSettings?.().muted); for (const id of ['carromMute', 'carromSound']) { const b = $(id); if (!b) continue; b.textContent = muted ? '🔇' : '🔊'; b.setAttribute('aria-pressed', String(muted)); } }
+for (const id of ['carromMute', 'carromSound']) $(id)?.addEventListener('click', () => { window.BS_AUDIO?.toggleMuted?.(); paintMute(); });
+addEventListener('bs-audio-change', paintMute); paintMute();
+document.addEventListener('visibilitychange', () => { if (document.hidden && ctl.mode !== 'online') pause(true); });
+document.addEventListener('keydown', (e) => {
+  if (!ctl.running || ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === 'Escape') { e.preventDefault(); pause(!ctl.paused); return; }
+  if (!canPlay()) return;
+  if (e.key === 'a' || e.key === 'd') { angle += e.key === 'a' ? -0.03 : 0.03; draw(); }
+  else if (e.key === 'Enter' || e.key === ' ') { if (e.target.closest('button,a')) return; e.preventDefault(); fire(angle, power || 0.55); }
+});
+if (new URLSearchParams(location.search).has('debug')) window.BS_CARROM = { get state() { return ctl.state; }, get ctl() { return ctl; }, startLocal, fire: (a, p) => fire(a, p), setAim(a, p) { angle = a; power = p; draw(); }, renderer, canPlay };

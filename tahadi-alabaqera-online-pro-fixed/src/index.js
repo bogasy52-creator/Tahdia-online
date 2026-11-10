@@ -42,7 +42,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.9.9';
+const RELEASE='33.9.10';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -792,7 +792,7 @@ export default {
         let body = {};
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
-        if (!["snakes", "zahra", "jackaroo", "dice", "baloot", "billiards", "jewels"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        if (!["snakes", "zahra", "jackaroo", "dice", "baloot", "billiards", "jewels", "carrom"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
         let variant = 'classic';
         if (game === 'snakes') {
           try { variant = normalizeSnakesVariant(body.variant); }
@@ -1736,7 +1736,7 @@ export class BoardRoom extends DurableObject {
 
   async initializeRoom(body){
     if(this.room)return json({ok:false,error:'room_exists'},409);
-    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot','billiards','jewels'].includes(game))return json({ok:false,error:'invalid_game'},400);
+    const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
@@ -1987,7 +1987,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
     if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats))); }
-    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot','billiards','jewels'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
+    if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
       return this.ctx.blockConcurrencyWhile(()=>this.initializeRoom(body));
@@ -2127,6 +2127,16 @@ export class BoardRoom extends DurableObject {
     for(const socket of this.ctx.getWebSockets()){try{const id=socket.deserializeAttachment()?.playerId;if(id&&id!==player.id)socket.send(packet);}catch{}}
   }
 
+  // 33.9.10: carrom — the other player sees the striker slide and the aim turn while it is set
+  relayCarromAim(player,msg){
+    const r=this.room;if(r?.game!=='carrom'||r.status!=='playing'||!r.state||r.order[r.state.turn]!==player.id)return;
+    const now=Date.now();if(now-(player.aimAt||0)<150)return;player.aimAt=now;
+    const num=(v,lo,hi)=>{const n=Number(v);return Number.isFinite(n)?Math.max(lo,Math.min(hi,Math.round(n*1000)/1000)):null};
+    const x=num(msg.x,220,780),angle=num(msg.angle,-7,7);if(x===null||angle===null)return;
+    const packet=JSON.stringify({type:'carrom_aim',seat:r.state.turn,x,angle,power:num(msg.power,0,1)||0,at:now});
+    for(const socket of this.ctx.getWebSockets()){try{const id=socket.deserializeAttachment()?.playerId;if(id&&id!==player.id)socket.send(packet);}catch{}}
+  }
+
   // 32.1.0: Baloot table talk — only the catalogue's phrases and emoji, by id,
   // relayed like reactions (no storage, no version) and limited per player.
   relayTalk(player,msg){
@@ -2153,6 +2163,7 @@ export class BoardRoom extends DurableObject {
     if(msg.type==='emote')return this.relayEmote(player,msg.emote,ws,msg.to);
     if(msg.type==='talk')return this.relayTalk(player,msg);
     if(msg.type==='pool_aim')return this.relayAim(player,msg);
+    if(msg.type==='carrom_aim')return this.relayCarromAim(player,msg);
     try {
       if (msg.type === "leave") {
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);
@@ -2205,7 +2216,7 @@ export class BoardRoom extends DurableObject {
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
-      if(['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank','pool_shot','jewels_swap','jewels_booster'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
+      if(['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank','pool_shot','jewels_swap','jewels_booster','carrom_shot'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
       if (TABLE_GAMES.includes(this.room.game)) {
         let steps;
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }

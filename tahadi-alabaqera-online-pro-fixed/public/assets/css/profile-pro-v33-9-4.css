@@ -76,3 +76,19 @@
 .bs-pp-rename input{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid #ffffff26;background:#0f1828;color:#fff;font:inherit;font-size:16px}
 .bs-pp-rename small{grid-column:1/-1;text-align:right}
 #playerProfileCard{display:none!important}
+
+/* 33.9.10: frames bought in the shop, round your own picture */
+.bs-avatar.bs-frame-emerald{box-shadow:0 0 0 2px #eafff3,0 0 0 5px #19b866,0 0 0 7px #064d28,0 0 12px #2fd17a99!important}
+.bs-avatar.bs-frame-gold{box-shadow:0 0 0 2px #fff6c8,0 0 0 5px #f0b81c,0 0 0 7px #6b4500,0 0 14px #ffd23f99!important}
+.bs-avatar.bs-frame-diamond{box-shadow:0 0 0 2px #fff,0 0 0 5px #9fdcff,0 0 0 7px #fff,0 0 0 8px #2a6fa8,0 0 18px #bfe9ff!important}
+.bs-avatar.bs-frame-crown{box-shadow:0 0 0 2px #fff6c8,0 0 0 5px #f0b81c,0 0 0 8px #6a2bd0,0 0 0 9px #2a0a6a,0 0 20px #b07aff!important}
+.bs-avatar.bs-frame-neon{animation:bsFrameNeon 2s linear infinite}
+.bs-avatar.bs-frame-flame{animation:bsFrameFlame .9s ease-in-out infinite alternate}
+@keyframes bsFrameNeon{0%,100%{box-shadow:0 0 0 2px #fff,0 0 0 5px #22d8ff,0 0 16px #22d8ff,0 0 26px #ff2fb066}50%{box-shadow:0 0 0 2px #fff,0 0 0 5px #ff2fb0,0 0 16px #ff2fb0,0 0 26px #22d8ff66}}
+@keyframes bsFrameFlame{0%{box-shadow:0 0 0 2px #fff3c0,0 0 0 5px #ff8a1c,0 -4px 14px #ff5a1c,0 0 22px #ffb01c88}100%{box-shadow:0 0 0 2px #fff3c0,0 0 0 5px #ff4a1c,0 -8px 20px #ffb01c,0 0 28px #ff3a1c88}}
+.sx-art-frame{display:grid;place-items:center}
+.sx-art-frame .sx-frame-pic{width:46%;height:auto;aspect-ratio:1;max-width:140px;font-size:44px}
+.sx-art-striker,.sx-art-cue{display:grid;place-items:center}
+.sx-look-art{display:block;max-width:82%;height:auto}
+.sx-look-cue{max-width:92%}
+@media (prefers-reduced-motion:reduce){.bs-avatar.bs-frame-neon,.bs-avatar.bs-frame-flame{animation:none;box-shadow:0 0 0 2px #fff,0 0 0 5px var(--bs-frame,#ff8a1c)!important}}

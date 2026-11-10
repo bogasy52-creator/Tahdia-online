@@ -3,11 +3,11 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.9.9';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.9.10';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
- ['stage','هوية كل الألعاب','✦','ألوان لقوائمك وحواف الساحات وشريط معلوماتك في جميع الألعاب.'],
+ ['frame','إطارات الصورة','🖼️','إطار حول صورتك في شريطك فوق، وفي ملفك، وفي بطاقتك داخل الألعاب.'],
  ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في الثعبان والسلالم والزهرة، وتصير كرات زجاجية في الجاكارو.'],
  ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في الثعبان والسلالم، وتكون صورتك على طاولة البلوت.'],
  ['dice','النرد','🎲','نرد ثلاثي الأبعاد يظهر في كل ألعاب النرد.'],
@@ -20,17 +20,19 @@ const CATS=[
  ['phrase','عبارات','💬','عبارات جاهزة تظهر باسمك في فقاعة داخل الغرفة.'],
  ['move','حركات','🎆','مؤثرات وأصوات تملأ اللوحة: ألعاب نارية، مطر ذهبي، صاعقة…'],
  ['trail','آثار الحركة','✨','أثر يرافق حجرك وهو يمشي على اللوحة.'],
+ ['striker','دوافع الكيرم','🎯','الدافع اللي تضرب فيه على طاولة الكيرم.'],
+ ['cue','عصي البلياردو','🎱','عصاك على طاولة البلياردو.'],
  ['victory','احتفالات الفوز','🏆','الاحتفال الذي يظهر عند فوزك.'],
  ['title','الألقاب','🎖️','لقب يظهر بجانب اسمك وفي شاشة الفوز.']
 ];
 const TYPE_LABEL=Object.fromEntries(CATS.map(([id,label])=>[id,label]));
 const TIER={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري',exclusive:'حصري'};
 const REACTION=new Set(core.REACTION_TYPES||['emote','phrase','move']);
-const SLOTS=['pawn','dice','table','jboard','board','character','deck','snake','trail','victory','title','stage'];
+const SLOTS=['frame','pawn','dice','table','jboard','board','character','deck','snake','striker','cue','trail','victory','title','stage'];
 const TABLE_MATERIAL={'table-club':'club','table-gallery':'ivory','table-nocturne':'carbon','table-botanic':'jade','table-royal':'royal','table-walnut':'walnut','table-cyber':'reactor','table-majlis':'majlis'};
 const BOARD_LOOK={'board-forest':{cell:'#18323e',alt:'#213f4a',num:'#e0edf0',frame:'#1b303e',dark:'#0c1d28',hi:'#45606c',snake:'#52f1c5',ladder:'#8fe2ef'},'board-lava':{cell:'#1d1513',alt:'#261b17',num:'#ffb27a',frame:'#24140d',dark:'#0b0604',hi:'#ff7a2e',snake:'#ff2d55',ladder:'#ff8a3d'},'board-galaxy':{cell:'#141238',alt:'#1a1745',num:'#d6ceff',frame:'#2f2868',dark:'#0c0a22',hi:'#a59cec',snake:'#ff4fa3',ladder:'#cdc4ff'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
 const DIE_ONE={'dice-obsidian':'#ebc677','dice-crystal':'#d6fff1','dice-smoke':'#ffdf9d','dice-nebula':'#ffdf9d'};
-const TRY={stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في الثعبان والسلالم'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح الثعبان والسلالم'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
+const TRY={frame:['/','شوفه في شريطك فوق'],striker:['/carrom','جرّبه في الكيرم'],cue:['/billiards','جرّبها في البلياردو'],stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/zahra','جرّبها في الزهرة'],character:['/snakes','جرّبها في الثعبان والسلالم'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح الثعبان والسلالم'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/zahra','جرّبه في الزهرة'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
 let missionKind='daily';
 let heroParts=null,view='shop',filter='all',query='',sort='featured',pending=false,previewId=null,previewCleanup=()=>{},bag=[],favorites=[],accountKey='',checkout=null,observer=null,clock=null,artSequence=0;
 
@@ -148,6 +150,16 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
  }else if(item.type==='deck'){deckArt(stage,item,live);
  }else if(item.type==='snake'){
   const img=make('img','sx-snake-art'+(item.id==='snake-sovereign'?' is-hero':''));img.src=item.id==='snake-sovereign'?'/assets/brand/sovereign-hero.webp':'/assets/previews/'+item.id+'.webp';img.alt='';img.loading='lazy';img.decoding='async';stage.append(img);
+ }else if(item.type==='frame'){
+  // 33.9.10: your own picture in this frame
+  const P=window.BS_PROFILE_PRO,me=window.BS_SOCIAL?.profile?.()||{},name=api()?.get?.()?.name||me.displayName||'أنت';
+  const pic=P?P.avatar({username:me.username||'',photo:me.photo||null,name},'bs-avatar sx-frame-pic'):make('span','bs-avatar sx-frame-pic',String(name).slice(0,1));
+  pic.classList.add('bs-frame','bs-frame-'+(item.design||'none'));stage.append(pic);
+ }else if(item.type==='striker'||item.type==='cue'){
+  const L=window.BS_LOOKS,cv=document.createElement('canvas');cv.className='sx-look-art sx-look-'+item.type;cv.width=320;cv.height=item.type==='cue'?120:320;stage.append(cv);
+  const c=cv.getContext?.('2d');
+  if(c&&L&&item.type==='striker')L.drawStriker(c,160,152,118,item.id);
+  else if(c&&L)L.drawCue(c,18,302,60,26,item.id);
  }else if(item.type==='board'){miniBoard(stage,item);
  }else if(item.type==='stage'){stage.style.background='radial-gradient(ellipse at top,'+item.color+'44,transparent 70%),#0d1b26';stage.append(make('span','sx-stage-symbol','✦'),make('b','sx-stage-label',item.name));
  }else if(item.type==='emote'){const g=make('span','sx-glyph fx-'+(item.fx||'pop'),item.glyph);stage.append(window.BS_REACTION_ART?.make?.(item)||g);

@@ -126,7 +126,8 @@ test('faces and moves: laughing and angry faces, moves thrown at a player, quick
 test('UNO, carrom and the picture race: their new screens are bundled and the host starts without a «ready»', async () => {
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
   assert.ok(bundles['chaos.html'].includes('assets/css/uno-v33-9.css'));
-  assert.ok(bundles['race.html'].includes('assets/css/carrom-v33-9.css'));
+  // 33.9.10: the carrom club has one sheet of its own
+  assert.ok(bundles['race.html'].includes('assets/css/carrom-club-v33-9-10.css'));
   assert.ok(bundles['picture.html'].includes('assets/css/picture-v33-9.css'));
   const [uno, room] = await Promise.all([read('public/assets/js/uno-ui.js'), read('src/images/image-room.js')]);
   assert.match(uno, /BS_UNO/);

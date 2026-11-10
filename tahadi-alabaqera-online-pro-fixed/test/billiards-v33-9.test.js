@@ -252,8 +252,8 @@ test('the page, the room code family and the home page know billiards', async ()
   assert.match(home, /href="\/billiards" class="home-game"/);
   assert.match(home, /class="home-feature" href="\/billiards"/);
   assert.match(presence, /billiards: \{ key: 'billiards', label: 'بلياردو' \}/);
-  assert.match(social, /"hockey", "billiards"(?:, "jewels")?\]/);
-  assert.match(profile, /'hockey','billiards'\]/);
+  assert.match(social, /"hockey", "billiards"(?:, "jewels")?(?:, "carrom")?\]/);
+  assert.match(profile, /'hockey','billiards'(?:,'carrom')?\]/);
   const main = await readFile(new URL('../public/assets/js/billiards/main.js', import.meta.url), 'utf8');
   assert.doesNotMatch(main, /بوت/);
   assert.match(main, /pool_aim/);

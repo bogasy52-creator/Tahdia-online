@@ -43,7 +43,11 @@ export function shootCarrom(s,{x=s.striker.x,angle,power}={},seat=s.turn) {
   if(!Number.isFinite(x)||x<220||x>780||!Number.isFinite(angle)||!Number.isFinite(power)||power<.08||power>1)throw Error('اضبط التصويب وقوة الضربة');
   const p=legalPosition(s,x,seat);
   if(p===null||Math.abs(p-x)>.1)throw Error('الدافع يتقاطع مع حجر؛ غيّر مكانه');
-  Object.assign(s.striker,{x,y:seat===0?825:175,vx:Math.cos(angle)*(220+power*1250),vy:Math.sin(angle)*(220+power*1250),pocketed:false});
+  launch(s,seat,x,Math.cos(angle)*(220+power*1250),Math.sin(angle)*(220+power*1250),power);
+}
+// 33.9.10: the striker leaves with its speed given whole, so a recorded shot replays the same on any phone
+function launch(s,seat,x,vx,vy,power){
+  Object.assign(s.striker,{x,y:seat===0?825:175,vx,vy,pocketed:false});
   s.phase='moving';s.shots[seat]++;
   s.shot={seat,captured:[],foul:false,ownBefore:count(s,seat),queenBefore:s.queen.pending,elapsed:0,quiet:0};
   s.events=[];emit(s,'strike',{power});s.message='الأحجار تتحرك…';
@@ -178,7 +182,7 @@ function clearPath(s,from,to,ignore,clearance) {
     return Math.hypot(c.x-from.x-t*dx,c.y-from.y-t*dy)>clearance+c.r;
   });
 }
-export function chooseCarromShot(s) {
+export function chooseCarromShot(s,level=null) {
   const seat=s.turn,baseline=seat===0?825:175;
   let targets=live(s).filter(c=>owner(c)===seat);
   if(s.queen.status==='board'&&count(s,seat)>0)targets=[...targets,s.coins.find(c=>c.kind==='queen')];
@@ -196,7 +200,7 @@ export function chooseCarromShot(s) {
   }
   choices.sort((a,b)=>b.score-a.score);
   const best=choices[0]||{x:legalPosition(s,500,seat)||500,angle:seat===0?-Math.PI/2:Math.PI/2,power:.7};
-  const noise=(random(s)-.5)*(s.difficulty==='expert'?.008:.034);
+  const how=level||s.difficulty,noise=(random(s)-.5)*(how==='expert'||how==='hard'?.008:how==='easy'?.07:.034);
   return {x:best.x,angle:best.angle+noise,power:best.power};
 }
 export function aimCarrom(s,angle) {
@@ -211,3 +215,41 @@ export function aimCarrom(s,angle) {
   return {x:from.x+dx*length,y:from.y+dy*length,target};
 }
 export function carromScore(s) {return [0,1].map(seat=>({coins:count(s,seat),queen:s.queen.owner===seat?3:0,due:s.due[seat]}));}
+
+/* ---------- 33.9.10: the online table — two players, the room plays each shot to its end ---------- */
+const strip=s=>{const {shotRec,last,events,...rest}=s;return structuredClone({...rest,events:[]});};
+export function createCarromDuel(names=['لاعب 1','لاعب 2'],{rng=Math.random,first=0}={}){
+  const s=createCarrom({mode:'ai',seed:Math.floor(rng()*4294967296)});
+  s.mode='online';s.players=names.slice(0,2).map((n,i)=>({name:String(n||'لاعب '+(i+1)).slice(0,20)}));
+  s.turn=first===1?1:0;s.seq=0;s.last=null;s.shotRec=null;s.message='';
+  placeStriker(s,500);
+  return s;
+}
+/** One shot of a player, played on the room to the moment every coin stands still. */
+export function playCarromShot(state,seat,{x,angle,power}={}){
+  if(state.winner!==null&&state.winner!==undefined)throw Error('match_over');
+  if(seat!==state.turn)throw Error('wrong_turn');
+  x=Number(x);angle=Number(angle);power=Number(power);
+  const before=strip(state),s=strip(state);s.phase='aim';
+  shootCarrom(s,{x,angle,power},seat);
+  const rec={seq:(state.seq||0)+1,by:seat,x,vx:s.striker.vx,vy:s.striker.vy,power,before},shot=s.shot;
+  let n=0;while(s.phase==='moving'&&n<2000){stepCarrom(s,FIXED_DT);n++;}
+  s.events=[];s.seq=rec.seq;s.shotRec=rec;
+  s.last={seq:rec.seq,by:seat,ms:Math.round(n*FIXED_DT*1000),captured:shot.captured.slice(),foul:!!shot.foul,again:s.turn===seat&&s.winner===null,message:s.message};
+  return s;
+}
+/** The shot again, from the state before it, for the page to animate (`step` each 1/120 s). */
+export function replayCarromShot(rec){
+  const s=structuredClone(rec.before);s.phase='aim';
+  launch(s,rec.by,rec.x,rec.vx,rec.vy,rec.power||.5);
+  return s;
+}
+/** Time ran out: the turn passes. */
+export function carromTimeout(state){
+  if(state.winner!==null&&state.winner!==undefined)return state;
+  const s=strip(state),seat=s.turn;s.turn=1-seat;s.turnNo++;s.phase='aim';s.shot=null;s.seq=(state.seq||0)+1;
+  placeStriker(s,500);s.message='خلص الوقت · الدور للاعب الثاني';
+  s.last={seq:s.seq,by:seat,ms:0,captured:[],foul:false,again:false,timeout:true,message:s.message};s.shotRec=null;
+  return s;
+}
+export function carromProgress(state,seat){return count(state,seat)+(state.queen?.owner===seat?3:0);}
