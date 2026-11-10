@@ -17,6 +17,8 @@
   // 33.9.3: a richer effects kit for every game (turns, start, win, coins, taps).
   for(const name of ['tap','open','yourTurn','count','go','victory','defeat','coin','combo','whoosh','hit','send','levelUp'])samples[name]='assets/sounds/fx-v33-9-3/'+name+'.wav';
   samples.win=samples.victory;
+  // 33.9.7: a softer «your turn»
+  samples.yourTurn='assets/sounds/fx-v33-9-3/yourTurn-soft.wav';
   // Create/decode only a sound the player uses, sharing aliases of the same file.
   function sample(name){const src=samples[name]||samples.click;if(!samplePool[src]){const a=new Audio(src);a.preload='none';a.volume=settings.volume*.9;samplePool[src]=a;}return audio[name]=samplePool[src];}
   const diceSamples={soft:['soft-1','soft-2'],wood:['wood-1','wood-2'],crystal:['crystal-1','crystal-2']},diceAudio={},diceCursor={dice:-1,diceImpact:-1};
@@ -52,6 +54,6 @@
   const has=name=>Boolean(samples[name]);const context=()=>{graph();return ctx};const musicBus=()=>graph()?.music||null;const recent=(ms=400)=>Date.now()-lastCue<ms;
   window.BS_AUDIO={play,timerTick,timerEnd,vibrate,setMuted,toggleMuted,update,getSettings,unlock,dispose,tone,registerContent,contentActive,prime,has,context,musicBus,recent};
   // Music and the sounds of play load on their own, after the page.
-  try{if(document&&!document.querySelector('script[data-bs-sound]')){const s=document.createElement('script');s.src='/assets/js/sound-v33-9-3.js?v=33.9.5';s.defer=true;s.dataset.bsSound='1';(document.head||document.documentElement).appendChild(s)}}catch{}
+  try{if(document&&!document.querySelector('script[data-bs-sound]')){const s=document.createElement('script');s.src='/assets/js/sound-v33-9-3.js?v=33.9.7';s.defer=true;s.dataset.bsSound='1';(document.head||document.documentElement).appendChild(s)}}catch{}
   const starter=()=>unlock();window.addEventListener('pointerdown',starter,{once:true,passive:true});window.addEventListener('keydown',starter,{once:true})
 })();

@@ -104,7 +104,7 @@ export class BoardOnlineClient {
           if(!msg.state||this.version!=null&&(msg.state.version<this.version||msg.state.version===this.version&&identity(msg.state)===this.stateKey))return;
           const state=stamp(msg.state);this.onState(state);announceRoom(this,state);
         }else if(msg.type==='emote'){
-          announce('bs-board-emote',{from:msg.from,name:msg.name,emote:msg.emote,at:msg.at});
+          announce('bs-board-emote',{from:msg.from,name:msg.name,emote:msg.emote,at:msg.at,...(msg.to?{to:msg.to}:{})});
         }else if(msg.type==='emote-locked'){
           announce('bs-board-emote-locked',{emote:msg.emote});
         }else if(msg.type==='talk'){

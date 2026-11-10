@@ -56,7 +56,7 @@ test('effects play from decoded buffers once loaded, through one compressor', as
     navigator: {}, CustomEvent: class {}, fetch: async (src) => { fetched.push(src); return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) }; }, console };
   vm.runInNewContext(code, context);
   window.BS_AUDIO.play('yourTurn');
-  assert.deepEqual(fetched, ['assets/sounds/fx-v33-9-3/yourTurn.wav']);
+  assert.deepEqual(fetched, ['assets/sounds/fx-v33-9-3/yourTurn-soft.wav']);
   await new Promise((r) => setTimeout(r, 10));
   window.BS_AUDIO.play('yourTurn');
   assert.equal(played.length, 1, 'the second call plays the decoded buffer');

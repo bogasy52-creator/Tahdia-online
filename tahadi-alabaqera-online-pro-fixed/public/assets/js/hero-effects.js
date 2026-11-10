@@ -10,7 +10,7 @@
  const host=()=>doc.querySelector('dialog[open]')||doc.fullscreenElement||doc.querySelector('body.serpent-active #arenaPlay')||doc.body;
  const node=(tag,cls)=>{const el=doc.createElement(tag);if(cls)el.className=cls;return el;};
  function signature(value){const id=String(value||current()).replace(/^character-/,''),rows=core()?.HERO_SIGNATURES;return rows&&Object.hasOwn(rows,id)?rows[id]:rows?.fox;}
- const style=node('link');style.rel='stylesheet';style.href='/assets/css/hero-effects.css?v=33.9.5-full1';doc.head?.append(style);
+ const style=node('link');style.rel='stylesheet';style.href='/assets/css/hero-effects.css?v=33.9.7-full1';doc.head?.append(style);
  function later(fn,ms){const version=epoch,id=setTimeout(()=>{timers.delete(id);if(version===epoch)fn();},ms);timers.add(id);return id;}
  function remember(key){if(seen.has(key))return false;seen.add(key);if(seen.size>120)seen.delete(seen.values().next().value);return true;}
  function remove(el){el?._heroRestore?.();for(const actor of el?.querySelectorAll?.('.character-actor')||[])root.BS_CHARACTERS?.dispose(actor);if(el?.classList?.contains('character-actor'))root.BS_CHARACTERS?.dispose(el);el?.remove();active.delete(el);}

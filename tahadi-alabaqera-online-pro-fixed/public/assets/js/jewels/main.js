@@ -1,8 +1,8 @@
 /* Tahdia 33.9.5 — «ماستر الجواهر»: the duel page. The engine decides; this file draws the board on a
    canvas, animates every move from the state's own record (swap, breaks, special gems, falls), and
    runs the three ways to play: online (a BoardRoom table), against the computer, two on one phone. */
-import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.5-jw1';
-import { createTable } from '../board-table-v33.js?v=33.9.5';
+import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.7-jw1';
+import { createTable } from '../board-table-v33.js?v=33.9.7';
 
 const $ = (s) => document.querySelector(s);
 const W = JD.W, H = JD.H, N = W * H;
@@ -13,12 +13,12 @@ const play = (name, volume) => { try { window.BS_AUDIO?.play?.(name, volume ? { 
 
 /* ---------- the gems ---------- */
 const GEMS = [
-  { base: '#ff3b5c', dark: '#8f0b27', light: '#ffc1cc', glow: '#ff6b85', shape: 'round' },
-  { base: '#ffc928', dark: '#a86a00', light: '#fff4b0', glow: '#ffe066', shape: 'star' },
-  { base: '#2fd977', dark: '#0a6e35', light: '#c4ffdc', glow: '#5cf59c', shape: 'emerald' },
-  { base: '#3b9dff', dark: '#0a3f9e', light: '#cfe8ff', glow: '#6cb8ff', shape: 'diamond' },
-  { base: '#b55cff', dark: '#4f139c', light: '#ecd2ff', glow: '#c98cff', shape: 'trillion' },
-  { base: '#ff8a2b', dark: '#9c3f05', light: '#ffd9b5', glow: '#ffa95c', shape: 'hex' },
+  { base: '#ff2f55', dark: '#a3001f', light: '#ffd0da', glow: '#ff6b85', shape: 'round' },
+  { base: '#ffd21f', dark: '#c27a00', light: '#fff8c8', glow: '#ffe066', shape: 'star' },
+  { base: '#36e27a', dark: '#078a3c', light: '#d2ffe4', glow: '#5cf59c', shape: 'emerald' },
+  { base: '#2f9bff', dark: '#0a4fc0', light: '#d8eeff', glow: '#6cb8ff', shape: 'diamond' },
+  { base: '#b74dff', dark: '#5e14b8', light: '#f0dcff', glow: '#c98cff', shape: 'trillion' },
+  { base: '#ff8a1f', dark: '#b8470a', light: '#ffe2c2', glow: '#ffa95c', shape: 'hex' },
 ];
 function poly(g, pts) { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); }
 function shapePoints(shape, r) {
@@ -38,7 +38,8 @@ function drawGem(g, c, r) {
   g.restore();
   let gr = g.createLinearGradient(-r, -r, r, r); gr.addColorStop(0, G.light); gr.addColorStop(0.35, G.base); gr.addColorStop(1, G.dark);
   path(); g.fillStyle = gr; g.fill();
-  g.lineWidth = Math.max(1, r * 0.07); g.strokeStyle = G.dark; g.stroke();
+  // a cartoon outline, thick and dark, like the toy-box gems of the duel games
+  g.lineWidth = Math.max(1.5, r * 0.12); g.strokeStyle = '#1a0b3d'; g.stroke();
   // facets: the table on top and lines to its corners
   const inner = 0.52, dy = -r * 0.06;
   g.save(); path(); g.clip();
@@ -115,7 +116,7 @@ const canvas = $('#jwBoard'), g = canvas.getContext('2d'), wrap = $('#jwWrap');
 const view = { size: 320, cell: 40, pad: 8, dpr: 1, tiles: new Map(), grid: Array(N).fill(null), fx: [], parts: [], sel: -1, hint: null, hintAt: 0, aimCell: -1, shake: 0, raf: 0 };
 function fitBoard() {
   const vw = Math.min(window.innerWidth, 560) - 24;
-  const used = ['#game .jw-bar', '#plateTop', '#status', '#plateBottom'].reduce((n, s) => n + ($(s)?.offsetHeight || 0), 0) + 54;
+  const used = ['#game .jw-bar', '.jw-hud', '#status', '#jwBoostBar'].reduce((n, s) => n + ($(s)?.offsetHeight || 0), 0) + 54;
   const size = Math.max(240, Math.min(vw, window.innerHeight - used, 520));
   view.dpr = Math.min(3, window.devicePixelRatio || 1); view.pad = Math.round(size * 0.025); view.cell = (size - view.pad * 2) / W; view.size = size;
   canvas.width = Math.round(size * view.dpr); canvas.height = Math.round(size * view.dpr); canvas.style.width = canvas.style.height = size + 'px';
@@ -139,12 +140,12 @@ function draw(now) {
   let sx = 0, sy = 0; if (view.shake > 0) { sx = (Math.random() - 0.5) * view.shake; sy = (Math.random() - 0.5) * view.shake; view.shake *= 0.86; if (view.shake < 0.3) view.shake = 0; }
   g.translate(sx, sy);
   // the board
-  let gr = g.createLinearGradient(0, 0, 0, S); gr.addColorStop(0, '#2c1a6e'); gr.addColorStop(1, '#170b40');
-  roundRect(1, 1, S - 2, S - 2, 20); g.fillStyle = gr; g.fill();
-  gr = g.createLinearGradient(0, 0, S, S); gr.addColorStop(0, '#fff0b8'); gr.addColorStop(0.3, '#ffd25e'); gr.addColorStop(0.7, '#b9831c'); gr.addColorStop(1, '#ffe58f');
-  g.lineWidth = 3; g.strokeStyle = gr; g.stroke();
+  let gr = g.createLinearGradient(0, 0, 0, S); gr.addColorStop(0, 'rgba(18,58,150,.92)'); gr.addColorStop(1, 'rgba(10,30,96,.95)');
+  roundRect(2, 2, S - 4, S - 4, 22); g.fillStyle = gr; g.fill();
+  g.lineWidth = 4; g.strokeStyle = '#ffffff'; g.stroke();
+  roundRect(5, 5, S - 10, S - 10, 19); g.lineWidth = 2; g.strokeStyle = 'rgba(120,220,255,.65)'; g.stroke();
   const p = view.pad, c = view.cell;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = (x + y) % 2 ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.16)'; roundRect(p + x * c + 1.5, p + y * c + 1.5, c - 3, c - 3, c * 0.18); g.fill(); }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = (x + y) % 2 ? 'rgba(255,255,255,.13)' : 'rgba(255,255,255,.06)'; roundRect(p + x * c + 1.5, p + y * c + 1.5, c - 3, c - 3, c * 0.18); g.fill(); }
   // booster aim
   if (ctl.aim >= 0) {
     const cells = aimCells(BOOSTERS[ctl.aim].id, view.aimCell);
@@ -339,22 +340,30 @@ const humanTurn = () => { const s = ctl.state; if (!s || s.winner !== null) retu
 const canAct = () => humanTurn() && !ctl.busy && !ctl.pending;
 const bottomSeat = () => (ctl.mode === 'online' ? ctl.me : 0);
 
+// 33.9.7: a duel head-up display like the big duel games: both players across the top (you first),
+// the round between them, and your boosters as big round buttons under the board
 function plateHTML(seat) {
-  return `<span class="jw-face" data-player-tag="${seat}" role="button" tabindex="0" aria-label="ملف اللاعب"><span class="jw-pic"></span><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="ring-bg" cx="32" cy="32" r="29"/><circle class="ring" cx="32" cy="32" r="29" stroke-dasharray="182.2" stroke-dashoffset="182.2"/></svg></span>
-  <span class="jw-who"><b></b><small></small></span><b class="jw-score">0</b>
-  <div class="jw-boosts">${BOOSTERS.map((b, k) => `<button type="button" class="jw-boost" data-k="${k}" style="--bc:${GEMS[b.color].base}"><i class="fill"></i><canvas></canvas><span><b>${b.name}</b><small></small></span></button>`).join('')}</div>`;
+  return `<span class="jw-face" data-player-tag="${seat}" role="button" tabindex="0" aria-label="ملف اللاعب"><span class="jw-pic"></span></span>
+  <b class="jw-score">0</b><span class="jw-who"><b></b><small></small></span>
+  <div class="jw-mini">${BOOSTERS.map((b, k) => `<i data-k="${k}" style="--bc:${GEMS[b.color].base}"></i>`).join('')}</div>`;
+}
+function boostHTML() {
+  return BOOSTERS.map((b, k) => `<button type="button" class="jw-boost" data-k="${k}" style="--bc:${GEMS[b.color].base}"><span class="ring"><canvas></canvas></span><b>${b.name}</b><small></small></button>`).join('');
 }
 function buildPlates() {
   for (const [id, seat] of [['#plateBottom', bottomSeat()], ['#plateTop', 1 - bottomSeat()]]) {
-    const el = $(id); el.dataset.seat = seat; el.innerHTML = plateHTML(seat); el.classList.toggle('foe', ctl.mode !== 'two' && seat !== bottomSeat());
-    el.querySelectorAll('.jw-boost canvas').forEach((cv, k) => boosterIcon(cv, k));
-    el.querySelectorAll('.jw-boost').forEach((b) => b.addEventListener('click', () => boosterTap(seat, Number(b.dataset.k))));
+    const el = $(id); el.dataset.seat = seat; el.innerHTML = plateHTML(seat); el.classList.toggle('foe', seat !== bottomSeat()); el.classList.toggle('me', seat === bottomSeat());
     const pic = el.querySelector('.jw-pic'), user = ctl.users[seat], P = window.BS_PROFILE_PRO;
-    if (P && (user?.username || user?.photo)) pic.replaceWith(P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '' }));
+    if (P && (user?.username || user?.photo || user?.fallback)) pic.replaceWith(P.avatar({ username: user.username, photo: user.photo, name: ctl.names[seat], fallback: user.fallback || '' }));
     else pic.replaceWith(Object.assign(document.createElement('span'), { className: 'jw-letter', textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) }));
   }
+  const bar = $('#jwBoostBar'); bar.innerHTML = boostHTML();
+  bar.querySelectorAll('.jw-boost canvas').forEach((cv, k) => boosterIcon(cv, k, 84));
+  bar.querySelectorAll('.jw-boost').forEach((b) => b.addEventListener('click', () => boosterTap(barSeat(), Number(b.dataset.k))));
   ctl.scores = ctl.state ? ctl.state.players.map((p) => p.score) : [0, 0];
 }
+// whose boosters the bar shows: yours, or (two on one phone) whoever is playing
+const barSeat = () => (ctl.mode === 'two' ? ctl.state?.turn ?? 0 : bottomSeat());
 function bumpScore(seat, pts) {
   ctl.scores[seat] += pts;
   const el = document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-score`); if (!el) return;
@@ -366,17 +375,20 @@ function renderPlates() {
     const seat = Number(el.dataset.seat), p = s.players[seat], on = s.winner === null && s.turn === seat;
     el.classList.toggle('on', on);
     el.querySelector('.jw-who b').textContent = ctl.names[seat] || p.name;
-    el.querySelector('.jw-who small').innerHTML = on ? `<span class="jw-pips">${Array.from({ length: Math.max(JD.MOVES, s.moves) }, (_, i) => `<i class="${i < s.moves ? 'full' : ''}"></i>`).join('')}</span> ${s.moves === 1 ? 'حركة' : s.moves === 2 ? 'حركتين' : s.moves + ' حركات'}` : (seat === mySeat() && ctl.mode !== 'two' ? 'أنت' : 'ينتظر');
+    el.querySelector('.jw-who small').innerHTML = on ? `<span class="jw-pips">${Array.from({ length: Math.max(JD.MOVES, s.moves) }, (_, i) => `<i class="${i < s.moves ? 'full' : ''}"></i>`).join('')}</span>` : '';
     if (!ctl.busy) { ctl.scores[seat] = p.score; el.querySelector('.jw-score').textContent = p.score; }
-    el.querySelectorAll('.jw-boost').forEach((b, k) => {
-      const need = BOOSTERS[k].need, have = Math.min(need, p.charge[k]), ready = have >= need;
-      b.style.setProperty('--charge', Math.round(have / need * 100) + '%');
-      b.querySelector('small').textContent = ready ? 'جاهزة!' : have + '/' + need;
-      b.classList.toggle('ready', ready); b.classList.toggle('aim', ctl.aim === k && s.turn === seat);
-      const mine = ctl.mode === 'two' ? s.turn === seat : seat === mySeat() && !ctl.bots[seat];
-      b.disabled = !(ready && mine && s.turn === seat && s.winner === null);
-    });
+    el.querySelectorAll('.jw-mini i').forEach((m, k) => { const need = BOOSTERS[k].need; m.style.setProperty('--c', Math.round(Math.min(need, p.charge[k]) / need * 100) + '%'); m.classList.toggle('ready', p.charge[k] >= need); });
   }
+  const seat = barSeat(), p = s.players[seat], bar = $('#jwBoostBar');
+  bar.dataset.seat = seat;
+  bar.querySelectorAll('.jw-boost').forEach((b, k) => {
+    const need = BOOSTERS[k].need, have = Math.min(need, p.charge[k]), ready = have >= need;
+    b.style.setProperty('--charge', Math.round(have / need * 100));
+    b.querySelector('small').textContent = ready ? 'جاهزة!' : have + '/' + need;
+    b.classList.toggle('ready', ready); b.classList.toggle('aim', ctl.aim === k && s.turn === seat);
+    const mine = ctl.mode === 'two' || !ctl.bots[seat];
+    b.disabled = !(ready && mine && s.turn === seat && s.winner === null);
+  });
   const r = $('#jwRound'), last = s.round === JD.ROUNDS;
   r.textContent = s.winner !== null ? 'انتهت المواجهة' : 'الجولة ' + s.round + ' من ' + JD.ROUNDS;
   r.parentElement.classList.toggle('last', last && s.winner === null);
@@ -405,7 +417,7 @@ function turnBanner(prev) {
   }
 }
 function flashBooster(seat, id) {
-  const k = BOOSTERS.findIndex((b) => b.id === id), el = document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-boost[data-k="${k}"]`);
+  const k = BOOSTERS.findIndex((b) => b.id === id), el = document.querySelector(`#jwBoostBar[data-seat="${seat}"] .jw-boost[data-k="${k}"]`) || document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-mini i[data-k="${k}"]`);
   if (el) { el.classList.add('aim'); setTimeout(() => el.classList.remove('aim'), 700); }
   banner(BOOSTERS[k]?.name + '!', seat !== mySeat()); play('levelUp', 0.45);
 }
@@ -627,7 +639,7 @@ addEventListener('resize', () => { if (!$('#game').hidden) fitBoard(); });
   function paint(now) {
     if ($('#menu').hidden) { requestAnimationFrame(paint); last = now; return; }
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    const gr = h.createRadialGradient(380, 120, 40, 380, 230, 520); gr.addColorStop(0, '#4a24a8'); gr.addColorStop(0.55, '#1d0d4d'); gr.addColorStop(1, '#0b0421'); h.fillStyle = gr; h.fillRect(0, 0, 760, 460);
+    const gr = h.createRadialGradient(380, 120, 40, 380, 230, 520); gr.addColorStop(0, '#5fd0ff'); gr.addColorStop(0.5, '#2a6be0'); gr.addColorStop(1, '#16216e'); h.fillStyle = gr; h.fillRect(0, 0, 760, 460);
     for (const q of gems) {
       if (!reduced()) { q.y += q.v * dt; q.a += q.spin * dt; if (q.y > 500) { q.y = -40; q.x = Math.random() * 760; } }
       h.save(); h.translate(q.x, q.y); h.rotate(Math.sin(q.a) * 0.25); h.globalAlpha = 0.55 + 0.45 * Math.min(1, q.r / 60);

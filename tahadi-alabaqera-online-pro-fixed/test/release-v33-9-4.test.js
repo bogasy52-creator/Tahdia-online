@@ -48,11 +48,14 @@ test('set, show, report three times to hide, and the owner keeps or removes', as
   assert.equal((await raw(env, '/api/social/photo/photo_b')).status, 404);
   assert.deepEqual((await api(env, '/api/social/moderation', { token: owner.data.token })).data.reports, []);
   // a ready picture
+  // 33.9.7: the first change is free, the next one costs coins (the owner never pays)
   r = await api(env, '/api/social/photo', { method: 'POST', token: b.data.token, body: { photo: { kind: 'preset', id: 'h-falcon' } } });
+  assert.equal(r.response.status, 400); assert.match(r.data.error, /250 عملة/);
+  r = await api(env, '/api/social/photo', { method: 'POST', token: owner.data.token, body: { photo: { kind: 'preset', id: 'h-falcon' } } });
   assert.deepEqual(r.data.photo, { kind: 'preset', id: 'h-falcon' });
-  const preset = await raw(env, '/api/social/photo/photo_b');
+  const preset = await raw(env, '/api/social/photo/bosrag');
   assert.equal(preset.status, 302); assert.equal(preset.headers.get('location'), '/assets/heroes/face/falcon.webp');
-  assert.equal((await api(env, '/api/social/photo', { method: 'POST', token: b.data.token, body: { photo: { kind: 'preset', id: 'h-nope' } } })).response.status, 400);
+  assert.equal((await api(env, '/api/social/photo', { method: 'POST', token: owner.data.token, body: { photo: { kind: 'preset', id: 'h-nope' } } })).response.status, 400);
   assert.equal((await api(env, '/api/social/report', { method: 'POST', token: reporters[0].data.token, body: { username: 'photo_b' } })).response.status, 404, 'only an uploaded photo is reported');
 });
 

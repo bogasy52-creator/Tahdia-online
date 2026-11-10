@@ -5,11 +5,11 @@
    60 frames a second with its sounds; online, the server's shot replays here to the same end.
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
-import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.5-pool1';
-import { createTable } from '../board-table-v33.js?v=33.9.5';
+import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.7-pool1';
+import { createTable } from '../board-table-v33.js?v=33.9.7';
 
 const { L, W, R } = POOL;
-const RAIL = 14, CUSHION = 4;
+const RAIL = 12, CUSHION = 4;
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -139,8 +139,12 @@ class TableView {
     // cloth on the cushions, then the bed under the lamp
     g.fillStyle = '#0a5539'; g.fillRect(-CUSHION, -CUSHION, L + 2 * CUSHION, W + 2 * CUSHION);
     const bed = g.createRadialGradient(L / 2, W / 2, 6, L / 2, W / 2, L * 0.62);
-    bed.addColorStop(0, '#1aa577'); bed.addColorStop(0.45, '#11845d'); bed.addColorStop(1, '#09553b');
+    bed.addColorStop(0, '#1fb383'); bed.addColorStop(0.5, '#138b62'); bed.addColorStop(1, '#0a5a3e');
     g.fillStyle = bed; g.fillRect(0, 0, L, W);
+    // 33.9.6: two lamps over the bed, and the edges falling into shade
+    for (const lx of [L * 0.3, L * 0.7]) { const lamp = g.createRadialGradient(lx, W / 2, 2, lx, W / 2, W * 0.75); lamp.addColorStop(0, 'rgba(255,255,230,.16)'); lamp.addColorStop(1, 'rgba(255,255,230,0)'); g.fillStyle = lamp; g.fillRect(0, 0, L, W); }
+    const shade = g.createLinearGradient(0, 0, 0, W); shade.addColorStop(0, 'rgba(0,0,0,.22)'); shade.addColorStop(0.12, 'rgba(0,0,0,0)'); shade.addColorStop(0.88, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,.22)');
+    g.fillStyle = shade; g.fillRect(0, 0, L, W);
     // the cushion noses: a lighter edge along each, angled into the pockets
     const { corner: CM, side: SM, jaw: J, sideJaw: [SJx, SJy] } = SHAPE, mid = L / 2, d = CUSHION, sx = (SJx * d) / SJy;
     const cush = [
@@ -155,15 +159,24 @@ class TableView {
     }
     // the pockets: a hole under a leather liner, cut into rail and cushion
     const holes = [[-1.7, -1.7, 6.7], [mid, -4.4, 6.0], [L + 1.7, -1.7, 6.7], [-1.7, W + 1.7, 6.7], [mid, W + 4.4, 6.0], [L + 1.7, W + 1.7, 6.7]];
+    // the lacquer: a long shine along each rail
+    g.save(); roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.clip();
+    for (const [y0, y1] of [[-RAIL + 1.2, -RAIL + 3.2], [W + RAIL - 3.2, W + RAIL - 1.2]]) { const gl = g.createLinearGradient(0, y0, 0, y1); gl.addColorStop(0, 'rgba(255,230,200,0)'); gl.addColorStop(0.5, 'rgba(255,230,200,.22)'); gl.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gl; g.fillRect(-RAIL, y0, L + 2 * RAIL, y1 - y0); }
+    for (const [x0, x1] of [[-RAIL + 1.2, -RAIL + 3.2], [L + RAIL - 3.2, L + RAIL - 1.2]]) { const gl = g.createLinearGradient(x0, 0, x1, 0); gl.addColorStop(0, 'rgba(255,230,200,0)'); gl.addColorStop(0.5, 'rgba(255,230,200,.18)'); gl.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gl; g.fillRect(x0, -RAIL, x1 - x0, W + 2 * RAIL); }
+    g.restore();
+    // chrome caps over the corners and the middles, where the pockets cut the rail
+    const cap = (x, y, r) => { const m = g.createLinearGradient(x - r, y - r, x + r, y + r); m.addColorStop(0, '#d9c27a'); m.addColorStop(0.4, '#8a6a2a'); m.addColorStop(0.65, '#e6cf8a'); m.addColorStop(1, '#5a4214'); g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = m; g.fill(); g.lineWidth = this.px(1); g.strokeStyle = 'rgba(0,0,0,.45)'; g.stroke(); };
+    for (const [x, y, r] of holes) cap(x, y, r + 2.5);
     for (const [x, y, r] of holes) {
-      g.beginPath(); g.arc(x, y, r + 1.7, 0, Math.PI * 2); g.fillStyle = '#20140c'; g.fill();
+      g.beginPath(); g.arc(x, y, r + 1.7, 0, Math.PI * 2); g.fillStyle = '#2a1608'; g.fill();
+      g.beginPath(); g.arc(x, y, r + 1.1, 0, Math.PI * 2); g.lineWidth = 0.9; g.strokeStyle = '#6b3a18'; g.stroke();
       const hole = g.createRadialGradient(x, y, 0, x, y, r);
       hole.addColorStop(0, '#000'); hole.addColorStop(0.75, '#050505'); hole.addColorStop(1, '#1d1d1d');
       g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = hole; g.fill();
     }
     void J;
     // brass sights on the rails
-    const sight = (x, y) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); g.fillStyle = '#f2e3bd'; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 2 * this.dpr; g.fillRect(-0.75, -0.75, 1.5, 1.5); g.restore(); };
+    const sight = (x, y) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); g.fillStyle = '#fff6dc'; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 2 * this.dpr; g.fillRect(-0.95, -0.95, 1.9, 1.9); g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(-0.95, -0.95, 0.8, 0.8); g.restore(); };
     const rm = CUSHION + (RAIL - CUSHION) / 2;
     for (const k of [1, 2, 3, 5, 6, 7]) { sight((L * k) / 8, -rm); sight((L * k) / 8, W + rm); }
     for (const k of [1, 2, 3]) { sight(-rm, (W * k) / 4); sight(L + rm, (W * k) / 4); }
@@ -209,6 +222,20 @@ class TableView {
     for (const [n, x, y, sc, al] of list) this.drawBall(n, x, y, sc, al);
     if (placing) this.drawPlacing(placing);
     if (aim && cue && aim.stick !== false) this.drawCue(cue, aim.dir, aim.pull || 0, aim.alpha ?? 1);
+    if (this.loupe && aim && guide && cue && !ghostOnly) this.drawLoupe(cue, aim.dir);
+  }
+
+  // 33.9.6: while you aim, a round magnifier shows where the cue ball will touch, three times bigger
+  drawLoupe(cue, dir) {
+    const gd = aimGuide(this.balls, cue, dir), at = gd.kind === 'ball' ? gd.ghost : gd.at; if (!at) return;
+    const g = this.g, [X, Y] = this.toScreen(at[0], at[1]), d = this.dpr, size = 64 * d, zoom = 3, src = size / zoom;
+    const cw = this.canvas.width, ch = this.canvas.height, cx = cw / 2, cy = Y < ch * 0.35 ? ch - size * 0.62 - 10 * d : size * 0.62 + 6 * d;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.save(); g.beginPath(); g.arc(cx, cy, size / 2, 0, Math.PI * 2); g.closePath(); g.fillStyle = '#0a2018'; g.fill(); g.clip();
+    g.drawImage(this.canvas, X - src / 2, Y - src / 2, src, src, cx - size / 2, cy - size / 2, size, size);
+    g.restore();
+    g.beginPath(); g.arc(cx, cy, size / 2, 0, Math.PI * 2); g.lineWidth = 3 * d; g.strokeStyle = '#f6dc96'; g.stroke();
+    g.beginPath(); g.moveTo(cx - 6 * d, cy); g.lineTo(cx + 6 * d, cy); g.moveTo(cx, cy - 6 * d); g.lineTo(cx, cy + 6 * d); g.lineWidth = 1 * d; g.strokeStyle = 'rgba(255,255,255,.6)'; g.stroke();
   }
 
   drawBall(n, x, y, scale = 1, alpha = 1) {
@@ -493,7 +520,7 @@ function beginTurn() {
   if (humanTurn()) defaultAim();
   renderPlates(); renderStatus(); invalidate();
 }
-function setPower(p) { ctl.power = p; const el = $('#biPower'); el.style.setProperty('--p', p.toFixed(3)); el.setAttribute('aria-valuenow', String(Math.round(p * 100))); el.classList.toggle('on', p > 0.02); el.querySelector('b').textContent = p > 0.02 ? Math.round(p * 100) + '%' : 'اسحب العصا وأفلتها'; }
+function setPower(p) { ctl.power = p; const el = $('#biPower'); el.style.setProperty('--p', p.toFixed(3)); el.setAttribute('aria-valuenow', String(Math.round(p * 100))); el.classList.toggle('on', p > 0.02); el.querySelector('b').textContent = p > 0.02 ? Math.round(p * 100) + '%' : 'اسحب لتحت وأفلت'; }
 let aimSent = 0, aimTimer = 0;
 function shareAim() {
   if (ctl.mode !== 'online' || !myTurn()) return;
@@ -578,7 +605,7 @@ view.canvas.addEventListener('pointerdown', (ev) => {
   const [x, y] = canvasPoint(ev), s = ctl.state;
   view.canvas.setPointerCapture?.(ev.pointerId);
   if (s.inHand && ctl.place && Math.hypot(x - ctl.place[0], y - ctl.place[1]) < R * 3.4) { drag = { kind: 'place', dx: ctl.place[0] - x, dy: ctl.place[1] - y }; return; }
-  drag = { kind: 'aim' }; aimAt(x, y);
+  drag = { kind: 'aim', x0: ev.clientX, y0: ev.clientY, wx: x, wy: y }; view.loupe = true; aimAt(x, y);
 });
 view.canvas.addEventListener('pointermove', (ev) => {
   if (!drag || !myTurn()) return;
@@ -589,7 +616,28 @@ view.canvas.addEventListener('pointermove', (ev) => {
     shareAim(); invalidate();
   } else aimAt(x, y);
 });
-const endDrag = () => {
+// 33.9.6: a tap on a ball aims to pot it in the pocket with the straightest line
+function potAim(n) {
+  const cue = cuePos(), b = view.balls[n]; if (!cue || !b) return false;
+  let best = null;
+  for (const p of POCKETS) {
+    const px = p.x - b[0], py = p.y - b[1], pl = Math.hypot(px, py); if (pl < 1) continue;
+    const ux = px / pl, uy = py / pl, gx = b[0] - ux * 2 * R, gy = b[1] - uy * 2 * R;
+    const cx = gx - cue[0], cy = gy - cue[1], cl = Math.hypot(cx, cy); if (cl < R) continue;
+    const cos = (cx * ux + cy * uy) / cl; if (cos < 0.2) continue;
+    const score = cos - pl / 2000;
+    if (!best || score > best.score) best = { score, dir: [cx / cl, cy / cl] };
+  }
+  if (!best) return false;
+  ctl.aim.dir = best.dir; shareAim(); invalidate(); return true;
+}
+const endDrag = (ev) => {
+  view.loupe = false;
+  if (drag?.kind === 'aim' && ev && Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < 8 && myTurn()) {
+    let hit = -1, near = R * 1.9;
+    for (let n = 1; n < 16; n++) { const b = view.balls[n]; if (!b) continue; const dd = Math.hypot(b[0] - drag.wx, b[1] - drag.wy); if (dd < near) { near = dd; hit = n; } }
+    if (hit > 0) potAim(hit);
+  }
   if (drag?.kind === 'place' && ctl.state?.inHand && ctl.place && !canPlace(ctl.state, ctl.place[0], ctl.place[1])) {
     const near = nearestPlace(ctl.state, ctl.place[0], ctl.place[1]); if (near) ctl.place = near;
   }
@@ -618,7 +666,8 @@ function rotateAim(a) { const [x, y] = ctl.aim.dir, c = Math.cos(a), s = Math.si
   el.addEventListener('pointermove', (ev) => {
     if (from === null || !myTurn()) return;
     const r = el.getBoundingClientRect(), tall = r.height > r.width;
-    const p = tall ? (ev.clientY - from[1]) / (r.height * 0.82) : Math.abs(ev.clientX - from[0]) / (r.width * 0.8);
+    // 33.9.6: pull it down (or sideways along the groove) — whichever you find easier
+    const p = tall ? (ev.clientY - from[1]) / (r.height * 0.82) : Math.max(Math.abs(ev.clientX - from[0]) / (r.width * 0.8), (ev.clientY - from[1]) / 190);
     setPower(Math.max(0, Math.min(1, p))); shareAim(); invalidate();
   });
   const up = () => { if (from === null) return; from = null; shoot(ctl.power); };

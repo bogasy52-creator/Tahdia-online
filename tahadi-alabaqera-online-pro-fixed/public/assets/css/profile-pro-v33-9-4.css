@@ -57,3 +57,22 @@
 .bs-pp-modrow small{display:block;color:#9fb0cb;font-size:12px}
 @media (max-width:420px){.bs-pp-grid{grid-template-columns:repeat(4,1fr);gap:8px}.bs-avatar.xl{width:84px;height:84px}}
 @media (prefers-reduced-motion:reduce){.bs-level-bar>i{transition:none}}
+
+/* 33.9.7: the player bar at the top, in place of the page name, and the profile sheet */
+.bs-topbar .bs-brand.bs-playerbar{display:flex;align-items:center;gap:9px;min-width:0;max-width:min(62vw,300px);padding:4px 6px 4px 12px;border-radius:999px;background:linear-gradient(180deg,#ffffff14,#ffffff08);border:1px solid #ffffff1f;text-decoration:none;color:inherit;cursor:pointer}
+.bs-playerbar .bs-pb-pic{width:40px;height:40px;font-size:17px;border-color:#ffd16677}
+.bs-pb-copy{display:grid;min-width:0;gap:2px;line-height:1.15}
+.bs-pb-copy b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-pb-copy span{font-size:11.5px;color:#b9c6dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-pb-xp{display:block;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--tier,#ffd166) var(--x,0%),#ffffff1c var(--x,0%));margin-top:2px}
+.bs-pp-profile .bs-pp-name{display:grid;gap:2px}
+.bs-pp-profile .bs-pp-name b{font-size:20px}
+.bs-pp-profile .bs-pp-name small{color:#9fb0cb}
+.bs-pp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.bs-pp-stats div{display:grid;justify-items:center;gap:2px;padding:10px 4px;border-radius:14px;background:#0f1828;border:1px solid #ffffff12}
+.bs-pp-stats b{font-size:17px;font-variant-numeric:tabular-nums}
+.bs-pp-stats small{font-size:11.5px;color:#9fb0cb}
+.bs-pp-rename{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.bs-pp-rename input{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid #ffffff26;background:#0f1828;color:#fff;font:inherit;font-size:16px}
+.bs-pp-rename small{grid-column:1/-1;text-align:right}
+#playerProfileCard{display:none!important}

@@ -2079,3 +2079,13 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 .jk-say.warn{border-color:#ff8a8a;background:#2a0d14ee;color:#ffe1e1;font-size:13px;white-space:normal;width:max-content;max-width:min(250px,70vw);text-align:center;animation-duration:1.65s}
 @media (prefers-reduced-motion:reduce){.jk-picked,[data-stone].jk-nope .stone-bob{animation:none!important}}
 :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #status{height:44px!important;min-height:44px!important;max-height:44px!important;overflow:hidden!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.35!important;align-content:center}
+
+/* 33.9.7: the hand keeps the size of five cards, with or without cards, so the board never moves */
+#hand{--jk-n:5!important;min-height:calc(var(--jk-card) * 1.4 + 16px)!important}
+
+/* 33.9.7: a marble sent home: the screen shakes, and its owner sees red */
+body.jk-hit #game{animation:jkShake .5s cubic-bezier(.36,.07,.19,.97)}
+body.jk-hit-me::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,40,60,.08) 30%,rgba(255,20,45,.62) 100%);animation:jkRed .9s ease-out forwards}
+@keyframes jkShake{10%,90%{transform:translate3d(-2px,1px,0)}20%,80%{transform:translate3d(4px,-2px,0)}30%,50%,70%{transform:translate3d(-7px,2px,0)}40%,60%{transform:translate3d(7px,-1px,0)}}
+@keyframes jkRed{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){body.jk-hit #game{animation:none}}

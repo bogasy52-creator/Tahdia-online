@@ -12,4 +12,4 @@ function show(it,{host,area,name,mine}={}){const kind=kindOf(it);if(!kinds.has(k
 window.BS_REACTION_ART=Object.freeze({make});window.BS_REACTION_CINEMA=Object.freeze({show});})();
 
 /* 33.8.0: the drawn, animated emoji live in their own file (outside the offline core): it loads with the page */
-(()=>{try{if(window.BS_EMOJI_ART||document.querySelector('script[data-bs-emoji]'))return;const s=document.createElement('script');s.src='/assets/js/emoji-faces-v33-8.js?v=33.9.5';s.async=true;s.dataset.bsEmoji='1';(document.head||document.documentElement).append(s);}catch{}})();
+(()=>{try{if(window.BS_EMOJI_ART||document.querySelector('script[data-bs-emoji]'))return;const s=document.createElement('script');s.src='/assets/js/emoji-faces-v33-8.js?v=33.9.7';s.async=true;s.dataset.bsEmoji='1';(document.head||document.documentElement).append(s);}catch{}})();

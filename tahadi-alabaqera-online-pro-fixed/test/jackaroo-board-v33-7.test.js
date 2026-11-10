@@ -86,8 +86,8 @@ test('the lane fills up: one marble a hole, no jumping over your own marbles, an
   assert.equal(g.track, 76); assert.equal(g.finish, 79);
   s.turn = 0; s.players[0].marbles = [74, 77, -1, -1];
   const moves = (card) => { s.hands[0] = [card]; return Jack.getJackarooActions(s, 0).filter((a) => a.type === 'move' && a.owner === 0); };
-  assert.ok(moves('2S').some((a) => a.marble === 0), '74 → the first lane hole');
-  assert.ok(!moves('3S').some((a) => a.marble === 0), 'the second hole is taken by your own marble');
+  assert.ok(moves('AS').some((a) => a.marble === 0 && a.steps === 1), '74 → the first lane hole (the gate hole is stepped over)');
+  assert.ok(!moves('2S').some((a) => a.marble === 0), 'the second hole is taken by your own marble');
   assert.ok(!moves('4S').some((a) => a.marble === 0 && !a.backward), 'no jumping over your own marble in the lane');
   assert.ok(moves('2S').some((a) => a.marble === 1), 'a marble in the lane can still go deeper');
   assert.equal(Jack.jackarooHome(s, 76), true); assert.equal(Jack.jackarooHome(s, 75), false);

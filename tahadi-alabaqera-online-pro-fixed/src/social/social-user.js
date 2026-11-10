@@ -43,6 +43,8 @@ export const PHOTO_PRESET_IDS = Object.freeze(["h-falcon", "h-desert", "g-prince
 export const photoPresetUrl = (id) => /^h-[a-z]+$/.test(id) ? "/assets/heroes/face/" + id.slice(2) + ".webp" : /^g-[a-z-]+$/.test(id) ? "/assets/avatars-v33-9-4/" + id.slice(2) + ".webp" : "";
 export const PHOTO_PRESETS = Object.freeze(Object.fromEntries(PHOTO_PRESET_IDS.map((id) => [id, photoPresetUrl(id)])));
 export const PHOTO_MAX_BYTES = 90_000;
+// 33.9.7: the first new picture and the first new name are free; after that each change costs this
+export const CHANGE_PRICE = 250;
 export const PHOTO_REPORTS_TO_HIDE = 3;
 export function decodePhoto(data, type) {
   if (!["image/webp", "image/jpeg"].includes(type) || typeof data !== "string" || data.length > PHOTO_MAX_BYTES * 1.4) return null;
@@ -162,7 +164,13 @@ export function createSocialUserClass(DurableObject) {
           if(action==='claim')career=Career.claimObjective(career,body.id);
           if(action==='bundle')career=Career.purchaseBundle(career,body.id,{expectedPrice:body.expectedPrice});
           if(action==='cart')career=Career.purchaseCart(career,body.ids,{expectedPrice:body.expectedPrice,requestId:body.requestId});
-          if(action==='rename'){career=Career.normalize({...career,name:body.name});this.profile.displayName=career.name;await this.ctx.storage.put('profile',this.profile);}
+          if(action==='rename'){
+            const next=Career.normalize({...career,name:body.name}),paid=(this.profile.renames||0)>=1&&!isOwner(this.profile);
+            if(next.name===career.name)throw new Error('هذا اسمك الحين');
+            if(paid&&career.coins<CHANGE_PRICE)throw new Error('تحتاج '+CHANGE_PRICE+' عملة عشان تغيّر اسمك');
+            career=next;if(paid)career.coins-=CHANGE_PRICE;
+            this.profile.renames=(this.profile.renames||0)+1;this.profile.displayName=career.name;await this.ctx.storage.put('profile',this.profile);
+          }
         }catch(e){return json({ok:false,error:e.message},400)}
         await this.ctx.storage.put('career',career);
         if(action==='verified')await this.reportLeaderboard({receipt:String(body.id||''),game:body.game,win:body.win===true});
@@ -409,6 +417,13 @@ export function createSocialUserClass(DurableObject) {
   async photoSet(body) {
     if (!(await this.sessionValid(body.secret))) return json({ ok: false, error: "unauthorized" }, 401);
     const photo = body.photo || {};
+    // a change after the first one costs coins (removing a picture is free)
+    const paid = photo.kind !== "none" && (this.profile.photoChanges || 0) >= 1 && !isOwner(this.profile);
+    let career = null;
+    if (paid) {
+      career = accountCareer(await this.ctx.storage.get("career") || { name: this.profile.displayName }, this.profile);
+      if (career.coins < CHANGE_PRICE) return json({ ok: false, error: "تحتاج " + CHANGE_PRICE + " عملة عشان تغيّر صورتك" }, 400);
+    }
     if (photo.kind === "none") { this.profile.photo = null; await this.ctx.storage.delete(["photo-data", "photo-reports"]); }
     else if (photo.kind === "preset") {
       if (!PHOTO_PRESETS[photo.id]) return json({ ok: false, error: "الصورة غير موجودة" }, 400);
@@ -421,9 +436,11 @@ export function createSocialUserClass(DurableObject) {
       await this.ctx.storage.put({ "photo-data": { type: photo.type, bytes }, "photo-reports": [] });
       this.profile.photo = { kind: "upload", v: at };
     } else return json({ ok: false, error: "invalid_photo" }, 400);
+    if (photo.kind !== "none") this.profile.photoChanges = (this.profile.photoChanges || 0) + 1;
+    if (paid) { career.coins -= CHANGE_PRICE; await this.ctx.storage.put("career", career); }
     this.profile.updatedAt = Date.now();
     await this.ctx.storage.put("profile", this.profile);
-    return json({ ok: true, photo: publicPhoto(this.profile) });
+    return json({ ok: true, photo: publicPhoto(this.profile), paid: paid ? CHANGE_PRICE : 0, changes: { photo: this.profile.photoChanges || 0, name: this.profile.renames || 0 } });
   }
 
   async photoReport(body) {
@@ -491,7 +508,7 @@ export function createSocialUserClass(DurableObject) {
       .map(clone);
     return json({
       ok: true,
-      profile: { ...publicProfile(this.profile, this.presence), photo: publicPhoto(this.profile) },
+      profile: { ...publicProfile(this.profile, this.presence), photo: publicPhoto(this.profile), changes: { photo: this.profile.photoChanges || 0, name: this.profile.renames || 0 } },
       settings: clone(this.profile.settings || { allowInvites: "friends", showOnline: true }),
       friends,
       incoming,

@@ -342,7 +342,7 @@
   }
 
   // 33.9.4: pictures and reports
-  async function setPhoto(photo) { const data = await api('/api/social/photo', { method: 'POST', body: JSON.stringify({ photo }) }); state.dashboard = null; try { const p = cachedProfile(); if (p) { p.photo = data.photo || null; writeStorage(PROFILE_KEY, JSON.stringify(p)); } } catch {} window.dispatchEvent(new CustomEvent('bs-photo-change', { detail: data.photo || null })); return data; }
+  async function setPhoto(photo) { const data = await api('/api/social/photo', { method: 'POST', body: JSON.stringify({ photo }) }); state.dashboard = null; try { const p = cachedProfile(); if (p) { p.photo = data.photo || null; writeStorage(PROFILE_KEY, JSON.stringify(p)); } } catch {} window.dispatchEvent(new CustomEvent('bs-photo-change', { detail: data.photo || null })); if (data.paid) window.BS_CAREER?.refresh?.()?.catch?.(() => {}); return data; }
   async function reportPhoto(username) { return api('/api/social/report', { method: 'POST', body: JSON.stringify({ username }) }); }
   async function moderation(username, action) { return username ? api('/api/social/moderation', { method: 'POST', body: JSON.stringify({ username, action }) }) : api('/api/social/moderation'); }
   const apiPublic = {

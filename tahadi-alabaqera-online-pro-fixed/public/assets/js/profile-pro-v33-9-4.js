@@ -7,7 +7,7 @@
   const doc = document, fmt = new Intl.NumberFormat('en-US');
   const node = (tag, cls, text) => { const el = doc.createElement(tag); if (cls) el.className = cls; if (text != null) el.textContent = text; return el; };
   const css = (href) => { if (doc.querySelector('link[href^="' + href.split('?')[0] + '"]')) return; const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = href; doc.head?.appendChild(l); };
-  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.5');
+  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.7');
 
   // ------------------------------------------------------------ pictures
   // the same list the server accepts: hero faces (h-) and cartoon girls and friends (g-)
@@ -142,7 +142,7 @@
     openSheet('صورتك', (panel, done) => {
       const now = node('div', 'bs-pp-current');
       now.append(avatar({ username: me.username, photo: me.photo, name: me.displayName }, 'bs-avatar xl'));
-      const note = node('p', 'bs-pp-note', 'اختر صورة جاهزة (أبطال وبنات وغيرهم) أو ارفع صورتك. صورتك يشوفها كل اللاعبين في ملفك.');
+      const note = node('p', 'bs-pp-note', 'اختر صورة جاهزة (أبطال وبنات وغيرهم) أو ارفع صورتك. أول تغيير مجانًا، وبعدها 250 عملة.');
       const grid = node('div', 'bs-pp-grid');
       const busy = (on) => panel.classList.toggle('busy', on);
       async function save(photo, label) {
@@ -187,8 +187,8 @@
   // ------------------------------------------------------------ tap any player
   function needCard() {
     if (window.BS_PLAYER_CARD) return Promise.resolve(window.BS_PLAYER_CARD);
-    css('/assets/css/player-card-v33-7.css?v=33.9.5');
-    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.5'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
+    css('/assets/css/player-card-v33-7.css?v=33.9.7');
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.7'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
   }
   doc.addEventListener('click', async (e) => {
     const el = e.target?.closest?.('[data-player-username]');
@@ -203,19 +203,62 @@
     const p = window.BS_CAREER?.get?.(); if (!p) return null;
     return { level: p.level, xp: p.xp, wins: p.wins, games: p.games, rankedWins: p.rankedWins, streak: p.dailyStreak, stats: p.stats || {} };
   }
-  function renderMine() {
-    const anchor = doc.getElementById('playerProfileCard'); if (!anchor) return;
-    const card = myCard(); if (!card) return;
-    let box = doc.getElementById('bsProfilePro');
-    if (!box) { box = node('section', 'bs-profile-pro'); box.id = 'bsProfilePro'; anchor.after(box); }
-    const social = window.BS_SOCIAL, me = social?.isLoggedIn?.() ? social.profile?.() : null;
-    const top = node('div', 'bs-pp-top');
-    const pic = avatar({ username: me?.username, photo: me?.photo, name: me?.displayName || 'أنت' }, 'bs-avatar xl');
-    const change = node('button', 'bs-btn bs-pp-change', me ? 'غيّر صورتك' : 'سجّل دخولك وحط صورتك'); change.type = 'button'; change.onclick = openPicker;
-    const side = node('div', 'bs-pp-side'); side.append(levelBar(card), change);
-    top.append(pic, side);
-    box.replaceChildren(top, node('h3', 'bs-pp-title', 'كؤوسك'), shelf(card, { all: true }));
-    if (me?.role === 'owner') moderation(box);
+  // 33.9.7: your profile lives in a sheet opened from the player bar at the top of every page
+  function meNow() {
+    const social = window.BS_SOCIAL, acc = social?.isLoggedIn?.() ? social.profile?.() : null, c = window.BS_CAREER?.get?.() || {};
+    return { acc, name: acc?.displayName || c.name || 'ضيف', username: acc?.username || '', photo: acc?.photo || null, hero: c.equipped?.character || '', card: myCard() || {}, coins: Number(c.coins) || 0 };
+  }
+  function renderBar() {
+    if (typeof location === 'undefined' || /^\/admin/.test(location.pathname)) return;
+    const me = meNow(), L = levelInfo(me.card);
+    for (const brand of doc.querySelectorAll('.bs-topbar .bs-brand')) {
+      brand.classList.add('bs-playerbar'); brand.setAttribute('href', '#profile'); brand.setAttribute('aria-label', 'ملفك: ' + me.name);
+      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '' }, 'bs-avatar bs-pb-pic');
+      const copy = node('span', 'bs-pb-copy');
+      copy.append(node('b', '', me.name), node('span', '', 'المستوى ' + L.level + ' · ' + L.tier));
+      const bar = node('i', 'bs-pb-xp'); bar.style.setProperty('--x', L.pct + '%'); bar.style.setProperty('--tier', L.color); copy.append(bar);
+      brand.replaceChildren(pic, copy);
+      if (!brand.dataset.pb) { brand.dataset.pb = '1'; brand.addEventListener('click', (e) => { e.preventDefault(); openProfile(); }); }
+    }
+  }
+  function openProfile() {
+    const me = meNow(), card = me.card;
+    openSheet('ملفك', (panel, done) => {
+      panel.classList.add('bs-pp-profile');
+      const top = node('div', 'bs-pp-top');
+      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '' }, 'bs-avatar xl');
+      const side = node('div', 'bs-pp-side');
+      const nm = node('div', 'bs-pp-name'); nm.append(node('b', '', me.name)); if (me.username) nm.append(node('small', '', '@' + me.username));
+      side.append(nm, levelBar(card));
+      top.append(pic, side);
+      const stats = node('div', 'bs-pp-stats');
+      for (const [k, v] of [['العملات', fmt.format(me.coins)], ['الانتصارات', fmt.format(card.wins || 0)], ['المباريات', fmt.format(card.games || 0)], ['الكؤوس', fmt.format(earned(card).length)]]) { const c = node('div'); c.append(node('b', '', v), node('small', '', k)); stats.append(c); }
+      const acts = node('div', 'bs-pp-actions');
+      const chPic = node('button', 'bs-btn primary', 'غيّر صورتك'); chPic.type = 'button'; chPic.onclick = () => { done(); openPicker(); };
+      const chName = node('button', 'bs-btn', 'غيّر اسمك'); chName.type = 'button'; chName.onclick = () => renameBox(panel, me);
+      acts.append(chPic, chName);
+      const price = node('p', 'bs-pp-rules', me.acc ? 'أول تغيير للصورة وأول تغيير للاسم مجانًا، وبعدها كل تغيير بـ 250 عملة.' : 'سجّل دخولك عشان تحط صورة ويشوفك أصدقاؤك.');
+      const links = node('div', 'bs-pp-actions');
+      const friends = node('a', 'bs-btn', me.acc ? 'أصدقاؤك وحسابك' : 'سجّل دخولك'); friends.href = '/social';
+      links.append(friends);
+      panel.append(top, stats, acts, price, node('h3', 'bs-pp-title', 'كؤوسك'), shelf(card, { all: true }), links);
+      if (me.acc?.role === 'owner') moderation(panel);
+    });
+  }
+  function renameBox(panel, me) {
+    if (panel.querySelector('.bs-pp-rename')) return;
+    const box = node('form', 'bs-pp-rename');
+    const input = node('input'); input.maxLength = 20; input.value = me.name; input.setAttribute('aria-label', 'اسمك الجديد');
+    const save = node('button', 'bs-btn primary', 'احفظ'); save.type = 'submit';
+    const note = node('small', 'bs-pp-note', me.acc ? 'أول تغيير مجانًا، وبعدها 250 عملة.' : '');
+    box.append(input, save, note);
+    box.onsubmit = async (e) => {
+      e.preventDefault(); const name = input.value.trim(); if (!name) return;
+      save.disabled = true;
+      try { await window.BS_CAREER.rename(name); note.textContent = 'تم ✓'; window.BS_AUDIO?.play?.('coin', { volume: .5 }); setTimeout(() => sheet?.remove(), 700); }
+      catch (err) { note.textContent = err?.message || 'ما انحفظ، جرّب مرة ثانية.'; save.disabled = false; }
+    };
+    panel.querySelector('.bs-pp-actions')?.after(box); input.focus();
   }
   async function moderation(box) {
     const wrap = node('div', 'bs-pp-mod'); wrap.append(node('h3', 'bs-pp-title', 'صور مبلغ عنها'));
@@ -233,10 +276,11 @@
       row.append(img, copy, rm, keep); wrap.append(row);
     }
   }
-  addEventListener('bs-career-change', () => setTimeout(renderMine, 0));
-  addEventListener('bs-photo-change', () => setTimeout(renderMine, 0));
-  addEventListener('bs-social-session', () => setTimeout(renderMine, 0));
-  if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', () => setTimeout(renderMine, 300)); else setTimeout(renderMine, 300);
+  addEventListener('bs-career-change', () => setTimeout(renderBar, 0));
+  addEventListener('bs-photo-change', () => setTimeout(renderBar, 0));
+  addEventListener('bs-social-session', () => setTimeout(renderBar, 0));
+  if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', () => setTimeout(renderBar, 120)); else setTimeout(renderBar, 120);
+  if (typeof location !== 'undefined' && location.hash === '#profile') setTimeout(openProfile, 600);
 
   // ------------------------------------------------------------ a new level, a new trophy
   let before = null;
@@ -251,5 +295,5 @@
   });
   setTimeout(() => { const card = myCard(); if (card && !before) before = { level: levelInfo(card).level, cups: new Map(earned(card).map((t) => [t.id, t.tier])) }; }, 1200);
 
-  window.BS_PROFILE_PRO = Object.freeze({ photoUrl, presetUrl, avatar, levelInfo, levelBar, trophies, earned, shelf, openPicker, report, PRESETS });
+  window.BS_PROFILE_PRO = Object.freeze({ openProfile, renderBar, photoUrl, presetUrl, avatar, levelInfo, levelBar, trophies, earned, shelf, openPicker, report, PRESETS });
 })();

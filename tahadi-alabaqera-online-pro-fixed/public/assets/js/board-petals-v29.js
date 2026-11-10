@@ -1,4 +1,4 @@
-import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js?v=33.9.5';
+import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js?v=33.9.7';
 /* Tahdia 31.0.0 — the Zahra and Jackaroo tables (file name kept for imports).
    Zahra: a classic cross board — coloured yards, a cream track, home lanes and
    a flower in the centre — with glossy standing stones.
@@ -555,7 +555,8 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
     root.append(g);
   }
   // the walk: white holes, their numbers outside the path on one side, upright; the houses with their roofs
-  const holeFill=radial(defs,prefix+'-hole',[[0,look.hole[0]],[.62,look.hole[1]],[1,look.hole[2]]],.42,.36,.7);
+  // 33.9.7: the holes are sunk into the board (dark, with a light lip) so a white or silver marble shows on them
+  const holeFill=radial(defs,prefix+'-hole',[[0,mix(look.surface[2],'#000000',.62)],[.7,mix(look.surface[2],'#000000',.3)],[1,mix(look.surface[1],'#ffffff',.18)]],.5,.42,.72);
   L.track.forEach((p,i)=>{
     const seat=Math.floor(i/L.arm),k=i-seat*L.arm,color=colors[seat];
     if(k===0){
@@ -566,7 +567,7 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
       return;
     }
     const r=L.hole;
-    root.append(n('circle',{cx:p.x,cy:+(p.y+.35).toFixed(2),r:+(r+.45).toFixed(2),fill:'#000',opacity:.28}),n('circle',{cx:p.x,cy:p.y,r,fill:holeFill,stroke:look.holeRim,'stroke-width':.55,'data-track':i,class:'tbl-hole'}));
+    root.append(n('circle',{cx:p.x,cy:+(p.y-.3).toFixed(2),r:+(r+.5).toFixed(2),fill:'#ffffff',opacity:.18}),n('circle',{cx:p.x,cy:p.y,r,fill:holeFill,stroke:look.holeRim,'stroke-width':.7,'data-track':i,class:'tbl-hole'}));
     const at=L.labels[i],size=k<10?4.7:4.3;
     root.append(up(n('text',{x:at.x,y:+(at.y+size*.36).toFixed(2),'text-anchor':'middle','font-size':size,'font-weight':900,'font-family':'Arial,sans-serif',direction:'ltr',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
   });
@@ -601,7 +602,9 @@ function stoneGraphic(game,defs,prefix,seat,c,own,size=.66){
   const P=pieces(),color=(game==='jackaroo'?JACK_COLORS:BOARD_COLORS)[seat],chosen=own||equipped('pawn'),pawn=chosen==='pawn-character'?'pawn-classic':chosen;
   if(game==='jackaroo'){
     const g=n('g',{transform:`scale(${size})`});
-    if(P)g.append(P.marble(document,defs,{style:P.marbleFor(pawn),color,scope:prefix+'-m'+seat}));
+    // 33.9.7: a silver or pearl marble looked white on the board: every marble shows its seat's colour
+    const look=P?P.marbleFor(pawn):'glass';
+    if(P)g.append(P.marble(document,defs,{style:look==='metal'||look==='pearl'?'glass':look,color,scope:prefix+'-m'+seat}));
     else g.append(n('circle',{r:5,fill:color,stroke:'#fff','stroke-width':.6}));
     return g;
   }

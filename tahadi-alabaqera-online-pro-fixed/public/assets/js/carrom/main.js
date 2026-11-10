@@ -44,10 +44,8 @@ function banner(text){
 }
 function controls(){
  const enabled=canPlay();
- for(const id of ['strikerPosition','shotPower','shoot'])$(id).disabled=!enabled;
- $('shoot').textContent=state?.phase==='moving'?'الأحجار تتحرك…':enabled?'اضرب':'الكمبيوتر يصوّب…';
- $('powerValue').textContent=Math.round(power*100)+'٪';
- $('shotPower').value=String(Math.round(power*100));
+ document.querySelector('.cm-dock')?.classList.toggle('idle',!enabled);
+ paintPower();
  if(!state)return;
  const scores=carromScore(state),labels=names();
  for(let i=0;i<2;i++){
@@ -64,13 +62,12 @@ function onTurn(){
  if(state.turnNo===turnSeen)return;
  turnSeen=state.turnNo;viewSeat=state.mode==='hotseat'?state.turn:0;
  angle=state.turn===0?-Math.PI/2:Math.PI/2;
- $('strikerPosition').value=String(viewSeat?1000-state.striker.x:state.striker.x);
- pointer=null;$('shotAngle').value='-90';
+ pointer=null;pull=0;
  if(state.mode==='ai'&&state.turn===1&&state.phase==='aim'){
   botPlan=chooseCarromShot(state);placeStriker(state,botPlan.x);
   angle=botPlan.angle;power=botPlan.power;botAt=performance.now()+900;
   state.message='الكمبيوتر يجهّز ضربته…';
- }else{botPlan=null;power=.55;}
+ }else{botPlan=null;power=0;}
  controls();
 }
 function start(){
@@ -94,9 +91,9 @@ function pause(value){
  if(!value){last=performance.now();botAt=last+700;accumulator=0;frame=requestAnimationFrame(loop);}
  controls();
 }
-function fire(){
- if(!canPlay())return;
- try{shootCarrom(state,{x:state.striker.x,angle,power});tone('strike',power);pointer=null;controls();}
+function fire(strength=power){
+ if(!canPlay()||strength<.06)return;
+ try{shootCarrom(state,{x:state.striker.x,angle,power:Math.max(.08,Math.min(1,strength))});tone('strike',strength);window.BS_AUDIO?.vibrate?.(14);pointer=null;power=0;controls();}
  catch(e){$('carromStatus').textContent=e.message;}
 }
 function finish(){
@@ -127,37 +124,56 @@ function loop(now){
  draw();
  if(state.phase!=='finished')frame=requestAnimationFrame(loop);
 }
-function updateAim(point,pull=false){
- const dx=pull?state.striker.x-point.x:point.x-state.striker.x,dy=pull?state.striker.y-point.y:point.y-state.striker.y;
+// 33.9.6: easier hands: touch the striker and slide it on its line; drag anywhere else on the board
+// and the aim follows your finger (a tap on a coin aims straight at it); the strip under the board
+// turns the aim a hair; the power bar is pulled down and let go to strike (back up cancels).
+let pull=0;
+function updateAim(point){
+ const dx=point.x-state.striker.x,dy=point.y-state.striker.y;
  if(Math.hypot(dx,dy)<8)return;
- angle=Math.atan2(dy,dx);const viewAngle=angle-(viewSeat?Math.PI:0);$('shotAngle').value=String(Math.round(viewAngle*180/Math.PI));
- if(pull)power=Math.max(.08,Math.min(1,Math.hypot(dx,dy)/220));
- controls();draw();
+ angle=Math.atan2(dy,dx);controls();draw();
 }
+function nudge(rad){angle+=rad*(viewSeat?-1:1);draw();}
 canvas.addEventListener('pointerdown',e=>{
- if(!canPlay())return;e.preventDefault();
- const p=renderer.point(e.clientX,e.clientY,viewSeat);
- pointer={id:e.pointerId,pull:Math.hypot(p.x-state.striker.x,p.y-state.striker.y)<100,start:p,moved:false};
+ if(!canPlay())return;e.preventDefault();window.BS_AUDIO?.unlock?.();
+ const p=renderer.point(e.clientX,e.clientY,viewSeat),near=Math.hypot(p.x-state.striker.x,p.y-state.striker.y)<state.striker.r*2.1;
+ pointer={id:e.pointerId,place:near,start:p};
  try{canvas.setPointerCapture(e.pointerId);}catch{}
- if(!pointer.pull)updateAim(p);
+ if(!near)updateAim(p);
 });
 canvas.addEventListener('pointermove',e=>{
  if(!pointer||pointer.id!==e.pointerId||!canPlay())return;
- const p=renderer.point(e.clientX,e.clientY,viewSeat);pointer.moved=Math.hypot(p.x-pointer.start.x,p.y-pointer.start.y)>25;
- updateAim(p,pointer.pull);
+ const p=renderer.point(e.clientX,e.clientY,viewSeat);
+ if(pointer.place){placeStriker(state,p.x);draw();}else updateAim(p);
 });
 canvas.addEventListener('pointerup',e=>{
  if(!pointer||pointer.id!==e.pointerId)return;
- const shot=pointer.pull&&pointer.moved;pointer=null;if(shot)fire();
+ // a tap on a coin: aim at its centre
+ const p=renderer.point(e.clientX,e.clientY,viewSeat);
+ if(!pointer.place&&Math.hypot(p.x-pointer.start.x,p.y-pointer.start.y)<14){const coin=state.coins.find(c=>!c.pocketed&&Math.hypot(c.x-p.x,c.y-p.y)<c.r*1.8);if(coin)updateAim(coin);}
+ pointer=null;
 });
 canvas.addEventListener('pointercancel',()=>{pointer=null;});
 canvas.addEventListener('lostpointercapture',()=>{pointer=null;});
-$('strikerPosition').addEventListener('input',()=>{
- if(canPlay()){const x=Number($('strikerPosition').value);placeStriker(state,viewSeat?1000-x:x);draw();}
-});
-$('shotPower').addEventListener('input',()=>{if(canPlay()){power=Number($('shotPower').value)/100;controls();draw();}});
-$('shotAngle').addEventListener('input',()=>{if(canPlay()){angle=Number($('shotAngle').value)*Math.PI/180+(viewSeat?Math.PI:0);draw();}});
- $('shoot').onclick=fire;$('carromStart').onclick=start;$('carromExit').onclick=menu;
+// fine aim
+{
+ const el=$('cmFine');let lastX=null,off=0;
+ el.addEventListener('pointerdown',e=>{if(!canPlay())return;lastX=e.clientX;try{el.setPointerCapture(e.pointerId);}catch{}});
+ el.addEventListener('pointermove',e=>{if(lastX===null||!canPlay())return;const dx=e.clientX-lastX;lastX=e.clientX;off+=dx;el.style.setProperty('--fine',off+'px');nudge(dx*.0016);});
+ const up=()=>{lastX=null;};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+ el.addEventListener('keydown',e=>{if(!canPlay())return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();nudge((e.key==='ArrowRight'?1:-1)*(e.shiftKey?.003:.012));}});
+}
+// the power: pull down, let go
+function paintPower(){const el=$('cmPower');if(!el)return;const shown=canPlay()?power:0;el.style.setProperty('--p',shown.toFixed(3));el.setAttribute('aria-valuenow',String(Math.round(power*100)));el.classList.toggle('on',shown>.02);el.querySelector('b').textContent=shown>.02?'القوة '+Math.round(power*100)+'%':canPlay()?'اسحب لتحت وأفلت عشان تضرب':state?.phase==='moving'?'الأحجار تتحرك…':state?.mode==='ai'&&state?.turn===1?'الكمبيوتر يصوّب…':'';}
+{
+ const el=$('cmPower');let from=null;
+ el.addEventListener('pointerdown',e=>{if(!canPlay())return;window.BS_AUDIO?.unlock?.();from=e.clientY;try{el.setPointerCapture(e.pointerId);}catch{}});
+ el.addEventListener('pointermove',e=>{if(from===null||!canPlay())return;power=Math.max(0,Math.min(1,(e.clientY-from)/170));paintPower();draw();});
+ const up=()=>{if(from===null)return;from=null;if(power>=.06)fire(power);else{power=0;paintPower();draw();}};
+ el.addEventListener('pointerup',up);el.addEventListener('pointercancel',()=>{from=null;power=0;paintPower();draw();});
+ el.addEventListener('keydown',e=>{if(!canPlay())return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();power=Math.max(0,Math.min(1,power+(e.key==='ArrowDown'?.05:-.05)));paintPower();draw();}else if(e.key==='Enter'||e.key===' '){e.preventDefault();fire(power||.55);}});
+}
+$('carromStart').onclick=start;$('carromExit').onclick=menu;
 $('carromPauseButton').onclick=()=>pause(true);$('carromResume').onclick=()=>pause(false);
 $('carromRestart').onclick=start;$('carromAgain').onclick=start;$('carromBackMenu').onclick=menu;
 $('carromMute').onclick=()=>{prefs.muted=!prefs.muted;persist();$('carromMute').setAttribute('aria-pressed',String(prefs.muted));$('carromMute').textContent=prefs.muted?'الصوت مغلق':'الصوت';};
@@ -172,8 +188,8 @@ document.addEventListener('keydown',e=>{
  if((e.key==='Enter'||e.key===' ')&&e.target.closest('button,a'))return;
  if(['ArrowLeft','ArrowRight'].includes(e.key)){
   e.preventDefault();const viewX=(viewSeat?1000-state.striker.x:state.striker.x)+(e.key==='ArrowLeft'?-15:15);
-  placeStriker(state,viewSeat?1000-viewX:viewX);$('strikerPosition').value=String(viewSeat?1000-state.striker.x:state.striker.x);draw();
+  placeStriker(state,viewSeat?1000-viewX:viewX);draw();
  }else if(['a','d'].includes(e.key.toLowerCase())){angle+=(e.key.toLowerCase()==='a'?-.045:.045);draw();}
- else if(e.key==='Enter'||e.key===' '){e.preventDefault();fire();}
+ else if(e.key==='Enter'||e.key===' '){e.preventDefault();fire(power||.55);}
 });
-if(new URLSearchParams(location.search).has('debug'))window.BS_CARROM={get state(){return state;},start,fire,pause,renderer,get angle(){return angle;},setAim(a,p){angle=a;power=p;controls();draw();}};
+if(new URLSearchParams(location.search).has('debug'))window.BS_CARROM={get state(){return state;},start,fire,pause,renderer,get angle(){return angle;},setAim(a,p){angle=a;power=p;controls();draw();},fire};

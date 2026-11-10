@@ -1,7 +1,7 @@
-import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.5-studio1';
+import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.7-studio1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
-import { createGame, step, carryPuck, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.9.5-studio1';
-import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.5-studio1';
+import { createGame, step, carryPuck, W, L, STRIKER_R, WIN_SCORE } from './core.js?v=33.9.7-studio1';
+import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.7-studio1';
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';
@@ -79,7 +79,9 @@ function netWord(){
   if(!theirs&&!mine&&performance.now()-myHitAt<(online?.rtt||110)+90)return;
   const now=carryPuck(room,netAge()),dx=now.x-p.x,dy=now.y-p.y,far=Math.hypot(dx,dy);
   if(theirs||far>120){p.vx=now.vx;p.vy=now.vy;p.spin=now.spin;netFix.x=dx;netFix.y=dy;netFix.rate=26;}
-  else{p.vx+=(now.vx-p.vx)*.6;p.vy+=(now.vy-p.vy)*.6;netFix.x=dx;netFix.y=dy;netFix.rate=10;}
+  // 33.9.7: after your own strike the room's word is folded in gently, so the puck does not wobble
+  else if(mine){p.vx+=(now.vx-p.vx)*.3;p.vy+=(now.vy-p.vy)*.3;netFix.x=dx;netFix.y=dy;netFix.rate=6;}
+  else{p.vx+=(now.vx-p.vx)*.45;p.vy+=(now.vy-p.vy)*.45;netFix.x=dx;netFix.y=dy;netFix.rate=8;}
 }
 function netStep(dt){
   if(!netTarget)return;

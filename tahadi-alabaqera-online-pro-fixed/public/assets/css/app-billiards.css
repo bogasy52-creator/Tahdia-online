@@ -924,3 +924,6 @@ body.billiards-page.bi-playing .rx-fab{position:fixed!important;z-index:25;top:a
 body.bi-playing:has(.rx-fab:not([hidden])) .bi-fine{margin-left:44px}
 @media (min-aspect-ratio:1/1){body.billiards-page.bi-playing .rx-fab{left:auto!important;right:10px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;width:34px!important;height:34px!important}body.bi-playing:has(.rx-fab:not([hidden])) .bi-fine{margin-left:0;margin-right:42px}}
 @media (prefers-reduced-motion:reduce){.bi-toast,.bi-plate,.bi-ring{transition:none}}
+/* 33.9.6: the rack of a player fits inside the plate */
+.bi-rack{overflow:hidden;gap:1px}
+.bi-rack i{width:11px;height:11px}

@@ -75,6 +75,7 @@ function collideStriker(g, i) {
   const rel = (p.vx - st.vx) * nx + (p.vy - st.vy) * ny; // approach speed along the normal
   if (rel < 0) {
     p.vx -= (1 + STRIKER_BOUNCE) * rel * nx; p.vy -= (1 + STRIKER_BOUNCE) * rel * ny;
+    // 33.9.7: the spin only turns the puck; it no longer bends its path (it swerved like a ball)
     p.spin = clamp((st.vx * -ny + st.vy * nx) * 0.004, -8, 8);
   }
   const sp = Math.hypot(p.vx, p.vy);
@@ -163,7 +164,7 @@ export function step(g, dt, controls = {}, { predict = false } = {}) {
     for (const i of [0, 1]) { if (g.bot[i]) runAI(g, i, h, g.bot[i]); else { const st = g.strikers[i], m = hand[i]; st.x += m.dx; st.y += m.dy; st.vx = m.vx; st.vy = m.vy; } }
     const p = g.puck;
     if (g.phase === 'play' || g.phase === 'serve') {
-      if (g.phase === 'play') { p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h); p.vx += p.spin * p.vy * 0.0004; }
+      if (g.phase === 'play') { p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h); }
       collideWalls(g);
       collideStriker(g, 0); collideStriker(g, 1);
       // keep a stalled puck from sitting in a corner for ever
@@ -186,7 +187,7 @@ export function step(g, dt, controls = {}, { predict = false } = {}) {
 export function carryPuck(puck, t) {
   const g = { puck: { ...puck, spin: puck.spin || 0 }, events: [] }, p = g.puck, sub = Math.max(1, Math.ceil(Math.max(0, t) / (1 / 240))), h = Math.max(0, t) / sub;
   for (let k = 0; k < sub && h > 0; k++) {
-    p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h); p.vx += p.spin * p.vy * 0.0004;
+    p.x += p.vx * h; p.y += p.vy * h; const f = Math.pow(FRICTION, h); p.vx *= f; p.vy *= f; p.spin *= Math.pow(0.5, h);
     collideWalls(g); p.y = clamp(p.y, -PUCK_R, L + PUCK_R);
   }
   return p;

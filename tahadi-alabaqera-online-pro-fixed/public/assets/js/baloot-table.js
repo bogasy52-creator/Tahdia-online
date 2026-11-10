@@ -6,10 +6,10 @@
    its winner, projects, Baloot and the hand result.
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
-import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.9.5-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.9.5';
-import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.9.5';
-import { BalootVoice } from './baloot-voice.js?v=33.9.5-audio1';
+import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.9.7-gameplay3';
+import { BoardOnlineClient } from './board-online.js?v=33.9.7';
+import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.9.7';
+import { BalootVoice } from './baloot-voice.js?v=33.9.7-audio1';
 
 const $ = (id) => document.getElementById(id);
 // 32.0.1: signed in, you sit at every table under your account's name.

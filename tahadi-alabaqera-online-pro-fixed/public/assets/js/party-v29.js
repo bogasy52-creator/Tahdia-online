@@ -1,12 +1,12 @@
-import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.5';
-import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.5';
+import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.7';
+import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.7';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
 import {PARTY_GAMES,PARTY_COUNTDOWN_MS,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
-import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=33.9.5';
-import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.9.5';
+import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=33.9.7';
+import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.9.7';
 let boardSurface=null,boardSurfaceRound='';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeCode=value=>String(value||'').replace(/[٠-٩]/g,n=>'٠١٢٣٤٥٦٧٨٩'.indexOf(n)).replace(/[۰-۹]/g,n=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(n)).replace(/\D/g,'').slice(0,6);
