@@ -10,7 +10,15 @@ function pick(scored,difficulty,rng){
  return best.length===1?best[0].value:best[Math.min(best.length-1,Math.floor(rng()*best.length))].value;
 }
 
+// 33.9.2: hit by a burning ten: give up the card that helps least (one that cannot move first)
+const BURN_KEEP=Object.freeze({A:9,K:9,J:7,'7':7,'5':6,'4':6,'10':6,Q:4,'9':3,'8':3,'6':3,'3':2,'2':2});
+function chooseBurnCard(state){
+ const actor=state.turn,free={...state,burnPick:null};let best=0,low=Infinity;
+ state.hands[actor].forEach((card,cardIndex)=>{const moves=getJackarooActions(free,cardIndex,actor).some(a=>a.type!=='discard'),rank=String(card).slice(0,-1),keep=moves?BURN_KEEP[rank]??3:-1;if(keep<low){low=keep;best=cardIndex;}});
+ return{cardIndex:best,action:{type:'burnPick'}};
+}
 export function chooseJackarooMove(state,difficulty='medium',rng=Math.random){
+ if(state.burnPick&&state.burnPick.target===state.turn&&state.hands[state.turn]?.length)return chooseBurnCard(state);
  const actor=state.turn,team=actor%2,scored=[],geometry=boardGeometry(state);
  state.hands[actor].forEach((_,cardIndex)=>{
   for(const action of getJackarooActions(state,cardIndex,actor)){

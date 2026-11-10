@@ -72,12 +72,8 @@
     const box = host(); box.replaceChildren(panel); box.classList.add('open');
     source = doc.activeElement; const ticket = ++opened;
     setTimeout(() => shut.focus({ preventScroll: true }), 30);
-    if (info.bot) {
-      line.textContent = 'منافس آلي' + (LEVELS[info.level] ? ' · مستوى ' + LEVELS[info.level] : '');
-      note.textContent = (hero ? 'يلعب بشخصية ' + hero + '. ' : '') + 'المنافس الآلي ما ينضاف للأصدقاء، بس تقدر تغلبه.';
-      return;
-    }
-    if (!info.username) {
+    // 33.9.2: a seat the computer plays reads like a guest's
+    if (!info.username || info.bot) {
       line.textContent = info.me ? 'هذا أنت · تلعب كضيف' : 'ضيف · ما عنده حساب';
       note.textContent = info.me ? 'سجّل دخولك عشان يقدر أصحابك يضيفونك ويشوفون ملفك.' : 'الضيف ما عنده ملف يتحفظ، فما ينضاف للأصدقاء.';
       if (info.me) { const a = node('a', 'bs-btn primary', 'سجّل دخولك'); a.href = '/social?next=' + encodeURIComponent(location.pathname + location.search); actions.append(a); }

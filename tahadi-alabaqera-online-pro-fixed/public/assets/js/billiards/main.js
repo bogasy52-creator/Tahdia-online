@@ -5,8 +5,8 @@
    60 frames a second with its sounds; online, the server's shot replays here to the same end.
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
-import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.1-pool1';
-import { createTable } from '../board-table-v33.js?v=33.9.1';
+import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.2-pool1';
+import { createTable } from '../board-table-v33.js?v=33.9.2';
 
 const { L, W, R } = POOL;
 const RAIL = 14, CUSHION = 4;
@@ -405,7 +405,7 @@ function renderPlates() {
     el.classList.toggle('turn', s.winner === null && s.turn === seat);
     const name = ctl.names[seat] || p.name || 'لاعب';
     el.querySelector('.bi-who b').textContent = name;
-    const tag = ctl.mode === 'ai' && seat === 1 ? { easy: 'سهل', medium: 'متوسط', hard: 'محترف' }[ctl.level] : ctl.bots[seat] ? 'آلي' : (ctl.mode === 'online' && seat === ctl.me) || (ctl.mode === 'ai' && seat === 0) ? 'أنت' : '';
+    const tag = ctl.mode === 'ai' && seat === 1 ? { easy: 'سهل', medium: 'متوسط', hard: 'محترف' }[ctl.level] : (ctl.mode === 'online' && seat === ctl.me) || (ctl.mode === 'ai' && seat === 0) ? 'أنت' : '';
     el.querySelector('.bi-who small').textContent = tag;
     el.querySelector('.bi-face i').textContent = (name.trim()[0] || '؟');
     const rack = el.querySelector('.bi-rack');
@@ -739,9 +739,9 @@ window.addEventListener('bs-pool-aim', (ev) => {
 try {
   table = createTable({
     game: 'billiards',
-    quickNote: 'طاولة لاثنين: لاعب حقيقي، وإذا ما حصلنا أحد خلال 10 ثواني يلعب معك منافس آلي.',
+    quickNote: 'طاولة لاثنين: نلقى لك منافس خلال ثواني.',
     roomNote: 'أنشئ غرفة وارسل الرمز لخويّك.',
-    lobbyNote: (next, isPublic) => (isPublic ? 'تبدأ بعد العد. إذا ما دخل أحد يلعب معك منافس آلي.' : 'أرسل الرمز لخويّك. تبدأ إذا ضغطت «ابدأ»، وإذا ما حضر يلعب منافس آلي.'),
+    lobbyNote: (next, isPublic) => (isPublic ? 'تبدأ بعد العد.' : 'أرسل الرمز لخويّك. تبدأ إذا ضغطت «ابدأ».'),
     apply,
     onLobby: () => { if (!$('#game').hidden) showMenu(); setMode('online'); },
     onMenu: () => { if (!$('#game').hidden) showMenu(); },

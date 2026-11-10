@@ -46,7 +46,7 @@
   const card=document.querySelector('.winner-card');
   if(card){let row=card.querySelector('.winner-reward');if(!row){row=document.createElement('div');row.className='winner-reward';const again=card.querySelector('#again');if(again?.before)again.before(row);else card.appendChild(row)}
    const coins=Math.max(0,(after?.coins||0)-(before?.coins||0)),xp=Math.max(0,(after?.xp||0)-(before?.xp||0));
-   row.textContent=coins||xp?`◈ +${coins} عملة · +${xp} خبرة`:'راجع رصيدك والمكافآت من المتجر';
+   row.textContent=coins||xp?`🪙 +${coins} عملة · +${xp} خبرة`:'راجع رصيدك والمكافآت من المتجر';
    let title=card.querySelector('.career-title');if(!title){title=document.createElement('span');title.className='career-title';card.appendChild(title)}const item=window.BS_CAREER_CORE?.CATALOG.find(i=>i.id===after?.equipped?.title);title.textContent=item?.name||'';title.style.setProperty('--title-color',item?.color||'#a8c6df');
    const ready=window.BS_CAREER_CORE?.objectives(after,{now:api.now?.()||Date.now()}).filter(o=>o.ready).length||0;let link=card.querySelector('.winner-missions');if(ready){if(!link){link=document.createElement('a');link.className='winner-missions';link.href='/shop?view=missions';card.appendChild(link)}link.textContent=`${ready} مكافأة جاهزة للاستلام ←`}else link?.remove();
   }
@@ -57,8 +57,8 @@
   if(!target||!window.BS_CAREER_CORE)return;
   function render(){
    const core=window.BS_CAREER_CORE,status=core.dailyStatus(window.BS_CAREER.get(),{now:window.BS_CAREER.now?.()||Date.now()});
-   target.className='daily-panel';target.innerHTML=`<div><h3>هديتك اليومية <span aria-hidden="true">✦</span></h3><p>${status.claimed?'استلمت هدية اليوم. ارجع غدًا لتكمل السلسلة.':'كل يوم تلعب فيه، هديتك تكبر. اليوم '+status.streak+' من 7.'}</p></div><button class="bs-btn gold daily-claim" ${status.claimed?'disabled':''}>${status.claimed?'✓ تم الاستلام':'استلم ◈ '+status.coins}</button><div class="daily-strip">${status.gifts.map((coins,i)=>`<div class="daily-day ${i+1===status.streak?'current':''} ${status.claimed&&i+1<=status.streak?'claimed':''}"><span>اليوم ${i+1}</span><strong>${coins}</strong><span>${status.claimed&&i+1<=status.streak?'✓':'◈'}</span></div>`).join('')}</div>`;
-   target.querySelector('button').onclick=async e=>{e.target.disabled=true;try{await window.BS_CAREER.daily();window.BS_AUDIO.play('finish');window.BS_PLATFORM.toast('وصلت هديتك إلى الرصيد ◈');render()}catch(error){window.BS_PLATFORM.toast('لم تُستلم الهدية: '+error.message);e.target.disabled=false}};
+   target.className='daily-panel';target.innerHTML=`<div><h3>هديتك اليومية <span aria-hidden="true">✦</span></h3><p>${status.claimed?'استلمت هدية اليوم. ارجع غدًا لتكمل السلسلة.':'كل يوم تلعب فيه، هديتك تكبر. اليوم '+status.streak+' من 7.'}</p></div><button class="bs-btn gold daily-claim" ${status.claimed?'disabled':''}>${status.claimed?'✓ تم الاستلام':'استلم 🪙 '+status.coins}</button><div class="daily-strip">${status.gifts.map((coins,i)=>`<div class="daily-day ${i+1===status.streak?'current':''} ${status.claimed&&i+1<=status.streak?'claimed':''}"><span>اليوم ${i+1}</span><strong>${coins}</strong><span>${status.claimed&&i+1<=status.streak?'✓':'🪙'}</span></div>`).join('')}</div>`;
+   target.querySelector('button').onclick=async e=>{e.target.disabled=true;try{await window.BS_CAREER.daily();window.BS_AUDIO.play('finish');window.BS_PLATFORM.toast('وصلت هديتك إلى الرصيد 🪙');render()}catch(error){window.BS_PLATFORM.toast('لم تُستلم الهدية: '+error.message);e.target.disabled=false}};
   }
   window.addEventListener('bs-career-change',render);document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});setInterval(render,60000);render();
  }

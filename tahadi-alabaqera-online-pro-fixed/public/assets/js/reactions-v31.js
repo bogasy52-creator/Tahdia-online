@@ -72,7 +72,7 @@
   /* 33.8.0: a phrase with a recorded line («السلام عليكم», «كفو»…) is spoken whole, in the voice of the
      voice studio — the same voice and the same player the Baloot table uses (one module on the page). */
   let voiceModule=null,voicePrimed=false,voiceApi=null;
-  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.1-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
+  function voice(){if(!voiceModule)voiceModule=import('/assets/js/baloot-voice.js?v=33.9.2-audio1').then(m=>m.BalootVoice||null).catch(()=>{voiceModule=null;return null;});return voiceModule;}
   function speak(it){if(!it?.voice)return;voice().then(v=>{try{v?.say?.(it.voice,0,{maxAge:6000});}catch{}});}
   function primeVoices(){if(voicePrimed)return;voicePrimed=true;voice().then(v=>{if(!v)return;voiceApi=v;if(sheet&&!sheet.hidden)render();Promise.resolve(v.unlock?.()).then(()=>{try{v.prime?.(all().filter(it=>it.voice).map(it=>it.voice));}catch{}}).catch(()=>{});});}
   // a phrase shows the speaker only when its line is recorded (the voice studio fills the new ones)
@@ -337,7 +337,7 @@
   function explainLock(it,why){
     if(!sheet)return;lockNote?.remove();
     lockNote=el('div','rx-lock-note');
-    const text=why==='signin'?'سجّل الدخول لتستخدم تفاعلاتك المشتراة في غرف الأونلاين.':why==='exclusive'?'«'+it.name+'» حصري ولا يُباع.':'«'+it.name+'» متاح في المتجر بـ '+it.price+' ◈';
+    const text=why==='signin'?'سجّل الدخول لتستخدم تفاعلاتك المشتراة في غرف الأونلاين.':why==='exclusive'?'«'+it.name+'» حصري ولا يُباع.':'«'+it.name+'» متاح في المتجر بـ '+it.price+' 🪙';
     lockNote.append(el('span',null,text));
     if(why==='buy'){const go=el('a','rx-lock-go','افتح المتجر');go.href='/shop?filter='+it.type+'#collection';go.target='_blank';go.rel='noopener';lockNote.append(go);}
     if(why==='signin'){const go=el('a','rx-lock-go','تسجيل الدخول');go.href='/social?auth=1';go.target='_blank';go.rel='noopener';lockNote.append(go);}
@@ -376,24 +376,32 @@
     b.setAttribute('aria-label',(it.text||it.name)+(state.ok?'':state.why==='signin'?' — يحتاج تسجيل الدخول':' — مقفل، '+it.price+' عملة'));
     if(it.type==='phrase'){b.append(el('span','rx-item-text',it.text||it.name));if(speaks(it))b.append(el('i','rx-voice','🔊'));}
     else{const art=window.BS_REACTION_ART?.make?.(it);b.append(art||el('span','rx-item-glyph',it.glyph));b.append(el('small','rx-item-name',it.name));}
-    if(!state.ok)b.append(el('i','rx-lock',state.why==='signin'?'🔑':state.why==='exclusive'?'★':it.price+' ◈'));
+    if(!state.ok)b.append(el('i','rx-lock',state.why==='signin'?'🔑':state.why==='exclusive'?'★':it.price+' 🪙'));
     else if(it.type==='move')b.append(el('i','rx-tier',it.target?'🎯 على لاعب':TIER[tier(it)]));
     if(state.ok&&cooling(it))b.disabled=true;
     b.addEventListener('click',()=>send(it));
     return b;
   }
+  /* 33.9.2: the grid is rebuilt only when what it shows changes (a voice that loads, the shop, a
+     cool-down ending used to rebuild it under the finger, and that tap was lost: «يعلق ما يرسل»). */
+  let gridKey='';
   function render(){
     if(!sheet)return;
     sheet.querySelectorAll('.rx-tab').forEach(b=>{const on=b.dataset.tab===tab;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',String(on));});
-    const body=sheet.querySelector('.rx-sheet-body');for(const child of [...body.children])if(child!==lockNote)child.remove();
+    const body=sheet.querySelector('.rx-sheet-body');
     const list=visibleItems(tab),ready=list.filter(it=>access(it).ok).sort((a,b)=>(b.voice?1:0)-(a.voice?1:0)||(b.target?1:0)-(a.target?1:0)),locked=list.filter(it=>!access(it).ok);
     if(tab==='phrase')primeVoices();
-    if(aiming&&tab==='move'){
-      const aim=el('div','rx-aim'),head=el('b','rx-aim-title',aiming.glyph+' '+aiming.name+' — على مين؟'),row=el('div','rx-aim-row'),back=el('button','rx-aim-cancel','إلغاء');back.type='button';back.addEventListener('click',()=>{aiming=null;render();});
-      for(const t of targets()){const b=el('button','rx-aim-player',t.name);b.type='button';b.addEventListener('click',()=>send(aiming,t));row.append(b);}
-      aim.append(head,row,back);body.append(aim);
-    }
-    const grid=el('div','rx-grid rx-grid-'+tab);for(const it of [...ready,...locked])grid.append(tile(it));body.append(grid);
+    const aimAt=aiming&&tab==='move'?targets():null;
+    const key=JSON.stringify([tab,aiming?.id||'',aimAt?.map(t=>t.id+'|'+t.name)||[],ready.map(it=>it.id+(speaks(it)?'+':'')),locked.map(it=>it.id+':'+access(it).why)]);
+    if(key!==gridKey||!body.querySelector('.rx-grid')){
+      gridKey=key;for(const child of [...body.children])if(child!==lockNote)child.remove();
+      if(aimAt){
+        const aim=el('div','rx-aim'),head=el('b','rx-aim-title',aiming.glyph+' '+aiming.name+' — على مين؟'),row=el('div','rx-aim-row'),back=el('button','rx-aim-cancel','إلغاء');back.type='button';back.addEventListener('click',()=>{aiming=null;render();});
+        for(const t of aimAt){const b=el('button','rx-aim-player',t.name);b.type='button';b.addEventListener('click',()=>send(aiming,t));row.append(b);}
+        aim.append(head,row,back);body.append(aim);
+      }
+      const grid=el('div','rx-grid rx-grid-'+tab);for(const it of [...ready,...locked])grid.append(tile(it));body.append(grid);
+    }else for(const b of body.querySelectorAll('.rx-item')){const it=item(b.dataset.reaction);b.disabled=Boolean(it&&access(it).ok&&cooling(it));}
     const hint=sheet.querySelector('.rx-hint');if(hint)hint.textContent=ready.length+' من '+list.length+' جاهزة'+(onlineMode()?'':' · طاولة على هذا الجهاز');
     const link=sheet.querySelector('.rx-shop-link');if(link)link.href='/shop?filter='+tab+'#collection';
   }

@@ -15,9 +15,13 @@ test('ten offers independent movement and next-card burn choices',()=>{
  const burn=actions.find(a=>a.type==='burn');assert.deepEqual(burn,{type:'burn',target:3});
  const before=structuredClone(s),preview=previewJackarooAction(s,burn,'10S');
  assert.deepEqual(preview.hands,s.hands);
- const next=playJackarooAction(s,0,burn);
- assert.deepEqual(s,before);assert.deepEqual(next.hands[3],['9C']);assert.equal(next.turn,2);
- assert.deepEqual(next.discard.slice(-2),['7D','10S']);
+ // 33.9.2: the player hit picks the card that burns, and that is their turn
+ const ask=playJackarooAction(s,0,burn);
+ assert.deepEqual(s,before);assert.equal(ask.turn,3);assert.deepEqual(ask.burnPick,{target:3,by:0});assert.deepEqual(ask.hands[3],s.hands[3]);
+ assert.deepEqual(getJackarooActions(ask,0,3),[{type:'burnPick'}]);assert.deepEqual(getJackarooActions(ask,0,2),[]);
+ const next=playJackarooAction(ask,ask.hands[3].indexOf('7D'),{type:'burnPick'},3);
+ assert.deepEqual(next.hands[3],['9C']);assert.equal(next.turn,2);assert.equal(next.burnPick,undefined);
+ assert.deepEqual(next.discard.slice(-2),['10S','7D']);
  assert.deepEqual(next.players,s.players);
 });
 test('burn requires a ten and a next-player card and is consumed only once',()=>{

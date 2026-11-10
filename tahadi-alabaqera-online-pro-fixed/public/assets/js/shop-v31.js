@@ -3,7 +3,7 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.9.1';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.9.2';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
@@ -311,7 +311,7 @@ function updatePreviewControls(){
  const item=core.CATALOG.find(item=>item.id===previewId);if(!item)return;
  const p=profile(),s=state(item,p),isReaction=REACTION.has(item.type);
  $('previewOwnership').textContent=locked(item)&&!s.owned?lockText(item):s.equipped?'مجهّزة الآن':s.owned?(isReaction?'في حسابك — تجده في زر التفاعل داخل الغرف':'ضمن خزانتك'):fmt(s.price)+' عملة · رصيدك '+fmt(p.coins);
- const action=$('previewAction');action.textContent=locked(item)&&!s.owned?lockText(item):s.equipped?'مجهّزة داخل اللعب':s.owned?(isReaction?'مملوك':'جهّز القطعة'):p.coins<s.price?'تحتاج '+fmt(s.price-p.coins)+' عملة إضافية':'شراء'+(isReaction?'':' وتجهيز')+' · '+fmt(s.price)+' ◈';
+ const action=$('previewAction');action.textContent=locked(item)&&!s.owned?lockText(item):s.equipped?'مجهّزة داخل اللعب':s.owned?(isReaction?'مملوك':'جهّز القطعة'):p.coins<s.price?'تحتاج '+fmt(s.price-p.coins)+' عملة إضافية':'شراء'+(isReaction?'':' وتجهيز')+' · '+fmt(s.price)+' 🪙';
  action.disabled=pending||s.equipped||isReaction&&s.owned||locked(item)&&!s.owned||!s.owned&&p.coins<s.price;action.onclick=()=>buy(item,s.price);
  $('previewBag').hidden=s.owned||locked(item);$('previewBag').disabled=pending;$('previewBag').textContent=bag.includes(item.id)?'فتح السلة':'أضف إلى السلة';$('previewBag').onclick=()=>{addToBag(item);};
 }
@@ -352,7 +352,7 @@ function openBag(){if($('previewDialog').open)$('previewDialog').close();renderB
 function renderBag(){
  const target=$('bagItems');target.replaceChildren();const p=profile();let quote={price:0};
  if(bag.length)quote=core.cartQuote(p,bag,{now:now()});else target.append(make('p','sx-bag-empty','سلتك فارغة. اضغط + على أي قطعة لتضيفها هنا.'));
- for(const id of bag){const item=core.CATALOG.find(item=>item.id===id),row=make('div','atelier-bag-row sx-bag-row');row.dataset.bagItem=id;const art=make('div','sx-bag-art');mountCollectible(art,item);const copy=make('div');copy.append(make('h3',null,item.name),make('small',null,p.owned.includes(id)?'مملوكة · تجهيز دون تكلفة':TYPE_LABEL[item.type]+' · '+fmt(cost(item))+' ◈'));const remove=make('button','atelier-bag-remove','إزالة');remove.disabled=pending;remove.onclick=()=>{const at=bag.indexOf(id);bag=bag.filter(value=>value!==id);checkout=null;saveLists();render();($('bagItems').querySelectorAll('.atelier-bag-remove')[Math.min(at,bag.length-1)]||$('bagClose')).focus();};row.append(art,copy,remove);target.append(row);}
+ for(const id of bag){const item=core.CATALOG.find(item=>item.id===id),row=make('div','atelier-bag-row sx-bag-row');row.dataset.bagItem=id;const art=make('div','sx-bag-art');mountCollectible(art,item);const copy=make('div');copy.append(make('h3',null,item.name),make('small',null,p.owned.includes(id)?'مملوكة · تجهيز دون تكلفة':TYPE_LABEL[item.type]+' · '+fmt(cost(item))+' 🪙'));const remove=make('button','atelier-bag-remove','إزالة');remove.disabled=pending;remove.onclick=()=>{const at=bag.indexOf(id);bag=bag.filter(value=>value!==id);checkout=null;saveLists();render();($('bagItems').querySelectorAll('.atelier-bag-remove')[Math.min(at,bag.length-1)]||$('bagClose')).focus();};row.append(art,copy,remove);target.append(row);}
  $('bagTotal').textContent=String(quote.price);$('bagCheckout').disabled=pending||!bag.length||p.coins<quote.price;$('bagCheckout').textContent=pending?'جارٍ التأكيد…':p.coins<quote.price?'تحتاج '+fmt(quote.price-p.coins)+' عملة إضافية':'تأكيد الشراء والتجهيز';
 }
 $('bagCheckout').onclick=()=>{if(!bag.length||pending)return;const quote=core.cartQuote(profile(),bag,{now:now()});checkout??={ids:[...bag],price:quote.price,id:crypto.randomUUID().replaceAll('-','')};const transaction=checkout;return operate(async()=>{await api().cart(transaction.ids,{expectedPrice:transaction.price,requestId:transaction.id});bag=[];checkout=null;saveLists();$('bagDialog').close();},'أُضيفت مقتنيات السلة وتجهّزت داخل ألعابك.');};

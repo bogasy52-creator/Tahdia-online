@@ -46,7 +46,9 @@ test('the burnt hand is skipped until the next deal, and the ten still burns the
   const burn = getJackarooActions(t, 0, 0).find((a) => a.type === 'burn');
   assert.deepEqual(burn, { type: 'burn', target: 3 });
   t = playJackarooAction(t, 0, burn, 0);
-  assert.equal(t.hands[3].length, 1); assert.equal(t.turn, 2, 'the next player is skipped');
+  // 33.9.2: the player hit picks the card that burns, and loses the turn with it
+  assert.equal(t.turn, 3); t = playJackarooAction(t, 1, { type: 'burnPick' }, 3);
+  assert.deepEqual(t.hands[3], ['5H']); assert.equal(t.turn, 2, 'the next player is skipped');
 });
 test('the room takes «احرق الكل» only from the player whose turn it is', () => {
   const s = jack(); s.players[0].marbles = [-1, -1, -1, -1]; s.hands[0] = ['2S', '3H', '9D'];
@@ -73,11 +75,11 @@ test('the Jackaroo page: moves chosen on the board, a faded card that can only b
   assert.match(page, /<b>تحرق كل أوراقك؟<\/b>/);
   assert.match(page, /table\.send\("jackaroo_burn_all", \{\}\)/);
   assert.match(page, /b\.classList\.add\("jk-dead"\);/);
-  assert.match(page, /"🔥 احرق ورقة " \+ \(state\.players\[burnNext\.target\]\?\.name \|\| "التالي"\) \+ " وتخطّاه"/);
+  assert.match(page, /"🔥 احرق على " \+ \(state\.players\[burnNext\.target\]\?\.name \|\| "التالي"\) \+ ": يختار ورقة تنحرق ويروح دوره"/);
   const css = await read('public/assets/css/jackaroo-v33-8.css');
   assert.match(css, /--jk-card:clamp\(48px,min\(calc\(\(100vw - 30px - \(var\(--jk-n\) - 1\) \* 8px\) \/ var\(--jk-n\)\),11\.5svh\),94px\)/);
   assert.ok(JSON.parse(await read('scripts/style-bundles.json'))['jackaroo.html'].includes('assets/css/jackaroo-v33-8.css'));
-  assert.match(await read('public/assets/js/board-fit-pro.js'), /Math\.min\(r\.height,r\.width\*1\.1\)/);
+  assert.match(await read('public/assets/js/board-fit-pro.js'), /Math\.min\(r\.height,r\.width\)/);
 });
 
 /* ---------- talk in every room ---------- */
@@ -117,11 +119,11 @@ test('a quick hockey match alone gets a computer opponent after the wait, and a 
   assert.equal(r.status, 'playing'); assert.equal(r.round, 2);
   assert.equal(r.status, 'playing'); r.status = 'finished';
 });
-test('the hockey page: a cover, three ways to play on the first screen, the wait counted down, the computer named', async () => {
+test('the hockey page: a cover, three ways to play on the first screen, the wait counted down', async () => {
   const page = await read('public/hockey.html'), main = await read('public/assets/js/hockey/main.js');
   assert.match(page, /<h1>هوكي الهواء<\/h1>/); assert.doesNotMatch(page, /AIR HOCKEY · ARENA|LIVE MATCH/);
   assert.match(page, /<p id="hkSearch" class="hk-search" role="status" hidden><\/p>/);
-  assert.match(main, /يلعب معك منافس آلي/); assert.match(main, /dataset\.bot = String\(Boolean\(online\?\.state\?\.players\?\.\[1 - online\.seat\]\?\.bot\)\)/);
+  assert.match(main, /نبحث لك عن منافس… /); /* 33.9.2: the wait no longer says who comes */ assert.match(main, /dataset\.bot = String\(Boolean\(online\?\.state\?\.players\?\.\[1 - online\.seat\]\?\.bot\)\)/);
   assert.match(main, /const NAME_KEY='bs-player-name-v33';/);
   assert.ok(JSON.parse(await read('scripts/style-bundles.json'))['hockey.html'].includes('assets/css/hockey-v33-8.css'));
 });

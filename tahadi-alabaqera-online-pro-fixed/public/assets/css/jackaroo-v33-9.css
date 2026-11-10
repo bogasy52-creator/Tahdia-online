@@ -4,8 +4,9 @@
 :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #board{height:var(--pro-board-h,var(--pro-board-size,320px))!important;block-size:var(--pro-board-h,var(--pro-board-size,320px))!important}
 :is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game #board>svg{width:100%!important;height:100%!important}
 /* the moves are chosen on the board: down here only the burns, and nothing when there is none */
-:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #actions:empty{display:none!important}
-:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #actions{min-height:0!important}
+/* 33.9.2: the row keeps its height when empty, so picking a card never moves the board */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #actions{display:flex!important;min-height:46px!important;height:46px!important;max-height:46px!important;overflow:hidden!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #actions:empty{visibility:hidden}
 
 /* the marble you picked, and where you told the seven's first marble to stop */
 .jk-pick{position:absolute;inset:0;z-index:6;pointer-events:none}
@@ -17,3 +18,4 @@
 @keyframes jk-nope{20%{transform:translateX(-1.3px)}40%{transform:translateX(1.3px)}60%{transform:translateX(-.9px)}80%{transform:translateX(.6px)}}
 .jk-say.warn{border-color:#ff8a8a;background:#2a0d14ee;color:#ffe1e1;font-size:13px;white-space:normal;width:max-content;max-width:min(250px,70vw);text-align:center;animation-duration:1.65s}
 @media (prefers-reduced-motion:reduce){.jk-picked,[data-stone].jk-nope .stone-bob{animation:none!important}}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game .jk-hand-dock #status{height:44px!important;min-height:44px!important;max-height:44px!important;overflow:hidden!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.35!important;align-content:center}

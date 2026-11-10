@@ -122,15 +122,15 @@
       const option = make('button', 'blt-option'); option.type = 'button'; option.dataset.item = tid;
       option.setAttribute('role', 'option'); option.setAttribute('aria-selected', String(tid === id));
       const thumb = make('span', 'blt-thumb'); thumb.append(felt(themeOf(tid)));
-      const status = tid === mine ? 'طاولتك ✓' : owned.has(tid) ? 'عندك' : '◈ ' + priceOf(tid);
+      const status = tid === mine ? 'طاولتك ✓' : owned.has(tid) ? 'عندك' : '🪙 ' + priceOf(tid);
       option.append(thumb, make('b', null, itemOf(tid)?.name || ''), make('small', tid === mine ? 'is-on' : owned.has(tid) ? 'is-owned' : 'is-price', status));
       option.addEventListener('click', () => { chosen = tid; sound('balootFlip'); paint(); });
       list.append(option);
     }
     const action = sheet.querySelector('.blt-action');
     action.disabled = busy || id === mine || (!owned.has(id) && coins < price);
-    action.textContent = id === mine ? 'هذي طاولتك ✓' : owned.has(id) ? 'اجلس على هذي الطاولة' : coins < price ? `تحتاج ◈ ${price} · رصيدك ${coins}` : `اشترها بـ ◈ ${price} واجلس`;
-    sheet.querySelector('.blt-coins').textContent = 'رصيدك: ◈ ' + coins;
+    action.textContent = id === mine ? 'هذي طاولتك ✓' : owned.has(id) ? 'اجلس على هذي الطاولة' : coins < price ? `تحتاج 🪙 ${price} · رصيدك ${coins}` : `اشترها بـ 🪙 ${price} واجلس`;
+    sheet.querySelector('.blt-coins').textContent = 'رصيدك: 🪙 ' + coins;
     const picked = list.querySelector('[aria-selected="true"]');
     picked?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
     if (hadFocus) picked?.focus?.({ preventScroll: true });

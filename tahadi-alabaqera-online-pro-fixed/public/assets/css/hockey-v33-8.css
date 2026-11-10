@@ -65,7 +65,7 @@
 /* ---------- the match bar: both names, both scores, the target ---------- */
 .hockey-page .score .nm{max-width:min(92px,24vw)!important;font-size:12px!important;font-weight:800;color:#dfe8ff!important}
 .hockey-page .score #nameA{color:#bfefff!important}
-.hockey-page .score #nameB[data-bot=true]::after{content:' · آلي';color:#93a2c9;font-weight:600}
+
 .hockey-page .score b{font-size:clamp(26px,7vw,34px)!important}
 .hockey-page .score small{bottom:-9px!important;font-size:10.5px!important;padding:1px 9px!important;border:1px solid #f6d98a44}
 

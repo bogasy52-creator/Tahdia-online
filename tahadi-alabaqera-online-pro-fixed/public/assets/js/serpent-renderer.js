@@ -261,7 +261,7 @@ export class SerpentRenderer {
   for(const z of g.world?.zones||[]){ctx.strokeStyle=g.world.phase==='active'?'#ffc797':'#9dcfdf88';ctx.beginPath();ctx.arc(x+z.x/g.width*size,y+z.y/g.height*size,Math.max(2,z.radius/g.width*size),0,Math.PI*2);ctx.stroke();}
   for(const f of g.food){if(f.value<3||!Number.isFinite(f.x)||!Number.isFinite(f.y))continue;ctx.fillStyle=f.kind==='gem'?'#86f5fb':'#ffd27c';ctx.beginPath();ctx.arc(x+clamp(f.x/g.width,0,1)*size,y+clamp(f.y/g.height,0,1)*size,1.5,0,Math.PI*2);ctx.fill();}
   for(const snake of g.snakes){if(!snake.alive||snake.id!==id&&powerActive(snake,'ghost',g.elapsed))continue;const sx=x+clamp(snake.x/g.width,0,1)*size,sy=y+clamp(snake.y/g.height,0,1)*size;
-   ctx.fillStyle=snake.id===id?'#e2fbff':snake.bot?'#e8ae86':'#b6a4f7';ctx.beginPath();ctx.arc(sx,sy,snake.id===id?3.5:2.2,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=snake.id===id?'#e2fbff':'#b6a4f7';ctx.beginPath();ctx.arc(sx,sy,snake.id===id?3.5:2.2,0,Math.PI*2);ctx.fill();
    if(snake.id===id){ctx.strokeStyle='#69e3f4';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+Math.cos(snake.angle)*10,sy+Math.sin(snake.angle)*10);ctx.stroke();}
   }
   ctx.fillStyle='#c3d9ee';ctx.font='11px Tahoma,Arial';ctx.textAlign='center';ctx.fillText('أنت والكنوز',x+size/2,y-9);ctx.restore();

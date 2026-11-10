@@ -1,8 +1,8 @@
 (()=>{'use strict';let pending=0;function fit(){pending=0;
  const jack=document.body.classList.contains('game-jackaroo'),running=document.body.classList.contains('game-running');
- if(jack&&running){const box=document.querySelector('.jack-board-wrap'),board=document.getElementById('board');if(box&&board){const r=box.getBoundingClientRect();const tall=r.height>r.width*1.06&&r.width<700&&!document.fullscreenElement?.matches?.('.jk-no-zoom');const size=Math.max(1,Math.floor(tall?Math.min(r.height,r.width*1.1):Math.min(r.width,r.height)));
+ if(jack&&running){const box=document.querySelector('.jack-board-wrap'),board=document.getElementById('board');if(box&&board){const r=box.getBoundingClientRect();const tall=r.height>r.width*1.06&&r.width<700&&!document.fullscreenElement?.matches?.('.jk-no-zoom');const size=Math.max(1,Math.floor(tall?Math.min(r.height,r.width):Math.min(r.width,r.height)));/* 33.9.2: the whole board fits the width (its sides were cut) */
  // 33.9.0: on a tall phone the board also stretches down into the empty space (its marbles and holes stay round)
- const high=tall?Math.max(size,Math.floor(Math.min(r.height-2,size*1.34))):size;
+ const high=tall?Math.max(size,Math.floor(Math.min(r.height-2,size*1.5))):size;
  board.style.setProperty('--pro-board-size',size+'px');board.style.setProperty('--pro-board-h',high+'px');document.body.classList.toggle('jack-board-wide',tall&&size>r.width+2);document.body.classList.toggle('jack-board-tall',high>size+2);}}
  const field=document.querySelector('.cm-playfield'),surface=document.getElementById('carromSurface');if(field&&surface){const r=field.getBoundingClientRect(),size=Math.max(1,Math.floor(Math.min(r.width-12,r.height-8)));if(r.width&&r.height){surface.style.width=size+'px';surface.style.height=size+'px';}}
 }

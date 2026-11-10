@@ -57,10 +57,11 @@ test('the challenge rooms and the party send the accounts with their players', a
   assert.equal(JSON.stringify(challengeView(m, 'a', 1e6 + 10)).includes('username'), false);
 });
 
-test('the card opens from every list of players, and a computer opponent or a guest gets a word instead of the button', async () => {
+test('the card opens from every list of players, and a guest (or a seat the computer plays) gets a word instead of the button', async () => {
   const card = await read('public/assets/js/player-card-v33-7.js');
   assert.match(card, /window\.BS_PLAYER_CARD = Object\.freeze\(\{ open, close \}\);/);
-  assert.match(card, /'المنافس الآلي ما ينضاف للأصدقاء، بس تقدر تغلبه\.'/);
+  assert.match(card, /if \(!info\.username \|\| info\.bot\) \{/, '33.9.2: a seat the computer plays reads like a guest');
+  assert.doesNotMatch(card, /منافس آلي|المنافس الآلي/);
   assert.match(card, /'ضيف · ما عنده حساب'/);
   for (const text of ['أضف صديق', 'صديقك ✓', 'طلبك مرسل ✓', 'اقبل طلب صداقته', 'انرسل طلب الصداقة ✓', 'صرتوا أصدقاء ✓']) assert.ok(card.includes(text), text);
   assert.match(card, /window\.BS_SOCIAL\.requestFriend\(info\.username\)/);

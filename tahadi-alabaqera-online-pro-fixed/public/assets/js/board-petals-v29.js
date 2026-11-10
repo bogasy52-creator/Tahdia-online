@@ -1,4 +1,4 @@
-import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js?v=33.9.1';
+import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js?v=33.9.2';
 /* Tahdia 31.0.0 — the Zahra and Jackaroo tables (file name kept for imports).
    Zahra: a classic cross board — coloured yards, a cream track, home lanes and
    a flower in the centre — with glossy standing stones.
@@ -409,24 +409,30 @@ function gradientLine(defs,id,a,b,from,to){const g=n('linearGradient',{id,gradie
 export const JACK_COLORS=Object.freeze(['#8b5cf6','#f2711c','#2f86e8','#22a565','#e0474c','#f0b429']);
 // measured on the picture (1254 px → 200 units at 0.184 a pixel): arm half-width, arm end,
 // where the diagonal starts, the lane, the yard, and how far a number sits from its hole
-const CROSS=Object.freeze({a:14.72,L:77.28,c:40.48,lane:[69.1,61.3,53.5,45.7],cup:38.4,yard:[-37,65],yardGap:4.1,label:6.9});
+const CROSS=Object.freeze({a:14.72,L:77.28,c:40.48,lane:[69.1,61.3,53.5,45.7],cup:38.4,yard:[-37,65],yardGap:4.1,label:6.2});
 const quarterTurn=(p,q)=>{let x=p.x,y=p.y;for(let i=0;i<((q%4)+4)%4;i++)[x,y]=[-y,x];return{x,y};};
 function jackCrossLayout(arm){
   const {a,L,c}=CROSS,C=100,pts=[[-a,L],[-a,c],[-c,a],[-L,a],[-L,-a]].map(([x,y])=>({x,y}));
   const normals=[{x:-1,y:0},{x:-Math.SQRT1_2,y:Math.SQRT1_2},{x:0,y:1},{x:-1,y:0}];
   const segs=pts.slice(0,4).map((p,i)=>({from:p,to:pts[i+1],len:Math.hypot(pts[i+1].x-p.x,pts[i+1].y-p.y),n:normals[i]}));
   const quarter=[];
-  const put=(i,t,corner)=>{const s=segs[i],m=corner?{x:segs[i-1].n.x+s.n.x,y:segs[i-1].n.y+s.n.y}:s.n,l=Math.hypot(m.x,m.y);quarter.push({x:s.from.x+(s.to.x-s.from.x)*t,y:s.from.y+(s.to.y-s.from.y)*t,n:{x:m.x/l,y:m.y/l}});};
+  const put=(i,t,corner)=>{const s=segs[i],m=corner?{x:segs[i-1].n.x+s.n.x,y:segs[i-1].n.y+s.n.y}:s.n,l=Math.hypot(m.x,m.y);quarter.push({x:s.from.x+(s.to.x-s.from.x)*t,y:s.from.y+(s.to.y-s.from.y)*t,n:{x:m.x/l,y:m.y/l},...(corner?{corner:segs[i-1].n,n2:s.n}:{})});};
   // the picture: holes 5, 10 and 15 on the corners, four steps up the arm's end to the next house
   if(arm===19)[5,5,5,4].forEach((count,i)=>{for(let k=0;k<count;k++)put(i,k/count,k===0&&i>0);});
   // a game from before the picture keeps its own count: the same walk, holes at equal steps
   else{const total=segs.reduce((m,s)=>m+s.len,0),step=total/arm;for(let k=0;k<arm;k++){let d=k*step,i=0;while(i<3&&d>segs[i].len+1e-9){d-=segs[i].len;i++;}put(i,d/segs[i].len,false);}}
   const place=(p,s)=>{const q=quarterTurn(p,s);return{x:+(C+q.x).toFixed(2),y:+(C+q.y).toFixed(2)};};
   const track=[],labels=[];
-  // Put each diagonal corner's number inside the path. Its neighbours stay outside,
-  // leaving room for two digits in portrait and for upright type in landscape.
-  if(arm===19){quarter[5].n={x:1,y:0};quarter[10].n={x:0,y:-1};}
-  for(let s=0;s<4;s++)quarter.forEach((p,k)=>{track.push(place(p,s));const n=quarterTurn(p.n,s),q=quarterTurn(p,s),d=p.shift?quarterTurn(p.shift,s):{x:0,y:0};labels.push(k?{x:+(C+q.x+n.x*CROSS.label+d.x).toFixed(2),y:+(C+q.y+n.y*CROSS.label+d.y).toFixed(2),num:k}:null);});
+  // 33.9.2: every number sits outside the path, on the same side all the way round (the corner ones
+  // used to sit inside, alone). A corner's number takes the free spot in its corner's outer fan.
+  const D=CROSS.label,spot=quarter.map((p,k)=>k?{x:p.x+p.n.x*D,y:p.y+p.n.y*D}:null);
+  quarter.forEach((p,k)=>{
+    if(!k||!p.corner)return;let best=null,score=-Infinity;const a0=Math.atan2(p.corner.y,p.corner.x),a1=Math.atan2(p.n2.y,p.n2.x);
+    for(let r=D;r<=D*1.6;r+=.3)for(let t=-.6;t<=1.6;t+=.05){const ang=a0+(a1-a0)*t,x=p.x+Math.cos(ang)*r,y=p.y+Math.sin(ang)*r;let m=Infinity;
+      spot.forEach((o,j)=>{if(o&&j!==k)m=Math.min(m,Math.hypot(o.x-x,(o.y-y)*1.3));});for(const h of quarter)m=Math.min(m,Math.hypot(h.x-x,h.y-y)+1.2);
+      m=Math.min(m,6.5);if(m-(r-D)*.1>score){score=m-(r-D)*.1;best={x,y};}}
+    spot[k]=best;});
+  for(let s=0;s<4;s++)quarter.forEach((p,k)=>{track.push(place(p,s));if(!k){labels.push(null);return;}const q=quarterTurn(spot[k],s);labels.push({x:+(C+q.x).toFixed(2),y:+(C+q.y).toFixed(2),num:k});});
   const g=CROSS.yardGap,[yx,yy]=CROSS.yard,step=arm===19?7.36:segs.reduce((m,s)=>m+s.len,0)/arm;
   return{kind:'cross',seats:4,arm,track,labels,step,hole:+Math.min(3.15,step*.4).toFixed(2),
     lanes:[0,1,2,3].map(s=>CROSS.lane.map(y=>place({x:0,y},s))),
@@ -548,7 +554,7 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
     L.bases[s].forEach((b,i)=>g.append(n('circle',{cx:b.x,cy:b.y,r:L.hole,fill:look.lane,stroke:color,'stroke-width':.8,opacity:.9,'data-yard':s+':'+i})));
     root.append(g);
   }
-  // the walk: white holes, the numbers beside them, the houses with their roofs
+  // the walk: white holes, their numbers outside the path on one side, upright; the houses with their roofs
   const holeFill=radial(defs,prefix+'-hole',[[0,look.hole[0]],[.62,look.hole[1]],[1,look.hole[2]]],.42,.36,.7);
   L.track.forEach((p,i)=>{
     const seat=Math.floor(i/L.arm),k=i-seat*L.arm,color=colors[seat];
@@ -559,9 +565,10 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
       const roof=n('g',{'pointer-events':'none'});roof.append(n('path',{d:HOUSE_ICON,transform:`translate(${p.x} ${p.y}) scale(${(L.hole*.62).toFixed(2)})`,fill:'none',stroke:look.houseIcon,'stroke-width':(.42/(L.hole*.62)).toFixed(3),'stroke-linecap':'round','stroke-linejoin':'round'}));root.append(up(roof,p.x,p.y));
       return;
     }
-    root.append(n('circle',{cx:p.x,cy:+(p.y+.35).toFixed(2),r:L.hole+.45,fill:'#000',opacity:.28}),n('circle',{cx:p.x,cy:p.y,r:L.hole,fill:holeFill,stroke:look.holeRim,'stroke-width':.55,'data-track':i,class:'tbl-hole'}));
-    const at=L.labels[i];
-    root.append(up(n('text',{x:at.x,y:+(at.y+1.42).toFixed(2),'text-anchor':'middle','font-size':k<10?5.1:4.65,'font-weight':900,'font-family':'Arial,sans-serif',direction:'ltr',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
+    const r=L.hole;
+    root.append(n('circle',{cx:p.x,cy:+(p.y+.35).toFixed(2),r:+(r+.45).toFixed(2),fill:'#000',opacity:.28}),n('circle',{cx:p.x,cy:p.y,r,fill:holeFill,stroke:look.holeRim,'stroke-width':.55,'data-track':i,class:'tbl-hole'}));
+    const at=L.labels[i],size=k<10?4.7:4.3;
+    root.append(up(n('text',{x:at.x,y:+(at.y+size*.36).toFixed(2),'text-anchor':'middle','font-size':size,'font-weight':900,'font-family':'Arial,sans-serif',direction:'ltr',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
   });
   crossMiddle(root,defs,prefix,state,look,pile,colors);
   lockBadges(root,overlay,L,state,colors);
@@ -665,6 +672,8 @@ export function renderPetalBoard(target,state,options={}){
     piece.classList.add('petal-stone-v29','atelier-piece-v30');if(can&&!quiet)piece.classList.add('legal');
     piece.append(n('circle',{r:game==='jackaroo'?+Math.max(3.6,Math.min(4.6,L.step*.62)).toFixed(2):6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
     if(can&&!quiet)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.42,ry:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
+    // 33.9.2: a ring of the seat's colour round every marble: a white or silver one shows on a white hole
+    if(game==='jackaroo')piece.append(n('circle',{r:+(marble+1.05).toFixed(2),fill:'none',stroke:'#08101f','stroke-width':.5,opacity:.55,'data-seat-ring':'out'}),n('circle',{r:+(marble+.5).toFixed(2),fill:'none',stroke:JACK_COLORS[seat],'stroke-width':1,'data-seat-ring':seat}));
     const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.27).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?3.6:2.5,'font-weight':700,fill:'#ffffff',stroke:'#15202b','stroke-width':.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);if(!quiet)piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);

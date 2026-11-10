@@ -1,4 +1,4 @@
-import {W,L} from './core.js?v=33.9.1-studio1';
+import {W,L} from './core.js?v=33.9.2-studio1';
 const session=()=>{try{return localStorage.getItem('bs_social_session')||'';}catch{return '';}};
 const abort=()=>Object.assign(new Error('تم إلغاء الاتصال السابق'),{name:'AbortError'});
 export function hockeyPerspective(source,seat){const g=structuredClone(source);if(seat!==1)return g;for(const p of[g.puck,...g.strikers]){p.x=W-p.x;p.y=L-p.y;p.vx=-p.vx;p.vy=-p.vy;if(Number.isFinite(p.tx))p.tx=W-p.tx;if(Number.isFinite(p.ty))p.ty=L-p.ty;}g.strikers.reverse();g.score.reverse();if(g.winner>=0)g.winner=1-g.winner;g.server=1-g.server;g.events=g.events.map(e=>({...e,...(Number.isFinite(e.x)?{x:W-e.x}:{}),...(Number.isFinite(e.y)?{y:L-e.y}:{}),...(e.scorer!==undefined?{scorer:1-e.scorer}:{}),...(e.who!==undefined?{who:1-e.who}:{}),...(e.winner>=0?{winner:1-e.winner}:{})}));return g;}
@@ -59,7 +59,7 @@ export class HockeyOnline{
   });
  }
  send(data){if(this.closed||this.ws?.readyState!==1||(this.ws.bufferedAmount||0)>65536)return false;try{this.ws.send(JSON.stringify(data));return true;}catch{return false;}}
- input(x,y){const now=performance.now();if(!this.state||this.state.paused||!Number.isFinite(x)||!Number.isFinite(y)||now-this.lastInput<33)return;
+ input(x,y){const now=performance.now();if(!this.state||this.state.paused||!Number.isFinite(x)||!Number.isFinite(y)||now-this.lastInput<16)return;
   // 33.9.0: a hand that has not moved says nothing (a word every half second keeps the round trip known)
   if(Math.abs(x-(this.lastX??-1e9))<.5&&Math.abs(y-(this.lastY??-1e9))<.5&&now-this.lastInput<500)return;
   this.lastInput=now;this.lastX=x;this.lastY=y;const seq=++this.seq;if(this.send({type:'input',seq,x:this.seat===1?W-x:x,y:this.seat===1?L-y:y})){this.sentAt.set(seq,now);if(this.sentAt.size>40)this.sentAt.delete(this.sentAt.keys().next().value);}}
