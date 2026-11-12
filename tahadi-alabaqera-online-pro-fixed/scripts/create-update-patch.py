@@ -47,30 +47,33 @@ def release(files):
 
 
 def build_patch(base, project, output):
-    base, project, output = base.resolve(), project.resolve(), output.resolve()
-    if not base.is_dir() or not project.is_dir():
+    bases = [base] if isinstance(base, Path) else list(base)
+    bases = [path.resolve() for path in bases]
+    project, output = project.resolve(), output.resolve()
+    if not bases or not all(path.is_dir() for path in bases) or not project.is_dir():
         raise ValueError('Both project directories must exist.')
-    if any(output.is_relative_to(folder) for folder in [base, project]):
+    if any(output.is_relative_to(folder) for folder in [*bases, project]):
         raise ValueError('Output ZIP must be outside both project directories.')
-    old, new = snapshot(base), snapshot(project)
-    previous, version = release(old), release(new)
-    deleted = sorted(set(old) - set(new))
+    histories, new = [snapshot(path) for path in bases], snapshot(project)
+    previous = list(dict.fromkeys(release(old) for old in histories))
+    version = release(new)
+    deleted = sorted(set().union(*(set(old) - set(new) for old in histories)))
     if deleted:
         raise ValueError('Sparse updates cannot remove files; use an explicit migration or full release: ' + ', '.join(deleted))
-    if old.get('wrangler.jsonc') != new.get('wrangler.jsonc'):
+    if any(old.get('wrangler.jsonc') != new.get('wrangler.jsonc') for old in histories):
         raise ValueError('Deployed Worker settings must remain unchanged: wrangler.jsonc')
     payload = {name: data for name, data in new.items()
-               if name != 'wrangler.jsonc' and (data != old.get(name) or name == 'package.json')}
+               if name != 'wrangler.jsonc' and (any(data != old.get(name) for old in histories) or name == 'package.json')}
     if len(payload) + 2 > 2000 or sum(map(len, payload.values())) > 149 * 1024 * 1024:
         raise ValueError('Patch exceeds the installed updater limits; prepare a compatible release package.')
     files = [{'path': name, 'sha256': digest(data), 'size_bytes': len(data),
-              'previous_sha256': [digest(old[name]) if name in old else None]}
+              'previous_sha256': list(dict.fromkeys(digest(old[name]) if name in old else None for old in histories))}
              for name, data in sorted(payload.items())]
     manifest = {'format': 'busraj-sparse-patch-v1', 'target': TARGET,
-                'version': version, 'supported_versions': [previous],
+                'version': version, 'supported_versions': previous,
                 'generated_by_existing_ci': sorted(GENERATED), 'files': files}
     instructions = ('# باتش تحديث\n\nارفع هذا ZIP وحده إلى جذر المستودع وانتظر نجاح الفحص. '
-                    'أُنشئ مقابل النسخة المثبتة ' + previous + ' لتحديثها إلى ' + version + '.\n'
+                    'أُنشئ مقابل النسخ المثبتة ' + '، '.join(previous) + ' لتحديثها إلى ' + version + '.\n'
                     'يُعاد إنشاء التخزين المؤقت والبصمات في سير التحديث. '
                     'إذا تغير ملف خارج النسخة الأساسية، يتوقف التطبيق لحفظ التعديل بدل استبداله.\n')
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -89,12 +92,12 @@ def build_patch(base, project, output):
     finally:
         Path(temporary).unlink(missing_ok=True)
     return {'file': str(output), 'files': len(files), 'bytes': output.stat().st_size,
-            'version': version, 'supported_versions': [previous]}
+            'version': version, 'supported_versions': previous}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--base', required=True, type=Path, help='Actual installed project snapshot')
+    parser.add_argument('--base', required=True, type=Path, action='append', help='Actual installed project snapshot; repeat for a cumulative patch')
     parser.add_argument('--project', required=True, type=Path, help='Complete next project')
     parser.add_argument('--output', required=True, type=Path, help='ZIP outside both project directories')
     args = parser.parse_args()

@@ -20,10 +20,11 @@
   const LABELS = {skip:'منع',reverse:'عكس',draw2:'اسحب ورقتين',wild:'غيّر اللون',draw4:'اسحب أربع'};
   const MARKS = {skip:'⊘',reverse:'⇄',draw2:'+2',wild:'✦',draw4:'+4'};
   const MODES = {classic:'كلاسيكي',stack:'سحب متراكم',quick:'جولة سريعة'};
-  const POSITIONS = [[13,47],[50,13],[87,47],[25,22],[75,22],[13,72],[87,72]];
+  const FACE_ORDER = ['0','1','2','3','4','5','6','7','8','9','skip','reverse','draw2','wild','draw4'];
+  const COLOR_ORDER = ['red','gold','green','blue','wild'];
   let match = null, hooks = null, mounted = false, paused = false, armed = false;
   let selected = null, handKey = '', topKey = '', seen = -1, resultKey = '', winnerActor = null, dockObserver = null;
-  let dom = null, prev = null, lastFrom = null, pile = [];
+  let dom = null, prev = null, lastFrom = null, pile = [], sorted = false, pickerReturn = null, shownTurn = '';
   const rivals = new Map();
   const me = () => match?.players.find(p => p.id === hooks.me);
   const text = (node,value) => { if (node.textContent !== value) node.textContent = value; };
@@ -73,14 +74,17 @@
 
   /* ---------- the table ---------- */
   function mount() {
-    const table = make('div','uno-table uno39');
+    const table = make('div','uno-table uno39 uno-pro');
     const heading = make('div','uno-table-heading');
-    heading.append(make('b','','أونو'),make('small','uno-mode'));
+    const tableCount = make('small','uno-table-count');
+    heading.append(make('b','','أونو'),make('small','uno-mode'),tableCount);
     const meter = make('div','uno-turn-clock');
     meter.append(make('small','','وقت الدور'),make('b','uno-seconds','30'));
     const clockbar = make('i','uno-clock-bar');
     meter.append(clockbar);
     const seats = make('div','uno-seats');
+    seats.setAttribute('role','list'); seats.setAttribute('aria-label','اللاعبون بترتيب المقاعد');
+    seats.setAttribute('tabindex','0');
     const center = make('div','uno-center');
     const stock = action('','uno-stock',() => send('draw'));
     stock.setAttribute('aria-label','اسحب ورقة');
@@ -114,28 +118,36 @@
       const button = action(NAMES[color],'uno-color-choice',() => play(selected,color));
       button.style.setProperty('--color',COLORS[color]); buttons.append(button);
     }
-    choice.append(make('b','','اللون لك'),make('small','','اختر لون اللعب الجاي'),buttons,action('إلغاء','uno-picker-close',closePicker));
+    choice.append(make('b','','اللون لك'),make('small','','اختر لون اللعب الجاي'),buttons,action('إلغاء','uno-picker-close',() => closePicker()));
+    picker.addEventListener('keydown',pickerKey);
     picker.append(choice);table.append(picker);
     const dock = make('div','uno-dock');
+    const meta = make('div','uno-dock-meta');
     const top = make('div','uno-dock-top');
     const own = make('b','uno-own-name');
+    const hint = make('small','uno-hand-hint','اسحب أفقيًا لرؤية بقية أوراقك');
+    hint.id = 'unoHandHint'; hint.hidden = true;
+    const sort = action('رتّب الأوراق','uno-sort',() => { sorted = !sorted; handKey = ''; render(match,hooks); });
+    sort.setAttribute('aria-pressed','false');
+    meta.append(own,sort);
     const draw = action('اسحب','uno-draw',() => send('draw'));
     const pass = action('مرّر','uno-pass',() => send('pass'));
     const uno = action('أونو!','uno-call',callUno);
     const catchButton = action('مسكته! نسي أونو','uno-catch',() => send('catch'));
     pass.hidden = true; catchButton.hidden = true;
-    top.append(own,draw,pass,uno,catchButton);
+    top.append(draw,pass,uno,catchButton);
     const hand = make('div','uno-hand');
     hand.setAttribute('aria-label','أوراقك');
-    dock.append(top,hand);
+    hand.setAttribute('role','group');
+    dock.append(meta,top,hand,hint);
     table.append(dock,fx);
     $('chBoard').className = 'ch-board ch-uno';
     $('chBoard').replaceChildren(table);
     $('chControls').replaceChildren(); $('chTactics').replaceChildren();
-    dom = {table,seats,stock,stockCount,discard,tint,turn,feed,status,picker,hand,own,draw,pass,uno,catchButton,ring,fx,center,
+    dom = {table,seats,stock,stockCount,discard,tint,turn,feed,status,picker,hand,own,draw,pass,uno,catchButton,ring,fx,center,dock,sort,hint,tableCount,
       seconds:meter.querySelector('.uno-seconds'),bar:clockbar,mode:heading.querySelector('small')};
     mounted = true;
-    const fitDock = () => { table.style.setProperty('--uno-dock-height',(dock.getBoundingClientRect?.().height||141)+'px'); fan(); };
+    const fitDock = () => { fan(); table.style.setProperty('--uno-dock-height',(dock.getBoundingClientRect?.().height||200)+'px'); };
     if(typeof ResizeObserver!=='undefined'){dockObserver=new ResizeObserver(fitDock);dockObserver.observe(dock);}
     fitDock();
   }
@@ -145,13 +157,44 @@
     const cards = [...dom.hand.children], n = cards.length; if (!n) return;
     // the outer cards lean out (they turn about a point under the hand): room is kept for that on both sides
     const W = dom.hand.clientWidth || 360, cw = Math.min(86, Math.max(58, W / 4.6)), spread = Math.min(22, n * 2.6), lean = Math.sin(spread / 2 * Math.PI / 180) * cw * 1.43 * 1.3;
-    const step = n > 1 ? Math.max(14, Math.min(cw * .72, (W - cw - 2 * lean - 6) / (n - 1))) : 0, start = (W - cw - step * (n - 1)) / 2;
+    const room = n > 1 ? (W - cw - 2 * lean - 6) / (n - 1) : cw;
+    const crowded = n > 8 || room < 30;
+    dom.hand.classList.toggle('scrollable',crowded);
+    dom.hand.setAttribute('tabindex',crowded?'0':'-1');
+    dom.hand.setAttribute('aria-label',crowded?'أوراقك · مرّر أفقيًا لرؤية جميع الأوراق':'أوراقك');
+    dom.hand.setAttribute('aria-describedby',crowded?'unoHandHint':'');
+    dom.hint.hidden=!crowded;
+    const step = n > 1 ? Math.max(0, Math.min(cw * .72, room)) : 0, start = (W - cw - step * (n - 1)) / 2;
     dom.hand.style.setProperty('--uno-cw', cw + 'px');
     cards.forEach((card, i) => { const k = n > 1 ? i / (n - 1) - .5 : 0; card.style.setProperty('--x', (start + step * i).toFixed(1) + 'px'); card.style.setProperty('--r', (k * spread).toFixed(1) + 'deg'); card.style.setProperty('--y', (k * k * 26).toFixed(1) + 'px'); card.style.zIndex = String(i + 1); });
   }
-  function closePicker() {
+  function closePicker(restore = true) {
+    const source = pickerReturn;
+    const open = dom && !dom.picker.hidden;
     selected = null;
-    if (dom) dom.picker.hidden = true;
+    pickerReturn = null;
+    if (dom) {
+      dom.picker.hidden = true;
+      for (const node of [dom.seats,dom.center,dom.dock]) node.inert = false;
+      if (open && restore) (source?.isConnected && !source.disabled ? source : dom.sort).focus();
+    }
+  }
+  function pickerKey(e) {
+    if (!dom || dom.picker.hidden) return;
+    const buttons = [...dom.picker.querySelectorAll('button')].filter(b=>!b.disabled);
+    const i = buttons.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); closePicker(); return; }
+    if (e.key === 'Tab') {
+      if (e.shiftKey && i <= 0) { e.preventDefault(); buttons.at(-1)?.focus(); }
+      else if (!e.shiftKey && (i < 0 || i === buttons.length - 1)) { e.preventDefault(); buttons[0]?.focus(); }
+      return;
+    }
+    const colors = buttons.slice(0,4), current = colors.indexOf(document.activeElement);
+    const step = {ArrowLeft:1,ArrowRight:-1,ArrowDown:2,ArrowUp:-2}[e.key];
+    if (step !== undefined || e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      colors[e.key === 'Home' ? 0 : e.key === 'End' ? 3 : ((current < 0 ? 0 : current) + step + 4) % 4]?.focus();
+    }
   }
   function send(type) {
     if (!match || match.phase !== 'playing' || paused) return;
@@ -161,12 +204,16 @@
     if (!card || !match.uno.legal.includes(card.id) || paused || match.phase !== 'playing') return;
     if (card.color === 'wild' && !color) {
       selected = card; dom.picker.hidden = false;
+      pickerReturn = [...dom.hand.children].find(node=>node.dataset.card===card.id) || document.activeElement;
+      for (const node of [dom.seats,dom.center,dom.dock]) node.inert = true;
       dom.picker.querySelector('button')?.focus(); return;
     }
     const called = armed;
+    const fromPicker = !dom.picker.hidden;
     lastFrom = dom.hand.querySelector(`[data-card="${globalThis.CSS?.escape ? CSS.escape(card.id) : card.id}"]`)?.getBoundingClientRect?.() || null;
-    closePicker();
+    closePicker(false);
     if (hooks.act({type:'play',card:card.id,color,uno:called}) !== false) armed = false;
+    if (fromPicker) dom?.sort.focus();
   }
   function callUno() {
     const u = match.uno, player = me();
@@ -228,32 +275,47 @@
     if (!mounted) mount();
     const u=m.uno, player=me();
     if (!player) return;
-    if (selected && (!u.legal.includes(selected.id) || m.phase !== 'playing')) closePicker();
+    if (selected && (!u.legal.includes(selected.id) || m.phase !== 'playing')) { closePicker(false); dom.sort.focus(); }
     if (u.hand.length !== 2) armed=false;
     text(dom.mode,MODES[u.mode]||'كلاسيكي');
     text(dom.own,player.name+' · '+u.hand.length+' أوراق');
+    text(dom.tableCount,m.players.length+' لاعبين');
+    dom.table.dataset.players=String(m.players.length);
+    dom.sort.setAttribute('aria-pressed',String(sorted));
+    text(dom.sort,sorted?'ترتيب التوزيع':'رتّب الأوراق');
     const order=m.players.filter(p=>p.id!==player.id).sort((a,b)=>(a.slot-player.slot+m.players.length)%m.players.length-(b.slot-player.slot+m.players.length)%m.players.length);
+    const ids=new Set(order.map(p=>p.id));
+    for(const [id,seat] of rivals)if(!ids.has(id)){seat.remove();rivals.delete(id);}
     for(const [i,p] of order.entries()) {
       let seat=rivals.get(p.id);
       if(!seat) {
-        seat=make('div','uno-rival');seat.dataset.player=p.id;
+        seat=make('div','uno-rival');seat.dataset.player=p.id;seat.setAttribute('role','listitem');
+        const number=make('small','uno-seat-number',String(p.slot+1).padStart(2,'0'));
         const face=make('span','uno-rival-face',([...String(p.name||'؟')][0]||'؟'));
         const backs=make('div','uno-mini-hand');
         for(let k=0;k<3;k++)backs.append(make('i'));
-        seat.append(face,backs,make('b','uno-rival-name',p.name),make('small','uno-rival-count'));
+        backs.setAttribute('aria-hidden','true');
+        seat.append(number,face,backs,make('b','uno-rival-name',p.name),make('small','uno-rival-count'));
         rivals.set(p.id,seat);dom.seats.append(seat);
       }
-      const [x,y]=POSITIONS[i%POSITIONS.length];
-      seat.style.setProperty('--x',x+'%');seat.style.setProperty('--y',y+'%');
+      dom.seats.append(seat);
+      seat.setAttribute('aria-current',u.turn===p.slot?'true':'false');
+      seat.setAttribute('aria-label',p.name+' · المقعد '+(p.slot+1)+' · '+u.counts[p.slot]+' أوراق'+(u.turn===p.slot?' · دوره الآن':''));
       seat.classList.toggle('active',u.turn===p.slot);
       seat.classList.toggle('last-card',u.counts[p.slot]===1);
       text(seat.querySelector('.uno-rival-count'),u.counts[p.slot]===1?'أونو · ورقة وحدة':u.counts[p.slot]+' أوراق');
     }
-    const key=u.hand.map(c=>c.id).join(',')+'|'+u.legal.join(',');
+    const turnKey=player.id+':'+u.turn;
+    if(shownTurn!==turnKey){shownTurn=turnKey;const active=order.find(p=>p.slot===u.turn);if(active)rivals.get(active.id)?.scrollIntoView?.({block:'nearest',inline:'nearest',behavior:still()?'instant':'smooth'});}
+    const key=u.hand.map(c=>c.id).join(',')+'|'+u.legal.join(',')+'|'+sorted;
     if(handKey!==key) {
       const had=new Set([...dom.hand.children].map(c=>c.dataset.card));
+      const focus=document.activeElement?.dataset?.card;
+      const scroll=dom.hand.scrollLeft;
       handKey=key;
-      dom.hand.replaceChildren(...u.hand.map(card=>{
+      const hand=[...u.hand];
+      if(sorted)hand.sort((a,b)=>COLOR_ORDER.indexOf(a.color)-COLOR_ORDER.indexOf(b.color)||FACE_ORDER.indexOf(a.face)-FACE_ORDER.indexOf(b.face));
+      dom.hand.replaceChildren(...hand.map(card=>{
         const node=cardNode(card,'uno-hand-card');
         node.addEventListener('click',()=>play(card));
         node.classList.toggle('playable',u.legal.includes(card.id));
@@ -261,6 +323,8 @@
         return node;
       }));
       fan();
+      if(scroll!==undefined)dom.hand.scrollLeft=scroll;
+      if(focus){const same=[...dom.hand.children].find(node=>node.dataset.card===focus);if(same&&u.legal.includes(focus))same.focus();else dom.sort.focus();}
     }
     if(topKey!==u.top.id) {
       topKey=u.top.id;
@@ -288,6 +352,7 @@
     const u=m.uno, player=m.players.find(p=>p.id===next.me);
     if(!player)return;
     const active=m.phase==='playing'&&!paused, myTurn=u.turn===player.slot;
+    if(selected&&!active){closePicker(false);dom.sort.focus();}
     const left=Math.max(0,Math.ceil((u.deadline-next.now())/1000));
     text(dom.seconds,String(left));
     dom.bar.style.setProperty('--left',Math.min(100,left/30*100)+'%');
@@ -327,10 +392,11 @@
     area.replaceChildren(portrait,rows);
   }
   function clear() {
+    closePicker(false);
     dockObserver?.disconnect();dockObserver=null;
     if(winnerActor)window.BS_CHARACTERS?.dispose?.(winnerActor);
     winnerActor=null;mounted=false;match=null;hooks=null;dom=null;paused=false;armed=false;
-    selected=null;handKey='';topKey='';seen=-1;resultKey='';rivals.clear();prev=null;lastFrom=null;pile=[];
+    selected=null;handKey='';topKey='';seen=-1;resultKey='';rivals.clear();prev=null;lastFrom=null;pile=[];sorted=false;pickerReturn=null;shownTurn='';
     $('unoRecap')?.replaceChildren();
   }
   window.BS_UNO={render,tick,podium,clear};

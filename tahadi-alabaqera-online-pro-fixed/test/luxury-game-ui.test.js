@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
@@ -21,7 +22,7 @@ test('service worker caches luxury presentation assets', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
   assert.ok(sw.includes('/assets/css/luxury-game-ui.css'));
   assert.ok(sw.includes('/assets/js/luxury-game-ui.js'));
-  assert.match(sw,/busraj-games-v66-release-33-9-10/);
+  assertCurrentCache(sw);
 });
 
 

@@ -18,14 +18,15 @@ export function createCarrom({mode='ai',difficulty='normal',seed=7}={}) {
     const angle=i/(ring*6)*Math.PI*2, radius=ring*38;
     coins.push(coin('c'+number,number++%2?'dark':'light',500+Math.cos(angle)*radius,500+Math.sin(angle)*radius));
   }
-  const s={mode:mode==='hotseat'?'hotseat':'ai',difficulty:difficulty==='expert'?'expert':'normal',
+  const s={mode:mode==='hotseat'?'hotseat':'ai',difficulty:['easy','normal','expert'].includes(difficulty)?difficulty:'normal',
     seed:seed>>>0,coins,turn:0,turnNo:0,phase:'aim',winner:null,queen:{status:'board',owner:null,pending:null},
     due:[0,0],shots:[0,0],events:[],message:'حرّك الدافع ثم اسحب للتصويب',
     striker:{id:'striker',kind:'striker',x:500,y:825,vx:0,vy:0,r:STRIKER_RADIUS,mass:1.8,pocketed:false},shot:null};
   return s;
 }
 export function legalPosition(s,requested,seat=s.turn) {
-  const y=seat===0?825:175, wanted=clamp(Number(requested)||500,220,780);
+  if(!Number.isFinite(requested))return null;
+  const y=seat===0?825:175, wanted=clamp(requested,220,780);
   const clear=x=>live(s).every(c=>Math.hypot(c.x-x,c.y-y)>c.r+STRIKER_RADIUS+2);
   if(clear(wanted))return wanted;
   for(let gap=8;gap<570;gap+=8)for(const x of [wanted-gap,wanted+gap])if(x>=220&&x<=780&&clear(x))return x;
@@ -215,6 +216,12 @@ export function aimCarrom(s,angle) {
   return {x:from.x+dx*length,y:from.y+dy*length,target};
 }
 export function carromScore(s) {return [0,1].map(seat=>({coins:count(s,seat),queen:s.queen.owner===seat?3:0,due:s.due[seat]}));}
+
+// Aim is a cosmetic preview only. Reject malformed network input before drawing it.
+export function readCarromAim(data) {
+  if(!data||![0,1].includes(data.seat)||!Number.isFinite(data.x)||data.x<220||data.x>780||!Number.isFinite(data.angle)||!Number.isFinite(data.power)||data.power<0||data.power>1)return null;
+  return {seat:data.seat,x:data.x,angle:data.angle,power:data.power};
+}
 
 /* ---------- 33.9.10: the online table — two players, the room plays each shot to its end ---------- */
 const strip=s=>{const {shotRec,last,events,...rest}=s;return structuredClone({...rest,events:[]});};

@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -29,5 +30,5 @@ test('online quiz protects memory preview before answers open',async()=>{
 });
 
 test('quiz luxury stylesheet is cached by the PWA',async()=>{
-  const sw=await read('public/service-worker.js');assert.match(sw,/busraj-games-v66-release-33-9-10/);assert.match(sw,/quiz-luxury\.css/);
+  const sw=await read('public/service-worker.js');assertCurrentCache(sw);assert.match(sw,/quiz-luxury\.css/);
 });

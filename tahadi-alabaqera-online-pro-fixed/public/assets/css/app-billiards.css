@@ -942,3 +942,140 @@ body.bi-playing:has(.rx-fab:not([hidden])) .bi-fine{margin-left:44px}
 /* 33.9.6: the rack of a player fits inside the plate */
 .bi-rack{overflow:hidden;gap:1px}
 .bi-rack i{width:11px;height:11px}
+
+/* assets/css/premium-refinements-v33-9-11.css */
+/* 33.9.11 — Master Match premium arena refinement: remove toy-like outlines and use a restrained competitive HUD. */
+:is(html,#x) body.jewels-page.mm2{
+ --mm-deep:#07131b;--mm-panel:#102733;--mm-panel-hi:#183b48;--mm-line:#294653;
+ --mm-me:#54d8c2;--mm-me-d:#176f70;--mm-foe:#f08b76;--mm-foe-d:#813f50;
+ --mm-gold:#e8c77d;--mm-gold-d:#87632e;--mm-green:#75d6a2;--mm-green-d:#287c61;
+ --mm-out:0 2px 8px #0008;
+ background:radial-gradient(100% 65% at 50% 0%,#1a4852 0%,#102b37 42%,#07131b 100%) fixed!important;
+}
+.mm2 .mm-bg::before{opacity:.16;animation-duration:150s}
+.mm2 .mm-bg::after{background:radial-gradient(70% 90% at 50% 100%,#3bc9b522,transparent 72%)}
+.mm2 .jw-icon,.mm2 .jw-ghost,.mm2 .jw-cta{border:1px solid #ffffff24;border-radius:14px;box-shadow:inset 0 1px 0 #ffffff20,0 8px 22px #0004;text-shadow:none}
+.mm2 .jw-icon{background:linear-gradient(180deg,#1b3c49,#102630)}
+.mm2 .jw-cta{background:linear-gradient(180deg,#82e0bd,#2a9d82);color:#06231d;font-size:18px}
+.mm2 .jw-ghost{background:linear-gradient(180deg,#315966,#1b3945);color:#f2fbfa}
+.mm2 .jw-hero,.mm2 .jw-panel,.mm2 .jw-sheet-card{border:1px solid #ffffff24;border-radius:22px;background:linear-gradient(155deg,#173744ee,#0b202bee);box-shadow:inset 0 1px 0 #ffffff18,0 18px 44px #0006}
+.mm2 .jw-hero-copy h1{color:#f4d99b;text-shadow:0 3px 18px #0008}
+.mm2 .jw-modes button{border:1px solid #ffffff26;border-radius:14px;background:linear-gradient(180deg,#1d414d,#102b36);box-shadow:none}
+.mm2 .jw-modes button[aria-checked=true]{background:linear-gradient(180deg,#f1d99e,#c89e57);color:#17232a;box-shadow:0 0 0 2px #f1d99e44}
+.mm2 .jw-wrap canvas{border-radius:18px;filter:drop-shadow(0 16px 24px #0008)}
+.mm2 .jw-face,.mm2 .jw-face .bs-avatar,.mm2 .jw-face .jw-letter{border-radius:15px;border:1px solid #ffffff45;box-shadow:0 8px 20px #0005}
+.mm2 .jw-score,.mm2 .jw-status,.mm2 .jw-boost b{ text-shadow:0 2px 8px #0008 }
+.mm2 .jw-banner{border:1px solid #ffffff30;border-radius:16px;background:linear-gradient(120deg,#286d75,#163c4b);box-shadow:0 18px 44px #0008;clip-path:none;text-shadow:0 2px 8px #0008}
+.mm2 .jw-banner.foe{background:linear-gradient(120deg,#9b5360,#4d2939)}
+.mm2 .jw-banner.gold{background:linear-gradient(120deg,#e9cf91,#9c7136);color:#17232a}
+.mm2 .jw-boost .mm-tank{border:1px solid #ffffff30;border-radius:18px;background:#091c25;box-shadow:inset 0 5px 12px #0008,0 8px 18px #0004}
+.mm2 .jw-boost.ready .mm-tank{border-color:var(--bc);box-shadow:inset 0 5px 12px #0008,0 0 24px color-mix(in srgb,var(--bc) 42%,transparent)}
+.mm2 .mm-side.me,.mm2 .mm-side.foe{background:linear-gradient(145deg,#173b48,#0b202c);clip-path:none;border-bottom:1px solid #ffffff20}
+.mm2 .mm-side.foe{background:linear-gradient(145deg,#49313c,#211e2a)}
+.mm2 .mm-side .bs-avatar,.mm2 .mm-side .jw-letter{border:1px solid #ffffff60;border-radius:22px;box-shadow:0 12px 28px #0007}
+.mm2 .mm-vsbig b{border:1px solid #fff8;background:linear-gradient(145deg,#f3dda5,#a77a3e);color:#1c2730;text-shadow:none;box-shadow:0 12px 28px #0008}
+.mm2 .jw-end-scores .mm-endp{border:1px solid #ffffff35;border-radius:16px;box-shadow:inset 0 1px 0 #ffffff20,0 8px 20px #0005}
+@media(prefers-reduced-motion:reduce){.mm2 .mm-bg::before{animation:none}}
+
+/* 33.9.11 — restrained tournament-room finish and clearer touch controls. */
+.billiards-page{background:radial-gradient(95% 65% at 50% 0%,#123a2b 0%,#071a14 48%,#020806 100%) fixed,var(--bi-night)}
+.bi-app{max-width:760px}
+.bi-top{padding:7px 9px;border:1px solid #ffffff12;border-radius:18px;background:linear-gradient(110deg,#0b2119dd,#06130edd);box-shadow:0 12px 30px #0005}
+.bi-brand{font-weight:850;letter-spacing:.02em}
+.bi-hero{border-color:#b995514d;box-shadow:0 24px 65px #000b,inset 0 1px 0 #ffffff20}
+.bi-icon,.bi-modes button,.bi-seg button{transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.bi-icon:active,.bi-modes button:active,.bi-seg button:active{transform:scale(.97)}
+.bi-stage{filter:drop-shadow(0 18px 28px #0008)}
+.bi-wrap{border:1px solid #d9b66a55;border-radius:14px;overflow:hidden;box-shadow:0 0 0 5px #071a14,0 0 0 6px #d9b66a35}
+.bi-dock,.bi-plates{border-color:#ffffff1b}
+.bi-power,.bi-fine{border-color:#d9b66a55}
+.bi-toast{backdrop-filter:blur(14px);border-color:#e3b96199;box-shadow:0 20px 55px #000c,0 0 24px #e3b96118}
+.bi-sheet-card{border-color:#d9b66a66;box-shadow:inset 0 1px 0 #ffffff20,0 30px 80px #000d}
+@media(prefers-reduced-motion:reduce){.bi-icon,.bi-modes button,.bi-seg button{transition:none}}
+
+/* assets/css/game-quality-v33-9-12.css */
+/* Compact controls belong below the board; each table keeps its own materials. */
+body.cm-club{--cm-control-line:#3b6555;--cm-control-ink:#f8edcf}
+body.cm-club .cm-eyebrow{font-size:11px;color:#ffe3a0;letter-spacing:.06em}
+body.cm-club .cm-quickstart{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;margin:14px 0;padding:0}
+body.cm-club .cm-quickstart li{display:flex;align-items:center;gap:7px;min-width:0;padding:10px 7px;background:#0d2c2488;border:1px solid #2f6a5577;border-radius:12px}
+body.cm-club .cm-quickstart li>span{display:grid;place-items:center;flex:0 0 23px;height:23px;border:1px solid #bfa06188;border-radius:50%;color:#f5d992;font-size:12px}
+body.cm-club .cm-quickstart b,body.cm-club .cm-quickstart small{display:block;line-height:1.5}
+body.cm-club .cm-quickstart b{font-size:12px;color:var(--cm-control-ink)}
+body.cm-club .cm-quickstart small{font-size:10px;color:#b3c8b9}
+body.cm-club .cm-dock{gap:3px;min-width:0;padding-top:10px;border:1px solid #3b655555;border-bottom:0}
+body.cm-club .cm-dock-heading,body.cm-club .cm-rail-label{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+body.cm-club .cm-dock-heading b{font-size:13px;color:#f8edcf}
+body.cm-club .cm-dock-heading span{font-size:11px;color:#b8cdbf}
+body.cm-club .cm-rail-label{padding-inline:7px;font-size:10px;color:#b8cdbf}
+body.cm-club .cm-rail-label output{font-variant-numeric:tabular-nums;color:#f5d992;direction:ltr}
+body.cm-club .cm-slider{height:40px}
+body.cm-club .cm-rail{inset-block:10px}
+body.cm-club .cm-knob{width:38px;height:38px;margin-left:-19px;top:0;border-width:2px}
+body.cm-club .cm-knob::after{inset:10px}
+body.cm-club .cm-shot-controls{min-width:0;margin:0;padding:0;border:0;display:grid;gap:7px}
+body.cm-club .cm-adjust-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-inline:6px}
+body.cm-club .cm-adjust{display:grid;gap:1px;min-width:0;font-size:11px;color:#d9e7dc}
+body.cm-club .cm-adjust>span{display:flex;justify-content:space-between;gap:5px}
+body.cm-club .cm-adjust output{direction:ltr;color:#f7d48b;font-variant-numeric:tabular-nums}
+body.cm-club .cm-adjust input{display:block;width:100%;height:28px;min-width:0;margin:0;accent-color:#e7c27a;touch-action:pan-y;cursor:ew-resize}
+body.cm-club .cm-shot-actions{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px}
+body.cm-club .cm-shot-actions button{min-height:40px;font-size:14px;border-radius:12px}
+body.cm-club .cm-shot-actions .cm-primary{display:flex;justify-content:center;align-items:center;gap:12px}
+body.cm-club .cm-shot-controls:disabled{opacity:.5}
+body.cm-club .cm-control-help{color:#abc8b5;font-size:11px;line-height:1.5}
+body.cm-club .cm-control-help summary{cursor:pointer;min-height:24px;text-align:center;list-style-position:inside}
+body.cm-club .cm-control-help p{margin:5px 0}
+body.cm-club .cm-sr-only,.jw-sr-only{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+body.cm-club :is(.cm-slider,input,canvas):focus-visible{outline:2px solid #ffe3a0;outline-offset:3px}
+@media(min-width:900px) and (min-aspect-ratio:6/5){
+ body.cm-club .cm-game{max-width:1100px;padding:14px;grid-template-columns:minmax(0,1fr) 278px;grid-template-rows:auto auto auto minmax(0,1fr);column-gap:22px}
+ body.cm-club .cm-bar,body.cm-club .cm-hud,body.cm-club .cm-status{grid-column:1/-1}
+ body.cm-club .cm-playfield{grid-column:1;grid-row:4}
+ body.cm-club .cm-dock{grid-column:2;grid-row:4;align-self:center;border:1px solid #3b655577;border-radius:18px;padding:16px;gap:10px}
+ body.cm-club .cm-adjust-grid{grid-template-columns:1fr;gap:14px}
+ body.cm-club .cm-tip{white-space:normal;line-height:1.7}
+}
+@media(max-height:650px) and (max-width:899px){
+ body.cm-club .cm-game{gap:3px;padding-top:4px;overflow:auto}
+ body.cm-club .cm-player{padding:4px 7px}
+ body.cm-club .cm-face,body.cm-club .cm-face :is(.bs-avatar,.cc-letter){width:32px;height:32px}
+ body.cm-club .cm-dock-heading,body.cm-club .cm-tip{display:none}
+ body.cm-club .cm-dock{padding-top:6px}
+ body.cm-club .cm-playfield{min-height:155px}
+}
+
+/* The pool table stays clear; target and resolved-shot information use one strip. */
+body.billiards-page{--bi-night:#050c11;--bi-deep:#0a1a22;--bi-panel:#112a34;--bi-line:#2a4651;--bi-felt:#276476;--bi-mute:#abc2c7;background:radial-gradient(100% 70% at 50% 0,#16313b,#070f15 72%) fixed}
+.billiards-page .bi-game{background:radial-gradient(90% 70% at 50% 45%,#172f39,#050c11 80%)}
+.billiards-page .bi-wrap{border-color:#748b8b44;box-shadow:0 16px 40px #0008,0 0 0 4px #071118}
+.billiards-page .bi-context{background:#0a1b24e8;border-color:#314650}
+.bi-context{display:grid;gap:4px;width:min(100%,1050px);margin-inline:auto;padding:7px 10px;background:#071a14cc;border:1px solid #294735;border-radius:12px;min-width:0;z-index:2}
+.bi-context-head,.bi-context-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.bi-context .bi-status{position:static;inset:auto;transform:none;min-height:0;margin:0;padding:0;background:none;text-align:start;white-space:normal;font-size:13px}
+.bi-target{color:#f6dc96;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bi-aim-info,.bi-shot-info{color:#b0c5b8;font-size:10px;line-height:1.5;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bi-aim-info.warn,.bi-shot-info.foul{color:#ffb7a5}
+.bi-match-stats{width:100%;border-collapse:collapse;text-align:start;font-size:13px;margin:14px 0}
+.bi-match-stats caption{color:#c7b788;font-size:12px;margin-bottom:7px}
+.bi-match-stats :is(td,th){padding:7px 10px;border-bottom:1px solid #3b5547;text-align:start}
+.bi-match-stats thead{color:#9fbcae;font-size:11px}
+.bi-match-stats .winner{color:#f6dc96;background:#e3b9610c}
+.bi-game :is(canvas,[role=slider]):focus-visible{outline:2px solid #f6dc96;outline-offset:2px}
+@media(min-aspect-ratio:1/1){.bi-game{grid-template-rows:auto auto minmax(0,1fr)}.bi-context{padding-block:4px}.bi-context-head{justify-content:center;gap:20px}.bi-context-foot{justify-content:center}}
+@media(max-width:380px){.bi-context-head{gap:6px}.bi-target{font-size:10px}.bi-shot-info{max-width:52%}.bi-context-foot{gap:5px}}
+
+/* Keyboard and touch guidance uses space outside the shared gems. */
+.mm2 .jw-game{grid-template-rows:auto auto auto auto minmax(0,1fr) auto}
+.mm2 .jw-board-tools{display:flex;align-items:center;gap:8px;min-width:0;padding-inline:4px}
+.mm2 .jw-board-tools p{flex:1;min-width:0;margin:0;color:var(--mm-mute);font-size:11px;line-height:1.5}
+.mm2 .jw-keyboard-help{display:block;color:#c7b9e9;font-size:10px}
+.mm2 .jw-tool{min-height:32px;border:1px solid #b39bd055;border-radius:10px;padding:4px 10px;background:var(--mm-deep);color:var(--mm-gold);font:700 11px Tajawal,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.mm2 .jw-tool:disabled{opacity:.45;cursor:default}
+.mm2 .jw-tool[hidden]{display:none}
+.mm2 .jw-wrap:focus-visible{outline:2px solid #fff1ad;outline-offset:3px;border-radius:24px}
+.mm2 .jw-boost:disabled{cursor:default}
+.mm2 .jw-boost:disabled:not(.ready){opacity:.78}
+@media(hover:none){.mm2 .jw-keyboard-help{display:none}}
+@media(max-height:700px){.mm2 .jw-board-tools{gap:5px}.mm2 .jw-keyboard-help{display:none}.mm2 .jw-tool{min-height:28px}}
+@media(prefers-reduced-motion:reduce){body.cm-club .cm-player,body.cm-club .cm-knob{transition:none}.mm2 .jw-boost .mm-liquid::before{animation:none}}

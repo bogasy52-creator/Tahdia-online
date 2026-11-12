@@ -84,3 +84,18 @@ test('future release numbers are derived from both packages instead of a permane
   const r=f.run();assert.equal(r.status,0,r.stdout+r.stderr);const {manifest}=inspectZip(f.output);
   assert.equal(manifest.version,'33.1.0');assert.deepEqual(manifest.supported_versions,['33.0.0']);
 });
+
+test('one cumulative patch accepts both installed versions and includes their different file histories',async t=>{
+ const f=await fixture(t),second=join(f.root,'second');await mkdir(join(second,'public'),{recursive:true});
+ for(const name of ['package.json','wrangler.jsonc','public/app.js'])await copyFile(join(f.base,name),join(second,name));
+ await writeFile(join(second,'package.json'),JSON.stringify({name:'busraj-games',version:'33.0.1'}));
+ await writeFile(join(second,'public/app.js'),'later intermediate game');
+ await writeFile(join(second,'public/new.webp'),Buffer.from([1,2,3]));
+ await writeFile(join(f.project,'public/new.webp'),Buffer.from([4,5,6]));
+ await writeFile(join(f.project,'package.json'),JSON.stringify({name:'busraj-games',version:'33.0.2'}));
+ const r=f.run('--base',second);assert.equal(r.status,0,r.stdout+r.stderr);
+ const {manifest}=inspectZip(f.output);assert.deepEqual(manifest.supported_versions,['33.0.0','33.0.1']);
+ assert.equal(manifest.files.find(x=>x.path==='public/app.js').previous_sha256.length,2,'an intermediate-only change still needs restoring');
+ const added=manifest.files.find(x=>x.path==='public/new.webp').previous_sha256;
+ assert.equal(added.length,2);assert.ok(added.includes(null));assert.ok(added.some(x=>typeof x==='string'));
+});

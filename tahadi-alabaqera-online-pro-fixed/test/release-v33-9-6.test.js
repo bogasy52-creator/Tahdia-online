@@ -15,9 +15,9 @@ test('carrom: the new board and coins, and the new cover on the page and the hom
   for (const page of ['public/race.html', 'public/index.html']) { const html = await read(page); assert.match(html, /carrom-cover-v33-9-6\.webp/, page); assert.doesNotMatch(html, /carrom-cover-v33-7\.svg/, page); }
 });
 
-test('carrom: the striker rail and the slingshot replaced the fine strip and the pull-down bar (33.9.10)', async () => {
+test('carrom: the striker rail and slingshot coexist with precise angle and power controls', async () => {
   const [html, main] = await Promise.all(['public/race.html', 'public/assets/js/carrom/main.js'].map(read));
-  assert.match(html, /id="cmSlider"/); assert.doesNotMatch(html, /id="cmFine"|id="cmPower"/);
+  assert.match(html, /id="cmSlider"/); assert.doesNotMatch(html, /id="cmFine"/); assert.match(html, /id="cmAngle"/); assert.match(html, /id="cmPower"/);
   assert.match(main, /h\.kind === 'sling' && power >= 0\.08/);
 });
 
@@ -28,7 +28,7 @@ test('billiards: a richer table, tap a ball to aim at a pocket, the loupe and a 
   assert.match(main, /function potAim\(n\)/); assert.match(main, /if \(hit > 0\) potAim\(hit\)/);
   assert.match(main, /drawLoupe\(cue, dir\)/); assert.match(main, /view\.loupe = true/);
   assert.match(main, /\(ev\.clientY - from\[1\]\) \/ 190/);
-  assert.match(html, /اسحب لتحت وأفلت/); assert.match(html, /عدسة تكبّر/);
+  assert.match(html, /اسحب وأفلت للضرب/); assert.match(html, /عدسة تكبّر/);
 });
 
 test('the release is 33.9.6 or later with its notes', async () => {

@@ -1,3 +1,4 @@
+import {assertReleaseAtLeast} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -7,8 +8,8 @@ test('v25 release verification and cache builder agree on the same version', asy
   read('package.json'), read('scripts/verify-v7.mjs'), read('scripts/build-offline.mjs')
  ]);
  const version = JSON.parse(packageText).version;
- assert.equal(version, '33.9.10');
+ assertReleaseAtLeast(version,'33.9.10');
  assert.match(builder, /busraj-games-v66-release-/);assert.match(builder,/release\.replaceAll/);
  assert.match(verifier, /busraj-games-v66-release-/);assert.match(verifier,/pkg\.version\.replaceAll/);
- assert.match(verifier, /assert\.equal\(pkg\.version,'33\.9\.10'\)/);
+ assert.match(verifier,/assert\.equal\(lock\.version,pkg\.version\)/);
 });

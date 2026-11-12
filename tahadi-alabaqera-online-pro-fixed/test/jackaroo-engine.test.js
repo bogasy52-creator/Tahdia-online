@@ -7,3 +7,22 @@ test('seven can split across two marbles',()=>{let s=withHand('7');s.players[0].
 
 test('seven can move a single marble the full seven steps',()=>{let s=withHand('7');s.players[0].marbles[0]=9;const move=getJackarooActions(s,0).find(a=>a.type==='move'&&a.steps===7);assert.ok(move);s=playJackarooAction(s,0,move);assert.equal(s.players[0].marbles[0],16)});
 test('team win requires all eight partner marbles complete',()=>{const s=createJackarooGame(['أ','ب','ج','د']);s.players[0].marbles.fill(56);s.players[2].marbles.fill(56);assert.equal(teamWinner(s),0)});
+
+test('five can move your own marble from a safe square, but cannot move an opponent from safety',()=>{
+ let s=withHand('5');s.players[0].marbles[0]=0;s.players[1].marbles[0]=0;
+ const actions=getJackarooActions(s,0);
+ assert.ok(actions.some(a=>a.type==='moveAny5'&&a.owner===0&&a.marble===0));
+ assert.ok(!actions.some(a=>a.type==='moveAny5'&&a.owner===1&&a.marble===0));
+ s=playJackarooAction(s,0,actions.find(a=>a.type==='moveAny5'&&a.owner===0));
+ assert.equal(s.players[0].marbles[0],5);
+});
+test('jack can swap a printed-star marble but cannot swap a protected own start',()=>{
+ const s=withHand('J');s.players[0].marbles[0]=8;s.players[1].marbles[0]=7;s.players[1].marbles[1]=0;
+ const swaps=getJackarooActions(s,0).filter(a=>a.type==='swap');
+ assert.ok(swaps.some(a=>a.owner===0&&a.marble===0&&a.otherMarble===0));
+ assert.ok(!swaps.some(a=>a.otherOwner===1&&a.otherMarble===1));
+});
+test('five never targets a marble already in its home lane',()=>{
+ const s=createJackarooGame(['أ','ب','ج','د'],{arm:19,home:'fill'});s.turn=0;s.hands[0]=['5S'];s.players[1].marbles[0]=s.arm*4;
+ assert.ok(!getJackarooActions(s,0).some(a=>a.type==='moveAny5'&&a.owner===1));
+});

@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 // 33.8.0: Jackaroo played on the board (a card, then the marble; a menu by the marble when it has
 // several moves), burning one card or the whole hand, the ten that burns the next player's card;
 // a bigger Jackaroo on the phone; spoken phrases in every room; air hockey online that always finds
@@ -21,7 +22,7 @@ test('the 33.8.0 notes say what changed (the release itself has moved on)', asyn
   assert.match(JSON.parse(await read('package.json')).version, /^33\.(?:[89]|\d{2,})\.\d+$/);
   const notes = await read('RELEASE_V33_8_AR.md');
   for (const words of ['جاكارو', 'احرق الكل', 'العشرة', 'السلام عليكم', 'الهوكي', 'منافس آلي', 'الصدام', 'الإيموجي', 'الرئيسية', 'صيد الكلمات', 'الاقتراح اللي نفذته']) assert.ok(notes.includes(words), words);
-  assert.match(await read('public/service-worker.js'), /const CACHE_NAME = 'busraj-games-v66-release-33-\d+-\d+';/);
+  assertCurrentCache(await read('public/service-worker.js'));
 });
 
 /* ---------- Jackaroo ---------- */

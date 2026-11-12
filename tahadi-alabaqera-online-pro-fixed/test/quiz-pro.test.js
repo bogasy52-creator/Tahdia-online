@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
@@ -71,7 +72,7 @@ test('online quiz has fair round options, anti-repeat and professional media con
 
 test('service worker lazily caches large quiz media instead of relying on external hosts', async()=>{
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v66-release-33-9-10/);assert.match(sw,/busraj-quiz-media-v4/);
+  assertCurrentCache(sw);assert.match(sw,/busraj-quiz-media-v4/);
   assert.match(sw,/assets\/quiz_photos/);assert.match(sw,/assets\/sounds_pro/);assert.match(sw,/questions-data\.js/);
   assert.doesNotMatch(sw,/upload\.wikimedia\.org/);
 });

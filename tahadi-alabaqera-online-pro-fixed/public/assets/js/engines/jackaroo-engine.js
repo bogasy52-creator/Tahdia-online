@@ -21,26 +21,75 @@ export function globalJackarooPosition(player,progress,state=4){return boardSton
 export const jackarooTeam=p=>p%2;
 export function teamWinner(state){for(const team of[0,1])if(state.players.filter((_,i)=>i%2===team).every(p=>p.marbles.every(m=>jackarooHome(state,m))))return team;return null}
 const ownerCandidates=(state,actor)=>{if(!state.players[actor].marbles.every(m=>jackarooHome(state,m)))return[actor];for(let n=2;n<state.players.length;n+=2){const mate=(actor+n)%state.players.length;if(!state.players[mate].marbles.every(m=>jackarooHome(state,m)))return[mate];}return[];};
-function isBaseProtected(state,owner,marble){const p=state.players[owner].marbles[marble];return p===0}
-function occupancy(state,global,exclude=null){const out=[];state.players.forEach((p,pi)=>p.marbles.forEach((m,mi)=>{if(m>=0&&m<boardGeometry(state).track&&globalJackarooPosition(pi,m,state)===global&&!(exclude&&exclude[0]===pi&&exclude[1]===mi))out.push({player:pi,marble:mi,progress:m,protected:m===0})}));return out}
+function isSafeGlobal(state,global){return boardGeometry(state).safe.has(global)}
+// Only a marble on its OWN starting hole is protected. Printed stars and a
+// visiting marble on another player's start are ordinary track positions.
+function isBaseProtected(state,owner,marble){return state.players[owner].marbles[marble]===0}
+function occupancy(state,global,exclude=null){const out=[];state.players.forEach((p,pi)=>p.marbles.forEach((m,mi)=>{if(m>=0&&m<boardGeometry(state).track&&globalJackarooPosition(pi,m,state)===global&&!(exclude&&exclude[0]===pi&&exclude[1]===mi))out.push({player:pi,marble:mi,progress:m,protected:m===0,safe:isSafeGlobal(state,global)})}));return out}
 // 33.9.0: a marble on its own start shuts the road — no marble (yours, your partner's or the
 // others') passes it or stops on it, forward or backward, until it moves on
-function roadShut(state,owner,marble,pos,steps,backward){const T=boardGeometry(state).track;for(let k=1;k<=steps;k++){let rel=backward?pos-k:pos+k;if(!backward&&rel>=T)break;if(rel<0)rel+=T;if(occupancy(state,globalJackarooPosition(owner,rel,state),[owner,marble]).some(o=>o.protected))return true}return false}
+function trackPath(state,pos,steps,backward=false,allowHome=true){
+ const g=boardGeometry(state),path=[];
+ for(let k=1;k<=steps;k++){
+  let rel=backward?pos-k:pos+k;
+  if(!backward&&allowHome&&rel>=g.track)break;
+  if(!backward&&allowHome&&g.fill&&pos<g.track-1&&rel===g.track-1)continue;
+  rel=((rel%g.track)+g.track)%g.track;path.push(rel);
+ }
+ return path;
+}
+function roadShut(state,owner,marble,pos,steps,backward,allowHome=true){
+ return trackPath(state,pos,steps,backward,allowHome).some(rel=>occupancy(state,globalJackarooPosition(owner,rel,state),[owner,marble]).some(o=>o.protected));
+}
 export function jackarooRoadShut(state,owner,marble,steps,backward=false){const pos=state.players[owner]?.marbles?.[marble];return Number.isInteger(pos)&&pos>=0&&pos<boardGeometry(state).track&&roadShut(state,owner,marble,pos,backward?steps:gateSteps(state,pos,steps),backward)}
+// 33.9.12: protection belongs to the marble's own starting hole, not printed stars.
 // 33.9.7: on the board of the picture a marble of yours goes from hole 17 straight into its home
 // lane: hole 18 is not on your way in. Only a 5 from the other team (or a Jack swap) puts it on 18.
 export function jackarooGateSteps(state,pos,steps,skip=true){return gateSteps(state,pos,steps,skip)}
 function gateSteps(state,pos,steps,skip=true){const g=boardGeometry(state);return g.fill&&skip&&pos>=0&&pos<g.track-1&&pos+steps>=g.track-1?steps+1:steps}
-function canMove(state,owner,marble,steps,backward=false,skip=true){const pos=state.players[owner].marbles[marble];if(pos<0||pos>=boardGeometry(state).finish)return false;if(!backward)steps=gateSteps(state,pos,steps,skip);if(pos<boardGeometry(state).track&&roadShut(state,owner,marble,pos,steps,backward))return false;if(backward){if(pos>=boardGeometry(state).track)return false;const target=pos-steps>=0?pos-steps:boardGeometry(state).track+(pos-steps);const g=globalJackarooPosition(owner,target,state);const occ=occupancy(state,g,[owner,marble]);if(occ.some(o=>o.player===owner||o.protected))return false;return true}const target=pos+steps;if(target>boardGeometry(state).finish)return false;if(target<boardGeometry(state).track){const g=globalJackarooPosition(owner,target,state),occ=occupancy(state,g,[owner,marble]);if(occ.some(o=>o.player===owner||o.protected))return false}else{if((boardGeometry(state).fill||target!==boardGeometry(state).finish)&&state.players[owner].marbles.some((m,i)=>i!==marble&&m===target))return false;if(state.players[owner].marbles.some((m,i)=>i!==marble&&m>=boardGeometry(state).track&&m<boardGeometry(state).finish&&m>pos&&m<target))return false}return true}
+/** Shared by legal moves and the board picker: an opposing five never enters home. */
+export function jackarooMoveTarget(state,owner,marble,steps,backward=false,allowHome=true){
+ const pos=state.players[owner].marbles[marble],g=boardGeometry(state);
+ if(backward)return((pos-steps)%g.track+g.track)%g.track;
+ const target=pos+gateSteps(state,pos,steps,allowHome);
+ return allowHome?target:target%g.track;
+}
+function canMove(state,owner,marble,steps,backward=false,allowHome=true,king=false){
+ const pos=state.players[owner].marbles[marble],g=boardGeometry(state);
+ if(pos<0||pos>=g.finish||backward&&pos>=g.track)return false;
+ const target=jackarooMoveTarget(state,owner,marble,steps,backward,allowHome);
+ if(target>g.finish)return false;
+ const distance=backward?steps:gateSteps(state,pos,steps,allowHome);
+ if(pos<g.track){
+  for(const rel of trackPath(state,pos,distance,backward,allowHome)){
+   const occupants=occupancy(state,globalJackarooPosition(owner,rel,state),[owner,marble]);
+   if(occupants.some(o=>o.protected||!king&&o.player===owner))return false;
+  }
+ }
+ if(target>=g.track){
+  if((g.fill||target!==g.finish)&&state.players[owner].marbles.some((m,i)=>i!==marble&&m===target))return false;
+  if(state.players[owner].marbles.some((m,i)=>i!==marble&&m>=g.track&&m<g.finish&&m>pos&&m<target))return false;
+ }
+ return true;
+}
 function enterAllowed(state,owner){const g=boardGeometry(state).starts[owner],occ=occupancy(state,g);return !occ.some(o=>o.player===owner||o.protected)}
-function standardMoveActions(state,actor,steps,backward=false){const out=[];for(const owner of ownerCandidates(state,actor))state.players[owner].marbles.forEach((_,marble)=>{if(canMove(state,owner,marble,steps,backward))out.push({type:'move',owner,marble,steps,backward})});return out}
-function fiveActions(state,actor=state.turn){const out=[];state.players.forEach((p,owner)=>p.marbles.forEach((m,marble)=>{if(m>=0&&m<boardGeometry(state).track&&!isBaseProtected(state,owner,marble)&&canMove(state,owner,marble,5,false,jackarooTeam(owner)===jackarooTeam(actor)))out.push({type:'moveAny5',owner,marble,steps:5})}));return out}
+function standardMoveActions(state,actor,steps,backward=false,king=false){const out=[];for(const owner of ownerCandidates(state,actor))state.players[owner].marbles.forEach((_,marble)=>{if(canMove(state,owner,marble,steps,backward,true,king))out.push({type:'move',owner,marble,steps,backward})});return out}
+function fiveActions(state,actor=state.turn){const out=[];state.players.forEach((p,owner)=>p.marbles.forEach((m,marble)=>{if(m<0||m>=boardGeometry(state).track)return;const own=jackarooTeam(owner)===jackarooTeam(actor);if(!own&&isBaseProtected(state,owner,marble))return;if(canMove(state,owner,marble,5,false,own))out.push({type:'moveAny5',owner,marble,steps:5})}));return out}
 function sevenActions(state,actor){const out=standardMoveActions(state,actor,7,false);for(const owner of ownerCandidates(state,actor)){for(let a=0;a<4;a++)for(let b=0;b<4;b++){if(a===b)continue;for(let first=1;first<=6;first++){const second=7-first;if(!canMove(state,owner,a,first,false))continue;const temp=clone(state);applyMove(temp,owner,a,first,false,false);if(canMove(temp,owner,b,second,false))out.push({type:'split7',owner,first:{marble:a,steps:first},second:{marble:b,steps:second}})}}}return out}
-function swapActions(state,actor){const out=[];for(const owner of ownerCandidates(state,actor)){state.players[owner].marbles.forEach((m,marble)=>{if(m<0||m>=boardGeometry(state).track)return;state.players.forEach((p,op)=>{if(op===owner)return;p.marbles.forEach((om,oi)=>{if(om<1||om>=boardGeometry(state).track)return;out.push({type:'swap',owner,marble,otherOwner:op,otherMarble:oi})})})})}return out}
-export function getJackarooActions(state,cardIndex,actor=state.turn){if(state.burnPick)return actor===state.burnPick.target&&state.hands[actor]?.[cardIndex]?[{type:'burnPick'}]:[];const card=state.hands[actor]?.[cardIndex];if(!card)return[];const rank=cardRank(card);let out=[];if(rank==='A'||rank==='K'){for(const owner of ownerCandidates(state,actor)){if(enterAllowed(state,owner))state.players[owner].marbles.forEach((m,marble)=>{if(m===-1)out.push({type:'enter',owner,marble})})}const steps=rank==='A'?[1,11]:[13];for(const n of steps)out.push(...standardMoveActions(state,actor,n,false))}else if(rank==='10'){out=standardMoveActions(state,actor,10,false);const target=jackarooNext(state,actor);if(state.hands[target]?.length)out.push({type:'burn',target});}else if(rank==='J')out=swapActions(state,actor);else if(rank==='7')out=sevenActions(state,actor);else if(rank==='5')out=fiveActions(state,actor);else{const n=rank==='Q'?12:Number(rank);if(Number.isFinite(n))out=standardMoveActions(state,actor,n,rank==='4')}if(!out.length)out=[{type:'discard'}];return out}
+function swapActions(state,actor){const out=[];for(const owner of ownerCandidates(state,actor)){state.players[owner].marbles.forEach((m,marble)=>{if(m<0||m>=boardGeometry(state).track||isBaseProtected(state,owner,marble))return;state.players.forEach((p,op)=>{if(op===owner)return;p.marbles.forEach((om,oi)=>{if(om<0||om>=boardGeometry(state).track||isBaseProtected(state,op,oi))return;out.push({type:'swap',owner,marble,otherOwner:op,otherMarble:oi})})})})}return out}
+function cardActions(state,cardIndex,actor){const card=state.hands[actor]?.[cardIndex];if(!card)return[];const rank=cardRank(card);let out=[];if(rank==='A'||rank==='K'){for(const owner of ownerCandidates(state,actor)){if(enterAllowed(state,owner))state.players[owner].marbles.forEach((m,marble)=>{if(m===-1)out.push({type:'enter',owner,marble})})}const steps=rank==='A'?[1,11]:[13];for(const n of steps)out.push(...standardMoveActions(state,actor,n,false,rank==='K'))}else if(rank==='10'){out=standardMoveActions(state,actor,10,false);const target=jackarooNext(state,actor);if(state.hands[target]?.length)out.push({type:'burn',target});}else if(rank==='J')out=swapActions(state,actor);else if(rank==='7')out=sevenActions(state,actor);else if(rank==='5')out=fiveActions(state,actor);else{const n=rank==='Q'?12:Number(rank);if(Number.isFinite(n))out=standardMoveActions(state,actor,n,rank==='4')}return out}
+export function getJackarooActions(state,cardIndex,actor=state.turn){
+ if(!state.players[actor]||!Number.isInteger(cardIndex)||!state.hands[actor]?.[cardIndex])return[];
+ if(state.burnPick)return actor===state.burnPick.target?[{type:'burnPick'}]:[];
+ const actions=cardActions(state,cardIndex,actor);
+ if(actions.length)return actions;
+ // A player must use any playable card; a dead card is not a free pass.
+ if(state.hands[actor].some((_,i)=>i!==cardIndex&&cardActions(state,i,actor).length))return[];
+ return[{type:'discard'}];
+}
 function captureAt(state,owner,marble){const pos=state.players[owner].marbles[marble];if(pos<0||pos>=boardGeometry(state).track)return[];const g=globalJackarooPosition(owner,pos,state),captured=[];state.players.forEach((p,pi)=>{if(pi===owner)return;p.marbles.forEach((m,mi)=>{if(m>=0&&m<boardGeometry(state).track&&globalJackarooPosition(pi,m,state)===g&&m!==0){p.marbles[mi]=-1;captured.push({player:pi,marble:mi})}})});return captured}
-function captureKingPath(state,owner,marble,from,steps){const captured=[];if(from<0||from>=boardGeometry(state).track)return captured;for(let k=1;k<=steps;k++){const rel=from+k;if(rel>=boardGeometry(state).track)break;const g=globalJackarooPosition(owner,rel,state);state.players.forEach((p,pi)=>p.marbles.forEach((m,mi)=>{if(pi===owner&&mi===marble)return;if(m>=0&&m<boardGeometry(state).track&&globalJackarooPosition(pi,m,state)===g&&m!==0){p.marbles[mi]=-1;captured.push({player:pi,marble:mi})}}))}return captured}
-function applyMove(state,owner,marble,steps,backward=false,king=false,skip=true){const from=state.players[owner].marbles[marble];if(!backward)steps=gateSteps(state,from,steps,skip);let to;if(backward)to=from-steps>=0?from-steps:boardGeometry(state).track+(from-steps);else to=from+steps;const pathCaptured=king?captureKingPath(state,owner,marble,from,steps):[];state.players[owner].marbles[marble]=to;const landingCaptured=captureAt(state,owner,marble);return{from,to,captured:[...pathCaptured,...landingCaptured]}}
+function captureKingPath(state,owner,marble,from,steps){const captured=[];if(from<0||from>=boardGeometry(state).track)return captured;for(const rel of trackPath(state,from,steps)){const g=globalJackarooPosition(owner,rel,state);state.players.forEach((p,pi)=>p.marbles.forEach((m,mi)=>{if(pi===owner&&mi===marble)return;if(m>=0&&m<boardGeometry(state).track&&globalJackarooPosition(pi,m,state)===g&&!isBaseProtected(state,pi,mi)){p.marbles[mi]=-1;captured.push({player:pi,marble:mi})}}))}return captured}
+function applyMove(state,owner,marble,steps,backward=false,king=false,skip=true){const from=state.players[owner].marbles[marble],to=jackarooMoveTarget(state,owner,marble,steps,backward,skip),distance=backward?steps:gateSteps(state,from,steps,skip);const pathCaptured=king?captureKingPath(state,owner,marble,from,distance):[];state.players[owner].marbles[marble]=to;const landingCaptured=captureAt(state,owner,marble);return{from,to,captured:[...pathCaptured,...landingCaptured]}}
 function removeCardAndAdvance(state,actor,cardIndex){const [card]=state.hands[actor].splice(cardIndex,1);if(card)state.discard.push(card);state.played++;advanceTurn(state,actor,state.lastEvent?.type==='burn'?2:1)}
 // 33.8.0: after a whole hand is burnt, the turn passes over a player with no cards left until the next deal (a burning ten skips the next player too)
 function advanceTurn(state,actor,step=1){state.winnerTeam=teamWinner(state);if(state.winnerTeam!==null)return;if(state.hands.every(h=>h.length===0)){const sizes=[4,4,5];dealBatch(state,sizes[state.dealIndex])}const n=state.players.length;let next=jackarooNext(state,actor,step);for(let k=0;k<n&&!state.hands[next]?.length;k++)next=jackarooNext(state,next);state.turn=next}

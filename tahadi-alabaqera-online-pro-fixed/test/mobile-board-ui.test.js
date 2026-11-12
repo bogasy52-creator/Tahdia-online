@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
@@ -7,7 +8,7 @@ const root=process.cwd(),pub=join(root,'public');
 test('mobile board stylesheet is shipped and cached', async()=>{
   await access(join(pub,'assets/css/mobile-game.css'));
   const sw=await readFile(join(pub,'service-worker.js'),'utf8');
-  assert.match(sw,/busraj-games-v66-release-33-9-10/);
+  assertCurrentCache(sw);
   assert.ok(sw.includes('/assets/css/mobile-game.css'));
 });
 

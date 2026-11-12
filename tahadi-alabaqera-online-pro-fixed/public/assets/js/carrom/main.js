@@ -3,8 +3,8 @@
    phone. One pair of hands: the striker slides on the rail under the board (or is dragged on its line),
    and the shot is a slingshot — touch the board anywhere, pull back, let go. The line shows where the
    striker goes and what it hits; the ring round the striker shows the strength. */
-import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, FIXED_DT } from './engine.js?v=33.9.10-club10';
-import { createCarromRenderer } from './render.js?v=33.9.10-club10';
+import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, readCarromAim, FIXED_DT } from './engine.js?v=33.9.12-quality1';
+import { createCarromRenderer } from './render.js?v=33.9.12-quality1';
 import { createTable } from '../board-table-v33.js?v=33.9.10';
 
 const $ = (id) => document.getElementById(id), KEY = 'bs-carrom-settings-v1';
@@ -38,7 +38,7 @@ function draw() {
   // the computer setting its shot
   if (ctl.bot && s === ctl.state) { aim = true; a = ctl.bot.angle; p = ctl.bot.power * Math.min(1, ctl.bot.t); }
   renderer.draw(shown, { angle: a, power: p, seat: ctl.viewSeat, aim });
-  paintSlider(); paintPowerTag(shown, p, aim);
+  paintSlider(); paintPowerTag(shown, p, aim); paintControls();
 }
 function resize() {
   const field = document.querySelector('.cm-playfield'); if (!field) return;
@@ -88,6 +88,7 @@ function renderStatus() {
   $('carromStatus').textContent = statusText();
   $('status').classList.toggle('mine', canPlay());
   document.querySelector('.cm-dock')?.classList.toggle('idle', !canPlay());
+  $('cmTurnHint').textContent = ctl.paused ? 'الطاولة متوقفة' : canPlay() ? (ctl.state.turn ? 'أحجارك السوداء' : 'أحجارك البيضاء') : 'بانتظار دورك';
 }
 let bannerTimer = 0, lastBanner = '';
 function banner(text) {
@@ -100,24 +101,60 @@ function banner(text) {
 /* ---------- the rail ---------- */
 const slider = $('cmSlider');
 const viewX = (x) => (ctl.viewSeat ? 1000 - x : x);
+let sliderPointer = null;
 function paintSlider() {
   const s = ctl.state; if (!s) return;
-  const x = ctl.bot && ctl.state === (ctl.anim || ctl.state) ? s.striker.x : remote && ctl.mode === 'online' && !canPlay() && remote.seat === s.turn ? remote.x : s.striker.x;
+  const x = ctl.bot && ctl.state === (ctl.anim || ctl.state) ? s.striker.x : remote && ctl.mode === 'online' && !canPlay() && remote.seat === s.turn && performance.now() - remote.t < 2500 ? remote.x : s.striker.x;
   const f = Math.max(0, Math.min(1, (viewX(x) - 220) / 560));
   slider.style.setProperty('--x', (f * 100).toFixed(2)); slider.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+  $('cmPositionValue').textContent = Math.round(f * 100) + '%';
+  slider.setAttribute('aria-valuetext', Math.round(f * 100) + '% من خط الدافع');
+  slider.setAttribute('aria-disabled', String(!canPlay())); slider.tabIndex = canPlay() ? 0 : -1;
 }
 function slideTo(clientX) {
   const r = slider.getBoundingClientRect(), f = Math.max(0, Math.min(1, (clientX - r.left - 20) / Math.max(1, r.width - 40)));
   const vx = 220 + f * 560; placeStriker(ctl.state, ctl.viewSeat ? 1000 - vx : vx); sendAim(); draw();
 }
 {
-  let id = null;
-  slider.addEventListener('pointerdown', (e) => { if (!canPlay()) return; e.preventDefault(); window.BS_AUDIO?.unlock?.(); id = e.pointerId; slider.classList.add('drag'); try { slider.setPointerCapture(id); } catch {} slideTo(e.clientX); });
-  slider.addEventListener('pointermove', (e) => { if (e.pointerId !== id || !canPlay()) return; slideTo(e.clientX); });
-  const up = (e) => { if (e.pointerId !== id) return; id = null; slider.classList.remove('drag'); };
-  slider.addEventListener('pointerup', up); slider.addEventListener('pointercancel', up);
-  slider.addEventListener('keydown', (e) => { if (!canPlay() || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); const vx = viewX(ctl.state.striker.x) + (e.key === 'ArrowLeft' ? -15 : 15); placeStriker(ctl.state, ctl.viewSeat ? 1000 - vx : vx); sendAim(); draw(); });
+  slider.addEventListener('pointerdown', (e) => { if (!canPlay() || e.button !== 0 || e.isPrimary === false || sliderPointer !== null || hand) return; e.preventDefault(); window.BS_AUDIO?.unlock?.(); sliderPointer = e.pointerId; slider.classList.add('drag'); try { slider.setPointerCapture(sliderPointer); } catch {} slideTo(e.clientX); });
+  slider.addEventListener('pointermove', (e) => { if (e.pointerId !== sliderPointer || !canPlay()) return; slideTo(e.clientX); });
+  const up = (e) => { if (e.pointerId !== sliderPointer) return; sliderPointer = null; slider.classList.remove('drag'); };
+  slider.addEventListener('pointerup', up); slider.addEventListener('pointercancel', up); slider.addEventListener('lostpointercapture', up);
+  slider.addEventListener('keydown', (e) => { if (!canPlay() || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; e.preventDefault(); e.stopPropagation(); moveStriker(e.key, e.shiftKey); });
 }
+
+function moveStriker(key, fine = false) {
+  const vx = key === 'Home' ? 220 : key === 'End' ? 780 : viewX(ctl.state.striker.x) + (key === 'ArrowLeft' ? -1 : 1) * (fine ? 3 : 15);
+  placeStriker(ctl.state, ctl.viewSeat ? 1000 - vx : vx); sendAim(); draw();
+}
+
+/* Precise controls share the same shot path as the slingshot, including online authority. */
+const aimControl = $('cmAngle'), powerControl = $('cmPower');
+function paintControls() {
+  const ready = canPlay(), relative = angle - (ctl.viewSeat ? Math.PI / 2 : -Math.PI / 2);
+  const degrees = Math.atan2(Math.sin(relative), Math.cos(relative)) * 180 / Math.PI;
+  aimControl.value = String(Math.round(degrees)); powerControl.value = String(Math.round(power * 100));
+  $('cmAngleValue').textContent = (Math.abs(degrees) < 0.05 ? '0' : Number(degrees.toFixed(1))) + '°';
+  $('cmPowerValue').textContent = Math.round(power * 100) + '%';
+  aimControl.setAttribute('aria-valuetext', $('cmAngleValue').textContent + ' من الأمام');
+  powerControl.setAttribute('aria-valuetext', Math.round(power * 100) + '%');
+  $('cmShotControls').disabled = !ready;
+  $('cmFire').disabled = !ready || power < 0.08;
+  $('cmCancel').disabled = !ready || (!hand && power === 0);
+}
+aimControl.addEventListener('input', () => {
+  if (!canPlay()) return;
+  const value = Number(aimControl.value); if (!Number.isFinite(value)) return;
+  hand = null; angle = (ctl.viewSeat ? Math.PI / 2 : -Math.PI / 2) + Math.max(-180, Math.min(180, value)) * Math.PI / 180;
+  sendAim(); draw();
+});
+powerControl.addEventListener('input', () => {
+  if (!canPlay()) return;
+  const value = Number(powerControl.value); if (!Number.isFinite(value)) return;
+  hand = null; power = Math.max(0, Math.min(1, value / 100)); sendAim(); draw();
+});
+$('cmFire').addEventListener('click', () => { if (power >= 0.08) fire(angle, power); });
+$('cmCancel').addEventListener('click', () => cancelAim());
 
 /* ---------- the slingshot ---------- */
 let hand = null;
@@ -132,10 +169,12 @@ function paintPowerTag(s, p, aim) {
   tag.style.setProperty('--pc', p < 0.45 ? '#3ddc84' : p < 0.75 ? '#f2c94c' : '#ff6b55');
 }
 canvas.addEventListener('pointerdown', (e) => {
-  if (!canPlay()) return; e.preventDefault(); window.BS_AUDIO?.unlock?.();
+  if (!canPlay() || hand || sliderPointer !== null || e.button !== 0 || e.isPrimary === false) return;
   const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), s = ctl.state;
+  if (!p) return;
+  e.preventDefault(); window.BS_AUDIO?.unlock?.(); canvas.focus({ preventScroll: true });
   const onStriker = Math.hypot(p.x - s.striker.x, p.y - s.striker.y) < s.striker.r * 1.9;
-  hand = { id: e.pointerId, sx: e.clientX, sy: e.clientY, p0: p, kind: onStriker ? 'maybe' : 'sling', moved: false };
+  hand = { id: e.pointerId, sx: e.clientX, sy: e.clientY, p0: p, initialPower: power, kind: onStriker ? 'maybe' : 'sling', moved: false };
   try { canvas.setPointerCapture(e.pointerId); } catch {}
 });
 canvas.addEventListener('pointermove', (e) => {
@@ -144,9 +183,10 @@ canvas.addEventListener('pointermove', (e) => {
   if (far > 6) hand.moved = true;
   // on the striker: sideways moves it on its line, anything else pulls it back
   if (hand.kind === 'maybe' && far > 10) hand.kind = Math.abs(dx) > Math.abs(dy) * 1.4 ? 'place' : 'sling';
-  if (hand.kind === 'place') { const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat); placeStriker(ctl.state, p.x); sendAim(); draw(); return; }
+  if (hand.kind === 'place') { const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat); if (!p) { cancelAim(); return; } placeStriker(ctl.state, p.x); sendAim(); draw(); return; }
   if (hand.kind !== 'sling') return;
-  const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), bx = hand.p0.x - p.x, by = hand.p0.y - p.y;
+  const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat); if (!p) { cancelAim(); return; }
+  const bx = hand.p0.x - p.x, by = hand.p0.y - p.y;
   const full = Math.max(120, Math.min(200, canvas.getBoundingClientRect().width * 0.42));
   if (far < 12) { power = 0; draw(); return; }
   angle = Math.atan2(by, bx); power = Math.max(0, Math.min(1, (far - 12) / full));
@@ -156,22 +196,27 @@ canvas.addEventListener('pointermove', (e) => {
 function release(e) {
   if (!hand || (e && hand.id !== e.pointerId)) return;
   const h = hand; hand = null;
-  if (h.kind === 'maybe' && !h.moved) {
-    // a tap: on a coin, aim straight at it
-    const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), coin = ctl.state.coins.find((c) => !c.pocketed && Math.hypot(c.x - p.x, c.y - p.y) < c.r * 1.8);
-    if (coin) { angle = Math.atan2(coin.y - ctl.state.striker.y, coin.x - ctl.state.striker.x); draw(); }
+  if (!canPlay()) { power = 0; draw(); return; }
+  if (!h.moved) {
+    const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat);
+    const coin = p && ctl.state.coins.find((c) => !c.pocketed && Math.hypot(c.x - p.x, c.y - p.y) < c.r * 1.8);
+    if (coin) angle = Math.atan2(coin.y - ctl.state.striker.y, coin.x - ctl.state.striker.x);
+    power = h.initialPower; sendAim(); draw();
     return;
   }
-  if (h.kind === 'sling' && !h.moved) {
-    const p = renderer.point(e.clientX, e.clientY, ctl.viewSeat), coin = ctl.state.coins.find((c) => !c.pocketed && Math.hypot(c.x - p.x, c.y - p.y) < c.r * 1.8);
-    if (coin) { angle = Math.atan2(coin.y - ctl.state.striker.y, coin.x - ctl.state.striker.x); power = 0; draw(); }
-    return;
-  }
+  if (h.kind === 'place') { power = h.initialPower; draw(); return; }
   if (h.kind === 'sling' && power >= 0.08) fire(angle, power);
   else { power = 0; draw(); }
 }
 canvas.addEventListener('pointerup', release);
-canvas.addEventListener('pointercancel', () => { hand = null; power = 0; draw(); });
+function cancelAim() {
+  const id = hand?.id; hand = null; power = 0;
+  if (id !== undefined) { try { canvas.releasePointerCapture(id); } catch {} }
+  sendAim(); draw();
+}
+const interrupted = (e) => { if (hand?.id === e.pointerId) cancelAim(); };
+canvas.addEventListener('pointercancel', interrupted); canvas.addEventListener('lostpointercapture', interrupted);
+addEventListener('blur', () => { if (hand) cancelAim(); sliderPointer = null; slider.classList.remove('drag'); });
 
 let aimSent = 0;
 function sendAim() {
@@ -179,26 +224,29 @@ function sendAim() {
   const now = Date.now(); if (now - aimSent < 150) return; aimSent = now;
   table?.send('carrom_aim', { x: Math.round(ctl.state.striker.x * 10) / 10, angle: Math.round(angle * 1000) / 1000, power: Math.round(power * 100) / 100 });
 }
-addEventListener('bs-carrom-aim', (e) => { const d = e.detail || {}; if (!Number.isFinite(d.x)) return; remote = { seat: d.seat, x: d.x, angle: d.angle, power: d.power || 0, t: performance.now() }; });
+addEventListener('bs-carrom-aim', (e) => { const d = readCarromAim(e.detail); if (!d || ctl.mode !== 'online' || d.seat === ctl.me) return; remote = { ...d, t: performance.now() }; });
 
 /* ---------- shots ---------- */
 function animate(sim) { return new Promise((resolve) => { ctl.anim = sim; ctl.animDone = resolve; acc = 0; renderStatus(); }); }
+function cancelPlayback() { const done = ctl.animDone; ctl.animDone = null; ctl.anim = null; clearTimeout(ctl.pending?.timer); ctl.pending = null; done?.(false); }
 function fire(a, p) {
-  if (!canPlay()) return;
+  if (!canPlay() || !Number.isFinite(a) || !Number.isFinite(p) || p < 0.08 || p > 1) return;
   const s = ctl.state, x = s.striker.x;
-  power = 0; play('hit', 0.35 + p * 0.6); window.BS_AUDIO?.vibrate?.(14);
   if (ctl.mode === 'online') {
     const sim = structuredClone(s);
     try { shootCarrom(sim, { x, angle: a, power: p }, s.turn); } catch (error) { banner(error.message); return; }
     if (!table?.send('carrom_shot', { x, angle: a, power: p })) { banner('ما وصلت الضربة، جرّب مرة ثانية'); return; }
+    hand = null; power = 0; window.dispatchEvent(new Event('bs-table-strike')); play('hit', 0.35 + p * 0.6); window.BS_AUDIO?.vibrate?.(14);
     ctl.pending = { seq: (s.seq || 0) + 1, done: animate(sim) };
-    ctl.pending.timer = setTimeout(() => { if (ctl.pending) { ctl.pending = null; ctl.anim = null; window.BS_PLATFORM?.toast?.('ما وصلت الضربة، جرّب مرة ثانية'); renderStatus(); draw(); } }, 15000);
+    ctl.pending.timer = setTimeout(() => { if (ctl.pending) { cancelPlayback(); window.BS_PLATFORM?.toast?.('ما وصلت الضربة، جرّب مرة ثانية'); renderStatus(); draw(); } }, 15000);
     renderStatus(); return;
   }
   try { shootCarrom(s, { x, angle: a, power: p }, s.turn); } catch (error) { banner(error.message); return; }
-  animate(s).then(afterLocalShot);
+  hand = null; power = 0; window.dispatchEvent(new Event('bs-table-strike')); play('hit', 0.35 + p * 0.6); window.BS_AUDIO?.vibrate?.(14);
+  animate(s).then(completed => { if (completed && ctl.running && ctl.state === s) afterLocalShot(); });
 }
 function afterLocalShot() {
+  if (!ctl.running || !ctl.state) return;
   const s = ctl.state; banner(s.message);
   if (s.winner !== null) { renderCards(); finish(); return; }
   onTurn();
@@ -209,7 +257,7 @@ function onTurn() {
   if (s.turnNo === ctl.turnSeen) { draw(); return; }
   ctl.turnSeen = s.turnNo;
   if (ctl.mode === 'hotseat') ctl.viewSeat = s.turn;
-  angle = s.turn === 0 ? -Math.PI / 2 : Math.PI / 2; power = 0; hand = null;
+  angle = s.turn === 0 ? -Math.PI / 2 : Math.PI / 2; power = 0.55; hand = null; sliderPointer = null; slider.classList.remove('drag');
   if (ctl.mode === 'ai' && s.turn === 1 && s.phase === 'aim' && s.winner === null) {
     const plan = chooseCarromShot(s, prefs.level); placeStriker(s, plan.x);
     ctl.bot = { ...plan, t: 0, at: performance.now() };
@@ -231,12 +279,12 @@ function loop(now) {
       }
       if (collide && now - (loop.click || 0) > 55) { loop.click = now; play('tap', 0.2 + collide * 0.7); }
       if (pocket) { play('capture', 0.8); window.BS_AUDIO?.vibrate?.(20); }
-      if (ctl.anim.phase !== 'moving') { const done = ctl.animDone; ctl.anim = null; ctl.animDone = null; done?.(); }
+      if (ctl.anim.phase !== 'moving') { const done = ctl.animDone; ctl.anim = null; ctl.animDone = null; done?.(true); }
     } else if (ctl.bot) {
       // the computer turns its aim to the shot, then strikes
       const b = ctl.bot; b.t = Math.min(1.2, (now - b.at) / 900);
       angle = b.angle;
-      if (b.t >= 1.2) { ctl.bot = null; const s = ctl.state; try { shootCarrom(s, b, 1); play('hit', 0.4 + b.power * 0.5); animate(s).then(afterLocalShot); } catch { const plan = chooseCarromShot(s, prefs.level); placeStriker(s, plan.x); ctl.bot = { ...plan, t: 0, at: now }; } }
+      if (b.t >= 1.2) { ctl.bot = null; const s = ctl.state; try { shootCarrom(s, b, 1); window.dispatchEvent(new Event('bs-table-strike')); play('hit', 0.4 + b.power * 0.5); animate(s).then(completed => { if (completed && ctl.running && ctl.state === s) afterLocalShot(); }); } catch { const plan = chooseCarromShot(s, prefs.level); placeStriker(s, plan.x); ctl.bot = { ...plan, t: 0, at: now }; } }
     }
   }
   draw();
@@ -254,16 +302,19 @@ function showGame() {
   renderer.setTheme(prefs.theme); buildCards(); ctl.running = true; ctl.paused = false; resize(); run();
 }
 function startLocal(mode) {
+  cancelPlayback();
   ctl.mode = mode; prefs.mode = mode; persist();
   ctl.names = mode === 'ai' ? [window.BS_GAME_MENU?.playerName?.() || 'أنت', 'الكمبيوتر'] : ['اللاعب الأول', 'اللاعب الثاني'];
   ctl.users = mode === 'ai' ? [myUser(), { photo: { kind: 'preset', id: 'h-robot' } }] : [null, null];
   ctl.bots = mode === 'ai' ? [false, true] : [false, false];
-  ctl.state = createCarrom({ mode: mode === 'hotseat' ? 'hotseat' : 'ai', difficulty: prefs.level === 'expert' ? 'expert' : 'normal', seed: (Math.random() * 4294967296) >>> 0 });
+  ctl.state = createCarrom({ mode: mode === 'hotseat' ? 'hotseat' : 'ai', difficulty: prefs.level, seed: (Math.random() * 4294967296) >>> 0 });
   ctl.anim = null; ctl.pending = null; ctl.bot = null; ctl.endShown = false; ctl.rewarded = false; ctl.turnSeen = -1; ctl.viewSeat = 0; lastBanner = '';
   ctl.receipt = 'carrom:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   showGame(); onTurn(); play('go', 0.5);
 }
 function showMenu() {
+  cancelPlayback();
+  clearTimeout(ctl.pending?.timer); hand = null; sliderPointer = null; power = 0; remote = null;
   ctl.running = false; ctl.anim = null; ctl.pending = null; ctl.bot = null; cancelAnimationFrame(frame); frame = 0;
   document.body.classList.remove('carrom-running', 'game-running');
   window.BS_LOCAL_REACTIONS = { active: false }; window.dispatchEvent(new Event('bs-reaction-refresh'));
@@ -271,8 +322,9 @@ function showMenu() {
 }
 function pause(value) {
   if (!ctl.running || ctl.mode === 'online' || ctl.state?.winner !== null) return;
-  ctl.paused = value; $('carromPause').hidden = !value; hand = null; last = performance.now();
+  ctl.paused = value; $('carromPause').hidden = !value; cancelAim(); sliderPointer = null; slider.classList.remove('drag'); last = performance.now();
   if (ctl.bot && !value) ctl.bot.at = performance.now();
+  renderStatus(); if (!value) canvas.focus({ preventScroll: true }); else $('carromResume').focus();
 }
 function finish() {
   if (ctl.endShown) return; ctl.endShown = true;
@@ -301,6 +353,7 @@ async function apply(next, { animate: moving }) {
   ctl.bots = [0, 1].map((i) => Boolean(next.players?.find((p) => p.index === i)?.bot));
   ctl.users = [0, 1].map((i) => { const p = next.players?.find((x) => x.index === i); const hero = p?.look?.character; return p?.username ? { username: p.username, fallback: hero ? '/assets/heroes/face/' + hero + '.webp' : '' } : hero ? { photo: null, fallback: '/assets/heroes/face/' + hero + '.webp', username: '' } : null; });
   if (fresh) {
+    cancelPlayback();
     ctl.mode = 'online'; ctl.match = next.startedAt || 0; ctl.endShown = false; ctl.rewarded = false; ctl.pending = null; ctl.anim = null; ctl.bot = null; ctl.turnSeen = -1; lastBanner = '';
     ctl.viewSeat = ctl.me;
     ctl.shownSeq = s.last ? s.last.seq - (next.stepOf ? 1 : 0) : 0;
@@ -308,10 +361,12 @@ async function apply(next, { animate: moving }) {
     showGame(); renderCards();
     if (!s.last) { banner(s.turn === ctl.me ? 'أنت تبدأ!' : (ctl.names[s.turn] || 'الخصم') + ' يبدأ'); play('go', 0.5); }
   }
+  const match = ctl.match;
   if (s.last && s.last.seq > ctl.shownSeq) {
     const mine = ctl.pending && ctl.pending.seq === s.last.seq;
-    if (mine) { clearTimeout(ctl.pending.timer); await ctl.pending.done; ctl.pending = null; }
-    else if (s.shotRec && s.shotRec.seq === s.last.seq && moving && !document.hidden) { remote = null; play('hit', 0.3 + (s.shotRec.power || 0.5) * 0.6); await animate(replayCarromShot(s.shotRec)); }
+    if (mine) { clearTimeout(ctl.pending.timer); const completed = await ctl.pending.done; if (!completed) return; ctl.pending = null; }
+    else if (s.shotRec && s.shotRec.seq === s.last.seq && moving && !document.hidden) { remote = null; window.dispatchEvent(new Event('bs-table-strike')); play('hit', 0.3 + (s.shotRec.power || 0.5) * 0.6); await animate(replayCarromShot(s.shotRec)); }
+    if (!ctl.running || ctl.mode !== 'online' || ctl.match !== match) return;
     ctl.shownSeq = s.last.seq;
     banner(s.last.message);
   }
@@ -328,7 +383,7 @@ try {
     onLobby: () => { if (!$('carromGame').hidden) showMenu(); setMode('online'); },
     onMenu: () => { if (!$('carromGame').hidden) showMenu(); },
     onStatus: () => {},
-    onError: (message) => { if (ctl.pending) { clearTimeout(ctl.pending.timer); ctl.pending = null; ctl.anim = null; renderStatus(); draw(); } window.BS_PLATFORM?.toast?.(message); },
+    onError: (message) => { if (ctl.pending) { cancelPlayback(); renderStatus(); draw(); } window.BS_PLATFORM?.toast?.(message); },
   });
 } catch (error) { console.error('carrom online unavailable', error); }
 
@@ -354,10 +409,13 @@ for (const id of ['carromMute', 'carromSound']) $(id)?.addEventListener('click',
 addEventListener('bs-audio-change', paintMute); paintMute();
 document.addEventListener('visibilitychange', () => { if (document.hidden && ctl.mode !== 'online') pause(true); });
 document.addEventListener('keydown', (e) => {
-  if (!ctl.running || ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-  if (e.key === 'Escape') { e.preventDefault(); pause(!ctl.paused); return; }
-  if (!canPlay()) return;
-  if (e.key === 'a' || e.key === 'd') { angle += e.key === 'a' ? -0.03 : 0.03; draw(); }
-  else if (e.key === 'Enter' || e.key === ' ') { if (e.target.closest('button,a')) return; e.preventDefault(); fire(angle, power || 0.55); }
+  if (!ctl.running || e.defaultPrevented) return;
+  if (e.key === 'Escape') { e.preventDefault(); if (canPlay() && (hand || power > 0)) cancelAim(); else pause(!ctl.paused); return; }
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) || e.target.closest('button,a,summary') || e.target.isContentEditable || !canPlay()) return;
+  const key = e.key.toLowerCase();
+  if (key === 'a' || key === 'd') { e.preventDefault(); angle += (key === 'a' ? -1 : 1) * (e.shiftKey ? 0.25 : 1) * Math.PI / 180; sendAim(); draw(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); moveStriker(e.key, e.shiftKey); }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); power = Math.max(0, Math.min(1, power + (e.key === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05))); sendAim(); draw(); }
+  else if ((e.key === 'Enter' || e.key === ' ') && power >= 0.08 && !e.repeat) { e.preventDefault(); fire(angle, power); }
 });
 if (new URLSearchParams(location.search).has('debug')) window.BS_CARROM = { get state() { return ctl.state; }, get ctl() { return ctl; }, startLocal, fire: (a, p) => fire(a, p), setAim(a, p) { angle = a; power = p; draw(); }, renderer, canPlay };

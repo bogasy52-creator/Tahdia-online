@@ -281,7 +281,7 @@ export function createPoolGame(names, { rng = Math.random, first = 0 } = {}) {
     players: names.slice(0, 2).map((name) => ({ name: String(name || 'لاعب'), group: null })),
     balls: rackBalls(rng),
     turn: first, phase: 'break', inHand: true, kitchen: true, open: true, winner: null,
-    shots: 0, fouls: [0, 0], last: null, shot: null,
+    shots: 0, shotsBySeat: [0, 0], fouls: [0, 0], last: null, shot: null,
   };
 }
 const clone = (s) => JSON.parse(JSON.stringify(s));
@@ -329,8 +329,11 @@ export function cleanShot(state, input = {}) {
   if (!Number.isFinite(len) || len < 1e-6) throw new Error('invalid_shot');
   const power = Number(input.power);
   if (!Number.isFinite(power) || power <= 0 || power > 1) throw new Error('invalid_shot');
-  let sx = Number(input.spin?.[0]) || 0, sy = Number(input.spin?.[1]) || 0;
-  const sl = Math.sqrt(sx * sx + sy * sy);
+  let sx = Number(input.spin?.[0] ?? 0), sy = Number(input.spin?.[1] ?? 0);
+  if (!Number.isFinite(sx) || !Number.isFinite(sy)) throw new Error('invalid_shot');
+  const scale = Math.max(1, Math.abs(sx), Math.abs(sy));
+  sx /= scale; sy /= scale;
+  const sl = Math.hypot(sx, sy);
   if (sl > 1) { sx /= sl; sy /= sl; }
   let cue = state.balls[0];
   if (state.inHand && Array.isArray(input.cue)) {
@@ -361,6 +364,9 @@ export function playPoolShot(state, seat, input) {
   if (cueIn) foul = 'scratch';
   const last = { seq: state.shots + 1, by: seat, potted: objects, first: sim.first, rail: sim.rail, foul, group: null, result: 'pass', ms: sim.ms, spotted: false };
   next.shots = state.shots + 1;
+  // Old room snapshots know only the overall total; do not invent their earlier seat history.
+  if (Array.isArray(next.shotsBySeat)) next.shotsBySeat[seat] += 1;
+  if (foul) next.fouls[seat] += 1;
   next.shot = { seq: next.shots, by: seat, cue: shot.cue, dir: shot.dir, speed: shot.speed, spin: shot.spin, before };
   next.phase = 'play';
   next.kitchen = false;
@@ -390,7 +396,6 @@ export function playPoolShot(state, seat, input) {
   }
   const mine = me.group ? objects.filter((n) => groupOf(n) === me.group) : objects.filter((n) => n !== 8);
   if (foul) {
-    next.fouls[seat] += 1;
     next.turn = other; next.inHand = true; last.result = 'foul';
   } else if (mine.length || (wasBreak && objects.length)) {
     next.turn = seat; next.inHand = false; last.result = 'again';

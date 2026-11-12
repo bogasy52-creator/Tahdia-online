@@ -1707,3 +1707,98 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @keyframes uno39-stamp{0%{transform:translate(-50%,-50%) scale(2.2) rotate(-10deg);opacity:0}16%{transform:translate(-50%,-50%) scale(.92) rotate(-4deg);opacity:1}28%{transform:translate(-50%,-50%) scale(1) rotate(-4deg)}78%{opacity:1}100%{transform:translate(-50%,-75%) scale(1) rotate(-4deg);opacity:0}}
 @keyframes uno39-burst{to{transform:scale(9);opacity:0;border-width:1px}}
 @media (prefers-reduced-motion:reduce){.uno39 *,.uno39 .uno-ring svg{animation:none!important;transition:none!important}}
+
+/* assets/css/uno-pro-v33-9-12.css */
+/* A clear table at every seat count; private cards keep their original artwork. */
+.uno-table.uno-pro{--uno-dock-height:230px;--uno-rail-top:57px;--uno-rail-height:94px}
+.uno-table.uno-pro::before{inset:8px 8px calc(var(--uno-dock-height) + 8px);border-radius:28px}
+.uno-pro .uno-table-heading{inset:12px auto auto 20px;grid-template-columns:auto auto;align-items:center;column-gap:9px;text-align:start}
+.uno-pro .uno-table-heading b{font-size:20px;grid-row:span 2;letter-spacing:0}
+.uno-pro .uno-table-heading small{font-size:10px}
+.uno-pro .uno-table-count{color:#eddbb8}
+.uno-pro .uno-turn-clock{inset:10px 20px auto auto;min-width:75px;grid-template-columns:1fr auto;gap:2px 7px}
+.uno-pro .uno-turn-clock small{font-size:10px}
+.uno-pro .uno-seconds{font-size:22px}
+.uno-pro .uno-clock-bar{grid-column:1/-1;width:100%}
+
+/* One real place per opponent, with the active player brought into view. */
+.uno-pro .uno-seats{position:absolute;inset:var(--uno-rail-top) 12px auto;height:var(--uno-rail-height);display:flex;align-items:flex-start;justify-content:safe center;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 4px 9px;scroll-padding:8px;scrollbar-width:thin;scrollbar-color:#b8c7b46b transparent;overscroll-behavior-x:contain;touch-action:pan-x}
+.uno-pro .uno-rival{position:relative;inset:auto;transform:none;flex:0 0 90px;width:90px;min-width:0;padding:6px 7px 5px;gap:2px;border-radius:13px;background:#06171bd9;box-sizing:border-box}
+.uno-pro .uno-rival-face{width:30px;height:30px;font-size:15px}
+.uno-pro .uno-seat-number{position:absolute;inset:7px 7px auto auto;color:#a9c6c0;font:600 9px/1.2 system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.uno-pro .uno-mini-hand{display:none}
+.uno-pro .uno-rival-name{width:100%;font-size:11px;line-height:1.35}
+.uno-pro .uno-rival-count{font-size:10px;line-height:1.3}
+.uno-pro .uno-rival.active{background:#234542;border-color:#efd8a6;box-shadow:0 0 0 2px #efd8a635}
+.uno-pro .uno-rival.active .uno-seat-number{color:#ffe5a6}
+.uno-pro .uno-rival.active .uno-rival-face{animation:none;border-color:#ffe3a4}
+
+.uno-pro .uno-center{top:calc(var(--uno-rail-top) + var(--uno-rail-height));bottom:calc(var(--uno-dock-height) + 36px);left:50%;width:min(440px,calc(100% - 32px));height:auto;transform:translateX(-50%);align-content:center;gap:8px;container-type:size}
+.uno-pro .uno-card-back{width:clamp(42px,34cqh,96px)}
+.uno-pro .uno-discard{width:clamp(48px,38cqh,104px)}
+.uno-pro .uno-piles{gap:clamp(22px,8vw,48px)}
+.uno-pro .uno-ring{width:min(78vw,290px,95cqh);opacity:.27}
+.uno-pro .uno-direction{gap:3px}
+.uno-pro .uno-color{font-size:12px;padding:3px 16px}
+.uno-pro .uno-color[style*="f6b70a"]{color:#382506;text-shadow:none}
+.uno-pro .uno-turn-name{font-size:10px;line-height:1.3}
+.uno-pro .uno-feed{max-width:350px;min-height:0;max-height:2.8em;overflow:hidden;font-size:11px;line-height:1.4;color:#c2d7d0}
+.uno-pro .uno-status{inset:auto 12px calc(var(--uno-dock-height) + 8px);font-size:12px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* The short hand keeps its fan. Crowded hands expose complete, readable cards. */
+.uno-pro .uno-dock{padding:7px 12px calc(5px + env(safe-area-inset-bottom));min-height:0;z-index:3}
+.uno-pro .uno-dock-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:0 auto 4px}
+.uno-pro .uno-own-name{max-width:none;min-width:0;font-size:12px}
+.uno-pro .uno-sort{flex:none;min-height:30px;padding:4px 9px;border:1px solid #819f9666;border-radius:8px;background:#193b3e;color:#c9ddd3;font:700 11px/1.3 Tajawal,system-ui,sans-serif;cursor:pointer}
+.uno-pro .uno-sort[aria-pressed=true]{border-color:#dfc18b;color:#ffdfa5;background:#2a4944}
+.uno-pro .uno-dock-top{gap:8px;margin-bottom:4px;flex-wrap:nowrap}
+.uno-pro .uno-dock-top button{min-height:40px;padding:6px 15px;font-size:12px;touch-action:manipulation}
+.uno-pro .uno-dock-top .uno-call{min-width:88px}
+.uno-pro .uno-hand{max-width:760px;direction:ltr;touch-action:pan-x;isolation:isolate}
+.uno-pro .uno-hand.scrollable{display:flex!important;align-items:flex-end;gap:9px;overflow-x:auto;overflow-y:hidden;padding:20px 8px 10px;height:calc(var(--uno-cw,72px)*1.43 + 34px);box-sizing:border-box;scroll-padding:12px;scrollbar-width:thin;scrollbar-color:#d4bc8599 #ffffff0b;overscroll-behavior-x:contain}
+.uno-pro .uno-hand.scrollable .uno-hand-card{position:relative;left:auto;bottom:auto;flex:0 0 var(--uno-cw,72px);transform:none;transform-origin:center;box-shadow:0 4px 8px #0007;scroll-margin:12px}
+.uno-pro.my-turn .uno-hand.scrollable .uno-hand-card.playable:not(:disabled){transform:translateY(-6px);box-shadow:0 0 0 2px #ffe7ac,0 3px 10px #0008}
+.uno-pro.my-turn .uno-hand.scrollable .uno-hand-card.playable:not(:disabled):is(:hover,:focus-visible){transform:translateY(-10px);outline:2px solid #fff;outline-offset:3px}
+.uno-pro .uno-hand-hint{display:block;margin:1px 0 0;text-align:center;font-size:10px;line-height:1.3;color:#b8cec3}
+.uno-pro .uno-hand-hint[hidden]{display:none}
+.uno-pro :is(.uno-seats,.uno-hand,.uno-sort,.uno-stock,.uno-dock-top button,.uno-picker-close):focus-visible{outline:2px solid #ffe3a4;outline-offset:3px}
+.uno-pro .uno-picker{z-index:50}
+.uno-pro .uno-picker-card{padding:22px;gap:10px}
+.uno-pro .uno-picker-close{min-height:44px;min-width:100px}
+
+@media(max-width:480px){
+ .uno-pro .uno-seats{inset-inline:8px;gap:6px}
+ .uno-pro .uno-rival{flex-basis:80px;width:80px}
+ .uno-pro .uno-dock{padding-inline:8px}
+ .uno-pro .uno-dock-top{gap:6px}
+ .uno-pro .uno-dock-top button{padding-inline:12px}
+ .uno-pro .uno-dock-top .uno-catch{font-size:10px;padding-inline:6px}
+}
+@media(max-height:640px){
+ .uno-table.uno-pro{--uno-rail-top:46px;--uno-rail-height:77px}
+ .uno-pro .uno-table-heading{top:7px}
+ .uno-pro .uno-turn-clock{top:6px}
+ .uno-pro .uno-rival{padding-block:4px}
+ .uno-pro .uno-rival-face{width:23px;height:23px;font-size:12px}
+ .uno-pro .uno-dock-top button{min-height:36px;padding-block:4px}
+ .uno-pro .uno-dock-meta{margin-bottom:1px}
+ .uno-pro .uno-sort{min-height:27px}
+ .uno-pro .uno-feed{font-size:10px;max-height:1.4em}
+ .uno-pro .uno-center{gap:5px}
+ .uno-pro .uno-turn-name{font-size:9px}
+}
+@media(orientation:landscape) and (max-height:540px){
+ .uno-table.uno-pro{--uno-rail-top:45px;--uno-rail-height:77px}
+ .uno-table.uno-pro::before{inset:7px calc(44% + 6px) 7px 7px}
+ .uno-pro .uno-dock{inset:0 0 0 auto;width:44%;padding:10px 12px;box-sizing:border-box;border-top:0;border-left:1px solid #9eac7b88;display:flex;flex-direction:column;justify-content:center}
+ .uno-pro .uno-dock-meta{width:100%;margin-bottom:7px}
+ .uno-pro .uno-seats{right:calc(44% + 8px)}
+ .uno-pro .uno-center{left:28%;width:calc(56% - 30px);bottom:36px}
+ .uno-pro .uno-status{right:calc(44% + 10px);bottom:10px}
+ .uno-pro .uno-turn-clock{right:calc(44% + 18px)}
+ .uno-pro .uno-hand{width:100%}
+ .uno-pro .uno-dock-top{flex-wrap:wrap;margin-bottom:8px}
+ .uno-pro .uno-dock-top button{min-height:40px}
+ .uno-pro .uno-hand-hint{margin-top:5px}
+}
+@media(prefers-reduced-motion:reduce){.uno-pro .uno-seats,.uno-pro .uno-hand{scroll-behavior:auto}.uno-pro .uno-rival.last-card{animation:none}}

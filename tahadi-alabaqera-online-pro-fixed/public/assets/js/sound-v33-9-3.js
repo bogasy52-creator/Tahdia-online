@@ -22,28 +22,27 @@
     arcade: ['serpent', 'reaction'],
     party: ['party'],
     jewels: ['jewels'],
-    jewels: ['jewels'],
   };
   // length of each loop in seconds and the wrap-around kept before and after it in the file
-  const LOOPS = {jewels:{lead:1.0,loop:49.65517},lobby:{lead:1.0,loop:39.183673},baloot:{lead:1.0,loop:46.829274},jackaroo:{lead:1.0,loop:36.923084},chaos:{lead:1.0,loop:48.81356},snakes:{lead:1.0,loop:36.226417},zahra:{lead:1.0,loop:38.4},dice:{lead:1.0,loop:51.428571},hockey:{lead:1.0,loop:45.714286},billiards:{lead:1.0,loop:43.636372},carrom:{lead:1.0,loop:40.851066},focus:{lead:1.0,loop:50.526327},quiz:{lead:1.0,loop:34.909093},words:{lead:1.0,loop:50.526327},arcade:{lead:1.0,loop:46.45161},party:{lead:1.0,loop:51.428571},jewels:{lead:1.0,loop:49.65517}};
+  const LOOPS = {lobby:{lead:1.0,loop:77.8378458},billiards:{lead:1.0,loop:93.65852608},carrom:{lead:1.0,loop:81.70213152},baloot:{lead:1.0,loop:73.84614512},jackaroo:{lead:1.0,loop:65.45453515},chaos:{lead:1.0,loop:55.38462585},snakes:{lead:1.0,loop:62.60868481},zahra:{lead:1.0,loop:66.97673469},dice:{lead:1.0,loop:64.0},hockey:{lead:1.0,loop:51.42857143},focus:{lead:1.0,loop:84.70587302},quiz:{lead:1.0,loop:64.0},words:{lead:1.0,loop:72.0},arcade:{lead:1.0,loop:53.33333333},party:{lead:1.0,loop:57.6},jewels:{lead:1.0,loop:56.47058957}};
   const trackFor = (name) => Object.keys(TRACKS).find((k) => TRACKS[k].includes(name)) || null;
   const track = trackFor(route);
   const settings = () => { try { return A()?.getSettings?.() || {}; } catch { return {}; } };
   const musicOn = () => { const s = settings(); return !s.muted && s.music !== false; };
-  const level = () => { const s = settings(); return Math.max(0, Math.min(1, (s.volume ?? .72) * (s.musicVolume ?? .55))) * .9; };
+  const level = () => { const s = settings(); return Math.max(0, Math.min(1, (s.volume ?? .72) * (s.musicVolume ?? .28))) * .62; };
   const store = { get(k) { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
   // ---------------------------------------------------------------- music
-  let node = null, gain = null, buffer = null, loading = null, startedAt = 0, offset = 0, ducked = false, wanted = false;
+  let node = null, gain = null, buffer = null, loading = null, startedAt = 0, offset = 0, ducked = false, wanted = false, strikeUntil = 0, strikeTimer = 0;
   function loadTrack() {
     if (buffer || loading || !track) return loading;
     const ctx = A()?.context?.(); if (!ctx?.decodeAudioData || typeof fetch !== 'function') return null;
-    loading = fetch('/assets/music/v33-9-3/' + track + '.mp3').then((r) => r.ok ? r.arrayBuffer() : Promise.reject(new Error('music')))
+    loading = fetch('/assets/music/v33-9-12/' + track + '.mp3').then((r) => r.ok ? r.arrayBuffer() : Promise.reject(new Error('music')))
       .then((b) => new Promise((ok, no) => ctx.decodeAudioData(b, ok, no))).then((b) => { buffer = b; return b; })
       .catch(() => { loading = null; return null; });
     return loading;
   }
-  function target() { return musicOn() ? level() * (ducked ? .3 : 1) : 0; }
+  function target() { return musicOn() ? level() * (ducked ? .3 : Date.now() < strikeUntil ? .48 : 1) : 0; }
   function ramp(to, sec = .8) {
     const ctx = A()?.context?.(); if (!gain || !ctx) return;
     const t = ctx.currentTime; try { gain.gain.cancelScheduledValues(t); gain.gain.setValueAtTime(gain.gain.value, t); gain.gain.linearRampToValueAtTime(to, t + sec); } catch { gain.gain.value = to; }
@@ -80,6 +79,7 @@
   document.addEventListener('visibilitychange', () => { const ctx = A()?.context?.(); if (!ctx) return; if (document.hidden) { save(); try { ctx.suspend(); } catch {} } else try { ctx.resume(); } catch {} });
   addEventListener('pagehide', save);
   addEventListener('bs-audio-change', sync);
+  addEventListener('bs-table-strike', () => { strikeUntil = Date.now() + 900; clearTimeout(strikeTimer); ramp(target(), .08); strikeTimer = setTimeout(() => ramp(target(), .65), 920); });
   const first = () => { A()?.unlock?.(); play(); A()?.prime?.(['tap', 'yourTurn', 'go', 'victory', 'defeat', 'coin', 'whoosh']); };
   addEventListener('pointerdown', first, { once: true, passive: true, capture: true });
   addEventListener('keydown', first, { once: true, capture: true });

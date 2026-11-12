@@ -1,7 +1,7 @@
 /* Tahdia 33.9.5 — «ماستر الجواهر»: the duel page. The engine decides; this file draws the board on a
    canvas, animates every move from the state's own record (swap, breaks, special gems, falls), and
    runs the three ways to play: online (a BoardRoom table), against the computer, two on one phone. */
-import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.10-jw1';
+import { JD, BOOSTERS, createJewelsDuel, playJewelsSwap, playJewelsBooster, chooseJewelsMove, legalSwaps, adjacent } from '../engines/jewels-duel-engine.js?v=33.9.11-jw2';
 import { createTable } from '../board-table-v33.js?v=33.9.10';
 
 const $ = (s) => document.querySelector(s);
@@ -133,10 +133,10 @@ function boosterIcon(cv, k, px = 60) {
 
 /* ---------- the board view ---------- */
 const canvas = $('#jwBoard'), g = canvas.getContext('2d'), wrap = $('#jwWrap');
-const view = { size: 320, cell: 40, pad: 8, dpr: 1, tiles: new Map(), grid: Array(N).fill(null), fx: [], parts: [], sel: -1, hint: null, hintAt: 0, aimCell: -1, shake: 0, raf: 0 };
+const view = { size: 320, cell: 40, pad: 8, dpr: 1, tiles: new Map(), grid: Array(N).fill(null), fx: [], parts: [], sel: -1, cursor: 0, hint: null, hintAt: 0, aimCell: -1, shake: 0, raf: 0 };
 function fitBoard() {
   const vw = Math.min(window.innerWidth, 560) - 12;
-  const used = ['#game .jw-bar', '.jw-hud', '#status', '#jwBoostBar'].reduce((n, s) => n + ($(s)?.offsetHeight || 0), 0) + 54;
+  const used = ['#game .jw-bar', '.jw-hud', '#status', '.jw-board-tools', '#jwBoostBar'].reduce((n, s) => n + ($(s)?.offsetHeight || 0), 0) + 54;
   const size = Math.max(240, Math.min(vw, window.innerHeight - used, 520));
   view.dpr = Math.min(3, window.devicePixelRatio || 1); view.pad = Math.round(size * 0.042); view.cell = (size - view.pad * 2) / W; view.size = size;
   canvas.width = Math.round(size * view.dpr); canvas.height = Math.round(size * view.dpr); canvas.style.width = canvas.style.height = size + 'px';
@@ -145,6 +145,7 @@ function fitBoard() {
 function setBoard(board) {
   view.tiles.clear(); view.grid = Array(N).fill(null);
   board.forEach((t, i) => { if (!t) return; view.tiles.set(t.i, { id: t.i, c: t.c, s: t.s, x: i % W, y: (i / W) | 0, scale: 1, alpha: 1 }); view.grid[i] = t.i; });
+  syncGrid();
   invalidate();
 }
 function invalidate() { if (!view.raf) view.raf = requestAnimationFrame(frame); }
@@ -194,6 +195,11 @@ function draw(now) {
     if (t.s === 'ball') { g.save(); g.translate(cx, cy); g.rotate(now / 700); sparkle(g, c * 0.32, 0, c * 0.08, 0.8); g.restore(); }
   }
   g.globalAlpha = 1; g.restore();
+  if (document.activeElement === wrap && !ctl.busy && !ctl.pending) {
+    const x = view.cursor % W, y = Math.floor(view.cursor / W);
+    g.save(); g.lineWidth = 2; g.strokeStyle = '#fff6a4'; g.setLineDash([5, 3]);
+    roundRect(p + x * c + 1, p + y * c + 1, c - 2, c - 2, c * 0.22); g.stroke(); g.restore();
+  }
   // selection
   if (view.sel >= 0) {
     const x = view.sel % W, y = (view.sel / W) | 0;
@@ -258,11 +264,12 @@ function aimCells(id, cell) {
 
 /* ---------- tweens ---------- */
 function tween(ms, fn) {
+  const epoch = ctl.epoch;
   if (document.hidden || reduced()) { fn(1); invalidate(); return Promise.resolve(); }
   animating++; invalidate();
   return new Promise((resolve) => {
     const t0 = performance.now();
-    const step = (now) => { const t = Math.min(1, (now - t0) / ms); fn(t); invalidate(); if (t < 1) requestAnimationFrame(step); else { animating--; resolve(); } };
+    const step = (now) => { if (!currentMatch(epoch)) { animating--; resolve(); return; } const t = Math.min(1, (now - t0) / ms); fn(t); invalidate(); if (t < 1) requestAnimationFrame(step); else { animating--; resolve(); } };
     requestAnimationFrame(step);
   });
 }
@@ -270,16 +277,19 @@ const easeOut = (t) => 1 - (1 - t) * (1 - t);
 const fallEase = (t) => (t < 0.82 ? (t / 0.82) ** 2 : 1 - Math.sin((t - 0.82) / 0.18 * Math.PI) * 0.05);
 
 async function slideSwap(a, b, back = false) {
+  const epoch = ctl.epoch;
   const ta = view.tiles.get(view.grid[a]), tb = view.tiles.get(view.grid[b]); if (!ta || !tb) return;
   const ax = a % W, ay = (a / W) | 0, bx = b % W, by = (b / W) | 0;
   play('whoosh', 0.45);
   await tween(150, (t) => { const e = easeOut(t); ta.x = ax + (bx - ax) * e; ta.y = ay + (by - ay) * e; tb.x = bx + (ax - bx) * e; tb.y = by + (ay - by) * e; });
+  if (!currentMatch(epoch)) return;
   if (back) { await tween(150, (t) => { const e = easeOut(t); ta.x = bx + (ax - bx) * e; ta.y = by + (ay - by) * e; tb.x = ax + (bx - ax) * e; tb.y = ay + (by - ay) * e; }); return; }
   view.grid[a] = tb.id; view.grid[b] = ta.id;
 }
 
 const COMBO_WORDS = ['', '', 'حلو!', 'رهيب!', 'خيالي!', 'أسطوري!'];
 async function animateLast(last, { skipSwap = false } = {}) {
+  const epoch = ctl.epoch;
   view.sel = -1; view.hint = null;
   setBoard(last.before);
   if (last.kind === 'swap') {
@@ -289,10 +299,11 @@ async function animateLast(last, { skipSwap = false } = {}) {
     flashBooster(last.seat, last.booster);
     await sleep(reduced() ? 0 : 260);
   }
+  if (!currentMatch(epoch)) return;
   let shown = 0;
   for (let k = 0; k < last.phases.length; k++) {
     const ph = last.phases[k];
-    if (ph.shuffle) { await shuffleAnim(ph.board); continue; }
+    if (ph.shuffle) { await shuffleAnim(ph.board); if (!currentMatch(epoch)) return; continue; }
     // the special gems going off
     for (const f of ph.fx || []) fxOf(f);
     // breaking
@@ -303,6 +314,7 @@ async function animateLast(last, { skipSwap = false } = {}) {
     if (ph.made?.length) setTimeout(() => play('coin', 0.45), 160);
     popPoints(ph, last.seat, k);
     await tween(230, (t) => { for (const t2 of gone) { t2.scale = 1 + 0.35 * t; t2.alpha = 1 - t; } });
+    if (!currentMatch(epoch)) return;
     for (const t of gone) view.tiles.delete(t.id);
     shown += ph.pts; bumpScore(last.seat, ph.pts);
     // falling
@@ -317,6 +329,7 @@ async function animateLast(last, { skipSwap = false } = {}) {
     });
     const far = Math.max(1, ...moves.map((m) => m.y1 - m.y0));
     await tween(Math.min(420, 150 + far * 45), (t) => { for (const m of moves) { if (m.t.made) { m.t.scale = easeOut(Math.min(1, t * 1.6)) * (1 + 0.15 * Math.sin(Math.min(1, t * 1.6) * Math.PI)); continue; } const e = fallEase(t); m.t.x = m.x0 + (m.x1 - m.x0) * e; m.t.y = m.y0 + (m.y1 - m.y0) * e; } });
+    if (!currentMatch(epoch)) return;
     for (const m of moves) { m.t.x = m.x1; m.t.y = m.y1; m.t.scale = 1; }
     view.grid = ph.board.map((t) => t.i);
     if (k >= 2) banner(COMBO_WORDS[Math.min(COMBO_WORDS.length - 1, k)], false, 800, 'combo');
@@ -339,10 +352,12 @@ function fxOf([kind, cell, color]) {
   invalidate();
 }
 async function shuffleAnim(board) {
+  const epoch = ctl.epoch;
   banner('ما فيه حركات · نخلط اللوحة');
   const target = new Map(board.map((t, i) => [t.i, i]));
   const moves = [...view.tiles.values()].map((t) => { const i = target.get(t.id) ?? 0; return { t, x0: t.x, y0: t.y, x1: i % W, y1: (i / W) | 0 }; });
   await tween(600, (t) => { const e = easeOut(t), sw = Math.sin(t * Math.PI) * 1.5; for (const m of moves) { m.t.x = m.x0 + (m.x1 - m.x0) * e + sw * (m.y0 > 3 ? 1 : -1) * 0.3; m.t.y = m.y0 + (m.y1 - m.y0) * e; } });
+  if (!currentMatch(epoch)) return;
   setBoard(board);
 }
 function popPoints(ph, seat, k) {
@@ -363,7 +378,8 @@ function banner(text, foe = false, ms = 900, kind = '') {
 }
 
 /* ---------- the match ---------- */
-const ctl = { mode: 'ai', state: null, level: 'medium', names: ['أنت', 'الكمبيوتر'], bots: [false, true], users: [null, null], me: 0, busy: false, aim: -1, pending: null, shownSeq: 0, endShown: false, rewarded: false, receipt: '', match: 0, scores: [0, 0], lastTurn: null, idleTimer: 0, aiTimer: 0 };
+const ctl = { epoch: 0, mode: 'ai', state: null, level: 'medium', names: ['أنت', 'الكمبيوتر'], bots: [false, true], users: [null, null], me: 0, busy: false, aim: -1, pending: null, shownSeq: 0, endShown: false, rewarded: false, receipt: '', match: 0, scores: [0, 0], lastTurn: null, idleTimer: 0, aiTimer: 0 };
+const currentMatch = epoch => ctl.epoch === epoch && Boolean(ctl.state);
 let table = null, room = null;
 const mySeat = () => (ctl.mode === 'online' ? ctl.me : ctl.mode === 'two' ? ctl.state?.turn ?? 0 : 0);
 const humanTurn = () => { const s = ctl.state; if (!s || s.winner !== null) return false; if (ctl.mode === 'online') return s.turn === ctl.me; if (ctl.mode === 'two') return true; return s.turn === 0; };
@@ -423,7 +439,7 @@ function renderPlates() {
     b.querySelector('small').textContent = ready ? 'جاهزة!' : have + '/' + need;
     b.classList.toggle('ready', ready); b.classList.toggle('aim', ctl.aim === k && s.turn === seat);
     const mine = ctl.mode === 'two' || !ctl.bots[seat];
-    b.disabled = !(ready && mine && s.turn === seat && s.winner === null);
+    b.disabled = !(ready && mine && s.turn === seat && s.winner === null && canAct());
   });
   // the moves left, between the two players, in the colour of the one playing
   const mv = $('#jwMoves');
@@ -441,6 +457,8 @@ function renderPlates() {
 function statusText() {
   const s = ctl.state; if (!s) return '';
   if (s.winner !== null) return '';
+  if (ctl.pending) return 'بانتظار تأكيد الحركة من السيرفر…';
+  if (ctl.busy) return 'تتحرك الجواهر…';
   if (ctl.aim >= 0) return 'اضغط مكان ' + BOOSTERS[ctl.aim].name;
   const name = ctl.names[s.turn] || 'اللاعب';
   if (ctl.mode === 'two') return 'دور ' + name;
@@ -450,6 +468,7 @@ function statusText() {
 function renderStatus() {
   const box = $('#status'); let span = box.querySelector('.jw-say'); if (!span) { span = document.createElement('span'); span.className = 'jw-say'; box.prepend(span); }
   span.textContent = statusText(); box.classList.toggle('mine', humanTurn());
+  syncGrid();
 }
 function turnBanner(prev) {
   const s = ctl.state; if (!s || s.winner !== null || !prev) return;
@@ -471,37 +490,44 @@ function scheduleHint() {
   ctl.idleTimer = setTimeout(() => { if (!canAct()) return; const m = chooseJewelsMove({ ...ctl.state, players: ctl.state.players.map((p) => ({ ...p, charge: [0, 0, 0] })) }, 'medium', () => 0.5); if (m?.type === 'swap') { view.hint = [m.a, m.b]; invalidate(); } }, 7000);
 }
 function afterMove(prev) {
+  if (!ctl.state) return;
   renderPlates(); renderStatus(); turnBanner(prev); scheduleHint();
   const s = ctl.state;
   if (s.winner !== null) { showEnd(); return; }
   if (ctl.mode === 'ai' && s.turn === 1) { clearTimeout(ctl.aiTimer); ctl.aiTimer = setTimeout(aiMove, 900); }
 }
 async function runLocal(fn) {
-  const prev = ctl.state; let next;
+  const epoch = ctl.epoch, prev = ctl.state; let next;
   try { next = fn(prev); } catch (e) { return false; }
   ctl.busy = true; ctl.aim = -1; view.aimCell = -1;
   ctl.state = next;
-  try { await animateLast(next.last); } finally { ctl.busy = false; }
+  renderPlates(); renderStatus();
+  try { await animateLast(next.last); } finally { if (currentMatch(epoch)) ctl.busy = false; }
+  if (!currentMatch(epoch) || ctl.state !== next) return false;
   setBoard(next.board); afterMove(prev); return true;
 }
 async function aiMove() {
+  const epoch = ctl.epoch;
   const s = ctl.state; if (!s || s.winner !== null || s.turn !== 1 || ctl.mode !== 'ai' || $('#game').hidden) return;
   const m = chooseJewelsMove(s, ctl.level);
   if (!m) return;
   if (m.type === 'booster') { await runLocal((st) => playJewelsBooster(st, 1, m.id, m.cell)); return; }
   view.sel = m.a; invalidate(); await sleep(260); view.sel = -1;
+  if (!currentMatch(epoch)) return;
   await runLocal((st) => playJewelsSwap(st, 1, m.a, m.b));
 }
 
 /* ---------- input ---------- */
 const legal = () => { const set = new Set(); for (const [a, b] of legalSwaps(ctl.state)) { set.add(a + ':' + b); set.add(b + ':' + a); } return set; };
 async function trySwap(a, b) {
-  view.sel = -1; view.hint = null;
   if (!adjacent(a, b) || !canAct()) return;
-  if (!legal().has(a + ':' + b)) { ctl.busy = true; await slideSwap(a, b, true); ctl.busy = false; play('error', 0.3); return; }
+  const epoch = ctl.epoch;
+  view.sel = -1; view.hint = null; syncGrid();
+  if (!legal().has(a + ':' + b)) { ctl.busy = true; renderPlates(); renderStatus(); await slideSwap(a, b, true); if (!currentMatch(epoch)) return; ctl.busy = false; renderPlates(); renderStatus(); play('error', 0.3); return; }
   if (ctl.mode === 'online') {
-    ctl.busy = true; await slideSwap(a, b); ctl.busy = false;
+    ctl.busy = true; renderPlates(); renderStatus(); await slideSwap(a, b); if (!currentMatch(epoch)) return; ctl.busy = false;
     ctl.pending = { seq: (ctl.state.seq || 0) + 1, a, b };
+    renderPlates(); renderStatus();
     if (!table?.client?.send('jewels_swap', { a, b })) revertPending();
     else ctl.pending.timer = setTimeout(() => revertPending('ما وصلت الحركة، جرّب مرة ثانية'), 8000);
     return;
@@ -510,7 +536,8 @@ async function trySwap(a, b) {
 }
 async function revertPending(message) {
   const p = ctl.pending; if (!p) return; clearTimeout(p.timer); ctl.pending = null;
-  setBoard(ctl.state.board); if (message) window.BS_PLATFORM?.toast?.(message); renderStatus();
+  if (!ctl.state) return;
+  setBoard(ctl.state.board); if (message) window.BS_PLATFORM?.toast?.(message); renderPlates(); renderStatus(); scheduleHint();
 }
 function boosterTap(seat, k) {
   const s = ctl.state; if (!s || s.turn !== seat || !canAct()) return;
@@ -520,6 +547,7 @@ function boosterTap(seat, k) {
   if (ctl.aim >= 0) play('open', 0.4);
 }
 async function useBooster(cell) {
+  if (!canAct() || ctl.aim < 0 || cell < 0 || cell >= N) return;
   const k = ctl.aim, id = BOOSTERS[k].id; ctl.aim = -1;
   if (ctl.mode === 'online') {
     ctl.pending = { seq: (ctl.state.seq || 0) + 1, booster: id };
@@ -535,16 +563,18 @@ function cellAt(ev) {
 }
 let drag = null;
 canvas.addEventListener('pointerdown', (ev) => {
+  if (ev.button !== 0 || ev.isPrimary === false || drag) return;
   window.BS_AUDIO?.unlock?.();
   const i = cellAt(ev); if (i < 0 || !canAct()) return;
   ev.preventDefault();
-  if (ctl.aim >= 0) { view.aimCell = i; invalidate(); drag = { aim: true, i }; return; }
+  view.cursor = i; wrap.focus({ preventScroll: true });
+  if (ctl.aim >= 0) { view.aimCell = i; invalidate(); drag = { aim: true, i, pointerId: ev.pointerId }; try { canvas.setPointerCapture(ev.pointerId); } catch {} return; }
   if (view.sel >= 0 && view.sel !== i && adjacent(view.sel, i)) { const a = view.sel; view.sel = -1; trySwap(a, i); return; }
-  view.sel = i; drag = { i, x: ev.clientX, y: ev.clientY }; invalidate();
+  view.sel = i; drag = { i, x: ev.clientX, y: ev.clientY, pointerId: ev.pointerId }; syncGrid(); invalidate();
   try { canvas.setPointerCapture(ev.pointerId); } catch {}
 });
 canvas.addEventListener('pointermove', (ev) => {
-  if (!drag) return;
+  if (!drag || drag.pointerId !== ev.pointerId) return;
   if (drag.aim) { const i = cellAt(ev); if (i >= 0) { view.aimCell = i; invalidate(); } return; }
   const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y, far = view.cell * 0.32;
   if (Math.max(Math.abs(dx), Math.abs(dy)) < far) return;
@@ -554,10 +584,52 @@ canvas.addEventListener('pointermove', (ev) => {
   if (tx >= 0 && ty >= 0 && tx < W && ty < H) trySwap(from, ty * W + tx); else view.sel = -1;
 });
 canvas.addEventListener('pointerup', (ev) => {
+  if (!drag || drag.pointerId !== ev.pointerId || ev.button !== 0) return;
   if (drag?.aim) { const i = cellAt(ev); drag = null; if (i >= 0 && ctl.aim >= 0) useBooster(i); return; }
   drag = null;
 });
-canvas.addEventListener('pointercancel', () => { drag = null; });
+canvas.addEventListener('pointercancel', ev => { if (drag?.pointerId === ev.pointerId) { drag = null; view.sel = -1; view.aimCell = -1; syncGrid(); invalidate(); } });
+
+const GEM_NAMES = ['حمراء', 'صفراء', 'خضراء', 'زرقاء', 'بنفسجية', 'برتقالية'];
+function syncGrid() {
+  const cells = $('#jwCells'); if (!cells) return;
+  if (!cells.querySelector('#jwCell-0')) cells.innerHTML = Array.from({ length: H }, (_, row) => `<div role="row">${Array.from({ length: W }, (_, col) => `<span id="jwCell-${row * W + col}" role="gridcell" aria-rowindex="${row + 1}" aria-colindex="${col + 1}"></span>`).join('')}</div>`).join('');
+  for (let i = 0; i < N; i++) {
+    const tile = view.tiles.get(view.grid[i]), cell = $('#jwCell-' + i);
+    const special = { rh: 'صاروخ أفقي', rv: 'صاروخ عمودي', bomb: 'قنبلة', ball: 'جوهرة نور' }[tile?.s];
+    cell.setAttribute('aria-label', `الصف ${Math.floor(i / W) + 1}، العمود ${i % W + 1}: ${special || 'جوهرة'} ${GEM_NAMES[tile?.c] || ''}`);
+    cell.setAttribute('aria-selected', String(view.sel === i));
+  }
+  wrap.setAttribute('aria-activedescendant', 'jwCell-' + view.cursor);
+  wrap.setAttribute('aria-busy', String(ctl.busy || Boolean(ctl.pending)));
+  $('#jwCancel').hidden = view.sel < 0 && ctl.aim < 0;
+  $('#jwHint').disabled = !canAct();
+}
+function cancelSelection() { drag = null; view.sel = -1; ctl.aim = -1; view.aimCell = -1; renderPlates(); renderStatus(); invalidate(); }
+wrap.addEventListener('keydown', ev => {
+  if (!ctl.state) return;
+  const row = Math.floor(view.cursor / W), col = view.cursor % W;
+  let next = view.cursor;
+  if (ev.key === 'ArrowRight') next = row * W + Math.min(W - 1, col + 1);
+  else if (ev.key === 'ArrowLeft') next = row * W + Math.max(0, col - 1);
+  else if (ev.key === 'ArrowDown') next = Math.min(H - 1, row + 1) * W + col;
+  else if (ev.key === 'ArrowUp') next = Math.max(0, row - 1) * W + col;
+  else if (ev.key === 'Home') next = ev.ctrlKey ? 0 : row * W;
+  else if (ev.key === 'End') next = ev.ctrlKey ? N - 1 : row * W + W - 1;
+  else if (ev.key === 'Escape') { ev.preventDefault(); cancelSelection(); return; }
+  else if (ev.key === 'Enter' || ev.key === ' ') {
+    ev.preventDefault(); if (!canAct()) return;
+    window.BS_AUDIO?.unlock?.();
+    if (ctl.aim >= 0) useBooster(view.cursor);
+    else if (view.sel >= 0 && adjacent(view.sel, view.cursor)) trySwap(view.sel, view.cursor);
+    else view.sel = view.sel === view.cursor ? -1 : view.cursor;
+    syncGrid(); invalidate(); return;
+  } else return;
+  ev.preventDefault(); view.cursor = next; if (ctl.aim >= 0) view.aimCell = next; syncGrid(); invalidate();
+});
+$('#jwCancel').addEventListener('click', cancelSelection);
+wrap.addEventListener('focus', invalidate); wrap.addEventListener('blur', invalidate);
+$('#jwHint').addEventListener('click', () => { if (!canAct()) return; const pair = legalSwaps(ctl.state)[0]; if (!pair) return; view.hint = pair; view.cursor = pair[0]; syncGrid(); invalidate(); wrap.focus({ preventScroll: true }); });
 
 /* ---------- start, end and the online table ---------- */
 // 33.9.9: the meeting — both players slide in and VS lands, then the board drops in
@@ -578,13 +650,14 @@ function showIntro() {
   return 1900;
 }
 function showGame() { $('#menu').hidden = true; $('#game').hidden = false; $('#jwEnd').hidden = true; buildPlates(); requestAnimationFrame(fitBoard); renderPlates(); renderStatus(); document.body.classList.add('game-running'); }
-function showMenu() { clearTimeout(ctl.aiTimer); clearTimeout(ctl.idleTimer); clearTimeout(introTimer); if ($('#jwIntro')) $('#jwIntro').hidden = true; ctl.state = null; ctl.pending = null; $('#game').hidden = true; $('#menu').hidden = false; $('#jwEnd').hidden = true; document.body.classList.remove('game-running'); }
+function resetActivity() { ctl.epoch++; clearTimeout(ctl.aiTimer); clearTimeout(ctl.idleTimer); clearTimeout(ctl.pending?.timer); clearTimeout(introTimer); clearTimeout(bannerTimer); ctl.pending = null; ctl.busy = false; ctl.aim = -1; drag = null; view.sel = -1; view.cursor = 0; view.hint = null; view.aimCell = -1; view.fx = []; view.parts = []; view.shake = 0; ctl.endShown = false; $('#jwBanner').classList.remove('show'); }
+function showMenu() { resetActivity(); if ($('#jwIntro')) $('#jwIntro').hidden = true; ctl.state = null; $('#game').hidden = true; $('#menu').hidden = false; $('#jwEnd').hidden = true; document.body.classList.remove('game-running'); }
 function myUser() {
   const me = window.BS_SOCIAL?.isLoggedIn?.() ? window.BS_SOCIAL.profile?.() : null;
   return me ? { username: me.username, photo: me.photo || null } : null;
 }
 function startLocal(mode) {
-  clearTimeout(ctl.aiTimer);
+  resetActivity(); const epoch = ctl.epoch;
   ctl.mode = mode; ctl.endShown = false; ctl.rewarded = false; ctl.busy = false; ctl.pending = null; ctl.aim = -1;
   ctl.receipt = 'jewels:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const me = window.BS_GAME_MENU?.playerName?.() || 'أنت';
@@ -594,12 +667,13 @@ function startLocal(mode) {
   ctl.state = createJewelsDuel(ctl.names, { first: mode === 'ai' ? (Math.random() < 0.5 ? 0 : 1) : 0 });
   ctl.shownSeq = 0; setBoard(ctl.state.board); showGame();
   const wait = showIntro();
-  setTimeout(() => { if (ctl.state?.winner !== null) return; play('go', 0.6); banner(mode === 'two' ? 'يبدأ ' + ctl.names[ctl.state.turn] : ctl.state.turn === 0 ? 'أنت تبدأ!' : 'الكمبيوتر يبدأ', ctl.state.turn === 1, 1200); }, wait);
+  setTimeout(() => { if (!currentMatch(epoch) || ctl.state.winner !== null) return; play('go', 0.6); banner(mode === 'two' ? 'يبدأ ' + ctl.names[ctl.state.turn] : ctl.state.turn === 0 ? 'أنت تبدأ!' : 'الكمبيوتر يبدأ', ctl.state.turn === 1, 1200); }, wait);
   scheduleHint();
   if (mode === 'ai' && ctl.state.turn === 1) ctl.aiTimer = setTimeout(aiMove, 1400 + wait);
 }
 function showEnd() {
   if (ctl.endShown) return; ctl.endShown = true;
+  const epoch = ctl.epoch;
   const s = ctl.state, w = s.winner, card = $('#jwEnd .jw-sheet-card');
   const iWon = ctl.mode === 'two' ? true : w === mySeat();
   const name = esc(ctl.names[w] || s.players[w]?.name || 'لاعب');
@@ -611,7 +685,7 @@ function showEnd() {
   card.classList.toggle('won', iWon);
   $('#jwAgain').textContent = ctl.mode === 'online' ? (room?.publicMatch ? 'مواجهة جديدة' : room?.me?.role === 'host' ? 'جولة جديدة' : 'بانتظار المضيف') : 'مواجهة جديدة';
   $('#jwAgain').disabled = ctl.mode === 'online' && !room?.publicMatch && room?.me?.role !== 'host';
-  setTimeout(() => { if (ctl.endShown) $('#jwEnd').hidden = false; }, 900);
+  setTimeout(() => { if (currentMatch(epoch) && ctl.endShown) $('#jwEnd').hidden = false; }, 900);
   play(iWon ? 'victory' : 'defeat', 0.8);
   if (!ctl.rewarded) {
     ctl.rewarded = true;
@@ -637,13 +711,14 @@ async function apply(next, { animate }) {
   ctl.bots = [0, 1].map((i) => Boolean(next.players?.find((p) => p.index === i)?.bot));
   ctl.users = [0, 1].map((i) => { const p = next.players?.find((x) => x.index === i); const hero = p?.look?.character; return p?.username ? { username: p.username, fallback: hero ? '/assets/heroes/face/' + hero + '.webp' : '' } : hero ? { photo: null, fallback: '/assets/heroes/face/' + hero + '.webp', username: '' } : null; });
   if (fresh) {
-    clearTimeout(ctl.aiTimer);
+    resetActivity();
     ctl.match = next.startedAt || 0; ctl.mode = 'online'; ctl.endShown = false; ctl.rewarded = false; ctl.pending = null; ctl.aim = -1;
     ctl.shownSeq = s.last ? s.last.seq - (next.stepOf ? 1 : 0) : 0;
     ctl.state = next.stepOf && s.last ? { ...s, players: s.players } : s;
     setBoard(next.stepOf && s.last ? s.last.before : s.board); showGame();
-    if (!s.last) { const wait = showIntro(); setTimeout(() => { play('go', 0.6); banner(s.turn === ctl.me ? 'أنت تبدأ!' : (ctl.names[s.turn] || 'الخصم') + ' يبدأ', s.turn !== ctl.me, 1200); }, wait); }
+    if (!s.last) { const wait = showIntro(), epoch = ctl.epoch; setTimeout(() => { if (!currentMatch(epoch)) return; play('go', 0.6); banner(s.turn === ctl.me ? 'أنت تبدأ!' : (ctl.names[s.turn] || 'الخصم') + ' يبدأ', s.turn !== ctl.me, 1200); }, wait); }
   }
+  const epoch = ctl.epoch;
   const prev = ctl.state;
   if (s.last && s.last.seq > ctl.shownSeq) {
     // the scores before this move, so the plates count up with it
@@ -651,7 +726,8 @@ async function apply(next, { animate }) {
     ctl.scores = before; document.querySelectorAll('.jw-plate').forEach((el) => { el.querySelector('.jw-score').textContent = before[Number(el.dataset.seat)]; });
     const mine = ctl.pending && ctl.pending.seq === s.last.seq;
     if (ctl.pending) { clearTimeout(ctl.pending.timer); ctl.pending = null; }
-    if (animate && !document.hidden) { ctl.busy = true; try { await animateLast(s.last, { skipSwap: Boolean(mine && s.last.kind === 'swap') }); } finally { ctl.busy = false; } }
+    if (animate && !document.hidden) { ctl.busy = true; renderPlates(); renderStatus(); try { await animateLast(s.last, { skipSwap: Boolean(mine && s.last.kind === 'swap') }); } finally { if (currentMatch(epoch)) ctl.busy = false; } }
+    if (!currentMatch(epoch)) return;
     ctl.shownSeq = s.last.seq;
   }
   ctl.state = s; setBoard(s.board);

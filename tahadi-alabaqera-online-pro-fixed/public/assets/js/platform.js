@@ -23,6 +23,6 @@ window.BS_UUID=()=>{if(typeof crypto.randomUUID==='function')return crypto.rando
   function syncMute(){const muted=window.BS_AUDIO?.getSettings?.().muted;document.querySelectorAll('[data-audio-toggle]').forEach(b=>{if(b.dataset.audioIcon==='vector')b.dataset.muted=String(!!muted);else b.textContent=muted?'🔇':'🔊';b.setAttribute('aria-label',muted?'تشغيل الصوت':'كتم الصوت')})}
   document.addEventListener('click',e=>{const installBtn=e.target.closest('[data-install]');if(installBtn)install();const audio=e.target.closest('[data-audio-toggle]');if(audio){window.BS_AUDIO?.toggleMuted();syncMute()}const settings=e.target.closest('[data-settings-open]');if(settings){buildSettings();document.querySelector('#bsSettings').classList.add('open');document.dispatchEvent(new Event('bs-ui-overlay'))}});
   window.addEventListener('bs-audio-change',syncMute);syncMute();
-  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js',{updateViaCache:'none'}).catch(()=>{}));
+  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js?v=33.9.12-quality1',{updateViaCache:'none'}).catch(()=>{}));
   window.BS_PLATFORM={toast,install,openSettings:()=>{buildSettings();document.querySelector('#bsSettings').classList.add('open');document.dispatchEvent(new Event('bs-ui-overlay'))}};
 })();

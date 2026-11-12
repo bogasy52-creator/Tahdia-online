@@ -8,7 +8,7 @@
    It also draws the table's effects: the card flying to the middle, a kill, a swap, a marble
    coming home, a burnt card. Sounds come from the shared audio manager. */
 import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.10';
-import { globalJackarooPosition, jackarooGateSteps } from './engines/jackaroo-engine.js?v=33.9.10-rules4';
+import { globalJackarooPosition, jackarooMoveTarget } from './engines/jackaroo-engine.js?v=33.9.12-quality1';
 
 const jkReduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 function jkEl(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
@@ -23,8 +23,7 @@ export function landingOf(board, state, owner, marble, steps, backward = false, 
   const g = boardGeometry(state), pos = state.players[owner].marbles[marble];
   if (pos < 0) return board.querySelector(`[data-track="${globalJackarooPosition(owner, 0, state)}"]`);
   // 33.9.8: the hole before the house is stepped over by its owner on the way in
-  if (!backward) steps = jackarooGateSteps(state, pos, steps, skip);
-  const end = backward ? (pos - steps >= 0 ? pos - steps : g.track + (pos - steps)) : pos + steps;
+  const end = jackarooMoveTarget(state, owner, marble, steps, backward, skip);
   if (end < g.track) return board.querySelector(`[data-track="${globalJackarooPosition(owner, end, state)}"]`);
   const lane = Math.min(3, end - g.track);
   return board.querySelector(`[data-safe="${owner}:${lane}"]`) || board.querySelector(`[data-home="${owner}:${lane}"]`);
@@ -80,8 +79,7 @@ function jkHole(el) {
 export function landingSpot(state, owner, marble, steps = 0, backward = false, enter = false, skip = true) {
   const g = boardGeometry(state), pos = state.players[owner].marbles[marble];
   if (enter || pos < 0) return { kind: 'track', at: globalJackarooPosition(owner, 0, state) };
-  if (!backward) steps = jackarooGateSteps(state, pos, steps, skip);
-  const end = backward ? (pos - steps >= 0 ? pos - steps : g.track + (pos - steps)) : pos + steps;
+  const end = jackarooMoveTarget(state, owner, marble, steps, backward, skip);
   if (end < g.track) return { kind: 'track', at: globalJackarooPosition(owner, end, state) };
   return { kind: 'lane', owner, at: Math.min(4, end - g.track) };
 }

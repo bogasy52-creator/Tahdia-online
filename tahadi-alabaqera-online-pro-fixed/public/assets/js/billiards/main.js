@@ -5,7 +5,7 @@
    60 frames a second with its sounds; online, the server's shot replays here to the same end.
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
-import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.10-pool1';
+import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.12-quality1';
 import { createTable } from '../board-table-v33.js?v=33.9.10';
 
 const { L, W, R } = POOL;
@@ -52,7 +52,7 @@ const Sound = (() => {
     ball(speed) { if (!on()) return; const v = Math.min(1, speed / 420); burst(3300 + v * 900, 3, 0.05, 0.06 + v * 0.55); ping(1850 + v * 500, 0.04, 0.03 + v * 0.16); },
     rail(speed) { if (!on()) return; const v = Math.min(1, speed / 450); burst(380, 0.9, 0.11, 0.05 + v * 0.42, 'lowpass'); ping(120, 0.09, 0.03 + v * 0.12, 0, 80); },
     pocket() { if (!on()) return; ping(170, 0.2, 0.42, 0, 70); burst(700, 0.8, 0.12, 0.3, 'lowpass'); burst(260, 0.7, 0.4, 0.12, 'lowpass', 0.09); },
-    cue(power) { if (!on()) return; burst(1600, 1.2, 0.06, 0.18 + power * 0.42); ping(980, 0.035, 0.08 + power * 0.1); },
+    cue(power) { window.dispatchEvent(new Event('bs-table-strike')); if (!on()) return; burst(1600, 1.2, 0.06, 0.18 + power * 0.42); ping(980, 0.035, 0.08 + power * 0.1); },
     foul() { if (!on()) return; ping(240, 0.2, 0.16, 0, 170); ping(180, 0.26, 0.14, 0.14, 120); },
     good() { if (!on()) return; ping(660, 0.1, 0.12); ping(990, 0.14, 0.1, 0.08); },
     win() { if (!on()) return; [523, 659, 784, 1046].forEach((f, i) => ping(f, 0.22, 0.13, i * 0.11)); },
@@ -118,7 +118,7 @@ class TableView {
     roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.fillStyle = '#3a1d0e'; g.fill(); g.restore();
     // walnut rails
     const wood = g.createLinearGradient(0, -RAIL, 0, W + RAIL);
-    wood.addColorStop(0, '#7a4423'); wood.addColorStop(0.08, '#5a2f17'); wood.addColorStop(0.5, '#4a2512'); wood.addColorStop(0.92, '#5a2f17'); wood.addColorStop(1, '#7a4423');
+    wood.addColorStop(0, '#79533b'); wood.addColorStop(0.08, '#473022'); wood.addColorStop(0.5, '#291d17'); wood.addColorStop(0.92, '#473022'); wood.addColorStop(1, '#79533b');
     roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.fillStyle = wood; g.fill();
     // grain
     g.save(); roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.clip();
@@ -133,16 +133,23 @@ class TableView {
       g.stroke();
     }
     g.restore();
+    // Cabinet joinery and two fine inlaid lines keep the rails substantial.
+    for (const inset of [1.4, 2.0]) {
+      roundRect(g,-RAIL+inset,-RAIL+inset,L+2*RAIL-2*inset,W+2*RAIL-2*inset,6-inset*.3);
+      g.lineWidth=.16;g.strokeStyle=inset===1.4?'#d7bd8966':'#130e09aa';g.stroke();
+    }
+    const joints=[[-RAIL,-RAIL,-CUSHION,-CUSHION],[L+RAIL,-RAIL,L+CUSHION,-CUSHION],[-RAIL,W+RAIL,-CUSHION,W+CUSHION],[L+RAIL,W+RAIL,L+CUSHION,W+CUSHION]];
+    for(const [x,y,xx,yy] of joints){g.beginPath();g.moveTo(x,y);g.lineTo(xx,yy);g.lineWidth=.25;g.strokeStyle='#120d0aaa';g.stroke();}
     // bevels
     g.lineWidth = this.px(1.2); g.strokeStyle = 'rgba(255,220,180,.28)'; roundRect(g, -RAIL + 0.6, -RAIL + 0.6, L + 2 * RAIL - 1.2, W + 2 * RAIL - 1.2, 6.4); g.stroke();
     g.strokeStyle = 'rgba(0,0,0,.45)'; g.strokeRect(-CUSHION - 0.4, -CUSHION - 0.4, L + 2 * CUSHION + 0.8, W + 2 * CUSHION + 0.8);
     // cloth on the cushions, then the bed under the lamp
-    g.fillStyle = '#0a5539'; g.fillRect(-CUSHION, -CUSHION, L + 2 * CUSHION, W + 2 * CUSHION);
+    g.fillStyle = '#0d3946'; g.fillRect(-CUSHION, -CUSHION, L + 2 * CUSHION, W + 2 * CUSHION);
     const bed = g.createRadialGradient(L / 2, W / 2, 6, L / 2, W / 2, L * 0.62);
-    bed.addColorStop(0, '#1fb383'); bed.addColorStop(0.5, '#138b62'); bed.addColorStop(1, '#0a5a3e');
+    bed.addColorStop(0, '#347b8c'); bed.addColorStop(0.5, '#276476'); bed.addColorStop(1, '#194857');
     g.fillStyle = bed; g.fillRect(0, 0, L, W);
     // 33.9.6: two lamps over the bed, and the edges falling into shade
-    for (const lx of [L * 0.3, L * 0.7]) { const lamp = g.createRadialGradient(lx, W / 2, 2, lx, W / 2, W * 0.75); lamp.addColorStop(0, 'rgba(255,255,230,.16)'); lamp.addColorStop(1, 'rgba(255,255,230,0)'); g.fillStyle = lamp; g.fillRect(0, 0, L, W); }
+    for (const lx of [L * 0.3, L * 0.7]) { const lamp = g.createRadialGradient(lx, W * .44, 2, lx, W * .44, W * .75); lamp.addColorStop(0, 'rgba(226,244,239,.11)'); lamp.addColorStop(1, 'rgba(226,244,239,0)'); g.fillStyle = lamp; g.fillRect(0, 0, L, W); }
     const shade = g.createLinearGradient(0, 0, 0, W); shade.addColorStop(0, 'rgba(0,0,0,.22)'); shade.addColorStop(0.12, 'rgba(0,0,0,0)'); shade.addColorStop(0.88, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,.22)');
     g.fillStyle = shade; g.fillRect(0, 0, L, W);
     // the cushion noses: a lighter edge along each, angled into the pockets
@@ -154,7 +161,11 @@ class TableView {
     ];
     for (const poly of cush) {
       g.beginPath(); poly.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath();
-      g.fillStyle = '#0c6142'; g.fill();
+      const cy=poly.reduce((sum,p)=>sum+p[1],0)/poly.length,cx=poly.reduce((sum,p)=>sum+p[0],0)/poly.length;
+      const vertical=Math.abs(poly[0][0]-poly[1][0])<.1;
+      const bevel=vertical?g.createLinearGradient(cx-CUSHION/2,0,cx+CUSHION/2,0):g.createLinearGradient(0,cy-CUSHION/2,0,cy+CUSHION/2);
+      bevel.addColorStop(0,'#123f4c');bevel.addColorStop(.35,'#2b6573');bevel.addColorStop(.65,'#255c6b');bevel.addColorStop(1,'#0e3441');
+      g.fillStyle = bevel; g.fill();
       g.beginPath(); g.moveTo(...poly[0]); g.lineTo(...poly[1]); g.lineWidth = this.px(1.4); g.strokeStyle = 'rgba(160,255,210,.16)'; g.stroke();
     }
     // the pockets: a hole under a leather liner, cut into rail and cushion
@@ -165,18 +176,30 @@ class TableView {
     for (const [x0, x1] of [[-RAIL + 1.2, -RAIL + 3.2], [L + RAIL - 3.2, L + RAIL - 1.2]]) { const gl = g.createLinearGradient(x0, 0, x1, 0); gl.addColorStop(0, 'rgba(255,230,200,0)'); gl.addColorStop(0.5, 'rgba(255,230,200,.18)'); gl.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gl; g.fillRect(x0, -RAIL, x1 - x0, W + 2 * RAIL); }
     g.restore();
     // chrome caps over the corners and the middles, where the pockets cut the rail
-    const cap = (x, y, r) => { const m = g.createLinearGradient(x - r, y - r, x + r, y + r); m.addColorStop(0, '#d9c27a'); m.addColorStop(0.4, '#8a6a2a'); m.addColorStop(0.65, '#e6cf8a'); m.addColorStop(1, '#5a4214'); g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = m; g.fill(); g.lineWidth = this.px(1); g.strokeStyle = 'rgba(0,0,0,.45)'; g.stroke(); };
-    for (const [x, y, r] of holes) cap(x, y, r + 2.5);
+    const cap = (x, y, r) => {
+      g.save();roundRect(g,-RAIL,-RAIL,L+2*RAIL,W+2*RAIL,7);g.clip();
+      if(Math.abs(x-mid)<1){
+        const bottom=y>W/2;g.translate(x,bottom?W:0);if(bottom)g.scale(1,-1);
+        roundRect(g,-9.3,-RAIL+.7,18.6,RAIL+5.5,3);g.fillStyle='#1d2423';g.fill();g.lineWidth=.25;g.strokeStyle='#8e826944';g.stroke();
+        roundRect(g,-8.6,-RAIL+1.6,17.2,RAIL+3.6,2.5);
+      }else{
+        const right=x>L/2,bottom=y>W/2;g.translate(right?L:0,bottom?W:0);g.scale(right?-1:1,bottom?-1:1);
+        g.beginPath();g.moveTo(-RAIL+1,-RAIL+1);g.lineTo(7,-RAIL+1);g.lineTo(7,-3);g.lineTo(-3,7);g.lineTo(-RAIL+1,7);g.closePath();g.fillStyle='#222927';g.fill();g.lineWidth=.3;g.strokeStyle='#9c8c6f55';g.stroke();
+        g.beginPath();g.moveTo(-RAIL+2.3,5);g.lineTo(-RAIL+2.3,-RAIL+2.3);g.lineTo(5,-RAIL+2.3);
+      }
+      g.lineWidth=.16;g.strokeStyle='#b5a48455';g.setLineDash([.45,.5]);g.stroke();g.restore();
+    };
+    for (const [x, y, r] of holes) cap(x, y, r + 1.65);
     for (const [x, y, r] of holes) {
-      g.beginPath(); g.arc(x, y, r + 1.7, 0, Math.PI * 2); g.fillStyle = '#2a1608'; g.fill();
-      g.beginPath(); g.arc(x, y, r + 1.1, 0, Math.PI * 2); g.lineWidth = 0.9; g.strokeStyle = '#6b3a18'; g.stroke();
+      g.beginPath(); g.arc(x, y, r + .8, 0, Math.PI * 2); g.fillStyle = '#171b19'; g.fill();
+      g.beginPath(); g.arc(x, y, r + .4, 0, Math.PI * 2); g.lineWidth = .55; g.strokeStyle = '#5d594c'; g.stroke();
       const hole = g.createRadialGradient(x, y, 0, x, y, r);
-      hole.addColorStop(0, '#000'); hole.addColorStop(0.75, '#050505'); hole.addColorStop(1, '#1d1d1d');
+      hole.addColorStop(0, '#010303'); hole.addColorStop(0.75, '#070b0c'); hole.addColorStop(1, '#242a28');
       g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = hole; g.fill();
     }
     void J;
     // brass sights on the rails
-    const sight = (x, y) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); g.fillStyle = '#fff6dc'; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 2 * this.dpr; g.fillRect(-0.95, -0.95, 1.9, 1.9); g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(-0.95, -0.95, 0.8, 0.8); g.restore(); };
+    const sight = (x, y) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); g.fillStyle = '#d7d5c6'; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 1 * this.dpr; g.fillRect(-.70,-.70,1.4,1.4);g.lineWidth=.1;g.strokeStyle='#f5eee0';g.strokeRect(-.70,-.70,1.4,1.4);g.restore(); };
     const rm = CUSHION + (RAIL - CUSHION) / 2;
     for (const k of [1, 2, 3, 5, 6, 7]) { sight((L * k) / 8, -rm); sight((L * k) / 8, W + rm); }
     for (const k of [1, 2, 3]) { sight(-rm, (W * k) / 4); sight(L + rm, (W * k) / 4); }
@@ -187,9 +210,12 @@ class TableView {
     g.setTransform(1, 0, 0, 1, 0, 0);
     const [ax, ay] = this.toScreen(0, 0), [bx, by] = this.toScreen(L, W), x0 = Math.min(ax, bx), y0 = Math.min(ay, by), w = Math.abs(bx - ax), h = Math.abs(by - ay);
     const tile = document.createElement('canvas'); tile.width = tile.height = 48; const tg = tile.getContext('2d'), img = tg.createImageData(48, 48);
-    for (let i = 0; i < img.data.length; i += 4) { const v = (Math.random() * 255) | 0; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 10; }
+    let fibre=1807;
+    for (let i = 0; i < img.data.length; i += 4) { fibre=(Math.imul(fibre,1664525)+1013904223)>>>0;const v=(fibre>>>24);img.data[i]=img.data[i+1]=img.data[i+2]=v;img.data[i+3]=7; }
     tg.putImageData(img, 0, 0);
     g.fillStyle = g.createPattern(tile, 'repeat'); g.fillRect(x0, y0, w, h);
+    g.setTransform(...this.m);g.save();g.translate(L*.5,W*.73);if(this.vertical)g.rotate(Math.PI/2);
+    g.textAlign='center';g.fillStyle='#d8e7e815';g.font='600 3.0px Arial,sans-serif';g.fillText('B O S R A J',0,0);g.font='1.35px Arial,sans-serif';g.fillText('T O U R N A M E N T   C L U B',0,3.5);g.restore();
   }
 
   /* one frame */
@@ -276,6 +302,9 @@ class TableView {
     const shine = g.createRadialGradient(X - r * 0.34, Y - r * 0.4, r * 0.04, X - r * 0.1, Y - r * 0.12, r * 1.08);
     shine.addColorStop(0, 'rgba(255,255,255,.85)'); shine.addColorStop(0.16, 'rgba(255,255,255,.22)'); shine.addColorStop(0.5, 'rgba(255,255,255,0)'); shine.addColorStop(0.86, 'rgba(0,0,0,.18)'); shine.addColorStop(1, 'rgba(0,0,0,.42)');
     g.beginPath(); g.arc(X, Y, r, 0, Math.PI * 2); g.fillStyle = shine; g.fill();
+    // Broad ceiling-light reflections and a small warm bounce give resin depth.
+    g.beginPath();g.ellipse(X-r*.25,Y-r*.40,r*.38,r*.14,-.35,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.23)';g.fill();
+    g.beginPath();g.arc(X+r*.15,Y+r*.16,r*.70,.22,1.85);g.strokeStyle='rgba(222,211,173,.18)';g.lineWidth=Math.max(.5,r*.10);g.stroke();
     g.restore();
   }
 
@@ -383,6 +412,7 @@ function render() {
   const remotePlace = !mine && ctl.remote?.cue && s.inHand ? ctl.remote.cue : null;
   if (remotePlace) view.balls[0] = remotePlace;
   view.draw({ aim, cue: remotePlace || cue, placing, kitchen: s.inHand && s.kitchen && (mine || remotePlace), guide: Boolean(aim) && !ctl.anim && (mine || ctl.display?.guide), illegal, ghostOnly: Boolean(ctl.remote && !mine) });
+  renderAimInfo();
 }
 
 /* ---------- shot playback ---------- */
@@ -451,6 +481,8 @@ function renderStatus() {
   const s = ctl.state; if (!s) return;
   $('#game').classList.toggle('idle', !myTurn());
   $('#biPower').classList.toggle('off', !myTurn());
+  for (const id of ['#biPower', '#biFine', '#biSpinBtn']) $(id).setAttribute('aria-disabled', String(!myTurn()));
+  renderShotContext();
   // while the balls roll the old line would mislead; the toast says what happened when they stop
   if (s.winner !== null || ctl.anim || (ctl.busy && ctl.mode !== 'ai')) { setStatus(''); return; }
   const name = ctl.names[s.turn] || s.players[s.turn]?.name || 'لاعب';
@@ -460,9 +492,7 @@ function renderStatus() {
   if (mine) {
     if (s.inHand && s.kitchen) hint = 'حط البيضاء ورا الخط واكسر';
     else if (s.inHand) hint = 'البيضاء بيدك: حرّكها وين ما تبي';
-    else if (onEight(s, s.turn)) hint = 'باقي الثمانية!';
-    else if (s.players[s.turn].group) hint = 'كراتك ' + GROUP_NAME[s.players[s.turn].group];
-    else hint = 'الطاولة مفتوحة';
+    else if (onEight(s, s.turn)) hint = 'الآن الثمانية للفوز';
   } else if (ctl.mode === 'ai') hint = 'يفكر…';
   setStatus(`${who}${hint ? ' <small>· ' + hint + '</small>' : ''}`);
 }
@@ -473,6 +503,38 @@ function toast(html, kind = '', ms = 1900) {
 }
 const FOUL = { scratch: 'البيضاء دخلت', no_hit: 'ما لمست ولا كرة', wrong_first: 'لمس كرة مو من كراته أول', eight_first: 'لمس الثمانية قبل وقتها', no_rail: 'ولا كرة وصلت الحافة', time: 'خلص الوقت' };
 const FOUL_ME = { scratch: 'البيضاء دخلت', no_hit: 'ما لمست ولا كرة', wrong_first: 'لمست كرة مو من كراتك أول', eight_first: 'لمست الثمانية قبل وقتها', no_rail: 'ولا كرة وصلت الحافة', time: 'خلص وقتك' };
+// Resolve the HUD from the actual table state; an opponent's cosmetic aim never changes it.
+function renderShotContext() {
+  const s = ctl.state; if (!s) return;
+  const group = s.players[s.turn]?.group;
+  $('#biTarget').textContent = s.phase === 'break' ? 'الكسر · خلف الخط' : onEight(s, s.turn) ? 'الهدف: 8' : group ? `${GROUP_NAME[group]} · باقي ${remaining(s, group).length}` : 'مفتوحة · 1–7 / 9–15';
+  const el = $('#biShotInfo'), l = s.last;
+  el.hidden = !l;
+  if (!l) { el.textContent = ''; el.classList.remove('foul'); return; }
+  const who = ctl.names[l.by] || s.players[l.by]?.name || 'لاعب';
+  let result;
+  if (l.foul) result = 'خطأ: ' + (FOUL[l.foul] || 'ضربة غير قانونية');
+  else if (l.result === 'win') result = 'حسم المباراة بالثمانية';
+  else if (l.result === 'loss') result = 'الثمانية دخلت قبل وقتها';
+  else if (l.spotted) result = 'الثمانية عادت لمكانها بعد الكسر';
+  else if (l.potted.length) result = 'دخلت ' + l.potted.join('، ') + (l.result === 'again' ? ' · يكمل دوره' : ' · انتقل الدور');
+  else result = 'لم تدخل كرة · انتقل الدور';
+  el.textContent = `${who}: ${result}`;
+  el.classList.toggle('foul', Boolean(l.foul));
+}
+function renderAimInfo() {
+  const s = ctl.state, el = $('#biAimInfo'); if (!s) return;
+  const angle = Math.atan2(ctl.aim.dir[1], ctl.aim.dir[0]) * 180 / Math.PI;
+  $('#biFine').setAttribute('aria-valuenow', angle.toFixed(1));
+  $('#biFine').setAttribute('aria-valuetext', `زاوية ${Math.round(angle)} درجة`);
+  if (!myTurn()) { el.textContent = ctl.anim || ctl.busy ? 'الضربة قيد التنفيذ…' : ''; el.classList.remove('warn'); return; }
+  const cue = cuePos(); if (!cue) { el.textContent = 'ضع البيضاء أولًا'; return; }
+  if (s.inHand && !canPlace(s, cue[0], cue[1])) { el.textContent = 'مكان البيضاء غير صالح'; el.classList.add('warn'); return; }
+  const guide = aimGuide(s.balls, cue, ctl.aim.dir);
+  const wrong = guide.kind === 'ball' && !legalTargets(s).includes(guide.n);
+  el.classList.toggle('warn', wrong);
+  el.textContent = guide.kind !== 'ball' ? 'التصويب: الحافة أولًا' : wrong ? `تنبيه: الكرة ${guide.n} ليست هدفك` : `اللمسة الأولى: ${guide.n} · هدف صحيح`;
+}
 function announce(s) {
   const l = s.last; if (!l) return;
   const key = l.seq + ':' + l.result + ':' + (l.foul || '') + ':' + s.turn; if (key === ctl.lastKey) return; ctl.lastKey = key;
@@ -524,7 +586,7 @@ function beginTurn() {
   if (humanTurn()) defaultAim();
   renderPlates(); renderStatus(); invalidate();
 }
-function setPower(p) { ctl.power = p; const el = $('#biPower'); el.style.setProperty('--p', p.toFixed(3)); el.setAttribute('aria-valuenow', String(Math.round(p * 100))); el.classList.toggle('on', p > 0.02); el.querySelector('b').textContent = p > 0.02 ? Math.round(p * 100) + '%' : 'اسحب لتحت وأفلت'; }
+function setPower(p) { ctl.power = p; const el = $('#biPower'); el.style.setProperty('--p', p.toFixed(3)); el.setAttribute('aria-valuenow', String(Math.round(p * 100))); el.setAttribute('aria-valuetext', Math.round(p * 100) + ' بالمئة'); el.classList.toggle('on', p > 0.02); el.querySelector('b').textContent = p > 0.02 ? Math.round(p * 100) + '%' : 'اسحب وأفلت للضرب'; }
 let aimSent = 0, aimTimer = 0;
 function shareAim() {
   if (ctl.mode !== 'online' || !myTurn()) return;
@@ -679,29 +741,42 @@ function rotateAim(a) { const [x, y] = ctl.aim.dir, c = Math.cos(a), s = Math.si
   el.addEventListener('keydown', (ev) => {
     if (!myTurn()) return;
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); setPower(Math.max(0, Math.min(1, ctl.power + (ev.key === 'ArrowDown' ? 0.05 : -0.05)))); invalidate(); }
-    else if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); shoot(ctl.power || 0.5); }
+    else if (ev.key === 'Home' || ev.key === 'Escape') { ev.preventDefault(); setPower(0); invalidate(); }
+    else if (ev.key === 'End') { ev.preventDefault(); setPower(1); invalidate(); }
+    else if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); shoot(ctl.power); }
   });
 }
 view.canvas.addEventListener('keydown', (ev) => {
   if (!myTurn()) return;
   if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { ev.preventDefault(); rotateAim((ev.key === 'ArrowRight' ? 1 : -1) * (ev.shiftKey ? 0.002 : 0.012)); }
   else if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); setPower(Math.max(0, Math.min(1, ctl.power + (ev.key === 'ArrowDown' ? 0.05 : -0.05)))); invalidate(); }
-  else if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); shoot(ctl.power || 0.5); }
+  else if (ev.key === 'Escape') { ev.preventDefault(); setPower(0); invalidate(); }
+  else if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); shoot(ctl.power); }
 });
 // spin
 {
   const sheet = $('#biSpinSheet'), ball = $('#biSpinBall'), btn = $('#biSpinBtn');
-  const paint = () => { for (const el of [ball, btn]) { el.style.setProperty('--sx', ctl.aim.spin[0].toFixed(3)); el.style.setProperty('--sy', ctl.aim.spin[1].toFixed(3)); } };
+  const paint = () => { for (const el of [ball, btn]) { el.style.setProperty('--sx', ctl.aim.spin[0].toFixed(3)); el.style.setProperty('--sy', ctl.aim.spin[1].toFixed(3)); } ball.setAttribute('aria-valuenow', String(Math.round(ctl.aim.spin[1] * 100))); ball.setAttribute('aria-valuetext', `دوران جانبي ${Math.round(ctl.aim.spin[0] * 100)} بالمئة، علوي ${Math.round(ctl.aim.spin[1] * 100)} بالمئة`); };
   const setFrom = (ev) => { const r = ball.getBoundingClientRect(); let sx = ((ev.clientX - r.left) / r.width - 0.5) / 0.39, sy = -((ev.clientY - r.top) / r.height - 0.5) / 0.39; const l = Math.hypot(sx, sy); if (l > 1) { sx /= l; sy /= l; } ctl.aim.spin = [Math.round(sx * 100) / 100, Math.round(sy * 100) / 100]; paint(); };
   let on = false;
   btn.addEventListener('click', () => { if (!myTurn()) return; sheet.hidden = false; paint(); ball.focus(); });
   ball.addEventListener('pointerdown', (ev) => { on = true; ball.setPointerCapture?.(ev.pointerId); setFrom(ev); });
   ball.addEventListener('pointermove', (ev) => { if (on) setFrom(ev); });
   ball.addEventListener('pointerup', () => { on = false; });
+  ball.addEventListener('pointercancel', () => { on = false; });
   ball.addEventListener('keydown', (ev) => { const k = { ArrowUp: [0, 0.1], ArrowDown: [0, -0.1], ArrowLeft: [-0.1, 0], ArrowRight: [0.1, 0] }[ev.key]; if (!k) return; ev.preventDefault(); let [sx, sy] = [ctl.aim.spin[0] + k[0], ctl.aim.spin[1] + k[1]]; const l = Math.hypot(sx, sy); if (l > 1) { sx /= l; sy /= l; } ctl.aim.spin = [Math.round(sx * 100) / 100, Math.round(sy * 100) / 100]; paint(); });
   $('#biSpinReset').addEventListener('click', () => { ctl.aim.spin = [0, 0]; paint(); });
-  $('#biSpinDone').addEventListener('click', () => { sheet.hidden = true; btn.focus(); });
-  sheet.addEventListener('click', (ev) => { if (ev.target === sheet) sheet.hidden = true; });
+  const close = () => { on = false; sheet.hidden = true; btn.focus(); };
+  $('#biSpinDone').addEventListener('click', close);
+  sheet.addEventListener('click', (ev) => { if (ev.target === sheet) close(); });
+  sheet.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') { ev.preventDefault(); close(); }
+    else if (ev.key === 'Tab') {
+      const first = ball, last = $('#biSpinDone');
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+  });
   paint();
 }
 
@@ -740,6 +815,8 @@ function showEnd() {
   $('#biEndTitle').innerHTML = ctl.mode === 'two' ? `${name} فاز` : iWon ? 'فزت!' : `${name} فاز`;
   const loser = esc(ctl.names[1 - w] || s.players[1 - w]?.name || '');
   $('#biEndText').innerHTML = l?.result === 'win' ? (ctl.mode === 'two' || !iWon ? `${name} نظّف كراته ودخّل الثمانية.` : 'نظّفت كراتك ودخّلت الثمانية.') : (l?.foul ? `الثمانية دخلت مع خطأ من ${loser}.` : `الثمانية دخلت قبل وقتها من ${loser}.`);
+  const counts = s.shotsBySeat;
+  $('#biEndStats').innerHTML = `<table class="bi-match-stats"><caption>ملخص المباراة · ${s.shots} ضربة</caption><thead><tr><th scope="col">اللاعب</th>${counts ? '<th scope="col">ضربات</th>' : ''}<th scope="col">أخطاء</th></tr></thead><tbody>${s.players.map((p, seat) => `<tr${seat === w ? ' class="winner"' : ''}><th scope="row">${esc(ctl.names[seat] || p.name)}</th>${counts ? `<td>${counts[seat]}</td>` : ''}<td>${s.fouls[seat]}</td></tr>`).join('')}</tbody></table>`;
   card.classList.toggle('won', iWon);
   $('#biAgain').textContent = ctl.mode === 'online' ? (room?.publicMatch ? 'مباراة جديدة' : room?.me?.role === 'host' ? 'جولة جديدة' : 'بانتظار المضيف') : 'مباراة جديدة';
   $('#biAgain').disabled = ctl.mode === 'online' && !room?.publicMatch && room?.me?.role !== 'host';

@@ -505,7 +505,8 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/uno-v33-9.css"
+    "assets/css/uno-v33-9.css",
+    "assets/css/uno-pro-v33-9-12.css"
   ],
   "wordbomb.html": [
     "assets/css/platform.css",
@@ -531,7 +532,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/carrom-club-v33-9-10.css"
+    "assets/css/carrom-club-v33-9-10.css",
+    "assets/css/game-quality-v33-9-12.css"
   ],
   "hockey.html": [
     "assets/css/hockey-v33-7.css",
@@ -555,7 +557,9 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/billiards-v33-9.css",
-    "/assets/css/tahdia-premium-v25.css"
+    "/assets/css/tahdia-premium-v25.css",
+    "assets/css/premium-refinements-v33-9-11.css",
+    "assets/css/game-quality-v33-9-12.css"
   ],
   "jewels.html": [
     "assets/css/platform.css",
@@ -570,6 +574,8 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/jewels-v33-9-5.css",
     "assets/css/jewels-mm-v33-9-9.css",
-    "/assets/css/tahdia-premium-v25.css"
+    "/assets/css/tahdia-premium-v25.css",
+    "assets/css/premium-refinements-v33-9-11.css",
+    "assets/css/game-quality-v33-9-12.css"
   ]
 }

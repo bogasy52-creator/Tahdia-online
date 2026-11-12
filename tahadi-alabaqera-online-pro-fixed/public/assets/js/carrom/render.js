@@ -1,9 +1,9 @@
-import {SIZE,POCKETS,aimCarrom} from './engine.js?v=33.9.10-club10';
+import {SIZE,POCKETS,aimCarrom} from './engine.js?v=33.9.12-quality1';
 // 33.9.6: a real club board — a lacquered rosewood frame, a maple surface with its grain under a lamp,
 // red-and-black markings, netted pockets — and coins turned from wood with grooves and a shine.
 const THEMES={
- walnut:{edge:['#5a2a16','#2e140a','#170904'],wood:['#f7deaa','#ebc584','#d9a965'],grain:[150,92,40],ink:'#3b2414',line:'#b8322c',cloth:'#0b242c',metal:'#e0bd72'},
- club:{edge:['#1f4a4c','#0f2a2e','#061517'],wood:['#f1ecd0','#dcd6ad','#c4bd8f'],grain:[110,104,60],ink:'#2b3b33',line:'#9a3a2c',cloth:'#091c28',metal:'#d8c28e'},
+ walnut:{edge:['#644331','#38251b','#1b1410'],wood:['#f2ead9','#e7d8b7','#cfb88f'],grain:[131,102,63],ink:'#3d3428',line:'#9b392f',cloth:'#0b242c',metal:'#c4ad82'},
+ club:{edge:['#314147','#17272d','#0c171d'],wood:['#efede3','#ddd9c8','#c3bda7'],grain:[113,107,85],ink:'#333e3f',line:'#944538',cloth:'#091c28',metal:'#bcc7bd'},
 };
 // value noise for the grain
 function noise2(seed){
@@ -22,7 +22,7 @@ function grainLayer(theme){
   const bend=n(x*.0035,y*.012)*9+n(x*.01,y*.04)*1.5;
   const streak=.5+.5*Math.sin(y*.42+bend*2.4);
   const fine=m(x*.02,y*.9);
-  const a=Math.pow(streak,14)*.16+Math.pow(fine,6)*.1;
+  const a=Math.pow(streak,14)*.045+Math.pow(fine,6)*.025;
   const i=(y*N+x)*4;d[i]=gr;d[i+1]=gg;d[i+2]=gb;d[i+3]=Math.round(Math.min(1,a)*255);
  }
  g.putImageData(img,0,0);return c;
@@ -56,13 +56,24 @@ function wood(ctx,theme) {
  const shine=b.createLinearGradient(0,0,1000,1000);shine.addColorStop(0,'#ffffff30');shine.addColorStop(.18,'#ffffff08');shine.addColorStop(.5,'#ffffff00');shine.addColorStop(.82,'#00000030');
  b.fillStyle=shine;b.fillRect(0,0,1000,1000);b.restore();
  rounded(b,9,9,982,982,48,null,'#ffffff2a',2);
+ // Four separate timber rails meet in miter joints, with a narrow brass inlay.
+ const rails=[[[7,7],[993,7],[935,65],[65,65]],[[993,7],[993,993],[935,935],[935,65]],[[993,993],[7,993],[65,935],[935,935]],[[7,993],[7,7],[65,65],[65,935]]];
+ rails.forEach((points,side)=>{
+  b.save();path(b,points,ramp(b,side%2?[0,0]:[0,0],side%2?[1000,0]:[0,1000],side===0||side===3?[theme.edge[0],theme.edge[1]]:[theme.edge[1],theme.edge[2]]),'#0a0907',1.5);
+  b.beginPath();points.forEach(([x,y],i)=>i?b.lineTo(x,y):b.moveTo(x,y));b.closePath();b.clip();
+  b.translate(500,500);b.rotate(side*Math.PI/2);b.translate(-500,-500);
+  for(let j=0;j<20;j++){b.beginPath();b.moveTo(20,12+j*2.4);b.bezierCurveTo(260,6+j*2.5,650,20+j*2.1,980,12+j*2.4);b.strokeStyle=j%3?'#b58b6210':'#100b0730';b.lineWidth=j%3?.7:1.1;b.stroke();}
+  b.restore();
+ });
+ rounded(b,15,15,970,970,38,null,'#dbc6a538',1.2);
+ rounded(b,55,55,890,890,18,null,theme.metal+'66',1.2);
  rounded(b,58,58,884,884,16,null,'#00000080',6);
  rounded(b,62,62,876,876,14,null,theme.metal+'aa',1.6);
  // the surface: maple under a lamp
  b.save();b.beginPath();if(b.roundRect)b.roundRect(66,66,868,868,12);else b.rect(66,66,868,868);b.clip();
  b.fillStyle=ramp(b,[100,80],[900,960],theme.wood);b.fillRect(66,66,868,868);
  b.drawImage(grainLayer(theme),66,66,868,868);
- const lamp=b.createRadialGradient(470,430,40,500,500,640);lamp.addColorStop(0,'#fff8e030');lamp.addColorStop(.55,'#ffffff00');lamp.addColorStop(1,'#3a1c0855');
+ const lamp=b.createRadialGradient(420,350,40,500,500,640);lamp.addColorStop(0,'#fffdf520');lamp.addColorStop(.55,'#ffffff00');lamp.addColorStop(1,'#30231835');
  b.fillStyle=lamp;b.fillRect(66,66,868,868);
  const inner=b.createLinearGradient(66,0,140,0);inner.addColorStop(0,'#00000040');inner.addColorStop(1,'#00000000');
  for(let side=0;side<4;side++){b.save();b.translate(500,500);b.rotate(side*Math.PI/2);b.translate(-500,-500);b.fillStyle=inner;b.fillRect(66,66,60,868);b.restore();}
@@ -81,12 +92,13 @@ function wood(ctx,theme) {
   path(b,[[ax+dx*4,ay+dy*4],[ax-dx*20,ay-dy*5],[ax-dx*5,ay-dy*20]],theme.ink);
   b.save();b.translate(x+dx*124,y+dy*124);b.rotate(Math.atan2(dy,dx));b.beginPath();b.arc(0,0,34,-1.2,1.2);b.strokeStyle=theme.ink;b.lineWidth=2;b.stroke();b.restore();
   // the pocket: a metal rim, a dark hole and its net
-  const ring=b.createRadialGradient(x-6,y-6,30,x,y,54);ring.addColorStop(0,'#000');ring.addColorStop(.74,'#0a0604');ring.addColorStop(.8,theme.metal);ring.addColorStop(.9,'#7a5a2a');ring.addColorStop(1,'#2a1a0c');
+  const ring=b.createRadialGradient(x-6,y-6,30,x,y,54);ring.addColorStop(0,'#000');ring.addColorStop(.72,'#070706');ring.addColorStop(.79,'#5c5142');ring.addColorStop(.84,'#c2b291');ring.addColorStop(.89,'#37312a');ring.addColorStop(1,'#171512');
   circle(b,x,y,54,ring);
   const hole=b.createRadialGradient(x+dx*6,y+dy*6,4,x,y,42);hole.addColorStop(0,'#000');hole.addColorStop(1,'#140d08');
   circle(b,x,y,42,hole);
   b.save();b.beginPath();b.arc(x,y,40,0,Math.PI*2);b.clip();
-  for(let i=-5;i<=5;i++){line(b,x-44,y+i*8+ i*.6,x+44,y+i*8-i*.6,'#6b5a4a44',1);line(b,x+i*8,y-44,x+i*8,y+44,'#6b5a4a44',1);}
+  for(let i=-5;i<=5;i++){line(b,x-44,y+i*8+ i*.6,x+44,y+i*8-i*.6,'#92806b22',.8);line(b,x+i*8,y-44,x+i*8,y+44,'#92806b22',.8);}
+  const depth=b.createRadialGradient(x,y+14,3,x,y,43);depth.addColorStop(0,'#0000');depth.addColorStop(.55,'#0008');depth.addColorStop(1,'#000e');circle(b,x,y,42,depth);
   b.restore();
  }
  circle(b,500,500,112,null,theme.ink,2.4);circle(b,500,500,100,null,theme.line,2);
@@ -97,6 +109,9 @@ function wood(ctx,theme) {
  circle(b,500,500,20,theme.line,theme.ink,1.6);circle(b,500,500,9,theme.wood[0]);
  b.font='700 13px system-ui,sans-serif';b.textAlign='center';b.fillStyle=theme.ink+'88';
  b.fillText('B O S R A J',500,682);
+ rounded(b,417,21,166,24,5,'#211912','#d2b98755',1);
+ b.font='600 10px system-ui,sans-serif';b.fillStyle='#d0bc98';b.fillText('B O S R A J   ·   C A R R O M',500,37);
+ for(const [x,y] of [[270,33],[730,33],[270,967],[730,967]]){circle(b,x,y,3,'#bca67c','#21170e',.8);line(b,x-1.5,y,x+1.5,y,'#413728',.7);}
  return c;
 }
 const sprites=new Map();
@@ -107,15 +122,15 @@ function disc(kind) {
  if(look){const cv=document.createElement('canvas');cv.width=cv.height=160;window.BS_LOOKS.drawStriker(cv.getContext('2d'),80,78,62,look);sprites.set(kind+look,cv);return cv;}
  const canvas=document.createElement('canvas');canvas.width=canvas.height=160;
  const c=canvas.getContext('2d'),X=80,Y=78,r=62;
- const tone={light:['#fff8e0','#ead09a','#b38a4f','#8a6332'],dark:['#6b7076','#26292e','#101215','#000'],queen:['#ffb3b8','#e0283f','#8e0f22','#4a0612'],striker:['#ffffff','#eef2f2','#c4d0d0','#8aa0a0']}[kind]||['#fff','#eee','#ccc','#999'];
+ const tone={light:['#f6eddb','#e0cba4','#ac8b5c','#725537'],dark:['#535554','#303332','#171b1b','#070b0b'],queen:['#da7c73','#a63235','#711b24','#3d0b15'],striker:['#ffffff','#f0f1ea','#c5cec6','#7e918c']}[kind]||['#fff','#eee','#ccc','#999'];
  // the shadow under it
- c.save();c.shadowColor='#000a';c.shadowBlur=10;c.shadowOffsetX=3;c.shadowOffsetY=7;circle(c,X,Y+3,r,'#000');c.restore();
+ c.save();c.shadowColor='#0008';c.shadowBlur=6;c.shadowOffsetX=2;c.shadowOffsetY=6;circle(c,X,Y+3,r,'#000');c.restore();
  // the edge, then the face
  circle(c,X,Y+3,r,tone[3]);
  const face=c.createRadialGradient(X-r*.35,Y-r*.45,r*.1,X,Y,r*1.05);face.addColorStop(0,tone[0]);face.addColorStop(.45,tone[1]);face.addColorStop(1,tone[2]);
  circle(c,X,Y,r-1,face);
  // turned grooves
- for(const k of [.84,.6,.34]){c.beginPath();c.arc(X,Y,r*k,0,Math.PI*2);c.lineWidth=2.6;c.strokeStyle=kind==='light'?'#8a63328c':kind==='striker'?'#5f8d8a99':'#00000099';c.stroke();
+ for(const k of [.87,.72,.34]){c.beginPath();c.arc(X,Y,r*k,0,Math.PI*2);c.lineWidth=1.8;c.strokeStyle=kind==='light'?'#8a633270':kind==='striker'?'#45625c99':'#00000080';c.stroke();
   c.beginPath();c.arc(X,Y+1.2,r*k,0,Math.PI*2);c.lineWidth=1.2;c.strokeStyle=kind==='dark'?'#ffffff22':'#ffffff66';c.stroke();}
  if(kind==='striker'){
   const pts=[];for(let i=0;i<16;i++){const a=i*Math.PI/8-Math.PI/2,rad=i%2?r*.2:r*.46;pts.push([X+Math.cos(a)*rad,Y+Math.sin(a)*rad]);}
@@ -124,7 +139,7 @@ function disc(kind) {
  }
  if(kind==='queen'){circle(c,X,Y,r*.22,'#f6d38f','#fff1c4',1.5);}
  // the shine
- const hi=c.createRadialGradient(X-r*.38,Y-r*.48,0,X-r*.3,Y-r*.4,r*.75);hi.addColorStop(0,'#ffffffcc');hi.addColorStop(.35,'#ffffff40');hi.addColorStop(1,'#ffffff00');
+ const hi=c.createRadialGradient(X-r*.38,Y-r*.48,0,X-r*.3,Y-r*.4,r*.75);hi.addColorStop(0,'#ffffff50');hi.addColorStop(.35,'#ffffff18');hi.addColorStop(1,'#ffffff00');
  circle(c,X,Y,r-2,hi);
  sprites.set(kind,canvas);return canvas;
 }
@@ -173,6 +188,7 @@ export function createCarromRenderer(canvas) {
  function setTheme(key){lastTheme=THEMES[key]?key:'walnut';background=null;}
  function point(clientX,clientY,seat=0){
   const r=canvas.getBoundingClientRect(),scale=Math.min(r.width,r.height)/1000;
+  if(!(scale>0)||!Number.isFinite(clientX)||!Number.isFinite(clientY))return null;
   const x=(clientX-r.left-(r.width-1000*scale)/2)/scale,y=(clientY-r.top-(r.height-1000*scale)/2)/scale;
   return seat?{x:1000-x,y:1000-y}:{x,y};
  }

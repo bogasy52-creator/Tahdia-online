@@ -9,12 +9,12 @@ import { createGame, remoteHit, step, L } from '../public/assets/js/hockey/core.
 
 const read = (file) => readFile(new URL('../' + file, import.meta.url), 'utf8');
 
-test('jackaroo: a marble just out on its base may swap; a marble on another base may not be taken', () => {
+test('jackaroo: both marbles on their own bases remain protected from swaps', () => {
   const s = Jack.createJackarooGame(['أ', 'ب', 'ج', 'د'], { arm: 19, home: 'fill' });
   s.turn = 0; s.players.forEach((p) => { p.marbles = [-1, -1, -1, -1]; });
   s.players[0].marbles[0] = 0; s.players[1].marbles[0] = 5; s.players[3].marbles[0] = 0; s.hands[0] = ['JS'];
   const swaps = Jack.getJackarooActions(s, 0).filter((a) => a.type === 'swap');
-  assert.ok(swaps.some((a) => a.marble === 0 && a.otherOwner === 1), 'your marble on its base swaps');
+  assert.ok(!swaps.some((a) => a.marble === 0), 'your marble on its own base is protected');
   assert.ok(!swaps.some((a) => a.otherOwner === 3), 'a marble on its own base is protected');
 });
 

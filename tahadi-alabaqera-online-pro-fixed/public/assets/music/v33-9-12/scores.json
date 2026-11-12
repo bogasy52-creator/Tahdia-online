@@ -1,0 +1,322 @@
+{
+  "lobby": {
+    "title": "After Hours",
+    "bpm": 74,
+    "mood": "lounge",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 77.83784580498866,
+    "file": "lobby.mp3",
+    "bytes": 1278738,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "billiards": {
+    "title": "Velvet & Ivory",
+    "bpm": 82,
+    "mood": "pool",
+    "bars": 32,
+    "lead": 1.0,
+    "loop": 93.6585260770975,
+    "file": "billiards.mp3",
+    "bytes": 1531606,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      11,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "carrom": {
+    "title": "Maple Room",
+    "bpm": 94,
+    "mood": "acoustic",
+    "bars": 32,
+    "lead": 1.0,
+    "loop": 81.70213151927437,
+    "file": "carrom.mp3",
+    "bytes": 1340595,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      24,
+      33,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "baloot": {
+    "title": "Quiet Majlis",
+    "bpm": 78,
+    "mood": "acoustic",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 73.84614512471656,
+    "file": "baloot.mp3",
+    "bytes": 1214791,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      24,
+      33,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "jackaroo": {
+    "title": "Four Corners",
+    "bpm": 88,
+    "mood": "acoustic",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 65.45453514739229,
+    "file": "jackaroo.mp3",
+    "bytes": 1080626,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      24,
+      33,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "chaos": {
+    "title": "Colour Club",
+    "bpm": 104,
+    "mood": "groove",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 55.384625850340136,
+    "file": "chaos.mp3",
+    "bytes": 919293,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "snakes": {
+    "title": "Easy Steps",
+    "bpm": 92,
+    "mood": "groove",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 62.60868480725624,
+    "file": "snakes.mp3",
+    "bytes": 1035067,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "zahra": {
+    "title": "Evening Dice",
+    "bpm": 86,
+    "mood": "lounge",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 66.97673469387755,
+    "file": "zahra.mp3",
+    "bytes": 1104868,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "dice": {
+    "title": "Amber Lounge",
+    "bpm": 90,
+    "mood": "lounge",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 64.0,
+    "file": "dice.mp3",
+    "bytes": 1057220,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "hockey": {
+    "title": "Clean Break",
+    "bpm": 112,
+    "mood": "sport",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 51.42857142857143,
+    "file": "hockey.mp3",
+    "bytes": 856181,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "focus": {
+    "title": "Still Water",
+    "bpm": 68,
+    "mood": "focus",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 84.70587301587301,
+    "file": "focus.mp3",
+    "bytes": 1388661,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      0,
+      32,
+      24,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "quiz": {
+    "title": "The Next Answer",
+    "bpm": 90,
+    "mood": "focus",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 64.0,
+    "file": "quiz.mp3",
+    "bytes": 1057223,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      0,
+      32,
+      24,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "words": {
+    "title": "Between Lines",
+    "bpm": 80,
+    "mood": "acoustic",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 72.0,
+    "file": "words.mp3",
+    "bytes": 1185117,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      24,
+      33,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "arcade": {
+    "title": "Night Drive",
+    "bpm": 108,
+    "mood": "sport",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 53.333333333333336,
+    "file": "arcade.mp3",
+    "bytes": 886692,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "party": {
+    "title": "Good Company",
+    "bpm": 100,
+    "mood": "groove",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 57.6,
+    "file": "party.mp3",
+    "bytes": 954820,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  },
+  "jewels": {
+    "title": "Cut Glass",
+    "bpm": 102,
+    "mood": "groove",
+    "bars": 24,
+    "lead": 1.0,
+    "loop": 56.470589569161,
+    "file": "jewels.mp3",
+    "bytes": 936845,
+    "sample_rate": 44100,
+    "integrated_target_lufs": -19,
+    "true_peak_ceiling_dbtp": -2,
+    "programs": [
+      4,
+      32,
+      12,
+      89
+    ],
+    "composition": "Original, deterministic arrangement"
+  }
+}

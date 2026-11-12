@@ -1,0 +1,48 @@
+/* 33.9.11 — Master Match premium arena refinement: remove toy-like outlines and use a restrained competitive HUD. */
+:is(html,#x) body.jewels-page.mm2{
+ --mm-deep:#07131b;--mm-panel:#102733;--mm-panel-hi:#183b48;--mm-line:#294653;
+ --mm-me:#54d8c2;--mm-me-d:#176f70;--mm-foe:#f08b76;--mm-foe-d:#813f50;
+ --mm-gold:#e8c77d;--mm-gold-d:#87632e;--mm-green:#75d6a2;--mm-green-d:#287c61;
+ --mm-out:0 2px 8px #0008;
+ background:radial-gradient(100% 65% at 50% 0%,#1a4852 0%,#102b37 42%,#07131b 100%) fixed!important;
+}
+.mm2 .mm-bg::before{opacity:.16;animation-duration:150s}
+.mm2 .mm-bg::after{background:radial-gradient(70% 90% at 50% 100%,#3bc9b522,transparent 72%)}
+.mm2 .jw-icon,.mm2 .jw-ghost,.mm2 .jw-cta{border:1px solid #ffffff24;border-radius:14px;box-shadow:inset 0 1px 0 #ffffff20,0 8px 22px #0004;text-shadow:none}
+.mm2 .jw-icon{background:linear-gradient(180deg,#1b3c49,#102630)}
+.mm2 .jw-cta{background:linear-gradient(180deg,#82e0bd,#2a9d82);color:#06231d;font-size:18px}
+.mm2 .jw-ghost{background:linear-gradient(180deg,#315966,#1b3945);color:#f2fbfa}
+.mm2 .jw-hero,.mm2 .jw-panel,.mm2 .jw-sheet-card{border:1px solid #ffffff24;border-radius:22px;background:linear-gradient(155deg,#173744ee,#0b202bee);box-shadow:inset 0 1px 0 #ffffff18,0 18px 44px #0006}
+.mm2 .jw-hero-copy h1{color:#f4d99b;text-shadow:0 3px 18px #0008}
+.mm2 .jw-modes button{border:1px solid #ffffff26;border-radius:14px;background:linear-gradient(180deg,#1d414d,#102b36);box-shadow:none}
+.mm2 .jw-modes button[aria-checked=true]{background:linear-gradient(180deg,#f1d99e,#c89e57);color:#17232a;box-shadow:0 0 0 2px #f1d99e44}
+.mm2 .jw-wrap canvas{border-radius:18px;filter:drop-shadow(0 16px 24px #0008)}
+.mm2 .jw-face,.mm2 .jw-face .bs-avatar,.mm2 .jw-face .jw-letter{border-radius:15px;border:1px solid #ffffff45;box-shadow:0 8px 20px #0005}
+.mm2 .jw-score,.mm2 .jw-status,.mm2 .jw-boost b{ text-shadow:0 2px 8px #0008 }
+.mm2 .jw-banner{border:1px solid #ffffff30;border-radius:16px;background:linear-gradient(120deg,#286d75,#163c4b);box-shadow:0 18px 44px #0008;clip-path:none;text-shadow:0 2px 8px #0008}
+.mm2 .jw-banner.foe{background:linear-gradient(120deg,#9b5360,#4d2939)}
+.mm2 .jw-banner.gold{background:linear-gradient(120deg,#e9cf91,#9c7136);color:#17232a}
+.mm2 .jw-boost .mm-tank{border:1px solid #ffffff30;border-radius:18px;background:#091c25;box-shadow:inset 0 5px 12px #0008,0 8px 18px #0004}
+.mm2 .jw-boost.ready .mm-tank{border-color:var(--bc);box-shadow:inset 0 5px 12px #0008,0 0 24px color-mix(in srgb,var(--bc) 42%,transparent)}
+.mm2 .mm-side.me,.mm2 .mm-side.foe{background:linear-gradient(145deg,#173b48,#0b202c);clip-path:none;border-bottom:1px solid #ffffff20}
+.mm2 .mm-side.foe{background:linear-gradient(145deg,#49313c,#211e2a)}
+.mm2 .mm-side .bs-avatar,.mm2 .mm-side .jw-letter{border:1px solid #ffffff60;border-radius:22px;box-shadow:0 12px 28px #0007}
+.mm2 .mm-vsbig b{border:1px solid #fff8;background:linear-gradient(145deg,#f3dda5,#a77a3e);color:#1c2730;text-shadow:none;box-shadow:0 12px 28px #0008}
+.mm2 .jw-end-scores .mm-endp{border:1px solid #ffffff35;border-radius:16px;box-shadow:inset 0 1px 0 #ffffff20,0 8px 20px #0005}
+@media(prefers-reduced-motion:reduce){.mm2 .mm-bg::before{animation:none}}
+
+/* 33.9.11 — restrained tournament-room finish and clearer touch controls. */
+.billiards-page{background:radial-gradient(95% 65% at 50% 0%,#123a2b 0%,#071a14 48%,#020806 100%) fixed,var(--bi-night)}
+.bi-app{max-width:760px}
+.bi-top{padding:7px 9px;border:1px solid #ffffff12;border-radius:18px;background:linear-gradient(110deg,#0b2119dd,#06130edd);box-shadow:0 12px 30px #0005}
+.bi-brand{font-weight:850;letter-spacing:.02em}
+.bi-hero{border-color:#b995514d;box-shadow:0 24px 65px #000b,inset 0 1px 0 #ffffff20}
+.bi-icon,.bi-modes button,.bi-seg button{transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.bi-icon:active,.bi-modes button:active,.bi-seg button:active{transform:scale(.97)}
+.bi-stage{filter:drop-shadow(0 18px 28px #0008)}
+.bi-wrap{border:1px solid #d9b66a55;border-radius:14px;overflow:hidden;box-shadow:0 0 0 5px #071a14,0 0 0 6px #d9b66a35}
+.bi-dock,.bi-plates{border-color:#ffffff1b}
+.bi-power,.bi-fine{border-color:#d9b66a55}
+.bi-toast{backdrop-filter:blur(14px);border-color:#e3b96199;box-shadow:0 20px 55px #000c,0 0 24px #e3b96118}
+.bi-sheet-card{border-color:#d9b66a66;box-shadow:inset 0 1px 0 #ffffff20,0 30px 80px #000d}
+@media(prefers-reduced-motion:reduce){.bi-icon,.bi-modes button,.bi-seg button{transition:none}}

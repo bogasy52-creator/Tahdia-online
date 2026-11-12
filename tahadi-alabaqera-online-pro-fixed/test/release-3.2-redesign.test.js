@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -44,6 +45,6 @@ test('genius question-selection board is a compact category-card grid with no sc
 
 test('3.2 PWA cache includes every new presentation layer', async()=>{
   const sw=await read('public/service-worker.js');
-  assert.match(sw,/busraj-games-v66-release-33-9-10/);
+  assertCurrentCache(sw);
   for(const asset of ['/assets/css/snakes-premium.css','/assets/css/zahra-premium.css','/assets/css/jackaroo-next.css','/assets/css/quiz-board-v2.css']) assert.ok(sw.includes(asset),`missing ${asset}`);
 });

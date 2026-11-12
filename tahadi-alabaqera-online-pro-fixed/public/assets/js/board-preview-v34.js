@@ -1,4 +1,4 @@
-import {previewJackarooAction} from './engines/jackaroo-engine.js?v=33.9.10-rules4';
+import {previewJackarooAction} from './engines/jackaroo-engine.js?v=33.9.12-quality1';
 import {applyLudoMove} from './engines/ludo-engine.js?v=33.9.10';
 import {boardGeometry} from './engines/board-geometry-v29.js?v=33.9.10';
 import {paintBoardPreview,clearBoardPreview} from './board-petals-v29.js?v=33.9.10';

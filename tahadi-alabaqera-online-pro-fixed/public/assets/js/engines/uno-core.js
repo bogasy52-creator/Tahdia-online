@@ -181,10 +181,12 @@ export function advanceUno(m, now) {
     applyUno(m, player, unoBotAction(m, u.turn), now);
     u.thinkAt = now + 1050; m.version++;
   } else if (now >= u.deadline) {
-    const amount = u.pending || 1; draw(u, u.turn, amount);
+    // A matching draw leaves the turn open only to play that card or pass.
+    // Expiring that choice must not charge the player for a second draw.
+    const amount = u.drawn ? 0 : u.pending || 1; draw(u, u.turn, amount);
     u.pending = 0; u.pendingFace = null; u.missed = null;
     const previous = u.turn; setTurn(m, nextSeat(u, previous), now);
-    event(m, 'timeout', previous, player.name + ' انتهى وقته وسحب ' + amount); m.version++;
+    event(m, 'timeout', previous, player.name + (amount ? ' انتهى وقته وسحب ' + amount : ' انتهى وقته ومرّر الدور')); m.version++;
   }
 }
 export function unoView(m, id) {

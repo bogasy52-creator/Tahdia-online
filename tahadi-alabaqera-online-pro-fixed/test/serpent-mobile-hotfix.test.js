@@ -1,3 +1,4 @@
+import {assertCurrentCache,releaseVersion} from './release-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -20,7 +21,7 @@ test('mobile boost and floating joystick no longer overlap on the right',async()
 });
 test('hotfix assets bust the previous mobile cache',async()=>{
  const html=await src('public/serpent.html'),sw=await src('public/service-worker.js');
- assert.match(html,/app-serpent\.css\?v=v?33\.9\.10/);
- assert.match(html,/serpent-ui\.js\?v=v?33\.9\.10/);
- assert.match(sw,/busraj-games-v66-release-33-9-10/);
+ assert.ok(html.includes('app-serpent.css?v='+releaseVersion));
+ assert.ok(html.includes('serpent-ui.js?v='+releaseVersion));
+ assertCurrentCache(sw);
 });

@@ -1,0 +1,12 @@
+BUSRAJ ORIGINAL SCORES — 33.9.12
+
+Original, reproducible compositions and arrangements created for this project.
+Instrument rendering: FluidSynth with the TimGM6mb General MIDI SoundFont.
+SoundFont credits: Tim Brechbill (2004), David Bolton (2010).
+Sample-library license: GPL-2. The SoundFont itself is not bundled here.
+SoundFont source: https://www.timbrechbill.com
+Debian package: timgm6mb-soundfont.
+
+The build script, instrument programs, score seeds, tempo, loop points and
+mastering targets are included with the project. No commercial song or
+recording was copied into these arrangements.
