@@ -40,6 +40,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
   function clockOf(next){
     if(!clock)return;
     const s=next.state;
+    if(s?.mode==='race'&&game==='jewels'){clock.clear();return;}
     if(next.stepOf||next.status!=='playing'||!next.turnDeadline||!s||s.winner!=null||s.winnerTeam!=null){clock.clear();return;}
     const base=Number(next.serverNow)||Date.now(),got=Number(next.clientReceivedAt)||Date.now(),seat=s.turn,mine=seat===next.me?.index;
     const who=(next.players||[]).find(p=>p.index===seat);

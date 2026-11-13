@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import { createDOM, MiniElement } from './dom-harness.mjs';
-import * as engine from '../public/assets/js/engines/jewels-duel-engine.js';
+import * as engine from '../public/assets/js/engines/jewels-race-engine.js';
 
 // The page's real DOM, input handlers and deterministic engine run together. Only the
 // canvas drawing surface and the network transport are replaced; no gameplay is mocked.
@@ -14,6 +14,7 @@ async function setup() {
     createLinearGradient: () => ({ addColorStop() {} }),
     createRadialGradient: () => ({ addColorStop() {} }),
     createConicGradient: () => ({ addColorStop() {} }),
+    measureText: text => ({ width: String(text).length * 8 }),
   }, { get: (target, key) => target[key] ?? (() => {}), set: (target, key, value) => (target[key] = value, true) });
   MiniElement.prototype.getContext = () => drawing;
   const h = await createDOM('jewels.html', {
@@ -29,12 +30,14 @@ async function setup() {
     const size = parseFloat(canvas.style.width) || 320;
     return { left: 0, top: 0, width: size, height: size, right: size, bottom: size };
   };
+  const rendererSource = (await readFile(new URL('../public/assets/js/jewels/studio-renderer.js', import.meta.url), 'utf8')).replace(/\bexport /g, '');
+  vm.runInContext(rendererSource, h.context);
   const source = (await readFile(new URL('../public/assets/js/jewels/main.js', import.meta.url), 'utf8')).replace(/^import[^\n]+\n/gm, '');
   vm.runInContext(source, h.context);
   function paint() { const jobs = [...frames.values()]; frames.clear(); for (const job of jobs) job(1000); }
   function key(key, extra = {}) { grid.dispatchEvent({ type: 'keydown', key, preventDefault() {}, ...extra }); }
   function pointer(type, cell, extra = {}) {
-    const size = parseFloat(canvas.style.width) || 320, pad = Math.round(size * .042), unit = (size - 2 * pad) / 8;
+    const { size, pad, cell: unit } = h.context.BS_JEWELS.geometry;
     canvas.dispatchEvent({ type, pointerId: 1, isPrimary: true, button: 0, clientX: pad + (cell % 8 + .5) * unit, clientY: pad + (Math.floor(cell / 8) + .5) * unit, preventDefault() {}, ...extra });
   }
   function start() { h.doc.getElementById('jwStartTwo').click(); paint(); paint(); }
@@ -82,7 +85,7 @@ test('Jewels ignores secondary buttons and pointers without losing the primary d
 // an unresolved move; checks that prediction never changes authoritative scores/state.
 test('Jewels locks pending online actions until the authoritative move or rejection', async () => {
   const h = await setup();
-  const state = engine.createJewelsDuel(['أنت', 'خصم'], { seed: 123, first: 0 });
+  const state = engine.createJewelsRace(['أنت', 'خصم'], { seed: 123 });
   state.players[0].charge = [22, 26, 32];
   const room = { state, startedAt: 123, me: { index: 0, role: 'host' }, players: [{ index: 0, name: 'أنت' }, { index: 1, name: 'خصم' }] };
   await h.table.options.apply(room, { animate: false });
@@ -96,12 +99,13 @@ test('Jewels locks pending online actions until the authoritative move or reject
   await h.api.swap(a, b); h.api.booster(0, 0);
   assert.equal(h.sent.length, 1);
   assert.equal(h.sent[0].type, 'jewels_swap');
+  assert.equal(h.sent[0].seq, 0, 'the outgoing sequence belongs to this player');
   h.table.options.onError('تم رفض الحركة'); await flush();
   assert.equal(h.api.busy, false);
   assert.equal(JSON.stringify(h.api.state), before);
   assert.equal(h.doc.querySelector('.jw-boost').disabled, false);
   await h.api.swap(a, b);
-  const accepted = engine.playJewelsSwap(state, 0, a, b);
+  const accepted = engine.playJewelsRaceSwap(state, 0, a, b);
   await h.table.options.apply({ ...room, state: accepted }, { animate: false });
   assert.equal(h.api.busy, false);
   assert.equal(h.api.state.seq, 1);

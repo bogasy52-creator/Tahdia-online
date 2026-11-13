@@ -17,6 +17,7 @@ import { createPoolGame, playPoolShot, poolTimeout, choosePoolShot, poolProgress
 // 33.9.10: carrom is a table of two like billiards: the room plays each shot to its end
 import { createCarromDuel, playCarromShot, carromTimeout, chooseCarromShot, carromProgress } from '../../public/assets/js/carrom/engine.js';
 import { createJewelsDuel, playJewelsSwap, playJewelsBooster, playJewelsAuto, jewelsTimeout, jewelsProgress, jewelsMoveMs } from '../../public/assets/js/engines/jewels-duel-engine.js';
+import {createJewelsRace,playJewelsRaceSwap,playJewelsRaceBooster,finishJewelsRace,advanceJewelsRace,chooseJewelsRaceMove} from '../../public/assets/js/engines/jewels-race-engine.js';
 import { chooseJackarooMove, chooseLudoMove, chooseSnakePower, shouldBankDice } from '../../public/assets/js/engines/bot-strategy.js';
 import { Career } from '../career/core.js';
 
@@ -97,13 +98,13 @@ function makeBot(seat, rng, taken) {
   };
 }
 
-function createState(game, names, variant, rng) {
+function createState(game, names, variant, rng, now=Date.now()) {
   if (game === 'snakes') return createSnakesServerGame(names, { variant: variant || 'classic' });
   if (game === 'zahra') return createLudoGame(names);
   // 33.7.0: four seats play on the board of the picture: 19 places a seat, the home lane filled
   if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length), home: 'fill' });
   if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
-  if (game === 'jewels') return createJewelsDuel(names, { rng });
+  if (game === 'jewels') return createJewelsRace(names, { rng,now });
   if (game === 'carrom') return createCarromDuel(names, { rng, first: rng() < 0.5 ? 0 : 1 });
   return createRaceDiceGame(names, DICE_TARGET);
 }
@@ -112,6 +113,7 @@ function createState(game, names, variant, rng) {
 // server die, so a test can set the dice without touching names or shuffles.
 const rollWith = (rng) => () => 1 + Math.floor(rng() * 6);
 const unitOf = (roll) => () => (roll() - 1) / 6;
+export const isJewelsRaceTable=room=>room?.game==='jewels'&&room.state?.mode==='race';
 export const tableOver = (room) => {
   const s = room.state;
   if (!s) return true;
@@ -125,7 +127,7 @@ export function recordStep(room, steps) {
   steps.list.push({ version: room.version, state: structuredClone(room.state), pendingRoll: room.pendingRoll ?? null });
   if (steps.list.length > MAX_STEPS) steps.list.splice(0, steps.list.length - MAX_STEPS);
 }
-export const stepsTime = (room, steps) => room.game==='snakes'
+export const stepsTime = (room, steps) => isJewelsRaceTable(room)?0:room.game==='snakes'
   ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.pendingChoice?650:snakesTurnDisplayMs(step.state?.lastEvent)),0)
   // a billiards shot takes as long as its balls roll, and a moment to read what happened
   : room.game==='jewels' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?jewelsMoveMs(step.state.last):300),0)
@@ -147,7 +149,7 @@ export function startTable(room, { quick = false, rng = Math.random, roll = roll
   }
   // a player beyond the table's seats (never more than the room allows) waits out this match
   room.order = plan;
-  room.state = createState(room.game, plan.map((id) => room.players[id].name), room.variant, rng);
+  room.state = createState(room.game, plan.map((id) => room.players[id].name), room.variant, rng, now);
   room.status = 'playing';
   room.startedAt = now;
   room.rewardsComplete = false;
@@ -156,6 +158,11 @@ export function startTable(room, { quick = false, rng = Math.random, roll = roll
   for (const id of plan) room.players[id].ready = true;
   const steps = beginSteps(room);
   recordStep(room, steps); // the starting position
+  if(isJewelsRaceTable(room)){
+    room.jewelsBotAt=plan.some((id,i)=>room.players[id]?.bot&&!room.state.players[i].done)?now+1500:null;
+    room.turnDeadline=room.state.endsAt;room.turnTotal=room.state.durationMs;
+    return steps;
+  }
   runBots(room, steps, rng, roll);
   return steps;
 }
@@ -167,6 +174,7 @@ export function resetTable(room) {
   room.state = null;
   room.pendingRoll = null;
   room.turnDeadline = null;
+  room.jewelsBotAt = null;
 }
 
 /* ---------- moves ---------- */
@@ -240,6 +248,7 @@ const trimDice = (room) => { if (room.state?.history?.length > 30) room.state.hi
 
 /** Bots act until a person must, or the match ends. */
 export function runBots(room, steps, rng, roll = rollWith(rng)) {
+  if(isJewelsRaceTable(room))return steps;
   let guard = 0;
   const limit = room.game === 'billiards' || room.game === 'carrom' ? POOL_BOT_SHOTS : 500;
   while (room.status === 'playing' && !tableOver(room) && seatIsBot(room, seatOf(room)) && guard++ < limit) {
@@ -249,8 +258,19 @@ export function runBots(room, steps, rng, roll = rollWith(rng)) {
 }
 
 /** A person's move. Returns the steps, or throws a short reason. */
-export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
+export function playerMove(room, seat, msg, rng, roll = rollWith(rng), now=Date.now()) {
   if (room.status !== 'playing' || !room.state || tableOver(room)) throw new Error('match_not_playing');
+  if(isJewelsRaceTable(room)){
+    const steps=beginSteps(room),advanced=advanceJewelsRace(room.state,now);
+    if(advanced!==room.state){room.state=advanced;room.jewelsBotAt=null;recordStep(room,steps);return steps;}
+    if(!Number.isSafeInteger(msg.seq))throw Error('invalid_sequence');
+    const options={expectedSeq:msg.seq,now};
+    if(msg.type==='jewels_swap')room.state=playJewelsRaceSwap(room.state,seat,msg.a,msg.b,options);
+    else if(msg.type==='jewels_booster')room.state=playJewelsRaceBooster(room.state,seat,String(msg.id||''),msg.cell,options);
+    else if(msg.type==='jewels_finish')room.state=finishJewelsRace(room.state,{seat,...options});
+    else throw Error('invalid_action');
+    recordStep(room,steps);return steps;
+  }
   if (seat !== seatOf(room)) throw new Error('wrong_turn');
   const steps = beginSteps(room);
   if (room.game === 'snakes') {
@@ -304,8 +324,23 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng)) {
 }
 
 /** The server plays for a person whose time ran out (a fair, plain move; never a power). */
-export function timeoutMove(room, rng, roll = rollWith(rng)) {
+export function timeoutMove(room, rng, roll = rollWith(rng), now=Date.now()) {
   if (room.status !== 'playing' || !room.state || tableOver(room)) return null;
+  if(isJewelsRaceTable(room)){
+    const steps=beginSteps(room),advanced=advanceJewelsRace(room.state,now);
+    if(advanced!==room.state){room.state=advanced;room.jewelsBotAt=null;recordStep(room,steps);return steps;}
+    if(!room.jewelsBotAt||now<room.jewelsBotAt)return null;
+    for(let seat=0;seat<room.order.length;seat++){
+      if(!seatIsBot(room,seat)||room.state.players[seat].done)continue;
+      const move=chooseJewelsRaceMove(room.state,seat,room.players[room.order[seat]]?.level||'medium',rng);
+      if(!move)room.state=finishJewelsRace(room.state,{seat,now});
+      else if(move.type==='booster')room.state=playJewelsRaceBooster(room.state,seat,move.id,move.cell,{now});
+      else room.state=playJewelsRaceSwap(room.state,seat,move.a,move.b,{now});
+      recordStep(room,steps);
+    }
+    room.jewelsBotAt=room.order.some((id,i)=>room.players[id]?.bot&&!room.state.players[i].done)?now+1400:null;
+    return steps.list.length?steps:null;
+  }
   const seat = seatOf(room), steps = beginSteps(room), s = room.state;
   if (room.game === 'snakes') {
     if(s.variant==='choice'){if(!s.pendingChoice){playSnakes(room,seat,roll);recordStep(room,steps);}room.state=chooseChoiceTurn(room.state,bestChoice(room.state));}
@@ -343,6 +378,7 @@ export function timeoutMove(room, rng, roll = rollWith(rng)) {
 export function winnerSeats(room) {
   const s = room.state;
   if (!s) return [];
+  if(isJewelsRaceTable(room)&&s.winner===-1)return[];
   if (room.game === 'jackaroo') return s.winnerTeam === null || s.winnerTeam === undefined ? [] : room.order.map((_, i) => i).filter((i) => i % 2 === s.winnerTeam);
   return s.winner === null || s.winner === undefined ? [] : [s.winner];
 }

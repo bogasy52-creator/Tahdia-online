@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#2a0f6b">
+<meta name="theme-color" content="#5026a4">
 <title>ماستر الجواهر — بوسراج</title>
-<meta name="description" content="ماستر الجواهر: مواجهة جواهر 1 ضد 1 على لوحة وحدة. بدّل وطابق واصنع الصواريخ والقنابل، واشحن مساعداتك واغلب خصمك أونلاين أو ضد الكمبيوتر.">
+<meta name="description" content="سباق جواهر 1 ضد 1: نفس البداية و25 حركة لكل لاعب. العب جولتك كاملة، اصنع الجواهر الخاصة واجمع أعلى نتيجة.">
 <link rel="manifest" href="/manifest.webmanifest?v=29.1.0">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0">
@@ -15,73 +15,69 @@
 
 
 
-
-
-
-
-
-
-
-
-
-<link rel="stylesheet" href="assets/css/app-jewels.css?v=33.9.12-c826bee863"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.9.12"></head>
-<body class="release-v26 jewels-page mm2">
+<link rel="stylesheet" href="assets/css/app-jewels.css?v=33.10.0-7f4db83978"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head>
+<body class="release-v26 jewels-page jw-studio">
 <main id="app" class="jw-app">
 <section id="menu" class="jw-menu" aria-labelledby="jwTitle">
-<header class="jw-top"><a class="jw-icon" href="/" aria-label="الرئيسية">↗</a><b class="jw-brand">بوسراج <small>للألعاب</small></b><button id="jwMute" class="jw-icon" type="button" aria-pressed="false" aria-label="الصوت">🔊</button></header>
-<div class="jw-hero"><canvas id="jwHero" width="760" height="460" aria-hidden="true"></canvas><div class="jw-hero-copy"><h1 id="jwTitle">ماستر الجواهر</h1><p>مواجهة جواهر 1 ضد 1. لوحة وحدة، حركتان لكل دور، واللي يكسر أكثر يفوز.</p></div></div>
+<header class="jw-top"><a class="jw-icon" href="/" aria-label="الرئيسية"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h12"/></svg></a><a href="/" class="jw-brand">بوسراج <small>للألعاب</small></a><button id="jwMute" class="jw-icon" type="button" aria-pressed="false" aria-label="كتم الصوت"></button></header>
+<div class="jw-menu-layout">
+<div class="jw-showcase">
+<div class="jw-kicker"><i></i> سباق المطابقة</div>
+<h1 id="jwTitle">ماستر<br><span>الجواهر</span></h1>
+<p class="jw-tagline">لوحتك. خطتك. لحظة فوزك.</p>
+<div class="jw-hero"><canvas id="jwHero" width="840" height="570" aria-hidden="true"></canvas><span class="jw-hero-label">كل تطابق بداية سلسلة</span></div>
+<div class="jw-promise"><span><b>نفس البداية</b><small>فرصة متساوية</small></span><i>✦</i><span><b>25 حركة</b><small>لكل لاعب</small></span><i>✦</i><span><b>أعلى نتيجة</b><small>تحسم الفوز</small></span></div>
+</div>
+<div class="jw-play-card">
+<div class="jw-card-heading"><span class="jw-overline">اختر تحدّيك</span><h2>جاهز تلمع؟</h2><p>العب جولتك كاملة، والنتيجة تتكلم.</p></div>
 <div class="jw-modes" role="radiogroup" aria-label="طريقة اللعب">
-<button type="button" data-mode="online" role="radio" aria-checked="true"><b>أونلاين</b><small>لاعب حقيقي</small></button>
-<button type="button" data-mode="ai" role="radio" aria-checked="false"><b>ضد الكمبيوتر</b><small>تدريب</small></button>
-<button type="button" data-mode="two" role="radio" aria-checked="false"><b>مع خويّك</b><small>جهاز واحد</small></button>
+<button type="button" data-mode="online" role="radio" aria-checked="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c5 5 5 11 0 16-5-5-5-11 0-16Z"/></svg><b>أونلاين</b><small>تحدٍ مباشر</small></button>
+<button type="button" data-mode="ai" role="radio" aria-checked="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2m8-2v2m-8 3h8M2 11v5m20-5v5"/></svg><b>تدريب</b><small>ضد الكمبيوتر</small></button>
+<button type="button" data-mode="two" role="radio" aria-checked="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20v-3c0-5 8-5 8 0v3m2 0v-3c0-5 8-5 8 0v3"/><circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/></svg><b>مع خويّك</b><small>جهاز واحد</small></button>
 </div>
 <section class="jw-panel" data-panel="online"><div id="gameMenu"></div></section>
 <section class="jw-panel" data-panel="ai" hidden>
-<h2>مستوى الكمبيوتر</h2>
-<div id="jwLevel" class="jw-seg" role="radiogroup" aria-label="مستوى الكمبيوتر"><button type="button" data-v="easy" role="radio">سهل</button><button type="button" data-v="medium" role="radio">متوسط</button><button type="button" data-v="hard" role="radio">محترف</button></div>
-<button id="jwStartAi" class="jw-cta" type="button">ابدأ المواجهة</button>
+<h3>اختر مستوى المنافس</h3>
+<div id="jwLevel" class="jw-seg" role="radiogroup" aria-label="مستوى الكمبيوتر"><button type="button" data-v="easy" role="radio">هادئ</button><button type="button" data-v="medium" role="radio">منافس</button><button type="button" data-v="hard" role="radio">محترف</button></div>
+<p class="jw-panel-note">نفس لوحة البداية لك وللكمبيوتر. عندك 3 دقائق لتصنع أقوى سلسلة.</p>
+<button id="jwStartAi" class="jw-cta" type="button"><span>ابدأ التحدّي</span><span aria-hidden="true">←</span></button>
 </section>
 <section class="jw-panel" data-panel="two" hidden>
-<p class="jw-panel-note">تتبادلون الجوال: كل واحد يلعب حركتينه في دوره.</p>
-<div class="jw-names"><label>اللاعب الأول<input id="jwName1" data-account-name maxlength="16" autocomplete="off" placeholder="اللاعب الأول"></label><label>اللاعب الثاني<input id="jwName2" maxlength="16" autocomplete="off" placeholder="اللاعب الثاني"></label></div>
-<button id="jwStartTwo" class="jw-cta" type="button">ابدأ المواجهة</button>
+<div class="jw-names"><label>اللاعب الأول<input id="jwName1" data-account-name maxlength="16" autocomplete="off" placeholder="اسمك"></label><label>اللاعب الثاني<input id="jwName2" maxlength="16" autocomplete="off" placeholder="اسم خويّك"></label></div>
+<p class="jw-panel-note">الأول يكمل 25 حركة، ثم يسلّم الجهاز. بداية متطابقة ونتائج مخفية حتى النهاية.</p>
+<button id="jwStartTwo" class="jw-cta" type="button"><span>ابدأ السباق</span><span aria-hidden="true">←</span></button>
 </section>
-<details class="jw-rules">
-<summary>القواعد وطريقة اللعب</summary>
-<ul>
-<li><b>الدور:</b> لكل واحد حركتين في دوره، والمباراة 5 جولات.</li>
-<li><b>النقاط:</b> كل جوهرة تنكسر في دورك نقطة لك، حتى اللي تطيح وتنكسر لحالها. <b>الجولة الأخيرة نقاطها دبل.</b></li>
-<li><b>التبديل:</b> اسحب جوهرة على اللي جنبها، أو اضغط وحدة ثم اللي جنبها، عشان تصف 3 أو أكثر من نفس اللون. بلوحة المفاتيح: الأسهم للتنقل، وEnter أو المسافة للاختيار والتبديل، وEsc للإلغاء.</li>
-<li><b>الصاروخ:</b> 4 في خط. يمسح الخط كله.</li>
-<li><b>القنبلة:</b> شكل L أو T. تفجّر 3×3.</li>
-<li><b>جوهرة النور:</b> 5 في خط. بدّلها مع أي لون وتمسح كل جواهره.</li>
-<li><b>حركة زيادة:</b> كل ما صنعت جوهرة خاصة تاخذ حركة زيادة (لين حركتين في الدور).</li>
-<li><b>المجموعات:</b> بدّل جوهرتين خاصتين مع بعض وتنفجر مع بعض: صاروخين = صليب، صاروخ وقنبلة = 3 صفوف و3 أعمدة، قنبلتين = 5×5، والنور مع خاصة تحوّل كل لونها لنفس الخاصة.</li>
-<li><b>المساعدات:</b> تنشحن من الجواهر اللي تكسرها من لونها، وما تاخذ منك حركة: المطرقة (أحمر) تفجّر 3×3، الصاروخين (أزرق) تمسح صف وعمود، والعاصفة (بنفسجي) تمسح لون كامل.</li>
-<li><b>التعادل:</b> يفوز صاحب أكبر ضربة في المباراة، وإذا تساوت يفوز من بدأ ثانيًا.</li>
-</ul>
-</details>
+<div class="jw-fair-note"><span aria-hidden="true">✧</span> العب بدون انتظار أدوار المنافس</div>
+<details class="jw-rules"><summary>كيف تصنع النتيجة الأقوى؟ <span aria-hidden="true">＋</span></summary><div>
+<p>اسحب جوهرة نحو جارتها لتطابق 3 أو أكثر. كل جوهرة تنكسر تحسب نقطة، والتساقط يفتح لك سلاسل جديدة.</p>
+<div class="jw-rule-grid"><span><b>4 في خط</b><small>صاروخ يمسح خطًا كاملًا</small></span><span><b>شكل L أو T</b><small>قنبلة تفجّر 3×3</small></span><span><b>5 في خط</b><small>جوهرة نور تمسح لونًا</small></span></div>
+<p>اجمع الأحمر والأزرق والبنفسجي لشحن المساعدات. كل تبديل ناجح أو مساعدة يستخدم حركة واحدة. اجمع أعلى نتيجة خلال 25 حركة؛ تساوي النقاط يعني التعادل.</p>
+<p>أونلاين: 3 دقائق للمباراة. على جهاز واحد: لكل لاعب جولته كاملة. بلوحة المفاتيح: الأسهم للتنقل، Enter للاختيار، وEsc للإلغاء.</p>
+</div></details>
+</div>
+</div>
+<footer class="jw-menu-foot">خطّط للتطابق. اترك الباقي للجواهر. <span>✦</span></footer>
 </section>
 
-<section id="game" class="jw-game" hidden aria-label="مواجهة الجواهر">
-<div class="mm-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-<header class="jw-bar">
-<button id="jwExit" class="jw-icon" type="button" aria-label="خروج">✕</button>
-<div class="jw-round"><b id="jwRound">الجولة 1 من 5</b><small id="jwRoundNote"></small></div>
-<button id="jwSound" class="jw-icon" type="button" aria-pressed="false" aria-label="الصوت">🔊</button>
-</header>
-<div class="jw-hud"><div id="plateBottom" class="jw-plate me"></div><div class="jw-vs"><b aria-hidden="true">VS</b><div id="jwMoves" class="mm-moves" aria-hidden="true"></div><span id="jwMovesText" class="jw-moves-text"></span></div><div id="plateTop" class="jw-plate foe"></div></div>
+<section id="game" class="jw-game" hidden aria-label="سباق الجواهر">
+<div class="jw-arena-decor" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="jw-bar"><button id="jwExit" class="jw-icon" type="button" aria-label="الخروج من المباراة"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><div class="jw-round"><b id="jwRound">سباق الجواهر</b><small id="jwRoundNote">نفس البداية · 25 حركة</small></div><button id="jwSound" class="jw-icon" type="button" aria-pressed="false" aria-label="كتم الصوت"></button></header>
+<div class="jw-match-meta"><span id="jwModeLabel">تحدٍ مباشر</span><span id="jwMatchClock" class="jw-clock" role="timer" aria-label="الوقت المتبقي">3:00</span><span class="jw-fair-chip">بداية متطابقة <i aria-hidden="true">✓</i></span></div>
+<div class="jw-hud"><div id="plateBottom" class="jw-plate me"></div><div class="jw-vs" aria-hidden="true"><span>VS</span><i>✦</i></div><div id="plateTop" class="jw-plate foe"></div></div>
+<div class="jw-runline"><div><span class="jw-live-dot" aria-hidden="true"></span><strong id="jwBoardTitle">لوحتك</strong><span id="jwMovesText">25 حركة متبقية</span></div><div id="jwMoves" class="jw-move-track" aria-hidden="true"><i></i></div></div>
+<div class="jw-stage"><div id="jwWrap" class="jw-wrap" role="grid" tabindex="0" aria-label="لوحة الجواهر الخاصة بك" aria-describedby="jwBoardHelp" aria-rowcount="8" aria-colcount="8"><canvas id="jwBoard" aria-hidden="true"></canvas><div id="jwCells" class="jw-sr-only"></div><div id="jwFloat" class="jw-float" aria-hidden="true"></div><div id="jwBanner" class="jw-banner" aria-hidden="true"></div></div></div>
+<div class="jw-board-tools"><p id="jwBoardHelp">اسحب وطابق <span class="jw-keyboard-help">· الأسهم وEnter للعب</span></p><div><button id="jwCancel" type="button" class="jw-tool" hidden>إلغاء الاختيار</button><button id="jwHint" type="button" class="jw-tool" aria-label="إظهار تبديل ممكن"><span aria-hidden="true">✧</span> تلميح</button></div></div>
 <div id="status" class="jw-status" role="status" aria-live="polite" aria-atomic="true"></div>
-<div class="jw-board-tools"><p id="jwBoardHelp">اسحب جوهرة أو اختر جوهرتين متجاورتين.<span class="jw-keyboard-help">الأسهم للتنقل · Enter للاختيار · Esc للإلغاء</span></p><button id="jwHint" type="button" class="jw-tool" aria-label="إظهار تبديل ممكن">✧ تلميح</button><button id="jwCancel" type="button" class="jw-tool" hidden>إلغاء</button></div>
-<div class="jw-stage"><div id="jwWrap" class="jw-wrap" role="grid" tabindex="0" aria-label="لوحة الجواهر المشتركة" aria-describedby="jwBoardHelp" aria-rowcount="8" aria-colcount="8"><canvas id="jwBoard" aria-hidden="true"></canvas><div id="jwCells" class="jw-sr-only"></div><div id="jwFloat" class="jw-float" aria-hidden="true"></div><div id="jwBanner" class="jw-banner" aria-hidden="true"></div></div></div>
-<div id="jwBoostBar" class="jw-boostbar" aria-label="مساعداتك"></div>
-<div id="jwIntro" class="mm-intro" hidden aria-hidden="true"><div class="mm-side me"><span class="mm-ava"></span><b></b><small></small></div><div class="mm-vsbig"><b>VS</b></div><div class="mm-side foe"><span class="mm-ava"></span><b></b><small></small></div></div>
-<div id="jwEnd" class="jw-sheet" hidden><div class="jw-sheet-card" role="dialog" aria-modal="true" aria-labelledby="jwEndTitle"><div class="mm-rays" aria-hidden="true"></div><div class="mm-ribbon"><h2 id="jwEndTitle"></h2></div><div id="jwEndScores" class="jw-end-scores"></div><p id="jwEndText"></p><div class="jw-sheet-actions"><button id="jwAgain" class="jw-cta" type="button">مواجهة جديدة</button><button id="jwToMenu" class="jw-ghost" type="button">القائمة</button></div></div></div>
+<div id="jwBoostBar" class="jw-boostbar" aria-label="مساعداتك — تستخدم المساعدة حركة واحدة"></div>
+<div id="jwWait" class="jw-wait" hidden><span class="jw-wait-orbit" aria-hidden="true">✦</span><h2>أكملت جولتك!</h2><p id="jwWaitText">الخصم يكمل حركاته. نتيجتك محفوظة.</p><b id="jwWaitScore"></b><small>تظهر النتيجة النهائية عندما ينتهي اللاعبان</small></div>
+<div id="jwHandover" class="jw-sheet jw-handover" hidden><div class="jw-sheet-card" role="dialog" aria-modal="true" aria-labelledby="jwHandoverTitle"><div class="jw-handover-art" aria-hidden="true"><span>✦</span><i>⇄</i></div><span class="jw-overline">نفس اللوحة. فرصة جديدة.</span><h2 id="jwHandoverTitle">سلّم الجهاز للاعب الثاني</h2><p>جولة اللاعب الأول محفوظة. لا تنظر للوحة حتى يصبح الجهاز معك.</p><button id="jwHandoverStart" class="jw-cta" type="button">الجهاز معي، ابدأ جولتي</button></div></div>
+<div id="jwEnd" class="jw-sheet" hidden><div class="jw-sheet-card jw-result" role="dialog" aria-modal="true" aria-labelledby="jwEndTitle"><div class="jw-result-crown" aria-hidden="true"><svg viewBox="0 0 100 80"><path d="m16 25 18 14L50 12l16 27 18-14-9 40H25Z"/><path d="M26 72h48"/><circle cx="50" cy="49" r="6"/></svg></div><span id="jwEndEyebrow" class="jw-overline">حصاد الجواهر</span><h2 id="jwEndTitle"></h2><div id="jwEndScores" class="jw-end-scores"></div><p id="jwEndText"></p><div id="jwEndStats" class="jw-end-stats"></div><div class="jw-sheet-actions"><button id="jwAgain" class="jw-cta" type="button">تحدٍ جديد <span aria-hidden="true">←</span></button><button id="jwToMenu" class="jw-ghost" type="button">العودة للقائمة</button></div></div></div>
+<div id="jwLegacy" class="jw-sheet" hidden><div class="jw-sheet-card" role="dialog" aria-modal="true" aria-labelledby="jwLegacyTitle"><div class="jw-handover-art" aria-hidden="true">✦</div><h2 id="jwLegacyTitle">السباق تغيّر</h2><p>هذه الغرفة من الإصدار السابق. ارجع للقائمة وابدأ سباقًا جديدًا بالقواعد الجديدة.</p><button id="jwLegacyBack" class="jw-cta" type="button">العودة للقائمة</button></div></div>
 </section>
 </main>
 <div class="bs-toast"></div>
-<script src="assets/js/audio-manager.js?v=33.9.12"></script><script src="assets/js/room-clock-v33-7.js?v=33.9.12"></script><script src="assets/js/player-card-v33-7.js?v=33.9.12"></script><script src="assets/js/platform.js?v=33.9.12"></script><script src="assets/js/social-client.js?v=33.9.12"></script><script src="assets/js/profile-core.js?v=33.9.12-pro1"></script><script src="assets/js/career-client.js?v=33.9.12"></script><script src="assets/js/game-menu-v33.js?v=33.9.12"></script><script src="/assets/js/reaction-performers.js?v=33.9.12-studio1"></script><script src="/assets/js/club-ui.js?v=33.9.12-club1"></script><script src="assets/js/reactions-v31.js?v=33.9.12-studio1"></script><script defer src="assets/js/client-health.js?v=33.9.12"></script>
-<script type="module" src="assets/js/jewels/main.js?v=33.9.12-quality1"></script>
+<script src="assets/js/audio-manager.js?v=33.10.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.10.0"></script><script src="assets/js/player-card-v33-7.js?v=33.10.0"></script><script src="assets/js/platform.js?v=33.10.0"></script><script src="assets/js/social-client.js?v=33.10.0"></script><script src="assets/js/profile-core.js?v=33.10.0-pro1"></script><script src="assets/js/career-client.js?v=33.10.0"></script><script src="assets/js/game-menu-v33.js?v=33.10.0"></script><script src="/assets/js/reaction-performers.js?v=33.10.0-studio1"></script><script src="/assets/js/club-ui.js?v=33.10.0-club1"></script><script src="assets/js/reactions-v31.js?v=33.10.0-studio1"></script><script defer src="assets/js/client-health.js?v=33.10.0"></script>
+<script type="module" src="assets/js/jewels/main.js?v=33.10.0-studio"></script>
 
-<script src="/assets/js/tahdia-premium-v25.js?v=33.9.12"></script></body>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.10.0"></script></body>
 </html>

@@ -40,6 +40,6 @@ test('hockey: spin no longer bends the puck path', async () => {
 test('jewels: the bright skin with plates, VS coin and a booster bar', async () => {
   const [html, css] = await Promise.all(['public/jewels.html', 'public/assets/css/jewels-v33-9-5.css'].map(read));
   // 33.9.9: the bright skin grew into the duel arena (jewels-mm-v33-9-9.css)
-  assert.match(html, /jewels-page mm2/); assert.match(html, /class="jw-hud"/); assert.match(html, /id="jwBoostBar"/);
+  assert.match(html, /jewels-page jw-studio/); assert.match(html, /class="jw-hud"/); assert.match(html, /id="jwBoostBar"/);
   assert.match(css, /moved to jewels-mm-v33-9-9\.css/);
 });

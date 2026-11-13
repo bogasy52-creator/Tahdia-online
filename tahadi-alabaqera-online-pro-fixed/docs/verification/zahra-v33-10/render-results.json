@@ -1,0 +1,100 @@
+{
+  "reports": [
+    {
+      "name": "zahra-four-start",
+      "players": 4,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 16,
+      "slots": 52,
+      "material": "ivory",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-four-playing",
+      "players": 4,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 16,
+      "slots": 52,
+      "material": "ivory",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-six-playing",
+      "players": 6,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 24,
+      "slots": 78,
+      "material": "ivory",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-four-phone-board",
+      "players": 4,
+      "width": 390,
+      "height": 390,
+      "pieces": 16,
+      "slots": 52,
+      "material": "ivory",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-character-loadout",
+      "players": 4,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 16,
+      "slots": 52,
+      "material": "ivory",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-royal-table",
+      "players": 4,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 16,
+      "slots": 52,
+      "material": "table-royal",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-majlis-table",
+      "players": 4,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 16,
+      "slots": 52,
+      "material": "table-majlis",
+      "trail": null,
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    },
+    {
+      "name": "zahra-meteor-trail",
+      "players": 4,
+      "width": 1200,
+      "height": 1200,
+      "pieces": 16,
+      "slots": 52,
+      "material": "ivory",
+      "trail": "trail-meteor",
+      "renderer": "public/assets/js/zahra-studio-v33-10.js",
+      "evidence": "Current SVG renderer rasterized through Sharp/librsvg; board artwork only, not a browser screenshot."
+    }
+  ]
+}

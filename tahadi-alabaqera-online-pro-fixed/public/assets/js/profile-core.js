@@ -376,15 +376,16 @@
     const xp=finite(raw.xp),rankedXP=finite(raw.rankedXP);
     return {version:12,dailyDay:String(raw.dailyDay||''),dailyStreak:Math.min(7,finite(raw.dailyStreak)),name:String(raw.name||'لاعب العباقرة').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,24)||'لاعب العباقرة',xp,rankedXP,coins:raw.coins==null?100:finite(raw.coins),wins:finite(raw.wins),losses:finite(raw.losses),games:finite(raw.games),stats:cleanStats(raw.stats),rankedWins:finite(raw.rankedWins),rankedLosses:finite(raw.rankedLosses),level:Math.floor(xp/1000)+1,rank:rankedXP>=20000?'Diamond':rankedXP>=8000?'Gold':rankedXP>=2500?'Silver':'Bronze',owned,equipped,receipts:Array.isArray(raw.receipts)?raw.receipts.filter(x=>typeof x==='string').slice(-300):[],checkouts:Array.isArray(raw.checkouts)?raw.checkouts.slice(-60).filter(row=>row&&typeof row.id==='string'&&/^[a-zA-Z0-9_-]{16,80}$/.test(row.id)&&Array.isArray(row.ids)&&row.ids.length>0&&row.ids.length<=12&&row.ids.every(id=>CATALOG.some(item=>item.id===id))&&Number.isSafeInteger(row.price)&&row.price>=0).map(row=>({id:row.id,ids:[...row.ids],price:row.price})):[],practiceDay:String(raw.practiceDay||''),practiceCount:finite(raw.practiceCount),missions:{daily:period(raw.missions?.daily),weekly:period(raw.missions?.weekly)},achievements:[...new Set(Array.isArray(raw.achievements)?raw.achievements:[])].filter(x=>OBJECTIVES.some(o=>o.id===x&&o.kind==='achievement'))};
   }
-  function reward(raw,{id,game,win=false,verified=false,now=Date.now()}={}){
+  function reward(raw,{id,game,win=false,draw=false,verified=false,now=Date.now()}={}){
     const p=normalize(raw),receipt=String(id||'').slice(0,160);
     if(!receipt||!GAME_IDS.includes(game))throw new Error('invalid_result');
     if(p.receipts.includes(receipt))return p;
     const day=riyadhDay(now);
     if(!verified){if(p.practiceDay!==day){p.practiceDay=day;p.practiceCount=0}if(p.practiceCount>=20)return p;p.practiceCount++}
     const gain=verified?(win?250:80):(win?100:40);
-    {const r=p.stats[game]||(p.stats[game]=[0,0]);r[0]++;if(win)r[1]++}p.xp+=gain;p.coins+=verified?(win?50:15):(win?20:8);p.games++;p[win?'wins':'losses']++;
-    if(verified){p.rankedXP+=gain;p[win?'rankedWins':'rankedLosses']++}
+    const tied=game==='jewels'&&draw===true&&!win;
+    {const r=p.stats[game]||(p.stats[game]=[0,0]);r[0]++;if(win)r[1]++}p.xp+=gain;p.coins+=verified?(win?50:15):(win?20:8);p.games++;if(!tied)p[win?'wins':'losses']++;
+    if(verified){p.rankedXP+=gain;if(!tied)p[win?'rankedWins':'rankedLosses']++}
     for(const kind of ['daily','weekly']){const key=kind==='daily'?riyadhDay(now):riyadhWeek(now);if(p.missions[kind].key!==key)p.missions[kind]=period({key});const m=p.missions[kind];m.games++;if(win)m.wins++;if(verified)m.online++;if(!m.variety.includes(game))m.variety.push(game);const row=m.byGame[game]||(m.byGame[game]={g:0,w:0});row.g++;if(win)row.w++}
     p.receipts.push(receipt);return normalize(p);
   }

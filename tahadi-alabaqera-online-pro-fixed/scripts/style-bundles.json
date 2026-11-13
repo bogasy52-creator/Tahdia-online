@@ -333,7 +333,8 @@
     "assets/css/player-card-v33-7.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/zahra-studio-v33-10.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
@@ -564,18 +565,12 @@
   "jewels.html": [
     "assets/css/platform.css",
     "assets/css/game-menu-v33.css",
-    "assets/css/tables-v33.css",
     "assets/css/game-interaction-v34.css",
-    "assets/css/room-clock-v33-7.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/jewels-v33-9-5.css",
-    "assets/css/jewels-mm-v33-9-9.css",
-    "/assets/css/tahdia-premium-v25.css",
-    "assets/css/premium-refinements-v33-9-11.css",
-    "assets/css/game-quality-v33-9-12.css"
+    "assets/css/jewels-studio-v33-10.css"
   ]
 }

@@ -6,18 +6,17 @@ import { readFile, stat } from 'node:fs/promises';
 
 const read = (file) => readFile(new URL('../' + file, import.meta.url), 'utf8');
 
-test('jewels: the painted gem sheet is loaded and used, with the drawn gems kept as a fallback', async () => {
-  const main = await read('public/assets/js/jewels/main.js');
+test('jewels: scalable original crystal art replaces the live raster dependency', async () => {
+  const [main,renderer] = await Promise.all(['public/assets/js/jewels/main.js','public/assets/js/jewels/studio-renderer.js'].map(read));
   assert.ok((await stat(new URL('../public/assets/jewels/gems-v33-9-9.webp', import.meta.url))).size > 20000);
-  assert.match(main, /\/assets\/jewels\/gems-v33-9-9\.webp/);
-  assert.match(main, /function fromSheet\(/); assert.match(main, /else if \(s === 'bomb'\) fromSheet\(g, c, 1, px\)/);
-  assert.match(main, /drawGem\(g, c, r\)/);
+  assert.match(main,/createJewelsRenderer/);assert.match(renderer,/export function drawStudioGem\(/);
+  assert.doesNotMatch(main+renderer,/new Image\(|gems-v33-9-9\.webp/);
+  for(const special of ['ball','bomb','rh','rv'])assert.ok(renderer.includes("'"+special+"'"));
 });
 
-test('jewels: the arena page — cards, moves, tanks, the meeting and the ribbon', async () => {
-  const [html, main, css, bundles] = await Promise.all(['public/jewels.html', 'public/assets/js/jewels/main.js', 'public/assets/css/jewels-mm-v33-9-9.css', 'scripts/style-bundles.json'].map(read));
-  assert.match(html, /id="jwMoves"/); assert.match(html, /id="jwIntro"/); assert.match(html, /class="mm-ribbon"/); assert.match(html, /class="mm-bg"/);
-  assert.match(main, /function showIntro\(/); assert.match(main, /class="mm-tank"/); assert.match(main, /'combo'\)/);
-  assert.match(css, /\.mm2 \.jw-boost \.mm-liquid\{/); assert.match(css, /@keyframes mmSlam/);
-  assert.ok(JSON.parse(bundles)['jewels.html'].includes('assets/css/jewels-mm-v33-9-9.css'));
+test('jewels: the independent arena exposes actions, timing, boosters and private handover', async () => {
+  const [html,main,bundles] = await Promise.all(['public/jewels.html','public/assets/js/jewels/main.js','scripts/style-bundles.json'].map(read));
+  for(const id of ['jwMoves','jwMatchClock','jwBoostBar','jwHandover','jwEndScores'])assert.ok(html.includes('id="'+id+'"'));
+  assert.match(main,/players\[seat\]\.seq/);assert.match(main,/renderClock\(/);assert.match(main,/'combo'/);
+  const styles=JSON.parse(bundles)['jewels.html'];assert.ok(styles.includes('assets/css/jewels-studio-v33-10.css'));assert.ok(!styles.includes('assets/css/jewels-mm-v33-9-9.css'));
 });

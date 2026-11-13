@@ -155,7 +155,7 @@ export function createSocialUserClass(DurableObject) {
             }
             return json({ok:true,journey,career,stars:result?.stars,first:result?.first,access:accountAccess(this.profile),serverNow:Date.now()});
           }
-          if(action==='practice'||action==='verified')career=Career.reward(career,{id:body.id,game:body.game,win:body.win===true,verified:action==='verified'});
+          if(action==='practice'||action==='verified')career=Career.reward(career,{id:body.id,game:body.game,win:body.win===true,draw:body.draw===true,verified:action==='verified'});
           if(action==='daily')career=Career.claimDaily(career);
           // 33.2.0: a cup prize; only the Worker sends this, after the leaderboard confirmed the place
           if(action==='prize')career=Career.grant(career,{id:body.id,coins:body.coins});

@@ -73,13 +73,14 @@ test('the computer plays every level to the end, and a timeout moves for a perso
   assert.ok(['swap', 'booster'].includes(chooseJewelsMove(s, 'hard').type));
 });
 
-test('online: a table of two, moves checked by the server, scores for the ranking', () => {
+test('stored version-one Jewels rooms keep validation and ranking compatibility', () => {
   assert.ok(TABLE_GAMES.includes('jewels'));
   const room = { game: 'jewels', status: 'lobby', players: { p1: { id: 'p1', name: 'سعد' } }, order: ['p1'], version: 0 };
-  const steps = startTable(room, { rng: () => 0.3 });
+  startTable(room, { rng: () => 0.3 });
   assert.equal(room.order.length, 2); assert.equal(room.state.game, 'jewels');
   const mine = room.order.indexOf('p1');
-  assert.equal(room.state.turn, mine, 'the computer already played its turn if it started');
+  room.state=createJewelsDuel(room.order.map(id=>room.players[id].name),{seed:123,first:mine});
+  const steps={from:room.version,list:[]};
   assert.ok(stepsTime(room, steps) >= 0);
   const [a, b] = legalSwaps(room.state)[0];
   const next = playerMove(room, mine, { type: 'jewels_swap', a, b }, () => 0.5);

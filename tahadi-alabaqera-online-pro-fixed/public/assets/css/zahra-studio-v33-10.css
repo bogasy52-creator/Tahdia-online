@@ -1,0 +1,182 @@
+/* Zahra Studio: the playfield is the hero; all rules and setup stay at its edges. */
+html body#zahraStudio.zahra-studio-v33{--z-bg:#10282c;--z-panel:#173338;--z-line:#365255;--z-ivory:#f9f1dc;--z-muted:#aac0bd;--z-gold:#dec389;--z-radius:20px;color:var(--z-ivory);background:radial-gradient(ellipse at 20% 0,#22484b 0,transparent 56%),radial-gradient(ellipse at 100% 100%,#163a3c 0,transparent 50%),var(--z-bg)!important;min-height:100svh;overflow-x:hidden!important;overflow-y:auto!important;font-family:Tajawal,Arial,sans-serif}
+#zahraStudio.zahra-studio-v33:before,#zahraStudio.zahra-studio-v33:after{display:none!important}
+#zahraStudio.zahra-studio-v33 .bs-shell{width:min(1120px,100%)!important;max-width:1120px!important;margin:auto!important;padding:14px 24px 24px!important;min-height:0!important;height:auto!important;overflow:visible!important}
+#zahraStudio.zahra-studio-v33 .bs-topbar{background:transparent!important;border-bottom:1px solid #d7c28e20;box-shadow:none!important;padding:0 0 12px!important;min-height:50px}
+#zahraStudio.zahra-studio-v33 .bs-mark{background:#e2c88d!important;color:#203b3b!important;border-radius:12px!important;box-shadow:none!important}
+#zahraStudio.zahra-studio-v33 .bs-brand-copy>span{font-size:10px;letter-spacing:1.4px;color:var(--z-muted)}
+#zahraStudio.zahra-studio-v33 #setup#setup{padding:0!important;border:0!important;box-shadow:none!important;background:none!important;max-width:none!important}
+#zahraStudio.zahra-studio-v33 .zahra-intro{display:grid!important;grid-template-columns:1fr 1fr!important;align-items:center;gap:30px;margin:22px 0 8px!important;padding:8px 0!important;min-height:340px;background:none!important;box-shadow:none!important;border:0!important;overflow:visible!important}
+#zahraStudio.zahra-studio-v33 .zahra-intro-copy{max-width:460px}
+#zahraStudio.zahra-studio-v33 .tbl-kicker{font-size:12px!important;font-weight:700!important;letter-spacing:.2px;color:var(--z-gold)!important;background:transparent!important;padding:0!important;border:0!important}
+#zahraStudio.zahra-studio-v33 .zahra-intro h1{font-size:clamp(48px,6vw,76px)!important;line-height:1.05!important;color:#fff7e6!important;margin:20px 0 16px!important;font-weight:900!important}
+#zahraStudio.zahra-studio-v33 .zahra-intro h1 span{display:block;font-size:18px;font-weight:500;letter-spacing:.2px;margin-top:12px;color:var(--z-gold)}
+#zahraStudio.zahra-studio-v33 .zahra-intro p{font-size:15px!important;line-height:1.9!important;max-width:380px!important;margin:0!important;color:#bbceca!important}
+#zahraStudio.zahra-studio-v33 .zahra-intro-tags{display:flex;gap:14px;flex-wrap:wrap;margin-top:21px;font-size:11px;color:#d8d8bf}
+#zahraStudio.zahra-studio-v33 #tblHeroArt#tblHeroArt{width:min(100%,385px)!important;height:auto!important;aspect-ratio:1;max-height:none!important;transform:rotate(-6deg)!important;filter:drop-shadow(0 24px 28px #03171899);overflow:visible!important;justify-self:center}
+#zahraStudio.zahra-studio-v33 #tblHeroArt>svg{display:block;width:100%;height:100%}
+#zahraStudio.zahra-studio-v33 .gm33-menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#zahraStudio.zahra-studio-v33 .gm33-quick{background:linear-gradient(135deg,#f1dcaa,#c9a76d)!important;color:#243c3d!important;border:1px solid #ead39f!important;border-radius:18px!important;min-height:90px!important;box-shadow:0 4px 0 #8a754f!important}
+#zahraStudio.zahra-studio-v33 .gm33-quick small{color:#49605b!important;font-size:12px}
+#zahraStudio.zahra-studio-v33 .gm33-quick b{font-size:21px!important}
+#zahraStudio.zahra-studio-v33 :is(.gm33-friends,.gm33-foot){background:#19363b!important;border:1px solid #41605d!important;border-radius:18px!important;box-shadow:none!important}
+#zahraStudio.zahra-studio-v33 .gm33-friends>summary{min-height:86px;align-content:center}
+#zahraStudio.zahra-studio-v33 .gm33-opponents{grid-column:1/-1;border:0!important;background:transparent!important;font-size:12px}
+#zahraStudio.zahra-studio-v33 .gm33-opponents>summary{min-height:28px}
+#zahraStudio.zahra-studio-v33 .gm33-foot{grid-column:1/-1;padding:12px 16px!important}
+#zahraStudio.zahra-studio-v33 :is(.gm33-name,.gm33-friends b){color:#fff4dc!important}
+#zahraStudio.zahra-studio-v33 .zahra-practice{border-top:1px solid #57706a70;margin-top:14px;padding:12px 2px;color:var(--z-muted)}
+#zahraStudio.zahra-studio-v33 .zahra-practice>summary{display:flex;gap:12px;align-items:center;cursor:pointer;list-style:none;min-height:38px}
+#zahraStudio.zahra-studio-v33 .zahra-practice>summary>span{font-size:14px;font-weight:800;color:#f1e3c7}
+#zahraStudio.zahra-studio-v33 .zahra-practice>summary>small{font-size:11px;flex:1}
+#zahraStudio.zahra-studio-v33 .zahra-practice>summary>i{font-size:20px;font-style:normal;color:var(--z-gold)}
+#zahraStudio.zahra-studio-v33 .zahra-practice-fields{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:12px;margin-top:12px}
+#zahraStudio.zahra-studio-v33 .zahra-practice label{display:grid;gap:7px;font-size:12px;color:#d8dfcd}
+#zahraStudio.zahra-studio-v33 .zahra-practice select{width:100%;height:42px;padding:0 10px;border:1px solid #58726b;border-radius:10px;background:#1d3c40;color:#fff0d8;font:700 13px Tajawal,Arial,sans-serif}
+#zahraStudio.zahra-studio-v33 #practiceStart{height:42px;border:1px solid #d5bd88;background:#dac28d;color:#263c37;min-width:145px}
+#zahraStudio.zahra-studio-v33 .zahra-practice p{font-size:11px;line-height:1.8;margin:12px 0 0;color:#a6bfba}
+#zahraStudio.zahra-studio-v33.game-running .bs-topbar{display:none!important}
+#zahraStudio.zahra-studio-v33.game-running .bs-shell{padding:10px 20px 20px!important;display:block!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game{position:relative!important;inset:auto!important;display:block!important;height:auto!important;min-height:0!important;max-height:none!important;width:100%!important;margin:0!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;grid-template-rows:none!important;gap:0!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game.hidden{display:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-toolbar{display:flex!important;position:relative!important;inset:auto!important;justify-content:space-between!important;align-items:center!important;min-height:46px!important;margin:0!important;padding:0!important;width:100%!important;gap:12px!important;background:none!important;z-index:3!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-title{display:block!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-title h1{margin:1px 0 0!important;font-size:27px!important;line-height:1.2!important;color:#fff0d5!important;display:flex;align-items:center;gap:12px}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-title h1 small{font-size:11px;font-weight:500;color:var(--z-muted);border-right:1px solid #698177;padding-right:12px}
+#zahraStudio .zahra-eyebrow{display:block;color:var(--z-gold);font-size:10px;font-weight:700;letter-spacing:.5px}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-actions{display:flex!important;align-items:center;gap:7px;position:static!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-actions .bs-btn{height:34px!important;min-height:34px!important;min-width:40px!important;padding:5px 12px!important;border:1px solid #45615f!important;border-radius:10px!important;background:#203c40!important;color:#e9e5cf!important;font-size:12px!important;box-shadow:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #livebar{position:static!important;display:flex!important;align-items:center;justify-content:flex-start!important;gap:12px;inset:auto!important;min-height:19px!important;margin:4px 0 10px!important;padding:0!important;color:#9fbab3!important;font-size:10px!important;background:none!important;border:0!important;line-height:1.4!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #livebar.hidden{display:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #livebar .net-badge{padding:0!important;background:none!important;border:0!important;font-size:10px!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #livebar .room-mini{background:none!important;color:#e0d5b1!important;border:0!important;padding:0!important;font-size:10px!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-roster{margin-bottom:12px}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players{display:grid!important;grid-template-columns:repeat(var(--zahra-players,4),minmax(0,1fr))!important;flex-wrap:nowrap!important;overflow:visible!important;gap:8px!important;margin:0!important;padding:0!important;background:none!important;min-height:0!important;height:auto!important;width:100%!important;position:static!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row{display:flex!important;position:relative!important;inset:auto!important;min-width:0!important;max-width:none!important;min-height:64px!important;height:auto!important;padding:10px 12px!important;gap:9px!important;border:1px solid #365752!important;border-radius:14px!important;background:#153337!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;flex:1 1 0!important;color:#f5edda!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row.turn{background:linear-gradient(110deg,#294848,#193a3e)!important;border-color:var(--seat)!important;box-shadow:inset 0 0 0 .5px var(--seat)!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row::before{content:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row.turn::after{content:'';position:absolute;inset:auto 12px 0;height:2px;background:var(--seat);border-radius:3px 3px 0 0}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row>div{min-width:0;flex:1}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players b{display:block;max-width:none!important;margin:0!important;font-size:13px!important;line-height:1.25!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff0d7!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .mini-note{display:block!important;font-size:10px!important;line-height:1.2!important;margin:3px 0!important;color:#a6c2b8!important;white-space:nowrap}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .score{font:800 23px/1 Tajawal,Arial,sans-serif!important;color:var(--z-gold)!important;display:flex;align-items:baseline;gap:1px;flex:0 0 auto}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .score small{font-size:10px;color:#98afa5;font-weight:500}
+#zahraStudio .zahra-seat-mark{position:relative;display:grid;place-items:center;flex:0 0 31px;width:31px;height:36px;border-radius:40% 40% 10px 10px;background:radial-gradient(circle at 35% 18%,#ffffff70 0,transparent 32%),linear-gradient(110deg,color-mix(in srgb,var(--seat),white 16%),var(--seat) 55%,color-mix(in srgb,var(--seat),#173432 50%));border:1px solid #fff2c550;box-shadow:inset 0 -4px 0 #102c3855,0 3px 5px #061b2144;font:800 13px/1 Arial,sans-serif;color:white;font-style:normal}
+#zahraStudio .zahra-seat-mark:after{content:'';position:absolute;left:3px;right:3px;bottom:4px;border-top:2px solid #e7cc91;border-radius:50%}
+#zahraStudio .zahra-progress{display:flex;gap:3px;height:4px;margin-top:4px}
+#zahraStudio .zahra-progress i{width:11px;height:3px;border-radius:3px;background:#8ba99a40}
+#zahraStudio .zahra-progress i.done{background:var(--seat);box-shadow:0 0 0 .3px #eadabe}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 260px!important;grid-template-areas:'board controls'!important;gap:25px!important;height:auto!important;min-height:0!important;align-items:center!important;margin:0!important;padding:0!important;overflow:visible!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-main{grid-area:board!important;display:block!important;min-height:0!important;width:100%!important;height:auto!important;padding:0!important;margin:0!important;overflow:visible!important;background:none!important;border:0!important;box-shadow:none!important;position:relative!important;align-self:start!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-frame{position:relative!important;inset:auto!important;width:min(100%,calc(100svh - 165px),710px)!important;height:auto!important;aspect-ratio:1;margin:0 auto!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important;overflow:visible!important;max-width:none!important;transform:none!important;flex:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #board{display:block!important;width:100%!important;height:auto!important;aspect-ratio:1!important;position:relative!important;inset:auto!important;margin:0!important;padding:0!important;gap:0!important;overflow:visible!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important;transform:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #board>svg.zahra-studio-board{display:block;width:100%;height:auto;aspect-ratio:1;overflow:visible;filter:drop-shadow(0 18px 20px #00131570)}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-side{grid-area:controls!important;display:flex!important;flex-direction:column!important;position:relative!important;inset:auto!important;width:100%!important;height:auto!important;max-height:none!important;min-height:0!important;margin:0!important;padding:0!important;gap:18px!important;overflow:visible!important;grid-template-areas:none!important;grid-template-columns:none!important;grid-template-rows:none!important;background:none!important;box-shadow:none!important;border:0!important;align-self:center!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-turn{text-align:center;width:100%}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #status{display:block!important;position:relative!important;width:100%!important;max-height:none!important;min-height:0!important;height:auto!important;inset:auto!important;margin:8px 0 0!important;padding:0!important;text-align:center!important;font:800 16px/1.6 Tajawal,Arial,sans-serif!important;color:#fff2d9!important;border:0!important;box-shadow:none!important;background:none!important;white-space:normal!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-control-dock{display:grid;grid-template-columns:1fr;gap:15px;width:100%}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .dice-stage.dice-duel-v33{display:grid!important;grid-template-columns:1fr 1fr!important;grid-area:auto!important;gap:12px!important;width:100%!important;height:auto!important;min-height:0!important;position:relative!important;inset:auto!important;margin:0!important;padding:0!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;place-items:stretch!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .dice-stage:after{display:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:5px!important;min-width:0!important;padding:13px 5px 10px!important;border-radius:18px!important;background:linear-gradient(145deg,#24484b,#173337)!important;border:1px solid #4d6d645c!important;box-shadow:inset 0 1px 0 #ffffff08!important;opacity:.66;transition:opacity .2s,border-color .2s}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die.is-turn{border-color:#ddc58c!important;background:linear-gradient(145deg,#39554e,#203d3b)!important;box-shadow:inset 0 0 0 .5px #ddc58c!important;opacity:1}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .duel-pair{display:flex;align-items:center;justify-content:center;min-height:63px!important;gap:0!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .die{--die-size:52px;width:var(--die-size)!important;height:var(--die-size)!important;min-width:0!important;border-radius:12px}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die small{display:block;max-width:100%;font-size:11px!important;line-height:1.3;color:#d9dbc5!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .duel-skin{display:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #roll{grid-area:auto!important;display:flex!important;align-items:center;justify-content:center;gap:9px;width:100%!important;height:58px!important;min-height:58px!important;max-height:none!important;align-self:stretch!important;margin:0!important;padding:8px 14px!important;background:linear-gradient(135deg,#f0d99f,#ccaa6d)!important;border:1px solid #f3dbab!important;border-radius:16px!important;box-shadow:0 4px 0 #8b744c,0 8px 14px #05202570!important;color:#243a34!important;font:900 17px/1 Tajawal,Arial,sans-serif!important;filter:none!important;opacity:1!important;transition:transform .12s,filter .12s}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #roll>span{font:24px/1 Arial,sans-serif}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #roll:not(:disabled):active{transform:translateY(3px)!important;box-shadow:0 1px 0 #8b744c!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game #roll:disabled{background:linear-gradient(135deg,#6a8177,#526e64)!important;border-color:#8da49460!important;color:#b6c2ae!important;box-shadow:0 3px 0 #2d4c45!important;filter:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-help{grid-area:auto!important;display:flex!important;justify-content:center;flex-wrap:wrap;gap:8px!important;margin:0!important;padding:0!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-help span{font-size:10px!important;color:#a9c0b4!important;background:none!important;border:0!important;padding:0 4px!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game details.rules{grid-area:auto!important;display:block!important;width:100%;margin:0!important;padding:12px 0!important;border-radius:0!important;border:0!important;border-top:1px solid #4f6e604d!important;background:none!important;color:#b9cdbb!important;font-size:12px!important;box-shadow:none!important}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game details.rules summary{display:flex;justify-content:space-between;list-style:none;cursor:pointer;color:#dedcc4;font-size:12px;font-weight:700}
+#zahraStudio.game-zahra.zahra-studio-v33 #game#game details.rules ul{padding-inline-start:18px;line-height:1.9;margin:10px 0 0}
+#zahraStudio .zahra-pawn{outline:none;transform-box:view-box}
+#zahraStudio .zahra-pawn.legal{cursor:pointer}
+#zahraStudio .zahra-pawn.legal .stone-bob{animation:none!important}
+#zahraStudio .zahra-pawn.legal:focus-visible .zahra-legal-ring{stroke:#173e3f;stroke-width:1.2;fill:#ffe5a0;opacity:1}
+#zahraStudio .zahra-pawn.legal:hover .stone-bob{filter:brightness(1.15)}
+#zahraStudio .zahra-legal-ring{animation:zahraRing 1.5s ease-in-out infinite}
+@keyframes zahraRing{50%{opacity:.3}}
+#zahraStudio.zahra-studio-v33 .board-preview-v34{border:1px solid #cab17c;background:#17393b;box-shadow:0 12px 35px #031c2399;border-radius:18px;color:#fff0d4;max-width:440px;padding:12px 14px;bottom:max(14px,env(safe-area-inset-bottom))}
+#zahraStudio.zahra-studio-v33 .board-preview-v34 p{font-size:12px;line-height:1.6}
+#zahraStudio.zahra-studio-v33 .board-preview-v34 .bs-btn{min-height:40px;font-size:13px}
+#zahraStudio.zahra-studio-v33 .winner-card{background:linear-gradient(145deg,#254746,#143337)!important;border:1px solid #ddc38a!important;border-radius:26px!important;box-shadow:0 24px 70px #03151dcc!important;color:#fff0d8!important}
+@media(max-width:760px){
+ #zahraStudio.zahra-studio-v33 .bs-shell{padding:12px 14px!important}
+ #zahraStudio.zahra-studio-v33 .zahra-intro{grid-template-columns:1.1fr 1fr!important;gap:5px;min-height:210px!important;margin:18px 0 10px!important}
+ #zahraStudio.zahra-studio-v33 .zahra-intro h1{font-size:43px!important;margin:12px 0!important}
+ #zahraStudio.zahra-studio-v33 .zahra-intro h1 span{font-size:13px;margin-top:9px}
+ #zahraStudio.zahra-studio-v33 .zahra-intro p{font-size:11px!important;line-height:1.7!important}
+ #zahraStudio.zahra-studio-v33 .tbl-kicker{font-size:9px!important}
+ #zahraStudio.zahra-studio-v33 .zahra-intro-tags{font-size:9px;gap:7px;margin-top:13px}
+ #zahraStudio.zahra-studio-v33 #tblHeroArt#tblHeroArt{width:100%!important;transform:rotate(-5deg)!important}
+ #zahraStudio.zahra-studio-v33 .gm33-menu{grid-template-columns:1fr}
+ #zahraStudio.zahra-studio-v33 .gm33-quick{min-height:81px!important}
+ #zahraStudio.zahra-studio-v33 .gm33-friends>summary{min-height:65px}
+ #zahraStudio.zahra-studio-v33 .zahra-practice>summary{gap:7px}
+ #zahraStudio.zahra-studio-v33 .zahra-practice>summary>span{font-size:12px}
+ #zahraStudio.zahra-studio-v33 .zahra-practice>summary>small{font-size:9px}
+ #zahraStudio.zahra-studio-v33 .zahra-practice-fields{grid-template-columns:1fr 1fr;gap:10px}
+ #zahraStudio.zahra-studio-v33 #practiceStart{grid-column:1/-1}
+ #zahraStudio.zahra-studio-v33.game-running .bs-shell{padding:8px 10px calc(12px + env(safe-area-inset-bottom))!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-toolbar{min-height:38px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-title h1{font-size:23px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .toolbar-title .zahra-eyebrow{display:none}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #livebar{margin:2px 0 8px!important;min-height:16px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-roster{margin-bottom:8px}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players{gap:5px!important;grid-template-columns:repeat(var(--zahra-players,4),minmax(0,1fr))!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players:has(>:nth-child(5)){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row{padding:6px 5px!important;min-height:46px!important;border-radius:10px!important;gap:5px!important;max-width:none!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players b{font-size:10px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .mini-note{font-size:8px!important;margin:2px 0!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .score{display:none!important}
+ #zahraStudio .zahra-seat-mark{flex-basis:16px;width:16px;height:23px;font-size:9px;border-radius:8px 8px 5px 5px}
+ #zahraStudio .zahra-seat-mark:after{inset:auto 1px 3px;border-top-width:1px}
+ #zahraStudio .zahra-progress{gap:2px;margin-top:3px;height:3px}
+ #zahraStudio .zahra-progress i{width:7px;height:2px}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .chip-piece{display:none!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:'board' 'controls'!important;gap:9px!important;align-items:start!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-frame{width:min(100%,calc(100svh - 292px),620px)!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-side{gap:10px!important;align-self:start!important;max-height:none!important;overflow:visible!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-turn>.zahra-eyebrow{display:none}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #status{font-size:13px!important;margin:0!important;line-height:1.5!important;min-height:20px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-control-dock{grid-template-columns:minmax(0,1fr) minmax(140px,.95fr);align-items:stretch;gap:11px}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .dice-stage.dice-duel-v33{gap:6px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die{padding:5px 3px 4px!important;gap:1px!important;border-radius:12px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .duel-pair{min-height:36px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .die{--die-size:34px;width:34px!important;height:34px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die small{font-size:9px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #roll{height:62px!important;min-height:62px!important;font-size:15px!important;border-radius:13px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-help{gap:6px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-help span{font-size:9px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game details.rules{padding:8px 0!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game details.rules summary{font-size:10px}
+}
+@media(max-height:550px) and (min-width:600px){
+ #zahraStudio.zahra-studio-v33.game-running .bs-shell{padding:5px 12px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game{display:grid!important;grid-template-columns:minmax(0,1fr) 235px!important;grid-template-areas:'toolbar toolbar' 'arena roster'!important;column-gap:12px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-toolbar{grid-area:toolbar;min-height:32px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #livebar{display:none!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-roster{grid-area:roster;align-self:start;margin-top:6px}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players{grid-template-columns:1fr 1fr!important;gap:5px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .player-row{min-height:42px!important;padding:5px 7px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .zahra-seat-mark{display:none}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players b{font-size:10px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #players .score{font-size:18px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-layout{grid-area:arena;display:contents!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-main{grid-column:1;grid-row:2 / span 2;align-self:center!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-frame{width:min(100%,calc(100svh - 48px))!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .game-side{grid-column:2;grid-row:3;gap:8px!important;align-self:end!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-control-dock{grid-template-columns:1fr;gap:7px}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .zahra-turn>.zahra-eyebrow{display:none}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #status{font-size:12px!important;margin:0!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die{padding:5px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .duel-pair{min-height:35px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .duel-die .die{--die-size:32px;width:32px!important;height:32px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game #roll{height:44px!important;min-height:44px!important;font-size:14px!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game .ludo-help{display:none!important}
+ #zahraStudio.game-zahra.zahra-studio-v33 #game#game details.rules{padding:5px 0!important}
+}
+@media(prefers-reduced-motion:reduce){#zahraStudio .zahra-legal-ring{animation:none}#zahraStudio .duel-die,#zahraStudio #roll{transition:none!important}}

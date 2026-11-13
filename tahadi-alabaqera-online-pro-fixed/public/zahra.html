@@ -1,16 +1,25 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#080b17"><title>الزهرة — بوسراج</title><style>
-:root{--board-glow:rgba(34,211,238,.16)}.ludo-frame{width:min(100%,800px);margin:auto;padding:10px;border-radius:30px;background:linear-gradient(145deg,#222842,#090d19);border:1px solid #46506e;box-shadow:0 28px 70px rgba(0,0,0,.38)}.ludo-board{display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);aspect-ratio:1;position:relative;direction:ltr;border-radius:22px;overflow:hidden;background:#ece7dd;padding:4px;gap:1px}.ludo-cell{position:relative;border:1px solid rgba(26,31,45,.12);border-radius:4px;background:#faf8f1;min-width:0;min-height:0;box-shadow:inset 0 0 8px rgba(0,0,0,.025)}.ludo-cell.safe:after{content:'✦';position:absolute;inset:0;display:grid;place-items:center;color:#655c78;font-size:9px}.ludo-cell.start{box-shadow:inset 0 0 0 3px var(--c);background:color-mix(in srgb,var(--c) 18%,#fff)}.home-lane{background:color-mix(in srgb,var(--c) 33%,#fff);border-color:color-mix(in srgb,var(--c) 55%,#ddd)}.ludo-yard{z-index:0;margin:3px;border-radius:18px;border:2px solid color-mix(in srgb,var(--c) 52%,#eee);background:linear-gradient(145deg,color-mix(in srgb,var(--c) 33%,#fff),color-mix(in srgb,var(--c) 12%,#fff));display:grid;place-items:center;padding:8px}.yard-inner{width:78%;height:78%;border-radius:18px;background:rgba(255,255,255,.62);display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;align-content:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}.finish-center{grid-area:7/7/10/10;z-index:1;border-radius:18px;background:conic-gradient(#8b5cf6 0 25%,#22d3ee 0 50%,#f0b94a 0 75%,#22c55e 0);border:3px solid #fff;box-shadow:0 8px 20px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;padding:8px}.ludo-piece{position:relative;z-index:5;width:clamp(15px,2.8vw,28px);height:clamp(15px,2.8vw,28px);border-radius:50%;display:grid;place-items:center;color:#fff;font-size:8px;font-weight:1000;background:var(--c);border:2px solid #fff;box-shadow:0 5px 10px rgba(0,0,0,.3),inset 0 -5px 8px rgba(0,0,0,.13);cursor:default}.ludo-piece.legal{cursor:pointer;animation:legalPulse .8s ease-in-out infinite;box-shadow:0 0 0 4px rgba(255,255,255,.82),0 0 25px var(--c)}@keyframes legalPulse{50%{transform:scale(1.2)}}.piece-stack{position:absolute;inset:1px;display:flex;align-items:center;justify-content:center;gap:1px;flex-wrap:wrap;z-index:4}.piece-stack .ludo-piece{width:clamp(11px,2.2vw,22px);height:clamp(11px,2.2vw,22px);font-size:7px}.ludo-help{font-size:11px;line-height:1.7;color:var(--bs-muted);margin-top:10px;display:flex;gap:7px;flex-wrap:wrap}.ludo-help span{border:1px solid var(--bs-line);border-radius:999px;padding:5px 8px;background:#0b0f1d}.dice-stage{position:relative}.dice-stage:after{content:"";position:absolute;width:150px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.18),transparent 68%);filter:blur(7px)}.die{z-index:1}@media(max-width:600px){.ludo-frame{padding:5px;border-radius:19px}.ludo-board{border-radius:14px;padding:2px}.ludo-yard{margin:1px;border-radius:10px;padding:4px}.yard-inner{padding:4px;gap:4px;border-radius:9px}.finish-center{border-radius:9px;padding:2px}.ludo-cell.safe:after{font-size:7px}}
-</style><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-zahra.css?v=33.9.12-645d505ab8"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.9.12"></head><body class="release-v26 bs-page board-game game-zahra release-v14 suite-v16 suite-v17"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الزهرة</b><span>Ludo Reimagined</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap tbl-setup"><div class="tbl-hero"><div><span class="tbl-kicker">لودو الخليج</span><h1>الزهرة</h1><p>ارمِ 6 لتخرج حجرك، كُل أحجار خصومك، وأدخل أحجارك الأربعة إلى قلب الزهرة. من لاعبين إلى ستة.</p></div><div id="tblHeroArt" class="tbl-hero-art" aria-hidden="true"></div></div><div id="gameMenu"></div></section>
-<section id="game" class="hidden tbl31"><div class="game-toolbar"><div class="toolbar-title"><h1>الزهرة</h1><p>ارمِ ثم اختر الحجر المضيء</p></div><div class="toolbar-actions"><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button><button id="leaveGame" class="bs-btn">خروج</button></div></div><div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div><div class="game-layout"><section class="bs-panel game-main"><div class="ludo-frame"><div id="board" class="ludo-board"></div></div><div class="ludo-help"><span>✦ خانات آمنة</span><span>💥 الأكل = دور إضافي</span><span>6️⃣ الستة = دور إضافي</span><span>🎯 الوصول الدقيق</span></div></section><aside class="bs-panel game-side"><div id="players" class="player-list"></div><div id="status" class="game-status"></div><div class="dice-stage dice-duel-v33" aria-label="النرد"><div id="myDieBox" class="duel-die mine"><div class="duel-pair"><div id="die" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div></div><small>نردك</small></div><div id="oppDieBox" class="duel-die theirs"><div class="duel-pair"><div id="dieOpp" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div></div><small id="dieOppName">نرد خصمك</small></div></div><button id="roll" class="bs-btn primary primary-action">🎲 ارْمِ الزهرة</button><details class="rules bs-panel" style="padding:11px;margin-top:10px"><summary>طريقة اللعب</summary><ul><li>يجب رمي 6 لإخراج حجر.</li><li>الستة أو أكل حجر يمنحان دورًا إضافيًا.</li><li>الخانات ✦ آمنة.</li><li>الدخول للنهاية يحتاج رقمًا دقيقًا.</li><li>أول من ينهي أحجاره الأربعة يفوز.</li></ul></details></aside></div></section></main>
-<div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🎯</div><h2 id="winnerName"></h2><p>أدخل الأحجار الأربعة إلى النهاية.</p><div class="winner-actions-v33"><button id="again" class="bs-btn gold">جولة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div><script src="assets/js/party-link-v32.js?v=33.9.12-room1"></script><script src="assets/js/audio-manager.js?v=33.9.12"></script><script src="assets/js/room-clock-v33-7.js?v=33.9.12"></script><script src="assets/js/player-card-v33-7.js?v=33.9.12"></script><script src="assets/js/platform.js?v=33.9.12"></script><script src="assets/js/social-client.js?v=33.9.12"></script><script src="assets/js/adaptive-board-layout.js?v=33.9.12"></script><script src="assets/js/fullscreen-game.js?v=33.9.12"></script><script src="assets/js/dice-3d-v31-1.js?v=33.9.12"></script><script src="assets/js/pro-dice.js?v=33.9.12"></script><script src="assets/js/game-menu-v33.js?v=33.9.12"></script><script src="/assets/js/reaction-performers.js?v=33.9.12-studio1"></script><script src="/assets/js/club-ui.js?v=33.9.12-club1"></script><script type="module" src="assets/js/neon-arena.js?v=33.9.12"></script><script src="assets/js/pieces-v31.js?v=33.9.12"></script><script type="module">import {requestBoardPreview} from "./assets/js/board-preview-v34.js?v=33.9.12-quality1";
-import { renderPetalBoard, BOARD_COLORS } from "./assets/js/board-petals-v29.js?v=33.9.12";
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10282c"><title>الزهرة — بوسراج</title><link rel="manifest" href="/manifest.webmanifest?v=29.1.0"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0"><meta name="application-name" content="بوسراج للألعاب"><meta name="apple-mobile-web-app-title" content="بوسراج"><link rel="stylesheet" href="assets/css/app-zahra.css?v=33.10.0-aca9b53c09"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head><body id="zahraStudio" class="zahra-studio-v33 table-room release-v26 bs-page board-game game-zahra release-v14 suite-v16 suite-v17"><main class="bs-shell"><header class="bs-topbar"><a class="bs-brand" href="./"><span class="bs-mark">BS</span><span class="bs-brand-copy"><b>الزهرة</b><span>Ludo Reimagined</span></span></a><div class="bs-actions"><a class="journey-shortcut-v17" href="/journey" aria-label="رحلة النجوم وألعاب المراحل"><i aria-hidden="true">✦</i><span>المراحل</span></a><a class="coin-chip" href="/shop" aria-label="عملاتك والمتجر"><span data-career-coins>100</span></a><button class="bs-icon-btn" data-audio-toggle>🔊</button><button class="bs-icon-btn" data-settings-open>⚙️</button><a class="bs-icon-btn" href="./" style="text-decoration:none">⌂</a></div></header><section id="setup" class="bs-panel setup-wrap tbl-setup">
+  <div class="tbl-hero zahra-intro"><div class="zahra-intro-copy"><span class="tbl-kicker">لعبة الأصحاب · ٢–٦ لاعبين</span><h1>الزهرة<span>رحلة إلى القلب</span></h1><p>أربعة أحجار، رمية حظ، وخطوة محسوبة. اجمع أصحابك حول طاولة الزهرة.</p><div class="zahra-intro-tags"><span>✦ خانات آمنة</span><span>٦ تفتح الطريق</span><span>الفوز للأربعة</span></div></div><div id="tblHeroArt" class="tbl-hero-art" aria-hidden="true"></div></div>
+  <div id="gameMenu"></div>
+  <details class="zahra-practice"><summary><span>تدريب على جهازك</span><small>ضد الكمبيوتر أو مع أصحابك</small><i aria-hidden="true">＋</i></summary><div class="zahra-practice-fields"><label for="practiceMode">طريقة اللعب<select id="practiceMode"><option value="ai">ضد الكمبيوتر</option><option value="pass">أصحاب على جهاز واحد</option></select></label><label for="practiceCount">عدد اللاعبين<select id="practiceCount"><option value="2">٢ لاعبين</option><option value="3">٣ لاعبين</option><option value="4" selected>٤ لاعبين</option><option value="5">٥ لاعبين</option><option value="6">٦ لاعبين</option></select></label><button id="practiceStart" class="bs-btn">ابدأ التدريب</button></div><p>تدريب بلا اتصال، وبنفس قواعد الطاولة. مرّر الجهاز لصاحب الدور عند اللعب مع أصحابك.</p></details>
+</section>
+<section id="game" class="hidden tbl31 zahra-arena">
+  <div class="game-toolbar"><div class="toolbar-title"><span class="zahra-eyebrow">طاولة الأصحاب</span><h1>الزهرة <small id="boardSeatCount">٤ لاعبين</small></h1></div><div class="toolbar-actions"><button class="bs-btn fullscreen-toggle" data-game-fullscreen aria-label="ملء الشاشة" aria-pressed="false" title="ملء الشاشة">⛶</button><button id="leaveGame" class="bs-btn">خروج</button></div></div>
+  <div id="livebar" class="game-livebar hidden"><span id="liveNet" class="net-badge online"><i></i><span>متصل</span></span><span><span id="roomLabel">الغرفة</span> <b id="gameRoomCode" class="room-mini"></b></span><span id="turnTimer" class="turn-timer hidden">⏱ 60ث</span></div>
+  <div class="zahra-roster"><div id="players" class="player-list"></div></div>
+  <div class="game-layout"><section class="bs-panel game-main"><div class="ludo-frame"><div id="board" class="ludo-board"></div></div></section>
+  <aside class="bs-panel game-side"><div class="zahra-turn"><span class="zahra-eyebrow">الخطوة التالية</span><div id="status" class="game-status" role="status" aria-live="polite"></div></div>
+  <div class="zahra-control-dock"><div class="dice-stage dice-duel-v33" aria-label="نرد اللاعبين"><div id="myDieBox" class="duel-die mine"><div class="duel-pair"><div id="die" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div></div><small id="myDieName">نردك</small></div><div id="oppDieBox" class="duel-die theirs"><div class="duel-pair"><div id="dieOpp" class="die" data-value="1"><i class="pip p1"></i><i class="pip p2"></i><i class="pip p3"></i><i class="pip p4"></i><i class="pip p5"></i><i class="pip p6"></i><i class="pip p7"></i><i class="pip p8"></i><i class="pip p9"></i></div></div><small id="dieOppName">نرد خصمك</small></div></div><button id="roll" class="bs-btn primary primary-action"><span aria-hidden="true">⚄</span> ارْمِ الزهرة</button></div>
+  <div class="ludo-help"><span>✦ خانات آمنة</span><span>٦ أو الأكل = رمية إضافية</span></div>
+  <details class="rules bs-panel"><summary>قواعد الطاولة <span aria-hidden="true">＋</span></summary><ul><li>تحتاج رمية ٦ لإخراج حجر من بيته.</li><li>الستة أو أكل حجر يمنحان دورًا إضافيًا.</li><li>الخانات المعلّمة بالنجمة آمنة من الأكل.</li><li>الوصول للقلب يحتاج رقمًا دقيقًا.</li><li>أول من يوصل أحجاره الأربعة يفوز.</li></ul></details></aside></div>
+</section></main>
+<div id="winnerOverlay" class="winner-overlay" role="dialog" aria-modal="true" aria-label="نتيجة المباراة"><div class="bs-panel winner-card"><div class="winner-icon">🏆🎯</div><h2 id="winnerName"></h2><p>أدخل الأحجار الأربعة إلى النهاية.</p><div class="winner-actions-v33"><button id="again" class="bs-btn gold">جولة جديدة</button><button id="toMenu" class="bs-btn">القائمة</button></div></div></div><div class="bs-toast"></div><script src="assets/js/party-link-v32.js?v=33.10.0-room1"></script><script src="assets/js/audio-manager.js?v=33.10.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.10.0"></script><script src="assets/js/player-card-v33-7.js?v=33.10.0"></script><script src="assets/js/platform.js?v=33.10.0"></script><script src="assets/js/social-client.js?v=33.10.0"></script><script src="assets/js/adaptive-board-layout.js?v=33.10.0"></script><script src="assets/js/fullscreen-game.js?v=33.10.0"></script><script src="assets/js/dice-3d-v31-1.js?v=33.10.0"></script><script src="assets/js/pro-dice.js?v=33.10.0"></script><script src="assets/js/game-menu-v33.js?v=33.10.0"></script><script src="/assets/js/reaction-performers.js?v=33.10.0-studio1"></script><script src="/assets/js/club-ui.js?v=33.10.0-club1"></script><script type="module" src="assets/js/neon-arena.js?v=33.10.0"></script><script src="assets/js/pieces-v31.js?v=33.10.0"></script><script type="module">import {requestBoardPreview} from "./assets/js/board-preview-v34.js?v=33.10.0-quality1";
+import { renderZahraBoard as renderPetalBoard, ZAHRA_COLORS as BOARD_COLORS } from "./assets/js/zahra-studio-v33-10.js?v=33.10.0";
+import { createZahraPractice } from "./assets/js/zahra-practice-v33-10.js?v=33.10.0";
 import { boardGeometry } from "./assets/js/engines/board-geometry-v29.js?v=29.1.0";
 import { getLegalLudoMoves } from "./assets/js/engines/ludo-engine.js?v=29.1.0";
-import { createTable, seatLook, botTag, skinDie } from "./assets/js/board-table-v33.js?v=33.9.12";
-// 33.0.0: الزهرة is played online only. «العب الحين» fills a table of four with
-// bots after ten seconds; a friends' room starts with whoever came. Each roll
-// and each move (yours and the bots') is a step this page shows in order, on
-// the die of the player who threw it, with every stone from its owner's shop.
+import { createTable, seatLook, botTag, skinDie } from "./assets/js/board-table-v33.js?v=33.10.0";
+// Online rooms and local practice share the same rules and visual frame sequence.
 function escHtml(v) {
   return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
@@ -25,7 +34,10 @@ let receipt = "",
   busy = false,
   room = null,
   lastOpponent = null,
-  visualTurn = null;
+  visualTurn = null,
+  practice = null,
+  frameGeneration = 0,
+  cancelPreview = null;
 const me = () => room?.me?.index ?? -1;
 const playerAt = (seat) => (room?.players || []).find((p) => p.index === seat) || null;
 const looks = () => (state?.players || []).map((_, i) => seatLook(room, i).pawn);
@@ -39,20 +51,22 @@ function canAct() {
 }
 function renderPieces() {
   const legal = canAct() && !busy && currentRoll ? getLegalLudoMoves(state, currentRoll) : [];
-  renderPetalBoard($("#board"), state, { game: "zahra", active: state.turn, legal, onPick: (ti) => moveToken(ti), looks: looks() });
+  renderPetalBoard($("#board"), state, { game: "zahra", active: state.turn, legal, onPick: (ti) => moveToken(ti), looks: looks(), characters: state.players.map((_,i)=>seatLook(room,i).character) });
 }
 function renderPlayers() {
   const box = $("#players");
+  box.style.setProperty("--zahra-players", state.players.length);
   box.innerHTML = "";
   state.players.forEach((p, i) => {
     const finished = p.tokens.filter((x) => x === boardGeometry(state).finish).length,
       row = document.createElement("div");
     row.className = "player-row " + (state.turn === i && state.winner === null ? "turn turn-glow" : "") + (i === me() ? " is-me" : "");
     row.style.setProperty("--seat", colors[i]);
-    row.innerHTML = `<i class="player-dot" style="background:${colors[i]}"></i><div><b>${escHtml(p.name)}${i === me() ? " · أنت" : ""}</b><div class="mini-note">${finished}/4 في النهاية</div></div><span class="score">${finished}</span>`;
+    const mine = i === me() && room?.localMode !== "pass";
+    row.innerHTML = `<i class="zahra-seat-mark" style="--seat:${colors[i]}"><span>${i + 1}</span></i><div><b>${escHtml(p.name)}${mine ? " · أنت" : ""}</b><div class="mini-note">${state.turn === i && state.winner === null ? "صاحب الدور" : "إلى قلب الزهرة"}</div><div class="zahra-progress" aria-label="${finished} من 4 في النهاية">${Array.from({length:4}, (_,k)=>`<i class="${k<finished?"done":""}"></i>`).join("")}</div></div><span class="score">${finished}<small>/٤</small></span>`;
     const tag = botTag(playerAt(i));
     if (tag) row.querySelector("b")?.append(tag);
-    if (window.BS_PIECES) {
+    if (window.BS_PIECES && seatLook(room, i).pawn !== "pawn-classic") {
       const pawn = seatLook(room, i).pawn,
         item = pawn === "pawn-character" ? "pawn-classic" : pawn;
       row.prepend(window.BS_PIECES.icon(document, { design: window.BS_PIECES.designFor(item), item, color: colors[i], className: "chip-piece" }));
@@ -76,7 +90,8 @@ function paintDice() {
   skinDie($("#die"), seatLook(room, mine).dice);
   skinDie($("#dieOpp"), seatLook(room, opp).dice);
   const name = state.players[opp]?.name || "الخصم";
-  $("#dieOppName").textContent = state.players.length > 2 ? "نرد " + name : "نرد خصمك " + name;
+  $("#dieOppName").textContent = "نرد " + name;
+  $("#myDieName").textContent = room?.localMode === "pass" ? state.players[mine]?.name || "صاحب الدور" : "نردك";
   $("#myDieBox").classList.toggle("is-turn", turn === mine && state.winner === null);
   $("#oppDieBox").classList.toggle("is-turn", turn !== mine && state.winner === null);
   $("#myDieBox").classList.toggle("is-idle", turn !== mine);
@@ -104,9 +119,9 @@ function render() {
   if (state.winner !== null) {
     $("#winnerName").textContent = state.players[state.winner].name + (state.winner === me() ? " (أنت)" : "");
     $("#winnerOverlay").classList.add("show");
-    $("#again").textContent = room?.publicMatch ? "مباراة جديدة" : room?.me?.role === "host" ? "جولة جديدة" : "بانتظار المضيف";
-    $("#again").disabled = !room?.publicMatch && room?.me?.role !== "host";
-    if (!rewarded) {
+    $("#again").textContent = room?.local ? "جولة تدريب جديدة" : room?.publicMatch ? "مباراة جديدة" : room?.me?.role === "host" ? "جولة جديدة" : "بانتظار المضيف";
+    $("#again").disabled = !room?.local && !room?.publicMatch && room?.me?.role !== "host";
+    if (!rewarded && !room?.local) {
       rewarded = true;
       if (window.BS_SOCIAL?.isLoggedIn()) (window.BS_PRO?.onlineResult ? window.BS_PRO.onlineResult(state.winner === me()) : window.BS_CAREER?.refresh?.())?.catch(() => {});
       else (window.BS_PRO?.record || window.BS_CAREER?.record)?.({ id: receipt, game: "zahra", win: state.winner === me() });
@@ -121,11 +136,12 @@ $("#roll").onclick = () => {
   if (busy || currentRoll !== null || state?.winner !== null || !canAct()) return;
   busy = true;
   render();
-  if (!table.send("roll")) {
+  if (!(practice?.active ? practice.send("roll") : table.send("roll"))) {
     busy = false;
     render();
     return;
   }
+  if (practice?.active) return;
   clearTimeout(remoteTimer);
   remoteTimer = setTimeout(() => {
     busy = false;
@@ -136,14 +152,14 @@ $("#roll").onclick = () => {
 function moveToken(ti) {
   if (busy || currentRoll === null || !canAct()) return;
   const snapshot=state,roll=currentRoll;
-  requestBoardPreview({board:$("#board"),state,game:'zahra',action:{token:ti},roll,valid:()=>state===snapshot&&currentRoll===roll&&!busy&&canAct(),commit:()=>commitToken(ti),toast:BS_PLATFORM.toast});
+  cancelPreview = requestBoardPreview({board:$("#board"),state,game:'zahra',action:{token:ti},roll,valid:()=>state===snapshot&&currentRoll===roll&&!busy&&canAct(),commit:()=>commitToken(ti),toast:BS_PLATFORM.toast});
 }
 function commitToken(ti) {
   if (busy || currentRoll === null || !canAct()) return;
   busy = true;
   render();
   BS_AUDIO.play("move");
-  if (!table.send("ludo_move", { token: ti })) {
+  if (!(practice?.active ? practice.send("ludo_move", { token: ti }) : table.send("ludo_move", { token: ti }))) {
     busy = false;
     render();
   }
@@ -159,6 +175,12 @@ function enterGame() {
   window.BS_GAME_FULLSCREEN?.fit?.();
 }
 function showMenu() {
+  $("#board").zahraCleanup?.();
+  $("#status").__bsClock?.clear?.();
+  frameGeneration++;
+  clearTimeout(remoteTimer);
+  cancelPreview?.();cancelPreview = null;
+  visualTurn = null;
   busy = false;
   state = null;
   currentRoll = null;
@@ -175,7 +197,11 @@ function net(s) {
   e.querySelector("span").textContent = s.text || "";
 }
 /* One room state (or one step of it): a roll, a move, or a pass — shown, then drawn. */
-async function apply(next, { animate }) {
+async function apply(next, { animate, signal } = {}) {
+  if (signal?.aborted) return;
+  const generation = ++frameGeneration;
+  const validFrame = () => !signal?.aborted && generation === frameGeneration && state === next.state;
+  cancelPreview?.();cancelPreview = null;
   clearTimeout(remoteTimer);
   room = next;
   if (!next.state) return;
@@ -189,8 +215,10 @@ async function apply(next, { animate }) {
     lastOpponent = null;
   }
   if ($("#game").classList.contains("hidden")) enterGame();
-  $("#gameRoomCode").textContent = next.publicMatch ? "مباراة سريعة" : next.code;
-  $("#roomLabel")?.classList.toggle("hidden", Boolean(next.publicMatch));
+  $("#gameRoomCode").textContent = next.local ? (next.localMode === "ai" ? "ضد الكمبيوتر" : "على جهاز واحد") : next.publicMatch ? "مباراة سريعة" : next.code;
+  $("#boardSeatCount").textContent = next.state.players.length.toLocaleString("ar") + " لاعبين";
+  if (next.local) net({online:true,text:"تدريب محلي"});
+  $("#roomLabel")?.classList.toggle("hidden", Boolean(next.publicMatch || next.local));
   if (animate && prev) {
     busy = true;
     const event = state.lastEvent,
@@ -199,12 +227,16 @@ async function apply(next, { animate }) {
       if (currentRoll !== null && currentRoll !== prevPending) {
         // a throw with a move to choose
         await spin(state.turn, currentRoll);
+        if (!validFrame()) return;
       } else if (moved && event?.pass) {
         await spin(event.player, event.roll);
+        if (!validFrame()) return;
         if (event.player === me()) BS_PLATFORM.toast(event.roll === 6 ? "لا توجد حركة — لك رمية أخرى" : "لا توجد حركة ممكنة");
         await wait(250);
+        if (!validFrame()) return;
       } else if (moved && event) {
         if (prevPending === null) await spin(event.player, state.lastRoll);
+        if (!validFrame()) return;
         visualTurn = event.player;
         render();
         const caps = event.captured?.length || 0;
@@ -214,12 +246,15 @@ async function apply(next, { animate }) {
           BS_PLATFORM.toast(event.player === me() ? "💥 أكلت حجرًا! دور إضافي" : `💥 ${state.players[event.player].name} أكل حجرًا`);
         } else BS_AUDIO.play("move", { volume: 0.55 });
         await ($("#board").atelierMotion || Promise.resolve());
+        if (!validFrame()) return;
         await wait(160);
+        if (!validFrame()) return;
       }
     } finally {
-      visualTurn = null;
+      if (validFrame()) visualTurn = null;
     }
   }
+  if (!validFrame()) return;
   busy = false;
   render();
   if (state.winner !== null && prev?.winner === null) BS_AUDIO.play(state.winner === me() ? "win" : "finish");
@@ -245,10 +280,23 @@ $("#leaveGame").onclick = () => {
     BS_PLATFORM.toast("اضغط «خروج» مرة ثانية لترك المباراة");
     return;
   }
-  table.leave();
+  leaveCurrent();
 };
-$("#again").onclick = () => table.again();
-$("#toMenu").onclick = () => table.leave();
+function leaveCurrent() {
+  practice?.leave();
+  table.leave();
+  room = null;
+}
+function startPractice() {
+  leaveCurrent();
+  practice ||= createZahraPractice({onFrame:apply,onError:message=>{busy=false;render();BS_PLATFORM.toast(message);}});
+  const profile = window.BS_CAREER?.get?.() || {};
+  return practice.start({mode:$("#practiceMode").value,count:Number($("#practiceCount").value),name:profile.name || table.menu.name() || "أنت",look:profile.equipped || {}});
+}
+$("#practiceStart").onclick = startPractice;
+$("#again").onclick = () => practice?.active ? startPractice() : table.again();
+$("#toMenu").onclick = leaveCurrent;
+window.addEventListener("pagehide", () => practice?.leave());
 window.addEventListener("bs-career-change", () => {
   if (state && !busy) render();
 });
@@ -283,7 +331,7 @@ window.BS_TABLE = Object.freeze({
     return Boolean(state);
   },
   get mode() {
-    return "online";
+    return practice?.active ? (room?.localMode === "pass" ? "local" : "ai") : "online";
   },
   get bots() {
     return (room?.players || []).filter((p) => p.bot).map((p) => p.index);
@@ -292,4 +340,4 @@ window.BS_TABLE = Object.freeze({
     return (state?.players || []).map((p, i) => ({ index: i, name: String(p?.name || "لاعب " + (i + 1)) }));
   },
 });
-</script><script src="assets/js/profile-core.js?v=33.9.12-pro1"></script><script src="assets/js/career-client.js?v=33.9.12"></script><script src="assets/js/royal-stones.js?v=33.9.12"></script><script src="assets/js/serpent-art-v16.js?v=33.9.12"></script><script src="assets/js/cosmetic-art.js?v=33.9.12"></script><script src="assets/js/ui-icons.js?v=33.9.12"></script><script src="assets/js/pro-experience.js?v=33.9.12-visual2"></script><script defer src="assets/js/client-health.js?v=33.9.12"></script><script src="assets/js/play-feedback-v24-1.js?v=33.9.12"></script><script src="assets/js/reactions-v31.js?v=33.9.12-studio1"></script><script src="/assets/js/character-player.js?v=33.9.12-smooth1"></script><script src="/assets/js/hero-effects.js?v=33.9.12-full1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.9.12"></script></body></html>
+</script><script src="assets/js/profile-core.js?v=33.10.0-pro1"></script><script src="assets/js/career-client.js?v=33.10.0"></script><script src="assets/js/royal-stones.js?v=33.10.0"></script><script src="assets/js/serpent-art-v16.js?v=33.10.0"></script><script src="assets/js/cosmetic-art.js?v=33.10.0"></script><script src="assets/js/ui-icons.js?v=33.10.0"></script><script src="assets/js/pro-experience.js?v=33.10.0-visual2"></script><script defer src="assets/js/client-health.js?v=33.10.0"></script><script src="assets/js/play-feedback-v24-1.js?v=33.10.0"></script><script src="assets/js/reactions-v31.js?v=33.10.0-studio1"></script><script src="/assets/js/character-player.js?v=33.10.0-smooth1"></script><script src="/assets/js/hero-effects.js?v=33.10.0-full1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.10.0"></script></body></html>
