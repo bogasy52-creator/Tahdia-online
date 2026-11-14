@@ -1,5 +1,6 @@
 import {relayGameReaction} from './social/game-reactions.js';
 import {HockeyRoom} from './hockey/hockey-room.js';
+import {TanksRoom} from './tanks/tanks-room.js';
 import {ChallengeRoom,ChallengeQueue} from './challenges/challenge-room.js';
 import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
 import {PartyRoom} from './party/party-room.js';
@@ -583,6 +584,23 @@ export default {
       return env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+m[1])).fetch(new Request('https://sudoku.internal/'+m[2]+url.search,{headers}));
     }
 
+
+    if(url.pathname.startsWith('/api/tanks/')){
+      if(!env.ROOMS)return json({ok:false,error:'خدمة المعارك غير متاحة الآن'},503);
+      if(url.pathname==='/api/tanks/health'&&request.method==='GET')return json({ok:true,online:true,engine:'tanks-authoritative-v1'});
+      const limited=await rateLimit(request,env,'tanks-api',120,60000);if(limited)return limited;
+      if(url.pathname==='/api/tanks/quick'&&request.method==='POST')return env.ROOMS.get(env.ROOMS.idFromName('tanks:queue')).fetch('https://tanks.internal/queue',{method:'POST',body:'{}'});
+      if(url.pathname==='/api/tanks/rooms'&&request.method==='POST'){
+        const raw=await request.text();if(raw.length>2048)return json({ok:false},413);let b;try{b=JSON.parse(raw);}catch{return json({ok:false},400);}
+        if(![2,3,4].includes(b?.capacity)||!['ffa','teams'].includes(b?.mode)||b.mode==='teams'&&b.capacity!==4)return json({ok:false,error:'اختر 2–4 لاعبين، وأربعة للفريقين'},400);
+        for(let i=0;i<8;i++){const code=roomCodeFor('tanks'),hostKey=token(),res=await env.ROOMS.get(env.ROOMS.idFromName('tanks:'+code)).fetch('https://tanks.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:b.capacity,mode:b.mode})});if(res.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذّر فتح غرفة'},503);
+      }
+      const m=url.pathname.match(/^\/api\/tanks\/rooms\/(07\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
+      const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
+      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
+      return env.ROOMS.get(env.ROOMS.idFromName('tanks:'+m[1])).fetch(new Request('https://tanks.internal/'+m[2]+url.search,{headers:h}));
+    }
+
     if(url.pathname.startsWith('/api/hockey/')){
       if(url.pathname==='/api/hockey/health'&&request.method==='GET')return json({ok:!!env.ROOMS,engine:'hockey-studio-v2',online:!!env.ROOMS},env.ROOMS?200:503);
       if(!env.ROOMS)return json({ok:false,error:'خدمة المواجهات غير متاحة الآن',code:'HOCKEY_UNAVAILABLE'},503);
@@ -906,6 +924,8 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async tanksDelegate(){if(!this.tanksRoom)this.tanksRoom=new TanksRoom(this.ctx,this.env);await this.tanksRoom.ready;return this.tanksRoom;}
+
   async hockeyDelegate(){if(!this.hockeyRoom)this.hockeyRoom=new HockeyRoom(this.ctx,this.env);await this.hockeyRoom.ready;return this.hockeyRoom;}
 
   async partyDelegate(){if(!this.partyRoom)this.partyRoom=new PartyRoom(this.ctx,this.env);await this.partyRoom.ready;return this.partyRoom;}
@@ -921,6 +941,7 @@ export class GameRoom extends DurableObject {
   async serpentDelegate(){if(!this.serpentRoom)this.serpentRoom=new SerpentRoom(this.ctx,this.env);await this.serpentRoom.ready;return this.serpentRoom;}
 
   async fetch(request) {
+    if(new URL(request.url).hostname==='tanks.internal')return (await this.tanksDelegate()).fetch(request);
     if(new URL(request.url).hostname==='hockey.internal')return (await this.hockeyDelegate()).fetch(request);
     const url = new URL(request.url);
     if(url.hostname==='party.internal')return (await this.partyDelegate()).fetch(request);
@@ -1089,11 +1110,12 @@ export class GameRoom extends DurableObject {
   async webSocketMessage(ws, raw) {
     if(typeof raw==='string'&&raw.length<512&&raw.includes('emote')){let m;try{m=JSON.parse(raw);}catch{}if(m?.type==='emote'){
       const a=ws.deserializeAttachment();let d=this;
-      if(a?.hockey)d=await this.hockeyDelegate();else if(a?.challenge)d=await this.challengeDelegate();else if(a?.party)d=await this.partyDelegate();else if(a?.serpent)d=await this.serpentDelegate();else if(a?.paths)d=await this.pathsDelegate();else if(a?.sudoku)d=await this.sudokuDelegate();else if(a?.picture)d=await this.pictureDelegate();
+      if(a?.tanks)d=await this.tanksDelegate();else if(a?.hockey)d=await this.hockeyDelegate();else if(a?.challenge)d=await this.challengeDelegate();else if(a?.party)d=await this.partyDelegate();else if(a?.serpent)d=await this.serpentDelegate();else if(a?.paths)d=await this.pathsDelegate();else if(a?.sudoku)d=await this.sudokuDelegate();else if(a?.picture)d=await this.pictureDelegate();
       const r=d.room||d.r,rows=Array.isArray(r?.players)?r.players:Object.values(r?.players||{}),id=a?.id||a?.playerId,p=rows.find(p=>p.id===id);
       if(p&&(!a.connection||p.connection===a.connection))await relayGameReaction(d,p,m);return;
     }}
 
+    if(ws.deserializeAttachment()?.tanks)return (await this.tanksDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketMessage(ws,raw);
@@ -1216,6 +1238,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketClose(ws) {
+    if(ws.deserializeAttachment()?.tanks)return (await this.tanksDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketClose(ws);
@@ -1238,6 +1261,7 @@ export class GameRoom extends DurableObject {
   }
 
   async webSocketError(ws) {
+    if(ws.deserializeAttachment()?.tanks)return (await this.tanksDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketError(ws);
@@ -1633,6 +1657,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.tanksRoom||(await this.ctx.storage.get('tanks')))return (await this.tanksDelegate()).alarm();
     if(this.hockeyRoom||(await this.ctx.storage.get('hockey')))return (await this.hockeyDelegate()).alarm();
     if(this.challengeRoom||await this.ctx.storage.get('challenge'))return (await this.challengeDelegate()).alarm();
     if(this.partyRoom||await this.ctx.storage.get('partyRoom'))return (await this.partyDelegate()).alarm();

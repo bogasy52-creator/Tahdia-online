@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-10-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-464b0a51f653';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-38726b7be1ed';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.10.0",
@@ -168,6 +168,7 @@ const ON_DEMAND = [
   "/assets/brand/star-reward.svg",
   "/assets/brand/sudoku-cover.svg",
   "/assets/brand/tahdia-hero-v15.webp",
+  "/assets/brand/tanks-arena-cover-nov14.webp",
   "/assets/brand/turbo-kart-cover-v33-7.svg",
   "/assets/challenges/chaos-mirage.svg",
   "/assets/challenges/chaos.svg",
@@ -262,6 +263,7 @@ const ON_DEMAND = [
   "/assets/css/app-social.css",
   "/assets/css/app-sudoku.css",
   "/assets/css/app-survival.css",
+  "/assets/css/app-tanks.css",
   "/assets/css/app-territory.css",
   "/assets/css/app-v5.css",
   "/assets/css/app-wordbomb.css",
@@ -387,6 +389,7 @@ const ON_DEMAND = [
   "/assets/css/tables-v33.css",
   "/assets/css/tabletop-v30.css",
   "/assets/css/tahdia-premium-v25.css",
+  "/assets/css/tanks-v33-10.css",
   "/assets/css/uno-pro-v33-9-12.css",
   "/assets/css/uno-v33-7.css",
   "/assets/css/uno-v33-9.css",
@@ -609,6 +612,12 @@ const ON_DEMAND = [
   "/assets/js/sudoku-ui.js",
   "/assets/js/table-viewport-v33-7.js",
   "/assets/js/tahdia-premium-v25.js",
+  "/assets/js/tanks/audio.js",
+  "/assets/js/tanks/boot.js",
+  "/assets/js/tanks/core.js",
+  "/assets/js/tanks/main.js",
+  "/assets/js/tanks/online.js",
+  "/assets/js/tanks/render.js",
   "/assets/js/ui-icons.js",
   "/assets/js/uno-ui.js",
   "/assets/js/v5-ultimate-expansion.js",
@@ -1271,6 +1280,7 @@ const ON_DEMAND = [
   "/social.html",
   "/sudoku.html",
   "/survival.html",
+  "/tanks.html",
   "/territory.html",
   "/v5.html",
   "/wordbomb.html",

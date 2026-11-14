@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-14",
+  "baseCommit": "608b5c5b80faabf86c6e526f2c303564e1a93394",
+  "release": {
+    "command": "npm run verify:release",
+    "tests": 1593,
+    "passed": 1593,
+    "failed": 0,
+    "skipped": 0,
+    "localAssetReferences": 1176,
+    "jsModules": 517,
+    "offlineCoreResources": 49,
+    "offlineCoreBytes": 999619
+  },
+  "runtime": {
+    "kind": "real local workerd/SQLite/WebSocket integration",
+    "checks": [
+      {
+        "check": "create-four-human-sockets-ready-and-start-2v2",
+        "passed": true
+      },
+      {
+        "check": "authoritative-input-projectiles-and-identical-four-client-snapshots",
+        "passed": true,
+        "frame": 287
+      },
+      {
+        "check": "token-reconnect-keeps-seat-and-running-match",
+        "passed": true
+      },
+      {
+        "check": "invalid-account-token-rejected-and-untrusted-account-headers-stripped",
+        "passed": true
+      },
+      {
+        "check": "quick-match-pairs-two-real-connections-without-bots",
+        "passed": true
+      }
+    ],
+    "passed": 5
+  },
+  "visual": {
+    "kind": "actual shared game engine and Canvas renderer; a local bot simulation, not browser or human gameplay",
+    "browserVerified": false,
+    "seed": 37,
+    "duration": 11.99999999999996,
+    "events": {
+      "go": 1,
+      "shot": 22,
+      "hit": 11,
+      "ricochet": 11,
+      "kill": 3,
+      "impact": 2,
+      "roundEnd": 1
+    },
+    "players": [
+      {
+        "name": "Jade",
+        "shots": 8,
+        "hits": 4,
+        "kills": 2,
+        "score": 1
+      },
+      {
+        "name": "Amber",
+        "shots": 6,
+        "hits": 4,
+        "kills": 1,
+        "score": 0
+      },
+      {
+        "name": "Cyan",
+        "shots": 5,
+        "hits": 1,
+        "kills": 0,
+        "score": 0
+      },
+      {
+        "name": "Violet",
+        "shots": 3,
+        "hits": 2,
+        "kills": 0,
+        "score": 0
+      }
+    ],
+    "sizes": [
+      [
+        720,
+        900
+      ],
+      [
+        375,
+        450
+      ],
+      [
+        620,
+        300
+      ],
+      [
+        1150,
+        700
+      ]
+    ]
+  },
+  "browserVerified": false,
+  "physicalPhoneVerified": false,
+  "published": false,
+  "art": {
+    "asset": "public/assets/brand/tanks-arena-cover-nov14.webp",
+    "origin": "Original generated cover, reused from the approved game art; WebP conversion only. Runtime gameplay is drawn by the actual Canvas renderer."
+  },
+  "retained": [
+    "Current Jewels mechanics and cover",
+    "Current Billiards cover",
+    "Deployment configuration",
+    "Existing ZIP updater and fingerprint checks"
+  ],
+  "sources": [
+    "https://github.com/bogasy52-creator/Tahdia-online/tree/608b5c5b80faabf86c6e526f2c303564e1a93394",
+    "https://play.google.com/store/apps/details?hl=en&id=net.froemling.bombsquad",
+    "https://apps.apple.com/us/app/tanktrouble-mobile-mayhem/id951971414"
+  ]
+}

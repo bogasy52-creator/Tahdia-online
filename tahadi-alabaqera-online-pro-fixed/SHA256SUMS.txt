@@ -49,6 +49,7 @@ f9b0903016cc938d60311de6902a80143605cc01c3588c24bcd2eb84bce9a9c6  ./docs/verific
 f6a9590a2af12784a0c12503e1aaef0122e120d8e47695897bf6ac50d3d424d4  ./docs/verification/pro-play/reaction-artwork-preview.png
 95bedff393efcbd9b5c952fc2f3f5341b8a431f86a7565530dae970fc3b12e77  ./docs/verification/pro-play/results.json
 38e1acd942317e2877df76e48a44c799e0b971b3ee82c2bc36398255daa2aafc  ./docs/verification/studio-repairs/results.json
+00213b6d833b6969f25696cfd6e9127f9da89568df30f8ec12eecc86e544c7e1  ./docs/verification/tanks-arena/results.json
 1eb6ead90cc004386a6c991343e994db8ae3147a38dd8bb168475b4222d3dfa8  ./docs/verification/v11_1/result.json
 294fba6d734a725e8e21fda3f74c49d4529d56f3267ce4c5f957d98d78333a62  ./docs/verification/v11_2/result.json
 a53cf06eee7747a5f8212d401565310361473624dac838d090bd99326325f757  ./docs/verification/v12/browser-checks.json
@@ -196,6 +197,7 @@ bc07353c3949d71c268128e02f5f3c0dacb8560bc2e3161a3d7ee84924213dba  ./public/asset
 9ddf955f45745d3920d66e1229bf2a063ae77001318de7abd719769863bb0833  ./public/assets/brand/star-reward.svg
 6d59fc16a2c746d75ec854c366b3550ba3e34f6fb8a39a8f4fd49fcb1af0bda1  ./public/assets/brand/sudoku-cover.svg
 36cdadb4cb0fdd5616fc153c7de0d60f46b8a470513d8cf634c425b053661c31  ./public/assets/brand/tahdia-hero-v15.webp
+6e598737c5e7376790a4d8fba281ffca04f43bd04581d1bb034af7960689343f  ./public/assets/brand/tanks-arena-cover-nov14.webp
 6a127e775b35818224a1b0b12585ea6a78d2f17a55231667b7e17f373fd4fe03  ./public/assets/brand/turbo-kart-cover-v33-7.svg
 21f7fbf005571e469108c904755e92f696e6f269270633c8b9e329b1d427a463  ./public/assets/challenges/chaos-mirage.svg
 7ed00e6a9981af942776e5c6e0400d1d319144c0f0e5975da002dc120f0a48b8  ./public/assets/challenges/chaos.svg
@@ -261,7 +263,7 @@ e0324d09a3de4ee37605f3d6dbfe89977aa3ca48413d4dc424150a72afdb8c52  ./public/asset
 771ce413819dd0815c901c44d3823c38c9c17cb237789820c211cb1c58a94837  ./public/assets/css/app-chaos.css
 21fd00a99b187d32754701b3b112487a5b8fd9f4883e2515915f7e4645b4eeef  ./public/assets/css/app-characters.css
 9af24ef567bfc1a57b5ad9aa932c5fc6e43de6455905666fdd05b03998c7cd81  ./public/assets/css/app-cipher.css
-1d1fe65b65e9927443352f186b1524fd169d1b80c775dc1e66422ea90af8cb8f  ./public/assets/css/app-crowd.css
+88bec3260a872e7874d3b14486468f09a1efe08d39454f35a0cf7ce26f68ff63  ./public/assets/css/app-crowd.css
 4532694e8759eac41c416f8327ae6e57c3fc6d484ad850b6ff1df8851b5ed119  ./public/assets/css/app-dice.css
 c473476b512652bb223349cc5f7deae3cfc3b9c3a746dfd4ab9ca05e766cd3d7  ./public/assets/css/app-focus.css
 6e6982dbd227ea29a0a2b1f32b6fd15aa54751f80f06f1e07866f53e232c1b03  ./public/assets/css/app-hockey.css
@@ -290,6 +292,7 @@ c473476b512652bb223349cc5f7deae3cfc3b9c3a746dfd4ab9ca05e766cd3d7  ./public/asset
 1508200a0177ee241e4eb23670c6c3b26a41e276de82a97052cc18586421b4dd  ./public/assets/css/app-social.css
 a84f15636f2a50472cd7e87e2af91856ddbbd44a7585fa5769279d5fdaea375d  ./public/assets/css/app-sudoku.css
 5d243c44361089dfb249cddd223cc19978c7b0a5638cd094c9c20b7f7d62cfe2  ./public/assets/css/app-survival.css
+2325d4403c5980338da66349e0ba41e27f6350401cc8761412fc94901b87ee58  ./public/assets/css/app-tanks.css
 5d243c44361089dfb249cddd223cc19978c7b0a5638cd094c9c20b7f7d62cfe2  ./public/assets/css/app-territory.css
 38991008ccd0f666f9254f5747178397b86005b1ef084cbf5944e4c4973d5e4b  ./public/assets/css/app-v5.css
 a09a4506674a9eff933a1867da44cad41da613160904cf3f0550907468034a90  ./public/assets/css/app-wordbomb.css
@@ -415,6 +418,7 @@ cb0db79f83f08bd7fac2e2d0db00ce41d1ca74a1aa7eeca34d0512514f198d87  ./public/asset
 6d6540c997f795e743ba083b844a929492d208d6959497d92a5f641df9347ab5  ./public/assets/css/tables-v33.css
 fbd4ed73d5cc1f2e936d686222cc7d7657649f1389e935590c17a30c1dfb84e5  ./public/assets/css/tabletop-v30.css
 5b2f25ab7ef810dc393babf37a4c7e80602be14b4380e52637596118395519ea  ./public/assets/css/tahdia-premium-v25.css
+89d3f406a5bef159472f651e50fa1285b38cf92a7652d9a9182c9d5dd8682674  ./public/assets/css/tanks-v33-10.css
 64dab8853b282fb4849be8d8d4689ec00efdfc3f33872db0a8366591324e104d  ./public/assets/css/uno-pro-v33-9-12.css
 c6efe94adf0eb70a6c2d7ee9e7f885b6dfdaba577cef4b18fc96519393ec0347  ./public/assets/css/uno-v33-7.css
 2d3fc17006f84bb0192307e382beae78c9588c8a576a79a35fce15a2eac1708c  ./public/assets/css/uno-v33-9.css
@@ -555,7 +559,7 @@ ff6f0fc392a4450de45d9755cf51904310a03b08188c16d31cced517f6c10246  ./public/asset
 16f8fa44166020282c40cf20a8da707bb89766180c4dbee4406169dc5b4e4cf3  ./public/assets/js/engines/wordbomb-core.js
 eac8d504eac6f6be4ed94e5ddd935997f1769e18d30b832761af38df50e3beca  ./public/assets/js/firebase-online.js
 cb093fd02da0fe7b60a37a5e43926e2bd4e32bd3beb218c2300f5e1cece0b01d  ./public/assets/js/fullscreen-game.js
-07a6a5c94ac6958393850cc0b1e0aa3b48d2839eda4615aaa7b020f910416856  ./public/assets/js/game-menu-v33.js
+91dbc87d3921b8359b0dc5025dc99ff011def40479b2c7d48bdf60346e97df62  ./public/assets/js/game-menu-v33.js
 e8f5c54e37e6e5d4d1a22207aa9c30cc3e4d927d801f574b6a418ecae64ce60a  ./public/assets/js/games/jackaroo-ui.js
 c55b447e0c363d9e6e40ccaef7c5c95a84f14ceae13643917da296ed9b1d443e  ./public/assets/js/games/snakes-ui.js
 2aaccce93fbe48693b9080c5891301c85a818beefc956dab23ea8a1e15af6495  ./public/assets/js/hero-effects.js
@@ -595,7 +599,7 @@ cf367248a5244bb85ed30be9cc6b2ba2a56dbeabc87f5416e1e148c5b89f2b11  ./public/asset
 8a5d6ef5eb1e2abebe30187a1a2ced057cc591d2ac0ca367aa46c4fbf0299b87  ./public/assets/js/paths-online-v24.js
 88fe7934995e53fd2c26c22b0aeb3ae838c40c6e2041967644a7e5c5b7298416  ./public/assets/js/picture-ui.js
 6dff1d94b7a7c609e314784bf3c7f6f8958de0b57f39ed3d92c5dd181ae5ffe0  ./public/assets/js/pieces-v31.js
-0a43bd0c8584341f520777af0ebf11f2ec0f8b92e0a473182098aa1969d0a533  ./public/assets/js/platform.js
+c346b26d7bc3189a93981da178df0c48365d224515585afa01ef7378806ecca9  ./public/assets/js/platform.js
 a5c08364f2c7a792c25a7f927b25608df68d218738c41177b0d660bef73b6ba5  ./public/assets/js/play-feedback-v24-1.js
 1ad261a6aeb4f23f08c2084a08197015bcfd8ef50af620b3313bf90c05a51235  ./public/assets/js/play-insights-v15.js
 9f5ad081a5f3d3cc4d2e44f596dd1f1e581acbdac33ee811a887e38c986a42be  ./public/assets/js/player-card-v33-7.js
@@ -638,6 +642,12 @@ c78e3c442ffcb8d7366a909c287a8a97789a2ad8a6ae0c5a7769715676e065b0  ./public/asset
 f1fecdf92438fcc37594082baba3b3e57c52f0daaf558b9fb324a9ca81f688b2  ./public/assets/js/sudoku-ui.js
 abb4726c24355d35d342b9f748d218cf9c997db8f15ec3ffabef0fd0a686052d  ./public/assets/js/table-viewport-v33-7.js
 0ed2eeee55315c307b32450d261f3ea5c8953c267162855e9dc80cc34874460a  ./public/assets/js/tahdia-premium-v25.js
+c685b0ae301bf67dbd23c8530b64e7942e585c75c47d3ea4fc3232a75dfe958b  ./public/assets/js/tanks/audio.js
+dfc14b0bab166b5cb6e45af720246f2bea5c39492eebfc3be040dcbe5008e030  ./public/assets/js/tanks/boot.js
+a004500e4f66e54c92c517d5f608847ca3da04b41d7b0714bc6823a248ec50ff  ./public/assets/js/tanks/core.js
+93be7e6dfe20f3f2e92c083f27514576f62dea7643c2f76981dc0120ae216010  ./public/assets/js/tanks/main.js
+59260d394197d01fd508599e2962cf8fa862b12e5c31099abe721d194563dd6c  ./public/assets/js/tanks/online.js
+e931c5de281e723ab1ab6e26b1161d0919849dd53b8bb0d6e8947c9b7d0992af  ./public/assets/js/tanks/render.js
 091ab9b06dd27b6a3925bea98880059d213ab6ea231b3485cca2f88dc4626ad3  ./public/assets/js/ui-icons.js
 8258f1d4edb903a5883afe02583f9698f76e421aa5f0e8f07e21b2bb24d1192b  ./public/assets/js/uno-ui.js
 8c47ca36e26b848f65fd40ca90171693900fb7d9c37b74f93eff323048aac57f  ./public/assets/js/v5-ultimate-expansion.js
@@ -1351,7 +1361,7 @@ da6bbcc8b499b3ff089774e09ab558cc6c7e994817ccc2a5dfa8776ff2dcbcf6  ./public/asset
 15d2f2383372d7e12458dfc509cda56383dde47bf516a398e5bbd226ca670489  ./public/chaos.html
 363701ddae43cb2bddd0dfb3650c24275b3d528518bed444f8c7ff9aa10a1387  ./public/characters.html
 fb5107e1a5c8c0ab1c46fa71cd2ce420c421e9454d64c812acf7ce5dfb111859  ./public/cipher.html
-44c48e53d75e50c8e8f41a61af3b5467ed8cb08ffc9a49e2e02cfd642469801a  ./public/crowd.html
+446b9b6e800bb4099651022840fe818bb2856174417be46314549c00f104c65b  ./public/crowd.html
 7cbd43e94605a89caf880b1390e33391b194c32f2f93fc70e6f3719c5c8dbbbb  ./public/dice.html
 f288fbc6e3ff3fed52c087b0076823cb79e2c576484a3c6a9debb283c19451a4  ./public/favicon-32.png
 e761817e76b9913d7d6556dd8421f5d8fdbeaa422fa6e201604a286850216bf6  ./public/focus.html
@@ -1359,7 +1369,7 @@ ffcda14d660c3e627d6aa356ab739523004661025d117d180136836a1dccb098  ./public/hocke
 ac51180272b51f5507061f9c1828ac52d02f4734f036e1bfbe0a532fe4fa6c04  ./public/icon-192.png
 a3698599fc6034a180025a063683f99fb2a1552abef6a92b67cb036ca174074b  ./public/icon-512.png
 4d3e08122248b46fe6c6d4c5598f92c09ae6ce330910fe46f6d292bd31ef2ef4  ./public/icon-maskable-512.png
-0ab1eba00c60758237c45674a78fb6d2decf7e3679ddc08e0e494e309b851431  ./public/index.html
+87dccbf9dad37a233d2a5261155848c9abba9eaff7e4c6bf6f4381a0e1887359  ./public/index.html
 0f154400fff7c769044e8e84a35796bb7623be718c763bfcbcfbbbd8593f923f  ./public/jackaroo.html
 5fe5c4215fbdf8f87760e17483e1db3950e21ad9e8a7e2e91abeec1112ca46ec  ./public/jewels.html
 31a5c1b2a005f8cb983523023aa5e1b26490e44457e4f77aaf076c3bdc050d00  ./public/journey.html
@@ -1381,12 +1391,13 @@ d1c3137cd1491e959e57e539c9c8484ea1d34a3f346dc7774700989e9ac727b9  ./public/quiz.
 6ee90f3aa94ce19888d74fef01b8ec5b09480b25b59bb9918291dd10ca3f7ddc  ./public/reaction-classic.html
 fc00d1a13ce6917b18a9fc40a56297c19b2a8fa7393e51c29f8be06cbf80d9a4  ./public/reaction.html
 8b4c2af5409b6926e436c6cc039a53537cc25e178800122afe953b1d95960149  ./public/serpent.html
-13ea3b28fe0b6618c861b518d91c32ad852c497b228bb14ffe547c13bca51856  ./public/service-worker.js
+1f68e26c69b3b19a60e7af5b3cd9df2b66a5e6f2d40d0e35ec601aa281683246  ./public/service-worker.js
 bfab28a672e5bc01e67788da37458dc4c6c269323950d98c3bb23109dd56b0a1  ./public/shop.html
 b8f734b34539f654b5034f2fa7d7d85b7ee344ef43900ae8ce914ec67ecb64a8  ./public/snakes.html
 9e6ff43ed7eb7168f07737254660e77f438b054690e692710ec5bef36be8a2eb  ./public/social.html
 f00dd23959a7fd313d9f6487ebb5e138bdd6d5c6ab9e3f3d2595319404cbaf60  ./public/sudoku.html
 3e36914f32d4e132dd2d06e59ce23f17248da6439765fe65724bcf777dde18a6  ./public/survival.html
+0298edf94d585e5235f0c594884670d8826755c1dfed644832dba6fe1eb52389  ./public/tanks.html
 ac4655df30bbe544fc416ea067c963305cd9b97f900570b25744863aea195c9e  ./public/territory.html
 b83eb20f941dc90bea7a014bba0e6efbbc697416f191f6a5d67bd8599b6c072c  ./public/v5.html
 387b10c6cf41f9fdf464e351e63f7dbe3592ae374b8ea954bc3462781857bdfb  ./public/wordbomb.html
@@ -1482,7 +1493,7 @@ efa48dcbc08e1c3fb0ccee34ebe0cb20d968b5e084e145c835390e940739ccf5  ./scripts/play
 e8c3c7675d90dfa6351b853c1aea75b8fb17ed98beea4140def3afdde6bff07c  ./scripts/render-snake-eat-v31-1.py
 3617a8702c559fdc75b61c161aba2c45f1126ec97a35217c018d76dabb4351cb  ./scripts/render-zahra-v33-10.mjs
 296108cb8e0e1293a1d1f73644dfea78d80071216bc7010237af6223ae987702  ./scripts/service-worker-runtime.txt
-79618a018b624374d898ae24a971012a1caf28920e8769a5afa8f673b498352b  ./scripts/style-bundles.json
+25bca682fb69a371c650d703c57f82eceab465fa9015ff912eaa0a6feece19bc  ./scripts/style-bundles.json
 b425444cea982b8042b5865f0bf5553f99ba3ff7297f6c235aada1cf6255bf08  ./scripts/sync-quiz-data.mjs
 99f7d7b07c29af80e16940acad7fbcac0ddf049ac5788f3f771fbdfdc83c482b  ./scripts/test-baloot-voice-browser.mjs
 bb6e45c07114279681f4720dcf1c5097a9ff70d617c01d640db85d1bdc5f5db6  ./scripts/test-browser-v26.mjs
@@ -1507,6 +1518,7 @@ fca84f802d687ddffac97aaa43ecfd269c1daf00561b7d8a01365f02e07a0df8  ./scripts/veri
 f87820846529bdd16c46bae01195eea80810c4af7ffc52a2e0d7e2cb5e56a962  ./scripts/verify-static.mjs
 1c28f0f63176953f941a58085e58eb197177944feb5d57c127ae5514e37f57af  ./scripts/verify-studio-browser-v33-7.mjs
 2581b7da5783ed4d322927e98191db0644e6c9b7457302f6c85454d50ab1a037  ./scripts/verify-sudoku-runtime.mjs
+679ecee68f5626b45b90fe76c15bf8c68384dcc2762b47d1eb52e4229a9f33c6  ./scripts/verify-tanks-runtime.mjs
 37b7dbfa25768ec9b2933c1132fdad16beb4036f344219e59fb3207482da41a5  ./scripts/verify-v6.mjs
 03dba203ab93f932e33c89a9e00211b5f58a188340419a267d3eae6d4206d8f6  ./scripts/verify-v7.mjs
 ce1236a33e7bd15b3a46b4aea32061160a07597ce843c208d0c11688d0e64ddd  ./scripts/verify-worker-config.mjs
@@ -1532,7 +1544,7 @@ c122c24648c485ad2b99fbce235acc22a8fd2e97e2d64c094b2f2c88318ba827  ./src/games/ba
 d918bc7afc032cc17e8223bfb40da9c41b5d64f0059331cdba631c539e0a2b0a  ./src/hockey/hockey-room.js
 90ba6d8495c7b31586b4e84504d817a81111db34ab5e1125f1f4ff6c243d9d0d  ./src/images/generate.js
 0280abc8c0d3b970f53743cad2c0557c29a973fec774e1d74d41ce7b3aeb2c57  ./src/images/image-room.js
-8bc40492015ec3a8539ac146538b20e0a3016f2f865a62a21e5f61b1bf29126c  ./src/index.js
+712b995109ca7721e79f1ff738d484c0bbe32ad2b32cc7a2ceefb760001ffe35  ./src/index.js
 67abbf9f5b87ce70a3ec6562434488ac7067f541c329331120f4c3652a468d22  ./src/leaderboard/leaderboard.js
 d3e1daf2846e8ecdd469b701ebf7ec04c6319915660ced1e83fee431ae7ba120  ./src/party/party-engine.js
 6a5f69a9e406bbc958a6400ec5bc01ee7245992781e36c63c0b639cc5af05e82  ./src/party/party-link.js
@@ -1548,16 +1560,17 @@ ce805adc9a9bef415e6e0cfa87687f57d9c087afec35b0af3b51e3dff5a6f927  ./src/presence
 03e432b8b3c7280ccc930f3c657aa48da884c1a92a708503cda7d6b32833868e  ./src/quiz/quiz-bots.js
 159c505d7bf2c184f678192ca0ea970cf8ab12213c5786c3b40315bbcd3f56ee  ./src/rooms/board-game-core.js
 077bcd7dc5b3004735f5b144f741813a683fff6881b6f076bf4e76cf9ccc1a5e  ./src/rooms/board-game-room.js
-23477154774763d2dc166aa0f332f6ac3f3c3b90a15f4d89f3f202a908684dcb  ./src/rooms/room-codes.js
+75e20a9c0fd6fbcfd7de503a5457b890e26bee5f7b1ecd297be19b73e25efb37  ./src/rooms/room-codes.js
 c96aee73350c3733ecd8088ec0b354920441ea9bfc9424787ad35fa0c6f00c3f  ./src/rooms/verified-results.js
 634226e0b20d114fa7c456bc9b7404562a580af6dea4eedff7b65b862ef56adc  ./src/serpent/serpent-matchmaker.js
 a3a168ea5df53479da2ebcf3430f0b086a3bec82e62be43808f79f51de688be9  ./src/serpent/serpent-room.js
 65df9dae08c4535c4fbe3395dee7cc49979b81e29dae1841980d061aeb9488c4  ./src/social/account-policy.js
 0128693207c8468f1958dfadefb2831b8e605c8163fdb2943412fdd6e67c53d8  ./src/social/game-reactions.js
-b92742b570b5a61f2d9f018ef598367b57548c32dd915b4134e76e7912c73c6c  ./src/social/social-api.js
-10101f49f9f4c7ec7d3b15ca30d044aa8020fdd56aa3ab5b0486fc2423fb8ebe  ./src/social/social-core.js
+57435a4eee1cd8516b49c8340ef3c570578567ea48cc112851c0f42ea1f629d4  ./src/social/social-api.js
+3bab8edf1dd5a809d5af3fe8c1b691ee5c6d2bf938bc52d361e23d029b1a3689  ./src/social/social-core.js
 f21dcedaee512779ce277e2afe682d271a7a2c59935c0a8eb20a2c378aa73d61  ./src/social/social-user.js
 de0b49652cad96749ae04e040e2a56f66632f6a82d8ea382c88e8c9d11b603ce  ./src/sudoku/sudoku-room.js
+1c168f567132ef09371a586d22601220a703b89281dc99e787c59e9cf331b8b2  ./src/tanks/tanks-room.js
 4e0d18560ae67bc281dab395a55d9a8e77af183d1aa2790c5b34752e3956c05a  ./START-HERE-AR.txt
 b79964fcd7c59f280b0991a20d0e1001b74d6bd09a148646be41c52d7ae5459e  ./START-LOCAL.cmd
 457acf2a6e4a481a772819c3c12d9d3d0a0e5de352455c449a9bbef85044126d  ./test/account-names-v32-0-1.test.js
@@ -1615,7 +1628,7 @@ cf5bbb94d591dd7d6aa84f823bfcf1762553828806f7b120663ab9c4324a4860  ./test/charact
 ef130aa787f821954ba81478709140f627ae552c3bea4a01b4e64f59f842a714  ./test/cipher-unlimited.test.js
 d0f1e4eb461c134755dd53d47c0a237a4747be55301ed59d1b5e66859265124a  ./test/client-health.test.js
 eecf14a1ee6dc1002a8f8226615c88ae677f49f4df08e642a0217d7db0b7c5ee  ./test/club-pro-v33-7.test.js
-b4d0a96bd691c3740f8ac33f1db605ded36d17f1e06ee0ff9d2559b684710941  ./test/crowd-runner-v33-10.test.js
+b00fe8b62d508cf90e9dc66320224b215d3b3efdf38af16e4c4d0c4feaa37d9d  ./test/crowd-runner-v33-10.test.js
 00a654ace69df10cb2122cbda335d7175025bb46a653e4cb00afa394a3709eec  ./test/current-quality-v33.test.js
 be08556adaa5e079c0aa43a04ece1f08f6bf49a80e133ab7155c0caa9a9d9a8e  ./test/design-refresh.test.js
 2012cb37402e02918f78e59d2600c964aa424b39cba2a49bc8303e6563584870  ./test/dice-engine.test.js
@@ -1765,6 +1778,9 @@ a3a63bd18277e72a68032e8576541b0975c09ac80a72e82bcac91f38cc29d373  ./test/sudoku-
 7ab4e2f1998b4f87bb7cfce4a1fab38942bdf9fb09e18ae866144b92715e661c  ./test/sudoku-ui-v20.test.js
 4c78e88201f128e34b1beab00b2625e8f7f784b62d2fd65b56ff335bbbf99f63  ./test/sudoku-v22.test.js
 690fb1e21b76403ae50b2a6509299d2af9618fd6fc8bf06b3b2e2349ea3d3ad0  ./test/table-visual-repair-v33-7.test.js
+73f6b37f3801f169fc70f71ead6a3bf278961a34fcf1f7660d18c4b09ad964ff  ./test/tanks-controller.test.js
+f21bd5b4cb7ff37b6a6d89b1e5fe6bc98d9acb3f01c17d373b8411a934e021e5  ./test/tanks-engine.test.js
+fd42d75e873c6415dbfa9e75115e77e67eb919c9b4d5fa82f35d1dd136f86628  ./test/tanks-room.test.js
 9b714aba0943e217dd2810b6b39a5f14e1c4bd7e230de01854ca9dea2a20f394  ./test/test_voice_import.py
 de6648b94562997398c5dde5a1cff2f3ec0b030b14d473bda9bc7f0ba3481bd0  ./test/uno-quality-v33-9-12.test.js
 716fcdb9e0a1714f7419e57e91e1fdd5b75c150d07f9be1c04ed679cdcb04d3e  ./test/uno-v33-7.test.js
@@ -1774,7 +1790,7 @@ f8d08f2fade10312c8538b85c35ed1ab33113e8f57cc65b7f20fa8fb20736b54  ./test/v134-ga
 f5ec9a640c415f28c80760aababfae9d0197331642192d15d7c55663e737d927  ./test/v134-quick-match.test.js
 26a9d91097851e22bcc8fc32f400201836e391464fd57b596bb6ee0f6eb47c99  ./test/v135-gameplay.test.js
 37e39305feb7e91fd7e1e768c9dc0e2caf9030d51a49949be88bda7e4607233c  ./test/v14-game-lifecycle.test.js
-3e5873c9a6c83d010d3fb486578fd3f2f2ff5526c0b16c8b676671637c5cf34d  ./test/v14-home-navigation.test.js
+c05238ba1cf89a1e5678ec6be136871c6341851c2d09f70c6c47dd678f4db1dc  ./test/v14-home-navigation.test.js
 47dc1a4271769f79e464c7522f70936946d37cae8d962facedae81e53fb95b42  ./test/v14-store-safety.test.js
 38e4abc39b757c84fc3a79b52eace8e76e5127bd0fd66460d49199885568a043  ./test/v15-cart.test.js
 3350c66249a35858e048506cf31c9a877fbaffe4241a4b38d450c42d05aaf12f  ./test/v15-play-experience.test.js
@@ -1797,6 +1813,7 @@ a243b8e3509e78be7e5f597d65fb4a59a7f37b26177eab0826963c0c1ea9e24a  ./test/worker-
 0e25b9daea4c9edc4988f7071ead8ae555f5341fe2efcd417ae228b594d608b0  ./UPDATE_MOBILE_CLUB_AR.md
 430d1c693859b36804aebff9ef8b9ee6f9cd96a89f5406ec344e6d9d2de759a4  ./UPDATE_PRO_PLAY_AR.md
 e3bcfff10751663aa3688ef3afaa72812f1c5471c91df4f2af5d957cfece580b  ./UPDATE_SAME_VERSION_AR.md
+6db41cafe89a87061eefb4ba40aa88990c6cd99499de0c6d3075f2452db64321  ./UPDATE_TANK_ARENA_AR.md
 db9a56a40f3bf116f7f35ca900d383e8b420c8a2f7853373bfa91d05b6b89e7f  ./VERIFICATION_V26_AR.md
 bfc7d9284c843d78bc64b0c52986d17755dfe1e6c22c7e8e7af2676bd264695c  ./verification/baloot-rules-voice/summary.json
 30bf001a4dff07e3ebc9dba763ba67215f5c8606ff5443ad5ec32495e768b545  ./verification/challenges/release.json

@@ -575,8 +575,12 @@
   ],
   "crowd.html": [
     "assets/css/platform.css",
+    "assets/css/game-interaction-v34.css"
+  ],
+  "tanks.html": [
+    "assets/css/platform.css",
     "assets/css/mobile-v21.css",
     "assets/css/game-interaction-v34.css",
-    "assets/css/crowd-v33-10.css"
+    "assets/css/tanks-v33-10.css"
   ]
 }
