@@ -15,7 +15,7 @@
 
 
 
-<link rel="stylesheet" href="assets/css/app-jewels.css?v=33.10.0-7f4db83978"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head>
+<link rel="stylesheet" href="assets/css/app-jewels.css?v=33.10.0-fe93e0134d"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head>
 <body class="release-v26 jewels-page jw-studio">
 <main id="app" class="jw-app">
 <section id="menu" class="jw-menu" aria-labelledby="jwTitle">
@@ -25,7 +25,7 @@
 <div class="jw-kicker"><i></i> سباق المطابقة</div>
 <h1 id="jwTitle">ماستر<br><span>الجواهر</span></h1>
 <p class="jw-tagline">لوحتك. خطتك. لحظة فوزك.</p>
-<div class="jw-hero"><canvas id="jwHero" width="840" height="570" aria-hidden="true"></canvas><span class="jw-hero-label">كل تطابق بداية سلسلة</span></div>
+<div class="jw-hero"><img id="jwCover" src="assets/brand/jewels-cover-33-10-nov14.webp" width="1586" height="992" alt="لوحة جواهر ملوّنة وصواريخ لامعة" decoding="async" fetchpriority="high"><canvas id="jwHero" width="840" height="570" aria-hidden="true"></canvas><span class="jw-hero-label">كل تطابق بداية سلسلة</span></div>
 <div class="jw-promise"><span><b>نفس البداية</b><small>فرصة متساوية</small></span><i>✦</i><span><b>25 حركة</b><small>لكل لاعب</small></span><i>✦</i><span><b>أعلى نتيجة</b><small>تحسم الفوز</small></span></div>
 </div>
 <div class="jw-play-card">
@@ -61,12 +61,12 @@
 
 <section id="game" class="jw-game" hidden aria-label="سباق الجواهر">
 <div class="jw-arena-decor" aria-hidden="true"><i></i><i></i><i></i></div>
-<header class="jw-bar"><button id="jwExit" class="jw-icon" type="button" aria-label="الخروج من المباراة"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><div class="jw-round"><b id="jwRound">سباق الجواهر</b><small id="jwRoundNote">نفس البداية · 25 حركة</small></div><button id="jwSound" class="jw-icon" type="button" aria-pressed="false" aria-label="كتم الصوت"></button></header>
+<header class="jw-bar"><button id="jwExit" class="jw-icon" type="button" aria-label="الخروج من المباراة"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><div class="jw-round"><b id="jwRound">سباق الجواهر</b><small id="jwRoundNote">نفس البداية · 25 حركة</small></div><button type="button" class="jw-icon jw-performance" data-jw-performance aria-label="تشغيل الوضع الخفيف لتقليل المؤثرات" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 3-9 11h6l-1 7 9-11h-6Z"/></svg></button><button id="jwSound" class="jw-icon" type="button" aria-pressed="false" aria-label="كتم الصوت"></button></header>
 <div class="jw-match-meta"><span id="jwModeLabel">تحدٍ مباشر</span><span id="jwMatchClock" class="jw-clock" role="timer" aria-label="الوقت المتبقي">3:00</span><span class="jw-fair-chip">بداية متطابقة <i aria-hidden="true">✓</i></span></div>
 <div class="jw-hud"><div id="plateBottom" class="jw-plate me"></div><div class="jw-vs" aria-hidden="true"><span>VS</span><i>✦</i></div><div id="plateTop" class="jw-plate foe"></div></div>
 <div class="jw-runline"><div><span class="jw-live-dot" aria-hidden="true"></span><strong id="jwBoardTitle">لوحتك</strong><span id="jwMovesText">25 حركة متبقية</span></div><div id="jwMoves" class="jw-move-track" aria-hidden="true"><i></i></div></div>
 <div class="jw-stage"><div id="jwWrap" class="jw-wrap" role="grid" tabindex="0" aria-label="لوحة الجواهر الخاصة بك" aria-describedby="jwBoardHelp" aria-rowcount="8" aria-colcount="8"><canvas id="jwBoard" aria-hidden="true"></canvas><div id="jwCells" class="jw-sr-only"></div><div id="jwFloat" class="jw-float" aria-hidden="true"></div><div id="jwBanner" class="jw-banner" aria-hidden="true"></div></div></div>
-<div class="jw-board-tools"><p id="jwBoardHelp">اسحب وطابق <span class="jw-keyboard-help">· الأسهم وEnter للعب</span></p><div><button id="jwCancel" type="button" class="jw-tool" hidden>إلغاء الاختيار</button><button id="jwHint" type="button" class="jw-tool" aria-label="إظهار تبديل ممكن"><span aria-hidden="true">✧</span> تلميح</button></div></div>
+<div class="jw-board-tools"><p id="jwBoardHelp">اسحب وطابق <span class="jw-keyboard-help">· الأسهم وEnter للعب</span></p><div><button id="jwCancel" type="button" class="jw-tool" hidden>إلغاء الاختيار</button><button id="jwHint" type="button" class="jw-tool" aria-label="إظهار تبديل مقترح بناءً على اللوحة الحالية"><span aria-hidden="true">✧</span> تلميح ذكي</button></div></div>
 <div id="status" class="jw-status" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="jwBoostBar" class="jw-boostbar" aria-label="مساعداتك — تستخدم المساعدة حركة واحدة"></div>
 <div id="jwWait" class="jw-wait" hidden><span class="jw-wait-orbit" aria-hidden="true">✦</span><h2>أكملت جولتك!</h2><p id="jwWaitText">الخصم يكمل حركاته. نتيجتك محفوظة.</p><b id="jwWaitScore"></b><small>تظهر النتيجة النهائية عندما ينتهي اللاعبان</small></div>
@@ -77,7 +77,7 @@
 </main>
 <div class="bs-toast"></div>
 <script src="assets/js/audio-manager.js?v=33.10.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.10.0"></script><script src="assets/js/player-card-v33-7.js?v=33.10.0"></script><script src="assets/js/platform.js?v=33.10.0"></script><script src="assets/js/social-client.js?v=33.10.0"></script><script src="assets/js/profile-core.js?v=33.10.0-pro1"></script><script src="assets/js/career-client.js?v=33.10.0"></script><script src="assets/js/game-menu-v33.js?v=33.10.0"></script><script src="/assets/js/reaction-performers.js?v=33.10.0-studio1"></script><script src="/assets/js/club-ui.js?v=33.10.0-club1"></script><script src="assets/js/reactions-v31.js?v=33.10.0-studio1"></script><script defer src="assets/js/client-health.js?v=33.10.0"></script>
-<script type="module" src="assets/js/jewels/main.js?v=33.10.0-studio"></script>
+<script type="module" src="assets/js/jewels/main.js?v=33.10.0-nov14"></script>
 
 <script src="/assets/js/tahdia-premium-v25.js?v=33.10.0"></script></body>
 </html>

@@ -1,0 +1,20 @@
+[
+  {
+    "file": "public/assets/brand/jewels-cover-33-10-nov14.webp",
+    "sourceLibraryFileId": "libfile_a9aa2b41b5bc8191b88b199211d706d8",
+    "sha256": "cdcd982af1477f35cf19dce852201ecbb48fc9a528321e55b18edad88d7f8074",
+    "kind": "previously generated project artwork; PNG converted to WebP without scene editing"
+  },
+  {
+    "file": "public/assets/brand/billiards-cover-33-10-nov14.webp",
+    "sourceLibraryFileId": "libfile_61f3f534524481918349bb1ce71718a8",
+    "sha256": "dab2d14f907ef0b466d2d1d8cb4e489c12fc5c4f5dff892e0523836e66572580",
+    "kind": "previously generated project artwork; PNG converted to WebP without scene editing"
+  },
+  {
+    "file": "public/assets/brand/crowd-cover-33-10.webp",
+    "sourceLibraryFileId": "libfile_c3892bbda1688191b3ac11895de9681f",
+    "sha256": "5dd179dd54c0fd5aa3bdfdeb28d7a56f0831784dc67f07045a343eea939eaccd",
+    "kind": "previously generated project artwork; PNG converted to WebP without scene editing"
+  }
+]

@@ -943,6 +943,9 @@ body.bi-playing:has(.rx-fab:not([hidden])) .bi-fine{margin-left:44px}
 .bi-rack{overflow:hidden;gap:1px}
 .bi-rack i{width:11px;height:11px}
 
+/* Nov14 generated pool-hall cover; the original hero remains a fallback. */
+.bi-hero .bi-hero-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.bi-hero .bi-hero-copy{position:absolute;z-index:2;background:linear-gradient(270deg,#020a07eb,#020a0799 58%,transparent)}
+
 /* assets/css/premium-refinements-v33-9-11.css */
 /* 33.9.11 — Master Match premium arena refinement: remove toy-like outlines and use a restrained competitive HUD. */
 :is(html,#x) body.jewels-page.mm2{

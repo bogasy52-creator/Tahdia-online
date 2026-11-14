@@ -2,7 +2,7 @@ window.BS_UUID=()=>{if(typeof crypto.randomUUID==='function')return crypto.rando
 (() => {
   // Prevent accidental long-press/drag selection on game labels. Do not cancel
   // pointer/touch starts: game drags, scrolling, native inputs and zoom need them.
-  const gamePages=new Set(['online','local','baloot','quiz','snakes','jackaroo','zahra','dice','serpent','sudoku','jewels','journey','paths','paths-online','picture','memory','reaction','logic','puzzle','accuracy','party']);
+  const gamePages=new Set(['online','local','baloot','quiz','snakes','jackaroo','zahra','dice','serpent','sudoku','jewels','crowd','journey','paths','paths-online','picture','memory','reaction','logic','puzzle','accuracy','party']);
   const gamePath=location.pathname.replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');
   {
     document.body.classList.add('bs-game-interaction-v34');

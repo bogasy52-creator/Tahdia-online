@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#082344">
+<title>زحف الجموع — بوسراج</title>
+<meta name="description" content="قُد الجموع الزرقاء، اختر بوابات زيادة العدد واهزم القلعة الحمراء. 30 مرحلة وتحدٍ يومي.">
+<link rel="manifest" href="/manifest.webmanifest?v=29.1.0">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=29.1.0">
+<meta name="application-name" content="بوسراج للألعاب">
+<meta name="apple-mobile-web-app-title" content="بوسراج">
+
+<link rel="stylesheet" href="assets/css/app-crowd.css?v=33.10.0-1d1fe65b65"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head>
+<body class="release-v26 crowd-page">
+<main id="app" class="cr-app">
+<section id="menu" class="cr-menu" aria-labelledby="crTitle">
+<header class="cr-top"><a class="cr-icon" href="/" aria-label="الرئيسية">↗</a><a class="cr-brand" href="/">بوسراج <small>للألعاب</small></a><button id="crMute" class="cr-icon" type="button" aria-label="كتم الصوت" aria-pressed="false">♫</button></header>
+<div class="cr-layout"><div class="cr-showcase"><p class="cr-kicker"><i></i> القرار يصنع الفرق</p><h1 id="crTitle" tabindex="-1">زحف <span>الجموع</span></h1><p class="cr-tagline">بوابة صح. جيش أكبر. انتصار أقرب.</p><div class="cr-hero"><img src="assets/brand/crowd-cover-33-10.webp" width="1586" height="992" alt="جموع زرقاء على جسر بين بوابات زيادة العدد وقلعة حمراء" fetchpriority="high" decoding="async"><span>اسحب · ضاعف · انتصر</span></div><div class="cr-features"><span><b>30</b> مرحلة</span><span><b>3</b> مسارات</span><span><b>كل يوم</b> تحدٍ جديد</span></div></div>
+<div class="cr-play-card"><p class="cr-kicker">جيشك ينتظر الإشارة</p><h2>اختر طريق الفوز</h2><p id="crProgressText" class="cr-progress-note">ابدأ رحلتك من المرحلة الأولى.</p><button id="crStart" type="button" class="cr-primary">ابدأ المرحلة 1 <span aria-hidden="true">←</span></button><button id="crDaily" type="button" class="cr-secondary">تحدّي اليوم <span aria-hidden="true">✦</span></button><p id="crDailyBest" class="cr-daily-note"></p><p id="crLoad" class="cr-load" role="status" aria-live="polite">جارٍ تجهيز اللعبة…</p><button id="crReload" type="button" class="cr-secondary" hidden>إعادة تحميل اللعبة</button>
+<details class="cr-rules"><summary>كيف تلعب؟ <span aria-hidden="true">＋</span></summary><p>اسحب يمينًا ويسارًا لاختيار مسارك. البوابات الزرقاء تزيد الجنود، والذهبية تضاعف العدد. انتبه للأحمر والقسمة.</p><p>يطلق جيشك تلقائيًا على العدو في مسارك. الحاجز الذي لا تهزمه قبل الوصول يخسّرك جنودًا. اجمع أكبر جيش واهزم القلعة قبل انتهاء 90 ثانية.</p><p>على الكمبيوتر استخدم الأسهم أو A وD، وزر المسافة للإيقاف. يمكن أيضًا استخدام زري الاتجاه أسفل اللعب.</p><p>تقدّمك محفوظ على هذا الجهاز، والتحدّي اليومي له نتيجة مستقلة.</p></details>
+<div class="cr-level-heading"><h3>خريطة المراحل</h3><span id="crStars">0 نجمة</span></div><div id="crLevels" class="cr-levels" aria-label="اختر المرحلة"></div></div></div>
+</section>
+<section id="game" class="cr-game" hidden aria-label="زحف الجموع">
+<header class="cr-hud"><button id="crExit" class="cr-icon" type="button" aria-label="إيقاف وفتح القائمة">☰</button><div class="cr-mode"><b id="crStageLabel">المرحلة 1</b><small id="crModeLabel">جاهز للزحف</small></div><div class="cr-count"><small>جنودك</small><strong id="crArmy" aria-live="off">0</strong></div><button id="crPause" class="cr-icon" type="button" aria-label="إيقاف مؤقت">Ⅱ</button></header>
+<div id="crTrack" class="cr-track" role="progressbar" aria-label="التقدم نحو القلعة" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="crTrackFill"></i></div>
+<div id="crViewport" class="cr-viewport"><canvas id="crCanvas" tabindex="0" aria-label="مسار الجموع. اسحب لاختيار البوابة أو استخدم الأسهم"></canvas></div>
+<footer class="cr-controls" dir="ltr"><button id="crLeft" type="button" aria-label="تحرك يسارًا">←</button><span id="crGuide" dir="rtl">اسحب لاختيار البوابة</span><button id="crRight" type="button" aria-label="تحرك يمينًا">→</button></footer>
+<div id="crPauseSheet" class="cr-sheet" hidden><div class="cr-sheet-card" role="dialog" aria-modal="true" aria-labelledby="crPauseTitle"><span class="cr-sheet-emblem" aria-hidden="true">Ⅱ</span><h2 id="crPauseTitle">خذ نفسًا</h2><p id="crPauseText">جيشك ينتظرك. الوقت متوقف.</p><button id="crResume" type="button" class="cr-primary">كمّل الزحف ←</button><button id="crRestart" type="button" class="cr-secondary">أعد المرحلة</button><button id="crBack" type="button" class="cr-text">خريطة المراحل</button></div></div>
+<div id="crResult" class="cr-sheet" hidden><div class="cr-sheet-card" role="dialog" aria-modal="true" aria-labelledby="crResultTitle"><span class="cr-sheet-emblem" id="crResultIcon" aria-hidden="true">✦</span><p id="crResultStars" class="cr-result-stars" aria-label="نجوم المرحلة"></p><h2 id="crResultTitle">انتصار!</h2><p id="crResultText"></p><div class="cr-result-stats"><span><b id="crScore">0</b> نقطة</span><span><b id="crSurvivors">0</b> جندي</span></div><button id="crNext" type="button" class="cr-primary">المرحلة التالية ←</button><button id="crAgain" type="button" class="cr-secondary">حاول مجددًا</button><button id="crMenu" type="button" class="cr-text">خريطة المراحل</button></div></div>
+</section>
+</main><div class="bs-toast"></div>
+<script src="assets/js/audio-manager.js?v=33.10.0"></script><script src="assets/js/platform.js?v=33.10.0"></script><script src="assets/js/social-client.js?v=33.10.0"></script><script src="assets/js/profile-core.js?v=33.10.0-pro1"></script><script src="assets/js/career-client.js?v=33.10.0"></script><script defer src="assets/js/client-health.js?v=33.10.0"></script>
+<script type="module" src="assets/js/crowd/boot.js?v=33.10.0-crowd1"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.10.0"></script></body></html>

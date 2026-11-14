@@ -17,6 +17,7 @@ test('Jewels explains equal independent runs and provides a private device hando
 async function setup({ motion = false, network = false } = {}) {
   const engine = await import('../public/assets/js/engines/jewels-race-engine.js');
   const duel = await import('../public/assets/js/engines/jewels-duel-engine.js');
+  const advisor = await import('../public/assets/js/jewels/advisor.js');
   const frames = new Map(), sent = [], sockets = [];
   let resolveQuick = null;
   let frameId = 0, table;
@@ -28,7 +29,7 @@ async function setup({ motion = false, network = false } = {}) {
   }, { get: (target, key) => target[key] ?? (() => {}), set: (target, key, value) => (target[key] = value, true) });
   MiniElement.prototype.getContext = () => drawing;
   const h = await createDOM('jewels.html', {
-    ...engine, ...duel, innerWidth: 390, innerHeight: 844, devicePixelRatio: 1,
+    ...engine, ...duel, ...advisor, innerWidth: 390, innerHeight: 844, devicePixelRatio: 1,
     matchMedia: () => ({ matches: !motion }),
     requestAnimationFrame: fn => { frames.set(++frameId, fn); return frameId; },
     cancelAnimationFrame: id => frames.delete(id),

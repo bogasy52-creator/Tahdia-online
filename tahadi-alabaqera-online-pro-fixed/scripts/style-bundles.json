@@ -572,5 +572,11 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/jewels-studio-v33-10.css"
+  ],
+  "crowd.html": [
+    "assets/css/platform.css",
+    "assets/css/mobile-v21.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/crowd-v33-10.css"
   ]
 }

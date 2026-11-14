@@ -1,0 +1,45 @@
+{
+  "baseCommit": "d15651c360a30a4c55ebd6e0204ac695fc644514",
+  "source": "https://github.com/bogasy52-creator/Tahdia-online/tree/d15651c360a30a4c55ebd6e0204ac695fc644514",
+  "date": "2026-11-14",
+  "version": "33.10.0",
+  "tests": {
+    "tests": 1572,
+    "pass": 1572,
+    "fail": 0,
+    "skipped": 0
+  },
+  "stageSimulation": 30,
+  "hintOpenings": 80,
+  "canvas": {
+    "kind": "actual Canvas game exports; not browser screenshots",
+    "browserVerified": false,
+    "browserReason": "Managed preview was rejected by automatic approval review because it could upload source externally.",
+    "renders": [
+      {
+        "file": "crowd-390x650.png",
+        "width": 390,
+        "height": 650,
+        "drawMs": 25.82,
+        "army": 858
+      },
+      {
+        "file": "crowd-375x535.png",
+        "width": 375,
+        "height": 535,
+        "drawMs": 4.71,
+        "army": 858
+      },
+      {
+        "file": "crowd-844x285.png",
+        "width": 844,
+        "height": 285,
+        "drawMs": 4.65,
+        "army": 858
+      }
+    ],
+    "jewelsBoard": true
+  },
+  "browserVerified": false,
+  "published": false
+}
