@@ -7,7 +7,7 @@
    game (`apply`) and sends its moves (`send`). */
 import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.10-gameplay3';
 
-const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2};
+const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2,pegs:2};
 
 export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
   const $=selector=>document.querySelector(selector);
@@ -25,7 +25,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     window.BS_GAME_MENU?.remember(game,next.code,{status:next.status==='finished'?'finished':'playing'});
     await apply(next,{animate,signal});
     if(!signal?.aborted){clockOf(next);nearWin(next);}
-  },{maxBacklog:game==='snakes'?5:14,onError:error=>console.error('table state failed',error)});
+  },{maxBacklog:game==='snakes'?5:game==='pegs'?40:14,onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
     game,modes,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,

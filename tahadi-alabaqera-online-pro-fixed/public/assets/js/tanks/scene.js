@@ -1,5 +1,5 @@
 /* Orthographic solid geometry over the authoritative 2D simulation. */
-import {TANKS,TANK_COLORS} from './core.js?v=33.10.0-tanks2';
+import {TANKS,TANK_COLORS} from './core.js?v=33.10.1-tanks2';
 const {W,H}=TANKS,TAU=Math.PI*2,clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const hash=n=>{let x=Math.imul(n+31,1597334677);x^=x>>>13;return(x>>>0)/4294967296;};
 const shade=(hex,k)=>{const v=parseInt(hex.slice(1),16);return '#'+[v>>16,v>>8&255,v&255].map(n=>Math.round(clamp(n*k,0,255)).toString(16).padStart(2,'0')).join('');};

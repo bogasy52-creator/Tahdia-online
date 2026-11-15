@@ -1,0 +1,55 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#1b1f45"><meta name="description" content="شطرنج الذاكرة من بوسراج: احفظ ألوان الأحجار، ارمِ نرد الألوان، واقلب الحجر الصح. كل ما صبت تكمل، وثلاث صح ورا بعض تخلي الحجر بنقطتين. أونلاين، ضد الكمبيوتر، أو مع الربع على جوال واحد."><title>شطرنج الذاكرة — بوسراج للألعاب</title><link rel="icon" href="/favicon-32.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="assets/css/app-pegs.css?v=33.10.1-7a0236d516"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.1"></head>
+<body class="release-v26 pegs-page pg-club">
+<main id="app" class="pg-app">
+<section class="pg-menu" id="pegsMenu" aria-labelledby="pegsTitle">
+<header class="pg-top"><a class="pg-icon" href="/" aria-label="الرئيسية">↗</a><b class="pg-brand">بوسراج <small>طاولة الذاكرة</small></b><button id="pegsMute" class="pg-icon" type="button" aria-pressed="false" aria-label="الصوت">🔊</button></header>
+<div class="pg-cover"><img src="assets/brand/pegs-cover-v33-10-1.webp" width="1000" height="600" alt="لوحة خشبية دائرية فيها أحجار تكشف ألوانها من تحت"><div class="pg-cover-copy"><h1 id="pegsTitle">شطرنج الذاكرة</h1><p>احفظ الألوان، ارمِ النرد، واقلب الحجر الصح.</p></div></div>
+<ol class="pg-steps" aria-label="طريقة اللعب باختصار"><li><i class="pg-step-dot" style="--c:#ffcf24"></i><div><b>احفظ</b><small>الألوان تبان ثواني في البداية</small></div></li><li><i class="pg-step-dot" style="--c:#2a7fe8"></i><div><b>ارمِ</b><small>النرد يختار لك اللون</small></div></li><li><i class="pg-step-dot" style="--c:#e8323f"></i><div><b>اقلب</b><small>صح؟ خذه وكمّل. غلط؟ الدور يروح</small></div></li></ol>
+<div class="pg-modes" role="radiogroup" aria-label="طريقة اللعب">
+<button type="button" data-mode="online" role="radio" aria-checked="true"><b>أونلاين</b><small>من 2 إلى 4</small></button>
+<button type="button" data-mode="ai" role="radio" aria-checked="false"><b>ضد الكمبيوتر</b><small>تدريب</small></button>
+<button type="button" data-mode="hotseat" role="radio" aria-checked="false"><b>مع الربع</b><small>جوال واحد</small></button>
+</div>
+<section class="pg-panel" data-panel="online"><div id="gameMenu"></div></section>
+<section class="pg-panel" data-panel="ai" hidden>
+<div class="pg-field"><span>المستوى</span><div id="pegsLevel" class="pg-seg" role="radiogroup" aria-label="مستوى الكمبيوتر"><button type="button" data-v="easy" role="radio">سهل</button><button type="button" data-v="medium" role="radio">متوسط</button><button type="button" data-v="hard" role="radio">صعب</button></div></div>
+<div class="pg-field"><span>كم كمبيوتر</span><div id="pegsRivals" class="pg-seg" role="radiogroup" aria-label="عدد المنافسين"><button type="button" data-v="1" role="radio">1</button><button type="button" data-v="2" role="radio">2</button><button type="button" data-v="3" role="radio">3</button></div></div>
+<button class="pg-primary" type="button" data-start="ai">ابدأ الجولة</button>
+</section>
+<section class="pg-panel" data-panel="hotseat" hidden>
+<div class="pg-field"><span>عدد اللاعبين</span><div id="pegsLocal" class="pg-seg" role="radiogroup" aria-label="عدد اللاعبين"><button type="button" data-v="2" role="radio">2</button><button type="button" data-v="3" role="radio">3</button><button type="button" data-v="4" role="radio">4</button></div></div>
+<p class="pg-note">كل واحد يلعب في دوره على نفس الجوال.</p>
+<button class="pg-primary" type="button" data-start="hotseat">ابدأ الجولة</button>
+</section>
+<div class="pg-options" data-local-options hidden>
+<div class="pg-field"><span>وقت الحفظ</span><div id="pegsLookTime" class="pg-seg" role="radiogroup" aria-label="وقت حفظ الألوان"><button type="button" data-v="4" role="radio">4 ث</button><button type="button" data-v="7" role="radio">7 ث</button><button type="button" data-v="12" role="radio">12 ث</button></div></div>
+<label class="pg-switch"><input id="pegsSwaps" type="checkbox"><span><b>طاولة التحدي</b><small>كل 3 أخطاء يتبادل حجران مكانهم</small></span></label>
+</div>
+<details class="pg-help"><summary>القواعد كاملة</summary>
+<p><b>اللوحة:</b> 24 حجر، وتحت كل حجر لون: أحمر، أصفر، أخضر، أزرق، أبيض، أسود. أربعة أحجار من كل لون.</p>
+<p><b>البداية:</b> الأحجار ترتفع وتوريك ألوانها ثواني، احفظ وين كل لون.</p>
+<p><b>دورك:</b> ارمِ نرد الألوان، ثم اختر حجر واقلبه. إذا طلع نفس اللون تاخذه وترمي مرة ثانية. إذا طلع غلط ينكشف للكل ويرجع مكانه ويروح الدور.</p>
+<p><b>حامي:</b> ثلاث صح ورا بعض وأكثر، كل حجر تاخذه يصير بنقطتين.</p>
+<p><b>عين الصقر:</b> مرة وحدة في الجولة تشوف لون حجر بالسر، وما يشوفه غيرك.</p>
+<p><b>الفوز:</b> لما تخلص الأحجار، الأعلى نقاط يفوز. وإذا تعادلوا يفوز صاحب أطول سلسلة.</p>
+</details>
+</section>
+
+<section id="pegsGame" class="pg-game" hidden aria-label="طاولة شطرنج الذاكرة">
+<header class="pg-bar"><button id="pegsExit" class="pg-icon" type="button" aria-label="خروج">✕</button><span id="pegsLeft" class="pg-left">24 حجر</span><div class="pg-bar-end"><button id="pegsPauseButton" class="pg-icon" type="button" aria-label="إيقاف">❚❚</button><button id="pegsSound" class="pg-icon" type="button" aria-pressed="false" aria-label="الصوت">🔊</button></div></header>
+<div id="players" class="pg-players" aria-label="اللاعبين"></div>
+<div id="status" class="pg-status" role="status" aria-live="polite"><span id="pegsStatus">احفظ الألوان</span></div>
+<div class="pg-stage" id="pegsStage">
+<canvas id="pegsBoard" tabindex="0" aria-label="لوحة الأحجار: اضغط على حجر لتقلبه" aria-describedby="pegsHint"></canvas>
+<div id="pegsBanner" class="pg-banner" hidden></div>
+</div>
+<div class="pg-dock">
+<div id="pegsLook" class="pg-look" hidden aria-hidden="true"><svg viewBox="0 0 44 44"><circle class="pg-look-track" cx="22" cy="22" r="19"/><circle id="pegsLookRing" class="pg-look-ring" cx="22" cy="22" r="19"/></svg><b id="pegsLookN">7</b></div><button id="pegsDie" class="pg-die" type="button" aria-label="ارمِ نرد الألوان"><span class="pg-die-tilt"><span id="pegsCube" class="pg-cube"><i class="pg-side s0"></i><i class="pg-side s1"></i><i class="pg-side s2"></i><i class="pg-side s3"></i><i class="pg-side s4"></i><i class="pg-side s5"></i></span></span></button>
+<div class="pg-dock-copy"><b id="pegsTarget">ارمِ النرد</b><small id="pegsHint">اضغط النرد</small></div>
+<button id="pegsPeek" class="pg-peek" type="button" aria-pressed="false"><i aria-hidden="true">👁</i><span>عين الصقر</span><small id="pegsPeekLeft">مرة</small></button>
+</div>
+<div id="pegsPause" class="pg-overlay" hidden><div class="pg-modal"><h2>خذ نفس</h2><p>الأحجار ما راح تتحرك.</p><button id="pegsResume" class="pg-primary" type="button">كمّل</button><button id="pegsRestart" class="pg-ghost" type="button">جولة جديدة</button></div></div>
+<div id="pegsResult" class="pg-overlay" hidden><div class="pg-modal pg-result"><h2 id="pegsWinner"></h2><p id="pegsResultCopy"></p><ol id="pegsPodium" class="pg-podium"></ol><div class="pg-actions"><button id="pegsAgain" class="pg-primary" type="button">العب مرة ثانية</button><button id="pegsBackMenu" class="pg-ghost" type="button">القائمة</button></div></div></div>
+</section></main>
+<div class="bs-toast"></div>
+<script src="/assets/js/compact/audio-manager.js?v=33.10.1"></script><script src="/assets/js/room-clock-v33-7.js?v=33.10.1"></script><script src="/assets/js/player-card-v33-7.js?v=33.10.1"></script><script src="/assets/js/compact/platform.js?v=33.10.1"></script><script src="/assets/js/compact/social-client.js?v=33.10.1"></script><script src="/assets/js/compact/profile-core.js?v=33.10.1-pro1"></script><script src="/assets/js/compact/career-client.js?v=33.10.1"></script><script src="/assets/js/game-menu-v33.js?v=33.10.1"></script><script src="/assets/js/reaction-performers.js?v=33.10.1-studio1"></script><script src="/assets/js/club-ui.js?v=33.10.1-club1"></script><script src="/assets/js/reactions-v31.js?v=33.10.1-studio1"></script><script defer src="/assets/js/client-health.js?v=33.10.1"></script><script type="module" src="assets/js/pegs/main.js?v=33.10.1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.10.1"></script></body></html>

@@ -16,6 +16,8 @@ import { createRaceDiceGame, rollRaceDice, bankRaceDice } from '../../public/ass
 import { createPoolGame, playPoolShot, poolTimeout, choosePoolShot, poolProgress } from '../../public/assets/js/engines/pool-engine.js';
 // 33.9.10: carrom is a table of two like billiards: the room plays each shot to its end
 import { createCarromDuel, playCarromShot, carromTimeout, chooseCarromShot, carromProgress } from '../../public/assets/js/carrom/engine.js';
+// 33.10.1: «شطرنج الذاكرة» — two to four players, the room keeps the colours under the pawns
+import { createPegsGame, rollPegs, pickPegs, peekPegs, pegsTimeout, choosePegsMove, pegsProgress } from '../../public/assets/js/engines/pegs-engine.js';
 import { createJewelsDuel, playJewelsSwap, playJewelsBooster, playJewelsAuto, jewelsTimeout, jewelsProgress, jewelsMoveMs } from '../../public/assets/js/engines/jewels-duel-engine.js';
 import {createJewelsRace,playJewelsRaceSwap,playJewelsRaceBooster,finishJewelsRace,advanceJewelsRace,chooseJewelsRaceMove} from '../../public/assets/js/engines/jewels-race-engine.js';
 import { chooseJackarooMove, chooseLudoMove, chooseSnakePower, shouldBankDice } from '../../public/assets/js/engines/bot-strategy.js';
@@ -23,16 +25,16 @@ import { Career } from '../career/core.js';
 
 // 33.9.0: billiards (8-ball pool) is a table of two: a quick table gives you a person or a computer player
 // 33.9.5: «ماستر الجواهر» is a duel too: one board, two players
-export const TABLE_GAMES = Object.freeze(['snakes', 'zahra', 'jackaroo', 'dice', 'billiards', 'jewels', 'carrom']);
-export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10, billiards: 2, jewels: 2, carrom: 2 });
-export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3, billiards: 2, jewels: 2, carrom: 2 });
+export const TABLE_GAMES = Object.freeze(['snakes', 'zahra', 'jackaroo', 'dice', 'billiards', 'jewels', 'carrom', 'pegs']);
+export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10, billiards: 2, jewels: 2, carrom: 2, pegs: 4 });
+export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3, billiards: 2, jewels: 2, carrom: 2, pegs: 2 });
 export const TABLE_LOBBY_MS = 10_000;
 // a group room's table starts when all its players are in, or this long after the first one came
 // 33.9.1: the group room's players come straight in, so a missing one is waited for 15 seconds
 export const PARTY_TABLE_WAIT_MS = 15_000;
 export const DICE_TARGET = 50;
 // how long a table needs on screen for one step (dice, walk, ladder or snake…)
-export const STEP_MS = Object.freeze({ snakes: 2700, zahra: 1250, jackaroo: 1500, dice: 900, billiards: 900, jewels: 900, carrom: 900 });
+export const STEP_MS = Object.freeze({ snakes: 2700, zahra: 1250, jackaroo: 1500, dice: 900, billiards: 900, jewels: 900, carrom: 900, pegs: 350 });
 // a computer player at the billiards table takes at most this many shots at once; the rest follow on the alarm
 export const POOL_BOT_SHOTS = 2;
 export const TURN_MS = Object.freeze({ room: 60_000, quick: 35_000, away: 9_000 });
@@ -63,7 +65,7 @@ export function pickBotLevel(rng = Math.random) {
 }
 
 // 33.4.0: snakes & ladders lets you pick the table size: 2, 3 or 4 players
-export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4] });
+export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], pegs: [2, 3, 4] });
 /** A table size the player picked, when this game offers one; otherwise null. */
 export function chosenSeats(game, value) {
   const n = Number(value);
@@ -106,6 +108,7 @@ function createState(game, names, variant, rng, now=Date.now()) {
   if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
   if (game === 'jewels') return createJewelsRace(names, { rng,now });
   if (game === 'carrom') return createCarromDuel(names, { rng, first: rng() < 0.5 ? 0 : 1 });
+  if (game === 'pegs') { const g = createPegsGame(names, { rng, now }); g.salt = Math.floor(rng() * 1e6); return g; }
   return createRaceDiceGame(names, DICE_TARGET);
 }
 
@@ -133,6 +136,8 @@ export const stepsTime = (room, steps) => isJewelsRaceTable(room)?0:room.game===
   : room.game==='jewels' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?jewelsMoveMs(step.state.last):300),0)
   : room.game==='billiards' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?(step.state.last.ms||0)+STEP_MS.billiards:300),0)
   : room.game==='carrom' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?(step.state.last.ms||0)+STEP_MS.carrom:300),0)
+  // the opening look at the colours, then each roll and each pawn turned over
+  : room.game==='pegs' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?(step.state.last.ms||0)+STEP_MS.pegs:step.state?.seq===0?(step.state.showMs||0)+600:300),0)
   : (steps?.list?.length || 0) * (STEP_MS[room.game] || 1000);
 
 /* ---------- starting a table ---------- */
@@ -227,6 +232,11 @@ export function botTurn(room, steps, rng, roll = rollWith(rng)) {
     try { room.state = playCarromShot(s, seat, chooseCarromShot(structuredClone(s), level)); }
     catch { room.state = carromTimeout(s); }
     recordStep(room, steps);
+  } else if (room.game === 'pegs') {
+    const move = choosePegsMove(s, level, rng);
+    try { room.state = move.type === 'roll' ? rollPegs(s, seat, rng) : pickPegs(s, seat, move.peg, rng); }
+    catch { room.state = pegsTimeout(s, rng); }
+    recordStep(room, steps);
   } else {
     if (s.turnTotal > 0 && shouldBankDice(s, level)) room.state = bankRaceDice(s);
     else room.state = rollRaceDice(s, roll());
@@ -303,6 +313,12 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng), now=Date.
   } else if (room.game === 'carrom') {
     if (msg.type !== 'carrom_shot') throw new Error('invalid_action');
     room.state = playCarromShot(room.state, seat, { x: Number(msg.x), angle: Number(msg.angle), power: Number(msg.power) });
+  } else if (room.game === 'pegs') {
+    if (now < Number(room.state.lookUntil || 0) - 250) throw new Error('look_phase');
+    if (msg.type === 'pegs_roll') room.state = rollPegs(room.state, seat, rng);
+    else if (msg.type === 'pegs_pick') room.state = pickPegs(room.state, seat, Number(msg.peg), rng);
+    else if (msg.type === 'pegs_peek') room.state = peekPegs(room.state, seat, Number(msg.peg));
+    else throw new Error('invalid_action');
   } else if (room.game === 'jackaroo') {
     // 33.8.0: a hand that cannot move anything may be burnt at once (the player asked and confirmed)
     if (msg.type === 'jackaroo_burn_all') room.state = burnJackarooHand(room.state, seat);
@@ -365,6 +381,9 @@ export function timeoutMove(room, rng, roll = rollWith(rng), now=Date.now()) {
   } else if (room.game === 'carrom') {
     if (seatIsBot(room, seat)) { botTurn(room, steps, rng, roll); }
     else { room.state = carromTimeout(s); recordStep(room, steps); }
+  } else if (room.game === 'pegs') {
+    if (seatIsBot(room, seat)) { botTurn(room, steps, rng, roll); }
+    else { room.state = pegsTimeout(s, rng); recordStep(room, steps); }
   } else {
     room.state = s.turnTotal > 0 ? bankRaceDice(s) : rollRaceDice(s, roll());
     trimDice(room);
@@ -392,5 +411,6 @@ export function seatProgress(room, seat) {
   if (room.game === 'billiards') return poolProgress(room.state, seat);
   if (room.game === 'jewels') return jewelsProgress(room.state, seat);
   if (room.game === 'carrom') return carromProgress(room.state, seat);
+  if (room.game === 'pegs') return pegsProgress(room.state, seat);
   return Number(sp.score) || 0;
 }
