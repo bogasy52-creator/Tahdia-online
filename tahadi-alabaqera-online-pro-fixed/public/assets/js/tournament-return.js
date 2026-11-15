@@ -1,0 +1,1 @@
+(()=>{const code=new URLSearchParams(location.search).get('cup');if(!/^06\d{4}$/.test(code||''))return;const a=document.createElement('a');a.className='cup-return';a.href='/tournament?room='+code;a.textContent='← مسار البطولة';(document.querySelector('header')||document.querySelector('main'))?.append(a);})();

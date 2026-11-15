@@ -10,9 +10,9 @@
   'use strict';
   if(root.BS_GAME_MENU)return;
   const doc=root.document;
-  const TITLES=Object.freeze({tanks:'معركة الدبابات',carrom:'كيرم',jewels:'ماستر الجواهر',billiards:'بلياردو',hockey:'هوكي الهواء',quiz:'تحدي الأسئلة',party:'الألعاب الجماعية',sudoku:'سودوكو',paths:'توصيل الأرقام',picture:'سباق الصور',serpent:'حلبة الثعابين',snakes:'الثعبان والسلالم',zahra:'الزهرة',jackaroo:'جاكارو',dice:'تحدي النرد',baloot:'بلوت',memory:'الذاكرة',logic:'الألغاز',puzzle:'تركيب الصور',reaction:'مواجهة التركيز',wordbomb:'صيد الكلمات',chaos:'أونو',focus:'مواجهة التركيز',cipher:'ساحة الشفرات',jewels:'ماستر الجواهر',colors:'توصيل الأرقام'});
+  const TITLES=Object.freeze({tournament:'البطولات',tanks:'معركة الدبابات',carrom:'كيرم',jewels:'ماستر الجواهر',billiards:'بلياردو',hockey:'هوكي الهواء',quiz:'تحدي الأسئلة',party:'الألعاب الجماعية',sudoku:'سودوكو',paths:'توصيل الأرقام',picture:'سباق الصور',serpent:'حلبة الثعابين',snakes:'الثعبان والسلالم',zahra:'الزهرة',jackaroo:'جاكارو',dice:'تحدي النرد',baloot:'بلوت',memory:'الذاكرة',logic:'الألغاز',puzzle:'تركيب الصور',reaction:'مواجهة التركيز',wordbomb:'صيد الكلمات',chaos:'أونو',focus:'مواجهة التركيز',cipher:'ساحة الشفرات',jewels:'ماستر الجواهر',colors:'توصيل الأرقام'});
   // the first two digits of a room code name its game (src/rooms/room-codes.js)
-  const FAMILIES=Object.freeze([['tanks',7,7,'/tanks'],['wordbomb',9,9,'/wordbomb'],['quiz',10,14,'/online'],['party',15,19,'/party'],['sudoku',20,24,'/sudoku'],['paths',25,29,'/paths-online'],['picture',30,34,'/picture'],['serpent',35,39,'/serpent'],['snakes',40,44,'/snakes'],['zahra',45,49,'/zahra'],['jackaroo',50,54,'/jackaroo'],['dice',55,59,'/dice'],['baloot',60,64,'/baloot'],['memory',65,69,'/memory'],['logic',70,74,'/logic'],['puzzle',75,79,'/puzzle'],['reaction',80,84,'/reaction'],['jewels',85,89,'/jewels'],['colors',90,94,'/paths-online?mode=solo'],['hockey',95,95,'/hockey'],['focus',96,96,'/focus'],['cipher',97,97,'/cipher'],['chaos',98,98,'/uno'],['billiards',99,99,'/billiards'],['carrom',8,8,'/carrom'],]);
+  const FAMILIES=Object.freeze([['tournament',6,6,'/tournament'],['tanks',7,7,'/tanks'],['wordbomb',9,9,'/wordbomb'],['quiz',10,14,'/online'],['party',15,19,'/party'],['sudoku',20,24,'/sudoku'],['paths',25,29,'/paths-online'],['picture',30,34,'/picture'],['serpent',35,39,'/serpent'],['snakes',40,44,'/snakes'],['zahra',45,49,'/zahra'],['jackaroo',50,54,'/jackaroo'],['dice',55,59,'/dice'],['baloot',60,64,'/baloot'],['memory',65,69,'/memory'],['logic',70,74,'/logic'],['puzzle',75,79,'/puzzle'],['reaction',80,84,'/reaction'],['jewels',85,89,'/jewels'],['colors',90,94,'/paths-online?mode=solo'],['hockey',95,95,'/hockey'],['focus',96,96,'/focus'],['cipher',97,97,'/cipher'],['chaos',98,98,'/uno'],['billiards',99,99,'/billiards'],['carrom',8,8,'/carrom'],]);
   const LAST_KEY='bs-last-match-v33',NAME_KEY='bs-player-name-v33',MODE_KEY=game=>'bs-mode-v33-'+game,SEATS_KEY=game=>'bs-seats-v33-'+game;
   const store={get(key){try{return localStorage.getItem(key)}catch{return null}},set(key,value){try{localStorage.setItem(key,value)}catch{}},remove(key){try{localStorage.removeItem(key)}catch{}}};
 
@@ -125,9 +125,12 @@
       box.append(row,make('small','gm33-seats-note',options.seatsNote||'الأماكن الفاضية يكمّلها منافسين متنوعي المستوى.'));
       menu.append(box);paint();
     }
+    let humanSelect=null;
+    if(options.humanChoice){const label=make('label','gm33-match-choice','المنافس في اللعب السريع');humanSelect=make('select');humanSelect.setAttribute('aria-label','نوع المنافس');for(const [value,text] of [['human','لاعبون حقيقيون فقط · ننتظر اكتمال العدد'],['mixed','طاولة سريعة · الكمبيوتر يكمل بعد العد']]){const item=make('option',null,text);item.value=value;humanSelect.append(item);}humanSelect.value=options.humansOnly?'human':'mixed';label.append(humanSelect);menu.append(label);}
     // العب الحين
-    const quick=button('gm33-quick',null,()=>run(()=>options.onQuick?.({mode,seats,name:playerName()})));
+    const quick=button('gm33-quick',null,()=>run(()=>options.onQuick?.({mode,seats,name:playerName(),humansOnly:humanSelect?.value==='human'})));
     quick.append(make('span','gm33-quick-icon','⚡'),make('b',null,options.quickLabel||'العب الحين'),make('small',null,options.quickNote||'تكتمل الطاولة خلال 10 ثوانٍ بمنافسين متنوعي المستوى'));
+    if(humanSelect){const explain=()=>{quick.querySelector('small').textContent=humanSelect.value==='human'?'ننتظر لاعبين حقيقيين. لا نضيف كمبيوتر.':'بعد 10 ثوانٍ يكمل الكمبيوتر المقاعد الفارغة.';};humanSelect.addEventListener('change',explain);explain();}
     if(options.onQuick)menu.append(quick);
     // غرفة مع أصحابك
     const friends=make('details','gm33-friends');

@@ -179,13 +179,13 @@ test('every emoji reaction is drawn and animated; the rarest come with a legenda
 /* ---------- home and word hunt ---------- */
 test('home: tonight\'s tables on a strip of covers, the new Jackaroo cover, compact game cards', async () => {
   const home = await read('public/index.html');
-  assert.match(home, /<div class="home-featured" role="list" aria-label="طاولات الليلة">/);
-  for (const href of ['/baloot', '/jackaroo', '/snakes', '/hockey', '/uno']) assert.match(home, new RegExp('<a role="listitem" class="home-feature" href="' + href + '">'));
+  assert.match(home, /<div class="home-featured" role="list" aria-label="ألعاب الليلة المميزة">/);
+  for (const href of ['/tanks', '/billiards', '/jewels', '/jackaroo']) assert.match(home, new RegExp('<a role="listitem" class="home-feature" href="' + href + '"[^>]*>'));
   assert.equal((home.match(/jackaroo-cover-v33-8\.webp/g) || []).length, 2);
   assert.doesNotMatch(home, /jackaroo-table-v17\.webp/);
   assert.ok((await stat(new URL('../public/assets/brand/jackaroo-cover-v33-8.webp', import.meta.url))).size > 20000);
   assert.ok(JSON.parse(await read('scripts/style-bundles.json'))['index.html'].includes('assets/css/home-v33-8.css'));
-  assert.match(await read('public/assets/css/app-index.css'), /\.home-featured\{display:flex;/);
+  assert.match(await read('public/assets/css/club-complete-v33-10.css'), /\.home-featured\{display:grid!important;/);
 });
 test('the word hunt strikes a found word through in the colour of whoever found it', async () => {
   const css = await read('public/assets/css/wordhunt-v33-5.css');

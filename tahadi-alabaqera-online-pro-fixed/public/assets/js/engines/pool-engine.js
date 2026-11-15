@@ -1,7 +1,7 @@
 /* Tahdia 33.9.0 — 8-ball pool (بلياردو): the table, the physics, the rules and the computer player.
    One module for the page (practice, two on one phone) and the server (online tables in BoardRoom).
 
-   The table is a 9-foot table in centimetres: 254 × 127, balls of 5.715 cm. A shot is simulated in
+   The table is a 9-foot table in centimetres: 254 × 127, larger 6.6 cm game balls. A shot is simulated in
    fixed steps of 1/60 s (light enough for a Durable Object, one frame each on the page); inside a
    step every contact (ball, cushion, jaw, pocket) is found exactly
    by its time of impact, so a fast ball never passes through another and a cut goes where the
@@ -15,7 +15,7 @@
    wins once your group is cleared, and loses if it drops early or with a foul (on the break it is
    spotted again). */
 
-export const POOL = Object.freeze({ L: 254, W: 127, R: 2.8575, DT: 1 / 60, FRAME: 1 / 60, MIN_SPEED: 30, MAX_SPEED: 800, MAX_TIME: 16 });
+export const POOL = Object.freeze({ L: 254, W: 127, R: 3.3, DT: 1 / 60, FRAME: 1 / 60, MIN_SPEED: 30, MAX_SPEED: 800, MAX_TIME: 16 });
 const L = POOL.L, W = POOL.W, R = POOL.R, D = 2 * R, D2 = D * D, DT = POOL.DT;
 const ROLL = 18, DRAG = 0.42, STOP = 0.6;           // rolling resistance (cm/s²), drag (1/s), stop speed (cm/s)
 const BALL_E = 0.94, RAIL_E = 0.76, RAIL_GRIP = 0.97; // restitution between balls and off the cushions
@@ -24,7 +24,7 @@ const SQRT3 = 1.7320508075688772;
 export const HEAD_X = L / 4, FOOT = Object.freeze([L * 0.75, W / 2]);
 
 /* ---------- the table: cushions, jaws and pockets ---------- */
-const CM = 9.4, SM = 6.6;                     // the corner and side mouths (from the corner / the middle)
+const CM = 10.2, SM = 7.4;                     // the corner and side mouths (from the corner / the middle)
 const seg = (ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, len = Math.sqrt(dx * dx + dy * dy); return { ax, ay, bx, by, tx: dx / len, ty: dy / len, len }; };
 function buildWalls() {
   const s = [], mid = L / 2;

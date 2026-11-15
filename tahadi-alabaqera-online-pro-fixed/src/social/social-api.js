@@ -112,7 +112,7 @@ export async function handleSocialRequest(request, env, options = {}) {
   if (!url.pathname.startsWith("/api/social")) return null;
   if (!socialNamespace(env)) return json({ ok: false, error: "نظام الأصدقاء غير مفعّل على السيرفر" }, 503);
 
-  const authPath = ["/api/social/signup", "/api/social/login"].includes(url.pathname);
+  const authPath = ["/api/social/signup", "/api/social/login", "/api/social/recovery/reset"].includes(url.pathname);
   const photoView = request.method === "GET" && /^\/api\/social\/photo\/[a-zA-Z0-9_]{3,20}$/.test(url.pathname);
   const limited = options.rateLimit && !photoView
     ? await options.rateLimit(request, env, authPath ? "social-auth" : "social-api", authPath ? 30 : 180, 60_000)
@@ -143,6 +143,13 @@ export async function handleSocialRequest(request, env, options = {}) {
     });
   }
 
+  if(url.pathname==='/api/social/recovery/reset'&&request.method==='POST'){
+    const body=await request.json().catch(()=>({})),stub=stubFor(env,body.username);if(!stub)return json({ok:false,error:'تعذّر الاسترجاع. تحقق من اسم المستخدم والرمز وصلاحيته.'},400);
+    return await stub.fetch('https://social.internal/recovery/reset',{method:'POST',body:JSON.stringify({code:body.code,password:body.password})});
+  }
+  if(['/api/social/recovery/codes','/api/social/recovery/status'].includes(url.pathname)&&request.method==='POST'){
+    const {response,auth}=await requireAuth(request,env);if(response)return response;const body=await request.json().catch(()=>({})),result=await call(auth.stub,url.pathname.slice('/api/social'.length),{secret:auth.secret,password:body.password});return json(result.data,result.response.status);
+  }
   if (request.method === "POST" && url.pathname === "/api/social/logout") {
     const parsed = parseSessionToken(bearer(request));
     if (!parsed) return json({ ok: true });

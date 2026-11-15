@@ -9,7 +9,7 @@ import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolS
 import { createTable } from '../board-table-v33.js?v=33.9.10';
 
 const { L, W, R } = POOL;
-const RAIL = 12, CUSHION = 4;
+const RAIL = 9, CUSHION = 4;
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -240,8 +240,8 @@ class TableView {
     // balls: shadows first, then the balls
     const list = [];
     for (let n = 0; n < 16; n++) { const b = n === 0 && placing ? placing.at : this.balls[n]; if (b) list.push([n, b[0], b[1], 1, 1]); }
-    this.sinking = this.sinking.filter((s) => now - s.t < 260);
-    for (const s of this.sinking) { const k = Math.min(1, (now - s.t) / 260), p = POCKETS[s.p]; list.push([s.n, s.x + (p.x - s.x) * k, s.y + (p.y - s.y) * k, 1 - 0.45 * k, 1 - k]); }
+    this.sinking = this.sinking.filter((s) => now - s.t < 540);
+    for (const s of this.sinking) { const k = Math.min(1, (now - s.t) / 540), p = POCKETS[s.p]; list.push([s.n, s.x + (p.x - s.x) * k, s.y + (p.y - s.y) * k, 1 - 0.72 * k, Math.max(0,1-k*k)]); }
     g.setTransform(1, 0, 0, 1, 0, 0);
     const [cxs, cys] = this.toScreen(L / 2, W / 2);
     for (const [, x, y, sc, al] of list) {
@@ -451,6 +451,7 @@ function stepAnimation(now) {
     if (pos && prev) rollAxes(view.axesOf(n), pos[0] - prev[0], pos[1] - prev[1]);
     view.balls[n] = pos;
   }
+  renderPocketTray();
   if (i0 >= last) { const done = a.done; ctl.anim = null; done(); return false; }
   return true;
 }
@@ -520,7 +521,7 @@ function renderStatus() {
   $('#game').classList.toggle('idle', !myTurn());
   $('#biPower').classList.toggle('off', !myTurn());
   for (const id of ['#biPower', '#biFine', '#biSpinBtn']) $(id).setAttribute('aria-disabled', String(!myTurn()));
-  renderShotContext();
+  renderShotContext();renderPocketTray();
   // while the balls roll the old line would mislead; the toast says what happened when they stop
   if (s.winner !== null || ctl.anim || (ctl.busy && ctl.mode !== 'ai')) { setStatus(''); return; }
   const name = ctl.names[s.turn] || s.players[s.turn]?.name || 'لاعب';
@@ -542,6 +543,13 @@ function toast(html, kind = '', ms = 1900) {
 const FOUL = { scratch: 'البيضاء دخلت', no_hit: 'ما لمست ولا كرة', wrong_first: 'لمس كرة مو من كراته أول', eight_first: 'لمس الثمانية قبل وقتها', no_rail: 'ولا كرة وصلت الحافة', time: 'خلص الوقت' };
 const FOUL_ME = { scratch: 'البيضاء دخلت', no_hit: 'ما لمست ولا كرة', wrong_first: 'لمست كرة مو من كراتك أول', eight_first: 'لمست الثمانية قبل وقتها', no_rail: 'ولا كرة وصلت الحافة', time: 'خلص وقتك' };
 // Resolve the HUD from the actual table state; an opponent's cosmetic aim never changes it.
+function renderPocketTray() {
+  const box=$('#biPottedBalls');if(!box)return;const balls=ctl.anim?view.balls:ctl.state?.balls;
+  if(!balls)return;const potted=Array.from({length:15},(_,i)=>i+1).filter(n=>!balls[n]);
+  const key=potted.join(',');if(box.dataset.balls===key)return;box.dataset.balls=key;
+  box.innerHTML=potted.length?potted.map(n=>'<i role="listitem" class="bi-collected-ball '+(n>8?'stripe':'')+'" style="--c:'+colorOf(n)+'" aria-label="الكرة '+n+' دخلت"><b>'+n+'</b></i>').join(''):'<span class="bi-tray-empty">الكرات المدخلة تظهر هنا</span>';
+  $('#biPottedCount').textContent=potted.length+' / 15';
+}
 function renderShotContext() {
   const s = ctl.state; if (!s) return;
   const group = s.players[s.turn]?.group;
@@ -826,7 +834,13 @@ function fitTable() {
   invalidate();
 }
 new ResizeObserver(() => { if (!$('#game').hidden) fitTable(); }).observe($('#biWrap'));
+function largeTable(enabled,remember=false){
+  $('#game').classList.toggle('bi-expanded',enabled);const button=$('#biExpand');button.setAttribute('aria-pressed',String(enabled));button.setAttribute('aria-label',enabled?'إظهار تفاصيل الطاولة':'تكبير مساحة الطاولة');button.textContent=enabled?'⤡':'⤢';
+  if(remember)try{localStorage.setItem('bs_pool_large_table',enabled?'1':'0');}catch{}requestAnimationFrame(fitTable);
+}
+$('#biExpand').addEventListener('click',()=>largeTable(!$('#game').classList.contains('bi-expanded'),true));
 function showGame() {
+  let big=innerWidth<600;try{const stored=localStorage.getItem('bs_pool_large_table');if(stored!==null)big=stored==='1';}catch{}largeTable(big);
   if ($('#game').hidden) { $('#game').hidden = false; document.body.classList.add('bi-playing'); requestAnimationFrame(fitTable); }
   $('#biEnd').hidden = true;
 }

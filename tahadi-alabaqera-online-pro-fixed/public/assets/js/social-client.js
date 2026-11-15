@@ -350,6 +350,7 @@
   async function moderation(username, action) { return username ? api('/api/social/moderation', { method: 'POST', body: JSON.stringify({ username, action }) }) : api('/api/social/moderation'); }
   const apiPublic = {
     version: '25.3.0',
+    recoveryCodes:password=>api('/api/social/recovery/codes',{method:'POST',body:JSON.stringify({password})}),recoveryStatus:()=>api('/api/social/recovery/status',{method:'POST',body:'{}'}),recover:body=>api('/api/social/recovery/reset',{method:'POST',body:JSON.stringify(body)}),
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
     isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,

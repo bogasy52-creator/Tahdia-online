@@ -497,6 +497,8 @@ img,svg,canvas{-webkit-user-drag:none}
 .coin-chip i[aria-hidden="true"]:empty{display:none}
 .sx-coin,body.shop31 .sx-coin{width:17px!important;height:17px!important;border-radius:50%;background:var(--bs-coin) center/contain no-repeat!important;box-shadow:none!important;filter:drop-shadow(0 1px 1.5px #0007)}
 
+.gm33-match-choice{display:grid;gap:8px;margin:12px 0;color:#c7d6dd;font-size:13px}.gm33-match-choice select{font:inherit;min-height:46px;padding:10px 12px;width:100%;border:1px solid #758a9c66;border-radius:12px;background:#101b29;color:#e4ecee}
+
 /* assets/css/room-clock-v33-7.css */
 /* Tahdia 33.7.0 — «ساعة الغرفة»: the same clear countdown in every room */
 @property --f{syntax:'<number>';inherits:true;initial-value:1}

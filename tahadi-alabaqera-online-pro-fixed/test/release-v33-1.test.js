@@ -15,10 +15,12 @@ test('every page bundle stops long-press selection, and typing fields stay selec
   assert.match(css, /^\*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/m);
   assert.match(css, /^input,textarea,select,[^{]*\[data-selectable\] \*\{-webkit-user-select:text;user-select:text/m);
   // accuracy.html only redirects home, so build-styles leaves its old bundle alone
-  for (const file of (await readdir(new URL('public/assets/css/', root))).filter((f) => /^app-.*\.css$/.test(f) && f !== 'app-accuracy.css')) {
+  for (const file of (await readdir(new URL('public/assets/css/', root))).filter((f) => /^app-.*\.css$/.test(f) && f !== 'app-accuracy.css' && !f.endsWith('-tail.css'))) {
     const text = await read('public/assets/css/' + file);
     assert.match(text, /\*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/, file);
   }
+  // Tail files follow each route prefix and shared CSS; the selection guard stays in the route prefix.
+  for(const page of ['index','sudoku','journey']){const html=await read('public/'+page+'.html');assert.match(html,/app-[^"]+\.css/);assert.match(html,/club-shared\.css/);}
   const offline = await read('public/offline.html');
   assert.match(offline, /body,body \*\{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none\}/);
 });

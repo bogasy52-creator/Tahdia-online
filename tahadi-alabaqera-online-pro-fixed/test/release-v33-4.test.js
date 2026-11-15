@@ -117,10 +117,10 @@ test('snakes & ladders: 2, 3 or 4 players; the empty seats are filled', async ()
   const page = await read('public/snakes.html');
   assert.match(page, /seats: \[2, 3, 4\],\s*seatsDefault: 4,/);
   const menu = await read('public/assets/js/game-menu-v33.js');
-  assert.match(menu, /options\.onQuick\?\.\(\{mode,seats,name:playerName\(\)\}\)/);
+  assert.match(menu, /options\.onQuick\?\.\(\{mode,seats,name:playerName\(\),humansOnly:humanSelect\?\.value==='human'\}\)/);
   assert.match(menu, /options\.onCreate\?\.\(\{mode,seats,name:playerName\(\)\}\)/);
   const worker = await read('src/index.js');
-  assert.match(worker, /"quick:" \+ game \+ ":" \+ variant \+ \(seats \? ":s" \+ seats : ""\) \+ ":v33"/);
+  assert.ok(worker.includes('"quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + (humansOnly?":humans":"") + ":v33"'));
   assert.match(worker, /open\.assigned >= \(seats \|\| MAX_SEATS\[game\]\)/);
   assert.match(worker, /tableSeats: this\.room\.tableSeats \|\| null,/);
 });

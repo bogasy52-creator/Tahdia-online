@@ -1,3 +1,4 @@
+import {issueRecovery,recoveryStatus,resetWithRecovery} from './account-recovery.js';
 import {verifyBillingGrant} from '../billing/proof.js';
 import {Career} from '../career/core.js';
 import {normalizeJourney,commitJourney,journeyStats} from '../../public/assets/js/engines/journey-engine.js';
@@ -104,6 +105,7 @@ export function createSocialUserClass(DurableObject) {
       ? await request.json().catch(() => ({}))
       : {};
 
+    if(request.method==='POST'&&['/recovery/codes','/recovery/status','/recovery/reset'].includes(url.pathname))return this.ctx.blockConcurrencyWhile(()=>url.pathname==='/recovery/codes'?issueRecovery(this,body):url.pathname==='/recovery/status'?recoveryStatus(this,body):resetWithRecovery(this,body));
     if (url.pathname === "/signup" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.signup(body));
     if (url.pathname === "/login" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.login(body));
     if (url.pathname === "/validate" && request.method === "POST") return this.validateSession(body.secret);

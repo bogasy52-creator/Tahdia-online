@@ -1,3 +1,4 @@
+import {createEffectsChannel} from '../audio-effects.js?v=33.10.0-club2';
 /* Jewels Studio: independent, equal-opening score runs. The engine owns results;
    the local Canvas replay owns animation. Opponent progress never redraws this board. */
 import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace } from '../engines/jewels-race-engine.js?v=33.10.0';
@@ -8,6 +9,7 @@ import { suggestJewelsSwap } from './advisor.js?v=33.10.0-nov14';
 
 const $=selector=>document.querySelector(selector);
 let lightEffects=false;try{lightEffects=localStorage.getItem('bs_jewels_light_effects')==='1';}catch{}
+const effectsChannel=createEffectsChannel();
 const W=JR.W,H=JR.H,N=W*H;
 const escapeText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 const reduced=()=>Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
@@ -23,12 +25,12 @@ const deadline=()=>ctl.mode==='two'?ctl.deadline:ctl.state?.endsAt;
 const timedOut=()=>Boolean(deadline()&&clockNow()>=deadline());
 const canAct=()=>Boolean(ctl.state&&!ctl.state.finished&&!player()?.done&&Array.isArray(player()?.board)&&!ctl.busy&&!ctl.pending&&!ctl.handover&&!ctl.legacy&&!timedOut());
 function sound(name,volume=.5){try{window.BS_AUDIO?.play?.(name,{volume});}catch{}}
-function unlock(){try{window.BS_AUDIO?.unlock?.();const Audio=window.AudioContext||window.webkitAudioContext;if(Audio&&!audioContext)audioContext=new Audio();audioContext?.resume?.();}catch{}}
+function unlock(){try{window.BS_AUDIO?.unlock?.();audioContext=effectsChannel.unlock();}catch{}}
 function gemSound(kind,cascade=0){
   if(kind==='swap'){sound('whoosh',.24);return;}
   if(kind==='special')sound('combo',.44);else if(kind==='made')sound('coin',.32);
-  if(!audioContext||window.BS_AUDIO?.getSettings?.().muted){if(kind==='match')sound('pop',.38);return;}
-  try{const time=audioContext.currentTime,notes=kind==='made'?[784,1046,1318]:kind==='special'?[392,587,784,1174]:[523.25,659.25,783.99].map(n=>n*2**(Math.min(5,cascade)/12));notes.forEach((note,index)=>{const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),at=time+index*.035;oscillator.type=kind==='special'?'triangle':'sine';oscillator.frequency.setValueAtTime(note,at);oscillator.frequency.exponentialRampToValueAtTime(note*1.025,at+.12);gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.035,at+.008);gain.gain.exponentialRampToValueAtTime(.0001,at+.24);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(at);oscillator.stop(at+.25);});}catch{}
+  if(!effectsChannel.enabled()){if(kind==='match')sound('pop',.38);return;}
+  try{const time=audioContext.currentTime,notes=kind==='made'?[784,1046,1318]:kind==='special'?[392,587,784,1174]:[523.25,659.25,783.99].map(n=>n*2**(Math.min(5,cascade)/12));notes.forEach((note,index)=>{const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),at=time+index*.035;oscillator.type=kind==='special'?'triangle':'sine';oscillator.frequency.setValueAtTime(note,at);oscillator.frequency.exponentialRampToValueAtTime(note*1.025,at+.12);gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.035,at+.008);gain.gain.exponentialRampToValueAtTime(.0001,at+.24);oscillator.connect(gain);gain.connect(effectsChannel.output);oscillator.start(at);oscillator.stop(at+.25);});}catch{}
 }
 function banner(text,quiet=false,combo=0){const element=$('#jwBanner');element.textContent=text;element.className='jw-banner show'+(combo>=2?' spectacular':'')+(quiet?' quiet':'');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>element.classList.remove('show'),quiet?1300:850);}
 function bumpScore(seat,points){ctl.scores[seat]=(ctl.scores[seat]||0)+points;const element=document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-score`);if(element){element.textContent=ctl.scores[seat];element.classList.remove('bump');void element.offsetWidth;element.classList.add('bump');}}

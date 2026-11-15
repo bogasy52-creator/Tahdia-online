@@ -9,7 +9,7 @@ const wrangler = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.m
 
 test('home exposes friends entry and loads the social client', () => {
   assert.match(index, /data-social-open/);
-  assert.match(index, /assets\/js\/social-client\.js/);
+  assert.match(index, /assets\/js\/(?:compact\/)?social-client\.js/);
   assert.match(index, /حسابك وأصدقاؤك/);
 });
 

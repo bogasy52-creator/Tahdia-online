@@ -25,7 +25,7 @@ test('a guest cannot become host by connecting before the creator', async () => 
   // 32.0.0: a public Baloot table has no host, so only it skips the gate.
   // 32.1.0: nor does a room a group party opened: nobody holds its host key, the party
   // shares its code with its own players only, and the first of them hosts.
-  const gates = worker.match(/this\.room\.order\.length === 0(?: && !this\.room\.publicMatch)?(?: && !this\.room\.partyLink)?\) return json\(\{ ok: false, error: "بانتظار دخول المضيف أولًا"/g) || [];
+  const gates = worker.match(/this\.room\.order\.length === 0(?: && !this\.room\.publicMatch)?(?: && !this\.room\.partyLink)?(?: && !this\.room\.tournament)?\) return json\(\{ ok: false, error: "بانتظار دخول المضيف أولًا"/g) || [];
   assert.equal(gates.length, 2);
   assert.doesNotMatch(worker, /this\.room\.order\.length === 0 \? "host" : "guest"/);
 });

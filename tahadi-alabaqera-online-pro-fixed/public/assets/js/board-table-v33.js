@@ -12,7 +12,7 @@ const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2};
 export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
   const $=selector=>document.querySelector(selector);
   const menuHost=$('#gameMenu');
-  let client=null,room=null,quickMode=null,quickSeats=null,leaving=false,retriedQuick=false;
+  let client=null,room=null,quickMode=null,quickSeats=null,quickHumans=['billiards','jewels'].includes(game),leaving=false,retriedQuick=false;
   const player=createStepPlayer(async(next,{animate,signal})=>{
     if(signal?.aborted)return;
     room=next;window.BS_HERO_FX?.frame(next);
@@ -28,8 +28,8 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
   },{maxBacklog:game==='snakes'?5:14,onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
-    game,modes,seats,seatsDefault,quickNote,roomNote,
-    onQuick:async({mode,seats:count})=>{quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
+    game,modes,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,
+    onQuick:async({mode,seats:count,humansOnly=false})=>{quickHumans=humansOnly;quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null,humansOnly:quickHumans});window.BS_AUDIO?.play?.('join');},
     onCreate:async({mode,seats:count})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
     onJoin:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());window.BS_AUDIO?.play?.('join');},
     onResume:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());}
@@ -65,7 +65,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
       onStatus:status=>onStatus?.(status),
       onError:message=>{
         // a public table that started before we got in: find the next one
-        if(quickMode!==null&&!retriedQuick&&!room&&/بدأت|ممتلئة|انتهت/.test(message)){retriedQuick=true;setTimeout(()=>menu.busy(false),0);client.quick(menu.name(),{variant:quickMode||'classic',seats:quickSeats}).catch(()=>{});return;}
+        if(quickMode!==null&&!retriedQuick&&!room&&/بدأت|ممتلئة|انتهت/.test(message)){retriedQuick=true;setTimeout(()=>menu.busy(false),0);client.quick(menu.name(),{variant:quickMode||'classic',seats:quickSeats,humansOnly:quickHumans}).catch(()=>{});return;}
         onError?.(message);
       }
     });
@@ -88,7 +88,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
       code:next.code,isPublic:Boolean(next.publicMatch),deadline:next.lobbyDeadline,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
       seats:next.publicMatch?(next.tableSeats||QUICK_SEATS[game]):0,variant:next.variant,
       title:next.publicMatch?'نجمع اللاعبين':'غرفتك جاهزة',
-      note:next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
+      note:next.humansOnly?'بانتظار اكتمال اللاعبين الحقيقيين. يمكنك إلغاء البحث والعودة للتدريب.':next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
       players:people.map(p=>({name:p.name,host:p.role==='host'&&!next.publicMatch,me:p.id===next.me?.id,connected:p.connected})),
       canStart:host,startDisabled:people.some(p=>!p.connected),startLabel:people.length>1?'ابدأ المباراة':'ابدأ المباراة',
       waitingText:'بانتظار المضيف يبدأ المباراة',
@@ -109,7 +109,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     if(room.publicMatch){
       const mode=room.variant||quickMode||'classic';
       leave();menu.setMode?.(mode);quickMode=mode;retriedQuick=false;connect();
-      try{await client.quick(menu.name(),{variant:mode});}catch(error){window.BS_PLATFORM?.toast?.(error.message);menu.menu();}
+      try{await client.quick(menu.name(),{variant:mode,humansOnly:quickHumans});}catch(error){window.BS_PLATFORM?.toast?.(error.message);menu.menu();}
       return;
     }
     if(room.me?.role==='host')client?.send('rematch');

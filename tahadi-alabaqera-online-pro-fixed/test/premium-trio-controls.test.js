@@ -19,3 +19,13 @@ test('replay seeks and changes speed, then cancels its frame when the page is hi
 test('an authoritative online match change closes a previous replay before applying the state',async()=>{
   const h=await setupPool();await completedShot(h);const state=structuredClone(h.api.ctl.state),room={startedAt:100,status:'playing',state,me:{index:0},players:[{index:0,name:'A'},{index:1,name:'B'}]};await h.table.options.apply(room,{animate:false});assert.equal(h.api.openReplay(),true);await h.table.options.apply({...room,startedAt:200},{animate:false});assert.equal(h.api.replay.active,false);assert.equal(h.api.ctl.state,state);assert.equal(h.api.ctl.mode,'online');assert.deepEqual(h.table.sent,[]);
 });
+
+test('pool collection tray follows actual sunk balls and removes a re-spotted ball',async()=>{
+ const h=await setupPool();h.api.startLocal('two');const s=h.api.ctl.state;
+ s.balls[3]=null;s.balls[12]=null;h.api.begin();const tray=h.doc.getElementById('biPottedBalls');assert.equal(h.doc.getElementById('biPottedCount').textContent,'2 / 15');assert.equal(tray.querySelectorAll('i').length,2);assert.match(tray.textContent,/3/);assert.match(tray.textContent,/12/);
+ s.balls[3]=[100,80];h.api.begin();assert.equal(h.doc.getElementById('biPottedCount').textContent,'1 / 15');assert.equal(tray.querySelectorAll('i').length,1);
+ h.api.startLocal('two');assert.equal(h.doc.getElementById('biPottedCount').textContent,'0 / 15');
+});
+test('phone pool starts with a larger table area and the layout toggle preserves the match',async()=>{
+ const h=await setupPool();h.api.startLocal('two');const state=JSON.stringify(h.api.ctl.state),game=h.doc.getElementById('game');assert.ok(game.classList.contains('bi-expanded'));const button=h.doc.getElementById('biExpand');assert.equal(button.getAttribute('aria-pressed'),'true');button.click();assert.ok(!game.classList.contains('bi-expanded'));assert.equal(JSON.stringify(h.api.ctl.state),state);assert.deepEqual(h.table.sent,[]);
+});

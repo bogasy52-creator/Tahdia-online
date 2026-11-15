@@ -35,7 +35,7 @@ test('home links every game and the online quiz (33.0.0: every game is online)',
 test('quiz pages load shared audio manager', async () => {
   for (const file of ['quiz.html', 'online.html']) {
     const html = await readFile(join(publicDir, file), 'utf8');
-    assert.match(html, /assets\/js\/audio-manager\.js/);
+    assert.match(html, /assets\/js\/(?:compact\/)?audio-manager\.js/);
   }
 });
 

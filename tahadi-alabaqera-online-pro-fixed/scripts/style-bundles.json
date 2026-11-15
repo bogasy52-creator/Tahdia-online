@@ -67,7 +67,8 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/home-v33-8.css"
+    "assets/css/home-v33-8.css",
+    "assets/css/club-complete-v33-10.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -290,7 +291,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/club-complete-v33-10.css"
   ],
   "v5.html": [
     "assets/css/platform.css",
@@ -403,7 +405,8 @@
   "leaderboard.html": [
     "assets/css/platform.css",
     "assets/css/leaderboard-v30-1.css",
-    "assets/css/game-interaction-v34.css"
+    "assets/css/game-interaction-v34.css",
+    "assets/css/club-complete-v33-10.css"
   ],
   "baloot.html": [
     "assets/css/platform.css",
@@ -561,7 +564,9 @@
     "/assets/css/tahdia-premium-v25.css",
     "assets/css/premium-refinements-v33-9-11.css",
     "assets/css/game-quality-v33-9-12.css",
-    "assets/css/trio-premium-v33-10.css"
+    "assets/css/trio-premium-v33-10.css",
+    "assets/css/club-complete-v33-10.css",
+    "assets/css/tournament.css"
   ],
   "jewels.html": [
     "assets/css/platform.css",
@@ -584,6 +589,12 @@
     "assets/css/mobile-v21.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/tanks-v33-10.css",
-    "assets/css/trio-premium-v33-10.css"
+    "assets/css/trio-premium-v33-10.css",
+    "assets/css/tournament.css"
+  ],
+  "tournament.html": [
+    "assets/css/platform.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/tournament.css"
   ]
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,writeFile,copyFile,rm,symlink,readdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -10,6 +10,12 @@ async function fixture(t){
  const root=await mkdtemp(join(tmpdir(),'tahdia-generated-css-'));
  t.after(()=>rm(root,{recursive:true,force:true}));
  await mkdir(join(root,'scripts'));
+ await mkdir(join(root,'node_modules'));
+ const dependencies=fileURLToPath(new URL('../node_modules',import.meta.url));
+ for(const child of await readdir(dependencies))await symlink(join(dependencies,child),join(root,'node_modules',child));
+ await copyFile(fileURLToPath(new URL('../scripts/build-core.mjs',import.meta.url)),join(root,'scripts/build-core.mjs'));
+ await mkdir(join(root,'public/assets/js'),{recursive:true});
+ for(const name of ['profile-core','social-client','career-client','platform','audio-manager','ui-icons'])await writeFile(join(root,'public/assets/js',name+'.js'),'globalThis.fixture_value=1;');
  await writeFile(join(root,'package.json'),JSON.stringify({version:'30.1.0'}));
  await mkdir(join(root,'public/assets/css'),{recursive:true});
  await copyFile(fileURLToPath(new URL('../scripts/build-styles.mjs',import.meta.url)),join(root,'scripts/build-styles.mjs'));

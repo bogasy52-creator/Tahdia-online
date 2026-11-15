@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-10-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-c596c414b742';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-631725c08bcd';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.10.0",
@@ -26,12 +26,12 @@ const APP_SHELL = [
   "/assets/css/app-index.css?v=33.10.0",
   "/assets/css/app-journey.css?v=33.10.0",
   "/assets/js/client-health.js?v=33.10.0",
-  "/assets/js/audio-manager.js?v=33.10.0",
-  "/assets/js/platform.js?v=33.10.0",
-  "/assets/js/social-client.js?v=33.10.0",
-  "/assets/js/profile-core.js?v=33.10.0",
-  "/assets/js/career-client.js?v=33.10.0",
-  "/assets/js/ui-icons.js?v=33.10.0",
+  "/assets/js/compact/audio-manager.js?v=33.10.0",
+  "/assets/js/compact/platform.js?v=33.10.0",
+  "/assets/js/compact/social-client.js?v=33.10.0",
+  "/assets/js/compact/profile-core.js?v=33.10.0",
+  "/assets/js/compact/career-client.js?v=33.10.0",
+  "/assets/js/compact/ui-icons.js?v=33.10.0",
   "/assets/js/pro-experience.js?v=33.10.0",
   "/assets/js/home-v14.js?v=33.10.0",
   "/assets/js/home-return-v17.js?v=33.10.0",
@@ -51,7 +51,9 @@ const APP_SHELL = [
   "/assets/js/club-ui.js?v=33.10.0",
   "/assets/js/reaction-performers.js?v=33.10.0",
   "/assets/css/play-experience-v25.css?v=33.10.0",
-  "/assets/fonts/tajawal-arabic-700.woff2"
+  "/assets/fonts/tajawal-arabic-700.woff2",
+  "/assets/css/club-shared.css?v=33.10.0",
+  "/assets/css/app-index-tail.css?v=33.10.0"
 ];
 const ON_DEMAND = [
   "/accuracy.html",
@@ -238,6 +240,7 @@ const ON_DEMAND = [
   "/assets/css/app-dice.css",
   "/assets/css/app-focus.css",
   "/assets/css/app-hockey.css",
+  "/assets/css/app-index-tail.css",
   "/assets/css/app-index.css",
   "/assets/css/app-jackaroo.css",
   "/assets/css/app-jewels.css",
@@ -265,6 +268,7 @@ const ON_DEMAND = [
   "/assets/css/app-survival.css",
   "/assets/css/app-tanks.css",
   "/assets/css/app-territory.css",
+  "/assets/css/app-tournament.css",
   "/assets/css/app-v5.css",
   "/assets/css/app-wordbomb.css",
   "/assets/css/app-zahra.css",
@@ -291,7 +295,9 @@ const ON_DEMAND = [
   "/assets/css/chaos-v33-6.css",
   "/assets/css/character-gallery.css",
   "/assets/css/cipher-v33-9-1.css",
+  "/assets/css/club-complete-v33-10.css",
   "/assets/css/club-pro-v33-7.css",
+  "/assets/css/club-shared.css",
   "/assets/css/cosmetics.css",
   "/assets/css/crowd-v33-10.css",
   "/assets/css/design-system.css",
@@ -390,6 +396,7 @@ const ON_DEMAND = [
   "/assets/css/tabletop-v30.css",
   "/assets/css/tahdia-premium-v25.css",
   "/assets/css/tanks-v33-10.css",
+  "/assets/css/tournament.css",
   "/assets/css/trio-premium-v33-10.css",
   "/assets/css/uno-pro-v33-9-12.css",
   "/assets/css/uno-v33-7.css",
@@ -435,6 +442,7 @@ const ON_DEMAND = [
   "/assets/heroes/samurai.webp",
   "/assets/heroes/viking.webp",
   "/assets/jewels/gems-v33-9-9.webp",
+  "/assets/js/account-recovery.js",
   "/assets/js/adaptive-board-layout.js",
   "/assets/js/admin-live-v32.js",
   "/assets/js/admin-quiz-ai-v31.js",
@@ -450,6 +458,7 @@ const ON_DEMAND = [
   "/assets/js/arena-powers-art-v24.js",
   "/assets/js/arena-worlds-art-v27.js",
   "/assets/js/atelier-shop-v30.js",
+  "/assets/js/audio-effects.js",
   "/assets/js/audio-manager.js",
   "/assets/js/baloot-cards.js",
   "/assets/js/baloot-cup.js",
@@ -483,6 +492,12 @@ const ON_DEMAND = [
   "/assets/js/club-ui.js",
   "/assets/js/cognitive-ui-v34.js",
   "/assets/js/commercial-upgrade-engine.js",
+  "/assets/js/compact/audio-manager.js",
+  "/assets/js/compact/career-client.js",
+  "/assets/js/compact/platform.js",
+  "/assets/js/compact/profile-core.js",
+  "/assets/js/compact/social-client.js",
+  "/assets/js/compact/ui-icons.js",
   "/assets/js/cosmetic-art.js",
   "/assets/js/crowd/boot.js",
   "/assets/js/crowd/main.js",
@@ -620,6 +635,8 @@ const ON_DEMAND = [
   "/assets/js/tanks/online.js",
   "/assets/js/tanks/render.js",
   "/assets/js/tanks/scene.js",
+  "/assets/js/tournament-return.js",
+  "/assets/js/tournament.js",
   "/assets/js/ui-icons.js",
   "/assets/js/uno-ui.js",
   "/assets/js/v5-ultimate-expansion.js",
@@ -1284,6 +1301,7 @@ const ON_DEMAND = [
   "/survival.html",
   "/tanks.html",
   "/territory.html",
+  "/tournament.html",
   "/v5.html",
   "/wordbomb.html",
   "/zahra.html"

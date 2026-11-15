@@ -1,3 +1,4 @@
+import {TournamentRoom,cleanTournamentLink,reportTournament} from './competition/tournament-room.js';
 import {relayGameReaction} from './social/game-reactions.js';
 import {HockeyRoom} from './hockey/hockey-room.js';
 import {TanksRoom} from './tanks/tanks-room.js';
@@ -290,8 +291,8 @@ function speedBonus(deadline, answeredAt) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if(['/carrom','/carrom.html'].includes(url.pathname)){url.pathname='/race.html';return env.ASSETS.fetch(new Request(url,request));}
-    if(['/uno','/uno.html'].includes(url.pathname)){url.pathname='/chaos.html';return env.ASSETS.fetch(new Request(url,request));}
+    if(['/carrom','/carrom.html'].includes(url.pathname)){url.pathname='/race.html';return await env.ASSETS.fetch(new Request(url,request));}
+    if(['/uno','/uno.html'].includes(url.pathname)){url.pathname='/chaos.html';return await env.ASSETS.fetch(new Request(url,request));}
     if(/^\/(labyrinth|territory|survival|patterns)(?:\.html)?\/?$/.test(url.pathname))return Response.redirect(new URL('/#games',url).href,302);
     try {
 
@@ -301,7 +302,7 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence|challenges)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence|challenges|tanks|hockey|tournament)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if(url.pathname.startsWith('/api/billing/'))return handleBillingRequest(request,env,{rateLimit});
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
@@ -359,6 +360,11 @@ export default {
     const socialResponse = await handleSocialRequest(request, env, { rateLimit });
     if (socialResponse) return socialResponse;
 
+    if(request.method==='GET'&&url.pathname==='/api/leaderboard/skill'){
+      const limited=await rateLimit(request,env,'skill-board',60,60000);if(limited)return limited;if(!env.BOARD_ROOMS)return json({ok:false,error:'خدمة التصنيف غير متاحة'},503);
+      const game=url.searchParams.get('game'),player=String(url.searchParams.get('player')||'').toLowerCase();if(!['tanks','billiards'].includes(game))return json({ok:false,error:'invalid_game'},400);
+      return await env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(LEADERBOARD_OBJECT)).fetch('https://leaderboard.internal/skill/top?game='+game+'&player='+encodeURIComponent(player));
+    }
     if (request.method === 'GET' && url.pathname === '/api/leaderboard') {
       const limited = await rateLimit(request, env, 'leaderboard', 90, 60_000);
       if (limited) return limited;
@@ -507,7 +513,7 @@ export default {
       const m=url.pathname.match(/^\/api\/party\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
       const headers=new Headers(request.headers);headers.delete('x-bs-account');
       if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}}
-      return env.ROOMS.get(env.ROOMS.idFromName('party:'+m[1])).fetch(new Request('https://party.internal/'+m[2]+url.search,{headers}));
+      return await env.ROOMS.get(env.ROOMS.idFromName('party:'+m[1])).fetch(new Request('https://party.internal/'+m[2]+url.search,{headers}));
     }
 
     if(url.pathname.startsWith('/api/challenges/')){
@@ -516,7 +522,7 @@ export default {
       if(url.pathname==='/api/challenges/quick'&&request.method==='POST'){
         const text=await request.text();if(text.length>1024)return json({ok:false,error:'طلب كبير'},413);let b;try{b=JSON.parse(text);}catch{return json({ok:false,error:'طلب غير صالح'},400);}
         if(!b||typeof b!=='object'||Array.isArray(b)||!['focus','cipher','wordbomb','chaos'].includes(b.game))return json({ok:false,error:'لعبة غير معروفة'},400);
-        return env.ROOMS.get(env.ROOMS.idFromName('challenge-queue:'+b.game)).fetch('https://challenge-queue.internal/assign',{method:'POST',body:JSON.stringify({game:b.game})});
+        return await env.ROOMS.get(env.ROOMS.idFromName('challenge-queue:'+b.game)).fetch('https://challenge-queue.internal/assign',{method:'POST',body:JSON.stringify({game:b.game})});
       }
       if(url.pathname==='/api/challenges/rooms'&&request.method==='POST'){
         if(Number(request.headers.get('content-length'))>1024)return json({ok:false,error:'طلب كبير'},413);
@@ -535,7 +541,7 @@ export default {
         if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);
         if(auth){headers.set('x-bs-account',auth.username);headers.set('x-bs-name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json();headers.set('x-bs-character',String(data.career?.equipped?.character||'character-fox').replace(/^character-/,''));}}
       }
-      return env.ROOMS.get(env.ROOMS.idFromName('challenge:'+m[1])).fetch(new Request('https://challenge.internal/'+m[2]+url.search,{headers}));
+      return await env.ROOMS.get(env.ROOMS.idFromName('challenge:'+m[1])).fetch(new Request('https://challenge.internal/'+m[2]+url.search,{headers}));
     }
 
     if(url.pathname.startsWith('/api/paths/')){
@@ -558,7 +564,7 @@ export default {
         if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
         if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}
       }
-      return env.ROOMS.get(env.ROOMS.idFromName('paths:'+m[1])).fetch(new Request('https://paths.internal/'+m[2]+url.search,{headers}));
+      return await env.ROOMS.get(env.ROOMS.idFromName('paths:'+m[1])).fetch(new Request('https://paths.internal/'+m[2]+url.search,{headers}));
     }
 
     if(url.pathname.startsWith('/api/sudoku/')){
@@ -581,15 +587,24 @@ export default {
         if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
         if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}
       }
-      return env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+m[1])).fetch(new Request('https://sudoku.internal/'+m[2]+url.search,{headers}));
+      return await env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+m[1])).fetch(new Request('https://sudoku.internal/'+m[2]+url.search,{headers}));
     }
 
 
+    if(url.pathname.startsWith('/api/tournament/')){
+      if(!env.ROOMS||!env.BOARD_ROOMS)return json({ok:false,error:'خدمة البطولات غير متاحة'},503);const limited=await rateLimit(request,env,'tournament-api',120,60000);if(limited)return limited;
+      const m=url.pathname.match(/^\/api\/tournament\/rooms(?:\/(06\d{4})(?:\/(join|start))?)?$/);if(!m)return json({ok:false},404);
+      if(m[1]&&!m[2]&&request.method==='GET')return await env.ROOMS.get(env.ROOMS.idFromName('tournament:'+m[1])).fetch('https://tournament.internal/view');
+      if(request.method!=='POST')return json({ok:false},405);const auth=await authenticate(request,env);if(!auth)return json({ok:false,error:'سجّل الدخول للبطولة.'},401);
+      if(!m[1]){const limit=await rateLimit(request,env,'tournament-create',12,60000);if(limit)return limit;const raw=await request.text();if(raw.length>2048)return json({ok:false},413);let body;try{body=JSON.parse(raw);}catch{return json({ok:false},400);}if(!['tanks','billiards'].includes(body.game)||![2,4,8].includes(body.capacity))return json({ok:false,error:'اختر اللعبة وعدد 2 أو 4 أو 8 لاعبين.'},400);
+        for(let i=0;i<6;i++){const code=roomCodeFor('tournament'),res=await env.ROOMS.get(env.ROOMS.idFromName('tournament:'+code)).fetch('https://tournament.internal/init',{method:'POST',body:JSON.stringify({code,game:body.game,capacity:body.capacity,username:auth.username,name:accountRoomName(auth)})});if(res.status===201)return res;}return json({ok:false,error:'تعذّر فتح البطولة.'},503);}
+      if(!m[2])return json({ok:false},405);return await env.ROOMS.get(env.ROOMS.idFromName('tournament:'+m[1])).fetch('https://tournament.internal/'+m[2],{method:'POST',body:JSON.stringify({username:auth.username,name:accountRoomName(auth)})});
+    }
     if(url.pathname.startsWith('/api/tanks/')){
       if(!env.ROOMS)return json({ok:false,error:'خدمة المعارك غير متاحة الآن'},503);
       if(url.pathname==='/api/tanks/health'&&request.method==='GET')return json({ok:true,online:true,engine:'tanks-authoritative-v1'});
       const limited=await rateLimit(request,env,'tanks-api',120,60000);if(limited)return limited;
-      if(url.pathname==='/api/tanks/quick'&&request.method==='POST')return env.ROOMS.get(env.ROOMS.idFromName('tanks:queue')).fetch('https://tanks.internal/queue',{method:'POST',body:'{}'});
+      if(url.pathname==='/api/tanks/quick'&&request.method==='POST')return await env.ROOMS.get(env.ROOMS.idFromName('tanks:queue')).fetch('https://tanks.internal/queue',{method:'POST',body:'{}'});
       if(url.pathname==='/api/tanks/rooms'&&request.method==='POST'){
         const raw=await request.text();if(raw.length>2048)return json({ok:false},413);let b;try{b=JSON.parse(raw);}catch{return json({ok:false},400);}
         if(![2,3,4].includes(b?.capacity)||!['ffa','teams'].includes(b?.mode)||b.mode==='teams'&&b.capacity!==4)return json({ok:false,error:'اختر 2–4 لاعبين، وأربعة للفريقين'},400);
@@ -598,18 +613,18 @@ export default {
       const m=url.pathname.match(/^\/api\/tanks\/rooms\/(07\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
       const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
       if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
-      return env.ROOMS.get(env.ROOMS.idFromName('tanks:'+m[1])).fetch(new Request('https://tanks.internal/'+m[2]+url.search,{headers:h}));
+      return await env.ROOMS.get(env.ROOMS.idFromName('tanks:'+m[1])).fetch(new Request('https://tanks.internal/'+m[2]+url.search,{headers:h}));
     }
 
     if(url.pathname.startsWith('/api/hockey/')){
       if(url.pathname==='/api/hockey/health'&&request.method==='GET')return json({ok:!!env.ROOMS,engine:'hockey-studio-v2',online:!!env.ROOMS},env.ROOMS?200:503);
       if(!env.ROOMS)return json({ok:false,error:'خدمة المواجهات غير متاحة الآن',code:'HOCKEY_UNAVAILABLE'},503);
       const limited=await rateLimit(request,env,'hockey-api',120,60000);if(limited)return limited;
-      if(url.pathname==='/api/hockey/quick'&&request.method==='POST')return env.ROOMS.get(env.ROOMS.idFromName('hockey:queue')).fetch('https://hockey.internal/queue',{method:'POST',body:'{}'});
+      if(url.pathname==='/api/hockey/quick'&&request.method==='POST')return await env.ROOMS.get(env.ROOMS.idFromName('hockey:queue')).fetch('https://hockey.internal/queue',{method:'POST',body:'{}'});
       if(url.pathname==='/api/hockey/rooms'&&request.method==='POST'){const b=await request.json();for(let i=0;i<8;i++){const code=roomCodeFor('hockey'),hostKey=token(),r=await env.ROOMS.get(env.ROOMS.idFromName('hockey:'+code)).fetch('https://hockey.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,target:b?.target})});if(r.status===201)return json({ok:true,code,hostKey});}return json({ok:false,error:'تعذر فتح الغرفة'},503);}
       const m=url.pathname.match(/^\/api\/hockey\/rooms\/(95\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
       const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-name');const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);if(st){const auth=await authenticate(new Request(request.url,{headers:{authorization:'Bearer '+st}}),env);if(!auth)return json({ok:false},401);headers.set('x-bs-account',auth.username);headers.set('x-bs-name',accountRoomName(auth));}
-      return env.ROOMS.get(env.ROOMS.idFromName('hockey:'+m[1])).fetch(new Request('https://hockey.internal/'+m[2]+url.search,{headers}));
+      return await env.ROOMS.get(env.ROOMS.idFromName('hockey:'+m[1])).fetch(new Request('https://hockey.internal/'+m[2]+url.search,{headers}));
     }
 
     if(url.pathname.startsWith('/api/picture/')){
@@ -627,7 +642,7 @@ export default {
         const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(auth){headers.set('x-bs-account',auth.username);if(m[2]==='ws')url.searchParams.set('name',accountRoomName(auth));}else if(m[2]==='generate')return json({ok:false,error:'سجّل الدخول لتوليد صورة'},401);
       }
       if(Number(headers.get('content-length'))>4096)return json({ok:false,error:'طلب كبير'},413);
-      let payload;if(request.method==='POST'){payload=await request.text();if(payload.length>4096)return json({ok:false,error:'طلب كبير'},413);}const stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+m[1]));return stub.fetch(new Request('https://picture.internal/'+m[2]+url.search,{method:request.method,headers,body:payload}));
+      let payload;if(request.method==='POST'){payload=await request.text();if(payload.length>4096)return json({ok:false,error:'طلب كبير'},413);}const stub=env.ROOMS.get(env.ROOMS.idFromName('picture:'+m[1]));return await stub.fetch(new Request('https://picture.internal/'+m[2]+url.search,{method:request.method,headers,body:payload}));
     }
 
     if (url.pathname.startsWith('/api/quick/')) {
@@ -731,7 +746,7 @@ export default {
       const body=await request.json().catch(()=>({})),auth=await authenticate(request,env);
       if(request.headers.has('authorization')&&!auth)return json({ok:false,error:'انتهت جلسة حسابك، سجل الدخول مجددًا'},401);
       const stub=env.QUICK_ARENA.get(env.QUICK_ARENA.idFromName('queue:serpent:v135'));
-      return stub.fetch('https://quick.internal/serpent/join',{method:'POST',body:JSON.stringify({name:auth?accountRoomName(auth):cleanName(body.name),username:auth?.username||null})});
+      return await stub.fetch('https://quick.internal/serpent/join',{method:'POST',body:JSON.stringify({name:auth?accountRoomName(auth):cleanName(body.name),username:auth?.username||null})});
     }
     if(request.method==='POST'&&url.pathname==='/api/serpent/rooms'){
       const limited=await rateLimit(request,env,'serpent-create',12,60_000);if(limited)return limited;
@@ -753,7 +768,7 @@ export default {
       const limited=await rateLimit(request,env,'serpent-connect',100,60_000);if(limited)return limited;
       if(!env.ROOMS||typeof env.ROOMS.idFromName!=='function')return json({ok:false,error:'محرك اللعب الجماعي غير مفعّل'},503);
       const stub=env.ROOMS.get(env.ROOMS.idFromName('__serpent__:'+serpentMatch[1]));
-      if(serpentMatch[2]!=='/ws')return stub.fetch('https://serpent.internal/status');
+      if(serpentMatch[2]!=='/ws')return await stub.fetch('https://serpent.internal/status');
       const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-skin');
       const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(s=>s.trim()).find(s=>s.startsWith('st.'))?.slice(3);
       let accountName='';
@@ -762,7 +777,7 @@ export default {
         const profile=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});
         if(profile.ok){const data=await profile.json();headers.set('x-bs-skin',data.career?.equipped?.snake||'snake-wild');}
       }}
-      const internal=new URL(request.url);internal.hostname='serpent.internal';internal.pathname='/ws';if(accountName)internal.searchParams.set('name',accountName);return stub.fetch(new Request(internal,{headers}));
+      const internal=new URL(request.url);internal.hostname='serpent.internal';internal.pathname='/ws';if(accountName)internal.searchParams.set('name',accountName);return await stub.fetch(new Request(internal,{headers}));
     }
 
     // Quick Baloot: a seat on an open public table; empty seats get bots.
@@ -792,10 +807,10 @@ export default {
       const game = String(body.game || ""), variant = game === 'snakes' && ['adventure','strategy','clash'].includes(body.variant) ? body.variant : 'classic';
       if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       // 33.4.0: a table size the player picked (snakes: 2, 3 or 4) has its own open table
-      const seats = chosenSeats(game, body.seats);
+      const seats = chosenSeats(game, body.seats),humansOnly=body.humansOnly===true;
       try {
-        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + ":v33"));
-        return await stub.fetch("https://tablequick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ game, variant, seats }) });
+        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + (humansOnly?":humans":"") + ":v33"));
+        return await stub.fetch("https://tablequick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ game, variant, seats, humansOnly }) });
       } catch (err) {
         if (isDurableRequestQuotaError(err)) throw err;
         console.error("board quick failed", err);
@@ -871,7 +886,7 @@ export default {
       });
     }
 
-    return env.ASSETS.fetch(request);
+    return await env.ASSETS.fetch(request);
     } catch (error) {
       if (isDurableRequestQuotaError(error)) return durableQuotaResponse(env);
       throw error;
@@ -924,6 +939,7 @@ export class GameRoom extends DurableObject {
     if (this.room) await this.ctx.storage.put("room", this.room);
   }
 
+  async tournamentDelegate(){if(!this.tournamentRoom)this.tournamentRoom=new TournamentRoom(this.ctx,this.env);await this.tournamentRoom.ready;return this.tournamentRoom;}
   async tanksDelegate(){if(!this.tanksRoom)this.tanksRoom=new TanksRoom(this.ctx,this.env);await this.tanksRoom.ready;return this.tanksRoom;}
 
   async hockeyDelegate(){if(!this.hockeyRoom)this.hockeyRoom=new HockeyRoom(this.ctx,this.env);await this.hockeyRoom.ready;return this.hockeyRoom;}
@@ -941,6 +957,7 @@ export class GameRoom extends DurableObject {
   async serpentDelegate(){if(!this.serpentRoom)this.serpentRoom=new SerpentRoom(this.ctx,this.env);await this.serpentRoom.ready;return this.serpentRoom;}
 
   async fetch(request) {
+    if(new URL(request.url).hostname==='tournament.internal')return (await this.tournamentDelegate()).fetch(request);
     if(new URL(request.url).hostname==='tanks.internal')return (await this.tanksDelegate()).fetch(request);
     if(new URL(request.url).hostname==='hockey.internal')return (await this.hockeyDelegate()).fetch(request);
     const url = new URL(request.url);
@@ -1657,6 +1674,7 @@ export class GameRoom extends DurableObject {
   }
 
   async alarm() {
+    if(this.tournamentRoom||await this.ctx.storage.get('tournament'))return (await this.tournamentDelegate()).alarm();
     if(this.tanksRoom||(await this.ctx.storage.get('tanks')))return (await this.tanksDelegate()).alarm();
     if(this.hockeyRoom||(await this.ctx.storage.get('hockey')))return (await this.hockeyDelegate()).alarm();
     if(this.challengeRoom||await this.ctx.storage.get('challenge'))return (await this.challengeDelegate()).alarm();
@@ -1761,9 +1779,10 @@ export class BoardRoom extends DurableObject {
   }
 
   async initializeRoom(body){
-    if(this.room)return json({ok:false,error:'room_exists'},409);
+    if(this.room){if(body.tournament?.token&&this.room.tournament?.token===body.tournament.token&&this.room.tournament.match===body.tournament.match)return json({ok:true},201);return json({ok:false,error:'room_exists'},409);}
     const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
+    const tournament=game==='billiards'?cleanTournamentLink(body.tournament):null;if(body.tournament&&!tournament)return json({ok:false,error:'invalid_tournament'},400);
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
     // still opens a table sized for exactly its players.
@@ -1771,13 +1790,15 @@ export class BoardRoom extends DurableObject {
     const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,Number(body.playerLimit)||2))):body.publicMatch===true&&tableSeats?tableSeats:MAX_SEATS[game];
     const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit,createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     // A public table (Baloot quick, or «العب الحين») starts by itself after the lobby countdown.
-    room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch?now+(game==='baloot'?BALOOT_LOBBY_MS:TABLE_LOBBY_MS):null;
+    room.humansOnly=body.humansOnly===true;
+    room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch&&!room.humansOnly?now+(game==='baloot'?BALOOT_LOBBY_MS:TABLE_LOBBY_MS):null;
+    if(tournament)room.tournament=tournament;
     if(tableSeats)room.tableSeats=tableSeats;
     if(game==='baloot'){room.bots=[];room.batch=null;room.nextHandAt=null;room.open=body.open!==false;}
     else{room.partyLink=partyLink;
       // 33.0.0: the players the group room sent to this table; it starts as soon as they are all in
       if(partyLink)room.partyExpected=Math.max(1,Math.min(playerLimit,Number(body.expected)||playerLimit));}
-    try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.publicMatch?room.lobbyDeadline:room.expiresAt);this.room=room;return json({ok:true},201)}
+    try{await this.ctx.storage.put('room',room);await this.ctx.storage.setAlarm(room.lobbyDeadline||room.expiresAt);this.room=room;return json({ok:true},201)}
     catch(error){const requestId=crypto.randomUUID();this.room=null;try{await this.ctx.storage.delete('room');await this.ctx.storage.deleteAlarm()}catch(rollback){console.error('board initialization rollback failed',{requestId,error:rollback.message})}console.error('board initialization failed',{requestId,error:error.message});return json({ok:false,code:'ROOM_INITIALIZATION_FAILED',error:'تعذر حفظ الغرفة على السيرفر. حاول مرة أخرى.',requestId},503)}
   }
 
@@ -1794,6 +1815,12 @@ export class BoardRoom extends DurableObject {
     if (!this.room) return;
     this.room.updatedAt = Date.now();
     await this.ctx.storage.put("room", this.room);
+    if(this.room.status==='finished'&&this.room.tournament&&!this.room.tournamentReported){const r=this.room,winner=r.state.winner>=0?r.players[r.order[r.state.winner]]?.username:null;r.tournamentReported=await reportTournament(this.env,r.tournament,r.game,winner||null);r.tournamentRetryAt=r.tournamentReported?null:Date.now()+10000;await this.ctx.storage.put('room',r);}
+    if(this.room.status==='finished'&&this.room.game==='billiards'&&!this.room.skillReported){
+      const r=this.room;r.skillReported=false;const players=r.order.map((id,i)=>({...r.players[id],seat:i}));
+      if(players.length!==2||players.some(p=>p.bot||!p.username)||Date.now()-r.startedAt<20000)r.skillReported=true;
+      else try{const res=await this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(LEADERBOARD_OBJECT)).fetch('https://leaderboard.internal/skill/record',{method:'POST',body:JSON.stringify({id:'billiards:'+r.code+':'+r.startedAt,game:'billiards',players:players.map(p=>({username:p.username,name:p.name,team:p.seat,score:r.state.winner===-1 ? .5 : r.state.winner===p.seat?1:0}))})});if(!res.ok)throw Error('rating_unavailable');r.skillReported=true;}catch{r.skillRetryAt=Date.now()+10000;}await this.ctx.storage.put('room',r);
+    }
     if(this.room.status==='finished'&&!this.room.rewardsComplete){
       const endedAt=this.room.startedAt;
       const rewards=this.room.order.map((id,index)=>{const player=this.room.players[id];return {username:player.username,id:'board:'+this.room.code+':'+endedAt+':'+player.id,game:this.room.game,...(isJewelsRaceTable(this.room)&&this.room.state.winner===-1?{draw:true}:{}),win:this.room.game==='baloot'?balootWinFor(this.room,player):this.room.game==='jackaroo'?this.room.state.winnerTeam===index%2:this.room.state.winner===index}});
@@ -1907,7 +1934,7 @@ export class BoardRoom extends DurableObject {
         return { id: p.id, index, name: p.name, username: p.bot ? undefined : p.username || undefined, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined, look, character: look.character };
       }),
       me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
-      publicMatch: Boolean(this.room.publicMatch),
+      publicMatch: Boolean(this.room.publicMatch),humansOnly:Boolean(this.room.humansOnly),
       party: this.room.partyLink ? { expected: this.room.partyExpected || this.room.playerLimit, first: !this.room.startedAt } : undefined,
       lobbyDeadline: this.room.lobbyDeadline || null,
       pendingRoll: this.room.pendingRoll,
@@ -1970,6 +1997,8 @@ export class BoardRoom extends DurableObject {
     const candidates = [this.room.expiresAt];
     if (this.room.status === 'lobby' && (this.room.publicMatch || this.room.partyLink) && this.room.lobbyDeadline) candidates.push(this.room.lobbyDeadline);
     if (this.room.game === 'baloot' && this.room.status === 'playing' && this.room.nextHandAt) candidates.push(this.room.nextHandAt);
+    if(this.room.status==='finished'&&this.room.tournament&&!this.room.tournamentReported)candidates.push(this.room.tournamentRetryAt||now+10000);
+    if (this.room.status==='finished'&&this.room.game==='billiards'&&!this.room.skillReported)candidates.push(this.room.skillRetryAt||now+10000);
     if (this.room.status === 'finished' && !this.room.rewardsComplete) candidates.push(this.room.rewardRetryAt || now + 10000);
     if (this.room.status === "playing" && this.room.turnDeadline) candidates.push(this.room.turnDeadline);
     if (this.room.status === 'playing' && isJewelsRaceTable(this.room) && this.room.jewelsBotAt) candidates.push(this.room.jewelsBotAt);
@@ -2018,7 +2047,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
-    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats))); }
+    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats),body.humansOnly===true)); }
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
@@ -2033,6 +2062,7 @@ export class BoardRoom extends DurableObject {
     if (url.pathname.endsWith("/ws")) {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
       if (request.headers.get("Upgrade") !== "websocket") return json({ ok: false, error: "WebSocket required" }, 426);
+      if(this.room.tournament&&!this.room.tournament.players.includes(request.headers.get('x-bs-account')))return json({ok:false,error:'المواجهة محجوزة للاعبي البطولة.'},403);
       const expectedGame = url.searchParams.get("game") || "";
       if (expectedGame && expectedGame !== this.room.game) return json({ ok: false, error: "رمز الغرفة يخص لعبة أخرى" }, 409);
       if (this.room.status === "lobby" && this.cleanupStaleLobbyGuests()) await this.persist();
@@ -2045,14 +2075,16 @@ export class BoardRoom extends DurableObject {
         player = Object.values(this.room.players).find((p) => p.role === "host") || null;
         if (!player) player = this.addPlayer(name, "host");
       }
+      if(!player&&this.room.tournament)player=Object.values(this.room.players).find(p=>p.username===request.headers.get('x-bs-account'))||null;
+      if(player?.username&&player.username!==request.headers.get('x-bs-account'))return json({ok:false,error:'account_mismatch'},403);
       if (!player) {
-        if (this.room.order.length === 0 && !this.room.publicMatch && !this.room.partyLink) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
+        if (this.room.order.length === 0 && !this.room.publicMatch && !this.room.partyLink && !this.room.tournament) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
         this.syncConnected();
         this.cleanupStaleLobbyGuests();
         if (this.room.order.length >= this.room.playerLimit) return json({ ok: false, error: "الغرفة ممتلئة — اللاعب المنقطع لديه مهلة للعودة" }, 409);
         // a room opened by a group room: the first player in hosts it
-        player = this.addPlayer(name, this.room.order.length === 0 && this.room.partyLink ? "host" : "guest");
+        player = this.addPlayer(name, this.room.order.length === 0 && (this.room.partyLink||this.room.tournament) ? "host" : "guest");
       } else if (name) player.name = name;
 
       {
@@ -2111,19 +2143,20 @@ export class BoardRoom extends DurableObject {
   // 33.0.0 «العب الحين»: one Durable Object per game hands out seats on an open
   // public table; the table starts by itself after its 10-second lobby and bots
   // take the seats nobody took.
-  async tableQuick(game, variant, seats = null) {
+  async tableQuick(game, variant, seats = null, humansOnly=false) {
     if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: 'اللعبة غير مدعومة' }, 400);
     if (game === 'snakes') try { variant = normalizeSnakesVariant(variant); } catch { variant = 'classic'; } else variant = 'classic';
     const now = Date.now(), key = 'tableQuick';
     let open = (await this.ctx.storage.get(key)) || null;
+    if(humansOnly&&open){try{const res=await this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(open.code)).fetch('https://board.internal/status'),data=await res.json();if(!res.ok||data.status!=='lobby'||data.players>=(seats||MAX_SEATS[game]))open=null;else open.assigned=0;}catch{return json({ok:false,error:'تعذّر التحقق من طاولة اللاعبين.'},503);}}
     // a table of a picked size takes no more people than its seats
     if (open && (open.assigned >= (seats || MAX_SEATS[game]) || now >= open.closesAt)) open = null;
     if (!open) {
       for (let attempt = 0; attempt < 8 && !open; attempt++) {
         const code = roomCodeFor(game);
         const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
-        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game, variant, publicMatch: true, seats }) });
-        if (res.status === 201) open = { code, createdAt: now, closesAt: now + TABLE_LOBBY_MS - 2500, assigned: 0 };
+        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game, variant, publicMatch: true, seats, humansOnly }) });
+        if (res.status === 201) open = { code, createdAt: now, closesAt: now + (humansOnly?1800000:TABLE_LOBBY_MS - 2500), assigned: 0 };
         else if (res.status !== 409) break;
       }
       if (!open) return json({ ok: false, error: 'تعذر فتح طاولة الآن، حاول بعد لحظة' }, 503);
@@ -2245,6 +2278,7 @@ export class BoardRoom extends DurableObject {
         if (player.role !== "host") return this.sendError(ws, "الإعادة للمضيف فقط");
         if (this.room.status !== "finished") return;
         if (!this.room.rewardsComplete) return this.sendError(ws, "جاري حفظ نتيجة الجولة — انتظر قليلًا ثم أعد المحاولة");
+        if(this.room.game==='billiards'&&this.room.skillReported===false)return this.sendError(ws,"جاري حفظ تصنيف المهارة");
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
@@ -2274,6 +2308,8 @@ export class BoardRoom extends DurableObject {
   // are in, or 15 seconds after the first one came (bots take the seats of the missing).
   async partyTableArrival() {
     const r = this.room;
+    if(r?.humansOnly){if(r.status==='lobby'&&r.order.length===r.playerLimit&&r.order.every(id=>r.players[id]?.connected))await this.startGame(true);return;}
+    if(r?.tournament){if(r.status==='lobby'&&r.order.length===2&&r.order.every(id=>r.players[id]?.connected))await this.startGame();return;}
     if (!r?.partyLink || r.status !== 'lobby' || r.startedAt || !TABLE_GAMES.includes(r.game)) return;
     this.syncConnected();
     const here = r.order.filter((id) => r.players[id] && !r.players[id].bot && r.players[id].connected).length;
@@ -2282,11 +2318,15 @@ export class BoardRoom extends DurableObject {
   }
 
   async startGame(quick = false) {
+    if(this.room.tournament&&(this.room.order.length!==2||!this.room.order.every(id=>this.room.players[id]?.connected)))return;
+    if(this.room.humansOnly&&(this.room.order.length!==this.room.playerLimit||!this.room.order.every(id=>this.room.players[id]?.connected)))return;
+    this.room.skillReported=false;this.room.skillRetryAt=null;
     const steps = startTable(this.room, { quick, rng: secureUnit, roll: () => this.randomDie(), now: Date.now() });
     return await this.settleTable(steps);
   }
 
   async resetForRematch() {
+    if(this.room.tournament)return;
     if (TABLE_GAMES.includes(this.room.game)) resetTable(this.room);
     this.room.status = "lobby";
     this.room.state = null;
@@ -2392,7 +2432,7 @@ export class BoardRoom extends DurableObject {
       await this.handleTurnTimeout();
       return;
     }
-    if (this.room.status === 'finished' && !this.room.rewardsComplete) await this.persist();
+    if (this.room.status === 'finished' && (!this.room.rewardsComplete||this.room.game==='billiards'&&!this.room.skillReported||this.room.tournament&&!this.room.tournamentReported)) await this.persist();
     if ((this.room.status === 'lobby' || this.room.status === 'finished' && this.room.rewardsComplete) && this.cleanupStaleLobbyGuests()) {
       await this.persist();
       this.broadcast();

@@ -23,7 +23,7 @@ test('carrom: the striker rail and slingshot coexist with precise angle and powe
 
 test('billiards: a richer table, tap a ball to aim at a pocket, the loupe and a pull-down power', async () => {
   const [main, html] = await Promise.all(['public/assets/js/billiards/main.js', 'public/billiards.html'].map(read));
-  assert.match(main, /const RAIL = 12, CUSHION = 4;/);
+  assert.match(main, /const RAIL = 9, CUSHION = 4;/);
   assert.match(main, /two lamps over the bed/); assert.match(main, /the lacquer/);
   assert.match(main, /function potAim\(n\)/); assert.match(main, /if \(hit > 0\) potAim\(hit\)/);
   assert.match(main, /drawLoupe\(cue, dir\)/); assert.match(main, /view\.loupe = true/);

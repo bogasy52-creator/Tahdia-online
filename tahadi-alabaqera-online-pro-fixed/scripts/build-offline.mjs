@@ -11,6 +11,11 @@ for(let i=shell.length-1;i>=0;i--)if(/^\/(?:quiz|picture)\.html$|^\/assets\/(?:c
 shell.push('/assets/js/club-ui.js?v='+release,'/assets/js/reaction-performers.js?v='+release);
 shell.push('/assets/css/play-experience-v25.css?v=29.1.0','/assets/fonts/tajawal-arabic-700.woff2');
 for(let i=0;i<shell.length;i++)if(!shell[i].includes('-gameplay3'))shell[i]=shell[i].replace(/\?v=[0-9.]+/,'?v='+release);
+for(let i=0;i<shell.length;i++)shell[i]=shell[i].replace(/^(\/assets\/js\/)(profile-core|social-client|career-client|platform|audio-manager|ui-icons)(\.js)/,'$1compact/$2$3');
+for(const page of ['index','sudoku','journey']){
+ const html=await readFile(path.join(root,page+'.html'),'utf8').catch(()=> '');
+ for(const m of html.matchAll(/<link[^>]+href=["'](assets\/css\/(?:club-shared|app-(?:index|sudoku|journey)-tail)\.css)[^"']*["']/g))if(!shell.some(p=>p.split('?')[0]==='/'+m[1]))shell.push('/'+m[1]+'?v='+release);
+}
 const demand=[...new Set([...(await walk(root)),'/service-worker.js'])].filter(file=>/\.(?:css|js|json|html|webp|png|svg|wav|mp3|woff2)$/.test(file)).sort();
 const runtime=await readFile(new URL('./service-worker-runtime.txt',import.meta.url),'utf8');
 // Same-release fixes must invalidate every cached executable/page, including

@@ -6,9 +6,10 @@
   const NUMERALS=['','1','2','3'];
   const COPY={
     week:{tab:'tabWeek',ends:'يتجدد الترتيب بعد',previous:'أبطال الأسبوع الماضي',empty:'لا توجد نتائج موثّقة هذا الأسبوع حتى الآن. أول فوز أونلاين يضعك في المركز الأول.',none:'لم تلعب مباراة موثّقة هذا الأسبوع.'},
+    skill:{tab:'tabSkill',ends:'',previous:'',empty:'بانتظار أول مواجهة مصنفة. تحدَّ لاعبًا مسجلًا في الدبابات أو البلياردو.',none:'ابدأ أول مباراة لتحديد مستواك.'},
     season:{tab:'tabSeason',ends:'ينتهي الموسم بعد',previous:'أبطال الموسم الماضي',empty:'لا توجد نتائج موثّقة في هذا الموسم حتى الآن. أول فوز أونلاين يضعك في المركز الأول.',none:'لم تلعب مباراة موثّقة في هذا الموسم.'}
   };
-  let period=new URLSearchParams(location.search).get('period')==='season'?'season':'week';
+  const query=new URLSearchParams(location.search);let period=['season','skill'].includes(query.get('period'))?query.get('period'):'week',skillGame=query.get('game')==='billiards'?'billiards':'tanks';$('skillGame').value=skillGame;
   let view=null,controller=null,clock=null,offset=0;
 
   function player(){
@@ -29,7 +30,7 @@
   function initial(name){return Array.from(String(name||'').trim())[0]||'؟';}
   function crown(){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 28 20');svg.setAttribute('class','lb-crown');svg.setAttribute('aria-hidden','true');svg.innerHTML='<path fill="currentColor" d="M2 6l6 5 6-10 6 10 6-5-3 14H5z"/>';return svg;}
   function avatar(row){const a=node('span','lb-avatar',initial(row?.name));a.setAttribute('aria-hidden','true');if(row?.owner)a.append(crown());return a;}
-  function pointsLabel(value){const p=node('span','lb-points',points.format(value));p.append(node('small',null,' نقطة'));return p;}
+  function pointsLabel(value){const p=node('span','lb-points',points.format(value));p.append(node('small',null,period==='skill'?' تقييم':' نقطة'));return p;}
 
   function step(rank,row,me){
     const card=node('div','lb-step'+(row?'':' is-empty')+(row&&row.username===me?' is-me':''));card.dataset.rank=rank;if(row?.username){card.dataset.playerUsername=row.username;card.dataset.playerName=row.name||row.displayName||row.username;}
@@ -37,6 +38,7 @@
     numeral.setAttribute('aria-hidden','true');block.append(numeral);person.append(avatar(row));card.append(person,block);
     if(!row){person.append(node('span','lb-name','بانتظار بطل'));card.setAttribute('aria-label',`المركز ${rank} شاغر`);return card;}
     person.append(node('span','lb-name',row.name),pointsLabel(row.points));
+    if(period==='skill'&&row.provisional)person.append(node('span','skill-tag','تحديد المستوى · '+row.placementsLeft+' متبقية'));
     if(row.owner)person.append(node('span','lb-tag','المدير'));else if(row.username===me)person.append(node('span','lb-tag me','أنت'));
     card.setAttribute('aria-label',`المركز ${rank}: ${row.name}، ${points.format(row.points)} نقطة، ${record(row.wins,row.games)}`);
     return card;
@@ -46,7 +48,7 @@
     if(row.username===me)li.setAttribute('aria-current','true');
     const rank=node('span','lb-rank',String(row.rank));rank.setAttribute('aria-hidden','true');
     const who=node('span','lb-who'),name=node('b');name.append(node('span',null,row.name));if(row.owner)name.append(crown());
-    who.append(name,node('small',null,record(row.wins,row.games)));
+    who.append(name,node('small',null,record(row.wins,row.games)));if(period==='skill'&&row.provisional)who.append(node('small','skill-tag','تحديد المستوى · '+row.placementsLeft+' متبقية'));
     li.append(rank,avatar(row),who,pointsLabel(row.points));return li;
   }
   function standing(data,me){
@@ -55,6 +57,7 @@
       box.append(node('span','lb-me-rank is-out','؟'));const copy=node('span','lb-me-copy');copy.append(node('b',null,'سجّل دخولك ليظهر اسمك في اللوحة'),node('span',null,'النقاط تُحفظ في حسابك وتُحسب من مباريات الأونلاين.'));
       const go=node('a','bs-btn primary','سجّل الدخول');go.href='/social?next='+encodeURIComponent('/leaderboard'+(period==='season'?'?period=season':''));box.append(copy,go);box.hidden=false;return;
     }
+    if(period==='skill'){const mine=data.me||{rating:1000,games:0,placementsLeft:10},copy=node('span','lb-me-copy');box.append(node('span','lb-me-rank',mine.rank?String(mine.rank):'—'));copy.append(node('b',null,'تقييمك '+points.format(mine.rating)),node('span',null,mine.provisional?'تحديد المستوى: '+mine.placementsLeft+' مباريات متبقية.':record(mine.wins,mine.games)));const go=node('a','bs-btn primary','ادخل المنافسة');go.href='/'+skillGame;box.append(copy,go);box.hidden=false;return;}
     const mine=data.me||{points:0,wins:0,games:0,rank:null},copy=node('span','lb-me-copy');
     if(mine.rank){
       box.append(node('span','lb-me-rank',String(mine.rank)));
@@ -77,6 +80,7 @@
   }
   function countdown(){
     if(!view)return;
+    if(period==='skill'){$('lbCountdown').textContent='قوة المنافس ونتيجة المباراة تحددان تقييمك · أول 10 مباريات لتحديد المستوى';return;}
     const left=view.endsAt-(Date.now()+offset),target=$('lbCountdown');target.textContent=COPY[period].ends+' ';target.append(node('b',null,remaining(left)));
     if(left<=0){clearInterval(clock);clock=null;load();}
   }
@@ -86,7 +90,7 @@
     list.replaceChildren();list.append(...rows.slice(3).map(row=>line(row,me)));
     $('lbEmpty').hidden=rows.length>0;$('lbEmptyText').textContent=COPY[period].empty;
     standing(data,me);previous(data);countdown();
-    clearInterval(clock);clock=setInterval(countdown,30000);
+    clearInterval(clock);clock=period==='skill'?null:setInterval(countdown,30000);
   }
   function fail(message){
     $('lbPodium').replaceChildren();$('lbList').replaceChildren();$('lbEmpty').hidden=true;$('lbMe').hidden=true;$('lbPrevious').hidden=true;
@@ -96,7 +100,7 @@
     controller?.abort();controller=new AbortController();const signal=controller.signal,panel=$('lbPanel'),me=player();
     panel.setAttribute('aria-busy','true');$('lbError').hidden=true;$('lbPodium').replaceChildren();$('lbList').replaceChildren();
     try{
-      const res=await fetch('/api/leaderboard?period='+period+(me?'&player='+encodeURIComponent(me):''),{signal,cache:'no-store'});
+      const res=await fetch((period==='skill'?'/api/leaderboard/skill?game='+skillGame:'/api/leaderboard?period='+period)+(me?'&player='+encodeURIComponent(me):''),{signal,cache:'no-store'});
       const data=await res.json().catch(()=>({}));
       if(signal.aborted)return;
       if(!res.ok||!data.ok)return fail(data.error);
@@ -106,16 +110,17 @@
   }
   function select(next,focus=false){
     if(next!==period||!view){period=next;}
-    for(const key of ['week','season']){const tab=$(COPY[key].tab),on=key===period;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;if(on&&focus)tab.focus();}
+    for(const key of ['week','season','skill']){const tab=$(COPY[key].tab),on=key===period;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;if(on&&focus)tab.focus();}
     $('lbPanel').setAttribute('aria-labelledby',COPY[period].tab);
-    const url=new URL(location.href);if(period==='season')url.searchParams.set('period','season');else url.searchParams.delete('period');history.replaceState(null,'',url);
+    const url=new URL(location.href);if(period!=='week')url.searchParams.set('period',period);else url.searchParams.delete('period');if(period==='skill')url.searchParams.set('game',skillGame);else url.searchParams.delete('game');$('skillGameWrap').hidden=period!=='skill';history.replaceState(null,'',url);
     load();
   }
   for(const tab of document.querySelectorAll('.lb-tabs [role="tab"]')){
     tab.addEventListener('click',()=>{if(tab.dataset.period!==period)select(tab.dataset.period);});
     // In a right-to-left tab list the left arrow moves forward.
-    tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?'week':event.key==='End'?'season':period==='week'?'season':'week';select(next,true);});
+    tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const keys=['week','season','skill'],next=event.key==='Home'?'week':event.key==='End'?'skill':keys[(keys.indexOf(period)+(event.key==='ArrowLeft'?1:2))%3];select(next,true);});
   }
+  $('skillGame').addEventListener('change',()=>{skillGame=$('skillGame').value==='billiards'?'billiards':'tanks';select('skill');});
   $('lbRetry').addEventListener('click',load);
   addEventListener('storage',event=>{if(event.key==='bs_social_session')load();});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view&&view.endsAt<=Date.now()+offset)load();});

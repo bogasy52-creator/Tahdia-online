@@ -51,7 +51,7 @@
   // ------------------------------------------------------------ trophies
   const TIER_NAMES = ['برونزي', 'فضي', 'ذهبي', 'ماسي'];
   const TIER_COLORS = ['#d08a4e', '#c9d3e6', '#ffcb45', '#7ee8ff'];
-  const GAMES = { baloot: 'البلوت', jackaroo: 'جاكارو', snakes: 'الثعبان والسلالم', zahra: 'الزهرة', dice: 'النرد', chaos: 'أونو', hockey: 'الهوكي', billiards: 'البلياردو', quiz: 'تحدي الأسئلة', serpent: 'حلبة الثعابين', memory: 'الذاكرة', logic: 'المنطق', puzzle: 'ترتيب الأرقام', sudoku: 'سودوكو', paths: 'توصيل الأرقام', jewels: 'ماستر الجواهر', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', reaction: 'سرعة الاستجابة', accuracy: 'الدقة' };
+  const GAMES = { tanks: 'معركة الدبابات', baloot: 'البلوت', jackaroo: 'جاكارو', snakes: 'الثعبان والسلالم', zahra: 'الزهرة', dice: 'النرد', chaos: 'أونو', hockey: 'الهوكي', billiards: 'البلياردو', quiz: 'تحدي الأسئلة', serpent: 'حلبة الثعابين', memory: 'الذاكرة', logic: 'المنطق', puzzle: 'ترتيب الأرقام', sudoku: 'سودوكو', paths: 'توصيل الأرقام', jewels: 'ماستر الجواهر', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', reaction: 'سرعة الاستجابة', accuracy: 'الدقة' };
   const MAIN = [
     ['wins', 'كأس الانتصارات', 'على كل فوز', [10, 50, 200, 1000], (c) => c.wins],
     ['games', 'كأس المشوار', 'على كل جولة تكملها', [25, 100, 500, 2000], (c) => c.games],

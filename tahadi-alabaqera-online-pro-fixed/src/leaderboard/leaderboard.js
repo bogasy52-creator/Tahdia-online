@@ -1,3 +1,4 @@
+import {SkillRatings} from './skill-ratings.js';
 // Weekly and monthly ("season") ladders. Only server-verified online results
 // reach this store (forwarded by the player's own account object), so local
 // play and practice can never move a player up the board.
@@ -39,10 +40,12 @@ export function compareEntries(a, b) { return b.p - a.p || b.w - a.w || a.at - b
 const publicRow = row => ({ username: row.u, name: row.n || row.u, points: row.p, wins: row.w, games: row.g, owner: Boolean(row.o) });
 
 export class LeaderboardStore {
-  constructor(ctx) { this.ctx = ctx; }
+  constructor(ctx) { this.ctx = ctx; this.skill = new SkillRatings(ctx); }
 
   async fetch(request) {
     const url = new URL(request.url);
+    if(url.pathname==='/skill/record'&&request.method==='POST'){const body=await request.json().catch(()=>null),result=await this.ctx.blockConcurrencyWhile(()=>this.skill.record(body));return json(result,result.ok?200:400);}
+    if(url.pathname==='/skill/top'&&request.method==='GET'){const result=await this.skill.top(url.searchParams.get('game'),url.searchParams.get('player'));return json(result,result.ok?200:400);}
     if (url.pathname === '/record' && request.method === 'POST') {
       const body = await request.json().catch(() => null);
       const result = await this.ctx.blockConcurrencyWhile(() => this.record(body));

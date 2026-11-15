@@ -33,9 +33,9 @@ export class BoardOnlineClient {
   }
   // 33.0.0: «العب الحين» — the server seats you at the open public table of this game
   // (and way of playing); it starts ten seconds after it opened, bots in the empty seats.
-  async quick(name,{variant='classic',seats=null}={}){
+  async quick(name,{variant='classic',seats=null,humansOnly=false}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
-    const res=await timedFetch('/api/board/quick',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,variant,...(seats?{seats}:{})})});
+    const res=await timedFetch('/api/board/quick',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,variant,humansOnly:humansOnly===true,...(seats?{seats}:{})})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);
     if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'){const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';throw error;}
