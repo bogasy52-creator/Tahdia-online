@@ -20,6 +20,63 @@ button,input,select{font:inherit}button{touch-action:manipulation}.bs-shell{widt
 /* 32.0.1: a game's own-name field showing the signed-in account's name (read-only) */
 input.bs-account-name{cursor:default;border-style:dashed!important;caret-color:transparent}
 
+/* assets/css/trio-premium-v33-10.css */
+/* Shared club materials; individual playfields keep their own identities. */
+body.release-v26.tanks-page,body.release-v26.billiards-page,body.release-v26.jw-studio{background:radial-gradient(ellipse at 30% -10%,#294b5266,transparent 55%),#07121e!important;color:#edf1e8}
+body.release-v26.jw-studio.game-running{background:radial-gradient(ellipse at 50% 0,#28394b 0,#111e30 45%,#07121e 90%)!important}
+.tanks-page :is(.tk-game,.tk-arena){background:#071521}
+.tanks-page .tk-game-top{background:linear-gradient(#1b303b,#10222e);border-color:#e5c68c26}
+.tanks-page .tk-roster{background:#0b1d29}
+.tanks-page .tk-player{background:linear-gradient(130deg,#273b43,#152a36);border-color:#8eacac2b}
+.tanks-page .tk-dock{background:linear-gradient(#132a36,#0b1c29);border-color:#c7bc8e2c}
+.tanks-page .tk-stick{background:radial-gradient(circle,#173744 46%,#0b202e 47%,#28454b 68%,#67817c 69%,#1b3540 71%);box-shadow:inset 0 3px 12px #04121dcc,0 1px 0 #dfd49b22}
+.tanks-page .tk-stick>i{background:linear-gradient(140deg,#a0b7aa,#4a6a69 44%,#234853);border-color:#a7bfb3;box-shadow:0 6px 15px #020b17cc,inset 0 2px 1px #f0f3bd66}
+.tanks-page .tk-aim{border-color:#d4b67d6b}.tanks-page .tk-aim>i{background:linear-gradient(140deg,#f4da99,#a79662 44%,#4c665e);border-color:#e8ce94}
+.tanks-page .tk-play-card{color:#d9e7df;background:linear-gradient(145deg,#213541,#132632);border-color:#cfb87c62;box-shadow:0 25px 60px #020b1499,inset 0 1px 0 #e6d5a018}
+.tanks-page :is(.tk-name,.tk-fields label,.tk-note,.tk-rules){color:#a6bdba}
+.tanks-page .tk-tabs{background:#0a1d2c;border-color:#5c726f55}.tanks-page .tk-tabs button{color:#93aaa8}
+.tanks-page .tk-tabs button[aria-selected=true]{background:linear-gradient(145deg,#ddc48b,#ac955e);color:#142b32}
+.tanks-page .tk-name input,.tanks-page .tk-join input,.tanks-page .tk-fields select{background:#10232e!important;color:#edf0d7!important;border-color:#72898277!important}
+.tanks-page .tk-primary{background:linear-gradient(150deg,#e9d097,#bba064);color:#102b32;border-color:#ebd6a6;box-shadow:0 4px 0 #736b48,0 8px 20px #020d1b66;text-shadow:none}
+.tanks-page .tk-secondary{background:#618f8422;color:#d7e1c3;border-color:#afc1a263}
+.tanks-page .tk-rules summary{color:#e2d1a5}.tanks-page .tk-status{color:#ebca89}.tanks-page .tk-divider{color:#aab7a6}
+.tanks-page .tk-icon{background:#16303d;border-color:#b3bb9c38}.tanks-page .tk-weapon{background:#092433e8;border-color:#c3bd8a50;color:#e4e4c7}
+.tanks-page .tk-sheet{background:#061320cf}.tanks-page .tk-sheet-card :is(.tk-primary,.tk-secondary){color:#18372e}
+.jw-studio #jwTitle{color:#f6f0dd}.jw-studio #jwTitle span{color:#f1d295}
+.jw-studio :is(.jw-kicker,.jw-overline){color:#dfc591}.jw-studio .jw-tagline{color:#b3c2ce}.jw-studio .jw-promise b{color:#e7e2cc}.jw-studio .jw-promise small{color:#93aabc}
+.jw-studio .jw-play-card{background:linear-gradient(150deg,#233449,#111e30);border:1px solid #e4c58a5c;box-shadow:0 30px 75px #000a1680,inset 0 1px 0 #fff4cf1a}
+.jw-studio .jw-card-heading h2{color:#f3e9ce}.jw-studio .jw-play-card :is(.jw-panel-note,.jw-names label,.jw-card-heading p,.jw-fair-note,.jw-rules,.jw-rules p){color:#a7baca}
+.jw-studio .jw-panel h3,.jw-studio .jw-rules summary{color:#e1cca1}.jw-studio .jw-modes{background:#0a192b;border-color:#6e849448}.jw-studio .jw-mode{color:#a4b7c8}
+.jw-studio .jw-mode[aria-checked=true]{background:linear-gradient(#dbbf86,#bda168);color:#142a39;border-color:#ead19d}
+.jw-studio .jw-seg button{background:#18293c;border-color:#6b83914d;color:#aabccb}.jw-studio .jw-seg button[aria-checked=true]{background:#53644c66;color:#ede5c9;border-color:#cebc85}
+.jw-studio .jw-names input{background:#0d1d30;color:#e7ecdf;border-color:#82928b66}
+.jw-studio .jw-cta,.jw-studio #gameMenu .gm33-quick{background:linear-gradient(160deg,#efdaa9,#bfa16a);border-color:#e9d09a;border-bottom-color:#85714b;color:#142c38;text-shadow:none;box-shadow:0 6px 18px #01091460,inset 0 1px 0 #fff9e099}
+.jw-studio #gameMenu .gm33-quick :is(b,small){color:#18313b}.jw-studio #gameMenu .gm33-quick-icon{color:#fff4cf;background:#213c4859}
+.jw-studio #gameMenu :is(.gm33-friends,.gm33-resume,.gm33-player){background:#14263a;border-color:#65818b55;color:#bac9d0}
+.jw-studio #gameMenu .gm33-friends summary b,.jw-studio #gameMenu .gm33-lobby h2{color:#ead7b0}.jw-studio #gameMenu :is(.gm33-friends-note,.gm33-status,.gm33-player small){color:#a2b8c5}
+.jw-studio #gameMenu :is(.gm33-create,.gm33-join-btn,.gm33-code){background:#38544b;color:#f1e7ca;border-color:#b3b58766}
+body.release-v26.jw-studio #gameMenu .gm33-join input{background:#0d1e2f!important;color:#f0ebd1!important;border-color:#82918288!important}
+.jw-studio .jw-rule-grid span{background:#0e2033}.jw-studio .jw-rule-grid b{color:#ded3af}.jw-studio .jw-rule-grid small{color:#a7bbc7}
+.jw-studio .jw-arena-decor{opacity:.22}.jw-studio .jw-wrap{border-radius:20px;box-shadow:0 8px 0 #050e1b,0 20px 45px #01071299,0 0 50px #a5c4e010}
+.jw-studio .jw-plate{background:linear-gradient(140deg,#293a4d,#17283c);border-color:#96abb544;box-shadow:inset 0 1px 0 #d0d9d816,0 5px 15px #030b1738}.jw-studio .jw-plate.leading{border-color:#cdb16f99}
+.jw-studio .jw-score{color:#efdaa4;text-shadow:0 3px 0 #091a2c}.jw-studio .jw-who b{color:#e1e8df}.jw-studio .jw-who small,.jw-studio .jw-scorebox small{color:#9eb4bd}
+.jw-studio .jw-runline,.jw-studio .jw-board-tools p,.jw-studio .jw-status{color:#a9bdc6}.jw-studio .jw-clock{color:#f2d69b;background:#213347;border-color:#a9b6a94d}.jw-studio .jw-tool{color:#f2dcae}
+.jw-studio .jw-boost{background:linear-gradient(150deg,#24374a,#15263b);border-color:#8aa5aa47;box-shadow:0 4px 0 #0b192b}.jw-studio .jw-boost-copy>b{color:#ebdfbf}.jw-studio .jw-boost-copy>small{color:#a2b9c3}.jw-studio .jw-boost-art{background:#091c30;border-color:#a7b7a638}
+.jw-studio .jw-banner{color:#ffe6ab;text-shadow:0 3px 0 #18263a,0 0 24px #e4bc6966}.jw-studio .jw-banner.spectacular{background:radial-gradient(ellipse,#081b2cd9,#081b2c00 70%);color:#fff1c5}
+.jw-studio .jw-sheet{background:#041221d9}.jw-studio .jw-sheet-card{background:linear-gradient(145deg,#25384a,#13263b);border:1px solid #dac28b77;color:#eef0dc}.jw-studio .jw-sheet-card h2{color:#f4e1b1}.jw-studio .jw-sheet-card p{color:#aabecc}
+.billiards-page .bi-game{background:radial-gradient(ellipse at 50% 38%,#243b36,#08171d 65%,#050f19);gap:7px}
+.billiards-page .bi-plate{background:linear-gradient(150deg,#1e3a38,#10292c);border-color:#9cb3a644}.billiards-page .bi-plate.active{border-color:#d8bd7c99}
+.billiards-page .bi-context{background:#102b2b9e;border-color:#e0c78b26}.billiards-page .bi-fine{background:linear-gradient(#1e3435,#0c242a);border-color:#a1a99055}.billiards-page .bi-toast{border:1px solid #d4b57270;background:#0a252ce8;backdrop-filter:blur(10px)}
+.bi-replay-button{font:700 25px/1 system-ui;flex-shrink:0}.bi-replay-button:disabled{opacity:.32}.bi-game:has(.bi-replay-sheet:not([hidden])){z-index:1500}
+.bi-replay-sheet{z-index:80;background:#04131de8;backdrop-filter:blur(12px);padding:16px}
+.bi-replay-card{width:min(100%,960px);margin:auto;padding:20px;border:1px solid #c6ad747a;border-radius:20px;background:linear-gradient(145deg,#1a3539,#0c222c);box-shadow:0 30px 90px #000b17aa}
+.bi-replay-card>header{display:flex;justify-content:space-between;align-items:center;gap:16px}.bi-replay-card header small{font-size:10px;color:#c6b781}.bi-replay-card h2{font-size:23px;color:#f0dfb6;margin:3px 0}.bi-replay-card>p{color:#9ab7b8;font-size:11px;margin:8px 0 13px}
+.bi-replay-view{width:100%;height:min(49vh,470px);min-height:170px;position:relative;overflow:hidden;border:1px solid #899b8c44;border-radius:12px;background:#071b21}.bi-replay-view canvas{display:block;width:100%;height:100%}
+.bi-replay-timeline{display:grid;grid-template-columns:auto minmax(50px,1fr) auto;align-items:center;gap:12px;font-size:10px;color:#afc2bb;margin:16px 0}.bi-replay-timeline input{width:100%;accent-color:#d9c18a;direction:ltr}.bi-replay-timeline b{font:500 11px system-ui;white-space:nowrap;color:#e0cfa2}
+.bi-replay-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.bi-replay-controls button{min-height:39px;min-width:100px;border-color:#93a89650;background:#22413e;color:#ebdfb8;font-size:12px}
+@media(max-width:599px){.bi-replay-card{padding:14px;border-radius:16px}.bi-replay-card h2{font-size:19px}.bi-replay-card>p{font-size:10px}.bi-replay-timeline{gap:8px;margin:12px 0;grid-template-columns:minmax(70px,1fr) auto}.bi-replay-timeline>span{display:none}.bi-replay-controls{gap:6px}.bi-replay-controls button{min-width:88px;font-size:10px}}
+@media(max-height:520px) and (orientation:landscape){.bi-replay-card{padding:10px 17px}.bi-replay-card h2{font-size:17px}.bi-replay-card header small{display:none}.bi-replay-card>p{margin:0 0 5px;font-size:9px}.bi-replay-view{height:47vh;min-height:110px}.bi-replay-timeline{margin:6px 0}.bi-replay-controls button{min-height:30px;padding:5px 10px}}
+
 /* assets/css/design-system.css */
 /* V17 shared product system. Board coordinates remain owned by each game. */
 :root{--bs-bg:#0b1522;--bs-bg2:#112131;--bs-surface:#142738;--bs-surface2:#1a3043;--bs-line:#355061;--bs-text:#f0f4ed;--bs-muted:#abc0cd;--bs-purple:#87c6b0;--bs-pink:#b6a5d9;--bs-gold:#eed093;--bs-cyan:#8cc9d5;--bs-green:#a4d6a7;--bs-radius:18px;--bs-shadow:0 14px 40px #020a1533}

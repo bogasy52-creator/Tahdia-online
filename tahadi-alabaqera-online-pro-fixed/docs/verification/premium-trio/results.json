@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-15",
+  "baseCommit": "f122b03a1f3875453939eb6dc0f2cd7ffada0ca3",
+  "release": {
+    "tests": 1597,
+    "failures": 0,
+    "skipped": 0,
+    "localAssetReferences": 1178,
+    "jsModules": 519,
+    "offlineCoreBytes": 999619
+  },
+  "runtime": {
+    "kind": "real local workerd/SQLite/WebSocket integration",
+    "checks": [
+      {
+        "check": "create-four-human-sockets-ready-and-start-2v2",
+        "passed": true
+      },
+      {
+        "check": "authoritative-input-projectiles-and-identical-four-client-snapshots",
+        "passed": true,
+        "frame": 286
+      },
+      {
+        "check": "token-reconnect-keeps-seat-and-running-match",
+        "passed": true
+      },
+      {
+        "check": "invalid-account-token-rejected-and-untrusted-account-headers-stripped",
+        "passed": true
+      },
+      {
+        "check": "quick-match-pairs-two-real-connections-without-bots",
+        "passed": true
+      }
+    ],
+    "passed": 5
+  },
+  "visual": {
+    "kind": "Native Canvas render from production game functions",
+    "browserVerified": false,
+    "physicalPhoneVerified": false,
+    "video": {
+      "seconds": 26,
+      "frames": 624,
+      "fps": 24,
+      "width": 720,
+      "height": 960,
+      "silent": true,
+      "tanks": {
+        "seed": 37,
+        "seconds": 10.000000000000073,
+        "events": {
+          "go": 1,
+          "shot": 16,
+          "hit": 9,
+          "ricochet": 11,
+          "kill": 2,
+          "impact": 2
+        }
+      },
+      "jewels": {
+        "seed": 91287,
+        "completedLegalActions": 3,
+        "specialEffects": [
+          "rh"
+        ]
+      },
+      "billiards": {
+        "recordedSimulation": true,
+        "videoSpeed": 0.5,
+        "events": 46
+      }
+    },
+    "renderedSizes": [
+      [
+        375,
+        450
+      ],
+      [
+        620,
+        300
+      ],
+      [
+        1150,
+        700
+      ]
+    ]
+  },
+  "browserVerified": false,
+  "physicalPhoneVerified": false,
+  "published": false
+}

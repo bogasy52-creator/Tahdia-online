@@ -24,7 +24,7 @@
 
 
 
-<link rel="stylesheet" href="assets/css/app-billiards.css?v=33.10.0-e0324d09a3"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head>
+<link rel="stylesheet" href="assets/css/app-billiards.css?v=33.10.0-4bbcac86b2"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.10.0"></head>
 <body class="release-v26 billiards-page">
 <main id="app" class="bi-app">
 <section id="menu" class="bi-menu" aria-labelledby="biTitle">
@@ -68,6 +68,7 @@
 <div id="plate0" class="bi-plate"><span class="bi-face"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="bi-ring-bg" cx="22" cy="22" r="20"/><circle class="bi-ring" cx="22" cy="22" r="20"/></svg><i></i></span><span class="bi-who"><b></b><small></small></span><span class="bi-rack" aria-hidden="true"></span></div>
 <div id="plate1" class="bi-plate"><span class="bi-face"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="bi-ring-bg" cx="22" cy="22" r="20"/><circle class="bi-ring" cx="22" cy="22" r="20"/></svg><i></i></span><span class="bi-who"><b></b><small></small></span><span class="bi-rack" aria-hidden="true"></span></div>
 </div>
+<button id="biReplay" class="bi-icon bi-replay-button" type="button" aria-label="إعادة آخر ضربة بالحركة البطيئة" title="إعادة آخر ضربة" disabled>↺</button>
 <button id="biSound" class="bi-icon" type="button" aria-pressed="false" aria-label="الصوت">🔊</button>
 </header>
 <div class="bi-context">
@@ -82,13 +83,14 @@
 <div id="biPower" class="bi-power" role="slider" tabindex="0" aria-label="قوة الضربة: اسحب وأفلت، أو اضبطها بالأسهم ثم Enter للضرب" title="الأسهم لضبط القوة · Enter للضرب · Escape للإلغاء" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="bi-power-fill"></i><i class="bi-power-cue"></i><b>اسحب وأفلت للضرب</b></div>
 </div>
 </div>
+<div id="biReplaySheet" class="bi-sheet bi-replay-sheet" hidden><div class="bi-replay-card" role="dialog" aria-modal="true" aria-labelledby="biReplayTitle"><header><div><small>من نفس محرك المباراة</small><h2 id="biReplayTitle">شوف ضربتك من جديد</h2></div><button id="biReplayClose" class="bi-icon" type="button" aria-label="إغلاق إعادة المشاهدة">✕</button></header><p id="biReplayNote" role="status"></p><div id="biReplayView" class="bi-replay-view"><canvas id="biReplayCanvas" aria-label="إعادة آخر ضربة"></canvas></div><label class="bi-replay-timeline"><span>لحظة الضربة</span><input id="biReplaySeek" type="range" min="0" max="1000" value="0" aria-label="الانتقال داخل إعادة الضربة"><b id="biReplayTime" dir="ltr">0.0 / 0.0 ث</b></label><div class="bi-replay-controls"><button id="biReplayPlay" class="bi-ghost" type="button">إيقاف مؤقت Ⅱ</button><button id="biReplaySpeed" class="bi-ghost" type="button">السرعة ×0.5</button><button id="biReplayRestart" class="bi-ghost" type="button">من البداية ↺</button></div></div></div>
 <div id="biSpinSheet" class="bi-sheet" hidden><div class="bi-sheet-card" role="dialog" aria-modal="true" aria-labelledby="biSpinTitle"><h2 id="biSpinTitle">مكان الضرب على البيضاء</h2><div id="biSpinBall" class="bi-spin-ball" role="slider" tabindex="0" aria-label="الدوران" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0"><i></i></div><p>فوق: تكمل ورا الكرة · تحت: ترجع · الجنب: تغيّر زاوية الحافة</p><div class="bi-sheet-actions"><button id="biSpinReset" class="bi-ghost" type="button">بدون دوران</button><button id="biSpinDone" class="bi-cta" type="button">تم</button></div></div></div>
 <div id="biEnd" class="bi-sheet" hidden><div class="bi-sheet-card bi-end-card" role="dialog" aria-modal="true" aria-labelledby="biEndTitle"><div class="bi-end-ball" aria-hidden="true"></div><h2 id="biEndTitle"></h2><p id="biEndText"></p><div id="biEndStats"></div><div class="bi-sheet-actions"><button id="biAgain" class="bi-cta" type="button">مباراة جديدة</button><button id="biToMenu" class="bi-ghost" type="button">القائمة</button></div></div></div>
 </section>
 </main>
 <div class="bs-toast"></div>
 <script src="assets/js/audio-manager.js?v=33.10.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.10.0"></script><script src="assets/js/player-card-v33-7.js?v=33.10.0"></script><script src="assets/js/platform.js?v=33.10.0"></script><script src="assets/js/social-client.js?v=33.10.0"></script><script src="assets/js/profile-core.js?v=33.10.0-pro1"></script><script src="assets/js/career-client.js?v=33.10.0"></script><script src="/assets/js/looks-v33-9-10.js?v=33.10.0"></script><script src="assets/js/game-menu-v33.js?v=33.10.0"></script><script src="/assets/js/reaction-performers.js?v=33.10.0-studio1"></script><script src="/assets/js/club-ui.js?v=33.10.0-club1"></script><script src="assets/js/reactions-v31.js?v=33.10.0-studio1"></script><script defer src="assets/js/client-health.js?v=33.10.0"></script>
-<script type="module" src="assets/js/billiards/main.js?v=33.9.12-quality1"></script>
+<script type="module" src="assets/js/billiards/main.js?v=33.10.0-premium3"></script>
 
 <script src="/assets/js/tahdia-premium-v25.js?v=33.10.0"></script></body>
 </html>

@@ -1,6 +1,6 @@
 // Small offline core. Other games and media are cached after the first visit.
 const CACHE_NAME = 'busraj-games-v66-release-33-10-0';
-const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-38726b7be1ed';
+const RUNTIME_CACHE = CACHE_NAME + '-visited-voice-c596c414b742';
 const MEDIA_CACHE = 'busraj-quiz-media-v4';
 const APP_SHELL = [
   "/assets/js/tahdia-premium-v25.js?v=33.10.0",
@@ -390,6 +390,7 @@ const ON_DEMAND = [
   "/assets/css/tabletop-v30.css",
   "/assets/css/tahdia-premium-v25.css",
   "/assets/css/tanks-v33-10.css",
+  "/assets/css/trio-premium-v33-10.css",
   "/assets/css/uno-pro-v33-9-12.css",
   "/assets/css/uno-v33-7.css",
   "/assets/css/uno-v33-9.css",
@@ -618,6 +619,7 @@ const ON_DEMAND = [
   "/assets/js/tanks/main.js",
   "/assets/js/tanks/online.js",
   "/assets/js/tanks/render.js",
+  "/assets/js/tanks/scene.js",
   "/assets/js/ui-icons.js",
   "/assets/js/uno-ui.js",
   "/assets/js/v5-ultimate-expansion.js",

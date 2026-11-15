@@ -85,7 +85,7 @@ function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcT
 class TableView {
   constructor(canvas) {
     this.canvas = canvas; this.g = canvas.getContext('2d'); this.table = document.createElement('canvas');
-    this.balls = Array(16).fill(null); this.axes = new Map(); this.sinking = []; this.flash = [];
+    this.balls = Array(16).fill(null); this.axes = new Map(); this.sinking = []; this.flash = []; this.previous = new Map();
     this.s = 1; this.dpr = 1; this.vertical = false; this.m = [1, 0, 0, 1, 0, 0];
   }
   fit(cssW, cssH, vertical, { focus = null, flip = false } = {}) {
@@ -93,7 +93,7 @@ class TableView {
     this.dpr = dpr; this.vertical = vertical; this.cssW = cssW; this.cssH = cssH;
     this.canvas.width = Math.max(2, Math.round(cssW * dpr)); this.canvas.height = Math.max(2, Math.round(cssH * dpr));
     // the part of the table to show (the whole table with its rails unless a cover asks for a close-up)
-    const [fx0, fy0, fx1, fy1] = focus || [-RAIL, -RAIL, L + RAIL, W + RAIL], fw = fx1 - fx0, fh = fy1 - fy0;
+    const [fx0, fy0, fx1, fy1] = focus || [-RAIL - 4, -RAIL - 4, L + RAIL + 4, W + RAIL + 6], fw = fx1 - fx0, fh = fy1 - fy0;
     const sx = vertical ? fh : fw, sy = vertical ? fw : fh;
     const s = focus ? Math.max(this.canvas.width / sx, this.canvas.height / sy) : Math.min(this.canvas.width / sx, this.canvas.height / sy);
     this.s = s;
@@ -112,13 +112,18 @@ class TableView {
   prerender() {
     const c = this.table; c.width = this.canvas.width; c.height = this.canvas.height;
     const g = c.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height);
+    const roomLight=g.createRadialGradient(c.width*.5,c.height*.4,0,c.width*.5,c.height*.5,Math.max(c.width,c.height)*.8);
+    roomLight.addColorStop(0,'#24352e');roomLight.addColorStop(.7,'#101c1e');roomLight.addColorStop(1,'#070f14');g.fillStyle=roomLight;g.fillRect(0,0,c.width,c.height);
+    g.save();g.translate(c.width/2,c.height/2);g.rotate(-.35);g.strokeStyle='#9c95770c';g.lineWidth=1;
+    for(let x=-c.width;x<c.width;x+=34*this.dpr){g.beginPath();g.moveTo(x,-c.height);g.lineTo(x,c.height);g.stroke();}g.restore();
+    for(const [drop,color]of[[8,'#070d12'],[5,'#15252a'],[2.7,'#ac9669']]){g.save();g.translate(0,drop*this.dpr);g.transform(...this.m);roundRect(g,-RAIL,-RAIL,L+2*RAIL,W+2*RAIL,7);g.fillStyle=color;g.fill();g.restore();}
     g.setTransform(...this.m);
     // the table's shadow on the floor
     g.save(); g.shadowColor = 'rgba(0,0,0,.65)'; g.shadowBlur = 34 * this.dpr; g.shadowOffsetY = 14 * this.dpr;
     roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.fillStyle = '#3a1d0e'; g.fill(); g.restore();
     // walnut rails
     const wood = g.createLinearGradient(0, -RAIL, 0, W + RAIL);
-    wood.addColorStop(0, '#79533b'); wood.addColorStop(0.08, '#473022'); wood.addColorStop(0.5, '#291d17'); wood.addColorStop(0.92, '#473022'); wood.addColorStop(1, '#79533b');
+    wood.addColorStop(0, '#526158'); wood.addColorStop(0.08, '#273c37'); wood.addColorStop(0.5, '#122b2a'); wood.addColorStop(0.92, '#273c37'); wood.addColorStop(1, '#526158');
     roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.fillStyle = wood; g.fill();
     // grain
     g.save(); roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.clip();
@@ -144,12 +149,12 @@ class TableView {
     g.lineWidth = this.px(1.2); g.strokeStyle = 'rgba(255,220,180,.28)'; roundRect(g, -RAIL + 0.6, -RAIL + 0.6, L + 2 * RAIL - 1.2, W + 2 * RAIL - 1.2, 6.4); g.stroke();
     g.strokeStyle = 'rgba(0,0,0,.45)'; g.strokeRect(-CUSHION - 0.4, -CUSHION - 0.4, L + 2 * CUSHION + 0.8, W + 2 * CUSHION + 0.8);
     // cloth on the cushions, then the bed under the lamp
-    g.fillStyle = '#0d3946'; g.fillRect(-CUSHION, -CUSHION, L + 2 * CUSHION, W + 2 * CUSHION);
+    g.fillStyle = '#103e38'; g.fillRect(-CUSHION, -CUSHION, L + 2 * CUSHION, W + 2 * CUSHION);
     const bed = g.createRadialGradient(L / 2, W / 2, 6, L / 2, W / 2, L * 0.62);
-    bed.addColorStop(0, '#347b8c'); bed.addColorStop(0.5, '#276476'); bed.addColorStop(1, '#194857');
+    bed.addColorStop(0, '#3b8a70'); bed.addColorStop(0.5, '#206c59'); bed.addColorStop(1, '#0f3e38');
     g.fillStyle = bed; g.fillRect(0, 0, L, W);
     // 33.9.6: two lamps over the bed, and the edges falling into shade
-    for (const lx of [L * 0.3, L * 0.7]) { const lamp = g.createRadialGradient(lx, W * .44, 2, lx, W * .44, W * .75); lamp.addColorStop(0, 'rgba(226,244,239,.11)'); lamp.addColorStop(1, 'rgba(226,244,239,0)'); g.fillStyle = lamp; g.fillRect(0, 0, L, W); }
+    for (const lx of [L * 0.3, L * 0.7]) { const lamp = g.createRadialGradient(lx, W * .44, 2, lx, W * .44, W * .75); lamp.addColorStop(0, 'rgba(249,231,189,.15)'); lamp.addColorStop(1, 'rgba(226,244,239,0)'); g.fillStyle = lamp; g.fillRect(0, 0, L, W); }
     const shade = g.createLinearGradient(0, 0, 0, W); shade.addColorStop(0, 'rgba(0,0,0,.22)'); shade.addColorStop(0.12, 'rgba(0,0,0,0)'); shade.addColorStop(0.88, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,.22)');
     g.fillStyle = shade; g.fillRect(0, 0, L, W);
     // the cushion noses: a lighter edge along each, angled into the pockets
@@ -164,7 +169,7 @@ class TableView {
       const cy=poly.reduce((sum,p)=>sum+p[1],0)/poly.length,cx=poly.reduce((sum,p)=>sum+p[0],0)/poly.length;
       const vertical=Math.abs(poly[0][0]-poly[1][0])<.1;
       const bevel=vertical?g.createLinearGradient(cx-CUSHION/2,0,cx+CUSHION/2,0):g.createLinearGradient(0,cy-CUSHION/2,0,cy+CUSHION/2);
-      bevel.addColorStop(0,'#123f4c');bevel.addColorStop(.35,'#2b6573');bevel.addColorStop(.65,'#255c6b');bevel.addColorStop(1,'#0e3441');
+      bevel.addColorStop(0,'#123d35');bevel.addColorStop(.35,'#31735b');bevel.addColorStop(.65,'#27644f');bevel.addColorStop(1,'#0e352f');
       g.fillStyle = bevel; g.fill();
       g.beginPath(); g.moveTo(...poly[0]); g.lineTo(...poly[1]); g.lineWidth = this.px(1.4); g.strokeStyle = 'rgba(160,255,210,.16)'; g.stroke();
     }
@@ -215,7 +220,7 @@ class TableView {
     tg.putImageData(img, 0, 0);
     g.fillStyle = g.createPattern(tile, 'repeat'); g.fillRect(x0, y0, w, h);
     g.setTransform(...this.m);g.save();g.translate(L*.5,W*.73);if(this.vertical)g.rotate(Math.PI/2);
-    g.textAlign='center';g.fillStyle='#d8e7e815';g.font='600 3.0px Arial,sans-serif';g.fillText('B O S R A J',0,0);g.font='1.35px Arial,sans-serif';g.fillText('T O U R N A M E N T   C L U B',0,3.5);g.restore();
+    g.textAlign='center';g.fillStyle='#eadab122';g.font='600 3.0px Arial,sans-serif';g.fillText('B O S R A J',0,0);g.font='1.35px Arial,sans-serif';g.fillText('T O U R N A M E N T   C L U B',0,3.5);g.restore();
   }
 
   /* one frame */
@@ -245,6 +250,8 @@ class TableView {
       g.globalAlpha = 0.42 * al; g.fillStyle = '#000'; g.beginPath(); g.ellipse(X + dx * r * 0.28, Y + dy * r * 0.28 + r * 0.1, r * 1.05, r * 0.95, 0, 0, Math.PI * 2); g.fill();
     }
     g.globalAlpha = 1;
+    // Motion streaks follow recorded displacement rather than predicting a shot.
+    for(const [n,x,y]of list){const old=this.previous.get(n),point=this.toScreen(x,y);if(!reduced()&&old&&now-old.t<100&&Math.hypot(x-old.x,y-old.y)>R*.35){const from=this.toScreen(old.x,old.y),gradient=g.createLinearGradient(from[0],from[1],point[0],point[1]);gradient.addColorStop(0,'#ffffff00');gradient.addColorStop(1,n===0?'#fff0c03a':colorOf(n)+'35');g.strokeStyle=gradient;g.lineWidth=R*this.s*1.25;g.lineCap='round';g.beginPath();g.moveTo(from[0],from[1]);g.lineTo(point[0],point[1]);g.stroke();}this.previous.set(n,{x,y,t:now});}
     for (const [n, x, y, sc, al] of list) this.drawBall(n, x, y, sc, al);
     if (placing) this.drawPlacing(placing);
     if (aim && cue && aim.stick !== false) this.drawCue(cue, aim.dir, aim.pull || 0, aim.alpha ?? 1);
@@ -302,6 +309,9 @@ class TableView {
     const shine = g.createRadialGradient(X - r * 0.34, Y - r * 0.4, r * 0.04, X - r * 0.1, Y - r * 0.12, r * 1.08);
     shine.addColorStop(0, 'rgba(255,255,255,.85)'); shine.addColorStop(0.16, 'rgba(255,255,255,.22)'); shine.addColorStop(0.5, 'rgba(255,255,255,0)'); shine.addColorStop(0.86, 'rgba(0,0,0,.18)'); shine.addColorStop(1, 'rgba(0,0,0,.42)');
     g.beginPath(); g.arc(X, Y, r, 0, Math.PI * 2); g.fillStyle = shine; g.fill();
+    g.save();g.beginPath();g.arc(X,Y,r*.98,0,Math.PI*2);g.clip();g.translate(X,Y);g.rotate(-.35);
+    for(const [xx,yy,w,h,a]of[[-.5,-.52,.72,.14,.63],[-.36,-.25,.53,.065,.28]]){roundRect(g,xx*r,yy*r,w*r,h*r,h*r*.3);g.fillStyle='rgba(255,252,226,'+a+')';g.fill();}g.restore();
+    const bounce=g.createRadialGradient(X+r*.55,Y+r*.65,0,X+r*.55,Y+r*.65,r);bounce.addColorStop(0,'#70d9bc22');bounce.addColorStop(1,'#70d9bc00');g.beginPath();g.arc(X,Y,r,0,Math.PI*2);g.fillStyle=bounce;g.fill();
     // Broad ceiling-light reflections and a small warm bounce give resin depth.
     g.beginPath();g.ellipse(X-r*.25,Y-r*.40,r*.38,r*.14,-.35,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.23)';g.fill();
     g.beginPath();g.arc(X+r*.15,Y+r*.16,r*.70,.22,1.85);g.strokeStyle='rgba(222,211,173,.18)';g.lineWidth=Math.max(.5,r*.10);g.stroke();
@@ -384,7 +394,7 @@ let table = null, room = null, loopOn = false, dirty = true, ended = false;
 const humanSeat = () => (ctl.mode === 'online' ? ctl.me : ctl.mode === 'ai' ? 0 : ctl.state?.turn ?? 0);
 // whose turn it is by the rules (a person here), and whether that person can act right now
 const humanTurn = () => { const s = ctl.state; if (!s || s.winner !== null) return false; return ctl.mode === 'two' || (ctl.mode === 'ai' ? s.turn === 0 : s.turn === ctl.me); };
-const myTurn = () => humanTurn() && !ctl.busy && !ctl.anim && (ctl.mode !== 'online' || (room?.status === 'playing' && !table?.busy));
+const myTurn = () => humanTurn() && !replay.active && !ctl.busy && !ctl.anim && (ctl.mode !== 'online' || (room?.status === 'playing' && !table?.busy));
 const cuePos = () => (ctl.state?.inHand && ctl.place ? ctl.place : ctl.state?.balls?.[0] || null);
 
 function invalidate() { dirty = true; if (!loopOn) { loopOn = true; requestAnimationFrame(loop); } }
@@ -447,6 +457,7 @@ function stepAnimation(now) {
 const nearestPocket = (b) => { let best = 0, d = Infinity; POCKETS.forEach((p, i) => { const dd = (p.x - b[0]) ** 2 + (p.y - b[1]) ** 2; if (dd < d) { d = dd; best = i; } }); return best; };
 /** Plays a shot (from its starting positions) and ends on `next`'s positions. */
 function animateShot(shot, next, { pull = 0.4 } = {}) {
+  closeReplay();
   const sim = simulate(shot.before, shot, { record: true });
   view.balls = shot.before.map((b) => (b ? b.slice() : null));
   return new Promise((resolve) => {
@@ -456,6 +467,32 @@ function animateShot(shot, next, { pull = 0.4 } = {}) {
     invalidate();
   });
 }
+
+/* Replay has a separate canvas, clock, positions and orientation state.
+   It never calls playPoolShot or sends a room command. */
+const replay={active:false,frame:0,view:null,sim:null,shot:null,elapsed:-450,last:0,speed:.5,seq:0,match:0,paused:false};
+function fitReplay(){if(!replay.active)return;const box=$('#biReplayView').getBoundingClientRect();replay.view.fit(box.width||Math.min(innerWidth-36,880),box.height||Math.max(180,Math.min(440,innerHeight*.5)),false);}
+function paintReplay(){
+  if(!replay.active||!replay.sim)return;const frames=replay.sim.frames,last=frames.length-1,pos=Math.max(0,replay.elapsed)/(1000/60),index=Math.min(last,Math.floor(pos)),k=pos-Math.floor(pos),a=frames[index],b=frames[Math.min(last,index+1)];
+  for(let n=0;n<16;n++){const previous=replay.view.balls[n],point=a[n]&&b[n]?[a[n][0]+(b[n][0]-a[n][0])*k,a[n][1]+(b[n][1]-a[n][1])*k]:a[n]?.slice()||null;if(point&&previous)rollAxes(replay.view.axesOf(n),point[0]-previous[0],point[1]-previous[1]);replay.view.balls[n]=point;}
+  const aim=replay.elapsed<0?{dir:replay.shot.dir,pull:Math.max(0,-replay.elapsed/450)*15}:null;replay.view.draw({aim,cue:aim?replay.view.balls[0]:null,guide:false});
+  const duration=last*(1000/60),elapsed=Math.max(0,Math.min(duration,replay.elapsed));$('#biReplaySeek').value=String(Math.round(duration?elapsed/duration*1000:0));$('#biReplayTime').textContent=(elapsed/1000).toFixed(1)+' / '+(duration/1000).toFixed(1)+' ث';$('#biReplayPlay').textContent=replay.paused?'تشغيل ▶':'إيقاف مؤقت Ⅱ';
+}
+function replayFrame(time){replay.frame=0;if(!replay.active||document.hidden)return;if(!replay.paused&&replay.last)replay.elapsed+=Math.min(80,Math.max(0,time-replay.last))*replay.speed;replay.last=time;paintReplay();if(replay.elapsed>=replay.sim.frames.length*(1000/60)){replay.paused=true;paintReplay();}if(!replay.paused)replay.frame=requestAnimationFrame(replayFrame);}
+function scheduleReplay(){if(replay.active&&!replay.frame){replay.last=0;replay.frame=requestAnimationFrame(replayFrame);}}
+function openReplay(){
+  const s=ctl.state;if(!s?.shot||ctl.anim||ctl.pending||ctl.busy)return false;replay.shot=structuredClone(s.shot);replay.sim=simulate(replay.shot.before,replay.shot,{record:true});if(!replay.sim.frames.length)return false;replay.view||=new TableView($('#biReplayCanvas'));
+  replay.view.balls=replay.shot.before.map(b=>b?.slice()||null);replay.view.axes.clear();replay.view.previous.clear();replay.seq=s.shot.seq;replay.match=room?.startedAt||0;replay.elapsed=-450;replay.paused=false;replay.speed=.5;replay.active=true;
+  setPower(0);drag=null;$('#biReplaySheet').hidden=false;$('#biReplayNote').textContent=ctl.mode==='online'?'إعادة مشاهدة فقط · وقت المباراة الأونلاين مستمر':'إعادة مشاهدة فقط · النتيجة محفوظة';$('#biReplaySpeed').textContent='السرعة ×0.5';fitReplay();paintReplay();renderStatus();scheduleReplay();$('#biReplayClose').focus({preventScroll:true});return true;
+}
+function closeReplay(){if(!replay.active)return;replay.active=false;cancelAnimationFrame(replay.frame);replay.frame=0;replay.last=0;$('#biReplaySheet').hidden=true;if(ctl.state){renderStatus();invalidate();}$('#biTable').focus({preventScroll:true});}
+$('#biReplay').addEventListener('click',openReplay);$('#biReplayClose').addEventListener('click',closeReplay);
+$('#biReplaySpeed').addEventListener('click',()=>{replay.speed=replay.speed===.5?1:replay.speed===1?.25:.5;$('#biReplaySpeed').textContent='السرعة ×'+replay.speed;});
+$('#biReplayRestart').addEventListener('click',()=>{replay.elapsed=-450;replay.paused=false;replay.view.previous.clear();scheduleReplay();});
+$('#biReplayPlay').addEventListener('click',()=>{replay.paused=!replay.paused;if(!replay.paused&&replay.elapsed>=replay.sim.frames.length*(1000/60))replay.elapsed=-450;paintReplay();scheduleReplay();});
+$('#biReplaySeek').addEventListener('input',()=>{replay.elapsed=Number($('#biReplaySeek').value)/1000*(replay.sim.frames.length-1)*(1000/60);replay.view.previous.clear();replay.last=0;paintReplay();});
+$('#biReplaySheet').addEventListener('keydown',ev=>{if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();closeReplay();}if(ev.key==='Tab'){const a=Array.from($('#biReplaySheet').querySelectorAll('button,input')).filter(el=>!el.disabled),first=a[0],last=a.at(-1);if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}}});
+window.addEventListener('resize',()=>{if(replay.active){fitReplay();paintReplay();}});document.addEventListener('visibilitychange',()=>{if(document.hidden)closeReplay();});
 
 /* ---------- the plates, the status, the toast ---------- */
 function seatOfPlate(i) { return ctl.mode === 'online' ? (i === 0 ? ctl.me : 1 - ctl.me) : i; }
@@ -479,6 +516,7 @@ function renderPlates() {
 function setStatus(html) { $('#biStatus').innerHTML = html; }
 function renderStatus() {
   const s = ctl.state; if (!s) return;
+  $('#biReplay').disabled=!s.shot||Boolean(ctl.anim||ctl.pending||ctl.busy);
   $('#game').classList.toggle('idle', !myTurn());
   $('#biPower').classList.toggle('off', !myTurn());
   for (const id of ['#biPower', '#biFine', '#biSpinBtn']) $(id).setAttribute('aria-disabled', String(!myTurn()));
@@ -793,10 +831,12 @@ function showGame() {
   $('#biEnd').hidden = true;
 }
 function showMenu() {
+  closeReplay();
   $('#game').hidden = true; $('#biEnd').hidden = true; $('#biSpinSheet').hidden = true; document.body.classList.remove('bi-playing');
   ctl.anim = null; ctl.display = null; ctl.busy = false; ended = true; drawHero();
 }
 function startLocal(mode) {
+  closeReplay();
   ended = false; ctl.mode = mode; ctl.endShown = false; ctl.rewarded = false; ctl.receipt = 'billiards:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const me = window.BS_GAME_MENU?.playerName?.() || 'أنت';
   ctl.names = mode === 'ai' ? [me, 'الكمبيوتر'] : [$('#biName1').value.trim() || 'لاعب 1', $('#biName2').value.trim() || 'لاعب 2'];
@@ -839,6 +879,7 @@ $('#biExit').addEventListener('click', () => {
 
 /* ---------- online: one table among the board tables ---------- */
 async function apply(next, { animate }) {
+  if(replay.active&&(next.state?.shot?.seq!==replay.seq||(next.startedAt||0)!==replay.match))closeReplay();
   room = next;
   const s = next.state; if (!s || s.game !== 'pool') return;
   if (ctl.mode !== 'online' || $('#game').hidden || ctl.match !== (next.startedAt || 0)) {
@@ -919,7 +960,7 @@ if (document.fonts?.ready) document.fonts.ready.then(() => { if ($('#game').hidd
 drawHero();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) invalidate(); });
 window.BS_BILLIARDS = {
-  ctl, view, get room() { return room; }, startLocal, shoot, setPower, rotateAim, begin: beginTurn, drawHero, heroView: hero,
+  ctl, view, replay, openReplay, closeReplay, get room() { return room; }, startLocal, shoot, setPower, rotateAim, begin: beginTurn, drawHero, heroView: hero,
   rack: (seed) => { let x = seed || 5; const rng = () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; return createPoolGame(['', ''], { rng }).balls.map((b) => (b ? b.slice() : null)); },
   tiltHero: (seed) => { let x = seed || 5; const rng = () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; hero.axes.clear(); for (let n = 1; n < 16; n++) rollAxes(hero.axesOf(n), (rng() - 0.5) * 2.6, (rng() - 0.5) * 2.6); },
 };

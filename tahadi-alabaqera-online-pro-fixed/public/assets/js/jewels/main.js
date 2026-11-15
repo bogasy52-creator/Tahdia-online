@@ -2,7 +2,7 @@
    the local Canvas replay owns animation. Opponent progress never redraws this board. */
 import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace } from '../engines/jewels-race-engine.js?v=33.10.0';
 import { createTable } from '../board-table-v33.js?v=33.10.0';
-import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.0';
+import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.0-premium3';
 
 import { suggestJewelsSwap } from './advisor.js?v=33.10.0-nov14';
 
