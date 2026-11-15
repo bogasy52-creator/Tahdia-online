@@ -1,20 +1,32 @@
-/* Tahdia 33.10.1 — «شطرنج الذاكرة»: the page. One controller for the three ways to play: online
-   (the room keeps the colours and sends each step), against the computer, and friends on one phone.
-   Every step — a roll, a pawn turned over, a look under a pawn — is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.1';
-import { createPegsBoard } from './board.js?v=33.10.1';
-import { createTable } from '../board-table-v33.js?v=33.10.1-pegs1';
+/* Tahdia 33.10.2 — «شطرنج الذاكرة»: the page. One controller for the three ways to play: online (the
+   room keeps the colours and sends each step), against the computer, and friends on one phone. The
+   board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
+   both take the same per-piece instructions, so every step is shown the same way whoever made it. */
+import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.2';
+import { createPegsBoard } from './board.js?v=33.10.2';
+import { createTable } from '../board-table-v33.js?v=33.10.2-pegs2';
 
 const $ = (id) => document.getElementById(id);
 const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a'];
 const HEROES = ['robot', 'cyber', 'astronaut'];
-const KEY = 'bs-pegs-v33-10-1';
+const KEY = 'bs-pegs-v33-10-1', TOUR_KEY = 'bs-pegs-tour-v1';
 const prefs = (() => { const base = { mode: 'online', level: 'medium', rivals: 1, local: 2, look: 7, swaps: false, wins: 0 }; try { return { ...base, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return base; } })();
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {} };
 const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+const params = new URLSearchParams(location.search);
 const reduce = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
 const easeOut = (k) => 1 - (1 - k) ** 3, easeIn = (k) => k * k * k, easeBack = (k) => 1 + 2.4 * (k - 1) ** 3 + 1.4 * (k - 1) ** 2;
 const colorName = (c) => PEG_COLORS[c]?.name || '';
+
+/* ---------- the symbol under each colour (the same shapes as on the pieces and the die) ---------- */
+const STAR = Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 4 : 9; return (k ? 'L' : 'M') + (12 + Math.cos(a) * r).toFixed(2) + ' ' + (12 + Math.sin(a) * r).toFixed(2); }).join('') + 'Z';
+const SYMBOL_PATHS = ['M12 3.5 21 19.5H3z', STAR, 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', 'M12 2.5 19.5 12 12 21.5 4.5 12z', 'M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M5 5h14v14H5z'];
+function gem(c) {
+  const el = document.createElement('i'); el.className = 'pg-gem' + (c === 1 || c === 4 ? ' light' : ''); el.style.setProperty('--c', PEG_COLORS[c]?.hex || '#999');
+  el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + SYMBOL_PATHS[c] + '"/></svg>';
+  el.setAttribute('role', 'img'); el.setAttribute('aria-label', colorName(c));
+  return el;
+}
 
 /* ---------- sounds: the game's own wooden kit, plus the shared dice and results ---------- */
 const SFX = ['lift', 'right', 'wrong', 'place', 'streak', 'look', 'hide', 'peek', 'swap', 'tick'];
@@ -45,20 +57,34 @@ const ctl = {
   mode: null, state: null, names: [], users: [], levels: [], me: 0,
   running: false, paused: false, busy: false, look: false, peeking: false, waiting: false,
   match: 0, shownSeq: -1, endShown: false, rewarded: false, receipt: null, gen: 0,
-  pendingPeg: null, lastTurn: null, aiTimer: 0, scores: [], trays: [],
+  pendingPeg: null, lastTurn: null, aiTimer: 0, scores: [],
 };
 let room = null, table = null;
 const fx = Array.from({ length: PEGS.COUNT }, () => ({}));
 let particles = [], scan = null, hover = -1;
 
-/* ---------- the board and its frame loop ---------- */
-const canvas = $('pegsBoard'), board = createPegsBoard(canvas);
-function resize() {
-  const r = $('pegsStage').getBoundingClientRect();
-  if (r.width > 10 && r.height > 10) { board.resize(Math.floor(r.width), Math.floor(r.height)); render(); }
+/* ---------- the board: flat first, then the 3D table as soon as it has loaded ---------- */
+const flatCanvas = $('pegsBoard'), flat = createPegsBoard(flatCanvas);
+let stage = flat;
+$('pegsDie').hidden = false; // the flat board's die, until the 3D table (with its own die) is ready
+function flatResize() { if (stage !== flat) return; const r = $('pegsStage').getBoundingClientRect(); if (r.width > 10 && r.height > 10) { flat.resize(Math.floor(r.width), Math.floor(r.height)); render(); } }
+if (typeof ResizeObserver === 'function') new ResizeObserver(flatResize).observe($('pegsStage'));
+addEventListener('resize', flatResize, { passive: true });
+async function upgrade3d() {
+  if (params.has('flat')) return;
+  try {
+    const mod = await import('./stage3d.js?v=33.10.2');
+    if (!mod.webglAvailable()) return;
+    const s3 = mod.createPegsStage3D();
+    s3.onLost = () => { stage = flat; $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.remove('is-3d'); $('pegsDie').hidden = false; s3.canvas.remove(); s3.overlay.remove(); flatResize(); };
+    s3.onLand = (c, last) => { play('diceImpact', last ? 0.6 : 0.4); };
+    stage = s3; $('pegsDie').hidden = true;
+    if (ctl.running) { $('pegsStage').classList.add('is-3d'); s3.attach($('pegsStage')); }
+    else { $('pegsHero').classList.add('is-3d'); s3.attach($('pegsHero'), { idle: true }); }
+    render();
+  } catch (error) { console.warn('pegs 3d unavailable', error); }
 }
-if (typeof ResizeObserver === 'function') new ResizeObserver(resize).observe($('pegsStage'));
-addEventListener('resize', resize, { passive: true });
+if (typeof IntersectionObserver === 'function') new IntersectionObserver(([e]) => stage.hold?.(!e.isIntersecting)).observe($('pegsHero'));
 
 const tweens = new Set();
 /** Moves numbers on `target` toward `props`; resolves on time even when no frame is drawn (a hidden tab). */
@@ -74,9 +100,15 @@ function stepTweens(t) {
 }
 let raf = 0;
 function kick() { if (!raf && ctl.running && !document.hidden) raf = requestAnimationFrame(frame); }
-function frame(t) { raf = 0; if (!ctl.running) return; render(t); if (!document.hidden) raf = requestAnimationFrame(frame); }
+// a still table is drawn 30 times a second, a moving one every frame
+let lastDraw = 0;
+function frame(t) {
+  raf = 0; if (!ctl.running) return;
+  if (tweens.size || particles.length || scan || ctl.look || stage.animating || t - lastDraw > 32) { lastDraw = t; render(t); }
+  if (!document.hidden) raf = requestAnimationFrame(frame);
+}
 function render(t = performance.now()) {
-  const s = ctl.state; if (!s) return;
+  const s = ctl.state; if (!s || !ctl.running) return;
   stepTweens(t);
   const picking = canPick() || (ctl.peeking && canAct());
   for (let i = 0; i < fx.length; i++) {
@@ -84,8 +116,10 @@ function render(t = performance.now()) {
     if (f.verdict) { f.ring = f.verdict; continue; }
     f.ring = picking && s.pegs[i].taken === null ? (i === hover ? (ctl.peeking ? '#5fd4ff' : '#ffc94d') : 'rgba(255,244,224,.28)') : null;
   }
-  board.draw({ pegs: s.pegs, fx, particles, time: t, scan });
+  stage.die?.ready(canRoll());
+  stage.draw({ pegs: s.pegs, fx, particles, time: t, scan, hover: picking ? hover : -1 });
   if (particles.length) particles = particles.filter((p) => t - p.start < p.life);
+  paintTimer();
 }
 function resetFx() { for (const f of fx) for (const k of Object.keys(f)) delete f[k]; particles = []; scan = null; }
 
@@ -94,7 +128,8 @@ const isHuman = (seat) => (ctl.mode === 'online' ? seat === ctl.me : ctl.mode ==
 function canAct() {
   const s = ctl.state;
   if (!s || !ctl.running || ctl.paused || ctl.busy || ctl.look || ctl.waiting || s.winner !== null) return false;
-  if (ctl.mode === 'online' && room?.status !== 'playing') return false;
+  // online, nothing is pressed while steps of the room are still being shown
+  if (ctl.mode === 'online' && (room?.status !== 'playing' || table?.busy)) return false;
   return isHuman(s.turn);
 }
 const canRoll = () => canAct() && ctl.state.phase === 'roll' && !ctl.peeking;
@@ -109,71 +144,98 @@ function faceOf(seat) {
   if (user?.fallback) return Object.assign(document.createElement('img'), { src: user.fallback, alt: '', loading: 'lazy' });
   return Object.assign(document.createElement('span'), { className: 'pg-letter', textContent: String(ctl.names[seat] || '؟').trim().slice(0, 1) });
 }
-function buildChips() {
-  const host = $('players'), s = ctl.state; if (!s) return;
-  host.replaceChildren();
-  ctl.scores = s.players.map((p) => p.score); ctl.trays = s.players.map((p) => p.pegs.length);
-  s.players.forEach((p, seat) => {
-    const chip = document.createElement('div'); chip.className = 'pg-chip'; chip.id = 'chip' + seat; chip.style.setProperty('--seat', SEATS[seat]);
-    if (ctl.mode === 'online') { chip.dataset.playerTag = String(seat); chip.tabIndex = 0; }
-    const face = document.createElement('span'); face.className = 'pg-face'; face.append(faceOf(seat));
-    const who = document.createElement('span'); who.className = 'pg-who'; who.textContent = ctl.names[seat] || 'لاعب';
-    const score = document.createElement('strong'); score.className = 'pg-score'; score.textContent = String(p.score);
-    const tray = document.createElement('span'); tray.className = 'pg-tray'; tray.setAttribute('aria-label', 'الأحجار اللي أخذها');
-    for (const c of p.pegs) tray.append(dot(c));
-    const badges = document.createElement('span'); badges.className = 'pg-badges';
-    chip.append(face, who, score, tray, badges); host.append(chip);
-  });
-  if (!window.BS_PROFILE_PRO && !buildChips.retried) { buildChips.retried = true; setTimeout(() => { if (ctl.state && ctl.running) buildChips(); renderChips(); }, 1600); }
-  renderChips();
+function avatarOf(seat) {
+  const box = document.createElement('div'); box.className = 'pg-avatar';
+  const face = document.createElement('span'); face.className = 'pg-face'; face.append(faceOf(seat));
+  box.append(face);
+  box.insertAdjacentHTML('beforeend', '<svg class="pg-timer" viewBox="0 0 50 50" aria-hidden="true"><circle class="run" cx="25" cy="25" r="23"/></svg>');
+  return box;
 }
 function dot(c, fresh = false) { const i = document.createElement('i'); i.style.setProperty('--c', PEG_COLORS[c]?.hex || '#999'); if (fresh) i.className = 'new'; i.title = colorName(c); return i; }
-function renderChips() {
+function buildSeats() {
+  const host = $('players'), s = ctl.state; if (!s) return;
+  host.replaceChildren(); host.dataset.n = String(s.players.length);
+  ctl.scores = s.players.map((p) => p.score);
+  s.players.forEach((p, seat) => {
+    const card = document.createElement('div'); card.className = 'pg-seat'; card.id = 'chip' + seat; card.style.setProperty('--seat', SEATS[seat]);
+    if (ctl.mode === 'online') { card.dataset.playerTag = String(seat); card.tabIndex = 0; }
+    const name = Object.assign(document.createElement('div'), { className: 'pg-seat-name', textContent: ctl.names[seat] || 'لاعب' });
+    const score = Object.assign(document.createElement('div'), { className: 'pg-seat-score', textContent: String(p.score) });
+    const tray = document.createElement('div'); tray.className = 'pg-tray'; tray.setAttribute('aria-label', 'القطع اللي أخذها');
+    for (const c of p.pegs) tray.append(dot(c));
+    const badges = document.createElement('span'); badges.className = 'pg-badges';
+    card.append(avatarOf(seat), name, score, tray, badges); host.append(card);
+  });
+  if (!window.BS_PROFILE_PRO && !buildSeats.retried) { buildSeats.retried = true; setTimeout(() => { if (ctl.state && ctl.running) buildSeats(); }, 1600); }
+  renderSeats();
+}
+function renderSeats() {
   const s = ctl.state; if (!s) return;
   s.players.forEach((p, seat) => {
-    const chip = $('chip' + seat); if (!chip) return;
+    const card = $('chip' + seat); if (!card) return;
     const active = s.winner === null && s.turn === seat && !ctl.look;
-    chip.classList.toggle('active', active);
-    chip.classList.toggle('hot', active && p.streak >= PEGS.HOT);
-    const score = chip.querySelector('.pg-score');
+    card.classList.toggle('active', active);
+    card.classList.toggle('hot', active && p.streak >= PEGS.HOT);
+    const score = card.querySelector('.pg-seat-score');
     if (p.score !== ctl.scores[seat]) { score.textContent = String(p.score); score.classList.remove('bump'); void score.offsetWidth; score.classList.add('bump'); ctl.scores[seat] = p.score; }
-    const tray = chip.querySelector('.pg-tray');
+    const tray = card.querySelector('.pg-tray');
     if (p.pegs.length !== tray.children.length) { if (p.pegs.length < tray.children.length) tray.replaceChildren(); for (let k = tray.children.length; k < p.pegs.length; k++) tray.append(dot(p.pegs[k], true)); }
-    const badges = chip.querySelector('.pg-badges'), list = [];
+    const list = [];
     if (active) list.push(['pg-turn', isHuman(seat) && ctl.mode !== 'hotseat' ? 'دورك' : 'دوره']);
     if (p.streak >= 2) list.push(['pg-flame', '🔥' + p.streak]);
-    badges.replaceChildren(...list.map(([cls, text]) => Object.assign(document.createElement('span'), { className: cls, textContent: text })));
+    card.querySelector('.pg-badges').replaceChildren(...list.map(([cls, text]) => Object.assign(document.createElement('span'), { className: cls, textContent: text })));
+  });
+}
+/** The turn clock as a ring round the face of whoever is playing (online). */
+function paintTimer() {
+  const s = ctl.state; if (!s) return;
+  const live = ctl.mode === 'online' && room?.status === 'playing' && room.turnDeadline && !room.stepOf && s.winner === null && !ctl.look && !ctl.busy;
+  const got = Number(room?.clientReceivedAt) || Date.now(), now = (Number(room?.serverNow) || got) + (Date.now() - got);
+  s.players.forEach((_, seat) => {
+    const card = $('chip' + seat), run = card?.querySelector('.pg-timer .run'); if (!run) return;
+    const on = live && s.turn === seat, total = Number(room?.turnTotal) || 20000, left = on ? Math.max(0, Number(room.turnDeadline) - now) : 0;
+    run.style.strokeDashoffset = String(on ? 144.5 * (1 - Math.min(1, left / total)) : 144.5);
+    card.classList.toggle('urgent', on && left < 5000);
   });
 }
 
-/* ---------- the lines under the players and the dock ---------- */
-function pill(c) { const i = document.createElement('i'); i.className = 'pg-pill'; i.style.setProperty('--c', PEG_COLORS[c]?.hex || '#999'); return i; }
+/* ---------- the status line and the dock ---------- */
 function renderStatus() {
   const s = ctl.state, out = $('pegsStatus'); if (!s) return;
   const name = ctl.names[s.turn] || 'لاعب', mine = isHuman(s.turn), hot = ctl.mode === 'hotseat';
   const parts = [];
   if (ctl.look) parts.push('احفظ الألوان قبل ما تختفي');
-  else if (s.winner !== null) parts.push('خلصت الأحجار');
-  else if (ctl.peeking) parts.push('اختر حجر تشوف لونه بالسر');
+  else if (s.winner !== null) parts.push('خلصت القطع');
+  else if (ctl.peeking) parts.push('اختر قطعة تشوف لونها بالسر');
   else if (s.phase === 'roll') parts.push(mine ? (hot ? 'دور ' + name + ': ارمِ النرد' : 'دورك: ارمِ النرد') : 'دور ' + name);
-  else { parts.push(mine ? (hot ? name + ': اقلب حجر ' : 'اقلب حجر ') : name + ' يدوّر على '); parts.push(pill(s.die)); parts.push(colorName(s.die)); }
+  else { parts.push(mine ? (hot ? name + ': اقلب قطعة ' : 'اقلب قطعة ') : name + ' يدوّر على '); parts.push(gem(s.die)); parts.push(colorName(s.die)); }
   out.replaceChildren(...parts.map((p) => (typeof p === 'string' ? document.createTextNode(p) : p)));
-  const left = s.pegs.filter((p) => p.taken === null).length;
-  $('pegsLeft').textContent = 'باقي ' + left + ' حجر';
-  // the dock
-  const die = $('pegsDie'), ready = canRoll();
-  die.disabled = !ready; die.classList.toggle('ready', ready);
-  const target = $('pegsTarget'), hint = $('pegsHint');
-  if (ctl.look) { target.textContent = 'احفظ'; hint.textContent = 'الأحجار بترجع بعد شوي'; }
-  else if (s.winner !== null) { target.textContent = 'انتهت الجولة'; hint.textContent = ''; }
-  else if (s.phase === 'pick') { target.replaceChildren(document.createTextNode('دوّر على '), pill(s.die), document.createTextNode(colorName(s.die))); hint.textContent = mine ? (ctl.peeking ? 'اضغط حجر تشوفه بالسر' : 'اضغط على الحجر اللي تتوقعه') : 'ركّز وين يقلب'; }
-  else { target.textContent = mine ? 'ارمِ النرد' : 'دور ' + name; hint.textContent = mine ? 'اضغط النرد' : 'انتظر دورك وتابع الأحجار'; }
-  const peek = $('pegsPeek'), mineSeat = ctl.mode === 'online' ? ctl.me : ctl.mode === 'ai' ? 0 : s.turn, left2 = s.players[mineSeat]?.peeks || 0;
+  $('pegsLeft').textContent = String(s.pegs.filter((p) => p.taken === null).length);
+  // the dock shows the one thing to do now
+  const action = $('pegsAction'), target = $('pegsTarget'), hint = $('pegsHint');
+  let state = 'wait';
+  if (ctl.look) state = 'look';
+  else if (s.winner !== null) { target.replaceChildren(Object.assign(document.createElement('span'), { textContent: 'انتهت الجولة' })); }
+  else if (s.phase === 'pick') {
+    state = mine ? 'pick' : 'wait';
+    const line = document.createElement('span'); line.append(document.createTextNode(mine ? 'دوّر على ' : name + ' يدوّر على '), document.createTextNode(colorName(s.die)));
+    const sub = Object.assign(document.createElement('small'), { textContent: mine ? (ctl.peeking ? 'اضغط قطعة تشوفها بالسر' : 'اضغط على القطعة اللي تتوقعها') : 'ركّز وين يقلب' });
+    const text = document.createElement('div'); text.append(line, sub);
+    target.replaceChildren(gem(s.die), text);
+  } else if (canRoll() || (mine && (ctl.busy || ctl.waiting))) state = 'roll';
+  else { const text = document.createElement('div'); text.append(Object.assign(document.createElement('span'), { textContent: 'دور ' + name }), Object.assign(document.createElement('small'), { textContent: 'تابع وين تنقلب القطع' })); target.replaceChildren(text); }
+  action.dataset.state = state;
+  $('pegsRoll').disabled = !canRoll();
+  hint.textContent = '';
+  // the flat board's die
+  const die = $('pegsDie'); die.disabled = !canRoll(); die.classList.toggle('ready', canRoll());
+  const peek = $('pegsPeek'), mineSeat = ctl.mode === 'online' ? ctl.me : ctl.mode === 'ai' ? 0 : s.turn, left = s.players[mineSeat]?.peeks || 0;
   peek.disabled = !(canPeek() || ctl.peeking); peek.setAttribute('aria-pressed', String(ctl.peeking));
-  $('pegsPeekLeft').textContent = left2 > 0 ? 'مرة وحدة' : 'استخدمتها';
+  $('pegsPeekLeft').textContent = left > 0 ? 'مرة وحدة' : 'استخدمتها';
   $('pegsStage').classList.toggle('pick', canPick() || ctl.peeking);
+  if (s.phase === 'roll' && !ctl.busy && !ctl.waiting) stage.die?.clear();
 }
-function renderAll() { renderChips(); renderStatus(); render(); }
+function renderAll() { renderSeats(); renderStatus(); render(); }
 
 let bannerTimer = 0;
 function banner(text, kind = '', color = '') {
@@ -188,35 +250,36 @@ function announceTurn() {
   else if (isHuman(s.turn)) { banner('دورك!', '', SEATS[s.turn]); play('yourTurn', 0.55); buzz(20); }
 }
 
-/* ---------- the colour die ---------- */
+/* ---------- the colour die (the flat board's CSS cube; the 3D table has its own) ---------- */
 const FACE_TURN = [[0, 0], [0, -90], [0, 180], [0, 90], [-90, 0], [90, 0]];
-const die = { x: 0, y: 0 };
-function dieTo(c, quick = false) {
+const cssDie = { x: 0, y: 0 };
+function cssDieTo(c, quick = false) {
   const cube = $('pegsCube'), [tx, ty] = FACE_TURN[c] || [0, 0];
-  const turns = quick ? 1 : 2, nx = Math.round((die.x - tx) / 360 + turns + 0.5) * 360 + tx, ny = Math.round((die.y - ty) / 360 + turns) * 360 + ty;
+  const turns = quick ? 1 : 2, nx = Math.round((cssDie.x - tx) / 360 + turns + 0.5) * 360 + tx, ny = Math.round((cssDie.y - ty) / 360 + turns) * 360 + ty;
   cube.classList.remove('spin'); cube.classList.toggle('quick', quick);
-  die.x = nx; die.y = ny; cube.style.transform = 'rotateX(' + nx + 'deg) rotateY(' + ny + 'deg)';
+  cssDie.x = nx; cssDie.y = ny; cube.style.transform = 'rotateX(' + nx + 'deg) rotateY(' + ny + 'deg)';
   return wait(reduce ? 150 : quick ? 450 : 900);
 }
-function dieSpin() { $('pegsCube').classList.add('spin'); }
-function dieStop() { $('pegsCube').classList.remove('spin'); }
+function dieSpin() { if (stage.die) stage.die.spin(); else $('pegsCube').classList.add('spin'); }
+function dieStop() { stage.die?.stop(); $('pegsCube').classList.remove('spin'); }
+function dieShow(c) { if (stage.die) stage.die.show(c); else cssDieTo(c, true); }
 
 /* ---------- effects ---------- */
 function burst(i, c) {
-  const m = board.middle(i), col = PEG_COLORS[c]?.hex || '#fff', t = performance.now();
-  for (let k = 0; k < 30; k++) {
-    const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6, v = 120 + Math.random() * 220;
+  const m = stage.middle(i), col = PEG_COLORS[c]?.hex || '#fff', t = performance.now();
+  for (let k = 0; k < 34; k++) {
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6, v = 120 + Math.random() * 240;
     particles.push({ x: m.x, y: m.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, start: t + Math.random() * 60, life: 700 + Math.random() * 500, size: 4 + Math.random() * 5, color: k % 3 ? col : '#ffe08a', spin: Math.random() - 0.5, round: k % 2 === 0 });
   }
   kick();
 }
 function float(i, text, color) {
-  const m = board.middle(i), size = board.size.pawn * 0.5;
-  particles.push({ x: m.x, y: m.y - size, vx: 0, vy: -70, fall: 0, start: performance.now(), life: 1100, size, text, color }); kick();
+  const m = stage.middle(i), size = Math.max(22, stage.size.pawn * 0.55);
+  particles.push({ x: m.x, y: m.y - size * 1.2, vx: 0, vy: -70, fall: 0, start: performance.now(), life: 1100, size, text, color }); kick();
 }
 function confetti() {
-  const { W } = board.size, t = performance.now();
-  for (let k = 0; k < 90; k++) particles.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 80, vy: 60 + Math.random() * 120, start: t + Math.random() * 700, life: 1800 + Math.random() * 900, size: 6 + Math.random() * 6, color: PEG_COLORS[k % 6].hex, spin: Math.random() - 0.5, fall: 0.5 });
+  const { W } = stage.size, t = performance.now();
+  for (let k = 0; k < 110; k++) particles.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 80, vy: 60 + Math.random() * 120, start: t + Math.random() * 700, life: 1800 + Math.random() * 900, size: 6 + Math.random() * 6, color: PEG_COLORS[k % 6].hex, spin: Math.random() - 0.5, fall: 0.5 });
   kick();
 }
 
@@ -225,11 +288,12 @@ async function runLook(ms) {
   const gen = ctl.gen, s = ctl.state;
   if (ms < 600 || !s.pegs.some((p) => p.c >= 0)) { hideColors(); return; }
   ctl.look = true; renderAll();
-  const order = s.pegs.map((p, i) => i).sort((a, b) => Math.atan2(board.foot(a).y - board.size.cy, board.foot(a).x - board.size.cx) - Math.atan2(board.foot(b).y - board.size.cy, board.foot(b).x - board.size.cx));
+  const { cx, cy } = stage.size;
+  const order = s.pegs.map((p, i) => i).sort((a, b) => Math.atan2(stage.foot(a).y - cy, stage.foot(a).x - cx) - Math.atan2(stage.foot(b).y - cy, stage.foot(b).x - cx));
   sfx('look', 0.7);
-  order.forEach((i, k) => { fx[i].color = s.pegs[i].c; setTimeout(() => { if (gen === ctl.gen) tween(fx[i], { lift: 0.3, tip: 0.86 }, 420, easeBack); }, reduce ? 0 : k * 28); });
-  const box = $('pegsLook'), ring = $('pegsLookRing'), n = $('pegsLookN'), end = performance.now() + ms;
-  box.hidden = false; $('pegsDie').hidden = true; let shown = -1;
+  order.forEach((i, k) => { fx[i].color = s.pegs[i].c; setTimeout(() => { if (gen === ctl.gen) tween(fx[i], { lift: 0.36, tip: 0.9 }, 440, easeBack); }, reduce ? 0 : k * 28); });
+  const ring = $('pegsLookRing'), n = $('pegsLookN'), end = performance.now() + ms;
+  let shown = -1;
   while (performance.now() < end - 650) {
     if (gen !== ctl.gen) return;
     const left = end - performance.now(), sec = Math.ceil(left / 1000);
@@ -239,10 +303,10 @@ async function runLook(ms) {
   }
   if (gen !== ctl.gen) return;
   sfx('hide', 0.6);
-  order.forEach((i, k) => setTimeout(() => { if (gen === ctl.gen) tween(fx[i], { lift: 0, tip: 0 }, 300, easeIn); }, reduce ? 0 : k * 14));
-  await wait(Math.max(0, end - performance.now()) + 120);
+  order.forEach((i, k) => setTimeout(() => { if (gen === ctl.gen) tween(fx[i], { lift: 0, tip: 0 }, 320, easeIn); }, reduce ? 0 : k * 14));
+  await wait(Math.max(0, end - performance.now()) + 140);
   if (gen !== ctl.gen) return;
-  box.hidden = true; $('pegsDie').hidden = false; ring.style.strokeDashoffset = '0';
+  ring.style.strokeDashoffset = '0';
   for (const f of fx) { delete f.color; f.lift = 0; f.tip = 0; }
   hideColors(); ctl.look = false;
 }
@@ -258,21 +322,27 @@ async function present(next, mine) {
 }
 async function showRoll(L, mine) {
   const gen = ctl.gen;
-  if (!mine || !$('pegsCube').classList.contains('spin')) play('dice', 0.7);
-  dieStop();
-  for (let k = 0; k < L.faces.length; k++) {
-    await dieTo(L.faces[k], k > 0); if (gen !== ctl.gen) return;
-    play('diceImpact', 0.55);
-    if (k < L.faces.length - 1) { banner('خلص ال' + colorName(L.faces[k]) + '، نرمي مرة ثانية', '', PEG_COLORS[L.faces[k]].hex); await wait(260); play('dice', 0.5); }
+  if (!mine || !ctl.waiting) play('dice', 0.7);
+  if (stage.die) {
+    dieStop();
+    if (L.faces.length > 1) setTimeout(() => { if (gen === ctl.gen) banner('خلص ال' + colorName(L.faces[0]) + '، نرمي مرة ثانية', '', PEG_COLORS[L.faces[0]].hex); }, 950);
+    await stage.die.roll(L.faces);
+  } else {
+    dieStop();
+    for (let k = 0; k < L.faces.length; k++) {
+      await cssDieTo(L.faces[k], k > 0); if (gen !== ctl.gen) return;
+      play('diceImpact', 0.55);
+      if (k < L.faces.length - 1) { banner('خلص ال' + colorName(L.faces[k]) + '، نرمي مرة ثانية', '', PEG_COLORS[L.faces[k]].hex); await wait(260); play('dice', 0.5); }
+    }
   }
-  banner(colorName(L.color), '', PEG_COLORS[L.color].hex);
-  await wait(200);
+  if (gen !== ctl.gen) return;
+  await wait(160);
 }
 async function scanTo(i, seat) {
   const free = ctl.state.pegs.map((p, k) => (p.taken === null && k !== i ? k : -1)).filter((k) => k >= 0);
   const path = [...free.sort(() => Math.random() - 0.5).slice(0, 2), i], gen = ctl.gen;
-  const first = board.middle(path[0]); scan = { x: first.x, y: first.y, color: SEATS[seat] };
-  for (const k of path) { const m = board.middle(k); await tween(scan, { x: m.x, y: m.y }, 140); if (gen !== ctl.gen) return; }
+  const first = stage.middle(path[0]); scan = { x: first.x, y: first.y, color: SEATS[seat] };
+  for (const k of path) { const m = stage.middle(k); await tween(scan, { x: m.x, y: m.y }, 140); if (gen !== ctl.gen) return; }
   await wait(80); scan = null;
 }
 async function showPick(next, L, mine) {
@@ -282,16 +352,16 @@ async function showPick(next, L, mine) {
   if (gen !== ctl.gen) return;
   f.top = true; f.color = L.color;
   if (!early) sfx('lift', 0.7);
-  await tween(f, { lift: 0.58 }, early ? 80 : 170);
-  await tween(f, { tip: 1 }, 240);
+  await tween(f, { lift: 0.62 }, early ? 80 : 170);
+  await tween(f, { tip: 1 }, 260);
   if (gen !== ctl.gen) return;
   if (L.ok) {
     const col = PEG_COLORS[L.color].hex;
     sfx('right', 0.8); buzz(14); f.glow = col; f.verdict = col; burst(i, L.color); float(i, '+' + L.gained, L.gained > 1 ? '#ffb23f' : '#fff4e0');
-    if (L.streak === PEGS.HOT) { sfx('streak', 0.75); banner('🔥 حامي! كل حجر بنقطتين', 'hot'); }
+    if (L.streak === PEGS.HOT) { sfx('streak', 0.75); banner('🔥 حامي! كل قطعة بنقطتين', 'hot'); }
     else if (L.streak > PEGS.HOT) banner('🔥 ' + L.streak + ' ورا بعض', 'hot');
     await wait(300); if (gen !== ctl.gen) return;
-    await flyToChip(i, L.seat);
+    await flyToSeat(i, L.seat);
   } else {
     sfx('wrong', 0.75); buzz([30, 40, 30]); f.mark = '✕'; f.verdict = '#ff5b5b';
     for (const dx of [9, -9, 6, -6, 3, 0]) { await tween(f, { dx }, 60); if (gen !== ctl.gen) return; }
@@ -303,21 +373,21 @@ async function showPick(next, L, mine) {
     if (L.swapped) await showSwap(L.swapped);
   }
 }
-async function flyToChip(i, seat) {
-  const f = fx[i], chip = $('chip' + seat), cr = canvas.getBoundingClientRect();
-  const start = board.foot(i), from = board.toBoard(start.x, start.y);
-  let to = { x: from.x, y: from.y - 1.4 };
-  if (chip) { const r = chip.getBoundingClientRect(); to = board.toBoard(r.left + r.width / 2 - cr.left, r.top + r.height / 2 - cr.top + board.size.pawn * 0.2); }
-  f.at = { ...from };
-  await Promise.all([tween(f.at, to, 440, easeIn), tween(f, { scale: 0.4, alpha: 0.15, lift: 0.9 }, 440, easeIn)]);
+async function flyToSeat(i, seat) {
+  const f = fx[i], card = $('chip' + seat), cr = (stage.is3d ? $('pegsStage') : flatCanvas).getBoundingClientRect();
+  const start = stage.foot(i), from = stage.toBoard(start.x, start.y);
+  let to = { x: from.x, y: from.y - 1.4, h: 0.8 };
+  if (card) { const r = card.querySelector('.pg-avatar')?.getBoundingClientRect() || card.getBoundingClientRect(); to = stage.toBoard(r.left + r.width / 2 - cr.left, r.top + r.height / 2 - cr.top, 0.9); }
+  f.at = { x: from.x, y: from.y, h: 0 };
+  await Promise.all([tween(f.at, to, 460, easeIn), tween(f, { scale: 0.45, alpha: 0.15, lift: 0.4 }, 460, easeIn)]);
   sfx('place', 0.35);
 }
 async function showSwap([a, b]) {
-  const gen = ctl.gen, A = board.foot(a), B = board.foot(b), pa = board.toBoard(A.x, A.y), pb = board.toBoard(B.x, B.y);
-  banner('تبادل حجرين مكانهم!', '', '#5fd4ff'); sfx('swap', 0.7);
-  for (const [k, from] of [[a, pa], [b, pb]]) { fx[k].at = { ...from }; fx[k].glow = '#5fd4ff'; fx[k].top = true; }
-  await Promise.all([tween(fx[a], { lift: 0.5 }, 200), tween(fx[b], { lift: 0.5 }, 200)]);
-  await Promise.all([tween(fx[a].at, pb, 520), tween(fx[b].at, pa, 520)]);
+  const gen = ctl.gen, A = stage.foot(a), B = stage.foot(b), pa = stage.toBoard(A.x, A.y), pb = stage.toBoard(B.x, B.y);
+  banner('تبادلت قطعتين مكانهم!', '', '#5fd4ff'); sfx('swap', 0.7);
+  for (const [k, from] of [[a, pa], [b, pb]]) { fx[k].at = { x: from.x, y: from.y, h: 0 }; fx[k].glow = '#5fd4ff'; fx[k].top = true; }
+  await Promise.all([tween(fx[a], { lift: 0.55 }, 200), tween(fx[b], { lift: 0.55 }, 200)]);
+  await Promise.all([tween(fx[a].at, { x: pb.x, y: pb.y }, 540), tween(fx[b].at, { x: pa.x, y: pa.y }, 540)]);
   if (gen !== ctl.gen) return;
   await Promise.all([tween(fx[a], { lift: 0 }, 180, easeIn), tween(fx[b], { lift: 0 }, 180, easeIn)]);
   for (const k of [a, b]) { delete fx[k].at; delete fx[k].glow; fx[k].top = false; }
@@ -328,7 +398,7 @@ async function showPeek(next, L, mine) {
   ctl.pendingPeg = null;
   sfx('peek', 0.7); f.top = true; f.color = seen; f.glow = '#5fd4ff';
   banner(mine ? 'عين الصقر 👁' : (ctl.names[L.seat] || 'لاعب') + ' استخدم عين الصقر', '', '#5fd4ff');
-  await tween(f, { lift: 0.45 }, 180); await tween(f, { tip: 0.95 }, 200);
+  await tween(f, { lift: 0.5 }, 180); await tween(f, { tip: 0.95 }, 200);
   await wait(mine && ctl.mode !== 'online' ? 1100 : 560); if (gen !== ctl.gen) return;
   await tween(f, { tip: 0, lift: 0 }, 240, easeIn);
   delete f.color; delete f.glow; f.top = false;
@@ -373,13 +443,13 @@ function startLocal(mode) {
   begin(mode, state);
   const gen = ctl.gen;
   ctl.receipt = 'pegs:' + Date.now().toString(36) + ':' + Math.floor(Math.random() * 1e9).toString(36);
-  runLook(state.showMs).then(() => { if (gen === ctl.gen && ctl.state) { renderAll(); if (state.turn === 0 || mode === 'hotseat') banner(mode === 'hotseat' ? 'يبدأ ' + ctl.names[state.turn] : 'أنت تبدأ!', '', SEATS[state.turn]); ctl.lastTurn = state.turn; play('go', 0.5); afterStep(); } });
+  runLook(state.showMs).then(() => { if (gen === ctl.gen && ctl.state) { renderAll(); banner(mode === 'hotseat' ? 'يبدأ ' + ctl.names[state.turn] : 'أنت تبدأ!', '', SEATS[state.turn]); ctl.lastTurn = state.turn; play('go', 0.5); afterStep(); } });
 }
 function begin(mode, state) {
   ctl.gen++; clearTimeout(ctl.aiTimer); tweens.clear(); resetFx();
   Object.assign(ctl, { mode, state, running: true, paused: false, busy: false, look: false, peeking: false, waiting: false, endShown: false, rewarded: false, pendingPeg: null, lastTurn: null, shownSeq: state.seq });
-  hover = -1; dieStop(); $('pegsLook').hidden = true; $('pegsDie').hidden = false;
-  showGame(); buildChips(); renderAll();
+  hover = -1; dieStop(); stage.die?.clear();
+  showGame(); buildSeats(); renderAll();
 }
 
 /* ---------- moves from the player ---------- */
@@ -404,18 +474,29 @@ function doPeek(i) {
   if (ctl.mode === 'online') { if (!table?.send('pegs_peek', { peg: i })) { renderStatus(); return; } ctl.waiting = true; ctl.pendingPeg = i; renderStatus(); return; }
   act((s) => peekPegs(s, s.turn, i));
 }
-function pointAt(e) { const r = canvas.getBoundingClientRect(); return board.hit(e.clientX - r.left, e.clientY - r.top, ctl.state?.pegs || []); }
-canvas.addEventListener('pointermove', (e) => { if (!ctl.state) return; const i = canPick() || ctl.peeking ? pointAt(e) : -1; if (i !== hover) { hover = i; render(); } });
-canvas.addEventListener('pointerleave', () => { hover = -1; render(); });
-canvas.addEventListener('click', (e) => { if (!ctl.state) return; const i = pointAt(e); if (i >= 0) { hover = i; doPick(i); } });
-canvas.addEventListener('keydown', (e) => {
-  const s = ctl.state; if (!s || !ctl.running) return;
+function pointer(e) { const r = (stage.is3d ? $('pegsStage') : flatCanvas).getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+const stageEl = $('pegsStage');
+stageEl.addEventListener('pointermove', (e) => { if (!ctl.state || e.pointerType === 'touch') return; const p = pointer(e), i = canPick() || ctl.peeking ? stage.hit(p.x, p.y, ctl.state.pegs) : -1; if (i !== hover) { hover = i; render(); } });
+stageEl.addEventListener('pointerleave', () => { hover = -1; render(); });
+stageEl.addEventListener('click', (e) => {
+  if (!ctl.state || e.target.closest('.pg-banner')) return;
+  const p = pointer(e);
+  if (stage.is3d && canRoll() && stage.hitDie(p.x, p.y)) { doRoll(); return; }
+  const i = stage.hit(p.x, p.y, ctl.state.pegs); if (i >= 0) { hover = i; doPick(i); }
+});
+// the keyboard: ← → to move between the pieces, Enter to turn one over, Space or R to roll
+document.addEventListener('keydown', (e) => {
+  const s = ctl.state; if (!s || !ctl.running || e.target.closest?.('input,textarea,button,a,summary') || !(canPick() || ctl.peeking)) return;
   const free = s.pegs.map((p, i) => (p.taken === null ? i : -1)).filter((i) => i >= 0);
   if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && free.length) { e.preventDefault(); const at = free.indexOf(hover), step = e.key === 'ArrowLeft' ? 1 : -1; hover = free[(at + step + free.length) % free.length] ?? free[0]; render(); }
   else if (e.key === 'Enter' && hover >= 0) { e.preventDefault(); doPick(hover); }
-  else if (e.key === ' ' || e.key.toLowerCase() === 'r') { e.preventDefault(); doRoll(); }
+});
+document.addEventListener('keydown', (e) => {
+  if (!ctl.running || e.target.closest?.('input,textarea')) return;
+  if ((e.key === ' ' || e.key.toLowerCase() === 'r') && canRoll()) { e.preventDefault(); doRoll(); }
 });
 $('pegsDie').addEventListener('click', doRoll);
+$('pegsRoll').addEventListener('click', doRoll);
 $('pegsPeek').addEventListener('click', () => { if (ctl.peeking) { ctl.peeking = false; } else if (canPeek()) { ctl.peeking = true; sfx('peek', 0.35); } renderAll(); });
 
 /* ---------- the end ---------- */
@@ -425,16 +506,22 @@ function finish() {
   const tie = s.ties.length > 1 && s.ties.includes(me) && ctl.mode !== 'hotseat';
   const won = ctl.mode === 'hotseat' || w === me;
   $('pegsWinner').textContent = ctl.mode === 'hotseat' ? (s.ties.length > 1 ? 'تعادل!' : ctl.names[w] + ' فاز!') : tie ? 'تعادل!' : won ? 'فزت!' : (ctl.names[w] || 'المنافس') + ' فاز';
-  const mine = s.players[me];
-  $('pegsResultCopy').textContent = ctl.mode === 'hotseat' ? 'أطول سلسلة: ' + Math.max(...s.players.map((p) => p.best)) : 'نقاطك ' + mine.score + ' · أطول سلسلة ' + mine.best + ' · أخطاء ' + mine.wrong;
+  $('pegsResultKicker').textContent = ctl.mode === 'hotseat' ? 'انتهت الجولة' : won || tie ? 'ذاكرة حديد' : 'قربت، المرة الجاية لك';
+  document.querySelector('.pg-result').classList.toggle('lost', !won && !tie);
   const rows = s.players.map((p, i) => ({ ...p, i })).sort((a, b) => b.score - a.score || b.best - a.best);
-  $('pegsPodium').replaceChildren(...rows.map((p, k) => {
-    const li = document.createElement('li'); li.style.setProperty('--seat', SEATS[p.i]); if (k === 0) li.className = 'first';
-    const rank = Object.assign(document.createElement('span'), { className: 'pg-rank', textContent: k === 0 ? '👑' : String(k + 1) });
-    const face = document.createElement('span'); face.className = 'pg-face'; face.append(faceOf(p.i));
-    const line = document.createElement('span'); line.className = 'pg-line';
-    line.append(Object.assign(document.createElement('b'), { textContent: ctl.names[p.i] || 'لاعب' }), Object.assign(document.createElement('small'), { textContent: p.pegs.length + ' حجر · أطول سلسلة ' + p.best }));
-    return li.appendChild(rank), li.append(face, line, Object.assign(document.createElement('strong'), { className: 'pg-score', textContent: String(p.score) })), li;
+  const order = rows.length >= 3 ? [rows[1], rows[0], rows[2], ...rows.slice(3)] : rows.length === 2 ? [rows[1], rows[0]] : rows;
+  $('pegsPodium').replaceChildren(...order.map((p) => {
+    const rank = rows.indexOf(p) + 1, step = document.createElement('div');
+    step.className = 'pg-step r' + rank + (rank === 1 ? ' first' : ''); step.style.setProperty('--seat', SEATS[p.i]);
+    const crown = Object.assign(document.createElement('span'), { className: 'pg-crown', textContent: rank === 1 ? '👑' : '' });
+    const name = Object.assign(document.createElement('b'), { textContent: ctl.names[p.i] || 'لاعب' });
+    const block = document.createElement('div'); block.className = 'pg-block';
+    block.append(Object.assign(document.createElement('strong'), { textContent: String(p.score) }), Object.assign(document.createElement('small'), { textContent: p.pegs.length + ' قطعة' }));
+    step.append(crown, avatarOf(p.i), name, block); return step;
+  }));
+  const focus = s.players[ctl.mode === 'hotseat' ? w : me], tries = focus.pegs.length + focus.wrong;
+  $('pegsStats').replaceChildren(...[[String(focus.score), 'النقاط'], [String(focus.best), 'أطول سلسلة'], [(tries ? Math.round((focus.pegs.length / tries) * 100) : 0) + '%', 'الدقة']].map(([v, l]) => {
+    const li = document.createElement('li'); li.append(Object.assign(document.createElement('b'), { textContent: v }), Object.assign(document.createElement('small'), { textContent: l })); return li;
   }));
   const again = $('pegsAgain');
   again.textContent = ctl.mode === 'online' ? (room?.publicMatch ? 'مباراة جديدة' : room?.me?.role === 'host' ? 'جولة جديدة' : 'بانتظار المضيف') : 'العب مرة ثانية';
@@ -461,14 +548,14 @@ async function apply(next, { animate } = {}) {
   ctl.users = Array.from({ length: n }, (_, i) => { const p = seat(i), hero = p?.look?.character; const fallback = hero ? '/assets/heroes/face/' + hero + '.webp' : ''; return p?.username ? { username: p.username, fallback } : fallback ? { fallback } : null; });
   if (fresh) {
     begin('online', s); ctl.match = next.startedAt || 0; ctl.shownSeq = s.seq;
-    $('pegsPauseButton').hidden = true;
     if (s.seq === 0 && s.winner === null) {
       const got = Number(next.clientReceivedAt) || Date.now(), serverNow = (Number(next.serverNow) || got) + (Date.now() - got);
       const left = Number(s.lookUntil || 0) - serverNow;
       if (animate !== false && left > 600) await runLook(left); else hideColors();
       if (ctl.mode === 'online' && ctl.state) { banner(isHuman(ctl.state.turn) ? 'أنت تبدأ!' : 'يبدأ ' + (ctl.names[ctl.state.turn] || 'لاعب'), '', SEATS[ctl.state.turn]); play('go', 0.5); ctl.lastTurn = ctl.state.turn; }
-    } else hideColors();
+    } else { hideColors(); if (s.phase === 'pick' && s.die !== null) dieShow(s.die); }
     renderAll(); if (ctl.state?.winner !== null) finish(); else announceTurn();
+    setTimeout(() => { if (ctl.running && ctl.mode === 'online') renderAll(); }, 0);
     return;
   }
   if (s.seq > ctl.shownSeq) {
@@ -476,12 +563,13 @@ async function apply(next, { animate } = {}) {
     if (animate && s.last && s.last.seq === s.seq && s.seq === ctl.shownSeq + 1) { ctl.busy = true; renderStatus(); await present(s, s.last.seat === ctl.me); ctl.busy = false; }
     if (gen !== ctl.gen) return;
     ctl.shownSeq = s.seq; ctl.state = s; ctl.waiting = false; ctl.pendingPeg = null; resetFx(); dieStop();
-    if (s.phase === 'pick' && s.die !== null) dieShow(s.die);
+    if (s.phase === 'pick' && s.die !== null && !(s.last?.type === 'roll' && animate)) dieShow(s.die);
   } else { ctl.state = { ...s, pegs: ctl.state?.pegs || s.pegs }; }
   renderAll();
   if (s.winner !== null) finish(); else announceTurn();
+  // once the room's steps are all shown, the buttons come back
+  setTimeout(() => { if (ctl.running && ctl.mode === 'online') renderAll(); }, 0);
 }
-function dieShow(c) { const [tx, ty] = FACE_TURN[c] || [0, 0]; if (((die.x - tx) % 360 + 360) % 360 === 0 && ((die.y - ty) % 360 + 360) % 360 === 0) return; dieTo(c, true); }
 try {
   table = createTable({
     game: 'pegs', seats: [2, 3, 4], seatsDefault: 2,
@@ -505,20 +593,44 @@ function showGame() {
   $('pegsPauseButton').hidden = ctl.mode === 'online';
   document.body.classList.add('pegs-running', 'game-running');
   window.BS_LOCAL_REACTIONS = { active: ctl.mode !== 'online' }; window.dispatchEvent(new Event('bs-reaction-refresh'));
-  requestAnimationFrame(resize); kick();
+  if (stage.is3d) { $('pegsStage').classList.add('is-3d'); $('pegsHero').classList.remove('is-3d'); stage.attach($('pegsStage')); }
+  else requestAnimationFrame(flatResize);
+  kick();
 }
 function showMenu() {
   ctl.gen++; clearTimeout(ctl.aiTimer); tweens.clear(); resetFx();
   ctl.running = false; ctl.state = null; ctl.mode = null; ctl.look = false; dieStop();
-  $('pegsGame').hidden = true; $('pegsMenu').hidden = false; $('pegsResult').hidden = true; $('pegsPause').hidden = true; $('pegsLook').hidden = true; $('pegsDie').hidden = false;
+  $('pegsGame').hidden = true; $('pegsMenu').hidden = false; $('pegsResult').hidden = true; $('pegsPause').hidden = true;
   document.body.classList.remove('pegs-running', 'game-running');
   window.BS_LOCAL_REACTIONS = { active: false }; window.dispatchEvent(new Event('bs-reaction-refresh'));
+  if (stage.is3d) { $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.add('is-3d'); stage.die.clear(); stage.attach($('pegsHero'), { idle: true }); }
 }
 function pause(on) {
   if (ctl.mode === 'online' || !ctl.running) return;
   ctl.paused = on; $('pegsPause').hidden = !on;
   if (!on) { renderAll(); if (ctl.mode === 'ai' && ctl.state?.turn !== 0 && !ctl.busy && ctl.state?.winner === null) thinkLater(); }
 }
+
+/* ---------- the first-time tour ---------- */
+const TOUR = [
+  ['احفظ', 'أول الجولة القطع تنقلب وتوريك ألوانها ثواني. ركّز وين كل لون.', '<span class="pawn"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#ffcf24"></i></span><span class="pawn up"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#e8323f"></i></span><span class="pawn"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#2a7fe8"></i></span>'],
+  ['ارمِ', 'اضغط «ارمِ النرد» أو النرد نفسه. اللون اللي يطلع هو اللي تدوّر عليه، وتحت كل لون رمز يساعدك تميّزه.', '<span class="tdie"><svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 12 12 21.5 4.5 12z"/></svg></span>'],
+  ['اقلب', 'صح؟ تاخذ القطعة وتكمل. غلط؟ تنكشف للكل والدور يروح. ثلاث صح ورا بعض تخلي كل قطعة بنقطتين 🔥، و«عين الصقر» توريك لون قطعة بالسر مرة وحدة.', '<span class="pawn up"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#22b35b"></i></span><span class="tick">✓</span>'],
+];
+let tourAt = 0, tourResume = false;
+function showTour(at = 0) {
+  tourAt = at; const [title, text, art] = TOUR[at];
+  $('pegsTourTitle').textContent = title; $('pegsTourText').textContent = text; $('pegsTourArt').innerHTML = art;
+  [...$('pegsTourDots').children].forEach((d, k) => d.classList.toggle('on', k === at));
+  $('pegsTourNext').textContent = at === TOUR.length - 1 ? 'يلا نلعب' : 'التالي';
+  $('pegsTour').hidden = false;
+  if (!ctl.running) stage.hold?.(true);
+}
+function closeTour() { $('pegsTour').hidden = true; if (!ctl.running) stage.hold?.(false); try { localStorage.setItem(TOUR_KEY, '1'); } catch {} if (tourResume) { tourResume = false; pause(false); } }
+$('pegsTourNext').onclick = () => (tourAt < TOUR.length - 1 ? showTour(tourAt + 1) : closeTour());
+$('pegsTourSkip').onclick = closeTour;
+$('pegsHelpMenu').onclick = () => showTour(0);
+$('pegsHelp').onclick = () => { if (ctl.mode !== 'online' && ctl.running && !ctl.paused) { ctl.paused = true; tourResume = true; } showTour(0); };
 
 /* ---------- the menu ---------- */
 function setMode(mode) {
@@ -535,17 +647,24 @@ function seg(id, key, cast = String) {
 }
 seg('pegsLevel', 'level'); seg('pegsRivals', 'rivals', Number); seg('pegsLocal', 'local', Number); seg('pegsLookTime', 'look', Number);
 $('pegsSwaps').checked = Boolean(prefs.swaps); $('pegsSwaps').addEventListener('change', (e) => { prefs.swaps = e.target.checked; persist(); });
-for (const b of document.querySelectorAll('.pg-modes button')) b.addEventListener('click', () => setMode(b.dataset.mode));
+for (const b of document.querySelectorAll('.pg-modes button')) b.addEventListener('click', () => { setMode(b.dataset.mode); window.BS_AUDIO?.play?.('tap', { volume: 0.4 }); });
 for (const b of document.querySelectorAll('[data-start]')) b.addEventListener('click', () => startLocal(b.dataset.start));
 setMode(/[?&]room=\d{6}/.test(location.search) ? 'online' : prefs.mode);
 $('pegsExit').onclick = () => { if (ctl.mode === 'online') table?.leave(); showMenu(); };
 $('pegsPauseButton').onclick = () => pause(true); $('pegsResume').onclick = () => pause(false);
 $('pegsRestart').onclick = () => { $('pegsPause').hidden = true; startLocal(ctl.mode); };
+$('pegsQuit').onclick = () => showMenu();
 $('pegsBackMenu').onclick = () => { if (ctl.mode === 'online') table?.leave(); showMenu(); };
 $('pegsAgain').onclick = () => { $('pegsResult').hidden = true; if (ctl.mode === 'online') table?.again(); else startLocal(ctl.mode); };
-function paintMute() { const muted = Boolean(window.BS_AUDIO?.getSettings?.().muted); for (const id of ['pegsMute', 'pegsSound']) { const b = $(id); if (!b) continue; b.textContent = muted ? '🔇' : '🔊'; b.setAttribute('aria-pressed', String(muted)); } }
-for (const id of ['pegsMute', 'pegsSound']) $(id)?.addEventListener('click', () => { window.BS_AUDIO?.toggleMuted?.(); paintMute(); });
+function paintMute() {
+  const muted = Boolean(window.BS_AUDIO?.getSettings?.().muted);
+  for (const b of document.querySelectorAll('.pg-mute')) { b.classList.toggle('is-muted', muted); b.setAttribute('aria-pressed', String(muted)); b.querySelector('use')?.setAttribute('href', muted ? '#i-mute' : '#i-sound'); }
+}
+for (const b of document.querySelectorAll('.pg-mute')) b.addEventListener('click', () => { window.BS_AUDIO?.toggleMuted?.(); paintMute(); });
 addEventListener('bs-audio-change', paintMute); paintMute();
 document.addEventListener('visibilitychange', () => { if (document.hidden) { if (ctl.mode === 'ai' || ctl.mode === 'hotseat') pause(true); } else kick(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ctl.running) { if (ctl.peeking) { ctl.peeking = false; renderAll(); } else pause(!ctl.paused); } });
-if (new URLSearchParams(location.search).has('debug')) window.BS_PEGS = { get ctl() { return ctl; }, get state() { return ctl.state; }, startLocal, doRoll, doPick, doPeek, board, fx };
+let firstTour = false; try { firstTour = !localStorage.getItem(TOUR_KEY); } catch {}
+if (firstTour && !/[?&]room=\d{6}/.test(location.search) && !params.has('debug')) setTimeout(() => { if (!ctl.running) showTour(0); }, 900);
+upgrade3d();
+if (params.has('debug')) window.BS_PEGS = { get ctl() { return ctl; }, get state() { return ctl.state; }, get board() { return stage; }, startLocal, doRoll, doPick, doPeek, fx, showTour };

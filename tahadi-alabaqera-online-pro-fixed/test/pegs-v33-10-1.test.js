@@ -114,7 +114,7 @@ test('the room never sends a hidden colour: only the look, and «عين الصق
 
 test('the page: three ways to play, the die, the look, «عين الصقر», and it is on the home page and in the menus', async () => {
   const html = await read('public/pegs.html');
-  for (const id of ['pegsMenu', 'gameMenu', 'pegsGame', 'pegsBoard', 'pegsDie', 'pegsPeek', 'pegsLook', 'pegsResult', 'players', 'status']) assert.match(html, new RegExp('id="' + id + '"'));
+  for (const id of ['pegsMenu', 'pegsHero', 'gameMenu', 'pegsGame', 'pegsStage', 'pegsBoard', 'pegsDie', 'pegsRoll', 'pegsTarget', 'pegsPeek', 'pegsLook', 'pegsResult', 'pegsTour', 'players', 'status']) assert.match(html, new RegExp('id="' + id + '"'));
   for (const mode of ['online', 'ai', 'hotseat']) assert.match(html, new RegExp('data-mode="' + mode + '"'));
   assert.match(html, /assets\/js\/pegs\/main\.js/);
   assert.doesNotMatch(html, /بوت/);
@@ -130,3 +130,24 @@ test('the page: three ways to play, the die, the look, «عين الصقر», an
   assert.match(profile, /'tanks','pegs'\]/);
   for (const name of ['lift', 'right', 'wrong', 'place', 'streak', 'look', 'hide', 'peek', 'swap', 'tick']) await readFile(new URL('../public/assets/sounds/pegs-v33-10-1/' + name + '.wav', import.meta.url));
 });
+
+test('33.10.2: the 3D table — a trimmed three.js of our own, the flat board kept for phones without WebGL', async () => {
+  const main = await read('public/assets/js/pegs/main.js'), stage = await read('public/assets/js/pegs/stage3d.js');
+  assert.match(main, /import\('\.\/stage3d\.js\?v=/, 'the 3D table loads after the page, so the menu never waits for it');
+  assert.match(main, /webglAvailable\(\)/);
+  assert.match(main, /createPegsBoard\(flatCanvas\)/, 'the flat board stays as the fallback');
+  assert.match(main, /onLost = \(\) =>/, 'a lost WebGL context falls back to the flat board');
+  assert.match(stage, /from '\.\.\/\.\.\/vendor\/three-r187-pegs\.js'/);
+  assert.match(stage, /PEG_SYMBOLS = Object\.freeze\(\['triangle', 'star', 'plus', 'diamond', 'circle', 'square'\]\)/, 'a symbol under every colour');
+  const vendor = await read('public/assets/vendor/three-r187-pegs.js'), license = await read('public/assets/vendor/three-LICENSE.txt');
+  assert.match(vendor.slice(0, 300), /three\.js r187 \(MIT/);
+  assert.match(license, /The MIT License/);
+  assert.ok(vendor.length < 700_000, 'only what the board draws with');
+  assert.doesNotMatch(vendor, /\beval\(|new Function\(/);
+  const css = await read('public/assets/css/pegs-v33-10-2.css');
+  assert.match(css, /\.pg-stage\.is-3d #pegsBoard\{display:none\}/);
+  assert.match(css, /prefers-reduced-motion/);
+  const bundles = JSON.parse(await read('scripts/style-bundles.json'));
+  assert.ok(bundles['pegs.html'].includes('assets/css/pegs-v33-10-2.css'));
+});
+
