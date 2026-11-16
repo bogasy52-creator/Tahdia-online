@@ -65,7 +65,7 @@ function arena(root,defs,id,state,L,active,material){
  const geo=boardGeometry(state),size=L.c*.91;
  L.track.forEach((p,i)=>{const start=geo.starts.indexOf(i),color=ZAHRA_COLORS[start],fill=start>=0?gradient(defs,id+'-start-'+i,[[0,mix(color,'#ffffff',.18)],[1,mix(color,'#19323b',.35)]]):cell;
   const g=slot(root,p,size,fill,{'data-track':i},L.seats===6?p.a:0,theme);
-  if(start>=0){const next=L.track[(i+1)%L.track.length],a=Math.atan2(next.y-p.y,next.x-p.x)-(L.seats===6?p.a:0,theme);g.append(make('path',{d:'M-2.4 -1.6L.5 -1.6V-3L3 0L.5 3V1.6H-2.4Z',fill:'#fff9e5',transform:`translate(${point(p)}) rotate(${a*180/Math.PI}) scale(.72)`}));}
+  if(start>=0){const next=L.track[(i+1)%L.track.length],a=Math.atan2(next.y-p.y,next.x-p.x)-(L.seats===6?(Number(p.a)||0):0);g.append(make('path',{d:'M-2.4 -1.6L.5 -1.6V-3L3 0L.5 3V1.6H-2.4Z',fill:'#fff9e5',transform:`translate(${point(p)}) rotate(${a*180/Math.PI}) scale(.72)`}));}
   else if(geo.safe.has(i))g.append(make('path',{d:star(p.x,p.y,L.c*.24),fill:'#b69553','data-safe':i}));
  });
  for(let seat=0;seat<L.seats;seat++){

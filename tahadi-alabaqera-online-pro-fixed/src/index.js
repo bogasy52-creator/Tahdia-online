@@ -45,7 +45,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.10.2';
+const RELEASE='33.10.3';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -308,6 +308,14 @@ export default {
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
     if (url.pathname === '/api/client-errors') return clientErrorReport(request,{release:RELEASE});
     // 32.1.0: live presence for the owner's dashboard (see src/presence/presence-registry.js)
+    // 33.10.3: the home page shows how many are playing now (counts only, never who)
+    if (url.pathname === '/api/presence/live' && request.method === 'GET') {
+      const limited = await rateLimit(request, env, 'presence-live', 30, 60_000); if (limited) return limited;
+      if (!env?.BOARD_ROOMS) return json({ ok: false, error: 'unavailable' }, 503);
+      const res = await env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(PRESENCE_OBJECT)).fetch('https://presence.internal/live');
+      const data = await res.json().catch(() => ({ ok: false }));
+      return json(data.ok ? { ok: true, people: Number(data.people) || 0, games: data.games || {} } : { ok: false }, res.ok ? 200 : 503);
+    }
     if (url.pathname === '/api/presence') {
       if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405);
       const limited = await rateLimit(request, env, 'presence', 40, 60_000); if (limited) return limited;

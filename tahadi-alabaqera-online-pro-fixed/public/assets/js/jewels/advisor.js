@@ -1,5 +1,5 @@
 /* Visible-board advice only: no refill seed, rival state or hidden future tiles. */
-import { adjacent, findGroups, legalSwaps } from '../engines/jewels-duel-engine.js?v=33.10.2';
+import { adjacent, findGroups, legalSwaps } from '../engines/jewels-duel-engine.js?v=33.10.3';
 export function analyzeJewelsSwap(board,a,b){
   if(!Array.isArray(board)||board.length!==64||!adjacent(a,b)||!board[a]||!board[b])return null;
   const first=board[a],second=board[b];

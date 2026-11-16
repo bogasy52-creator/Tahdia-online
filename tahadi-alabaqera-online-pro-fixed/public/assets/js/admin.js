@@ -15,7 +15,7 @@
  }
  function paintAccount(account){
   selected=account;$('adminUsername').value=account.profile.username;const box=$('adminAccount');box.replaceChildren();box.append(node('h3',null,account.profile.displayName),node('span','account-handle','@'+account.profile.username),node('span','account-status'+(account.suspended?' suspended':''),account.suspended?'موقوف':'نشط'));
-  const stats=node('div','account-values');for(const [label,value]of [['العملات',account.career.coins],['الخبرة',account.career.xp],['المستوى',account.career.level],['المقتنيات',account.career.owned.length]]){const e=node('div');e.append(node('b',null,value),node('small',null,label));stats.appendChild(e)}box.appendChild(stats);box.append(node('p','admin-last-seen',window.BS_PLAYER_PROFILE?.seen(account.profile)|| (account.profile.online?'متصل الآن':account.profile.lastSeen?'آخر ظهور '+new Date(account.profile.lastSeen).toLocaleString('ar-SA'):'آخر ظهور غير متاح')));$('adminActionForm').classList.remove('hidden');
+  const stats=node('div','account-values');for(const [label,value]of [['العملات',account.career.coins],['الخبرة',account.career.xp],['المستوى',account.career.level],['المقتنيات',account.career.owned.length]]){const e=node('div');e.append(node('b',null,value),node('small',null,label));stats.appendChild(e)}box.appendChild(stats);box.append(node('p','admin-last-seen',window.BS_PLAYER_PROFILE?.seen(account.profile)|| (account.profile.online?'متصل الآن':account.profile.lastSeen?'آخر ظهور '+new Date(account.profile.lastSeen).toLocaleString('ar-SA-u-nu-latn'):'آخر ظهور غير متاح')));$('adminActionForm').classList.remove('hidden');
   fillItems();paintAction();
  }
  function fillItems(){

@@ -223,7 +223,7 @@ function paintSnakesChrome(v, t, me, myId, names, yourTurn) {
     const icon = node('span', 'pb-player-pawn'); icon.append(pawnIcon(seatColor(i)));
     const label = node('span', 'pb-player-name', m.id === myId ? m.name + ' · أنت' : m.name);
     const pos = t.players[i]?.position || 0;
-    const where = node('span', 'pb-player-pos', pos > 0 ? String(pos) : '٠');
+    const where = node('span', 'pb-player-pos', pos > 0 ? String(pos) : '0');
     where.title = pos > 0 ? 'الخانة ' + pos : 'خارج اللوحة';
     chip.append(icon, label, where); return chip;
   }));

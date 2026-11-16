@@ -1,11 +1,11 @@
-import {createEffectsChannel} from '../audio-effects.js?v=33.10.2-club2';
+import {createEffectsChannel} from '../audio-effects.js?v=33.10.3-club2';
 /* Jewels Studio: independent, equal-opening score runs. The engine owns results;
    the local Canvas replay owns animation. Opponent progress never redraws this board. */
-import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace } from '../engines/jewels-race-engine.js?v=33.10.2';
-import { createTable } from '../board-table-v33.js?v=33.10.2';
-import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.2-premium3';
+import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace } from '../engines/jewels-race-engine.js?v=33.10.3';
+import { createTable } from '../board-table-v33.js?v=33.10.3';
+import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.3-premium3';
 
-import { suggestJewelsSwap } from './advisor.js?v=33.10.2-nov14';
+import { suggestJewelsSwap } from './advisor.js?v=33.10.3-nov14';
 
 const $=selector=>document.querySelector(selector);
 let lightEffects=false;try{lightEffects=localStorage.getItem('bs_jewels_light_effects')==='1';}catch{}
@@ -197,7 +197,7 @@ async function apply(next,{animate=false,signal}={}){
   if(incoming.v!==2||incoming.mode!=='race'){if(fresh){resetActivity();ctl.mode='online';ctl.state=incoming;ctl.match=match;$('#menu').hidden=true;$('#game').hidden=false;ctl.legacy=true;$('#jwLegacy').hidden=false;wrap.inert=true;$('#jwLegacyBack').focus();}return;}
   const seat=next.me?.index??0;if(!Array.isArray(incoming.players?.[seat]?.board))return;
   if(fresh){resetActivity();ctl.mode='online';ctl.me=seat;ctl.seat=seat;ctl.match=match;ctl.rewarded=false;ctl.state=null;}
-  ctl.me=seat;ctl.clockOffset=(Number(next.serverNow)||Date.now())-(Number(next.clientReceivedAt)||Date.now());ctl.names=[0,1].map(i=>next.players?.find(p=>p.index===i)?.name||incoming.players[i]?.name||'لاعب');ctl.bots=[0,1].map(i=>Boolean(next.players?.find(p=>p.index===i)?.bot));ctl.users=[0,1].map(i=>{const p=next.players?.find(p=>p.index===i),character=p?.look?.character;return p?.username?{username:p.username,fallback:character?'/assets/heroes/face/'+character+'.webp':''}:character?{fallback:'/assets/heroes/face/'+character+'.webp'}:null;});
+  ctl.me=seat;ctl.clockOffset=(Number(next.serverNow)||Date.now())-(Number(next.clientReceivedAt)||Date.now());ctl.names=[0,1].map(i=>next.players?.find(p=>p.index===i)?.name||incoming.players[i]?.name||'لاعب');ctl.bots=[0,1].map(i=>Boolean(next.players?.find(p=>p.index===i)?.bot));ctl.users=[0,1].map(i=>{const p=next.players?.find(p=>p.index===i),face=window.BS_CAREER_CORE?.heroFace?.(p?.look?.character)||'';return p?.username?{username:p.username,fallback:face}:face?{fallback:face}:null;});
   const previous=ctl.state,state=incomingState(incoming),own=state.players[seat],oldSeq=previous?.players[seat]?.seq??-1;ctl.state=state;
   if(fresh){ctl.shownSeq=own.seq||0;renderer.setBoard(own.board);showGame();afterRun();return;}
   if(ctl.pending&&(own.seq>ctl.pending.seq||state.finished)){clearTimeout(ctl.pending.timer);ctl.pending=null;}

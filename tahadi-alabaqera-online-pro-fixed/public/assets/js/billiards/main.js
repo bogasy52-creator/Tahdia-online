@@ -571,8 +571,8 @@ function renderShotContext() {
 function renderAimInfo() {
   const s = ctl.state, el = $('#biAimInfo'); if (!s) return;
   const angle = Math.atan2(ctl.aim.dir[1], ctl.aim.dir[0]) * 180 / Math.PI;
-  $('#biFine').setAttribute('aria-valuenow', angle.toFixed(1));
-  $('#biFine').setAttribute('aria-valuetext', `زاوية ${Math.round(angle)} درجة`);
+  if (fine) { fine.paint(myTurn()); fine.value(`زاوية ${Math.round(angle)} درجة`, Math.round(angle)); }
+  else { $('#biFine').setAttribute('aria-valuenow', angle.toFixed(1)); $('#biFine').setAttribute('aria-valuetext', `زاوية ${Math.round(angle)} درجة`); }
   if (!myTurn()) { el.textContent = ctl.anim || ctl.busy ? 'الضربة قيد التنفيذ…' : ''; el.classList.remove('warn'); return; }
   const cue = cuePos(); if (!cue) { el.textContent = 'ضع البيضاء أولًا'; return; }
   if (s.inHand && !canPlace(s, cue[0], cue[1])) { el.textContent = 'مكان البيضاء غير صالح'; el.classList.add('warn'); return; }
@@ -632,7 +632,7 @@ function beginTurn() {
   if (humanTurn()) defaultAim();
   renderPlates(); renderStatus(); invalidate();
 }
-function setPower(p) { ctl.power = p; const el = $('#biPower'); el.style.setProperty('--p', p.toFixed(3)); el.setAttribute('aria-valuenow', String(Math.round(p * 100))); el.setAttribute('aria-valuetext', Math.round(p * 100) + ' بالمئة'); el.classList.toggle('on', p > 0.02); el.querySelector('b').textContent = p > 0.02 ? Math.round(p * 100) + '%' : 'اسحب وأفلت للضرب'; }
+function setPower(p) { ctl.power = p; const el = $('#biPower'); el.style.setProperty('--p', p.toFixed(3)); el.setAttribute('aria-valuenow', String(Math.round(p * 100))); el.setAttribute('aria-valuetext', Math.round(p * 100) + ' بالمئة'); el.classList.toggle('on', p > 0.02); el.querySelector('b').textContent = p > 0.02 ? Math.round(p * 100) + '% · أفلت' : 'اسحب وأفلت للضرب'; el.classList.toggle('hard', p >= 0.75); el.classList.toggle('far', p >= 0.45); }
 let aimSent = 0, aimTimer = 0;
 function shareAim() {
   if (ctl.mode !== 'online' || !myTurn()) return;
@@ -710,6 +710,10 @@ function pullBack(power, ms) { return tween(ms, (k) => { if (ctl.display) ctl.di
 
 /* ---------- input ---------- */
 function canvasPoint(ev) { const r = view.canvas.getBoundingClientRect(); return view.toWorld((ev.clientX - r.left) * view.dpr, (ev.clientY - r.top) * view.dpr); }
+// 33.10.3: a finger on the cloth turns the cue round the white ball (it never jumps to the touch);
+// a tap on a ball lines it up for the pocket, a tap on the cloth aims at that spot.
+const CUE = window.BS_CUE_CONTROLS || null;
+const nearCueInHand = (x, y) => Boolean(ctl.state?.inHand && ctl.place && Math.hypot(x - ctl.place[0], y - ctl.place[1]) < R * 3.4);
 let drag = null;
 view.canvas.addEventListener('pointerdown', (ev) => {
   Sound.unlock();
@@ -717,6 +721,7 @@ view.canvas.addEventListener('pointerdown', (ev) => {
   const [x, y] = canvasPoint(ev), s = ctl.state;
   view.canvas.setPointerCapture?.(ev.pointerId);
   if (s.inHand && ctl.place && Math.hypot(x - ctl.place[0], y - ctl.place[1]) < R * 3.4) { drag = { kind: 'place', dx: ctl.place[0] - x, dy: ctl.place[1] - y }; return; }
+  if (CUE) { try { view.canvas.releasePointerCapture?.(ev.pointerId); } catch {} return; } // turning is below
   drag = { kind: 'aim', x0: ev.clientX, y0: ev.clientY, wx: x, wy: y }; view.loupe = true; aimAt(x, y);
 });
 view.canvas.addEventListener('pointermove', (ev) => {
@@ -762,8 +767,25 @@ function aimAt(x, y) {
   ctl.aim.dir = [dx / l, dy / l]; shareAim(); invalidate();
 }
 function rotateAim(a) { const [x, y] = ctl.aim.dir, c = Math.cos(a), s = Math.sin(a); const nx = x * c - y * s, ny = x * s + y * c, l = Math.hypot(nx, ny); ctl.aim.dir = [nx / l, ny / l]; shareAim(); invalidate(); }
-// fine aim
-{
+const turning = CUE?.aimDrag(view.canvas, {
+  can: () => myTurn() && !drag && Boolean(cuePos()),
+  point: (ev) => { const [x, y] = canvasPoint(ev); return { x, y }; },
+  center: () => { const [x, y] = cuePos(); return { x, y }; },
+  get: () => Math.atan2(ctl.aim.dir[1], ctl.aim.dir[0]),
+  set: (a) => { ctl.aim.dir = [Math.cos(a), Math.sin(a)]; shareAim(); invalidate(); },
+  lever: 46,
+  claim: (p) => !nearCueInHand(p.x, p.y),
+  start: () => { view.loupe = true; invalidate(); },
+  end: () => { view.loupe = false; invalidate(); },
+  tap: (p) => {
+    let hit = -1, near = R * 1.9;
+    for (let n = 1; n < 16; n++) { const b = view.balls[n]; if (!b) continue; const dd = Math.hypot(b[0] - p.x, b[1] - p.y); if (dd < near) { near = dd; hit = n; } }
+    if (!(hit > 0 && potAim(hit))) aimAt(p.x, p.y);
+  },
+});
+const fine = CUE ? CUE.fineRuler($('#biFine'), { can: () => myTurn() && !turning?.active, rotate: rotateAim, perPx: 0.0011, nudge: 0.0026, label: 'تصويب دقيق', hint: 'دقّق' }) : null;
+// fine aim (without the cue controls)
+if (!fine) {
   const el = $('#biFine'); let last = null, off = 0;
   el.addEventListener('pointerdown', (ev) => { if (!myTurn()) return; last = ev.clientX; el.setPointerCapture?.(ev.pointerId); });
   el.addEventListener('pointermove', (ev) => { if (last === null || !myTurn()) return; const dx = ev.clientX - last; last = ev.clientX; off += dx; el.style.setProperty('--fine', off + 'px'); rotateAim(dx * 0.0011); });

@@ -1,0 +1,118 @@
+/* Tahdia 33.10.3 — the home page, redrawn as a games lobby.
+   One big moment: the spotlight of tonight's games, full-bleed art you swipe through (a bento on wide
+   screens). Everything under it is quiet: four quick doors (a room by code, the group room, cups, the
+   ranking), then the library with a filter bar that stays in reach while you scroll. Navy night,
+   brass gold for what you press, mint for what is live. */
+html body.home-v33103.home-v26{
+  --hm-night:#080e1c;--hm-deep:#050a15;--hm-ink:#0e1729;--hm-raise:#132036;--hm-raise-2:#18284a;--hm-line:rgba(255,255,255,.08);--hm-line-2:rgba(255,255,255,.14);
+  --hm-text:#f5f2ea;--hm-muted:#a6b3c6;--hm-gold:#f7ba55;--hm-gold-hi:#ffd98a;--hm-gold-deep:#a8701c;--hm-mint:#7fe0c0;--hm-ink-dark:#231606;
+  background:radial-gradient(60% 40% at 92% -6%,rgba(247,186,85,.13),transparent 70%),radial-gradient(55% 45% at -8% 32%,rgba(127,224,192,.07),transparent 70%),linear-gradient(180deg,#0a1222 0%,var(--hm-night) 40%,var(--hm-deep) 100%) fixed,var(--hm-deep)!important;
+  color:var(--hm-text)!important;
+}
+html body.home-v33103.home-v26 .bs-shell{max-width:1240px!important}
+
+/* ---------- the hero: a greeting, then the spotlight ---------- */
+html body.home-v33103.home-v26 .home-stage{display:block!important;margin:6px 0 0!important}
+html body.home-v33103.home-v26 .home-lead{display:grid!important;gap:14px!important}
+html body.home-v33103.home-v26 .home-hero{display:grid!important;gap:14px!important;height:auto!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+html body.home-v33103.home-v26 .home-hero .hero-copy{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-auto-flow:row!important;align-items:start!important;justify-items:start!important;gap:4px!important;padding:6px 2px 0!important;max-width:none!important;text-align:start!important}
+html body.home-v33103.home-v26 .home-hero .home-greet{margin:0!important;font-size:14px!important;font-weight:700!important;color:var(--hm-gold)!important}
+html body.home-v33103.home-v26 .home-hero .hero-copy h1{margin:0!important;font-size:clamp(28px,7.6vw,46px)!important;line-height:1.12!important;font-weight:900!important;letter-spacing:0!important;color:var(--hm-text)!important}
+html body.home-v33103.home-v26 .home-hero .hero-copy>p:last-child{margin:2px 0 0!important;font-size:14.5px!important;line-height:1.7!important;color:var(--hm-muted)!important;max-width:46ch}
+
+html body.home-v33103.home-v26 .home-featured{display:flex!important;gap:12px!important;grid-template-columns:none!important;overflow-x:auto!important;overflow-y:visible!important;scroll-snap-type:x mandatory!important;scroll-padding-inline:16px!important;overscroll-behavior-x:contain;margin:0 -16px!important;padding:4px 16px 6px!important;scrollbar-width:none}
+html body.home-v33103.home-v26 .home-featured::-webkit-scrollbar{display:none}
+html body.home-v33103.home-v26 .home-feature{position:relative!important;flex:0 0 86%!important;min-width:0!important;aspect-ratio:16/11!important;scroll-snap-align:center;display:block!important;border-radius:28px!important;overflow:hidden!important;border:1px solid var(--hm-line-2)!important;background:#0c1424!important;box-shadow:0 22px 44px rgba(0,0,0,.45)!important;text-decoration:none!important;isolation:isolate;transform:none!important}
+html body.home-v33103.home-v26 .home-feature img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;transition:transform .6s cubic-bezier(.2,.7,.2,1)!important;z-index:0}
+html body.home-v33103.home-v26 .home-feature::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(5,10,21,0) 38%,rgba(5,10,21,.55) 64%,rgba(5,10,21,.94) 100%)}
+html body.home-v33103.home-v26 .home-feature-copy{position:absolute!important;inset:auto 0 0 0!important;z-index:2;display:grid!important;grid-template-columns:1fr auto!important;grid-template-areas:"tag tag" "title cta" "sub cta"!important;align-items:end!important;column-gap:12px!important;row-gap:2px!important;padding:16px 18px 18px!important;background:none!important;text-align:start!important}
+html body.home-v33103.home-v26 .home-feature-copy small{grid-area:tag;justify-self:start;margin-bottom:6px;padding:4px 10px!important;border-radius:999px;background:rgba(5,10,21,.62);border:1px solid rgba(255,255,255,.16);font-size:11.5px!important;font-weight:700!important;color:#efe9dc!important;backdrop-filter:blur(6px)}
+html body.home-v33103.home-v26 .home-feature-copy b{grid-area:title;font-size:clamp(26px,7.4vw,34px)!important;line-height:1.1!important;font-weight:900!important;color:#fff!important;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+html body.home-v33103.home-v26 .home-feature-copy em{grid-area:sub;font-style:normal;font-size:13px;color:#d7dce6;line-height:1.5}
+html body.home-v33103.home-v26 .home-feature-copy i{grid-area:cta;align-self:end;display:inline-grid;place-items:center;min-width:76px;height:42px;padding:0 18px!important;border-radius:999px!important;font-style:normal!important;font-size:15px!important;font-weight:900!important;color:var(--hm-ink-dark)!important;background:linear-gradient(180deg,var(--hm-gold-hi),var(--hm-gold))!important;box-shadow:0 4px 0 var(--hm-gold-deep),0 10px 22px rgba(0,0,0,.4)!important;position:static!important}
+html body.home-v33103.home-v26 .home-feature:hover img{transform:scale(1.04)}
+html body.home-v33103.home-v26 .home-feature:focus-visible{outline:3px solid var(--hm-gold);outline-offset:3px}
+html body.home-v33103.home-v26 .home-spot-dots{display:flex;justify-content:center;gap:6px;min-height:8px;margin-top:-4px}
+html body.home-v33103.home-v26 .home-spot-dots i{width:7px;height:7px;border-radius:7px;background:rgba(255,255,255,.22);transition:width .3s,background .3s}
+html body.home-v33103.home-v26 .home-spot-dots i.on{width:22px;background:var(--hm-gold)}
+
+html body.home-v33103.home-v26 .home-hero .home-live{display:inline-flex;align-items:center;gap:8px;justify-self:start;margin:6px 0 0!important;padding:5px 12px;border-radius:999px;background:rgba(127,224,192,.1);border:1px solid rgba(127,224,192,.3);color:var(--hm-mint)!important;font-size:13px!important;font-weight:700!important}
+html body.home-v33103.home-v26 .home-hero .home-live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--hm-mint);box-shadow:0 0 0 0 rgba(127,224,192,.6);animation:hm-live 2s ease-out infinite}
+html body.home-v33103.home-v26 .home-hero .home-live[hidden]{display:none!important}
+@keyframes hm-live{0%{box-shadow:0 0 0 0 rgba(127,224,192,.6)}100%{box-shadow:0 0 0 9px rgba(127,224,192,0)}}
+html body.home-v33103.home-v26 .home-playing{position:absolute;z-index:3;top:10px;inset-inline-end:10px;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:rgba(5,10,21,.72);border:1px solid rgba(127,224,192,.4);color:var(--hm-mint);font-size:11px;font-weight:700;backdrop-filter:blur(6px)}
+html body.home-v33103.home-v26 .home-playing::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--hm-mint)}
+html body.home-v33103.home-v26 .home-feature .home-playing{top:14px;inset-inline-end:14px}
+
+/* four quick doors */
+html body.home-v33103.home-v26 .home-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin:4px 0 0!important;padding:0!important}
+html body.home-v33103.home-v26 .home-actions>*{display:grid!important;grid-template-columns:auto 1fr!important;grid-template-rows:auto auto!important;align-items:center!important;column-gap:11px!important;row-gap:0!important;min-height:66px!important;padding:12px 14px!important;border-radius:20px!important;border:1px solid var(--hm-line)!important;background:linear-gradient(180deg,var(--hm-raise),var(--hm-ink))!important;box-shadow:0 10px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05)!important;color:var(--hm-text)!important;text-align:start!important;text-decoration:none!important;font:inherit!important;cursor:pointer;width:auto!important;height:auto!important;justify-content:stretch!important}
+html body.home-v33103.home-v26 .home-actions>*:hover{border-color:rgba(247,186,85,.45)!important}
+html body.home-v33103.home-v26 .home-tile-icon{grid-row:1/3;display:grid!important;place-items:center;width:42px;height:42px;border-radius:14px;background:rgba(247,186,85,.12);color:var(--hm-gold);font-size:20px!important;font-weight:900!important}
+html body.home-v33103.home-v26 .home-tile-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html body.home-v33103.home-v26 .home-actions b{font-size:15.5px!important;font-weight:900!important;line-height:1.3!important;color:var(--hm-text)!important}
+html body.home-v33103.home-v26 .home-actions small{font-size:12px!important;line-height:1.4!important;color:var(--hm-muted)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.home-v33103.home-v26 .home-join-open .home-tile-icon{background:rgba(127,224,192,.12);color:var(--hm-mint)}
+html body.home-v33103.home-v26 .club-season-link{display:none!important}
+html body.home-v33103.home-v26 .home-resume-v33:not([hidden]){display:block!important;margin:2px 0 0!important}
+html body.home-v33103.home-v26 .home-resume-card{display:grid!important;grid-template-columns:auto 1fr auto!important;align-items:center;gap:12px!important;padding:14px 16px!important;border-radius:20px!important;border:1px solid rgba(127,224,192,.35)!important;background:linear-gradient(90deg,rgba(127,224,192,.14),rgba(127,224,192,.04))!important;color:var(--hm-text)!important;text-decoration:none!important}
+
+/* ---------- the library ---------- */
+html body.home-v33103.home-v26 .home-games{margin-top:30px!important;scroll-margin-top:12px}
+html body.home-v33103.home-v26 .home-section-heading{display:grid!important;grid-template-columns:1fr!important;gap:12px!important;align-items:end!important;margin:0 0 12px!important}
+html body.home-v33103.home-v26 .home-section-heading h2{margin:0!important;font-size:clamp(24px,6vw,32px)!important;font-weight:900!important;color:var(--hm-text)!important}
+html body.home-v33103.home-v26 .home-section-heading p{margin:2px 0 0!important;color:var(--hm-muted)!important;font-size:14px!important}
+html body.home-v33103.home-v26 .game-search{width:100%!important;min-height:48px!important;border-radius:16px!important;border:1px solid var(--hm-line-2)!important;background:rgba(255,255,255,.04)!important;padding:0 14px!important}
+html body.home-v33103.home-v26 .game-search svg{width:20px;height:20px;fill:none;stroke:var(--hm-muted);stroke-width:2;stroke-linecap:round}
+html body.home-v33103.home-v26 .game-search input{font-size:15px!important;color:var(--hm-text)!important}
+html body.home-v33103.home-v26 .game-library-tools{position:sticky!important;top:0!important;z-index:20!important;display:grid!important;gap:6px!important;margin:0 -16px 12px!important;padding:10px 16px 8px!important;background:linear-gradient(180deg,rgba(8,14,28,.96),rgba(8,14,28,.86))!important;backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
+html body.home-v33103.home-v26 .game-library-tools.is-stuck{border-bottom-color:var(--hm-line)}
+html body.home-v33103.home-v26 .game-filter-list{display:flex!important;gap:8px!important;overflow-x:auto!important;flex-wrap:nowrap!important;scrollbar-width:none;margin:0!important;padding:0!important}
+html body.home-v33103.home-v26 .game-filter-list::-webkit-scrollbar{display:none}
+html body.home-v33103.home-v26 .game-filter-list button{flex:0 0 auto!important;min-height:40px!important;padding:0 16px!important;border-radius:999px!important;border:1px solid var(--hm-line-2)!important;background:rgba(255,255,255,.04)!important;color:#dfe5ee!important;font-size:14px!important;font-weight:700!important;box-shadow:none!important}
+html body.home-v33103.home-v26 .game-filter-list button[aria-pressed="true"]{background:linear-gradient(180deg,var(--hm-gold-hi),var(--hm-gold))!important;color:var(--hm-ink-dark)!important;border-color:transparent!important}
+html body.home-v33103.home-v26 .library-count{margin:0!important;font-size:12px!important;color:var(--hm-muted)!important}
+html body.home-v33103.home-v26 .home-game-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+html body.home-v33103.home-v26 .home-game{position:relative!important;display:flex!important;flex-direction:column!important;min-width:0!important;padding:0 0 12px!important;border-radius:22px!important;border:1px solid var(--hm-line)!important;background:linear-gradient(180deg,var(--hm-raise),var(--hm-ink))!important;box-shadow:0 12px 26px rgba(0,0,0,.28)!important;overflow:hidden!important;text-decoration:none!important;transform:none!important;transition:border-color .2s,transform .2s!important}
+html body.home-v33103.home-v26 .home-game:hover{border-color:rgba(247,186,85,.45)!important;transform:translateY(-3px)!important}
+html body.home-v33103.home-v26 .home-game .game-cover{position:relative!important;aspect-ratio:16/11!important;height:auto!important;margin:0 0 10px!important;border-radius:0!important;overflow:hidden!important;background:#0b1322!important;border:0!important}
+html body.home-v33103.home-v26 .home-game .game-cover img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;transform:none!important}
+html body.home-v33103.home-v26 .home-game .game-cover::after{content:"";position:absolute;inset:auto 0 0 0;height:40%;background:linear-gradient(180deg,transparent,rgba(14,23,41,.85));pointer-events:none}
+html body.home-v33103.home-v26 .home-game-grid .home-game .game-number{display:inline-block!important;position:absolute!important;top:10px!important;inset-inline-start:10px!important;inset-inline-end:auto!important;z-index:2!important;padding:3px 10px!important;border-radius:999px!important;font-size:11px!important;font-weight:900!important;line-height:1.5!important;color:var(--hm-ink-dark)!important;background:linear-gradient(180deg,var(--hm-gold-hi),var(--hm-gold))!important;box-shadow:0 4px 10px rgba(0,0,0,.35)!important;border:0!important;width:auto!important;height:auto!important;min-width:0!important}
+html body.home-v33103.home-v26 .home-game h3{order:1;margin:0 12px 2px!important;font-size:16.5px!important;line-height:1.35!important;font-weight:900!important;color:var(--hm-text)!important}
+html body.home-v33103.home-v26 .home-game>small{order:2;display:block!important;min-height:0!important;padding:0 12px!important;font-size:11.5px!important;line-height:1.5!important;color:var(--hm-muted)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+html body.home-v33103.home-v26 .home-game>p,html body.home-v33103.home-v26 .home-game>b{display:none!important}
+html body.home-v33103.home-v26 .home-game.hidden{display:none!important}
+html body.home-v33103.home-v26 .v14-empty{border-radius:20px!important}
+
+/* ---------- today, progress and rewards: the same cards as the rest ---------- */
+html body.home-v33103.home-v26 .home-today-v17,html body.home-v33103.home-v26 .home-profile,html body.home-v33103.home-v26 .home-rewards>section,html body.home-v33103.home-v26 .home-missions-link{border-radius:24px!important;border:1px solid var(--hm-line)!important;background:linear-gradient(180deg,var(--hm-raise),var(--hm-ink))!important;box-shadow:0 14px 30px rgba(0,0,0,.25)!important}
+html body.home-v33103.home-v26 .home-today-v17{margin-top:28px!important}
+html body.home-v33103.home-v26 .home-daily-grid-v17 a{border-radius:18px!important}
+
+/* ---------- wider screens: the spotlight becomes a bento, the library spreads out ---------- */
+@media (min-width:760px){
+  html body.home-v33103.home-v26 .home-featured{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;grid-auto-flow:dense;gap:14px!important;overflow:visible!important;margin:0!important;padding:0!important;height:clamp(380px,46vw,520px)}
+  html body.home-v33103.home-v26 .home-feature{flex:none!important;aspect-ratio:auto!important;height:100%!important}
+  html body.home-v33103.home-v26 .home-feature:first-child{grid-column:span 2;grid-row:span 2}
+  html body.home-v33103.home-v26 .home-feature:not(:first-child) .home-feature-copy b{font-size:22px!important}
+  html body.home-v33103.home-v26 .home-feature:not(:first-child) .home-feature-copy em{display:none}
+  html body.home-v33103.home-v26 .home-feature:not(:first-child) .home-feature-copy i{min-width:0;height:36px;padding:0 14px!important;font-size:13px!important}
+  html body.home-v33103.home-v26 .home-feature:first-child .home-feature-copy{padding:26px 28px 28px!important}
+  html body.home-v33103.home-v26 .home-feature:first-child .home-feature-copy b{font-size:clamp(34px,4vw,48px)!important}
+  html body.home-v33103.home-v26 .home-feature:first-child .home-feature-copy em{font-size:15px}
+  html body.home-v33103.home-v26 .home-spot-dots{display:none}
+  html body.home-v33103.home-v26 .home-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  html body.home-v33103.home-v26 .home-section-heading{grid-template-columns:1fr minmax(260px,340px)!important}
+  html body.home-v33103.home-v26 .game-library-tools{margin:0 0 14px!important;padding:10px 0 8px!important}
+  html body.home-v33103.home-v26 .home-game-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+  html body.home-v33103.home-v26 .home-game>p{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;order:3;overflow:hidden;margin:6px 12px 0!important;min-height:0!important;font-size:13px!important;line-height:1.6!important;color:#c3ccd9!important}
+}
+@media (min-width:1080px){
+  html body.home-v33103.home-v26 .home-game-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media (prefers-reduced-motion:reduce){
+  html body.home-v33103.home-v26 .home-feature img,html body.home-v33103.home-v26 .home-game{transition:none!important}
+  html body.home-v33103.home-v26 .home-hero .home-live::before{animation:none}
+  html body.home-v33103.home-v26 .home-feature:hover img{transform:none}
+}

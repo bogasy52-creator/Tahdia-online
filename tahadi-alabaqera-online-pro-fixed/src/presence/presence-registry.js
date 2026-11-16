@@ -31,6 +31,7 @@ export const PRESENCE_PAGES = Object.freeze({
   dice: { key: 'dice', label: 'تحدي النرد' },
   wordbomb: { key: 'wordbomb', label: 'صيد الكلمات' },
   chaos: { key: 'chaos', label: 'سباق الفوضى' },
+  uno: { key: 'chaos', label: 'أونو' },
   focus: { key: 'focus', label: 'مواجهة التركيز' },
   cipher: { key: 'cipher', label: 'ساحة الشفرات' },
   tournament: { key: 'tournament', label: 'البطولات' },
@@ -150,6 +151,16 @@ export class PresenceRegistry {
     };
   }
 
+  /** 33.10.3: how many people are on the site and in each game right now — counts only, for the home page. */
+  live(now = Date.now()) {
+    this.prune(now);
+    const people = new Map();
+    for (const row of this.entries.values()) { const seen = people.get(row.did); if (!seen || row.last > seen.last) people.set(row.did, row); }
+    const games = {};
+    for (const row of people.values()) { const { key } = presencePage(row.page); games[key] = (games[key] || 0) + 1; }
+    return { ok: true, people: people.size, games };
+  }
+
   async fetch(request) {
     await this.load();
     const url = new URL(request.url), now = Date.now();
@@ -164,6 +175,7 @@ export class PresenceRegistry {
       await this.save(now, beat.vis === 'leave' && this.entries.size === 0);
       return json({ ...result, next: PRESENCE_BEAT_MS });
     }
+    if (url.pathname === '/live' && request.method === 'GET') return json(this.live(now));
     if (url.pathname === '/summary' && request.method === 'GET') { const data = this.summary(now); await this.save(now); return json(data); }
     return json({ ok: false, error: 'not_found' }, 404);
   }

@@ -68,7 +68,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/home-v33-8.css",
-    "assets/css/club-complete-v33-10.css"
+    "assets/css/club-complete-v33-10.css",
+    "assets/css/home-v33-10-3.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -537,7 +538,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/carrom-club-v33-9-10.css",
-    "assets/css/game-quality-v33-9-12.css"
+    "assets/css/game-quality-v33-9-12.css",
+    "assets/css/cue-controls-v33-10-3.css"
   ],
   "hockey.html": [
     "assets/css/hockey-v33-7.css",
@@ -566,7 +568,8 @@
     "assets/css/game-quality-v33-9-12.css",
     "assets/css/trio-premium-v33-10.css",
     "assets/css/club-complete-v33-10.css",
-    "assets/css/tournament.css"
+    "assets/css/tournament.css",
+    "assets/css/cue-controls-v33-10-3.css"
   ],
   "jewels.html": [
     "assets/css/platform.css",

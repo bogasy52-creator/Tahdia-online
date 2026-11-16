@@ -2,7 +2,10 @@
    the room plays every shot to its end and the pages replay it), against the computer, or two on one
    phone. One pair of hands: the striker slides on the rail under the board (or is dragged on its line),
    and the shot is a slingshot — touch the board anywhere, pull back, let go. The line shows where the
-   striker goes and what it hits; the ring round the striker shows the strength. */
+   striker goes and what it hits; the ring round the striker shows the strength.
+   33.10.3: aiming that does what the hand means — a finger on the board turns the aim round the striker
+   (it never jumps to the touch), the ruler under the board turns it a hair at a time, and the strength
+   is its own pull: drag it back, let go to strike. Pulling the striker itself still works as before. */
 import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, readCarromAim, FIXED_DT } from './engine.js?v=33.9.12-quality1';
 import { createCarromRenderer } from './render.js?v=33.9.12-quality1';
 import { createTable } from '../board-table-v33.js?v=33.9.10';
@@ -15,6 +18,7 @@ const play = (name, volume) => { try { window.BS_AUDIO?.play?.(name, volume ? { 
 const reduced = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
 const canvas = $('carromBoard'), renderer = createCarromRenderer(canvas);
 
+const CUE = window.BS_CUE_CONTROLS || null;
 const ctl = { mode: 'ai', state: null, anim: null, animDone: null, names: ['أنت', 'الكمبيوتر'], users: [null, null], bots: [false, true], me: 0, viewSeat: 0, pending: null, shownSeq: 0, match: 0, endShown: false, rewarded: false, receipt: '', turnSeen: -1, bot: null, running: false, paused: false };
 let angle = -Math.PI / 2, power = 0, remote = null, table = null, room = null, frame = 0, last = 0, acc = 0;
 
@@ -81,7 +85,8 @@ function statusText() {
   if (ctl.anim) return 'الأحجار تتحرك…';
   if (ctl.pending) return 'الضربة طايرة…';
   if (ctl.bot) return 'الكمبيوتر يصوّب…';
-  if (canPlay()) return ctl.mode === 'hotseat' ? 'دور ' + ctl.names[s.turn] + ' · اسحب لورا وأفلت' : 'دورك · اسحب لورا وأفلت';
+  const how = CUE ? 'صوّب ثم اسحب القوة وأفلت' : 'اسحب لورا وأفلت';
+  if (canPlay()) return ctl.mode === 'hotseat' ? 'دور ' + ctl.names[s.turn] + ' · ' + how : 'دورك · ' + how;
   return 'دور ' + (ctl.names[s.turn] || 'الخصم') + '…';
 }
 function renderStatus() {
@@ -141,6 +146,9 @@ function paintControls() {
   $('cmShotControls').disabled = !ready;
   $('cmFire').disabled = !ready || power < 0.08;
   $('cmCancel').disabled = !ready || (!hand && power === 0);
+  const free = ready && !hand && sliderPointer === null;
+  ruler?.paint(free); pull?.paint(free);
+  ruler?.value(aimControl.getAttribute('aria-valuetext') || '', Math.round(degrees));
 }
 aimControl.addEventListener('input', () => {
   if (!canPlay()) return;
@@ -174,6 +182,7 @@ canvas.addEventListener('pointerdown', (e) => {
   if (!p) return;
   e.preventDefault(); window.BS_AUDIO?.unlock?.(); canvas.focus({ preventScroll: true });
   const onStriker = Math.hypot(p.x - s.striker.x, p.y - s.striker.y) < s.striker.r * 1.9;
+  if (CUE && !onStriker) return; // a finger off the striker turns the aim (below)
   hand = { id: e.pointerId, sx: e.clientX, sy: e.clientY, p0: p, initialPower: power, kind: onStriker ? 'maybe' : 'sling', moved: false };
   try { canvas.setPointerCapture(e.pointerId); } catch {}
 });
@@ -215,6 +224,37 @@ function cancelAim() {
   sendAim(); draw();
 }
 const interrupted = (e) => { if (hand?.id === e.pointerId) cancelAim(); };
+
+/* ---------- 33.10.3: turn, fine-tune, pull ---------- */
+const onStrikerAt = (p) => { const s = ctl.state; return Boolean(s && Math.hypot(p.x - s.striker.x, p.y - s.striker.y) < s.striker.r * 1.9); };
+const turnTo = (a) => { angle = CUE.wrap(a); sendAim(); draw(); };
+const turning = CUE?.aimDrag(canvas, {
+  can: () => canPlay() && !hand && sliderPointer === null && !pull?.dragging,
+  point: (e) => renderer.point(e.clientX, e.clientY, ctl.viewSeat),
+  center: () => ctl.state.striker,
+  get: () => angle,
+  set: turnTo,
+  lever: 300,
+  claim: (p) => !onStrikerAt(p),
+  start: () => { window.BS_AUDIO?.unlock?.(); canvas.focus({ preventScroll: true }); canvas.classList.add('turning'); },
+  end: () => canvas.classList.remove('turning'),
+  // a tap: on a coin aims at it, on the board aims at that spot
+  tap: (p) => {
+    const s = ctl.state, coin = s.coins.find((c) => !c.pocketed && Math.hypot(c.x - p.x, c.y - p.y) < c.r * 1.8), at = coin || p;
+    if (Math.hypot(at.x - s.striker.x, at.y - s.striker.y) < s.striker.r) return;
+    turnTo(Math.atan2(at.y - s.striker.y, at.x - s.striker.x)); play('tap', 0.12);
+  },
+});
+const ruler = CUE && $('cmRuler') ? CUE.fineRuler($('cmRuler'), { can: () => canPlay() && !hand && !turning?.active, rotate: (d) => turnTo(angle + d), perPx: 0.0012, nudge: 0.0035, label: 'تصويب دقيق', hint: 'دقّق' }) : null;
+let pullStep = 0;
+const pull = CUE && $('cmPull') ? CUE.powerPull($('cmPull'), {
+  can: () => canPlay() && !hand && sliderPointer === null && !turning?.active,
+  get: () => power,
+  change: (p) => { power = p; const step = Math.round(p * 10); if (step !== pullStep) { pullStep = step; if (step % 2 === 0) play('tap', 0.1); window.BS_AUDIO?.vibrate?.(4); } sendAim(); draw(); },
+  fire: (p) => { pullStep = 0; fire(angle, p); },
+  cancel: () => { pullStep = 0; power = 0; sendAim(); draw(); },
+  min: 0.08, hint: 'اسحب لورا وأفلت', armed: 'أفلت للضربة', weak: 'رجّعها للبداية تلغي', label: 'قوة الضربة: اسحب وأفلت، أو الأسهم ثم Enter',
+}) : null;
 canvas.addEventListener('pointercancel', interrupted); canvas.addEventListener('lostpointercapture', interrupted);
 addEventListener('blur', () => { if (hand) cancelAim(); sliderPointer = null; slider.classList.remove('drag'); });
 
@@ -257,7 +297,7 @@ function onTurn() {
   if (s.turnNo === ctl.turnSeen) { draw(); return; }
   ctl.turnSeen = s.turnNo;
   if (ctl.mode === 'hotseat') ctl.viewSeat = s.turn;
-  angle = s.turn === 0 ? -Math.PI / 2 : Math.PI / 2; power = 0.55; hand = null; sliderPointer = null; slider.classList.remove('drag');
+  angle = s.turn === 0 ? -Math.PI / 2 : Math.PI / 2; power = CUE ? 0 : 0.55; hand = null; sliderPointer = null; slider.classList.remove('drag');
   if (ctl.mode === 'ai' && s.turn === 1 && s.phase === 'aim' && s.winner === null) {
     const plan = chooseCarromShot(s, prefs.level); placeStriker(s, plan.x);
     ctl.bot = { ...plan, t: 0, at: performance.now() };
@@ -351,7 +391,7 @@ async function apply(next, { animate: moving }) {
   ctl.me = next.me?.index ?? 0;
   ctl.names = [0, 1].map((i) => next.players?.find((p) => p.index === i)?.name || s.players?.[i]?.name || 'لاعب');
   ctl.bots = [0, 1].map((i) => Boolean(next.players?.find((p) => p.index === i)?.bot));
-  ctl.users = [0, 1].map((i) => { const p = next.players?.find((x) => x.index === i); const hero = p?.look?.character; return p?.username ? { username: p.username, fallback: hero ? '/assets/heroes/face/' + hero + '.webp' : '' } : hero ? { photo: null, fallback: '/assets/heroes/face/' + hero + '.webp', username: '' } : null; });
+  ctl.users = [0, 1].map((i) => { const p = next.players?.find((x) => x.index === i); const hero = window.BS_CAREER_CORE?.heroFace?.(p?.look?.character) || ''; return p?.username ? { username: p.username, fallback: hero } : hero ? { photo: null, fallback: hero, username: '' } : null; });
   if (fresh) {
     cancelPlayback();
     ctl.mode = 'online'; ctl.match = next.startedAt || 0; ctl.endShown = false; ctl.rewarded = false; ctl.pending = null; ctl.anim = null; ctl.bot = null; ctl.turnSeen = -1; lastBanner = '';

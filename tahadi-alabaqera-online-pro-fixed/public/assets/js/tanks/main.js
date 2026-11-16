@@ -1,7 +1,7 @@
-import {TANKS,TANK_COLORS,WEAPONS,createTankBattle,stepTankBattle,setTankInput} from './core.js?v=33.10.2-tanks2';
-import {createTankRenderer,sampleTankView,screenVectorToTank} from './render.js?v=33.10.2-premium3';
-import {TanksOnline,tankCode} from './online.js?v=33.10.2-tanks2';
-import {createTankAudio} from './audio.js?v=33.10.2-tanks2';
+import {TANKS,TANK_COLORS,WEAPONS,createTankBattle,stepTankBattle,setTankInput} from './core.js?v=33.10.3-tanks2';
+import {createTankRenderer,sampleTankView,screenVectorToTank} from './render.js?v=33.10.3-premium3';
+import {TanksOnline,tankCode} from './online.js?v=33.10.3-tanks2';
+import {createTankAudio} from './audio.js?v=33.10.3-tanks2';
 const $=id=>document.getElementById(id),canvas=$('tkCanvas'),audio=createTankAudio(),keys=new Set(),cache={},stickResets=[];
 let light=false;try{light=localStorage.getItem('bs_tanks_light')==='1';}catch{}
 let g=null,mode='practice',seat=0,paused=false,frameId=0,lastTime=0,from=null,receivedAt=0,viewState=null,currentMatch=-1,seenEnd='',endAt=0,epoch=0,busy=false,aim=Math.PI/2,fire=false,mouse=null,moveStick=null,aimStick=null,broken=false,waiting=false,tab='online',roundStamp='',rewardReceipt='';

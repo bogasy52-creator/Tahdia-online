@@ -190,7 +190,7 @@
   function needCard() {
     if (window.BS_PLAYER_CARD) return Promise.resolve(window.BS_PLAYER_CARD);
     css('/assets/css/player-card-v33-7.css?v=33.9.10');
-    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.9.10'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.10.3'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
   }
   doc.addEventListener('click', async (e) => {
     const el = e.target?.closest?.('[data-player-username]');
@@ -215,7 +215,7 @@
     const me = meNow(), L = levelInfo(me.card);
     for (const brand of doc.querySelectorAll('.bs-topbar .bs-brand')) {
       brand.classList.add('bs-playerbar'); brand.setAttribute('href', '#profile'); brand.setAttribute('aria-label', 'ملفك: ' + me.name);
-      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '', self: true }, 'bs-avatar bs-pb-pic');
+      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? (window.BS_CAREER_CORE?.heroFace?.(me.hero) || '') : '', self: true }, 'bs-avatar bs-pb-pic');
       const copy = node('span', 'bs-pb-copy');
       copy.append(node('b', '', me.name), node('span', '', 'المستوى ' + L.level + ' · ' + L.tier));
       const bar = node('i', 'bs-pb-xp'); bar.style.setProperty('--x', L.pct + '%'); bar.style.setProperty('--tier', L.color); copy.append(bar);
@@ -228,7 +228,7 @@
     openSheet('ملفك', (panel, done) => {
       panel.classList.add('bs-pp-profile');
       const top = node('div', 'bs-pp-top');
-      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? '/assets/heroes/face/' + me.hero + '.webp' : '', self: true }, 'bs-avatar xl');
+      const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? (window.BS_CAREER_CORE?.heroFace?.(me.hero) || '') : '', self: true }, 'bs-avatar xl');
       const side = node('div', 'bs-pp-side');
       const nm = node('div', 'bs-pp-name'); nm.append(node('b', '', me.name)); if (me.username) nm.append(node('small', '', '@' + me.username));
       side.append(nm, levelBar(card));

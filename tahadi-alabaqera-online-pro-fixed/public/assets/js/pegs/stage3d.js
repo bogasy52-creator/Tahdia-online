@@ -5,7 +5,7 @@
    It takes the same instructions as the flat board (board.js): per piece {lift, tip, color, glow, ring,
    mark, at, dx, scale, alpha}, so the page plays every step the same way on either. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { PEG_COLORS, PEG_HOLES } from '../engines/pegs-engine.js?v=33.10.2';
+import { PEG_COLORS, PEG_HOLES } from '../engines/pegs-engine.js?v=33.10.3';
 
 const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -427,6 +427,8 @@ export function createPegsStage3D() {
     hold(on) { if (!showcase) return; if (on) { if (showRaf) cancelAnimationFrame(showRaf); showRaf = 0; } else if (!showRaf) showRaf = requestAnimationFrame(loop); },
     /** Something on the table is moving by itself (the die). */
     get animating() { return Boolean(dieState.anim || dieState.spin || Math.abs(dieState.light - (dieState.color !== null ? 1 : 0)) > 0.02 || reveal.intensity > 0.02); },
+    /** The scene itself, for the cover render and the tests. */
+    get parts() { return { T, camera, scene, renderer, world, die, pawns, reveal, dieGlow, key }; },
     get lost() { return lost; },
     onLost: null, onLand: null,
     dispose() { stopShowcase(); ro?.disconnect(); renderer.dispose(); },

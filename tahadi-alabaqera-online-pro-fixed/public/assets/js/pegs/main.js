@@ -2,9 +2,9 @@
    room keeps the colours and sends each step), against the computer, and friends on one phone. The
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.2';
-import { createPegsBoard } from './board.js?v=33.10.2';
-import { createTable } from '../board-table-v33.js?v=33.10.2-pegs2';
+import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.3';
+import { createPegsBoard } from './board.js?v=33.10.3';
+import { createTable } from '../board-table-v33.js?v=33.10.3-pegs2';
 
 const $ = (id) => document.getElementById(id);
 const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a'];
@@ -73,7 +73,7 @@ addEventListener('resize', flatResize, { passive: true });
 async function upgrade3d() {
   if (params.has('flat')) return;
   try {
-    const mod = await import('./stage3d.js?v=33.10.2');
+    const mod = await import('./stage3d.js?v=33.10.3');
     if (!mod.webglAvailable()) return;
     const s3 = mod.createPegsStage3D();
     s3.onLost = () => { stage = flat; $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.remove('is-3d'); $('pegsDie').hidden = false; s3.canvas.remove(); s3.overlay.remove(); flatResize(); };
@@ -545,7 +545,7 @@ async function apply(next, { animate } = {}) {
   const fresh = ctl.mode !== 'online' || $('pegsGame').hidden || ctl.match !== (next.startedAt || 0);
   ctl.me = next.me?.index ?? 0;
   ctl.names = Array.from({ length: n }, (_, i) => seat(i)?.name || s.players[i]?.name || 'لاعب');
-  ctl.users = Array.from({ length: n }, (_, i) => { const p = seat(i), hero = p?.look?.character; const fallback = hero ? '/assets/heroes/face/' + hero + '.webp' : ''; return p?.username ? { username: p.username, fallback } : fallback ? { fallback } : null; });
+  ctl.users = Array.from({ length: n }, (_, i) => { const p = seat(i), fallback = window.BS_CAREER_CORE?.heroFace?.(p?.look?.character) || ''; return p?.username ? { username: p.username, fallback } : fallback ? { fallback } : null; });
   if (fresh) {
     begin('online', s); ctl.match = next.startedAt || 0; ctl.shownSeq = s.seq;
     if (s.seq === 0 && s.winner === null) {
