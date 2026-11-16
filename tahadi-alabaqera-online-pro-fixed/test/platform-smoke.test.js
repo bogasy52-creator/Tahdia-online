@@ -27,7 +27,8 @@ test('home links every game and the online quiz (33.0.0: every game is online)',
   assert.doesNotMatch(html, /href=["']\/local/, 'the same-device quiz moved online');
   // 33.4.0: no unnamed «الأونلاين» link: the quiz card opens the quiz, and its online room is inside it
   assert.doesNotMatch(html, /href=["']\/online["']/);
-  for (const href of ['/quiz', '/party', '/snakes', '/dice', '/zahra', '/jackaroo', '/baloot', '/serpent']) {
+  // 33.10.6: الزهرة became لودو
+  for (const href of ['/quiz', '/party', '/snakes', '/dice', '/ludo', '/jackaroo', '/baloot', '/serpent']) {
     assert.match(html, new RegExp(`href=["']${href.replace('.', '\\.')}`));
   }
 });

@@ -1002,3 +1002,17 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/party-v33-10-6.css */
+/* Tahdia 33.10.6 — الجمعة: the host picks the categories of «تحدي العباقرة» (several at once). */
+.party-editor-settings .party-quiz-cats{grid-column:1/-1;margin:2px 0 0;padding:10px;border:1px solid var(--party-line,#ffffff1f);border-radius:12px;background:#ffffff06;min-width:0}
+.party-quiz-cats legend{padding:0 6px;font-size:12px;font-weight:800;color:#e9efff}
+.party-quiz-cats legend small{margin-inline-start:6px;font-weight:600;color:#a5e7cc}
+.party-quiz-tools{display:flex;gap:6px;margin-bottom:8px}
+.party-chip-tool{min-height:30px;padding:0 12px;border-radius:999px;border:1px solid #ffffff2a;background:#ffffff10;color:#fff;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.party-quiz-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:210px;overflow:auto;overscroll-behavior:contain}
+.party-quiz-chip{position:relative;display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:0 11px;border-radius:999px;border:1px solid #ffffff24;background:#ffffff0a;color:#d7def0;font-size:12px!important;font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none}
+.party-quiz-chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.party-quiz-chip.on{border-color:#a5e7cc;background:#a5e7cc22;color:#fff;box-shadow:0 0 0 1px #a5e7cc55}
+.party-quiz-chip:has(input:focus-visible){outline:2px solid #a5e7cc;outline-offset:2px}
+.party-rail-cats{display:block;margin-top:2px;font-size:10.5px;color:#a5e7cc;white-space:normal;max-width:220px}

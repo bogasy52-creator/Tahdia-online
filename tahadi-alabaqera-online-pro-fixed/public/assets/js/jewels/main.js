@@ -1,11 +1,11 @@
-import {createEffectsChannel} from '../audio-effects.js?v=33.10.5-club2';
+import {createEffectsChannel} from '../audio-effects.js?v=33.10.6-club2';
 /* Jewels Studio: independent, equal-opening score runs. The engine owns results;
    the local Canvas replay owns animation. Opponent progress never redraws this board. */
-import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace, starsOf } from '../engines/jewels-race-engine.js?v=33.10.5-mm5';
-import { createTable } from '../board-table-v33.js?v=33.10.5-ludo1';
-import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.5-mm5';
+import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace, starsOf } from '../engines/jewels-race-engine.js?v=33.10.6-mm5';
+import { createTable } from '../board-table-v33.js?v=33.10.6-ludo1';
+import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.6-mm5';
 
-import { suggestJewelsSwap } from './advisor.js?v=33.10.5-nov14';
+import { suggestJewelsSwap } from './advisor.js?v=33.10.6-nov14';
 
 const $=selector=>document.querySelector(selector);
 let lightEffects=false;try{lightEffects=localStorage.getItem('bs_jewels_light_effects')==='1';}catch{}

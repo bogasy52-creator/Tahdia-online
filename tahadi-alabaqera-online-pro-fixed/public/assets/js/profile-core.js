@@ -26,7 +26,7 @@
     {id:'board-forest',type:'board',name:'لوحة النيون',description:'خانات كحلية هادئة متبادلة، وإطار معدني مع ثعابين مفصّلة وسلالم نيون رفيعة. اللوحة المجانية.',price:0,color:'#21434e'},
     {id:'board-ocean',type:'board',name:'لوحة المحيط',description:'درجات زرقاء هادئة.',price:160,color:'#173f61'},
     {id:'board-sand',type:'board',name:'لوحة الرمال',description:'ألوان رملية دافئة.',price:160,color:'#62492c'},
-    {id:'table-walnut',type:'table',name:'طاولة الجوز',description:'ديوانية البلوت: جوز وسدو أحمر وجوخ أخضر. وتلبس لوحة الزهرة.',price:0,color:'#5b3928'},
+    {id:'table-walnut',type:'table',name:'طاولة الجوز',description:'ديوانية البلوت: جوز وسدو أحمر وجوخ أخضر.',price:0,color:'#5b3928'},
     {id:'table-slate',type:'table',name:'طاولة الأردواز',description:'سطح داكن وحواف معدنية.',price:240,color:'#344454'},
     {id:'table-emerald',type:'table',name:'طاولة الزمرد',description:'سطح أخضر بإطار جوزي.',price:260,color:'#184c3b'},
     {id:'snake-wild',type:'snake',name:'وحوش النيون',description:'ثعابين معدنية متنوعة تتحرك وتتفاعل مع الأحجار.',price:0,color:'#77b38a'},
@@ -40,7 +40,7 @@
     {id:'board-twilight',type:'board',name:'لوحة الغسق',description:'خانات بنفسجية وإطار داكن.',price:360,color:'#68608e'},
     {id:'board-royal',type:'board',name:'لوحة القصر',description:'رخام أسود بعروق ذهبية على فواصل من الذهب، بإطار ملكي وسلالم ذهبية.',price:550,color:'#c8a159'},
     {id:'table-midnight',type:'table',name:'طاولة منتصف الليل',description:'طاولة جاكارو داكنة بأمان واضح.',price:380,color:'#1f273d'},
-    {id:'table-royal',type:'table',name:'طاولة القصر',description:'طاولة بلوت بإطار ذهب ومخمل بنفسجي مزخرف. وتلبس لوحة الزهرة.',price:580,color:'#4a3659'},
+    {id:'table-royal',type:'table',name:'طاولة القصر',description:'طاولة بلوت بإطار ذهب ومخمل بنفسجي مزخرف.',price:580,color:'#4a3659'},
     {id:'snake-toxic',type:'snake',name:'أفاعي الزمرد الكهربائي',description:'دروع خضراء لامعة وعيون نيون مع حركة الافتراس الكاملة.',price:420,color:'#8aef48'},
     {id:'snake-plasma',type:'snake',name:'أفاعي البلازما',description:'ألوان سماوية وبنفسجية متدرجة بين الثعابين.',price:600,color:'#ca73ff'},
     {id:'dice-nebula',type:'dice',name:'نرد السديم',description:'أوجه زرقاء معدنية ونقاط عاجية كبيرة.',price:380,color:'#245797'},
@@ -140,7 +140,7 @@
     {id:'cue-neon',type:'cue',name:'النيون',subtitle:'تضوي سماوي ووردي',design:'neon',price:420,color:'#22d8ff'},
     {id:'cue-dragon',type:'cue',name:'التنين',subtitle:'أحمر وأسود وذهب',design:'dragon',price:580,color:'#d4202e'},
     {id:'cue-royal',type:'cue',name:'الملكية',subtitle:'أبيض وذهب وبنفسجي',design:'royal',price:780,color:'#a07aff'}
-  ].map(item=>Object.freeze({...item,description:item.type==='frame'?(item.price?'إطار '+item.subtitle+' حول صورتك: في شريطك فوق، وفي ملفك، وفي بطاقتك داخل الألعاب.':'صورتك بدون إطار.'):item.type==='striker'?'دافع '+item.subtitle+' تضرب فيه في الكيرم.':item.type==='cue'?'عصا '+item.subtitle+' على طاولة البلياردو.':item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في الثعبان والسلالم تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الزهرة والجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو والزهرة.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'. وتلبس لوحة الزهرة.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو والزهرة.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+  ].map(item=>Object.freeze({...item,description:item.type==='frame'?(item.price?'إطار '+item.subtitle+' حول صورتك: في شريطك فوق، وفي ملفك، وفي بطاقتك داخل الألعاب.':'صورتك بدون إطار.'):item.type==='striker'?'دافع '+item.subtitle+' تضرب فيه في الكيرم.':item.type==='cue'?'عصا '+item.subtitle+' على طاولة البلياردو.':item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في الثعبان والسلالم تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
   // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
   // phrases and board-wide moves. They are owned, never equipped, and the
   // first eight keep the ids older rooms already relay (`legacy`).
@@ -314,7 +314,7 @@
   // 33.2.0: a Baloot mission every day and one more game that changes daily
   const GAME_MISSIONS=Object.freeze([
     ['baloot','games',2,60,'جلسة بلوت','العب صكّتين بلوت كاملة اليوم.'],['baloot','wins',1,80,'صكّة لك','اربح صكّة بلوت اليوم.'],
-    ['snakes','games',2,50,'الثعبان والسلالم','العب جولتين في الثعبان والسلالم اليوم.'],['zahra','games',2,50,'طاولة الزهرة','العب جولتين زهرة اليوم.'],
+    ['snakes','games',2,50,'الثعبان والسلالم','العب جولتين في الثعبان والسلالم اليوم.'],['zahra','games',2,50,'طاولة لودو','العب جولتين لودو اليوم.'],
     ['quiz','games',2,50,'تحدي الأسئلة','العب مباراتين في تحدي الأسئلة اليوم.'],['jackaroo','games',2,50,'جاكارو','العب جولتين جاكارو اليوم.'],
     ['dice','wins',1,70,'سباق النرد','اربح جولة في تحدي النرد اليوم.'],['serpent','games',3,50,'حلبة الثعابين','العب 3 جولات في حلبة الثعابين اليوم.'],
     ['snakes','wins',1,70,'أول من يوصل','اربح جولة في الثعبان والسلالم اليوم.'],['sudoku','games',1,50,'سودوكو أونلاين','العب مباراة سودوكو أونلاين اليوم.'],

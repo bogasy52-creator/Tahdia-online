@@ -54,7 +54,7 @@ async function gameJoin(answer,page='snakes'){
  return {h,joined,join,href:()=>h.context.location.href};
 }
 test('a room code typed inside a game opens its own game and reads Arabic and Persian digits',async()=>{
- const routes={quiz:'/online',picture:'/picture',sudoku:'/sudoku',paths:'/paths-online',serpent:'/serpent',jackaroo:'/jackaroo',zahra:'/zahra',dice:'/dice',baloot:'/baloot',party:'/party'};
+ const routes={quiz:'/online',picture:'/picture',sudoku:'/sudoku',paths:'/paths-online',serpent:'/serpent',jackaroo:'/jackaroo',zahra:'/ludo',dice:'/dice',baloot:'/baloot',party:'/party'};
  const prefixes={quiz:'10',party:'15',sudoku:'20',paths:'25',picture:'30',serpent:'35',snakes:'40',zahra:'45',jackaroo:'50',dice:'55',baloot:'60'};
  const {joined,join,href}=await gameJoin(code=>Object.keys(prefixes).find(game=>code.startsWith(prefixes[game])));
  for(const [game,route]of Object.entries(routes)){

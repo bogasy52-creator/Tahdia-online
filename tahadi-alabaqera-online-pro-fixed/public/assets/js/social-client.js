@@ -134,7 +134,7 @@
 
   // 33.6.0: every game that has rooms opens from an invitation — the challenge games (focus, cipher,
   // wordbomb, chaos) were missing here, so their invitations reached the phone and were dropped.
-  const GAME_LABELS = Object.freeze({ party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان والسلالم', zahra: 'الزهرة', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى' });
+  const GAME_LABELS = Object.freeze({ party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى' });
   const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
   const gameLabel = (game) => GAME_LABELS[game] || String(game || 'لعبة');
 

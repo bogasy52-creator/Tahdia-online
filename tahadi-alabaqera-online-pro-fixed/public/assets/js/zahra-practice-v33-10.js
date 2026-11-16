@@ -1,4 +1,4 @@
-import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn,ludoGeometry} from './engines/ludo-engine.js?v=33.10.5-classic1';
+import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn,ludoGeometry} from './engines/ludo-engine.js?v=33.10.6-classic1';
 import {boardGeometry} from './engines/board-geometry-v29.js?v=33.9.10';
 const BOT_NAMES=['نورة','ماجد','ليان','فهد','سارة'];
 function random(){const bytes=new Uint32Array(1);globalThis.crypto.getRandomValues(bytes);return bytes[0]/4294967296;}

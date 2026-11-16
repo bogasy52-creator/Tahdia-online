@@ -96,6 +96,19 @@ vec3 rotZ(vec3 p,float a){float c=cos(a),s=sin(a);return vec3(c*p.x-s*p.y,s*p.x+
 #define M_SOIL 36.
 #define M_CACTUS 37.
 #define M_VOID 38.
+#define M_APPLE 39.
+#define M_BANANA 40.
+#define M_EGG 41.
+#define M_WAX 42.
+#define M_FLAME 43.
+#define M_CARROT 44.
+#define M_LEMON 45.
+#define M_BALLOON 46.
+#define M_STRING 47.
+#define M_GEM 48.
+#define M_VELVET 49.
+#define M_COFFEE 50.
+#define M_FANJAN 51.
 
 // ---------- objects (each stands on the floor at y = 0) ----------
 vec2 basketball(vec3 p){return vec2(length(p-vec3(0.,.5,0.))-.5,M_ORANGE);}
@@ -425,6 +438,138 @@ vec2 cactus(vec3 p){
   return r;
 }
 
+
+// ---------- 33.10.6 objects ----------
+vec2 apple(vec3 p){
+  vec3 q=p-vec3(0.,.36,0.);
+  float rxz=length(q.xz);
+  float d=length(vec3(q.x,q.y*1.08,q.z))-.36;
+  d+=.075*exp(-rxz*rxz*55.)*smoothstep(-.05,.33,q.y);
+  d+=.03*exp(-rxz*rxz*90.)*smoothstep(.0,-.33,q.y);
+  d+=.006*cos(atan(q.z,q.x)*5.)*smoothstep(-.1,-.33,q.y);
+  vec2 r=vec2(d*.8,M_APPLE);
+  r=U(r,vec2(sdCap(p,vec3(0.,.58,0.),vec3(.035,.8,.01),.016),M_DARKWOOD));
+  vec3 l=rotZ(p-vec3(.11,.74,.02),-.55);
+  float w=.05*(1.-smoothstep(-.02,.11,abs(l.x)));
+  r=U(r,vec2(sdEll(l,vec3(.11,.01,max(w,.008)+.004)),M_LEAF));
+  return r;
+}
+const float BR0=.62,BAMAX=.85;
+vec3 bananaAxis(float a){return vec3(sin(a)*BR0,.1+.13*a*a,cos(a)*BR0-BR0+.25);}
+vec2 banana(vec3 p){
+  vec2 c=vec2(p.x,p.z-.25+BR0);
+  float a=clamp(atan(c.x,c.y),-BAMAX,BAMAX);
+  vec3 ax=bananaAxis(a);
+  vec3 dq=p-ax;
+  float t=a/BAMAX;
+  float rr=.095*(1.-.62*t*t);
+  vec3 tang=normalize(vec3(cos(a)*BR0,.26*a,-sin(a)*BR0));
+  vec3 side=normalize(cross(tang,vec3(0.,1.,0.)));
+  float phi=atan(dot(dq,vec3(0.,1.,0.)),dot(dq,side));
+  rr*=1.+.05*cos(5.*phi);
+  float d=length(dq)-rr;
+  vec2 r=vec2(d*.85,M_BANANA);
+  vec3 e2=bananaAxis(BAMAX)+vec3(sin(BAMAX),.25,cos(BAMAX))*.11;
+  r=U(r,vec2(sdCap(p,bananaAxis(BAMAX*.97),e2,.026),M_DARKWOOD));
+  return r;
+}
+vec2 egg(vec3 p){
+  vec3 q=rotZ(p-vec3(0.,.235,0.),1.32);
+  float k=mix(1.,.8,smoothstep(-.3,.32,q.y));
+  float d=sdEll(vec3(q.x/k,q.y,q.z/k),vec3(.235,.31,.235))*k;
+  return vec2(d,M_EGG);
+}
+vec2 candle(vec3 p){
+  vec2 q=vec2(length(p.xz),p.y);
+  float wax=sdRBox2(q-vec2(0.,.37),vec2(.15,.3),.02);
+  wax=max(wax,-(length(p-vec3(0.,.72,0.))-.13));
+  float a=atan(p.z,p.x);
+  for(int i=0;i<4;i++){float fa=float(i)*1.7+.4;vec3 dp=vec3(cos(fa)*.15,0.,sin(fa)*.15);float len=.1+.08*hash1(float(i)*3.1);
+    wax=smin(wax,sdCap(p,dp+vec3(0.,.64,0.),dp+vec3(0.,.64-len,0.),.022),.03);}
+  vec2 r=vec2(wax,M_WAX);
+  float dish=max(sdRBox2(q-vec2(0.,.03),vec2(.3,.03),.015),-(sdRBox2(q-vec2(0.,.07),vec2(.26,.02),.01)));
+  r=U(r,vec2(dish,M_BRASS));
+  r=U(r,vec2(sdCap(p,vec3(0.,.6,0.),vec3(.006,.72,0.),.007),M_BLACK));
+  vec3 f=p-vec3(.004,.84,0.);
+  float k=mix(1.,.45,smoothstep(-.05,.14,f.y));
+  r=U(r,vec2(sdEll(vec3(f.x/k,f.y,f.z/k),vec3(.045,.13,.045))*k,M_FLAME));
+  return r;
+}
+vec2 carrot(vec3 p){
+  vec3 q=rotY(p,.0);
+  float d=sdCone(q,vec3(-.42,.13,0.),vec3(.5,.035,.02),.13,.012);
+  d+=.004*sin(q.x*70.+sin(q.z*40.))*smoothstep(.5,-.3,q.x);
+  vec2 r=vec2(d*.9,M_CARROT);
+  for(int i=0;i<5;i++){float fi=float(i);float ang=-.5+fi*.25;
+    vec3 a0=vec3(-.5,.14+.01*fi,-.02+.01*fi);vec3 a1=a0+vec3(-.32*cos(ang),.14+.06*sin(fi*2.),.3*sin(ang));
+    r=U(r,vec2(sdCap(p,a0,a1,.014),M_LEAF));
+    vec3 mid=mix(a0,a1,.7);
+    r=U(r,vec2(sdEll(rotY(p-mid,ang),vec3(.07,.012,.03)),M_LEAF));}
+  return r;
+}
+vec2 lemon(vec3 p){
+  vec3 q=rotY(p-vec3(0.,.235,0.),.35);
+  float d=sdEll(q,vec3(.33,.235,.235));
+  d=smin(d,length(q-vec3(.33,0.,0.))-.04,.06);
+  d=smin(d,length(q+vec3(.33,0.,0.))-.03,.05);
+  return vec2(d,M_LEMON);
+}
+vec2 crown(vec3 p){
+  float rr=length(p.xz);
+  float band=max(abs(rr-.36)-.028,abs(p.y-.14)-.11);
+  vec3 q=polar(rotY(p,.1),5.);
+  float y=q.y-.24,hw=.15*(1.-clamp(y/.36,0.,1.));
+  float spike=max(max(abs(q.z)-hw,-y),y-.36);
+  spike=max(spike,abs(q.x-.36)-.022);
+  float d=min(band,spike);
+  d=min(d,length(q-vec3(.36,.62,0.))-.04);
+  d=min(d,sdTorus(p-vec3(0.,.04,0.),vec2(.36,.03)));
+  d=min(d,sdTorus(p-vec3(0.,.25,0.),vec2(.36,.022)));
+  vec2 r=vec2(d,M_GOLD);
+  r=U(r,vec2(sdEll(q-vec3(.39,.145,0.),vec3(.03,.05,.04)),M_GEM));
+  vec3 qq=polar(rotY(p,.1+PI/5.),5.);
+  r=U(r,vec2(length(qq-vec3(.388,.145,0.))-.026,M_GEM+0.));
+  float cushion=max(length(p-vec3(0.,.1,0.))-.37,-(p.y-.24));
+  r=U(r,vec2(cushion,M_VELVET));
+  r=U(r,vec2(length(p-vec3(0.,.5,0.))-.045,M_GOLD));
+  return r;
+}
+vec2 balloon(vec3 p){
+  vec3 q=p-vec3(0.,.92,0.);
+  float k=mix(.82,1.,smoothstep(-.32,.15,q.y));
+  float d=sdEll(vec3(q.x/k,q.y,q.z/k),vec3(.3,.36,.3))*k;
+  d=smin(d,sdCone(p,vec3(0.,.52,0.),vec3(0.,.6,0.),.035,.015),.03);
+  vec2 r=vec2(d,M_BALLOON);
+  float s=sdCap(p,vec3(0.,.52,0.),vec3(.06,.3,.02),.006);
+  s=min(s,sdCap(p,vec3(.06,.3,.02),vec3(-.02,.0,.05),.006));
+  r=U(r,vec2(s,M_STRING));
+  return r;
+}
+vec2 fanjan(vec3 p){
+  vec2 q=vec2(length(p.xz),p.y);
+  float prof=mix(.15,.235,clamp(q.y/.3,0.,1.));
+  float outer=max(q.x-prof,max(-q.y,q.y-.3));
+  float inner=max(q.x-(prof-.018),max(.03-q.y,q.y-.4));
+  float cup=max(outer,-inner);
+  cup=min(cup,sdRBox2(q-vec2(0.,.012),vec2(.12,.012),.006));
+  vec2 r=vec2(cup,M_FANJAN);
+  r=U(r,vec2(sdTorus(p-vec3(0.,.3,0.),vec2(.226,.01)),M_GOLD));
+  float liquid=max(p.y-.22,q.x-(mix(.15,.235,.22/.3)-.016));
+  liquid=max(liquid,.03-p.y);
+  r=U(r,vec2(liquid,M_COFFEE));
+  return r;
+}
+vec2 key(vec3 p){
+  vec3 q=rotY(p,.35);
+  float bow=sdTorus(q-vec3(-.32,.035,0.),vec2(.12,.034));
+  float shaft=sdCap(q,vec3(-.2,.034,0.),vec3(.4,.034,0.),.03);
+  float collar=sdCyl(vec3(q.y-.034,q.x+.17,q.z),.05,.02);
+  float bit=sdBox(q-vec3(.31,.034,.085),vec3(.075,.026,.07));
+  bit=max(bit,-sdBox(q-vec3(.31,.034,.13),vec3(.02,.04,.04)));
+  float d=min(min(bow,shaft),min(collar,bit));
+  return vec2(d,M_BRASS);
+}
+
 vec2 object(vec3 p){
   if(uObj==0)return basketball(p);
   if(uObj==1)return soccer(p);
@@ -445,7 +590,17 @@ vec2 object(vec3 p){
   if(uObj==16)return magnet(p);
   if(uObj==17)return bell(p);
   if(uObj==18)return die(p);
-  return cactus(p);
+  if(uObj==19)return cactus(p);
+  if(uObj==20)return apple(p);
+  if(uObj==21)return banana(p);
+  if(uObj==22)return egg(p);
+  if(uObj==23)return candle(p);
+  if(uObj==24)return carrot(p);
+  if(uObj==25)return lemon(p);
+  if(uObj==26)return crown(p);
+  if(uObj==27)return balloon(p);
+  if(uObj==28)return fanjan(p);
+  return key(p);
 }
 float glassD(vec3 p){
   if(uObj==6)return bulbGlass(p);
@@ -672,6 +827,39 @@ vec3 shade(vec3 p,vec3 n,vec3 v,float m){
   if(m<36.5)return shadeSurface(p,bumpN(n,p,200.,.6),v,vec3(.16,.1,.06),0.,.95,0.);
   if(m<37.5){float a=atan(p.z,p.x);float crest=smoothstep(.85,1.,cos(a*10.));vec2 g=vec2(a*10./(2.*PI),p.y*18.);float sp=step(length(fract(g)-.5),.12)*crest;
     vec3 alb=mix(vec3(.16,.45,.18),vec3(.95,.93,.8),sp);return shadeSurface(p,n,v,alb,0.,.5,.4);}
+  if(m<38.5)return vec3(.005);
+  if(m<39.5){vec3 q=p-vec3(0.,.36,0.);float a=atan(q.z,q.x);
+    float st=noise3(vec3(a*5.,q.y*2.5,1.3))*.7+noise3(vec3(a*16.,q.y*9.,4.2))*.3;
+    vec3 alb=mix(vec3(.6,.025,.035),vec3(.93,.3,.06),smoothstep(.42,.82,st)*.75);
+    alb=mix(alb,vec3(.72,.62,.18),smoothstep(.55,.66,p.y)*smoothstep(.12,.0,length(q.xz))*.8);
+    alb=mix(alb,vec3(.96,.86,.55),step(.9,noise3(p*95.))*.35);
+    return shadeSurface(p,bumpN(n,p,70.,.04),v,alb,0.,.26,.8);}
+  if(m<40.5){vec3 alb=vec3(.98,.74,.05)*(.9+.2*noise3(p*18.));
+    alb=mix(alb,vec3(.42,.27,.07),step(.78,noise3(p*42.))*.65);
+    alb=mix(alb,vec3(.55,.62,.15),smoothstep(.4,.58,abs(p.x))*.5);
+    return shadeSurface(p,n,v,alb,0.,.45,.25);}
+  if(m<41.5){vec3 alb=vec3(.93,.85,.74)*(.93+.12*noise3(p*14.));alb=mix(alb,vec3(.7,.55,.42),step(.84,noise3(p*80.))*.45);
+    vec3 c=shadeSurface(p,bumpN(n,p,260.,.12),v,alb,0.,.55,.1);return c+alb*.06;}
+  if(m<42.5){vec3 alb=vec3(.96,.92,.84);vec3 c=shadeSurface(p,n,v,alb,0.,.4,.25);
+    c+=alb*.12+vec3(1.,.6,.25)*.9*smoothstep(.5,.7,p.y)*smoothstep(.25,.0,length(p.xz)-.0);return c;}
+  if(m<43.5){float core=smoothstep(.05,.0,length(p.xz))*smoothstep(1.,.8,p.y);
+    return mix(vec3(1.,.5,.12),vec3(1.,.96,.8),core)*5.;}
+  if(m<44.5){vec3 alb=vec3(.86,.2,.008)*(.88+.22*noise3(p*15.));alb=mix(alb,vec3(.62,.16,.01),smoothstep(.85,.97,fract(p.x*24.+noise3(p*9.)))*.6);
+    return shadeSurface(p,bumpN(n,p,90.,.15),v,alb,0.,.42,.25);}
+  if(m<45.5){vec3 alb=vec3(.99,.82,.1)*(.9+.15*noise3(p*25.));return shadeSurface(p,bumpN(n,p,240.,.4),v,alb,0.,.33,.4);}
+  if(m<46.5){vec3 alb=vec3(.86,.03,.07);vec3 c=shadeSurface(p,n,v,alb,0.,.1,1.1);c+=alb*.18*(1.-max(dot(n,v),0.));return c;}
+  if(m<47.5)return shadeSurface(p,n,v,vec3(.92,.92,.9),0.,.8,0.);
+  if(m<48.5){vec3 c=shadeSurface(p,n,v,vec3(.72,.02,.06),0.,.05,1.3);c+=vec3(1.,.3,.3)*pow(max(dot(reflect(-v,n),KEY),0.),40.)*2.;return c;}
+  if(m<49.5){vec3 alb=vec3(.3,.01,.04);vec3 c=shadeSurface(p,bumpN(n,p,300.,.3),v,alb,0.,.92,0.);c+=alb*pow(1.-max(dot(n,v),0.),2.)*.6;return c;}
+  if(m<50.5)return shadeSurface(p,n,v,vec3(.42,.22,.04),0.,.22,.25);
+  if(m<51.5){
+    bool outside=dot(n.xz,p.xz)>0.;
+    if(outside&&p.y>.16&&p.y<.26){float a=atan(p.z,p.x)*12./(2.*PI);float f=abs(fract(a)-.5)*2.;
+      float dm=f+abs(p.y-.21)*22.;
+      if(dm<.75)return shadeSurface(p,n,v,vec3(1.,.76,.3),1.,.18,0.);
+      if(abs(p.y-.21)>.036)return shadeSurface(p,n,v,vec3(1.,.76,.3),1.,.2,0.);
+      return shadeSurface(p,n,v,vec3(.04,.38,.28),0.,.15,1.);}
+    return shadeSurface(p,n,v,vec3(.95,.95,.93),0.,.14,1.);}
   return vec3(.005);
 }
 vec3 aces(vec3 x){const float a=2.51,b=.03,c=2.43,d=.59,e=.14;return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.,1.);}
@@ -727,6 +915,11 @@ void main(){
     vec3 refl=env(reflect(-v,n));
     vec3 hl=vec3(1.)*pow(max(dot(n,normalize(KEY+v)),0.),300.)*5.;
     col=col*vec3(.94,.97,1.)*(1.-fr*.8)+refl*fr*.9+hl;
+  }
+  if(uObj==23){
+    // the candle flame's warm glow
+    vec3 c0=vec3(0.,.86,0.);vec3 oc=ro-c0;float b=dot(oc,rd);vec3 cl=oc-rd*b;float dd=length(cl);
+    col+=vec3(1.,.62,.25)*.1/(.02+dd*dd*40.);
   }
   if(uObj==6){
     // the filament's warm halo inside the bulb

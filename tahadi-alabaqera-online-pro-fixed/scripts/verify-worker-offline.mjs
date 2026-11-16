@@ -49,8 +49,9 @@ try {
   response = await mod.default.fetch(new Request('https://game.test/api/catalog'), env);
   assert.equal(response.status, 200);
   body = await response.json();
-  assert.equal(body.categories.length, 24);
+  assert.equal(body.categories.length, 25);
   assert.ok(body.categories.some((category) => category.id === 'memory' && category.name.includes('الذاكرة')));
+  assert.ok(body.categories.some((category) => category.id === 'flags'), '33.10.6: the flags category');
 
   response = await mod.default.fetch(new Request('https://game.test/index.html'), env);
   assert.equal(await response.text(), 'asset:/index.html');

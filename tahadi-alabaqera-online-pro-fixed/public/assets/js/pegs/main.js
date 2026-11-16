@@ -2,9 +2,9 @@
    room keeps the colours and sends each step), against the computer, and friends on one phone. The
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.5';
-import { createPegsBoard } from './board.js?v=33.10.5';
-import { createTable } from '../board-table-v33.js?v=33.10.5-pegs2';
+import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.6';
+import { createPegsBoard } from './board.js?v=33.10.6';
+import { createTable } from '../board-table-v33.js?v=33.10.6-pegs2';
 
 const $ = (id) => document.getElementById(id);
 const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a'];
@@ -73,7 +73,7 @@ addEventListener('resize', flatResize, { passive: true });
 async function upgrade3d() {
   if (params.has('flat')) return;
   try {
-    const mod = await import('./stage3d.js?v=33.10.5');
+    const mod = await import('./stage3d.js?v=33.10.6');
     if (!mod.webglAvailable()) return;
     const s3 = mod.createPegsStage3D();
     s3.onLost = () => { stage = flat; $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.remove('is-3d'); $('pegsDie').hidden = false; s3.canvas.remove(); s3.overlay.remove(); flatResize(); };

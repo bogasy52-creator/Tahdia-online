@@ -1,4 +1,4 @@
-import { CROWD, crowdLane, crowdTarget } from '../engines/crowd-engine.js?v=33.10.5-crowd1';
+import { CROWD, crowdLane, crowdTarget } from '../engines/crowd-engine.js?v=33.10.6-crowd1';
 const TAU=Math.PI*2;
 function round(ctx,x,y,w,h,r=8){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 function polygon(ctx,points,color){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fillStyle=color;ctx.fill();}

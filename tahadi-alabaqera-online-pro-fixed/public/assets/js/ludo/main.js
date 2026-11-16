@@ -2,10 +2,10 @@
    rooms, quick tables, the party and the stats are the same; the board is the classic cross.
    The board turns so your yard is at the bottom left, and each player's card sits in the corner of
    the screen where his yard is, with his die next to it. */
-import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.10.5-ludo1';
-import { createZahraPractice } from '../zahra-practice-v33-10.js?v=33.10.5-classic1';
-import { getLegalLudoMoves, ludoGeometry } from '../engines/ludo-engine.js?v=33.10.5-classic1';
-import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.10.5-ludo1';
+import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.10.6-ludo1';
+import { createZahraPractice } from '../zahra-practice-v33-10.js?v=33.10.6-classic1';
+import { getLegalLudoMoves, ludoGeometry } from '../engines/ludo-engine.js?v=33.10.6-classic1';
+import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.10.6-ludo1';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));

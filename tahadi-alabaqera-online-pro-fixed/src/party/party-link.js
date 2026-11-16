@@ -21,7 +21,6 @@ export const LINKED_GAMES = Object.freeze({
   // 33.0.0: the table games start with whoever is there (bots fill the table) and a
   // bigger party plays them on several tables, each its own real room
   snakes: { page: '/snakes', min: 1, max: 10, tables: true },
-  zahra: { page: '/zahra', min: 1, max: 6, tables: true },
   jackaroo: { page: '/jackaroo', min: 1, max: 6, tables: true },
   // 33.9.1: the dice race is played on its own table too, ten to a table
   dice: { page: '/dice', min: 1, max: 10, tables: true },
@@ -44,7 +43,8 @@ export const LINK_ONLY = Object.freeze(new Set(['ludo', 'billiards', 'carrom', '
 export const LOCAL_GAMES = Object.freeze({ memory: '/memory', logic: '/logic', puzzle: '/puzzle', jewels: '/journey' });
 export function localGame(game) { return LOCAL_GAMES[game] || null; }
 
-export function linkedGame(game) { return LINKED_GAMES[game] || null; }
+// 33.10.6: الزهرة made way for لودو; a round that still names it is played as لودو
+export function linkedGame(game) { return LINKED_GAMES[game === 'zahra' ? 'ludo' : game] || null; }
 /** Can this many players start the real game? (board games need their table full) */
 export function linkable(game, count) {
   const g = linkedGame(game);
@@ -82,7 +82,9 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   if (game === 'quiz') {
     // 4 and 6 open a team match; a party plays everyone against everyone
     const playerLimit = Math.min(20, Math.max(2, [4, 6].includes(room) ? room + 1 : room));
-    return { ns: 'ROOMS', name: code, url: 'https://room.internal/init', body: { code, hostKey, name: 'party', playerLimit, expected: count, party } };
+    // 33.10.6: the host may pick the categories (several); none picked means six at random
+    const categories = Array.isArray(settings?.categories) ? settings.categories.slice(0, 40) : undefined;
+    return { ns: 'ROOMS', name: code, url: 'https://room.internal/init', body: { code, hostKey, name: 'party', playerLimit, expected: count, party, ...(categories?.length ? { categories } : {}) } };
   }
   // 33.9.1: these start by themselves too, once the players the room sent are in
   if (game === 'sudoku') return { ns: 'ROOMS', name: 'sudoku:' + code, url: 'https://sudoku.internal/init', body: { code, hostKey, difficulty, capacity: room, expected: count, party } };
@@ -95,7 +97,7 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   }
   // snakes, zahra, jackaroo, dice, ludo, billiards, carrom, pegs: a board room for the players of
   // this table (bots fill the rest)
-  const table = LINKED_GAMES[game] || {};
+  const table = linkedGame(game) || {};
   return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game: table.board || game, playerLimit: game === 'jackaroo' ? (count > 4 ? 6 : 4) : count, expected: count, name: '', variant: table.variant || 'classic', party } };
 }
 

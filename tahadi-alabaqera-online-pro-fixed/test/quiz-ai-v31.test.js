@@ -16,7 +16,7 @@ const post=(path,body,owner=true)=>new Request('https://quizai.internal'+path,{m
 
 test('zoom pictures are answered with the plain name of the thing',()=>{
  const zoom=CATEGORIES.find(c=>c.id==='zoom');
- for(const q of zoom.questions){assert.ok(q.a.split(/\s+/).length<=2,q.id+' '+q.a);assert.doesNotMatch(q.a,/نقوش|تفاصيل|هيكل|سطح|شفرات|أوعية|منصة|بدلة|خوذة|مركز|جسم|محرك|عجلة|مصباح/,q.id);assert.equal(q.q,'وش اللي في الصورة؟');}
+ for(const q of zoom.questions){assert.ok(q.a.split(/\s+/).length<=2,q.id+' '+q.a);assert.doesNotMatch(q.a,/نقوش|تفاصيل|هيكل|سطح|شفرات|أوعية|منصة|بدلة|خوذة|مركز|جسم|محرك|عجلة|مصباح/,q.id);assert.ok(['وش اللي في الصورة؟','كرة وش؟'].includes(q.q),q.id);}
  assert.deepEqual([...new Set(zoom.questions.filter(q=>q.mediaFamily==='image:cheetah').map(q=>q.a))],['فهد']);
  for(const q of zoom.questions)assert.ok(!q.distractors.includes(q.a),q.id);
 });

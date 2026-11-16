@@ -1,5 +1,5 @@
-import {makeTankCamera,projectTankPoint,unprojectTankPoint,tankScreenVector,paintTankTerrain,drawTankScene} from './scene.js?v=33.10.5-life1';
-import {TANKS,TANK_COLORS} from './core.js?v=33.10.5-life1';
+import {makeTankCamera,projectTankPoint,unprojectTankPoint,tankScreenVector,paintTankTerrain,drawTankScene} from './scene.js?v=33.10.6-life1';
+import {TANKS,TANK_COLORS} from './core.js?v=33.10.6-life1';
 const{W,H}=TANKS,TAU=Math.PI*2,clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 function rect(c,x,y,w,h,r=6){c.beginPath();c.roundRect(x,y,w,h,r);}
 function poly(c,a,fill,stroke){c.beginPath();a.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.stroke();}}

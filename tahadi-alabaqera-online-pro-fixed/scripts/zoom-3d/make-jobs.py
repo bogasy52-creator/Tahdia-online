@@ -1,4 +1,4 @@
-"""Jobs for the zoom challenge renders (32.0.0): object, camera and studio colours."""
+"""Jobs for the zoom challenge renders (32.0.0, 33.10.6): object, camera and studio colours."""
 import json
 # name, object index, look-at, distance, elevation, yaw, vertical fov, backdrop, floor, tint
 O = [
@@ -22,14 +22,28 @@ O = [
     ('bell', 17, [0, .45, 0], 3.2, .25, .2, .5, '#20304a', '#18253c', None),
     ('die', 18, [0, .3, 0], 2.6, .55, .0, .5, '#2c6e63', '#245c52', None),
     ('cactus', 19, [0, .5, 0], 3.4, .22, .2, .5, '#f2d9b8', '#e3c69f', None),
+    # 33.10.6: ten more objects
+    ('apple', 20, [0, .4, 0], 2.6, .3, .3, .5, '#f4e3c3', '#e8d2a8', None),
+    ('banana', 21, [0, .15, 0], 2.6, .7, .25, .5, '#b9d7ea', '#a5c5da', None),
+    ('egg', 22, [0, .22, 0], 2.0, .35, .3, .5, '#d8cfc4', '#c9bdb0', None),
+    ('candle', 23, [0, .45, 0], 3.0, .25, .2, .5, '#2a2230', '#211a27', None),
+    ('carrot', 24, [0, .15, 0], 2.6, .55, .3, .5, '#dfeccf', '#cddcb9', None),
+    ('lemon', 25, [0, .24, 0], 2.3, .35, .3, .5, '#cfe0f4', '#bccfe6', None),
+    ('crown', 26, [0, .32, 0], 2.7, .35, .2, .5, '#3a1d4a', '#2c1438', None),
+    ('balloon', 27, [0, .68, 0], 2.8, .2, .2, .5, '#fde2c4', '#f1cfa9', None),
+    ('fanjan', 28, [0, .16, 0], 2.0, .55, .2, .5, '#5b2e22', '#4b241a', None),
+    ('key', 29, [0, .03, 0], 2.3, 1.0, .3, .5, '#2f4a5c', '#2a4253', None),
 ]
 jobs = []
 for n, o, t, d, e, y, f, bg, fl, tint in O:
-    j = {'name': n, 'obj': o, 'target': t, 'dist': d, 'elev': e, 'yaw': y, 'fov': f, 'bg': bg, 'floor': fl, 'w': 1350, 'h': 900}
+    j = {'name': n, 'obj': o, 'target': t, 'dist': d, 'elev': e, 'yaw': y, 'fov': f, 'bg': bg, 'floor': fl, 'w': 1350 if o < 20 else 1200, 'h': 900 if o < 20 else 800}
     if tint:
         j['tint'] = tint
     if n == 'icecream':
         j['floorOn'] = 0  # it floats, like a cone held up in a studio
     jobs.append(j)
+import sys
+if '--new' in sys.argv:
+    jobs = [j for j in jobs if j['obj'] >= 20]
 json.dump(jobs, open('jobs-zoom.json', 'w'))
 print(len(jobs))

@@ -1,5 +1,5 @@
 import {createMemorySequence,stepMemorySequence} from '../../public/assets/js/engines/cognitive-v34.js';
-import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,partyGame,normalizePlaylist,playlistCapacity,capacityMessage,playersLabel,tableSize,tablesFor} from '../../public/assets/js/engines/party-catalog-v29.js';
+import {PARTY_CAPACITY,PARTY_COUNTDOWN_MS,PARTY_BREAK_MS,PLAYLIST_MAX,partyGame,normalizePlaylist,playlistCapacity,capacityMessage,playersLabel,tableSize,tablesFor} from '../../public/assets/js/engines/party-catalog-v29.js';
 import {CATEGORIES} from '../questions.js';
 import {createSudoku,moveSudoku} from '../../public/assets/js/engines/sudoku-engine.js';
 import {solveSudoku,SUDOKU_PEERS} from '../../public/assets/js/engines/sudoku-core.js';
@@ -47,9 +47,11 @@ export function partyRanking(room){
  return rows.map((p,i)=>{const key=p.score+':'+p.wins;if(last!==key)rank=i+1;last=key;return{id:p.id,name:p.name,username:p.username||undefined,role:p.role,ready:p.ready,connected:p.connected,score:p.score,wins:p.wins,rank,rounds:room.history.filter(h=>h.rows.some(r=>r.id===p.id)).length};});
 }
 function choices(q,category,random){const wrong=[...new Set([...(q.distractors||[]),...shuffled(category.questions,random).map(x=>x.a)].filter(a=>a!==q.a))].slice(0,3);const options=shuffled([q.a,...wrong],random);return{...q,options,correctIndex:options.indexOf(q.a)};}
-function quizPack(game,seed,difficulty=2){const random=seeded(seed);
+function quizPack(game,seed,difficulty=2,picked=null){const random=seeded(seed);
  if(game==='logic')return Array.from({length:10},(_,i)=>{const q=logicQuestion(i,random,difficulty);return{id:'logic:'+i,q:q.question,category:q.category,visual:q.visual,sequence:q.sequence,a:String(q.answer),options:q.options.map(String),correctIndex:q.options.indexOf(q.answer),explanation:q.explanation};});
- const categories=shuffled(CATEGORIES,random),out=[];for(let i=0;i<8;i++){const cat=categories[i%categories.length],q=shuffled(cat.questions,random)[0];out.push({...choices(q,cat,random),category:cat.name});}return out;
+ // 33.10.6: the host's chosen categories (several), else all of them
+ const chosen=Array.isArray(picked)&&picked.length?CATEGORIES.filter(c=>picked.includes(c.id)):[];
+ const categories=shuffled(chosen.length?chosen:CATEGORIES,random),out=[];for(let i=0;i<8;i++){const cat=categories[i%categories.length],q=shuffled(cat.questions,random)[0];out.push({...choices(q,cat,random),category:cat.name});}return out;
 }
 function resetQuizQuestion(r,now){r.questionStartedAt=now;r.answerOpensAt=now+(r.questions[r.questionIndex]?.media==='memory'?Math.min(8000,Math.max(2500,r.questions[r.questionIndex].memory?.previewMs||4500)):0);r.questionDeadline=Math.min(r.deadline,r.answerOpensAt+Math.max(7000,Math.floor(r.settings.duration*1000/r.questions.length)-2500));r.revealUntil=0;for(const p of Object.values(r.participants)){p.choice=null;p.listenCount=0;}}
 function tableGroups(room,r,random){
@@ -113,7 +115,7 @@ export function setupRoundGame(room,r,now=Date.now()){
   for(const p of Object.values(r.participants))p.state={deck:[...deck],sequence:order?[...order]:null,cursor:0,mistakes:0,open:[],matched:[],moves:0,active:true,locked:false};
  }
  else if(game==='puzzle'){const tiles=generatePuzzle(random,30+settings.difficulty*40);for(const p of Object.values(r.participants))p.tiles=[...tiles];}
- else if(['quiz','logic'].includes(game)){r.questions=quizPack(game,seed,settings.difficulty);r.questionIndex=0;resetQuizQuestion(r,now);}
+ else if(['quiz','logic'].includes(game)){r.questions=quizPack(game,seed,settings.difficulty,game==='quiz'?settings.categories:null);r.questionIndex=0;resetQuizQuestion(r,now);}
  else if(game==='reaction'){r.trial=0;r.trials=5;r.signal='wait';r.signalAt=now+1500+Math.floor(random()*2200);r.signalDeadline=r.signalAt+5000;for(const p of Object.values(r.participants)){p.times=[];p.trialChoice=null;}}
  else if(partyGame(game).kind==='board'){r.tables=tableGroups(room,r,random);}
  else if(game==='serpent'){r.arena=createSerpentGame(room.roster.map(id=>({id,name:room.players[id].name,skin:room.players[id].skin||'snake-wild'})),{seed,worldId:settings.worldId,collisionMode:'arena-v23',duration:settings.duration,difficulty:'medium'});r.lastSimulationAt=now;r.stepCarry=0;}
@@ -292,7 +294,7 @@ export function configureParty(room,id,message,now=Date.now()){
  }
  if(message.type==='playlist'){
   if(message.playlistRevision!==room.playlistRevision)throw Error('تغيرت القائمة؛ أعد تحميلها');const rows=normalizePlaylist(message.playlist);if(room.order.length>playlistCapacity(rows))throw Error(capacityMessage(rows));
-  if(room.status==='lobby'||room.status==='finished')room.playlist=rows;else{const prefix=room.playlist.slice(0,room.cursor+1);if(prefix.length+rows.length>20)throw Error('حد القائمة 20 لعبة');room.playlist=[...prefix,...rows];}
+  if(room.status==='lobby'||room.status==='finished')room.playlist=rows;else{const prefix=room.playlist.slice(0,room.cursor+1);if(prefix.length+rows.length>PLAYLIST_MAX)throw Error('حد القائمة '+PLAYLIST_MAX+' لعبة');room.playlist=[...prefix,...rows];}
   room.capacity=Math.min(room.capacity,playlistCapacity(room.playlist.slice(Math.max(0,room.cursor+1))));room.playlistRevision++;if(room.status==='lobby')for(const x of Object.values(room.players))x.ready=false;return;
  }
  if(message.type==='capacity'){
@@ -344,6 +346,8 @@ export function partySnapshot(room,id=null,now=Date.now()){
 export function retirePartyChallenges(room,now=Date.now()){
  const retired=new Set(['labyrinth','territory','survival']);let changed=false;
  for(const row of room.playlist||[])if(retired.has(row.game)){row.game='focus';changed=true;}
+ // 33.10.6: الزهرة made way for لودو (the round being played keeps its table)
+ (room.playlist||[]).forEach((row,i)=>{if(row.game==='zahra'&&!(i===room.cursor&&room.round?.game==='zahra')){row.game='ludo';changed=true;}});
  if(changed)room.playlistRevision=(room.playlistRevision||0)+1;
  if(retired.has(room.round?.game)){if(room.status==='playing')finishPartyRound(room,now,true);room.round=null;room.returnWait=false;if(room.status==='intermission')room.nextAt=now+PARTY_BREAK_MS;changed=true;}
  return changed;

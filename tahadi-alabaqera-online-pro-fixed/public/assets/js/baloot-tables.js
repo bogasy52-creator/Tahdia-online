@@ -99,7 +99,7 @@
     const stage = make('div', 'blt-stage'), info = make('div', 'blt-info'), list = make('div', 'blt-list');
     list.setAttribute('role', 'listbox'); list.setAttribute('aria-label', 'الطاولات');
     const action = make('button', 'bl-cta blt-action'); action.type = 'button'; action.addEventListener('click', act);
-    const foot = make('div', 'blt-foot'); foot.append(make('small', 'blt-coins'), make('small', 'blt-note', 'الطاولة نفسها تلبس لوحتي الجاكارو والزهرة.'));
+    const foot = make('div', 'blt-foot'); foot.append(make('small', 'blt-coins'));
     card.append(head, stage, info, list, action, foot); sheet.append(card); document.body.append(sheet);
     sheet.addEventListener('click', (event) => { if (event.target === sheet) hide(); });
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && sheet && !sheet.hidden) { event.preventDefault(); hide(); } });

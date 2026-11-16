@@ -1,0 +1,44 @@
+<!doctype html><html><body style="margin:0;background:#000"><canvas id="c"></canvas>
+<script src="flags.js"></script>
+<script>
+// Waves one flag on a pole over a soft studio sky. The wave is gentle so the
+// colours and emblems stay exact; light and shade follow the folds.
+const W = 1350, H = 900;
+const canvas = document.getElementById('c'); canvas.width = W; canvas.height = H;
+const ctx = canvas.getContext('2d');
+function load(src) { return new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src); }); }
+window.renderFlag = async function (name, seed = 0) {
+  const im = await load(window.QUIZ_FLAGS[name]);
+  const ratio = im.width / im.height;
+  let fw = 880, fh = fw / ratio; if (fh > 560) { fh = 560; fw = fh * ratio; }
+  fw = Math.round(fw); fh = Math.round(fh);
+  const flat = document.createElement('canvas'); flat.width = fw; flat.height = fh;
+  flat.getContext('2d').drawImage(im, 0, 0, fw, fh);
+  // backdrop: a calm sky gradient with a soft glow behind the flag
+  const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#a9c4e4'); bg.addColorStop(1, '#e9eff6');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(W * .55, H * .45, 40, W * .55, H * .45, W * .6); glow.addColorStop(0, 'rgba(255,255,255,.55)'); glow.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+  const x0 = Math.round((W - fw) / 2 + 40), y0 = Math.round((H - fh) / 2 - 10);
+  // the cloth, column by column
+  const layer = document.createElement('canvas'); layer.width = W; layer.height = H; const L = layer.getContext('2d');
+  const amp = fh * 0.035, k = 2 * Math.PI * 1.35, ph = 0.4 + seed * 0.7;
+  const off = x => amp * Math.sin(k * x / fw + ph) * (0.15 + 0.85 * x / fw);
+  for (let x = 0; x < fw; x++) L.drawImage(flat, x, 0, 1, fh, x0 + x, y0 + off(x), 1.6, fh);
+  L.globalCompositeOperation = 'source-atop';
+  for (let x = 0; x < fw; x++) {
+    const s = Math.cos(k * x / fw + ph) * (0.25 + 0.75 * x / fw);
+    L.fillStyle = s > 0 ? `rgba(255,255,255,${(0.16 * s).toFixed(3)})` : `rgba(0,0,0,${(-0.2 * s).toFixed(3)})`;
+    L.fillRect(x0 + x, 0, 1.6, H);
+  }
+  // pole and its gold finial
+  ctx.save(); ctx.shadowColor = 'rgba(20,40,70,.28)'; ctx.shadowBlur = 30; ctx.shadowOffsetX = 10; ctx.shadowOffsetY = 16; ctx.drawImage(layer, 0, 0); ctx.restore();
+  const px = x0 - 16, pw = 16;
+  const pole = ctx.createLinearGradient(px, 0, px + pw, 0); pole.addColorStop(0, '#6d7784'); pole.addColorStop(.35, '#f4f6f8'); pole.addColorStop(1, '#58616d');
+  ctx.fillStyle = pole; ctx.fillRect(px, y0 - 46, pw, H - y0 + 60);
+  const ball = ctx.createRadialGradient(px + pw / 2 - 6, y0 - 62, 2, px + pw / 2, y0 - 56, 20); ball.addColorStop(0, '#fff5c8'); ball.addColorStop(.5, '#e2b23a'); ball.addColorStop(1, '#8a6212');
+  ctx.fillStyle = ball; ctx.beginPath(); ctx.arc(px + pw / 2, y0 - 56, 18, 0, Math.PI * 2); ctx.fill();
+  return { url: canvas.toDataURL('image/png'), box: { x: x0 / W, y: y0 / H, w: fw / W, h: fh / H } };
+};
+window.ready = true;
+</script></body></html>

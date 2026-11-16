@@ -1,11 +1,12 @@
 # Zoom challenge renders (32.0.0)
 
-Twenty everyday objects for the zoom quiz category, modelled as signed distance
+Thirty everyday objects for the zoom quiz category, modelled as signed distance
 fields and ray marched in a WebGL fragment shader (`objects-shader.js`) with a
 perspective camera over a seamless studio sweep. Glass (the bulb, the hourglass)
 is traced in two passes: its surface, then what lies behind it.
 
-1. `python3 make-jobs.py` — writes `jobs-zoom.json` (20 objects at 1350 × 900).
+1. `python3 make-jobs.py` — writes `jobs-zoom.json` (30 objects; the ten added in 33.10.6 at
+   1200 × 800 straight away, `--new` keeps only those).
 2. `node studio.cjs jobs-zoom.json out` — renders them in headless Chromium.
 3. `python3 pack.py out ../../public/assets/quiz_render_v32` — 1200 × 800 WebP.
 

@@ -11,7 +11,7 @@ export const ROOM_FAMILIES = Object.freeze({
   picture: { from: 30, to: 34, page: '/picture' },
   serpent: { from: 35, to: 39, page: '/serpent' },
   snakes: { from: 40, to: 44, page: '/snakes' },
-  zahra: { from: 45, to: 49, page: '/zahra' },
+  zahra: { from: 45, to: 49, page: '/ludo' }, // 33.10.6: الزهرة made way for لودو
   jackaroo: { from: 50, to: 54, page: '/jackaroo' },
   dice: { from: 55, to: 59, page: '/dice' },
   baloot: { from: 60, to: 64, page: '/baloot' },

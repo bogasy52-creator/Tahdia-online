@@ -10,7 +10,7 @@ const pub = join(root,'public');
 const byId = id => CATEGORIES.find(c=>c.id===id);
 
 test('quiz bank is expanded, balanced, and uniquely identified', () => {
-  assert.equal(CATEGORIES.length,24);
+  assert.equal(CATEGORIES.length,25);
   const total=CATEGORIES.reduce((n,c)=>n+c.questions.length,0);
   assert.ok(total>=680,`expected >=680 challenges, got ${total}`);
   const ids=new Set();
@@ -87,7 +87,8 @@ test('approved premium dice uses large black pips and physical lift/impact motio
 
 
 test('quiz text questions have no exact duplicates and use category-aware curated distractors', () => {
-  const textQs=CATEGORIES.flatMap(c=>['sounds','zoom'].includes(c.id)?[]:c.questions.map(q=>({...q,cat:c.id})));
+  // 33.10.6: picture categories (zoom, flags) share one prompt; only text must differ
+  const textQs=CATEGORIES.flatMap(c=>['sounds','zoom','flags'].includes(c.id)?[]:c.questions.map(q=>({...q,cat:c.id})));
   const seen=new Set();
   for(const q of textQs){
     const key=String(q.q||'').trim().replace(/\s+/g,' ').toLowerCase();
@@ -95,9 +96,9 @@ test('quiz text questions have no exact duplicates and use category-aware curate
     assert.ok(q.kind,`${q.id} missing answer kind`);
   }
   const find=id=>textQs.find(q=>q.id===id);
-  assert.deepEqual(find('general-003').distractors,['العربية','الهندية','الإسبانية']);
-  assert.deepEqual(find('general-006').distractors,['مليون','مليار','تريليون']);
-  assert.deepEqual(new Set(find('history-009').distractors),new Set(['معاهدة أوترخت','صلح وستفاليا','معاهدة تورديسيلاس']));
+  assert.deepEqual(find('general-003').distractors,['الحصان','الفيل','الحمار']);
+  assert.deepEqual(find('general-006').distractors,['الأحمر','الأزرق','الأصفر']);
+  assert.deepEqual(new Set(find('history-009').distractors),new Set(['اليابان','الهند','منغوليا']));
 });
 
 test('audio mastering manifest confirms 60 clear consistently leveled quiz clips', async()=>{

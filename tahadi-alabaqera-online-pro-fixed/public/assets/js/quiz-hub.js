@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id),selectionKey='bs-quiz-lineup-v21';
 let catalog=[],selected=[],selectedOnly=false;
-const symbols={ai:'✧',palm:'❋',map:'⌖',scroll:'▤',globe:'◎',atom:'⚛',rocket:'↗',chip:'▦',car:'◈',tag:'◇',ball:'◉',trophy:'♜',letter:'أ',puzzle:'✚',chef:'♨',film:'▣',bulb:'✦',paw:'♧',quran:'▥',tafsir:'⌕',meanings:'ض',soundcat:'♫',zoom:'⊕',memory:'∞'};
+const symbols={ai:'✧',palm:'❋',map:'⌖',scroll:'▤',globe:'◎',atom:'⚛',rocket:'↗',chip:'▦',car:'◈',tag:'◇',ball:'◉',trophy:'♜',letter:'أ',puzzle:'✚',chef:'♨',film:'▣',bulb:'✦',paw:'♧',quran:'▥',tafsir:'⌕',meanings:'ض',soundcat:'♫',zoom:'⊕',memory:'∞',flag:'⚑'};
 const normalize=value=>String(value||'').normalize('NFKC').replace(/[\u064b-\u065f\u0670]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').trim();
 function persist(){try{localStorage.setItem(selectionKey,JSON.stringify(selected));}catch{}}
 function remove(id){selected=selected.filter(value=>value!==id);persist();render();}

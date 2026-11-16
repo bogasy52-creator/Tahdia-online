@@ -45,7 +45,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.10.5';
+const RELEASE='33.10.6';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -1024,6 +1024,12 @@ export class GameRoom extends DurableObject {
         partyExpected: cleanPartyLink(body.party) ? Math.max(1, Math.min(20, Number(body.expected) || 2)) : undefined,
       };
       await this.loadAiPack();
+      // 33.10.6: a group room (الجمعة) may name the categories to ask from, as many as it likes
+      if (Array.isArray(body.categories)) {
+        const known = new Set(this.categoryList().map((c) => c.id));
+        const picked = [...new Set(body.categories)].filter((id) => typeof id === 'string' && known.has(id)).slice(0, 40);
+        if (picked.length) { this.room.selectedCategories = picked; this.room.categoriesFixed = true; }
+      }
       await this.persist();
       await this.ctx.storage.setAlarm(this.room.expiresAt);
       return json({ ok: true }, 201);
@@ -1170,6 +1176,7 @@ export class GameRoom extends DurableObject {
 
         case "set_categories":
           if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
+          if (this.room.categoriesFixed) return this.sendError(ws, "الأقسام محددة من الجمعة");
           {
             const ids = [...new Set(Array.isArray(msg.categories) ? msg.categories : [])]
               .filter((id) => this.hasCategory(id))
@@ -1217,6 +1224,7 @@ export class GameRoom extends DurableObject {
 
         case "random_categories":
           if (player.role !== "host" || this.room.status !== "lobby") return this.sendError(ws, "للمضيف فقط");
+          if (this.room.categoriesFixed) return this.sendError(ws, "الأقسام محددة من الجمعة");
           this.room.selectedCategories = shuffle(this.categoryList().map((c) => c.id)).slice(0, 6);
           for(const p of Object.values(this.room.players))p.ready=false;
           await this.persistAndBroadcast();
@@ -2308,7 +2316,7 @@ export class BoardRoom extends DurableObject {
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }
         catch (error) {
           const code = String(error?.message || error);
-          const messages = { hand_can_move: 'عندك ورقة تقدر تلعبها، ما تقدر تحرق الكل', wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: this.room.game === 'zahra' ? 'ارمِ الزهرة أولًا' : 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة', bad_place: 'ما تقدر تحط البيضاء هنا', place_first: 'حط الكرة البيضاء أول', invalid_shot: 'الضربة غير صالحة', match_over: 'المباراة خلصت', not_roll: 'اختر حجرًا أولًا', not_pick: 'ارمِ نرد الألوان أولًا', invalid_peg: 'اختر حجرًا من اللي على اللوحة', no_peeks: 'استخدمت عين الصقر في هذي الجولة', look_phase: 'احفظ الألوان، اللعب يبدأ بعد شوي' };
+          const messages = { hand_can_move: 'عندك ورقة تقدر تلعبها، ما تقدر تحرق الكل', wrong_turn: 'مو دورك الآن', move_first: 'اختر الحجر أولًا', choose_first:'اختر إحدى الرميتين أولًا', invalid_choice:'اختر رمية من المعروضتين', roll_first: 'ارمِ النرد أولًا', power_unavailable: 'القدرة غير متاحة الآن', illegal_move: 'الحركة غير صالحة', illegal_ludo_move: 'الحركة غير صالحة', invalid_action: 'أمر غير معروف', match_not_playing: 'المباراة غير نشطة', bad_place: 'ما تقدر تحط البيضاء هنا', place_first: 'حط الكرة البيضاء أول', invalid_shot: 'الضربة غير صالحة', match_over: 'المباراة خلصت', not_roll: 'اختر حجرًا أولًا', not_pick: 'ارمِ نرد الألوان أولًا', invalid_peg: 'اختر حجرًا من اللي على اللوحة', no_peeks: 'استخدمت عين الصقر في هذي الجولة', look_phase: 'احفظ الألوان، اللعب يبدأ بعد شوي' };
           const jewelsMessages = { stale_move:'وصلت حركتك سابقًا؛ تم تحديث لوحتك', invalid_sequence:'حدّث اللوحة ثم حاول الحركة مجددًا', run_finished:'اكتملت جولتك؛ ننتظر النتيجة', match_expired:'انتهى وقت التحدي', no_match:'اختر تبديلًا يصنع تطابقًا', not_charged:'القدرة لم تكتمل بعد', not_adjacent:'اختر جوهرتين متجاورتين', bad_cell:'اختر جوهرة داخل اللوحة' };
           this.sendError(ws, messages[code] || jewelsMessages[code] || 'تعذر تنفيذ الحركة');
           if (independentJewels) { try { ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)})); } catch {} }
