@@ -44,6 +44,7 @@ test('the match deadline stops unfinished runs rather than auto-playing human mo
 });
 test('human and bot each finish 25 actions without a shared turn or an extended deadline',()=>{
  const r=room(1),end=r.state.endsAt;for(let n=0;n<25;n++)play(r,0);assert.equal(r.state.players[1].used,0);
- let alarms=0;while(!tableOver(r)&&alarms++<30){assert.ok(r.jewelsBotAt<end);timeoutMove(r,()=>.4,undefined,r.jewelsBotAt);}
- assert.equal(alarms,25);assert.equal(tableOver(r),true);assert.deepEqual(r.state.players.map(p=>p.used),[25,25]);assert.equal(r.jewelsBotAt,null);
+ let alarms=0;while(!tableOver(r)&&alarms++<40){assert.ok(r.jewelsBotAt<end);timeoutMove(r,()=>.4,undefined,r.jewelsBotAt);}
+ // 33.10.5: «المنقار» breaks a gem without a move, so a run can take a few more actions than 25
+ assert.ok(alarms>=25&&alarms<30,String(alarms));assert.equal(tableOver(r),true);assert.deepEqual(r.state.players.map(p=>p.used),[25,25]);assert.equal(r.jewelsBotAt,null);
 });

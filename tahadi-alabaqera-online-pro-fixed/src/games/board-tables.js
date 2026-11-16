@@ -65,19 +65,20 @@ export function pickBotLevel(rng = Math.random) {
 }
 
 // 33.4.0: snakes & ladders lets you pick the table size: 2, 3 or 4 players
-export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], pegs: [2, 3, 4] });
+export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], pegs: [2, 3, 4], ludo: [2, 3, 4] });
 /** A table size the player picked, when this game offers one; otherwise null. */
-export function chosenSeats(game, value) {
+export function chosenSeats(game, value, variant = null) {
   const n = Number(value);
-  return TABLE_SIZES[game]?.includes(n) ? n : null;
+  // 33.10.5: «لودو» (a zahra table on the cross board) also lets you pick 2, 3 or 4
+  return TABLE_SIZES[game === 'zahra' && isLudoVariant(variant) ? 'ludo' : game]?.includes(n) ? n : null;
 }
 /** How many seats the table gets for this many players (and the size picked, if any). */
-export function seatsFor(game, humans, quick = false, chosen = null) {
+export function seatsFor(game, humans, quick = false, chosen = null, variant = null) {
   if (game === 'jackaroo') return humans > 4 ? 6 : 4;
   if (game === 'billiards' || game === 'jewels' || game === 'carrom') return 2;
-  const picked = chosenSeats(game, chosen);
+  const picked = chosenSeats(game, chosen, variant);
   const least = picked || (quick ? QUICK_SEATS[game] : 2);
-  return Math.min(MAX_SEATS[game], Math.max(least, humans));
+  return Math.min(seatLimit(game, variant, MAX_SEATS[game]), Math.max(least, humans));
 }
 
 /** Seat → player id (null for a bot). In Jackaroo the first players in sit as partners. */
@@ -105,12 +106,18 @@ function makeBot(seat, rng, taken) {
 export function tableVariant(game, variant) {
   if (game === 'snakes') { try { return normalizeSnakesVariant(variant || 'classic'); } catch { return 'classic'; } }
   if ((game === 'jackaroo' || game === 'zahra') && variant === 'quick') return 'quick';
+  // 33.10.5: «لودو» is a zahra table on the classic cross board (2–4 players), with its own «سريع»
+  if (game === 'zahra' && (variant === 'ludo' || variant === 'ludo-quick')) return variant;
   return 'classic';
+}
+export const isLudoVariant = (variant) => variant === 'ludo' || variant === 'ludo-quick';
+export function seatLimit(game, variant, limit) {
+  return game === 'zahra' && isLudoVariant(variant) ? Math.min(4, limit) : limit;
 }
 
 function createState(game, names, variant, rng, now=Date.now()) {
   if (game === 'snakes') return createSnakesServerGame(names, { variant: variant || 'classic' });
-  if (game === 'zahra') return createLudoGame(names, { quick: variant === 'quick' });
+  if (game === 'zahra') return createLudoGame(names, { quick: variant === 'quick' || variant === 'ludo-quick', ...(isLudoVariant(variant) ? { layout: 'classic' } : {}) });
   // 33.7.0: four seats play on the board of the picture: 19 places a seat, the home lane filled
   if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length), home: 'fill', quick: variant === 'quick' });
   if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
@@ -151,7 +158,7 @@ export const stepsTime = (room, steps) => isJewelsRaceTable(room)?0:room.game===
 /* ---------- starting a table ---------- */
 export function startTable(room, { quick = false, rng = Math.random, roll = rollWith(rng), now = Date.now() } = {}) {
   const humans = room.order.filter((id) => room.players[id] && !room.players[id].bot);
-  const seats = seatsFor(room.game, humans.length, quick, room.tableSeats);
+  const seats = seatsFor(room.game, humans.length, quick, room.tableSeats, room.variant);
   const plan = seatPlan(room.game, humans, seats);
   const taken = new Set(humans.map((id) => room.players[id].name));
   for (let seat = 0; seat < seats; seat++) {

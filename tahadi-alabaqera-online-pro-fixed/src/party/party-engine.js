@@ -12,7 +12,7 @@ import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn} from '../..
 import {createJackarooGame,getJackarooActions,playJackarooAction} from '../../public/assets/js/engines/jackaroo-engine.js';
 import {createRaceDiceGame,rollRaceDice,bankRaceDice} from '../../public/assets/js/engines/dice-engine.js';
 import {createSerpentGame,steerSerpent,stepSerpent,serpentSnapshot} from '../../public/assets/js/engines/serpent-engine.js';
-import {linkedGame,linkable,linkTables,localGame,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
+import {linkedGame,linkable,linkTables,localGame,LINK_ONLY,PARTY_LINK_WAIT_MS,PARTY_RETURN_MS} from './party-link.js';
 
 export const PARTY_VERSION=29;
 export const CONTINUOUS_BREAK_MS=5000;
@@ -82,6 +82,8 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
   return;
  }
  if(room.continuous&&localGame(game)){r.local=localRound(r);return;}
+ // 33.10.5: a game the room has no copy of, with nobody here to play it: on to the next one
+ if(LINK_ONLY.has(game)){r.events.push('ما فيه لاعبين متصلين لهذي اللعبة؛ ننتقل للجولة التالية');finishPartyRound(room,now);return;}
  setupRoundGame(room,r,now);
 }
 // 33.9.1: what a game's own page needs to play the round: everyone the same board.
@@ -127,7 +129,7 @@ export function openPartyLink(room,{code,page},now=Date.now(),table=0){
 // The real room could not open: the round is played inside the party instead.
 export function failPartyLink(room,now=Date.now()){
  const r=room.round;if(room.status!=='playing'||r?.link?.status!=='creating')return false;
- if(['focus','cipher','wordbomb','chaos'].includes(r.game)){r.events.push('تعذر فتح اللعبة؛ الانتقال للجولة التالية دون نقاط');finishPartyRound(room,now);return true;}
+ if(LINK_ONLY.has(r.game)||['focus','cipher','wordbomb','chaos'].includes(r.game)){r.events.push('تعذر فتح اللعبة؛ الانتقال للجولة التالية دون نقاط');finishPartyRound(room,now);return true;}
  r.link={status:'failed',page:r.link.page};r.startedAt=now;r.deadline=now+r.settings.duration*1000;setupRoundGame(room,r,now);r.revision++;return true;
 }
 /** The real room's final ranking becomes this round's result. */

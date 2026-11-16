@@ -1,5 +1,5 @@
-import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=33.10.4-why1';
-import {getLegalLudoMoves,applyLudoMove,globalLudoPosition} from './ludo-engine.js?v=33.10.4-quick1';
+import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=33.10.5-why1';
+import {getLegalLudoMoves,applyLudoMove,globalLudoPosition,ludoGeometry} from './ludo-engine.js?v=33.10.5-classic1';
 import {boardGeometry} from './board-geometry-v29.js';
 
 function pick(scored,difficulty,rng){
@@ -62,16 +62,16 @@ export function chooseJackarooMove(state,difficulty='medium',rng=Math.random){
 function cardCost(card){return /^[AK]/.test(card)?10:/^7/.test(card)?8:1}
 
 export function chooseLudoMove(state,roll,difficulty='medium',rng=Math.random){
- const actor=state.turn,geometry=boardGeometry(state);
+ const actor=state.turn,geometry=ludoGeometry(state);
  return pick(getLegalLudoMoves(state,roll).map(token=>{
   const next=applyLudoMove(state,token,roll),event=next.lastEvent;
-  let score=event.to===geometry.finish?600:event.to>=geometry.track?150+event.to:event.from===-1?65:event.to;
+  let score=event.to===geometry.finish?600:event.to>=geometry.lane?150+event.to:event.from===-1?65:event.to;
   score+=(event.captured?.length||0)*110;
-  if(difficulty==='hard'&&event.to<geometry.track){
+  if(difficulty==='hard'&&event.to<geometry.lane){
    const global=globalLudoPosition(actor,event.to,state);
    if(geometry.safe.has(global))score+=35;
    else for(let op=0;op<state.players.length;op++)if(op!==actor)for(const m of next.players[op].tokens){
-    if(m>=0&&m<geometry.track){const gap=(global-globalLudoPosition(op,m,state)+geometry.track)%geometry.track;if(gap>0&&gap<=6)score-=18}
+    if(m>=0&&m<geometry.lane){const gap=(global-globalLudoPosition(op,m,state)+geometry.track)%geometry.track;if(gap>0&&gap<=6)score-=18}
    }
   }
   return{value:token,score};

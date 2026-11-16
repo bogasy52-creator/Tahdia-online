@@ -20,7 +20,7 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from "./games/snakes-server.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
-import { TABLE_GAMES, MAX_SEATS, chosenSeats, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, isJewelsRaceTable, DEFAULT_LOOK, FREE_LOOK_ITEMS, tableVariant } from "./games/board-tables.js";
+import { TABLE_GAMES, MAX_SEATS, chosenSeats, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, isJewelsRaceTable, DEFAULT_LOOK, FREE_LOOK_ITEMS, tableVariant, seatLimit, isLudoVariant } from "./games/board-tables.js";
 import { publicJewelsRace, finishJewelsRace } from '../public/assets/js/engines/jewels-race-engine.js';
 import { BALOOT_LOBBY_MS, freeBalootSeat, startBalootRoom, applyBalootMove, balootAlarm, balootPlayers, balootRoomView, balootWinFor } from "./games/baloot-server.js";
 import { validTalk } from "../public/assets/js/engines/baloot-talk.js";
@@ -45,7 +45,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.10.4';
+const RELEASE='33.10.5';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -815,7 +815,7 @@ export default {
       const game = String(body.game || ""), variant = game === 'snakes' ? (['adventure','strategy','clash'].includes(body.variant) ? body.variant : 'classic') : tableVariant(game, body.variant);
       if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       // 33.4.0: a table size the player picked (snakes: 2, 3 or 4) has its own open table
-      const seats = chosenSeats(game, body.seats),humansOnly=body.humansOnly===true;
+      const seats = chosenSeats(game, body.seats, variant),humansOnly=body.humansOnly===true;
       try {
         const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + (humansOnly?":humans":"") + ":v33"));
         return await stub.fetch("https://tablequick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ game, variant, seats, humansOnly }) });
@@ -841,7 +841,7 @@ export default {
           catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
         }
         // 33.0.0: a room takes whoever comes, up to the game's table; nobody picks a count
-        const playerLimit = game === "baloot" ? 4 : MAX_SEATS[game];
+        const playerLimit = game === "baloot" ? 4 : seatLimit(game, variant, MAX_SEATS[game]);
         const name = cleanName(body.name);
         for (let attempt = 0; attempt < 12; attempt++) {
           const code = roomCodeFor(game);
@@ -850,9 +850,9 @@ export default {
           const hostKey = token();
           const res = await stub.fetch("https://board.internal/init", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant, open: body.open !== false, seats: chosenSeats(game, body.seats) }),
+            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant, open: body.open !== false, seats: chosenSeats(game, body.seats, variant) }),
           });
-          if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit, variant, seats: chosenSeats(game, body.seats) });
+          if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit, variant, seats: chosenSeats(game, body.seats, variant) });
           if(res.status!==409){const failure=await res.json().catch(()=>({})),requestId=failure.requestId||crypto.randomUUID();return json({ok:false,code:failure.code==='ROOM_INITIALIZATION_FAILED'?'ROOM_INITIALIZATION_FAILED':'BOARD_ENGINE_UNAVAILABLE',error:'فشل تشغيل غرفة اللعبة على السيرفر. أعد المحاولة؛ إذا تكرر الخطأ افحص نشر محرك الغرف.',requestId,release:RELEASE},503)}
         }
         return json({ ok: false, error: "تعذر إنشاء غرفة الآن" }, 503);
@@ -1794,9 +1794,9 @@ export class BoardRoom extends DurableObject {
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
     // still opens a table sized for exactly its players.
-    const tableSeats=partyLink?null:chosenSeats(game,body.seats);
+    const tableSeats=partyLink?null:chosenSeats(game,body.seats,variant);
     const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,Number(body.playerLimit)||2))):body.publicMatch===true&&tableSeats?tableSeats:MAX_SEATS[game];
-    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit,createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
+    const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:seatLimit(game,variant,playerLimit),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     // A public table (Baloot quick, or «العب الحين») starts by itself after the lobby countdown.
     room.humansOnly=body.humansOnly===true;
     room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch&&!room.humansOnly?now+(game==='baloot'?BALOOT_LOBBY_MS:TABLE_LOBBY_MS):null;
@@ -1842,7 +1842,7 @@ export class BoardRoom extends DurableObject {
         if(this.room.startedAt===endedAt&&this.room.status==='finished'){this.room.rewardsComplete=true;this.room.rewardRetryAt=null;await this.ctx.storage.put('room',this.room)}
       }catch(error){if(this.room.startedAt===endedAt&&this.room.status==='finished'){this.room.rewardRetryAt=Date.now()+10000;await this.ctx.storage.put('room',this.room)}console.error('Board reward will retry',error.message)}
     }
-    if(this.room.status==='finished'&&this.room.partyLink&&!this.room.partyReported&&this.room.state){await settlePartyLink(this.env,this.room,this.room.game,this.boardStandings());await this.ctx.storage.put('room',this.room);}
+    if(this.room.status==='finished'&&this.room.partyLink&&!this.room.partyReported&&this.room.state){await settlePartyLink(this.env,this.room,this.room.game==='zahra'&&isLudoVariant(this.room.variant)?'ludo':this.room.game,this.boardStandings());await this.ctx.storage.put('room',this.room);}
   }
   // 32.1.0: the final ranking of a board match, for the group room that opened it
   boardStandings(){
@@ -2066,7 +2066,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
-    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats),body.humansOnly===true)); }
+    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats, tableVariant(String(body.game || ''), body.variant)),body.humansOnly===true)); }
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom','pegs'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
@@ -2167,9 +2167,9 @@ export class BoardRoom extends DurableObject {
     if (game === 'snakes') try { variant = normalizeSnakesVariant(variant); } catch { variant = 'classic'; } else variant = tableVariant(game, variant);
     const now = Date.now(), key = 'tableQuick';
     let open = (await this.ctx.storage.get(key)) || null;
-    if(humansOnly&&open){try{const res=await this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(open.code)).fetch('https://board.internal/status'),data=await res.json();if(!res.ok||data.status!=='lobby'||data.players>=(seats||MAX_SEATS[game]))open=null;else open.assigned=0;}catch{return json({ok:false,error:'تعذّر التحقق من طاولة اللاعبين.'},503);}}
+    if(humansOnly&&open){try{const res=await this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(open.code)).fetch('https://board.internal/status'),data=await res.json();if(!res.ok||data.status!=='lobby'||data.players>=(seats||seatLimit(game,variant,MAX_SEATS[game])))open=null;else open.assigned=0;}catch{return json({ok:false,error:'تعذّر التحقق من طاولة اللاعبين.'},503);}}
     // a table of a picked size takes no more people than its seats
-    if (open && (open.assigned >= (seats || MAX_SEATS[game]) || now >= open.closesAt)) open = null;
+    if (open && (open.assigned >= (seats || seatLimit(game, variant, MAX_SEATS[game])) || now >= open.closesAt)) open = null;
     if (!open) {
       for (let attempt = 0; attempt < 8 && !open; attempt++) {
         const code = roomCodeFor(game);

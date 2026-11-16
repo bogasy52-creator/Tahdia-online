@@ -65,5 +65,5 @@ test('public snapshots keep the opponent board and replay private',()=>{
  assert.notEqual(view.players[0].board,s.players[0].board);
 });
 test('every AI strength completes valid independent boards within the same action budget',()=>{
- for(const level of['easy','medium','hard'])for(const seed of[1,17,713,9001]){let s=create({seed});for(let used=0;used<25;used++){const m=E.chooseJewelsRaceMove(s,1,level,()=>.4);assert.ok(m);s=m.type==='booster'?E.playJewelsRaceBooster(s,1,m.id,m.cell,{now:1100}):E.playJewelsRaceSwap(s,1,m.a,m.b,{now:1100});assert.equal(s.players[1].used,used+1);assert.equal(s.players[1].board.length,64);assert.ok(s.players[1].board.every(Boolean));}assert.equal(s.players[1].done,true);assert.equal(s.players[0].used,0);assert.equal(s.finished,false);}
+ for(const level of['easy','medium','hard'])for(const seed of[1,17,713,9001]){let s=create({seed});for(let used=0;used<25;){const m=E.chooseJewelsRaceMove(s,1,level,()=>.4);assert.ok(m);s=m.type==='booster'?E.playJewelsRaceBooster(s,1,m.id,m.cell,{now:1100}):E.playJewelsRaceSwap(s,1,m.a,m.b,{now:1100});if(!s.players[1].last.free)used++;assert.equal(s.players[1].used,used,'only «المنقار» is free');assert.equal(s.players[1].board.length,64);assert.ok(s.players[1].board.every(Boolean));}assert.equal(s.players[1].done,true);assert.equal(s.players[0].used,0);assert.equal(s.finished,false);}
 });

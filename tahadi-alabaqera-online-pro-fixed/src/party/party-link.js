@@ -25,7 +25,18 @@ export const LINKED_GAMES = Object.freeze({
   jackaroo: { page: '/jackaroo', min: 1, max: 6, tables: true },
   // 33.9.1: the dice race is played on its own table too, ten to a table
   dice: { page: '/dice', min: 1, max: 10, tables: true },
+  // 33.10.5: every table game of the site: لودو (the cross board, on the tables of الزهرة),
+  // billiards and carrom two to a table, شطرنج الذاكرة four to a table
+  ludo: { page: '/ludo', min: 1, max: 4, tables: true, board: 'zahra', variant: 'ludo' },
+  billiards: { page: '/billiards', min: 1, max: 2, tables: true },
+  carrom: { page: '/carrom', min: 1, max: 2, tables: true },
+  pegs: { page: '/pegs', min: 1, max: 4, tables: true },
+  // tanks four to a table and air hockey two; computer players take the seats nobody came for
+  tanks: { page: '/tanks', min: 1, max: 4, tables: true },
+  hockey: { page: '/hockey', min: 1, max: 2, tables: true },
 });
+/** 33.10.5: games the group room can only play in their own room (it has no copy of them). */
+export const LINK_ONLY = Object.freeze(new Set(['ludo', 'billiards', 'carrom', 'pegs', 'tanks', 'hockey']));
 
 // 33.9.1: the games with no online room are played on their own page inside the group
 // room: every player gets the same board (one seed for all) and each page sends its
@@ -54,7 +65,7 @@ export function cleanPartyLink(value) {
 }
 
 // 33.0.0: the code carries the game (see rooms/room-codes.js)
-const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo', dice: 'dice' };
+const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo', dice: 'dice', ludo: 'zahra', billiards: 'billiards', carrom: 'carrom', pegs: 'pegs', tanks: 'tanks', hockey: 'hockey' };
 const roomCode = (game) => roomCodeFor(FAMILY[game] || game);
 const secret = () => crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
 
@@ -65,6 +76,9 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   const difficulty = Math.min(5, Math.max(1, Number(settings?.difficulty) || 2));
   const room = Math.max(1, Math.min(20, Math.max(count, Number(seats) || 0)));
   if(['focus','cipher','wordbomb','chaos'].includes(game))return{ns:'ROOMS',name:'challenge:'+code,url:'https://challenge.internal/init',body:{game,code,hostKey,party,expected:count,capacity:room}};
+  // 33.10.5: tanks and air hockey have rooms of their own
+  if (game === 'tanks') return { ns: 'ROOMS', name: 'tanks:' + code, url: 'https://tanks.internal/init', body: { code, hostKey, capacity: Math.max(2, Math.min(4, count)), mode: 'ffa', expected: count, party } };
+  if (game === 'hockey') return { ns: 'ROOMS', name: 'hockey:' + code, url: 'https://hockey.internal/init', body: { code, hostKey, quick: true, target: 5, expected: count, party } };
   if (game === 'quiz') {
     // 4 and 6 open a team match; a party plays everyone against everyone
     const playerLimit = Math.min(20, Math.max(2, [4, 6].includes(room) ? room + 1 : room));
@@ -79,8 +93,10 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
     const playerLimit = Math.max(2, room), botCount = count < 2 ? 1 : 0;
     return { ns: 'ROOMS', name: '__serpent__:' + code, url: 'https://serpent.internal/init', body: { code, hostKey, playerLimit, duration, botCount, difficulty: 'mixed', matchMode: 'timed', worldId: settings?.worldId || 'classic', expected: count, party } };
   }
-  // snakes, zahra, jackaroo, dice: a board room for the players of this table (bots fill the rest)
-  return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game, playerLimit: game === 'jackaroo' ? (count > 4 ? 6 : 4) : count, expected: count, name: '', variant: 'classic', party } };
+  // snakes, zahra, jackaroo, dice, ludo, billiards, carrom, pegs: a board room for the players of
+  // this table (bots fill the rest)
+  const table = LINKED_GAMES[game] || {};
+  return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game: table.board || game, playerLimit: game === 'jackaroo' ? (count > 4 ? 6 : 4) : count, expected: count, name: '', variant: table.variant || 'classic', party } };
 }
 
 /** Opens the real room. Returns { ok, code, page } or { ok: false }. */

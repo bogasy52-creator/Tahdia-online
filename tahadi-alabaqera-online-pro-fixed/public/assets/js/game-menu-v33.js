@@ -84,7 +84,7 @@
   /* ---------- the menu ---------- */
   function mount(target,options={}){
     if(!target)throw new Error('menu_target_missing');
-    const game=options.game,modes=Array.isArray(options.modes)?options.modes.filter(m=>m&&m.id):[];
+    const game=options.game,title=options.title||TITLES[game],modes=Array.isArray(options.modes)?options.modes.filter(m=>m&&m.id):[];
     let mode=modes.length?(modes.some(m=>m.id===store.get(MODE_KEY(game)))?store.get(MODE_KEY(game)):options.mode&&modes.some(m=>m.id===options.mode)?options.mode:modes[0].id):null;
     let pending=false,view='menu',lobbyTimer=null,friendsFor='';
     const box=make('div','gm33');box.dataset.game=game||'';box.setAttribute('dir','rtl');
@@ -244,7 +244,7 @@
         copy.append(codeButton);
         const share=button('gm33-share','مشاركة',async()=>{
           const url=root.location.origin+(roomUrl(game,model.code)||root.location.pathname+'?room='+model.code);
-          const text='تعال العب '+(TITLES[game]||'معي')+' في بوسراج — رمز الغرفة '+model.code;
+          const text='تعال العب '+(title||'معي')+' في بوسراج — رمز الغرفة '+model.code;
           try{if(navigator.share){await navigator.share({title:'بوسراج',text,url});return;}}catch{return;}
           try{await navigator.clipboard.writeText(text+'\n'+url);toast('نسخنا رابط الدعوة');}catch{toast(url);}
         });
@@ -268,7 +268,7 @@
       // your online friends, one tap to invite
       if(!model.isPublic&&model.code){
         if(friendsBlock)lobbyView.append(friendsBlock);
-        else{friendsFor=String(model.code);lobbyView.append(onlineFriends(game,model.code,model.variant));}
+        else{friendsFor=String(model.code);lobbyView.append(onlineFriends(game,model.code,model.variant,title));}
       }
       const actions=make('div','gm33-lobby-actions');
       if(model.canStart){const start=button('gm33-start',model.startLabel||'ابدأ المباراة',()=>model.onStart?.());start.disabled=Boolean(model.startDisabled);actions.append(start);}
@@ -301,7 +301,7 @@
   }
 
   /* ---------- online friends in a room lobby ---------- */
-  function onlineFriends(game,code,variant){
+  function onlineFriends(game,code,variant,title=TITLES[game]){
     const block=make('div','gm33-online-friends');
     const social=root.BS_SOCIAL;
     if(!social?.isLoggedIn?.()){
@@ -310,7 +310,7 @@
     }
     block.append(make('b',null,'أصحابك المتصلون'));
     const list=make('div','gm33-friend-list');list.append(make('small','gm33-muted','نشوف مين متصل…'));block.append(list);
-    const all=button('gm33-all-friends','كل الأصدقاء',()=>social.openInvitePicker?.({game,roomCode:code,variant,title:TITLES[game]}));
+    const all=button('gm33-all-friends','كل الأصدقاء',()=>social.openInvitePicker?.({game,roomCode:code,variant,title}));
     block.append(all);
     const paint=async(force=false)=>{
       let data=null;try{data=await social.me?.(force);}catch{}

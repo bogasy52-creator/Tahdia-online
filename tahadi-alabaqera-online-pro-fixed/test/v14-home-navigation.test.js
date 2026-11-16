@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {createDOM} from './dom-harness.mjs';
 async function home(){const h=await createDOM('index.html');await h.runFile('assets/js/home-v14.js');return h}
 test('Arabic game search and categories combine and empty results can be reset',async()=>{
- // 33.9.0: twenty-three games with crowd runner; 33.10.1: twenty-four with «شطرنج الذاكرة»
- const h=await home();assert.equal(h.doc.querySelectorAll('.home-game').filter(card=>!card.classList.contains('hidden')).length,24);
+ // 33.9.0: twenty-three games with crowd runner; 33.10.1: twenty-four with «شطرنج الذاكرة»; 33.10.5: twenty-five with «لودو»
+ const h=await home();assert.equal(h.doc.querySelectorAll('.home-game').filter(card=>!card.classList.contains('hidden')).length,25);
  h.doc.getElementById('gameSearch').value='الذَاكـرة';h.doc.getElementById('gameSearch').dispatchEvent({type:'input'});assert.equal(h.doc.querySelectorAll('.home-game').filter(card=>!card.classList.contains('hidden')).length,2);
  // 33.10.1: «شطرنج الذاكرة» is played with friends too, so the empty combination is memory games with stages
  h.doc.getElementById('gameFilters').dispatchEvent({type:'click',target:h.doc.querySelector('[data-category="stages"]')});assert.equal(h.doc.getElementById('gameEmpty').classList.contains('hidden'),false);
- h.doc.getElementById('gameReset').onclick();assert.equal(h.doc.querySelectorAll('.home-game').filter(card=>!card.classList.contains('hidden')).length,24);assert.equal(h.doc.activeElement.id,'gameSearch');
+ h.doc.getElementById('gameReset').onclick();assert.equal(h.doc.querySelectorAll('.home-game').filter(card=>!card.classList.contains('hidden')).length,25);assert.equal(h.doc.activeElement.id,'gameSearch');
 });
 test('the home page opens on the games: no room box, no unnamed online panel (33.4.0)',async()=>{
  const h=await home();

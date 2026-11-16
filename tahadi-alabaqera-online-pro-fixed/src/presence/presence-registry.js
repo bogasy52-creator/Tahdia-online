@@ -41,6 +41,7 @@ export const PRESENCE_PAGES = Object.freeze({
   jewels: { key: 'jewels', label: 'ماستر الجواهر' },
   carrom: { key: 'carrom', label: 'كيرم' },
   pegs: { key: 'pegs', label: 'شطرنج الذاكرة' },
+  ludo: { key: 'ludo', label: 'لودو' },
   shop: { key: 'shop', label: 'المتجر' },
   social: { key: 'social', label: 'الأصدقاء والحساب' },
   leaderboard: { key: 'leaderboard', label: 'الأبطال' },

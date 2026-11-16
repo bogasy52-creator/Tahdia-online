@@ -9,7 +9,9 @@ import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-onli
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2,pegs:2};
 
-export function createTable({game,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
+export function createTable({game,page=null,title=null,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
+  // 33.10.5: a page that plays another game's rooms (لودو on the tables of الزهرة) keeps its own address and name
+  const where=code=>page?page+'?room='+code:undefined;
   const $=selector=>document.querySelector(selector);
   const menuHost=$('#gameMenu');
   let client=null,room=null,quickMode=null,quickSeats=null,quickHumans=['billiards','jewels'].includes(game),leaving=false,retriedQuick=false;
@@ -19,16 +21,16 @@ export function createTable({game,modes=null,modesLabel,seats=null,seatsDefault,
     if(next.status==='lobby'){
       onLobby?.(next);
       menu.lobby(lobbyModel(next));
-      window.BS_GAME_MENU?.remember(game,next.code,{status:'lobby'});
+      window.BS_GAME_MENU?.remember(game,next.code,{status:'lobby',page:where(next.code)});
       return;
     }
-    window.BS_GAME_MENU?.remember(game,next.code,{status:next.status==='finished'?'finished':'playing'});
+    window.BS_GAME_MENU?.remember(game,next.code,{status:next.status==='finished'?'finished':'playing',page:where(next.code)});
     await apply(next,{animate,signal});
     if(!signal?.aborted){clockOf(next);nearWin(next);}
   },{maxBacklog:game==='snakes'?5:game==='pegs'?40:14,onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
-    game,modes,modesLabel,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,
+    game,title,modes,modesLabel,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,
     onQuick:async({mode,seats:count,humansOnly=false})=>{quickHumans=humansOnly;quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null,humansOnly:quickHumans});window.BS_AUDIO?.play?.('join');},
     onCreate:async({mode,seats:count})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
     onJoin:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());window.BS_AUDIO?.play?.('join');},

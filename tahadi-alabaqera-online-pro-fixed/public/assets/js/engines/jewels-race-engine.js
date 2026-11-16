@@ -1,10 +1,13 @@
 /* Independent score runs: the same opening and random stream, a separate board
    per player, and an equal action budget. The server resolves every action. */
-import {BOOSTERS,adjacent,createJewelsDuel,playJewelsSwap,playJewelsBooster,chooseJewelsMove,legalSwaps} from './jewels-duel-engine.js';
-export {BOOSTERS,adjacent};
-export const JR=Object.freeze({W:8,H:8,MOVES:25,DURATION_MS:180000});
+import {BOOSTERS,adjacent,createJewelsDuel,playJewelsSwap,playJewelsBooster,chooseJewelsMove,legalSwaps,chargesOf} from './jewels-duel-engine.js?v=33.10.5-mm5';
+export {BOOSTERS,adjacent,chargesOf};
+// 33.10.5: three stars on the way (a good run has 200), and the beak breaks a gem without a move
+export const JR=Object.freeze({W:8,H:8,MOVES:25,DURATION_MS:180000,STARS:Object.freeze([100,200,300])});
+export const FREE_BOOSTERS=Object.freeze(new Set(['pick']));
+export const starsOf=score=>JR.STARS.filter(n=>(Number(score)||0)>=n).length;
 const clone=value=>structuredClone(value);
-const stats=p=>({name:p?.name||'لاعب',score:p?.score||0,charge:[...(p?.charge||[0,0,0])],best:p?.best||0,specials:p?.specials||0});
+const stats=p=>({name:p?.name||'لاعب',score:p?.score||0,charge:chargesOf(p),best:p?.best||0,specials:p?.specials||0});
 
 export function createJewelsRace(names=['لاعب 1','لاعب 2'],{seed,rng=Math.random,now=Date.now(),durationMs=JR.DURATION_MS,moves=JR.MOVES}={}){
  if(!Array.isArray(names)||names.length!==2)throw Error('requires_two_players');
@@ -47,9 +50,10 @@ function closeIfReady(s){
 }
 function accept(state,seat,resolved){
  const next=clone(state),previous=state.players[seat],p=resolved.players[seat];
- const remaining=previous.remaining-1;
+ const free=resolved.last?.kind==='booster'&&FREE_BOOSTERS.has(resolved.last.booster);
+ const remaining=previous.remaining-(free?0:1);
  next.players[seat]={...previous,...stats(p),board:resolved.board,seed:resolved.seed,serial:resolved.serial,
-  seq:previous.seq+1,used:previous.used+1,remaining,done:remaining===0,last:{...resolved.last,extra:false}};
+  seq:previous.seq+1,used:previous.used+(free?0:1),remaining,done:remaining===0,last:{...resolved.last,extra:false,...(free?{free:true}:{})}};
  next.seq++;next.last={seq:next.seq,seat,kind:resolved.last.kind};
  return closeIfReady(next);
 }

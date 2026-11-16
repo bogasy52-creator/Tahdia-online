@@ -14,7 +14,8 @@ test('the home opens on a spotlight of five games, then four quick doors, then t
   assert.match(home, /<body class="[^"]*home-v26 home-v33103">/);
   const featured = home.slice(home.indexOf('<div class="home-featured"'), home.indexOf('data-spot-dots'));
   const order = [...featured.matchAll(/class="home-feature" href="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(order, ['/pegs', '/tanks', '/billiards', '/jewels', '/jackaroo'], 'the new 3D game leads the spotlight');
+  // 33.10.5: the new لودو and the new look of ماستر الجواهر lead the spotlight
+  assert.deepEqual(order, ['/ludo', '/jewels', '/tanks', '/billiards', '/jackaroo'], 'the newest games lead the spotlight');
   for (const href of ['/party', '/tournament', '/leaderboard?period=skill']) assert.match(home, new RegExp('<a class="home-tile" href="' + href.replace('?', '\\?') + '"'));
   assert.match(home, /id="homeJoinOpen"[^>]*><span class="home-tile-icon" aria-hidden="true">#<\/span><b>ادخل برمز<\/b>/);
   assert.doesNotMatch(home, /<span class="game-number">\d+<\/span>/, 'running numbers on the cards are gone; «جديد» stays');

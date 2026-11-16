@@ -1,11 +1,11 @@
-import {createEffectsChannel} from '../audio-effects.js?v=33.10.4-club2';
+import {createEffectsChannel} from '../audio-effects.js?v=33.10.5-club2';
 /* Jewels Studio: independent, equal-opening score runs. The engine owns results;
    the local Canvas replay owns animation. Opponent progress never redraws this board. */
-import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace } from '../engines/jewels-race-engine.js?v=33.10.4';
-import { createTable } from '../board-table-v33.js?v=33.10.4';
-import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.4-premium3';
+import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace, starsOf } from '../engines/jewels-race-engine.js?v=33.10.5-mm5';
+import { createTable } from '../board-table-v33.js?v=33.10.5-ludo1';
+import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.5-mm5';
 
-import { suggestJewelsSwap } from './advisor.js?v=33.10.4-nov14';
+import { suggestJewelsSwap } from './advisor.js?v=33.10.5-nov14';
 
 const $=selector=>document.querySelector(selector);
 let lightEffects=false;try{lightEffects=localStorage.getItem('bs_jewels_light_effects')==='1';}catch{}
@@ -14,7 +14,7 @@ const W=JR.W,H=JR.H,N=W*H;
 const escapeText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 const reduced=()=>Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
 const cloneValue=value=>structuredClone(value);
-const ctl={epoch:0,mode:'ai',state:null,level:'medium',names:['أنت','الكمبيوتر'],bots:[false,true],users:[null,null],me:0,seat:0,busy:false,pending:null,aim:-1,shownSeq:0,endShown:false,rewarded:false,receipt:'',match:0,scores:[0,0],idleTimer:0,botTimer:0,botHistory:[],botReady:false,clockTimer:0,clockOffset:0,deadline:null,handover:false,legacy:false,selected:-1,cursor:0,hint:null,aimCell:-1};
+const ctl={starsShown:[0,0],epoch:0,mode:'ai',state:null,level:'medium',names:['أنت','الكمبيوتر'],bots:[false,true],users:[null,null],me:0,seat:0,busy:false,pending:null,aim:-1,shownSeq:0,endShown:false,rewarded:false,receipt:'',match:0,scores:[0,0],idleTimer:0,botTimer:0,botHistory:[],botReady:false,clockTimer:0,clockOffset:0,deadline:null,handover:false,legacy:false,selected:-1,cursor:0,hint:null,aimCell:-1};
 let table=null,room=null,drag=null,bannerTimer=0,endTimer=0,exitArmed=0,audioContext=null;
 const canvas=$('#jwBoard'),wrap=$('#jwWrap');
 const currentMatch=epoch=>epoch===ctl.epoch&&Boolean(ctl.state);
@@ -33,16 +33,19 @@ function gemSound(kind,cascade=0){
   try{const time=audioContext.currentTime,notes=kind==='made'?[784,1046,1318]:kind==='special'?[392,587,784,1174]:[523.25,659.25,783.99].map(n=>n*2**(Math.min(5,cascade)/12));notes.forEach((note,index)=>{const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),at=time+index*.035;oscillator.type=kind==='special'?'triangle':'sine';oscillator.frequency.setValueAtTime(note,at);oscillator.frequency.exponentialRampToValueAtTime(note*1.025,at+.12);gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.035,at+.008);gain.gain.exponentialRampToValueAtTime(.0001,at+.24);oscillator.connect(gain);gain.connect(effectsChannel.output);oscillator.start(at);oscillator.stop(at+.25);});}catch{}
 }
 function banner(text,quiet=false,combo=0){const element=$('#jwBanner');element.textContent=text;element.className='jw-banner show'+(combo>=2?' spectacular':'')+(quiet?' quiet':'');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>element.classList.remove('show'),quiet?1300:850);}
-function bumpScore(seat,points){ctl.scores[seat]=(ctl.scores[seat]||0)+points;const element=document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-score`);if(element){element.textContent=ctl.scores[seat];element.classList.remove('bump');void element.offsetWidth;element.classList.add('bump');}}
+function bumpScore(seat,points){ctl.scores[seat]=(ctl.scores[seat]||0)+points;const element=document.querySelector(`.jw-plate[data-seat="${seat}"] .jw-score`);if(element){element.textContent=ctl.scores[seat];element.classList.remove('bump');void element.offsetWidth;element.classList.add('bump');}paintStars(seat,ctl.scores[seat],true);}
+/* 33.10.5: three stars on the score bar (100, 200 and 300 points); a new one is cheered */
+const STAR_WORDS=['','⭐ أول نجمة!','⭐⭐ النجمة الثانية!','⭐⭐⭐ ثلاث نجوم!'];
+function paintStars(seat,score,live=false){const plate=document.querySelector(`.jw-plate[data-seat="${seat}"]`);if(!plate)return;const hidden=ctl.mode==='two'&&seat!==mySeat()&&!ctl.state?.finished,top=JR.STARS[JR.STARS.length-1],stars=hidden?0:starsOf(score);const fill=plate.querySelector('.mm-starbar>i');if(fill)fill.style.width=(hidden?0:Math.min(100,score/top*100))+'%';plate.querySelectorAll('.mm-starbar em').forEach((star,k)=>{const on=k<stars;if(on&&!star.classList.contains('on')&&live){star.classList.add('pop');setTimeout(()=>star.classList.remove('pop'),900);}star.classList.toggle('on',on);});const shown=ctl.starsShown[seat]||0;if(live&&stars>shown&&seat===mySeat()){banner(STAR_WORDS[stars],false,2);sound('levelUp',.42);}if(stars>shown||!live)ctl.starsShown[seat]=stars;}
 const renderer=createJewelsRenderer({canvas,reduceMotion:reduced,lightEffects:()=>lightEffects,onScore:bumpScore,onCascade:banner,onSound:gemSound});
 function chooseHint(){const advice=suggestJewelsSwap(player()?.board);ctl.hintLabel=advice?.label||'';return advice?.pair||null;}
 function paintSelection(){const help=$('#jwBoardHelp');if(help)help.textContent=ctl.hint?(ctl.hintLabel||'تبديل متاح على لوحتك'):'اسحب وطابق · الأسهم وEnter للعب';renderer.configure({selection:ctl.selected,cursor:ctl.cursor,hint:ctl.hint,aim:ctl.aim>=0?aimCells(BOOSTERS[ctl.aim].id,ctl.aimCell):[],focus:document.activeElement===wrap});syncGrid();}
 function clearSelection(){drag=null;ctl.selected=-1;ctl.aim=-1;ctl.aimCell=-1;ctl.hint=null;paintSelection();renderHud();renderStatus();}
-function aimCells(id,cell){if(cell<0||!player()?.board)return[];const x=cell%W,y=Math.floor(cell/W),out=[];if(id==='hammer'){for(let row=y-1;row<=y+1;row++)for(let col=x-1;col<=x+1;col++)if(row>=0&&col>=0&&row<H&&col<W)out.push(row*W+col);}else if(id==='cross'){for(let col=0;col<W;col++)out.push(y*W+col);for(let row=0;row<H;row++)if(row!==y)out.push(row*W+x);}else{const color=player().board[cell]?.c;player().board.forEach((tile,index)=>{if(tile?.c===color)out.push(index);});}return out;}
+function aimCells(id,cell){if(id==='shuffle')return player()?.board?Array.from({length:N},(_,i)=>i):[];if(cell<0||!player()?.board)return[];const x=cell%W,y=Math.floor(cell/W),out=[];if(id==='pick')return[cell];if(id==='hammer'){for(let row=y-1;row<=y+1;row++)for(let col=x-1;col<=x+1;col++)if(row>=0&&col>=0&&row<H&&col<W)out.push(row*W+col);}else if(id==='cross'){for(let col=0;col<W;col++)out.push(y*W+col);for(let row=0;row<H;row++)if(row!==y)out.push(row*W+x);}else{const color=player().board[cell]?.c;player().board.forEach((tile,index)=>{if(tile?.c===color)out.push(index);});}return out;}
 function fitBoard(){
   const parentWidth=$('.jw-stage')?.clientWidth||innerWidth;
   const width=Math.max(220,Math.min(548,innerWidth-24,parentWidth));
-  const height=Math.max(220,innerHeight-(innerWidth<600?325:335));
+  const placed=el=>{try{return getComputedStyle(el).position;}catch{return'';}},used=Array.from($('#game')?.children||[]).filter(el=>!el.hidden&&!el.classList?.contains('jw-stage')&&!/^(absolute|fixed)$/.test(placed(el))).reduce((n,el)=>n+(Number(el.offsetHeight)||0)+6,0);const height=Math.max(220,innerHeight-used-12);
   const size=Math.min(width,height);
   const geometry=renderer.resize(size,window.devicePixelRatio||1);wrap.style.width=wrap.style.height=geometry.size+'px';
   $('#game').style.setProperty('--jw-board-size',geometry.size+'px');
@@ -59,12 +62,13 @@ function faceOf(seat){
   if(profile?.avatar&&(user?.username||user?.photo||user?.fallback||self))return profile.avatar({username:user?.username||'',photo:user?.photo||null,name:ctl.names[seat],fallback:user?.fallback||'',self});
   const face=document.createElement('span');face.className='jw-letter'+(self&&profile?.frameClass?.()?' bs-avatar '+profile.frameClass():'');face.textContent=ctl.bots[seat]?'✦':String(ctl.names[seat]||'؟').trim().slice(0,1);return face;
 }
-function plateHTML(seat){return `<span class="jw-face" data-player-tag="${seat}" role="button" tabindex="0" aria-label="ملف ${escapeText(ctl.names[seat])}"><span class="jw-pic"></span></span><span class="jw-who"><b></b><small></small></span><span class="jw-scorebox"><b class="jw-score">0</b><small>نقطة</small></span><span class="jw-player-track" aria-hidden="true"><i></i></span>`;}
+function plateHTML(seat){return `<span class="jw-face" data-player-tag="${seat}" role="button" tabindex="0" aria-label="ملف ${escapeText(ctl.names[seat])}"><span class="jw-pic"></span></span><span class="jw-who"><b></b><small></small></span><span class="jw-scorebox"><b class="jw-score">0</b><small>نقطة</small></span><span class="mm-starbar" aria-hidden="true"><i></i>${JR.STARS.map((n,k)=>`<em style="--at:${(k+1)/JR.STARS.length*100}%">★</em>`).join('')}</span><span class="jw-player-track" aria-hidden="true"><i></i></span>`;}
 function buildHud(){
   const own=mySeat();for(const[id,seat]of[['#plateBottom',own],['#plateTop',1-own]]){const plate=$(id);plate.dataset.seat=seat;plate.innerHTML=plateHTML(seat);plate.querySelector('.jw-pic').replaceWith(faceOf(seat));}
-  const bar=$('#jwBoostBar');bar.innerHTML=BOOSTERS.map((booster,index)=>`<button type="button" class="jw-boost" data-k="${index}" style="--boost:${GEM_COLORS[booster.color].base};--boost-light:${GEM_COLORS[booster.color].glow}" aria-label="${escapeText(booster.name)}: ${escapeText(booster.text)}. تستخدم حركة واحدة"><span class="jw-boost-art"><i></i><canvas aria-hidden="true"></canvas><span class="jw-boost-ready" aria-hidden="true">✓</span></span><span class="jw-boost-copy"><b>${booster.name}</b><small></small><span class="jw-charge-track" aria-hidden="true"><i></i></span></span></button>`).join('');
+  const bar=$('#jwBoostBar');bar.innerHTML=BOOSTERS.map((booster,index)=>`<button type="button" class="jw-boost" data-k="${index}" data-id="${booster.id}" style="order:${booster.order??index};--boost:${GEM_COLORS[booster.color].base};--boost-light:${GEM_COLORS[booster.color].glow}" aria-label="${escapeText(booster.name)}: ${escapeText(booster.text)}. ${booster.id==='pick'?'ببلاش بدون حركة':'تستخدم حركة واحدة'}"><span class="jw-boost-art"><i></i><canvas aria-hidden="true"></canvas><span class="jw-boost-ready" aria-hidden="true">✓</span></span><span class="jw-boost-copy"><b>${booster.name}</b><small></small><span class="jw-charge-track" aria-hidden="true"><i></i></span></span></button>`).join('');
   bar.querySelectorAll('canvas').forEach((cv,index)=>drawBoosterIcon(cv,index));bar.querySelectorAll('.jw-boost').forEach(button=>button.addEventListener('click',()=>{unlock();boosterTap(Number(button.dataset.k));}));
-  ctl.scores=ctl.state?.players.map(p=>p.score)||[0,0];
+  ctl.scores=ctl.state?.players.map(p=>p.score)||[0,0];ctl.starsShown=ctl.scores.map(score=>starsOf(score));
+  const help=$('#jwBoostHelp');if(help)help.innerHTML=[...BOOSTERS].sort((a,b)=>(a.order??0)-(b.order??0)).map(b=>`<li style="--boost:${GEM_COLORS[b.color].base}"><b>${escapeText(b.name)}</b> ${escapeText(b.text)}${b.id==='pick'?' · ببلاش':''}</li>`).join('');
 }
 function renderHud(){
   const state=ctl.state;if(!state)return;const own=mySeat(),p=state.players[own];
@@ -72,18 +76,18 @@ function renderHud(){
     const seat=Number(plate.dataset.seat),summary=state.players[seat],hidden=ctl.mode==='two'&&seat!==own&&!state.finished;
     plate.querySelector('.jw-who b').textContent=ctl.names[seat]||summary.name;
     plate.querySelector('.jw-who small').textContent=hidden?'النتيجة عند النهاية':summary.done?'اكتملت الجولة':seat===own?'أنت تلعب':`${summary.used||0} / ${state.moves} حركة`;
-    if(!ctl.busy||seat!==own){ctl.scores[seat]=summary.score;plate.querySelector('.jw-score').textContent=hidden?'•••':summary.score;}
+    if(!ctl.busy||seat!==own){ctl.scores[seat]=summary.score;plate.querySelector('.jw-score').textContent=hidden?'•••':summary.score;paintStars(seat,summary.score,seat!==own);}
     plate.querySelector('.jw-player-track i').style.width=(hidden?0:Math.min(100,(summary.used||0)/state.moves*100))+'%';
     plate.classList.toggle('complete',summary.done);plate.classList.toggle('leading',!hidden&&summary.score>state.players[1-seat].score);
   }
   $('#jwMovesText').textContent=p.done?'اكتملت جولتك':p.remaining+' حركة متبقية';$('#jwMoves i').style.width=Math.max(0,p.remaining/state.moves*100)+'%';$('#jwMoves').classList.toggle('low',p.remaining<=5);$('#jwBoardTitle').textContent=ctl.mode==='two'?'لوحة '+ctl.names[own]:'لوحتك';
   $('#jwRoundNote').textContent='نفس البداية · '+state.moves+' حركة';$('#jwModeLabel').textContent=ctl.mode==='online'?'تحدٍ مباشر':ctl.mode==='two'?'جهاز واحد':'تدريب · '+({easy:'هادئ',medium:'منافس',hard:'محترف'}[ctl.level]);
-  for(const button of $('#jwBoostBar').querySelectorAll('.jw-boost')){const index=Number(button.dataset.k),booster=BOOSTERS[index],have=Math.min(booster.need,p.charge?.[index]||0),ready=have>=booster.need;button.querySelector('small').textContent=ctl.aim===index?'اختر مكان الضربة':ready?'جاهزة · حركة واحدة':have+' / '+booster.need;button.querySelector('.jw-charge-track i').style.width=have/booster.need*100+'%';button.style.setProperty('--fill',have/booster.need*100+'%');button.classList.toggle('ready',ready);button.classList.toggle('aim',ctl.aim===index);button.disabled=!(ready&&canAct());}
+  for(const button of $('#jwBoostBar').querySelectorAll('.jw-boost')){const index=Number(button.dataset.k),booster=BOOSTERS[index],have=Math.min(booster.need,p.charge?.[index]||0),ready=have>=booster.need;button.querySelector('small').textContent=ctl.aim===index?(booster.id==='shuffle'?'المس اللوحة':'اختر المكان'):ready?(booster.id==='pick'?'جاهز · ببلاش':'جاهزة'):have+' / '+booster.need;button.querySelector('.jw-charge-track i').style.width=have/booster.need*100+'%';button.style.setProperty('--fill',have/booster.need*100+'%');button.classList.toggle('ready',ready);button.classList.toggle('aim',ctl.aim===index);button.disabled=!(ready&&canAct());}
   wrap.inert=ctl.handover||ctl.legacy;$('#jwBoostBar').inert=ctl.handover||ctl.legacy;syncGrid();
 }
 function renderStatus(){
   const state=ctl.state;if(!state)return;
-  let text=ctl.aim>=0?BOOSTERS[ctl.aim].name+' · اختر جوهرة لتحديد الضربة':ctl.pending?'نؤكّد حركتك مع السيرفر…':timedOut()?'انتهى الوقت · نجهّز النتيجة':ctl.busy?'':player()?.done?'جولتك محفوظة':player()?.remaining<=5?'باقي القليل… اجعلها أقوى سلسلة!':'اصنع تطابقًا، وافتح سلسلة جديدة';
+  let text=ctl.aim>=0?(BOOSTERS[ctl.aim].id==='shuffle'?'الخلطة · المس اللوحة أو الزر مرة ثانية':BOOSTERS[ctl.aim].name+' · اختر حلوى لتحديد الضربة'):ctl.pending?'نؤكّد حركتك مع السيرفر…':timedOut()?'انتهى الوقت · نجهّز النتيجة':ctl.busy?'':player()?.done?'جولتك محفوظة':player()?.remaining<=5?'باقي القليل… اجعلها أقوى سلسلة!':'اصنع تطابقًا، وافتح سلسلة جديدة';
   let span=$('#status .jw-say');if(!span){span=document.createElement('span');span.className='jw-say';$('#status').prepend(span);}span.textContent=text;$('#status').classList.toggle('pending',Boolean(ctl.pending));$('#status').classList.toggle('aiming',ctl.aim>=0);syncGrid();
 }
 function scheduleHint(){clearTimeout(ctl.idleTimer);if(!canAct())return;const epoch=ctl.epoch;ctl.idleTimer=setTimeout(()=>{if(!currentMatch(epoch)||!canAct()||ctl.selected>=0||ctl.aim>=0)return;ctl.hint=chooseHint();paintSelection();},7500);}
@@ -134,7 +138,7 @@ async function trySwap(a,b){
   if(ctl.mode==='online'){sendAction('jewels_swap',{a,b});return true;}
   return runLocal(state=>playJewelsRaceSwap(state,seat,a,b,{expectedSeq:state.players[seat].seq}));
 }
-function boosterTap(index){if(!canAct()||!BOOSTERS[index]||(player().charge?.[index]||0)<BOOSTERS[index].need)return;ctl.aim=ctl.aim===index?-1:index;ctl.selected=-1;ctl.aimCell=ctl.aim>=0?ctl.cursor:-1;ctl.hint=null;paintSelection();renderHud();renderStatus();if(ctl.aim>=0){sound('open',.25);wrap.focus({preventScroll:true});}}
+function boosterTap(index){if(!canAct()||!BOOSTERS[index]||(player().charge?.[index]||0)<BOOSTERS[index].need)return;if(ctl.aim===index&&BOOSTERS[index].id==='shuffle'){useBooster(ctl.cursor);return;}ctl.aim=ctl.aim===index?-1:index;ctl.selected=-1;ctl.aimCell=ctl.aim>=0?ctl.cursor:-1;ctl.hint=null;paintSelection();renderHud();renderStatus();if(ctl.aim>=0){sound('open',.25);wrap.focus({preventScroll:true});}}
 async function useBooster(cell){if(!canAct()||ctl.aim<0||cell<0||cell>=N)return false;const index=ctl.aim,id=BOOSTERS[index].id,seat=mySeat();if(ctl.mode==='online'){sendAction('jewels_booster',{id,cell});return true;}banner(BOOSTERS[index].name+'!');return runLocal(state=>playJewelsRaceBooster(state,seat,id,cell,{expectedSeq:state.players[seat].seq}));}
 function cellAt(event){const rect=canvas.getBoundingClientRect(),geo=renderer.geometry(),scale=geo.size/rect.width,x=Math.floor(((event.clientX-rect.left)*scale-geo.pad)/geo.cell),y=Math.floor(((event.clientY-rect.top)*scale-geo.pad)/geo.cell);return x>=0&&y>=0&&x<W&&y<H?y*W+x:-1;}
 canvas.addEventListener('pointerdown',event=>{
@@ -163,7 +167,7 @@ function resetActivity(){ctl.epoch++;renderer.cancel();for(const timer of [ctl.i
 function showGame(){
   $('#menu').hidden=true;$('#game').hidden=false;document.body.classList.add('game-running');buildHud();fitBoard();requestAnimationFrame(fitBoard);paintSelection();renderHud();renderStatus();renderClock();clearInterval(ctl.clockTimer);ctl.clockTimer=setInterval(tickClock,250);
 }
-function showMenu(){resetActivity();ctl.state=null;$('#game').hidden=true;$('#menu').hidden=false;document.body.classList.remove('game-running');renderer.setBoard([]);$('#jwTitle').focus?.({preventScroll:true});paintHero();}
+function showMenu(){$('#jwSettings')&&($('#jwSettings').hidden=true);resetActivity();ctl.state=null;$('#game').hidden=true;$('#menu').hidden=false;document.body.classList.remove('game-running');renderer.setBoard([]);$('#jwTitle').focus?.({preventScroll:true});paintHero();}
 function myUser(){const user=window.BS_SOCIAL?.isLoggedIn?.()?window.BS_SOCIAL.profile?.():null;return user?{username:user.username,photo:user.photo||null}:null;}
 function startLocal(mode){
   table?.leave();
@@ -178,7 +182,7 @@ $('#jwHandoverStart').addEventListener('click',()=>{if(!ctl.state||ctl.mode!=='t
 function showEnd(){
   if(ctl.endShown||!ctl.state?.finished)return;ctl.endShown=true;clearInterval(ctl.clockTimer);clearTimeout(ctl.idleTimer);$('#jwWait').hidden=true;$('#jwHandover').hidden=true;const state=ctl.state,winner=state.winner,draw=winner===-1,own=mySeat(),won=winner===own,epoch=ctl.epoch;$('#jwEndTitle').textContent=draw?'تعادل جميل!':ctl.mode==='two'?ctl.names[winner]+' فاز!':won?'هذه لحظة فوزك!':'التحدّي القادم لك';$('#jwEndEyebrow').textContent=draw?'نفس النتيجة. نفس المهارة.':won||ctl.mode==='two'?'يا سلام على اللعب!':'كل سباق يعلّمك حركة';
   const result=(seat,side)=>{const element=document.createElement('div');element.className='jw-end-player '+side+(seat===winner?' winner':'');element.append(faceOf(seat));element.insertAdjacentHTML('beforeend',`<small>${escapeText(ctl.names[seat])}</small><b>${state.players[seat].score}</b><span>نقطة</span>`);return element;};
-  const versus=document.createElement('i');versus.textContent='VS';$('#jwEndScores').replaceChildren(result(own,'me'),versus,result(1-own,'foe'));const diff=Math.abs(state.players[0].score-state.players[1].score);$('#jwEndText').textContent=draw?'تساوت النقاط؛ الفوز القادم ينتظر خطتك.':'حُسم السباق بفارق '+diff+' نقطة';const p=state.players[own];$('#jwEndStats').innerHTML=`<span><b>${p.best||0}</b><small>أكبر ضربة</small></span><span><b>${p.specials||0}</b><small>جواهر خاصة</small></span><span><b>${p.used||0}/${state.moves}</b><small>حركة مستخدمة</small></span>`;
+  const versus=document.createElement('i');versus.textContent='VS';$('#jwEndScores').replaceChildren(result(own,'me'),versus,result(1-own,'foe'));const diff=Math.abs(state.players[0].score-state.players[1].score);$('#jwEndText').textContent=draw?'تساوت النقاط؛ الفوز القادم ينتظر خطتك.':'حُسم السباق بفارق '+diff+' نقطة';const p=state.players[own];const earned=starsOf(p.score);$('#jwEndStats').innerHTML=`<span class="mm-end-stars"><b>${'★'.repeat(earned)}<i>${'★'.repeat(JR.STARS.length-earned)}</i></b><small>${earned?earned+' من 3 نجوم':'النجمة الأولى عند 100'}</small></span><span><b>${p.best||0}</b><small>أكبر ضربة</small></span><span><b>${p.specials||0}</b><small>جواهر خاصة</small></span><span><b>${p.used||0}/${state.moves}</b><small>حركة مستخدمة</small></span>`;
   $('#jwEnd .jw-sheet-card').classList.toggle('won',won||ctl.mode==='two');$('#jwAgain').textContent=ctl.mode==='online'&&!room?.publicMatch?(room?.me?.role==='host'?'تحدٍ جديد':'بانتظار المضيف'):'تحدٍ جديد';$('#jwAgain').disabled=ctl.mode==='online'&&!room?.publicMatch&&room?.me?.role!=='host';
   const reveal=()=>{if(!currentMatch(epoch)||!ctl.endShown)return;$('#jwEnd').hidden=false;wrap.inert=true;$('#jwAgain').disabled?$('#jwToMenu').focus():$('#jwAgain').focus();};if(reduced())reveal();else endTimer=setTimeout(reveal,650);sound(draw?'levelUp':won||ctl.mode==='two'?'victory':'defeat',.55);
   if(!ctl.rewarded){ctl.rewarded=true;if(ctl.mode==='online')window.BS_CAREER?.refresh?.()?.catch?.(()=>{});else if(ctl.mode==='ai')window.BS_CAREER?.record?.({id:ctl.receipt,game:'jewels',win:winner===0,draw:winner===-1})?.catch?.(()=>{});}
@@ -223,4 +227,13 @@ for(const b of document.querySelectorAll('[data-jw-performance]'))b.addEventList
 $('#jwCover')?.addEventListener('load',()=>{if(heroFrame)cancelAnimationFrame(heroFrame);heroFrame=0;$('#jwHero').hidden=true;});
 $('#jwCover')?.addEventListener('error',()=>{$('#jwCover').hidden=true;$('#jwHero').hidden=false;paintHero();});
 if(coverReady())$('#jwHero').hidden=true;else{paintHero();if(!reduced())heroFrame=requestAnimationFrame(heroLoop);}
+/* 33.10.5: the settings sheet (sound, light effects, the boosters, the way out) */
+function openSettings(open){const sheet=$('#jwSettings');if(!sheet)return;sheet.hidden=!open;if(open){$('#jwSettingsClose').focus({preventScroll:true});sound('open',.2);}else $('#jwSettingsOpen')?.focus({preventScroll:true});}
+$('#jwSettingsOpen')?.addEventListener('click',()=>{unlock();openSettings(true);});
+$('#jwSettingsClose')?.addEventListener('click',()=>openSettings(false));
+$('#jwSettingsLeave')?.addEventListener('click',()=>{openSettings(false);leaveMatch();});
+$('#jwSettings')?.addEventListener('click',event=>{if(event.target.id==='jwSettings')openSettings(false);});
+$('#jwSettings')?.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();openSettings(false);}});
+// the reactions (the chat button) work against the computer too
+window.BS_TABLE=Object.freeze({get active(){return Boolean(ctl.state)&&!$('#game').hidden;},get mode(){return ctl.mode==='online'?'online':ctl.mode==='two'?'local':'ai';},get bots(){return ctl.mode==='ai'?[1]:[];},get players(){return ctl.names.map((name,index)=>({index,name:String(name||'لاعب')}));}});
 window.BS_JEWELS=Object.freeze({get state(){return ctl.state;},get busy(){return ctl.busy||Boolean(ctl.pending);},get seat(){return mySeat();},get geometry(){return renderer.geometry();},get lightEffects(){return lightEffects;},hint:()=>suggestJewelsSwap(player()?.board),swap:trySwap,booster:(index,cell)=>{boosterTap(index);return ctl.aim>=0?useBooster(cell):null;},legal:()=>ctl.state?.v===2?legalRaceSwaps(ctl.state,mySeat()):[]});

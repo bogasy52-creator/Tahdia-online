@@ -31,7 +31,7 @@
       '.party-embedded-seat body{background:transparent}' +
       '.party-embedded :is(#bsGameCommand,.bs-party-back,.bs-party-return,.bs-party-nav){display:none!important}' +
       // the way out of a game is the group room itself, and the site's own header stays out
-      '.party-embedded :is(#leaveGame,#soLeave,#pathLeave,#pathCopy,#arenaExit,#arenaLeaveLobby,#arenaPauseExit,#arenaResultExit,.gm33-leave,.bs-topbar,.paths-header,.arcade-info){display:none!important}' +
+      '.party-embedded :is(#leaveGame,#soLeave,#pathLeave,#pathCopy,#arenaExit,#arenaLeaveLobby,#arenaPauseExit,#arenaResultExit,.gm33-leave,.bs-topbar,.paths-header,.arcade-info,#biExit,#carromExit,#carromBackMenu,#pegsExit,#pegsQuit,#pegsBackMenu,#tkExit,#tkLeaveLobby,#tkToMenu,#hkExit){display:none!important}' +
       '.party-embedded body.picture-page:not(.sudoku-page) #leave{display:none!important}' +
       ':is(html,#v31).party-embedded body #game#game#game#game #leaveGame{display:none!important}' +
       '.party-embedded body.quiz-v19 :is(.top,#roomHeader,.footer){display:none!important}' +

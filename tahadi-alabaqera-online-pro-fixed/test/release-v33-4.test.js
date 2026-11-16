@@ -121,7 +121,7 @@ test('snakes & ladders: 2, 3 or 4 players; the empty seats are filled', async ()
   assert.match(menu, /options\.onCreate\?\.\(\{mode,seats,name:playerName\(\)\}\)/);
   const worker = await read('src/index.js');
   assert.ok(worker.includes('"quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + (humansOnly?":humans":"") + ":v33"'));
-  assert.match(worker, /open\.assigned >= \(seats \|\| MAX_SEATS\[game\]\)/);
+  assert.match(worker, /open\.assigned >= \(seats \|\| (?:MAX_SEATS\[game\]|seatLimit\(game, variant, MAX_SEATS\[game\]\))\)/);
   assert.match(worker, /tableSeats: this\.room\.tableSeats \|\| null,/);
 });
 

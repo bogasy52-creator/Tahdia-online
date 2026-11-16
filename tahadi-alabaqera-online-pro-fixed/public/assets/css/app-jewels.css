@@ -591,3 +591,136 @@ body.release-v26.jw-studio .jw-names input,body.release-v26.jw-studio #gameMenu 
 /* Nov14 cover, visible-board hints and optional lighter effects. */
 .jw-studio .jw-hero{position:relative;top:auto;z-index:0;width:100%;height:auto;aspect-ratio:1.6;margin:20px 0 18px;left:auto;right:auto;isolation:isolate;overflow:hidden;border:1px solid #e6c8ff77;border-radius:24px;background:#542987;box-shadow:0 18px 45px #19083544}.jw-studio .jw-hero>img{position:relative;z-index:1;display:block;width:100%;height:100%;object-fit:cover}.jw-studio .jw-hero canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%}.jw-studio .jw-hero-label{display:block;transform:none;z-index:2;bottom:12px;right:12px;left:auto;background:#351d67d9;border:1px solid #e6cbff6b;backdrop-filter:blur(8px);border-radius:30px;padding:6px 13px;font-size:11px}.jw-studio .jw-showcase{display:block}.jw-studio .jw-performance{margin-inline-start:auto}.jw-studio .jw-performance[aria-pressed="true"]{color:#9cffe4;border-color:#94e6cc88;background:#3e8e7f55}.jw-studio .jw-board-tools>p{max-width:60%;line-height:1.4}.jw-studio.jw-light-effects .jw-arena-decor{display:none}.jw-studio.jw-light-effects .jw-banner{filter:none;box-shadow:none}
 @media(max-width:599px){.jw-studio .jw-hero{width:100%;height:auto;aspect-ratio:1.6;left:auto;right:auto;margin:17px 0 14px}.jw-studio .jw-showcase{text-align:center}.jw-studio #jwTitle{font-size:39px;line-height:1.35}.jw-studio .jw-showcase h1 br{display:none}.jw-studio .jw-showcase h1 span{margin-inline-start:8px}.jw-studio .jw-promise{justify-content:center;margin:12px 0 0}.jw-studio .jw-hero-label{font-size:10px}.jw-studio .jw-kicker{justify-content:center}}
+
+/* assets/css/jewels-mm-v33-10-5.css */
+/* Tahdia 33.10.5 — «ماستر الجواهر» in the duel-arena look: a violet hall, the two players face to
+   face under a gold crown, a score bar with three stars each, the jelly tray in the middle, five
+   square boosters under it, and the settings and chat buttons at the bottom corners. */
+body.jw-studio.mm5{--mm-ink:#fff;--mm-mute:#d7c6ff;--mm-gold:#ffd23f;--mm-gold-deep:#b87a00;--mm-deep:#1c0656;--mm-me:#3fe0ff;--mm-foe:#ff4f8b}
+body.jw-studio.mm5.game-running{background:radial-gradient(120% 70% at 50% -5%,#8a4bff 0%,#5a22d0 28%,#35118f 58%,#1c0656 100%) fixed!important;background-color:#1c0656!important}
+.jw-studio.mm5 #game.jw-game{display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:5px;width:min(560px,100%);min-height:100dvh;padding:calc(env(safe-area-inset-top) + 6px) 10px max(10px,env(safe-area-inset-bottom));box-sizing:border-box}
+.jw-studio.mm5 #game .jw-arena-decor{opacity:.5}
+
+/* the top: a way out, the mode */
+.jw-studio.mm5 #game .jw-bar{min-height:34px;gap:8px}
+.jw-studio.mm5 #game .jw-bar .jw-icon{width:34px;height:34px;border-radius:12px;background:#ffffff1a;border:1px solid #ffffff2e;box-shadow:none}
+.jw-studio.mm5 #game .jw-round{flex:1;text-align:start;min-width:0}
+.jw-studio.mm5 #game .jw-round b{font-size:16px;color:#fff;font-weight:900}
+.jw-studio.mm5 #game .jw-round small{display:none}
+.jw-studio.mm5 #game .mm-mode{padding:4px 11px;border-radius:999px;background:#0000002e;border:1px solid #ffffff22;color:var(--mm-mute);font-size:12px;font-weight:800;white-space:nowrap}
+
+/* face to face */
+.jw-studio.mm5 #game .jw-hud{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr);align-items:start;gap:4px;width:100%;min-height:0;max-width:540px}
+.jw-studio.mm5 #game .jw-plate{--side:var(--mm-me);display:grid;grid-template-columns:auto minmax(0,1fr);padding-inline-end:16px!important;grid-template-areas:"face who" "face score" "bar bar";align-items:center;gap:2px 8px;min-height:0;padding:8px 10px 10px;border-radius:20px;background:linear-gradient(180deg,#ffffff24,#ffffff0d);border:1.5px solid #ffffff2e;box-shadow:0 6px 18px #12033f66,inset 0 1px 0 #ffffff33;color:#fff;overflow:visible}
+.jw-studio.mm5 #game .jw-plate.foe{--side:var(--mm-foe)}
+.jw-studio.mm5 #game .jw-plate .jw-face{grid-area:face;width:48px;height:48px;padding:3px;border-radius:50%;background:conic-gradient(from 210deg,var(--side),#fff8,var(--side));box-shadow:0 0 0 2px #1c065699,0 6px 14px #0007;cursor:pointer}
+.jw-studio.mm5 #game .jw-plate .jw-face>*{width:100%!important;height:100%!important;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#2a0f6b;font-size:22px;font-weight:900;color:#fff;object-fit:cover}
+.jw-studio.mm5 #game .jw-plate .jw-face img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.jw-studio.mm5 #game .jw-plate .jw-who{grid-area:who;min-width:0;display:grid;gap:0}
+.jw-studio.mm5 #game .jw-plate .jw-who b{font-size:14px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jw-studio.mm5 #game .jw-plate .jw-who small{font-size:10.5px;color:var(--mm-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jw-studio.mm5 #game .jw-plate .jw-scorebox{grid-area:score;display:flex;align-items:baseline;gap:4px;justify-self:start;background:none;border:0;padding:0;min-width:0}
+.jw-studio.mm5 #game .jw-plate .jw-score{font-size:26px;line-height:1;font-weight:900;color:var(--mm-gold);-webkit-text-stroke:1.5px #5a2a00;paint-order:stroke fill;text-shadow:0 3px 0 #3d1a00a6;font-variant-numeric:tabular-nums}
+.jw-studio.mm5 #game .jw-plate .jw-scorebox small{display:none}
+.jw-studio.mm5 #game .jw-plate .jw-player-track{display:none}
+.jw-studio.mm5 #game .jw-plate.leading{border-color:#ffd23f99;box-shadow:0 0 0 1px #ffd23f55,0 6px 18px #12033f66,inset 0 1px 0 #ffffff33}
+.jw-studio.mm5 #game .jw-plate.complete .jw-who small{color:#9ff5c0}
+/* the score bar: it fills toward 300, a star at 100, 200 and 300 */
+.jw-studio.mm5 #game .mm-starbar{grid-area:bar;position:relative;display:block;height:12px;margin:8px 4px 2px;border-radius:999px;background:#12033f;border:1.5px solid #ffffff2a;box-shadow:inset 0 2px 4px #0008}
+.jw-studio.mm5 #game .mm-starbar>i{position:absolute;inset:1px 1px 1px auto;width:0;max-width:calc(100% - 2px);border-radius:999px;background:linear-gradient(180deg,#fff2a0,#ffc21c 55%,#e08a00);box-shadow:0 0 10px #ffd23f88;transition:width .35s ease-out}
+.jw-studio.mm5 #game .jw-plate.foe .mm-starbar>i{background:linear-gradient(180deg,#ffc0d4,#ff4f8b 55%,#c4145a);box-shadow:0 0 10px #ff4f8b88}
+
+.jw-studio.mm5 #game .mm-starbar em{position:absolute;top:50%;right:var(--at);transform:translate(55%,-50%);font-style:normal;font-size:19px;line-height:1;color:#4b2a8f;-webkit-text-stroke:1.2px #1c0656;text-shadow:0 2px 0 #0006;transition:color .25s}
+.jw-studio.mm5 #game .mm-starbar em.on{color:var(--mm-gold);-webkit-text-stroke:1.2px #7a4a00;text-shadow:0 0 10px #ffd23fcc,0 2px 0 #0006}
+.jw-studio.mm5 #game .mm-starbar em.pop{animation:mm-star .85s cubic-bezier(.2,1.6,.4,1)}
+@keyframes mm-star{0%{transform:translate(55%,-50%) scale(.4) rotate(-40deg)}55%{transform:translate(55%,-50%) scale(1.8) rotate(12deg)}100%{transform:translate(55%,-50%) scale(1)}}
+
+/* the crown in the middle: VS and the clock */
+.jw-studio.mm5 #game .mm-vs{display:grid;justify-items:center;align-content:start;gap:0;padding-top:2px}
+.jw-studio.mm5 #game .mm-crown{width:54px;height:38px;filter:drop-shadow(0 4px 6px #0008)}
+.jw-studio.mm5 #game .mm-crown path:first-child{fill:#ffc935;stroke:#8a5200;stroke-width:2.4;stroke-linejoin:round}
+.jw-studio.mm5 #game .mm-crown .mm-crown-band{fill:#e9a313;stroke:#8a5200;stroke-width:2}
+.jw-studio.mm5 #game .mm-crown circle{fill:#ff3d63;stroke:#7a0a22;stroke-width:1.5}
+.jw-studio.mm5 #game .mm-vs-word{margin-top:-6px;font-size:30px;line-height:1;font-weight:900;font-style:italic;letter-spacing:-1px;color:#fff;-webkit-text-stroke:2px #3a0f8f;paint-order:stroke fill;text-shadow:0 4px 0 #1c0656,0 0 18px #c9a8ff99}
+.jw-studio.mm5 #game .jw-clock{margin-top:5px;min-width:68px;padding:4px 10px;border-radius:999px;background:#12033fcc;border:1.5px solid #ffffff2e;color:#fff;font-size:16px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;box-shadow:inset 0 2px 4px #0007}
+.jw-studio.mm5 #game .jw-clock.urgent{color:#ffd0d8;border-color:#ff4f8b;animation:mm-urgent 1s ease-in-out infinite}
+@keyframes mm-urgent{50%{box-shadow:0 0 0 3px #ff4f8b55,inset 0 2px 4px #0007}}
+
+/* moves left: one pill above the tray */
+.jw-studio.mm5 #game .jw-runline{width:auto;min-width:0;display:flex;align-items:center;gap:10px;padding:3px 12px;border-radius:999px;background:#12033f99;border:1px solid #ffffff22}
+.jw-studio.mm5 #game .jw-runline>div:first-child{display:flex;align-items:center;gap:7px}
+.jw-studio.mm5 #game .jw-runline strong{display:none}
+.jw-studio.mm5 #game #jwMovesText{font-size:13px;font-weight:900;color:#fff}
+.jw-studio.mm5 #game .jw-move-track{width:84px;height:6px;border-radius:999px;background:#ffffff1f;overflow:hidden}
+.jw-studio.mm5 #game .jw-move-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7ff0ff,#3fe0ff)}
+.jw-studio.mm5 #game .jw-move-track.low i{background:linear-gradient(90deg,#ff9ab4,#ff4f8b)}
+
+/* the tray */
+.jw-studio.mm5 #game .jw-wrap{border-radius:24px;box-shadow:0 10px 0 #1c065699,0 18px 40px #0a012a88,0 0 40px #b07bff3d}
+.jw-studio.mm5 #game .jw-banner{font-weight:900;-webkit-text-stroke:2px #3a0f8f;paint-order:stroke fill}
+.jw-studio.mm5 #game .jw-board-tools{min-height:24px;padding:0 2px}
+.jw-studio.mm5 #game #jwBoardHelp{font-size:11px;color:var(--mm-mute)}
+.jw-studio.mm5 #game .jw-tool{min-height:28px;padding:0 12px;border-radius:999px;background:#ffffff1a;border:1px solid #ffffff2e;color:#fff;font-size:12px;font-weight:800}
+
+/* five square boosters */
+.jw-studio.mm5 #game .jw-boostbar{display:flex;justify-content:center;gap:8px;width:100%;max-width:440px;min-height:0;padding:2px 0 0}
+.jw-studio.mm5 #game .jw-boost{--fill:0%;position:relative;flex:1 1 0;max-width:76px;display:grid;justify-items:center;align-content:start;gap:8px;min-height:0;padding:0;border:0;background:none;box-shadow:none;color:#fff;text-align:center;cursor:pointer}
+.jw-studio.mm5 #game .jw-boost-art{position:relative;flex:none;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#4a1fa8,#2a0d73);border:2.5px solid color-mix(in srgb,var(--boost) 70%,#ffffff);box-shadow:0 5px 0 #12033f,inset 0 2px 0 #ffffff33;display:grid;place-items:center}
+.jw-studio.mm5 #game .jw-boost-art>i{position:absolute;inset:auto 0 0 0;height:var(--fill);background:linear-gradient(180deg,color-mix(in srgb,var(--boost) 75%,#fff),var(--boost));opacity:.55;transition:height .4s ease-out;border-radius:0}
+.jw-studio.mm5 #game .jw-boost-art canvas{position:relative;width:78%;height:78%;filter:drop-shadow(0 3px 3px #0007)}
+.jw-studio.mm5 #game .jw-boost-ready{position:absolute;top:3px;inset-inline-end:3px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900;background:#3ed35d;color:#fff;border:1.5px solid #fff;opacity:0;transform:scale(.4);transition:.2s}
+.jw-studio.mm5 #game .jw-boost-copy{display:grid;justify-items:center;gap:0;min-width:0;width:100%}
+.jw-studio.mm5 #game .jw-boost-copy>b{font-size:11px;font-weight:900;color:#fff;white-space:nowrap}
+.jw-studio.mm5 #game .jw-boost-copy>small{font-size:10px;color:var(--mm-mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+.jw-studio.mm5 #game .jw-charge-track{display:none}
+.jw-studio.mm5 #game .jw-boost:disabled{opacity:1;cursor:default}
+.jw-studio.mm5 #game .jw-boost:disabled .jw-boost-art canvas{filter:grayscale(.55) brightness(.8) drop-shadow(0 3px 3px #0007)}
+.jw-studio.mm5 #game .jw-boost.ready .jw-boost-art{border-color:#fff;box-shadow:0 5px 0 #12033f,0 0 18px var(--boost),inset 0 2px 0 #ffffff55;animation:mm-ready 1.3s ease-in-out infinite}
+.jw-studio.mm5 #game .jw-boost.ready .jw-boost-art>i{opacity:.8}
+.jw-studio.mm5 #game .jw-boost.ready .jw-boost-ready{opacity:1;transform:none}
+.jw-studio.mm5 #game .jw-boost.ready .jw-boost-copy>small{color:#a8ffbe;font-weight:800}
+.jw-studio.mm5 #game .jw-boost.aim .jw-boost-art{border-color:var(--mm-gold);box-shadow:0 5px 0 #12033f,0 0 0 3px #ffd23f88,0 0 22px #ffd23f;animation:none;transform:translateY(-3px)}
+.jw-studio.mm5 #game .jw-boost.aim .jw-boost-copy>small{color:var(--mm-gold)}
+.jw-studio.mm5 #game .jw-boost[data-id="pick"] .jw-boost-art::after{content:"ببلاش";position:absolute;top:3px;inset-inline-start:3px;padding:0 5px;border-radius:999px;background:#ffd23f;color:#3b2604;font-size:8.5px;font-weight:900;line-height:14px}
+@keyframes mm-ready{50%{transform:translateY(-2px) scale(1.03)}}
+
+/* the bottom corners: settings and chat; the line in between */
+.jw-studio.mm5 #game .mm-foot{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;align-items:center;gap:8px;width:100%;max-width:540px;margin-top:2px}
+.jw-studio.mm5 #game .mm-round{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;border:2px solid #ffffff3a;background:radial-gradient(circle at 50% 35%,#8a55f0,#4a1fa8);box-shadow:0 4px 0 #12033f,inset 0 2px 0 #ffffff44;color:#fff;cursor:pointer;padding:0}
+.jw-studio.mm5 #game .mm-round svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.jw-studio.mm5 #game .mm-chat svg path:first-child{fill:#ffffff26}
+.jw-studio.mm5 #game .mm-round[hidden]{display:grid!important;visibility:visible}
+.jw-studio.mm5 #game .mm-foot .jw-status{height:auto;min-height:20px;font-size:12px;line-height:1.5;color:#efe6ff;font-weight:700;text-align:center}
+
+/* the settings sheet */
+.jw-studio.mm5 .mm-settings .jw-sheet-card{max-width:380px;text-align:start}
+.jw-studio.mm5 .mm-settings h2{margin:0 0 10px;font-size:20px}
+.jw-studio.mm5 .mm-set-list{display:grid;gap:8px}
+.jw-studio.mm5 .mm-set-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:14px;background:#f1e9ff;border:1px solid #e2d4ff;color:#2b0f6b;font-weight:800}
+.jw-studio.mm5 .mm-set-row .jw-icon{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(180deg,#8a55f0,#5a22d0);border:0;box-shadow:0 3px 0 #3a138f;color:#fff}
+.jw-studio.mm5 .mm-set-row .jw-icon svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.jw-studio.mm5 .mm-set-row .jw-icon[aria-pressed="true"]{background:linear-gradient(180deg,#ff7aa4,#e0336b);box-shadow:0 3px 0 #8f1340}
+.jw-studio.mm5 .mm-set-help{margin:12px 0;font-size:13px;line-height:1.7;color:#2b0f6b}
+.jw-studio.mm5 .mm-set-help ul{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px}
+.jw-studio.mm5 .mm-set-help li{display:flex;gap:6px;align-items:baseline}
+.jw-studio.mm5 .mm-set-help li::before{content:"";flex:0 0 9px;height:9px;border-radius:3px;background:var(--boost);transform:translateY(-1px)}
+.jw-studio.mm5 .mm-set-help p{margin:4px 0 0;opacity:.8}
+.jw-studio.mm5 .mm-end-stars b{color:var(--mm-gold);letter-spacing:2px;font-size:20px}
+.jw-studio.mm5 .mm-end-stars b i{font-style:normal;color:#ffffff33}
+
+@media (max-width:380px){
+  .jw-studio.mm5 #game .jw-hud{grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr)}
+  .jw-studio.mm5 #game .jw-plate{padding:7px 7px 9px;gap:2px 6px}
+  .jw-studio.mm5 #game .jw-plate .jw-face{width:44px;height:44px}
+  .jw-studio.mm5 #game .jw-plate .jw-score{font-size:22px}
+  .jw-studio.mm5 #game .mm-vs-word{font-size:24px}
+  .jw-studio.mm5 #game .jw-boost-copy>b{font-size:10px}
+}
+@media (max-height:700px){
+  .jw-studio.mm5 #game .jw-board-tools{display:none}
+  .jw-studio.mm5 #game .jw-boost-copy>b{display:none}
+  .jw-studio.mm5 #game .mm-crown{width:40px;height:28px}
+}
+@media (prefers-reduced-motion:reduce){
+  .jw-studio.mm5 #game .jw-boost.ready .jw-boost-art,.jw-studio.mm5 #game .mm-starbar em.pop,.jw-studio.mm5 #game .jw-clock.urgent{animation:none}
+}

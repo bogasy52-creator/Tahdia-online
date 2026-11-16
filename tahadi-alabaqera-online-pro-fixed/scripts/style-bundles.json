@@ -582,7 +582,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/jewels-studio-v33-10.css",
-    "assets/css/trio-premium-v33-10.css"
+    "assets/css/trio-premium-v33-10.css",
+    "assets/css/jewels-mm-v33-10-5.css"
   ],
   "crowd.html": [
     "assets/css/platform.css",
@@ -614,5 +615,35 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/pegs-v33-10-2.css"
+  ],
+  "ludo.html": [
+    "assets/css/platform.css",
+    "assets/css/game-kit.css",
+    "assets/css/pro-games.css",
+    "assets/css/pro-v7.css",
+    "assets/css/arena-suite.css",
+    "assets/css/dice-refined.css",
+    "assets/css/cosmetics.css",
+    "assets/css/royal-play.css",
+    "assets/css/professional-v14.css",
+    "assets/css/studio-v16.css",
+    "assets/css/mobile-v21.css",
+    "assets/css/tabletop-v30.css",
+    "assets/css/release-v30-1.css",
+    "assets/css/release-v31.css",
+    "assets/css/dice-v31.css",
+    "assets/css/tables-v31.css",
+    "assets/css/reactions-v31.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/tables-v33.css",
+    "assets/css/tables-phone-v33-3.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/gameplay-v34.css",
+    "assets/css/room-clock-v33-7.css",
+    "assets/css/player-card-v33-7.css",
+    "assets/css/mobile-club-v33-7.css",
+    "assets/css/reactions-premium-v33-7.css",
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/ludo-v33-10-5.css"
   ]
 }

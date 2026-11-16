@@ -9,19 +9,25 @@
    - Four in a line makes a rocket (clears its line), an L or T makes a bomb (3×3), five in a line
      makes a light gem (clears every gem of the colour it is swapped with). Swapping two special
      gems fires them together. Making a special gem gives one extra move (two at most in a turn).
-   - Three boosters charge from the gems of their colour you break: the hammer (red, a 3×3 blast
-     where you tap), the twin rockets (blue, a row and a column) and the storm (purple, every gem
-     of the colour you tap). A booster costs no move.
+   - Five boosters charge from the gems of their colours you break: the beak (green and orange,
+     one gem you pick), the mix (yellow: the board is shuffled and three gems turn special), the
+     hammer (red, a 3×3 blast where you tap), the twin rockets (blue, a row and a column) and the
+     storm (purple, every gem of the colour you tap). A booster costs no move.
    - The board is shuffled when nobody can move. A draw goes to the bigger single move, then to
      the player who moved second. */
 
 export const JD = Object.freeze({ W: 8, H: 8, COLORS: 6, ROUNDS: 5, MOVES: 2, LAST_DOUBLE: true });
 export const GEM_NAMES = Object.freeze(['أحمر', 'أصفر', 'أخضر', 'أزرق', 'بنفسجي', 'برتقالي']);
 export const BOOSTERS = Object.freeze([
-  Object.freeze({ id: 'hammer', color: 0, need: 22, name: 'المطرقة', text: 'تفجّر 3×3 وين ما تضغط' }),
-  Object.freeze({ id: 'cross', color: 3, need: 26, name: 'الصاروخين', text: 'تمسح الصف والعمود' }),
-  Object.freeze({ id: 'storm', color: 4, need: 32, name: 'العاصفة', text: 'تمسح كل جواهر اللون اللي تضغطه' }),
+  Object.freeze({ id: 'hammer', color: 0, colors: Object.freeze([0]), need: 22, order: 2, name: 'المطرقة', text: 'تفجّر 3×3 وين ما تضغط' }),
+  Object.freeze({ id: 'cross', color: 3, colors: Object.freeze([3]), need: 26, order: 3, name: 'الصاروخين', text: 'تمسح الصف والعمود' }),
+  Object.freeze({ id: 'storm', color: 4, colors: Object.freeze([4]), need: 32, order: 4, name: 'العاصفة', text: 'تمسح كل جواهر اللون اللي تضغطه' }),
+  // 33.10.5: two more, five in all (the first three keep their places in `charge`)
+  Object.freeze({ id: 'pick', color: 2, colors: Object.freeze([2, 5]), need: 14, order: 0, name: 'المنقار', text: 'يكسر جوهرة وحدة تختارها' }),
+  Object.freeze({ id: 'shuffle', color: 1, colors: Object.freeze([1]), need: 18, order: 1, name: 'الخلطة', text: 'تخلط اللوحة وتزرع 3 جواهر خاصة' }),
 ]);
+/** A player's charges, one for each booster (older states had three). */
+export const chargesOf = (p) => BOOSTERS.map((_, k) => Math.max(0, Number(p?.charge?.[k]) || 0));
 const W = JD.W, H = JD.H, N = W * H;
 const clone = (s) => JSON.parse(JSON.stringify(s));
 const xOf = (i) => i % W, yOf = (i) => (i / W) | 0, at = (x, y) => y * W + x;
@@ -161,7 +167,8 @@ function settle(s, seat, first, opts) {
     total += points;
     const p = s.players[seat];
     p.score += points;
-    BOOSTERS.forEach((bo, k) => { if (opts.charge !== k) p.charge[k] = Math.min(bo.need, p.charge[k] + colors[bo.color]); });
+    p.charge = chargesOf(p);
+    BOOSTERS.forEach((bo, k) => { if (opts.charge !== k) p.charge[k] = Math.min(bo.need, p.charge[k] + bo.colors.reduce((n, c) => n + colors[c], 0)); });
     for (const i of broken) b[i] = null;
     for (const [i, sp, c] of makeList) { b[i] = gem(s, c, sp); made++; }
     p.specials += makeList.length;
@@ -213,7 +220,7 @@ function finishMove(s, seat, result, { usedMove }) {
 export function createJewelsDuel(names = ['لاعب 1', 'لاعب 2'], { seed, rng = Math.random, first } = {}) {
   const s = {
     game: 'jewels', v: 1, seed: (seed ?? Math.floor(rng() * 4294967295)) >>> 0 || 7, serial: 0,
-    players: names.slice(0, 2).map((name) => ({ name: String(name || 'لاعب').slice(0, 20), score: 0, charge: [0, 0, 0], best: 0, specials: 0 })),
+    players: names.slice(0, 2).map((name) => ({ name: String(name || 'لاعب').slice(0, 20), score: 0, charge: BOOSTERS.map(() => 0), best: 0, specials: 0 })),
     first: first ?? (rng() < 0.5 ? 0 : 1), turn: 0, round: 1, moves: JD.MOVES, extras: 0, winner: null, seq: 0, last: null, board: [],
   };
   s.turn = s.first;
@@ -280,10 +287,30 @@ export function playJewelsBooster(state, seat, id, cell) {
   const k = BOOSTERS.findIndex((b) => b.id === id); cell = Number(cell);
   if (k < 0) throw new Error('unknown_booster');
   if (!Number.isInteger(cell) || cell < 0 || cell >= N) throw new Error('bad_cell');
-  if (state.players[seat].charge[k] < BOOSTERS[k].need) throw new Error('not_charged');
+  if (chargesOf(state.players[seat])[k] < BOOSTERS[k].need) throw new Error('not_charged');
   const s = clone(state), B = s.board, x = xOf(cell), y = yOf(cell), fx = [[id, cell]];
+  s.players[seat].charge = chargesOf(s.players[seat]);
+  if (id === 'shuffle') {
+    // the board is mixed (no match left, a move always there) and three gems turn special
+    s.players[seat].charge[k] = 0;
+    s.seq += 1;
+    s.last = { seq: s.seq, seat, kind: 'booster', booster: id, cell, before: clone(B), round: s.round, extra: false };
+    shuffle(s);
+    const plain = s.board.map((g, i) => (g && !g.s ? i : -1)).filter((i) => i >= 0), made = [];
+    for (const sp of ['bomb', rnd(s) < 0.5 ? 'rh' : 'rv', rnd(s) < 0.5 ? 'rh' : 'rv']) {
+      if (!plain.length) break;
+      const i = plain.splice(Math.floor(rnd(s) * plain.length), 1)[0];
+      s.board[i] = gem(s, s.board[i].c, sp); made.push([i, sp]);
+    }
+    s.players[seat].specials += made.length;
+    const result = { phases: [{ shuffle: true, booster: true, clear: [], made, fx: [['shuffle', cell]], pts: 0, board: clone(s.board) }], made: 0, total: 0 };
+    Object.assign(s.last, { phases: result.phases, total: 0, made: 0 });
+    finishMove(s, seat, result, { usedMove: false });
+    return s;
+  }
   let clear;
-  if (id === 'hammer') clear = area(x, y, 1);
+  if (id === 'pick') clear = [cell];
+  else if (id === 'hammer') clear = area(x, y, 1);
   else if (id === 'cross') clear = [...new Set([...row(y), ...col(x)])];
   else { const c = B[cell]?.s === 'ball' ? mostColor(B) : B[cell]?.c; clear = B.map((g, i) => (g && g.c === c ? i : -1)).filter((i) => i >= 0); }
   s.players[seat].charge[k] = 0;
@@ -315,7 +342,9 @@ function bestBoosterCell(state, k) {
   for (let i = 0; i < N; i++) {
     const x = xOf(i), y = yOf(i);
     let n;
-    if (id === 'hammer') n = area(x, y, 1).length + area(x, y, 1).filter((j) => B[j]?.s).length * 4;
+    if (id === 'shuffle') return 0;
+    if (id === 'pick') n = B[i]?.s ? 20 + (B[i].s === 'ball' ? 10 : 0) : 1 + (y < 2 ? 0 : 1);
+    else if (id === 'hammer') n = area(x, y, 1).length + area(x, y, 1).filter((j) => B[j]?.s).length * 4;
     else if (id === 'cross') n = row(y).length + col(x).length + [...row(y), ...col(x)].filter((j) => B[j]?.s).length * 4;
     else { const c = B[i]?.c; n = B.filter((g) => g && g.c === c).length + B.filter((g) => g && g.c === c && g.s).length * 4; }
     if (n > best) { best = n; cell = i; }
@@ -325,7 +354,7 @@ function bestBoosterCell(state, k) {
 /** The computer's move: {type:'booster', id, cell} or {type:'swap', a, b}. */
 export function chooseJewelsMove(state, level = 'medium', rng = Math.random) {
   const seat = state.turn, p = state.players[seat];
-  const ready = BOOSTERS.findIndex((b, k) => p.charge[k] >= b.need);
+  const charge = chargesOf(p), ready = BOOSTERS.findIndex((b, k) => charge[k] >= b.need);
   if (ready >= 0 && (level !== 'easy' || rng() < 0.5)) return { type: 'booster', id: BOOSTERS[ready].id, cell: bestBoosterCell(state, ready) };
   const swaps = legalSwaps(state);
   if (!swaps.length) return null;

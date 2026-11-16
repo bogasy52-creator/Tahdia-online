@@ -2,7 +2,7 @@
    Twenty-four beech pawns stand in their holes; a pawn that is lifted and tipped shows the colour
    painted under its foot. The page tells each pawn what to do (lift, tip, shake, fly) and this file
    only draws: it never knows a colour it was not told to show. */
-import { PEG_COLORS, PEG_HOLES } from '../engines/pegs-engine.js?v=33.10.4';
+import { PEG_COLORS, PEG_HOLES } from '../engines/pegs-engine.js?v=33.10.5';
 
 let TILT = 0.62; // how flat the board looks (1 = seen from straight above); set by the room the board has
 const TAU = Math.PI * 2;
