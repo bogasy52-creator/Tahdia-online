@@ -8,7 +8,7 @@
    It also draws the table's effects: the card flying to the middle, a kill, a swap, a marble
    coming home, a burnt card. Sounds come from the shared audio manager. */
 import { boardGeometry } from './engines/board-geometry-v29.js?v=33.9.10';
-import { globalJackarooPosition, jackarooMoveTarget } from './engines/jackaroo-engine.js?v=33.9.12-quality1';
+import { globalJackarooPosition, jackarooMoveTarget, jackarooWhyNot, jackarooEnterWhyNot } from './engines/jackaroo-engine.js?v=33.10.4-why1';
 
 const jkReduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 function jkEl(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
@@ -106,25 +106,61 @@ export function createBoardPicker({ board, fx = null, context = () => null, onCo
   function clear() { pick = null; if (layer) layer.replaceChildren(); }
   function nope(text, at, stone) {
     sound('error');
+    // 33.10.4: the words go below the tapped marble when the one in the way is above it, so it is seen
+    if (at && blamed && blamed.y < at.y && Math.abs(blamed.x - at.x) < 30) at = { x: at.x, y: Math.min(92, at.y + 13) };
+    blamed = null;
     if (text && fx && at) fx.say(at, text, 'warn');
     const el = stone && jkStoneEl(board, stone[0], stone[1]);
     if (el) { el.classList.remove('jk-nope'); void el.getBBox?.(); el.classList.add('jk-nope'); setTimeout(() => el.classList.remove('jk-nope'), 420); }
   }
   function commit(act) { sound('select'); clear(); onCommit(act); }
   function base(ctx) { tell(ctx?.hint || 'اختر الحجر'); }
-  /** Why the tapped marble has nothing with this card. */
+  /** 33.10.4: the marble that stands in the way shakes too, in gold */
+  let blamed = null;
+  function blame(stone) {
+    const el = stone && jkStoneEl(board, stone[0], stone[1]);
+    if (!el) return;
+    el.classList.remove('jk-blocker'); void el.getBBox?.(); el.classList.add('jk-blocker');
+    setTimeout(() => el.classList.remove('jk-blocker'), 1300);
+    blamed = jkCenterIn(board, el);
+  }
+  /** Why the tapped marble has nothing with this card — said plainly, naming what is in the way. */
   function explain(ctx, stone, at) {
     const { state, me } = ctx, rank = String(ctx.card || '').replace(/[SHDC]$/, '');
+    const name = (i) => state.players[i]?.name || 'لاعب';
+    // hit by a ten: this turn is only for choosing the card that burns
+    if (state.burnPick && state.burnPick.target === me) return nope('🔥 انحرقت عليك هالدورة: اختر ورقة من يدك تنحرق', at, stone);
     const [o, m] = stone, pos = state.players[o]?.marbles?.[m];
     const g = boardGeometry(state), home = (v) => (g.fill ? v >= g.track : v === g.finish);
     const own = o === me || (o % 2 === me % 2 && state.players[me].marbles.every(home));
-    if (own && pos < 0) return nope(rank === 'A' || rank === 'K' ? 'خانة البداية مسكّرة' : 'يطلع من الحوش بالآس أو الشايب', at, stone);
-    if (own && (JK_STEPS[rank] || [Number(rank)]).every((n) => n > 0 && shut(state, o, m, n, rank === '4'))) return nope(JK_LOCK, at, stone);
-    if (own) return nope('هالحجر ما يمشي بهالورقة', at, stone);
-    if (pos === 0 && (rank === 'J' || rank === '5')) return nope(JK_LOCK, at, stone);
-    if (rank === 'J') return nope('ما تقدر تبدّل مع هالحجر', at, stone);
-    if (rank === '5') return nope('هالحجر ما يمشي 5', at, stone);
-    return nope('هذا مو حجرك', at, stone);
+    if (!own) {
+      if (pos === 0 && (rank === 'J' || rank === '5')) return nope(JK_LOCK, at, stone);
+      if (rank === 'J') return nope(pos < 0 || (pos >= g.track) ? 'الولد يبدّل بس الأحجار اللي على الطريق' : 'ما تقدر تبدّل مع هالحجر', at, stone);
+      if (rank === '5') return nope(pos < 0 ? 'هالحجر في الحوش' : pos >= g.track ? 'هالحجر داخل بيته' : 'هالحجر ما يمشي 5: شي يسد طريقه', at, stone);
+      return nope(o % 2 === me % 2 ? 'هذا حجر شريكك — تلعبه بس إذا خلصت أحجارك' : 'هذا مو حجرك', at, stone);
+    }
+    if (pos < 0) {
+      if (rank !== 'A' && rank !== 'K') return nope('يطلع من الحوش بالإكة أو الشايب بس', at, stone);
+      const why = jackarooEnterWhyNot(state, o);
+      if (why?.why === 'start-own') { blame([why.player, why.marble]); return nope('حجرك واقف على البداية — حرّكه أول عشان يطلع غيره', at, stone); }
+      if (why?.why === 'locked') { blame([why.player, why.marble]); return nope('بدايتك مسكّرة الحين', at, stone); }
+      return nope('هالحجر ما يطلع الحين', at, stone);
+    }
+    if (rank === 'J') return nope(pos === 0 ? 'حجرك على بدايته: ما يتبدّل لين يتحرك' : pos >= g.track ? 'حجرك داخل البيت: ما يتبدّل' : 'ما فيه حجر خصم ينفع تبدّل معه', at, stone);
+    const steps = JK_STEPS[rank] || [Number(rank)];
+    const reasons = steps.filter((n) => n > 0).map((n) => jackarooWhyNot(state, o, m, n, { backward: rank === '4', king: rank === 'K' })).filter(Boolean);
+    const why = reasons.find((r) => r.why === 'own' || r.why === 'locked' || r.why === 'lane-own' || r.why === 'lane-taken') || reasons[0];
+    const others = (ctx.actions || []).some((a) => a.type !== 'discard' && a.type !== 'burn');
+    const more = others ? ' — جرّب حجر ثاني' : '';
+    if (!why) return nope('هالحجر ما يمشي بهالورقة' + more, at, stone);
+    if (why.why === 'done') return nope('هالحجر وصل آخر البيت', at, stone);
+    if (why.why === 'lane-back') return nope('ما يرجع لورا وهو داخل البيت', at, stone);
+    if (why.why === 'too-far') return nope(why.room > 0 ? 'الورقة أكبر من اللي باقي: هالحجر يمشي ' + why.room + ' أو أقل' : 'هالحجر ما يقدر يتقدم أكثر', at, stone);
+    if (why.why === 'locked') { blame([why.player, why.marble]); return nope('🔒 الطريق مقفول: ' + (why.player === me ? 'حجرك' : 'حجر ' + name(why.player)) + ' واقف على بدايته' + more, at, stone); }
+    if (why.why === 'own') { blame([why.player, why.marble]); return nope('حجرك ' + (why.marble + 1) + ' بطريقه — ما تتعدى حجرك' + more, at, stone); }
+    if (why.why === 'lane-taken') { blame([why.player, why.marble]); return nope('خانة البيت هذي فيها حجرك ' + (why.marble + 1) + more, at, stone); }
+    if (why.why === 'lane-own') { blame([why.player, why.marble]); return nope('حجرك ' + (why.marble + 1) + ' داخل البيت سادّ الطريق — دخّله لآخر البيت أول' + more, at, stone); }
+    return nope('هالحجر ما يمشي بهالورقة' + more, at, stone);
   }
   function begin(ctx, from, options, at) {
     if (options.length === 1 && options[0].act) return commit(options[0].act);

@@ -5,7 +5,7 @@
    It takes the same instructions as the flat board (board.js): per piece {lift, tip, color, glow, ring,
    mark, at, dx, scale, alpha}, so the page plays every step the same way on either. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { PEG_COLORS, PEG_HOLES } from '../engines/pegs-engine.js?v=33.10.3';
+import { PEG_COLORS, PEG_HOLES } from '../engines/pegs-engine.js?v=33.10.4';
 
 const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));

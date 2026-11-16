@@ -1,5 +1,5 @@
 /* Orthographic solid geometry over the authoritative 2D simulation. */
-import {TANKS,TANK_COLORS} from './core.js?v=33.10.3-tanks2';
+import {TANKS,TANK_COLORS} from './core.js?v=33.10.4-life1';
 const {W,H}=TANKS,TAU=Math.PI*2,clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const hash=n=>{let x=Math.imul(n+31,1597334677);x^=x>>>13;return(x>>>0)/4294967296;};
 const shade=(hex,k)=>{const v=parseInt(hex.slice(1),16);return '#'+[v>>16,v>>8&255,v&255].map(n=>Math.round(clamp(n*k,0,255)).toString(16).padStart(2,'0')).join('');};
@@ -68,7 +68,7 @@ export function paintArmoredTank(c,v,p,color=TANK_COLORS[p.seat%4],time=0){
   const[ax,ay]=local(p.x,p.y,a,-25,-18);line3(c,v,[[ax,ay,31],[ax-3,ay-4,72]],'#aec4b7',1.7);
   if(p.shield>0){const q=projectTankPoint(v,p.x,p.y,25);c.save();c.strokeStyle='#a6f4ffaa';c.lineWidth=1.2;c.setLineDash([5,3]);c.beginPath();c.ellipse(q.x,q.y,47*v.scale,49*v.scale,0,0,TAU);c.stroke();c.setLineDash([]);halo(c,q,49*v.scale,'#68d7f91b');c.restore();}
 }
-function pickup(c,v,p,time){if(p.taken)return;const color={shield:'#8edcff',rapid:'#f0c56f',triple:'#c59cfc',repair:'#82e9a6',boost:'#6ce8f3',heavy:'#ff8d69'}[p.kind]||'#fff',z=20+Math.sin(time*.003+p.x)*5,q=projectTankPoint(v,p.x,p.y,z);halo(c,q,35*v.scale,color+'38');box(c,v,p.x,p.y,29,29,z,7,'#e0d2aa',Math.PI/4,3);c.save();c.fillStyle='#173e4a';c.font=`900 ${Math.max(9,22*v.scale)}px sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText({shield:'◇',rapid:'ϟ',triple:'≡',repair:'+',boost:'»',heavy:'◉'}[p.kind],q.x,q.y-5*v.scale);c.restore();}
+function pickup(c,v,p,time){if(p.taken)return;const color={shield:'#8edcff',rapid:'#f0c56f',triple:'#c59cfc',repair:'#82e9a6',boost:'#6ce8f3',heavy:'#ff8d69',homing:'#ff6fb1'}[p.kind]||'#fff',z=20+Math.sin(time*.003+p.x)*5,q=projectTankPoint(v,p.x,p.y,z);halo(c,q,35*v.scale,color+'38');box(c,v,p.x,p.y,29,29,z,7,'#e0d2aa',Math.PI/4,3);c.save();c.fillStyle='#173e4a';c.font=`900 ${Math.max(9,22*v.scale)}px sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText({shield:'◇',rapid:'ϟ',triple:'≡',repair:'+',boost:'»',heavy:'◉',homing:'➶'}[p.kind],q.x,q.y-5*v.scale);c.restore();}
 function effects(c,v,fx,time,light){
   for(const e of fx){const age=(time-e.at)/1000;if(age<0)continue;
     if(e.type==='shot'&&age<.16){const q=projectTankPoint(v,e.x+Math.cos(e.aim)*57,e.y+Math.sin(e.aim)*57,47),o=projectTankPoint(v,e.x,e.y,47),a=1-age/.16;c.save();c.globalCompositeOperation='lighter';halo(c,q,68*v.scale*a,'#ffc36bbf');c.translate(q.x,q.y);c.rotate(Math.atan2(q.y-o.y,q.x-o.x));c.scale(v.scale,v.scale);polygon(c,[[0,-3],[8,-13*a],[19,-5],[40*a,0],[19,5],[8,13*a],[0,3]],'#fff0b7');polygon(c,[[0,-3],[26*a,0],[0,3]],'#fff');c.restore();}
@@ -84,13 +84,26 @@ export function drawTankScene(c,g,w,h,{time=0,view=makeTankCamera(w,h),terrain=n
   const depth=(x,y)=>x*Math.sin(view.angle)+y*Math.cos(view.angle),objects=[...g.walls.filter(b=>b.hp!==0).map(b=>({d:depth(b.x+b.w/2,b.y+b.h/2),paint:()=>obstacle(c,view,b)})),...g.players.map(p=>({d:depth(p.x,p.y),paint:()=>paintArmoredTank(c,view,p,TANK_COLORS[p.seat],time)})),...g.pickups.filter(p=>!p.taken).map(p=>({d:depth(p.x,p.y),paint:()=>pickup(c,view,p,time)}))];objects.sort((a,b)=>a.d-b.d);for(const obj of objects)obj.paint();
   const self=g.players[localSeat];if(self?.alive&&g.phase==='battle'){const{x,y,aim}=self;c.save();c.setLineDash([3,6]);line3(c,view,[[x+Math.cos(aim)*64,y+Math.sin(aim)*64,44],[x+Math.cos(aim)*145,y+Math.sin(aim)*145,44]],'#b6e8d79c',2.5);c.restore();}
   for(const b of g.bullets){const q=projectTankPoint(view,b.x,b.y,45);c.save();c.globalCompositeOperation='lighter';if(!light)halo(c,q,24*view.scale,'#ffbf643f');line3(c,view,[[b.x-b.vx*.045,b.y-b.vy*.045,45],[b.x,b.y,45]],'#ffe2a0',6);c.fillStyle='#fff9e3';c.beginPath();c.arc(q.x,q.y,Math.max(2.2,4*view.scale),0,TAU);c.fill();c.restore();}effects(c,view,fx,time,light);
-  for(const p of g.players){if(!p.alive)continue;const q=projectTankPoint(view,p.x,p.y,87);if(q.x<0||q.x>w||q.y<0||q.y>h)continue;const x=clamp(q.x,38,w-38),y=clamp(q.y,14,h-18),size=Math.max(25,56*view.scale);c.save();c.font=`700 ${Math.max(9,12*view.scale)}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='bottom';c.lineWidth=3;c.strokeStyle='#051b25';const label=p.seat===localSeat?'أنت':p.name;c.strokeText(label,x,y-7);c.fillStyle='#f3f3dc';c.fillText(label,x,y-7);c.fillStyle='#071923';c.fillRect(x-size/2-1,y-1,size+2,5);c.fillStyle=TANK_COLORS[p.seat];c.fillRect(x-size/2,y,Math.max(0,size*p.hp/100),3);c.restore();}
+  // 33.10.4: a real health bar over every tank — long, coloured by what is left, the shield in blue over it
+  const lifeColor=f=>f>.6?'#45e07a':f>.3?'#ffcf4a':'#ff5a4a',onScreen=[];
+  for(const p of g.players){if(!p.alive)continue;const q=projectTankPoint(view,p.x,p.y,87);if(q.x<0||q.x>w||q.y<0||q.y>h)continue;const mine=p.seat===localSeat,x=clamp(q.x,40,w-40),y=clamp(q.y,16,h-20),size=Math.max(mine?54:46,(mine?84:72)*view.scale),bh=mine?8:7,f=clamp(p.hp/TANKS.HP,0,1),sf=clamp((p.shield||0)/TANKS.SHIELD,0,1);onScreen.push({seat:p.seat,x,y});c.save();
+    c.font=`800 ${Math.max(10,12.5*view.scale)}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='bottom';c.lineWidth=3.5;c.strokeStyle='#051b25';const label=mine?'أنت':p.name;c.strokeText(label,x,y-bh-4);c.fillStyle=mine?'#ffffff':'#f3f3dc';c.fillText(label,x,y-bh-4);
+    c.fillStyle='#04121acc';c.beginPath();c.roundRect(x-size/2-2,y-bh-1,size+4,bh+4,4);c.fill();c.fillStyle=TANK_COLORS[p.seat];c.fillRect(x-size/2-2,y-bh-1,3,bh+4);
+    c.fillStyle='#ffffff1a';c.fillRect(x-size/2,y-bh+1,size,bh);c.fillStyle=lifeColor(f);c.fillRect(x-size/2,y-bh+1,size*f,bh);c.fillStyle='#ffffff40';c.fillRect(x-size/2,y-bh+1,size*f,Math.max(1,bh*.35));
+    c.fillStyle='#04121a99';for(let k=1;k<5;k++)c.fillRect(x-size/2+size*k/5-.5,y-bh+1,1,bh);
+    if(sf>0){c.fillStyle='#7fd8ff';c.fillRect(x-size/2,y+1,size*sf,2.5);}
+    if(mine){c.font=`900 ${Math.max(9,10*view.scale)}px system-ui,sans-serif`;c.textBaseline='top';c.lineWidth=3;c.strokeText(String(Math.ceil(p.hp)),x+size/2+12,y-bh-1);c.fillStyle=lifeColor(f);c.fillText(String(Math.ceil(p.hp)),x+size/2+12,y-bh-1);}
+    c.restore();}
+  // 33.10.4: an enemy off the screen shows as an arrow on the edge, in its colour, pointing where it is
+  const lead=g.players[localSeat],selfQ=lead?.alive?projectTankPoint(view,lead.x,lead.y,20):{x:w/2,y:h/2};
+  if(view.zoomed)for(const p of g.players){if(!p.alive||p.seat===localSeat||(g.mode==='teams'&&lead&&p.team===lead.team))continue;const q=projectTankPoint(view,p.x,p.y,20);if(q.x>=8&&q.x<=w-8&&q.y>=8&&q.y<=h-8)continue;const a=Math.atan2(q.y-selfQ.y,q.x-selfQ.x),m=22,ex=clamp(selfQ.x+Math.cos(a)*9999,m,w-m),ey0=selfQ.y+Math.sin(a)*Math.abs((ex-selfQ.x)/(Math.cos(a)||1e-6)),ey=clamp(ey0,m,h-m),ex2=Math.abs(ey0-ey)>.5?clamp(selfQ.x+Math.cos(a)*Math.abs((ey-selfQ.y)/(Math.sin(a)||1e-6)),m,w-m):ex;c.save();c.translate(ex2,ey);c.rotate(a);c.globalAlpha=.92;c.fillStyle=TANK_COLORS[p.seat];c.strokeStyle='#04121a';c.lineWidth=2.5;c.beginPath();c.moveTo(12,0);c.lineTo(-7,-9);c.lineTo(-3,0);c.lineTo(-7,9);c.closePath();c.stroke();c.fill();c.restore();}
+  // the map of the arena sits in the corner farthest from your tank, and fades when a tank is under it
   if(view.zoomed){
-    const rw=Math.min(100,w*.25),rh=rw*H/W,mx=10,my=12;c.save();c.fillStyle='#06141de8';c.fillRect(mx-4,my-4,rw+8,rh+8);c.strokeStyle='#b8c9b55c';c.lineWidth=1;c.strokeRect(mx-4,my-4,rw+8,rh+8);
+    const rw=Math.min(84,w*.2),rh=rw*H/W,right=selfQ.x<w/2,mx=right?w-rw-10:10,my=12,under=onScreen.some(o=>o.x>mx-14&&o.x<mx+rw+14&&o.y>my-14&&o.y<my+rh+30);c.save();c.globalAlpha=under?.28:.82;c.fillStyle='#06141de0';c.beginPath();c.roundRect(mx-4,my-4,rw+8,rh+8,7);c.fill();c.strokeStyle='#b8c9b55c';c.lineWidth=1;c.stroke();
     c.save();c.beginPath();c.rect(mx,my,rw,rh);c.clip();for(const b of g.walls)if(b.hp!==0){c.fillStyle=b.type==='stone'?'#5c7b80':'#927a52';c.fillRect(mx+b.x/W*rw,my+b.y/H*rh,Math.max(2,b.w/W*rw),Math.max(2,b.h/H*rh));}
     for(const p of g.pickups)if(!p.taken){c.fillStyle='#e7d69a';c.fillRect(mx+p.x/W*rw-1.5,my+p.y/H*rh-1.5,3,3);}
-    for(const p of g.players)if(p.alive){c.beginPath();c.arc(mx+p.x/W*rw,my+p.y/H*rh,p.seat===localSeat?3.8:2.5,0,TAU);c.fillStyle=TANK_COLORS[p.seat];c.fill();if(p.seat===localSeat){c.strokeStyle='#fff';c.lineWidth=1;c.stroke();}}
-    c.restore();c.fillStyle='#bbc9cc';c.font='9px system-ui';c.textAlign='center';c.fillText('خريطة المعركة',mx+rw/2,my+rh+15);c.restore();
+    for(const p of g.players)if(p.alive){c.beginPath();c.arc(mx+p.x/W*rw,my+p.y/H*rh,p.seat===localSeat?3.8:2.6,0,TAU);c.fillStyle=TANK_COLORS[p.seat];c.fill();if(p.seat===localSeat){c.strokeStyle='#fff';c.lineWidth=1.2;c.stroke();}}
+    c.restore();c.restore();
   }
   for(const e of fx){const t=(time-e.at)/800;if(e.type!=='hit'||!e.damage||t<0||t>1)continue;const q=projectTankPoint(view,e.x,e.y,75+40*t),x=clamp(q.x+Math.max(18,30*view.scale),16,w-16);c.save();c.globalAlpha=1-t;c.font='900 15px system-ui,sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#2c1d22';c.strokeText('−'+e.damage,x,q.y);c.fillStyle='#ffdf9c';c.fillText('−'+e.damage,x,q.y);c.restore();}
 }

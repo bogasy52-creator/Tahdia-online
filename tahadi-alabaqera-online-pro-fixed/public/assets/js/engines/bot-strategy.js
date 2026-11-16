@@ -1,5 +1,5 @@
-import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=33.9.12-quality1';
-import {getLegalLudoMoves,applyLudoMove,globalLudoPosition} from './ludo-engine.js?v=29.1.0';
+import {getJackarooActions,previewJackarooAction,teamWinner,globalJackarooPosition} from './jackaroo-engine.js?v=33.10.4-why1';
+import {getLegalLudoMoves,applyLudoMove,globalLudoPosition} from './ludo-engine.js?v=33.10.4-quick1';
 import {boardGeometry} from './board-geometry-v29.js';
 
 function pick(scored,difficulty,rng){

@@ -20,7 +20,7 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from "./games/snakes-server.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
-import { TABLE_GAMES, MAX_SEATS, chosenSeats, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, isJewelsRaceTable, DEFAULT_LOOK, FREE_LOOK_ITEMS } from "./games/board-tables.js";
+import { TABLE_GAMES, MAX_SEATS, chosenSeats, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, isJewelsRaceTable, DEFAULT_LOOK, FREE_LOOK_ITEMS, tableVariant } from "./games/board-tables.js";
 import { publicJewelsRace, finishJewelsRace } from '../public/assets/js/engines/jewels-race-engine.js';
 import { BALOOT_LOBBY_MS, freeBalootSeat, startBalootRoom, applyBalootMove, balootAlarm, balootPlayers, balootRoomView, balootWinFor } from "./games/baloot-server.js";
 import { validTalk } from "../public/assets/js/engines/baloot-talk.js";
@@ -45,7 +45,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.10.3';
+const RELEASE='33.10.4';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -812,7 +812,7 @@ export default {
       if (limited) return limited;
       if (!env.BOARD_ROOMS || typeof env.BOARD_ROOMS.idFromName !== "function") return json({ ok: false, code: "BOARD_BINDING_MISSING", error: "محرك الغرف غير مربوط بالسيرفر" }, 503);
       const body = await request.json().catch(() => ({}));
-      const game = String(body.game || ""), variant = game === 'snakes' && ['adventure','strategy','clash'].includes(body.variant) ? body.variant : 'classic';
+      const game = String(body.game || ""), variant = game === 'snakes' ? (['adventure','strategy','clash'].includes(body.variant) ? body.variant : 'classic') : tableVariant(game, body.variant);
       if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       // 33.4.0: a table size the player picked (snakes: 2, 3 or 4) has its own open table
       const seats = chosenSeats(game, body.seats),humansOnly=body.humansOnly===true;
@@ -835,7 +835,7 @@ export default {
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
         if (!["snakes", "zahra", "jackaroo", "dice", "baloot", "billiards", "jewels", "carrom", "pegs"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
-        let variant = 'classic';
+        let variant = tableVariant(game, body.variant);
         if (game === 'snakes') {
           try { variant = normalizeSnakesVariant(body.variant); }
           catch { return json({ ok: false, error: 'اختر الكلاسيك أو المطوّرة' }, 400); }
@@ -1789,7 +1789,7 @@ export class BoardRoom extends DurableObject {
   async initializeRoom(body){
     if(this.room){if(body.tournament?.token&&this.room.tournament?.token===body.tournament.token&&this.room.tournament.match===body.tournament.match)return json({ok:true},201);return json({ok:false,error:'room_exists'},409);}
     const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom','pegs'].includes(game))return json({ok:false,error:'invalid_game'},400);
-    let variant='classic';if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
+    let variant=tableVariant(game,body.variant);if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
     const tournament=game==='billiards'?cleanTournamentLink(body.tournament):null;if(body.tournament&&!tournament)return json({ok:false,error:'invalid_tournament'},400);
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
@@ -2164,7 +2164,7 @@ export class BoardRoom extends DurableObject {
   // take the seats nobody took.
   async tableQuick(game, variant, seats = null, humansOnly=false) {
     if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: 'اللعبة غير مدعومة' }, 400);
-    if (game === 'snakes') try { variant = normalizeSnakesVariant(variant); } catch { variant = 'classic'; } else variant = 'classic';
+    if (game === 'snakes') try { variant = normalizeSnakesVariant(variant); } catch { variant = 'classic'; } else variant = tableVariant(game, variant);
     const now = Date.now(), key = 'tableQuick';
     let open = (await this.ctx.storage.get(key)) || null;
     if(humansOnly&&open){try{const res=await this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(open.code)).fetch('https://board.internal/status'),data=await res.json();if(!res.ok||data.status!=='lobby'||data.players>=(seats||MAX_SEATS[game]))open=null;else open.assigned=0;}catch{return json({ok:false,error:'تعذّر التحقق من طاولة اللاعبين.'},503);}}

@@ -357,7 +357,7 @@
     text(dom.seconds,String(left));
     dom.bar.style.setProperty('--left',Math.min(100,left/30*100)+'%');
     dom.table.classList.toggle('my-turn',active&&myTurn);
-    text(dom.status,m.phase==='finished'?'انتهت الجولة':paused?'اللعب متوقف':myTurn?(u.pending?'عليك سحب '+u.pending+' أو تراكم بنفس الرمز':u.drawn?'العب الورقة المسحوبة أو مرّر':'دورك · اختر ورقة مضيئة'):'دور '+m.players[u.turn].name);
+    text(dom.status,m.phase==='finished'?'انتهت الجولة':paused?'اللعب متوقف':myTurn?(u.pending?(u.legal?.length?'عليك +'+u.pending+' — ردّها بـ'+(u.top?.face==='draw4'?'+4':'+2')+' من أي لون، أو اسحب '+u.pending:'عليك سحب '+u.pending):u.drawn?'العب الورقة المسحوبة أو مرّر':'دورك · اختر ورقة مضيئة'):'دور '+m.players[u.turn].name);
     dom.stock.disabled=dom.draw.disabled=!active||!myTurn||!!u.drawn;
     text(dom.draw,u.pending?'اسحب '+u.pending:'اسحب ورقة');
     dom.pass.hidden=!u.drawn;dom.pass.disabled=!active||!myTurn;

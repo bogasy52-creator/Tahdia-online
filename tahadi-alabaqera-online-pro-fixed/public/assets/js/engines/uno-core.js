@@ -132,14 +132,17 @@ export function applyUno(m, p, action, now) {
     if (card.face === 'skip' || card.face === 'reverse' && u.hands.length === 2) next = nextSeat(u, seat, 2);
     if (card.face === 'draw2' || card.face === 'draw4') {
       const count = card.face === 'draw2' ? 2 : 4;
-      if (u.mode === 'stack' && u.hands[seat].length) {
+      // 33.10.4: a +2 stacks in every table: whoever gets it answers with a +2 of any colour and it
+      // passes on, bigger; the «سحب متراكم» table stacks +4 on +4 as well
+      if ((u.mode === 'stack' || card.face === 'draw2') && u.hands[seat].length) {
         u.pending += count; u.pendingFace = card.face;
       } else {
         draw(u, following, count + u.pending);
         u.pending = 0; u.pendingFace = null; next = nextSeat(u, seat, 2);
       }
     }
-    event(m, 'play', seat, p.name + (announced ? ' · أونو!' : ' لعب ورقته'), card);
+    const stacked = (card.face === 'draw2' || card.face === 'draw4') && u.pending > (card.face === 'draw2' ? 2 : 4);
+    event(m, 'play', seat, p.name + (announced ? ' · أونو!' : stacked ? ' ردّها! +' + u.pending + ' على ' + m.players[following].name : ' لعب ورقته'), card);
     if (!u.hands[seat].length) { finish(m, seat, now); return; }
     setTurn(m, next, now); return;
   }

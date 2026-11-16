@@ -16,10 +16,11 @@ export function shuffleJackarooDeck(deck=createJackarooDeck(),rng=Math.random){c
 // (seat − 1 is the player on your right; the board itself is drawn as before)
 export const jackarooNext=(state,seat,step=1)=>{const n=state.players.length;return((seat-step)%n+n)%n};
 function dealBatch(state,size){if(state.deck.length<size*state.players.length){state.deck=shuffleJackarooDeck(createJackarooDeck());state.discard=[];state.dealer=jackarooNext(state,state.dealer)}state.hands=state.hands.map(()=>[]);for(let r=0;r<size;r++)for(let i=1;i<=state.players.length;i++){const p=jackarooNext(state,state.dealer,i);state.hands[p].push(state.deck.pop())}state.dealIndex=(state.dealIndex+1)%3}
-export function createJackarooGame(names=['لاعب 1','لاعب 2','لاعب 3','لاعب 4'],options={}){if(!Array.isArray(names)||![4,6].includes(names.length))throw new Error('jackaroo_requires_4_or_6_players');const s={...([13,18,19].includes(options.arm)&&!(options.arm>13&&names.length!==4)?{arm:options.arm}:{}),...(options.home==='fill'&&options.arm===19&&names.length===4?{home:'fill'}:{}),players:names.map((n,id)=>({id,name:String(n||`لاعب ${id+1}`).slice(0,20),marbles:[-1,-1,-1,-1]})),hands:names.map(()=>[]),deck:options.deck?[...options.deck]:shuffleJackarooDeck(createJackarooDeck(),options.rng||Math.random),discard:[],dealer:options.dealer??0,dealIndex:0,turn:(options.dealer??0)+names.length-1,played:0,winnerTeam:null,lastEvent:null};s.turn%=names.length;dealBatch(s,4);return s}
+export function createJackarooGame(names=['لاعب 1','لاعب 2','لاعب 3','لاعب 4'],options={}){if(!Array.isArray(names)||![4,6].includes(names.length))throw new Error('jackaroo_requires_4_or_6_players');const s={...([13,18,19].includes(options.arm)&&!(options.arm>13&&names.length!==4)?{arm:options.arm}:{}),...(options.home==='fill'&&options.arm===19&&names.length===4?{home:'fill'}:{}),...(options.quick===true?{quick:true}:{}),players:names.map((n,id)=>({id,name:String(n||`لاعب ${id+1}`).slice(0,20),marbles:[-1,-1,-1,-1]})),hands:names.map(()=>[]),deck:options.deck?[...options.deck]:shuffleJackarooDeck(createJackarooDeck(),options.rng||Math.random),discard:[],dealer:options.dealer??0,dealIndex:0,turn:(options.dealer??0)+names.length-1,played:0,winnerTeam:null,lastEvent:null};s.turn%=names.length;dealBatch(s,4);return s}
 export function globalJackarooPosition(player,progress,state=4){return boardStonePosition(player,progress,state)}
 export const jackarooTeam=p=>p%2;
-export function teamWinner(state){for(const team of[0,1])if(state.players.filter((_,i)=>i%2===team).every(p=>p.marbles.every(m=>jackarooHome(state,m))))return team;return null}
+// 33.10.4 «سريع»: the first marble of a team that comes home wins the match for its team
+export function teamWinner(state){if(state.quick){for(const team of[0,1])if(state.players.some((p,i)=>i%2===team&&p.marbles.some(m=>jackarooHome(state,m))))return team;return null}for(const team of[0,1])if(state.players.filter((_,i)=>i%2===team).every(p=>p.marbles.every(m=>jackarooHome(state,m))))return team;return null}
 const ownerCandidates=(state,actor)=>{if(!state.players[actor].marbles.every(m=>jackarooHome(state,m)))return[actor];for(let n=2;n<state.players.length;n+=2){const mate=(actor+n)%state.players.length;if(!state.players[mate].marbles.every(m=>jackarooHome(state,m)))return[mate];}return[];};
 function isSafeGlobal(state,global){return boardGeometry(state).safe.has(global)}
 // Only a marble on its OWN starting hole is protected. Printed stars and a
@@ -72,6 +73,32 @@ function canMove(state,owner,marble,steps,backward=false,allowHome=true,king=fal
  }
  return true;
 }
+/** 33.10.4: why a marble cannot walk `steps` — what the player is told when a tap does nothing.
+    null when it can. {why:'yard'|'done'|'lane-back'|'too-far'|'locked'|'own'|'lane-taken'|'lane-own', ...} */
+export function jackarooWhyNot(state,owner,marble,steps,{backward=false,king=false,allowHome=true}={}){
+ const pos=state.players[owner]?.marbles?.[marble],g=boardGeometry(state);
+ if(!Number.isInteger(pos))return{why:'none'};
+ if(pos<0)return{why:'yard'};
+ if(pos>=g.finish)return{why:'done'};
+ if(backward&&pos>=g.track)return{why:'lane-back'};
+ const target=jackarooMoveTarget(state,owner,marble,steps,backward,allowHome);
+ if(target>g.finish)return{why:'too-far',room:g.finish-pos-(g.fill&&pos<g.track-1?1:0)};
+ const distance=backward?steps:gateSteps(state,pos,steps,allowHome);
+ if(pos<g.track)for(const rel of trackPath(state,pos,distance,backward,allowHome)){
+  const occupants=occupancy(state,globalJackarooPosition(owner,rel,state),[owner,marble]);
+  const locked=occupants.find(o=>o.protected);if(locked)return{why:'locked',player:locked.player,marble:locked.marble};
+  const mine=!king&&occupants.find(o=>o.player===owner);if(mine)return{why:'own',player:owner,marble:mine.marble};
+ }
+ if(target>=g.track){
+  const taken=state.players[owner].marbles.findIndex((m,i)=>i!==marble&&m===target);
+  if((g.fill||target!==g.finish)&&taken>=0)return{why:'lane-taken',player:owner,marble:taken};
+  const inside=state.players[owner].marbles.findIndex((m,i)=>i!==marble&&m>=g.track&&m<g.finish&&m>pos&&m<target);
+  if(inside>=0)return{why:'lane-own',player:owner,marble:inside};
+ }
+ return null;
+}
+/** Why no marble can come out: your own marble, or a marble that is locked, sits on your start. */
+export function jackarooEnterWhyNot(state,owner){const at=boardGeometry(state).starts[owner],occ=occupancy(state,at);const mine=occ.find(o=>o.player===owner);if(mine)return{why:'start-own',player:owner,marble:mine.marble};const locked=occ.find(o=>o.protected);if(locked)return{why:'locked',player:locked.player,marble:locked.marble};if(!state.players[owner].marbles.some(m=>m===-1))return{why:'yard-empty'};return null}
 function enterAllowed(state,owner){const g=boardGeometry(state).starts[owner],occ=occupancy(state,g);return !occ.some(o=>o.player===owner||o.protected)}
 function standardMoveActions(state,actor,steps,backward=false,king=false){const out=[];for(const owner of ownerCandidates(state,actor))state.players[owner].marbles.forEach((_,marble)=>{if(canMove(state,owner,marble,steps,backward,true,king))out.push({type:'move',owner,marble,steps,backward})});return out}
 function fiveActions(state,actor=state.turn){const out=[];state.players.forEach((p,owner)=>p.marbles.forEach((m,marble)=>{if(m<0||m>=boardGeometry(state).track)return;const own=jackarooTeam(owner)===jackarooTeam(actor);if(!own&&isBaseProtected(state,owner,marble))return;if(canMove(state,owner,marble,5,false,own))out.push({type:'moveAny5',owner,marble,steps:5})}));return out}

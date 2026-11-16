@@ -9,7 +9,7 @@ import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-onli
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2,pegs:2};
 
-export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
+export function createTable({game,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
   const $=selector=>document.querySelector(selector);
   const menuHost=$('#gameMenu');
   let client=null,room=null,quickMode=null,quickSeats=null,quickHumans=['billiards','jewels'].includes(game),leaving=false,retriedQuick=false;
@@ -28,7 +28,7 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
   },{maxBacklog:game==='snakes'?5:game==='pegs'?40:14,onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
-    game,modes,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,
+    game,modes,modesLabel,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,
     onQuick:async({mode,seats:count,humansOnly=false})=>{quickHumans=humansOnly;quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null,humansOnly:quickHumans});window.BS_AUDIO?.play?.('join');},
     onCreate:async({mode,seats:count})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
     onJoin:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());window.BS_AUDIO?.play?.('join');},
@@ -52,6 +52,9 @@ export function createTable({game,modes=null,seats=null,seatsDefault,quickNote,r
     const me=next.me?.index,tag=game+':'+next.code+':'+(next.startedAt||0)+':',name=i=>(next.players||[]).find(p=>p.index===i)?.name||'لاعب';
     const say=(key,mine,text)=>window.BS_CLOCK.alert(tag+key,text,{tone:mine?'mine':'rival'});
     if(game==='snakes')s.players.forEach((p,i)=>{const at=Number(p.position)||0;if(at>=94&&at<100)say(i,i===me,i===me?'قربت! أنت على '+at+' وباقي لك رمية وتوصل 100':name(i)+' على '+at+' — قريب من 100!');});
+    // 33.10.4 «سريع»: the first one home wins, so the alarm rings when a stone is near home
+    if(game==='zahra'&&s.quick){const finish=(s.players.length>4?6:4)*(s.arm||13)+(s.home==='fill'?3:4);s.players.forEach((p,i)=>{if((p.tokens||[]).some(t=>t>=0&&t<finish&&finish-t<=6))say('q'+i,i===me,i===me?'حجرك على بعد رمية من النهاية!':name(i)+' قريب من النهاية — ويفوز!');});return;}
+    if(game==='jackaroo'&&s.quick){const seats=s.players.length>4?6:4,track=seats*(s.arm||13);for(const team of [0,1]){const near=s.players.some((p,i)=>i%2===team&&(p.marbles||[]).some(m=>m>=0&&m<track&&track-m<=13));if(near){const ours=me!=null&&me%2===team;say('q'+team,ours,ours?'حجر فريقكم قريب من البيت — دخّلوه وتفوزون!':'الفريق الثاني قريب من البيت!');}}return;}
     if(game==='zahra'){const finish=(s.players.length>4?6:4)*(s.arm||13)+(s.home==='fill'?3:4);s.players.forEach((p,i)=>{const done=(p.tokens||[]).filter(t=>t===finish).length;if(done===(p.tokens||[]).length-1&&done>0)say(i,i===me,i===me?'قربت تفوز! باقي لك حجر واحد':name(i)+' باقي له حجر واحد ويفوز!');});}
     if(game==='jackaroo'){const seats=s.players.length>4?6:4,track=seats*(s.arm||13),home=m=>s.home==='fill'?m>=track:m===track+4;
       for(const team of [0,1]){const ms=s.players.filter((_,i)=>i%2===team).flatMap(p=>p.marbles||[]),done=ms.filter(home).length;if(ms.length&&done===ms.length-1){const ours=me!=null&&me%2===team;say('team'+team,ours,ours?'قربتوا تفوزون! باقي لفريقك كرة وحدة':'الفريق الثاني باقي له كرة وحدة ويفوز!');}}}

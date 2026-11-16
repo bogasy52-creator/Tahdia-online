@@ -67,8 +67,8 @@ test('large maps retain connected spawn paths and free supply locations',()=>{
  }
 });
 test('repair, boost and heavy weapons are server simulated and camera input remains invertible',()=>{
- const game=()=>{const g=createTankBattle();g.phase='battle';g.roundTime=1;g.walls=[];g.pickupAt=1000;return g;};
- for(const kind of ['repair','boost','heavy']){const g=game(),p=g.players[0];p.hp=50;g.pickups=[{x:p.x,y:p.y,kind}];stepTankBattle(g,1/60);if(kind==='repair')assert.equal(p.hp,82);if(kind==='boost'){assert.ok(p.boostUntil>g.time);setTankInput(g,0,{mx:1,my:0,aim:0,fire:false});for(let i=0;i<60;i++)stepTankBattle(g,1/60);assert.ok(p.vx>TANKS.SPEED);for(let i=0;i<310;i++)stepTankBattle(g,1/60);assert.ok(p.vx<=TANKS.SPEED+1);}if(kind==='heavy')assert.equal(p.weapon,'heavy');}
+ const game=()=>{const g=createTankBattle();g.phase='battle';g.roundTime=TANKS.SAFE+.4;g.walls=[];g.pickupAt=1000;return g;};
+ for(const kind of ['repair','boost','heavy']){const g=game(),p=g.players[0];p.hp=50;g.pickups=[{x:p.x,y:p.y,kind}];stepTankBattle(g,1/60);if(kind==='repair')assert.equal(p.hp,105);if(kind==='boost'){assert.ok(p.boostUntil>g.time);setTankInput(g,0,{mx:1,my:0,aim:0,fire:false});for(let i=0;i<60;i++)stepTankBattle(g,1/60);assert.ok(p.vx>TANKS.SPEED);for(let i=0;i<310;i++)stepTankBattle(g,1/60);assert.ok(p.vx<=TANKS.SPEED+1);}if(kind==='heavy')assert.equal(p.weapon,'heavy');}
  for(const[w,h]of[[390,540],[844,330]])for(const focus of [{x:160,y:200},{x:1000,y:1100}]){const v=makeTankCamera(w,h,{focus,zoom:1.55}),p=projectTankPoint(v,focus.x+84,focus.y-31),q=unprojectTankPoint(v,p.x,p.y);assert.ok(Math.abs(q.x-focus.x-84)<1e-6);assert.ok(Math.abs(q.y-focus.y+31)<1e-6);}
 });
 

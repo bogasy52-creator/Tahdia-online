@@ -45,8 +45,10 @@ test('reverse with two players, skip, draw-two and legal draw-four apply to the 
  act(m,0,{type:'play',card:'x'});assert.equal(m.uno.turn,0);
  m=setup();m.uno.hands[0][0]=card('x','red','skip');
  act(m,0,{type:'play',card:'x'});assert.equal(m.uno.turn,2);
+ // 33.10.4: a +2 stacks on every table — the next player answers it or draws it and loses the turn
  m=setup();m.uno.hands[0][0]=card('x','red','draw2');
- act(m,0,{type:'play',card:'x'});assert.equal(m.uno.hands[1].length,5);assert.equal(m.uno.turn,2);
+ act(m,0,{type:'play',card:'x'});assert.equal(m.uno.pending,2);assert.equal(m.uno.turn,1);
+ act(m,1,{type:'draw'});assert.equal(m.uno.hands[1].length,5);assert.equal(m.uno.turn,2);
  m=setup();m.uno.hands[0]=[card('x','wild','draw4'),card('b','blue','3')];
  act(m,0,{type:'play',card:'x',color:'blue',uno:true});
  assert.equal(m.uno.hands[1].length,7);assert.equal(m.uno.turn,2);

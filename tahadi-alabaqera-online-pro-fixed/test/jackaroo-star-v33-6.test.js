@@ -49,7 +49,7 @@ test('on the big board a marble goes round eighteen holes a seat and enters its 
 });
 
 test('the rooms deal the big board, and the middle shows the last three cards played', async () => {
-  assert.match(await read('src/games/board-tables.js'), /if \(game === 'jackaroo'\) return createJackarooGame\(names, \{ rng, arm: jackarooArm\(names\.length\), home: 'fill' \}\);/);
+  assert.match(await read('src/games/board-tables.js'), /if \(game === 'jackaroo'\) return createJackarooGame\(names, \{ rng, arm: jackarooArm\(names\.length\), home: 'fill'(?:, quick: variant === 'quick')? \}\);/, '33.10.4: the same board, with «سريع» when the room was opened that way');
   const worker = await read('src/index.js');
   assert.match(worker, /state\.discard = \(state\.discard \|\| \[\]\)\.map\(\(card, i, all\) => \(i >= all\.length - 3 \? card : "\?"\)\);/);
   assert.match(worker, /state\.deck = Array\(state\.deck\?\.length \|\| 0\)\.fill\("\?"\);/, 'the deck stays hidden');

@@ -2106,3 +2106,36 @@ body.jk-hit-me::after{content:'';position:fixed;inset:0;z-index:9999;pointer-eve
 @keyframes jkShake{10%,90%{transform:translate3d(-2px,1px,0)}20%,80%{transform:translate3d(4px,-2px,0)}30%,50%,70%{transform:translate3d(-7px,2px,0)}40%,60%{transform:translate3d(7px,-1px,0)}}
 @keyframes jkRed{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){body.jk-hit #game{animation:none}}
+
+/* assets/css/jackaroo-v33-10-4.css */
+/* Tahdia 33.10.4 — جاكارو: a bigger board on phones (the hand takes less room), the marble in the way
+   shown in gold, the burnt turn said by the whole dock, and the «سريع» tag. */
+
+/* ---------- the hand: one line for what to do (and the burn button beside it), then the cards ---------- */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock{grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;gap:2px 8px!important;padding:4px 8px calc(5px + env(safe-area-inset-bottom))!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #status{grid-row:1!important;grid-column:1!important;height:auto!important;min-height:32px!important;max-height:38px!important;margin:0!important;font:700 12.5px/1.45 Tajawal,system-ui,sans-serif!important;-webkit-line-clamp:2!important;align-content:center}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #actions{grid-row:1!important;grid-column:2!important;height:auto!important;min-height:0!important;max-height:none!important;align-self:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important;overflow:visible!important;visibility:visible!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #actions:empty{display:none!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #actions .mini-note{display:none!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #actions .bs-btn{min-height:36px!important;height:36px!important;padding:0 14px!important;font:800 13.5px/1 Tajawal,system-ui,sans-serif!important;white-space:nowrap!important;border-radius:12px!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #hand{grid-row:2!important;grid-column:1/-1!important;--jk-card:clamp(44px,min(calc((100vw - 62px) / 5),8.8svh),58px)!important;min-height:calc(var(--jk-card) * 1.4 + 12px)!important;padding-top:10px!important;padding-bottom:0!important}
+@media (min-width:700px){:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock #hand{--jk-card:clamp(52px,9svh,76px)!important}}
+
+/* ---------- hit by a ten: the dock burns until a card is chosen ---------- */
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock.is-burnt{box-shadow:0 0 0 2px #ff7a3d,0 -10px 34px #ff5a1f66!important;background:linear-gradient(180deg,#3a1408,#170b10 60%)!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock.is-burnt #status{color:#ffd9b8!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock.is-burnt #hand .playing-card:not(.selected){box-shadow:0 0 0 1.5px #ff8a4c99,0 6px 14px #0008!important}
+:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock.is-burnt #actions .jk-burn{background:linear-gradient(180deg,#ff9a4d,#e8521d)!important;color:#fff!important;box-shadow:0 0 18px #ff6a2a88!important;animation:jk-burn-pulse 1.2s ease-in-out infinite}
+@keyframes jk-burn-pulse{50%{transform:scale(1.05)}}
+
+/* ---------- the marble in the way of a tap: a gold ring that blinks ---------- */
+[data-stone].jk-blocker .stone-bob{animation:jk-blocker 1.25s ease}
+[data-stone].jk-blocker [data-seat-ring]{stroke:#ffd36b!important;stroke-width:1.3px!important;opacity:1!important;animation:jk-blocker-ring 1.25s ease}
+@keyframes jk-blocker{0%,100%{transform:none}15%,45%,75%{transform:scale(1.22)}30%,60%{transform:scale(1)}}
+@keyframes jk-blocker-ring{0%,100%{opacity:.55}20%,50%,80%{opacity:1}}
+
+/* ---------- «سريع» ---------- */
+.jk-quick-tag{display:inline-flex;align-items:center;gap:3px;margin-inline-start:7px;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#ffd36b,#f59e0b);color:#3a2205;font:800 11.5px/1.3 Tajawal,system-ui,sans-serif;vertical-align:middle;box-shadow:0 0 12px #f59e0b66}
+.jk-quick-tag[hidden]{display:none}
+
+@media (prefers-reduced-motion:reduce){[data-stone].jk-blocker .stone-bob,[data-stone].jk-blocker [data-seat-ring],:is(html,#v31) body.table-room.game-jackaroo.game-running #game#game#game#game .jk-hand-dock.is-burnt #actions .jk-burn{animation:none!important}}

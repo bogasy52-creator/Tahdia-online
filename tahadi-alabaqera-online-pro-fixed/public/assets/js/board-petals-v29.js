@@ -466,6 +466,8 @@ const LOCK_ICON='M-1.15 -.2V-.95A1.15 1.15 0 0 1 1.15 -.95V-.2M-1.6 -.2H1.6V1.75
     engine's roadShut). A gold ring round the house, and an upright plate in the nearest free spot
     by it (the holes, their numbers, the yards and the portraits are kept clear). */
 export const LOCK_PHRASE='مقفل — صاحب البيت، لا يمكن المرور';
+// 33.10.4: the zoom the page will draw the board at (a phone's board fills its width): plates stay inside it
+let VIEW_ZOOM=1;
 function lockBadges(root,overlay,L,state,colors){
   const locked=state.players.map((p,s)=>s<4&&(p.marbles||[]).some(m=>m===0)).map((on,s)=>on?s:-1).filter(s=>s>=0);
   if(!locked.length)return;
@@ -473,7 +475,7 @@ function lockBadges(root,overlay,L,state,colors){
   const dots=[...L.track,...L.lanes.flat(),...L.bases.flat()].map(p=>({...turn(p),r:L.hole+1.1})).concat(L.labels.filter(Boolean).map(p=>({...turn(p),r:3.1})),{x:100,y:100,r:29});
   const view=SEAT_SPOTS.map(([ax,ay,px,py])=>[{x:100+ax,y:100+ay,r:8.6},{x:100+px,y:100+py,w:30,h:7.4}]).flat();
   const W=16.6,H=7,taken=[];
-  const clear=(c)=>{const x0=c.x-W/2,x1=c.x+W/2,y0=c.y-H/2,y1=c.y+H/2;if(x0<9.5||x1>190.5||y0<9||y1>191)return false;
+  const edge=Math.max(9.5,100-100/VIEW_ZOOM+2),clear=(c)=>{const x0=c.x-W/2,x1=c.x+W/2,y0=c.y-H/2,y1=c.y+H/2;if(x0<edge||x1>200-edge||y0<9||y1>191)return false;
     for(const o of [...dots,...view.filter(v=>v.r),...taken]){if(o.w){if(Math.abs(o.x-c.x)<(o.w+W)/2+.6&&Math.abs(o.y-c.y)<(o.h+H)/2+.6)return false;continue;}const dx=Math.max(x0-o.x,0,o.x-x1),dy=Math.max(y0-o.y,0,o.y-y1);if(Math.hypot(dx,dy)<o.r+.5)return false;}
     for(const o of view.filter(v=>v.w))if(Math.abs(o.x-c.x)<(o.w+W)/2+.6&&Math.abs(o.y-c.y)<(o.h+H)/2+.6)return false;return true;};
   for(const s of locked){
@@ -601,16 +603,35 @@ export function createAtelierPiece({prefix='piece',color='#2f86e8',kind='classic
 function stoneGraphic(game,defs,prefix,seat,c,own,size=.66){
   const P=pieces(),color=(game==='jackaroo'?JACK_COLORS:BOARD_COLORS)[seat],chosen=own||equipped('pawn'),pawn=chosen==='pawn-character'?'pawn-classic':chosen;
   if(game==='jackaroo'){
-    const g=n('g',{transform:`scale(${size})`});
-    // 33.9.7: a silver or pearl marble looked white on the board: every marble shows its seat's colour
+    // 33.10.4: a drawn token — a bright rim round the seat's colour, so a marble reads at a glance on any
+    // board look; the shop's marble style is kept as the token's finish
     const look=P?P.marbleFor(pawn):'glass';
-    if(P)g.append(P.marble(document,defs,{style:look==='metal'||look==='pearl'?'glass':look,color,scope:prefix+'-m'+seat}));
-    else g.append(n('circle',{r:5,fill:color,stroke:'#fff','stroke-width':.6}));
-    return g;
+    return jackToken(defs,prefix,seat,size,look);
   }
   const scale=c/12.8*.8,g=n('g',{transform:`translate(0 ${(c*.3).toFixed(2)}) scale(${scale.toFixed(3)})`});
   if(P)g.append(P.pawn(document,defs,{design:KINDS[pawn]||'classic',item:pawn,color,scope:prefix+'-p'+seat}));
   else g.append(createAtelierPiece({prefix:prefix+'-p'+seat,color}));
+  return g;
+}
+
+/** 33.10.4: the Jackaroo marble: a white (or gold, «royal») bevelled rim, the seat's colour in an enamel
+    cup, a gloss on top and a shadow under — the same in every look of the board. */
+function jackToken(defs,prefix,seat,R,style='glass'){
+  const color=JACK_COLORS[seat],id=prefix+'-tk'+seat+'-'+style,g=n('g',{'data-token-finish':style,'data-piece-color':color});
+  if(!defs.querySelector('[id="'+id+'-c"]')){
+    const core=style==='pearl'?[[0,mix(color,'#ffffff',.78)],[.55,mix(color,'#ffffff',.38)],[1,mix(color,'#1a1030',.25)]]
+      :style==='galaxy'?[[0,mix(color,'#ffffff',.4)],[.42,mix(color,'#14143a',.3)],[1,'#0b0b22']]
+      :style==='metal'?[[0,mix(color,'#ffffff',.6)],[.35,mix(color,'#ffffff',.15)],[.7,mix(color,'#000000',.35)],[1,mix(color,'#ffffff',.2)]]
+      :[[0,mix(color,'#ffffff',.55)],[.48,color],[1,mix(color,'#000000',.5)]];
+    radial(defs,id+'-c',core,.36,.3,.78);
+    gradient(defs,id+'-r',style==='royal'?[[0,'#fff4c9'],[.45,'#e2b552'],[1,'#7c5512']]:[[0,'#ffffff'],[.5,'#e7ecf6'],[1,'#8e9ab0']],0,1);
+  }
+  g.append(n('ellipse',{cx:0,cy:+(R*.34).toFixed(2),rx:+(R*1.04).toFixed(2),ry:+(R*.66).toFixed(2),fill:'#000',opacity:.42}),
+    n('circle',{r:R,fill:paint(id+'-r'),stroke:'#081020','stroke-width':+(R*.11).toFixed(2)}),
+    n('circle',{r:+(R*.76).toFixed(2),fill:paint(id+'-c'),stroke:mix(color,'#000000',.55),'stroke-width':+(R*.05).toFixed(2)}));
+  if(style==='royal')g.append(n('circle',{r:+(R*.6).toFixed(2),fill:'none',stroke:'#f6d27a','stroke-width':+(R*.07).toFixed(2),opacity:.85}));
+  if(style==='galaxy')for(const [x,y,r] of [[-.3,.25,.05],[.28,-.1,.04],[.12,.38,.035],[-.08,-.32,.03]])g.append(n('circle',{cx:+(R*x).toFixed(2),cy:+(R*y).toFixed(2),r:+(R*r).toFixed(2),fill:'#ffffff',opacity:.9}));
+  g.append(n('ellipse',{cx:+(-R*.24).toFixed(2),cy:+(-R*.4).toFixed(2),rx:+(R*.44).toFixed(2),ry:+(R*.22).toFixed(2),fill:'#ffffff',opacity:style==='metal'?.7:.5,transform:'rotate(-24 '+(-R*.24).toFixed(2)+' '+(-R*.4).toFixed(2)+')'}));
   return g;
 }
 
@@ -641,6 +662,7 @@ function trace(svg,points,color,duration){
 
 /* ---------- Render ---------- */
 export function renderPetalBoard(target,state,options={}){
+  VIEW_ZOOM=Math.max(1,Math.min(1.3,Number(options.zoom)||1));
   const {game='zahra',legal=[],legalStones=[],onPick=()=>{},onSelect=null,active=state.turn,material,pawn,preview=false,looks=null,viewer=-1,avatars=null,pile=null,quiet=false}=options;
   const g=boardGeometry(state),themeKey=material&&THEMES[material]?material:MATERIALS[material]||MATERIALS[equipped('table')]||'walnut',theme=THEMES[themeKey],pawnId=pawn?Object.keys(KINDS).find(k=>KINDS[k]===(LEGACY_KINDS[pawn]||pawn))||'pawn-classic':equipped('pawn');
   // 33.6.0: the Jackaroo board's look: asked for, else a shop table's (previews), else the player's
@@ -663,7 +685,7 @@ export function renderPetalBoard(target,state,options={}){
   else if(game==='jackaroo')drawStar(root,defs,prefix,state,L,LOOKS[STAR_LOOK[lookKey]||'neon'],active,lookKey,{avatars:avatars||[],pile});else drawCross(root,defs,prefix,state,L,theme,active);
   const positions=new Map(),values=new Map(),motions=[],effects=[],traces=[],cellSize=L.c||12.8;
   // a marble a little bigger than its hole, never wider than the step between two holes
-  const marble=game==='jackaroo'?Math.min(L.hole*1.38,L.step*.49):0,marbleScale=+(marble/6.5*1.35).toFixed(3);
+  const marble=game==='jackaroo'?Math.min(L.hole*1.45,L.step*.53):0,marbleScale=+marble.toFixed(3);
   const stoneLayer=n('g',{'data-layer':'stones'});
   // Stones further down the board are drawn later so they overlap correctly.
   const order=[];state.players.forEach((player,seat)=>(player.tokens||player.marbles).forEach((progress,index)=>order.push({seat,index,progress,p:petalStonePoint(state,seat,index,game)})));
@@ -676,8 +698,9 @@ export function renderPetalBoard(target,state,options={}){
     piece.append(n('circle',{r:game==='jackaroo'?+Math.max(3.6,Math.min(4.6,L.step*.62)).toFixed(2):6.2,cy:game==='jackaroo'?0:-2,fill:'transparent'}));
     if(can&&!quiet)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.42,ry:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
     // 33.9.2: a ring of the seat's colour round every marble: a white or silver one shows on a white hole
-    if(game==='jackaroo')piece.append(n('circle',{r:+(marble+1.05).toFixed(2),fill:'none',stroke:'#08101f','stroke-width':.5,opacity:.55,'data-seat-ring':'out'}),n('circle',{r:+(marble+.5).toFixed(2),fill:'none',stroke:JACK_COLORS[seat],'stroke-width':1,'data-seat-ring':seat}));
-    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.27).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?3.6:2.5,'font-weight':700,fill:'#ffffff',stroke:'#15202b','stroke-width':.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
+    // 33.10.4: the token carries its own rim; a soft halo of the seat's colour lifts it off the board
+    if(game==='jackaroo')piece.append(n('circle',{r:+(marble+.55).toFixed(2),fill:'none',stroke:JACK_COLORS[seat],'stroke-width':.7,opacity:.55,'data-seat-ring':seat}));
+    const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.34).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?+(marble*.98).toFixed(2):2.5,'font-weight':800,fill:'#ffffff',stroke:'#0d1524','stroke-width':game==='jackaroo'?.55:.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);if(!quiet)piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);
     const old=previous?.positions.get(key),oldValue=previous?.values.get(key),moved=old&&(Math.abs(old.x-p.x)>.01||Math.abs(old.y-p.y)>.01);
@@ -732,10 +755,12 @@ function fitMark(node,ratio,rot,x=0,y=0,upright=false){
  const base=viewportTransforms.get(node),angle=upright?0:rot,unit=Math.min(1,ratio);
  node.setAttribute('transform',base+' translate('+x+' '+y+') rotate('+(-angle)+') scale('+unit+' '+(unit/ratio)+') rotate('+angle+') translate('+(-x)+' '+(-y)+')');
 }
-export function fitJackarooViewport(target,width,height){
+export function fitJackarooViewport(target,width,height,zoom=1){
  const svg=target.querySelector('svg');
  if(!svg||width<1||height<1)return;
- const ratio=Math.max(.25,Math.min(3,height/width));
+ // 33.10.4: `zoom` > 1 draws the board bigger and lets its frame run off the left and right edges:
+ // the track then fills the width of a phone. Everything stays round.
+ const z=Math.max(1,Math.min(1.3,Number(zoom)||1)),ratio=Math.max(.25,Math.min(3,height/width/z));
  let fit=svg.querySelector('[data-board-fit]');
  if(!fit){
   fit=n('g',{'data-board-fit':'true'});
@@ -743,7 +768,8 @@ export function fitJackarooViewport(target,width,height){
   svg.append(fit);
  }
  fit.setAttribute('transform','scale(1 '+ratio+')');
- svg.setAttribute('viewBox','0 0 200 '+(200*ratio));
+ svg.setAttribute('viewBox',(z>1?(100-100/z).toFixed(3)+' 0 '+(200/z).toFixed(3):'0 0 200')+' '+(200*ratio));
+ svg.dataset.fitZoom=String(z);
  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
  svg.dataset.fitRatio=String(ratio);
  const root=svg.querySelector('[data-board-root]'),rot=Number(root?.getAttribute('data-rot'))||0;

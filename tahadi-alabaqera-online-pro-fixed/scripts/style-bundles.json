@@ -105,7 +105,8 @@
     "assets/css/club-pro-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/jackaroo-v33-8.css",
-    "assets/css/jackaroo-v33-9.css"
+    "assets/css/jackaroo-v33-9.css",
+    "assets/css/jackaroo-v33-10-4.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -593,7 +594,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/tanks-v33-10.css",
     "assets/css/trio-premium-v33-10.css",
-    "assets/css/tournament.css"
+    "assets/css/tournament.css",
+    "assets/css/tanks-v33-10-4.css"
   ],
   "tournament.html": [
     "assets/css/platform.css",

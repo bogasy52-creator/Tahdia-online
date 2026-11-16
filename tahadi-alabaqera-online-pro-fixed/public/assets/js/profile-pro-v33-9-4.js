@@ -190,7 +190,7 @@
   function needCard() {
     if (window.BS_PLAYER_CARD) return Promise.resolve(window.BS_PLAYER_CARD);
     css('/assets/css/player-card-v33-7.css?v=33.9.10');
-    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.10.3'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
+    return new Promise((ok) => { const s = doc.createElement('script'); s.src = '/assets/js/player-card-v33-7.js?v=33.10.4'; s.onload = () => ok(window.BS_PLAYER_CARD); s.onerror = () => ok(null); doc.head.append(s); });
   }
   doc.addEventListener('click', async (e) => {
     const el = e.target?.closest?.('[data-player-username]');

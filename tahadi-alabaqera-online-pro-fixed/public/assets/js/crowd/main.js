@@ -1,5 +1,5 @@
-import { CROWD, createCrowdRun, crowdDaySeed, normalizeCrowdProgress, recordCrowdRun, stepCrowdRun } from '../engines/crowd-engine.js?v=33.10.3-crowd1';
-import { createCrowdPainter } from './render.js?v=33.10.3-crowd1';
+import { CROWD, createCrowdRun, crowdDaySeed, normalizeCrowdProgress, recordCrowdRun, stepCrowdRun } from '../engines/crowd-engine.js?v=33.10.4-crowd1';
+import { createCrowdPainter } from './render.js?v=33.10.4-crowd1';
 const $=id=>document.getElementById(id),canvas=$('crCanvas'),painter=createCrowdPainter(canvas);
 let run=null,paused=false,frameId=0,lastTime=0,effects=[],drag=null,runOwner='',runDay='',frameError=false;
 const memory=new Map(),held=new Set(),hud={};

@@ -8,7 +8,7 @@
 //   player action costs one Durable Object request however many bots answer.
 // - Each seat carries its owner's dice, stone and character from the shop.
 import {chooseChoiceTurn,bestChoice} from '../../public/assets/js/engines/snakes-choice.js';
-import { createSnakesServerGame, rollSnakesServer } from './snakes-server.js';
+import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from './snakes-server.js';
 import { snakesTurnDisplayMs } from '../../public/assets/js/snakes-v4-fx.js';
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from '../../public/assets/js/engines/ludo-engine.js';
 import { createJackarooGame, getJackarooActions, playJackarooAction, jackarooArm, burnJackarooHand } from '../../public/assets/js/engines/jackaroo-engine.js';
@@ -100,11 +100,19 @@ function makeBot(seat, rng, taken) {
   };
 }
 
+/** 33.10.4: the ways a table can be played. Snakes keep theirs; جاكارو and الزهرة have «سريع»
+    (the first marble or stone home wins); every other game plays its one way. */
+export function tableVariant(game, variant) {
+  if (game === 'snakes') { try { return normalizeSnakesVariant(variant || 'classic'); } catch { return 'classic'; } }
+  if ((game === 'jackaroo' || game === 'zahra') && variant === 'quick') return 'quick';
+  return 'classic';
+}
+
 function createState(game, names, variant, rng, now=Date.now()) {
   if (game === 'snakes') return createSnakesServerGame(names, { variant: variant || 'classic' });
-  if (game === 'zahra') return createLudoGame(names);
+  if (game === 'zahra') return createLudoGame(names, { quick: variant === 'quick' });
   // 33.7.0: four seats play on the board of the picture: 19 places a seat, the home lane filled
-  if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length), home: 'fill' });
+  if (game === 'jackaroo') return createJackarooGame(names, { rng, arm: jackarooArm(names.length), home: 'fill', quick: variant === 'quick' });
   if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
   if (game === 'jewels') return createJewelsRace(names, { rng,now });
   if (game === 'carrom') return createCarromDuel(names, { rng, first: rng() < 0.5 ? 0 : 1 });
