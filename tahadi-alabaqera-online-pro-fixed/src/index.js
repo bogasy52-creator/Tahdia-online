@@ -1,3 +1,4 @@
+import {publicPegsRace,advancePegsRace} from '../public/assets/js/engines/pegs-race-engine.js';
 import {TournamentRoom,cleanTournamentLink,reportTournament} from './competition/tournament-room.js';
 import {relayGameReaction} from './social/game-reactions.js';
 import {HockeyRoom} from './hockey/hockey-room.js';
@@ -20,7 +21,7 @@ import { CATEGORIES } from "./questions.js";
 import { createSnakesServerGame, rollSnakesServer, normalizeSnakesVariant } from "./games/snakes-server.js";
 import { createLudoGame, getLegalLudoMoves, applyLudoMove, passLudoTurn } from "../public/assets/js/engines/ludo-engine.js";
 import { createJackarooGame, getJackarooActions, playJackarooAction } from "../public/assets/js/engines/jackaroo-engine.js";
-import { TABLE_GAMES, MAX_SEATS, chosenSeats, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, isJewelsRaceTable, DEFAULT_LOOK, FREE_LOOK_ITEMS, tableVariant, seatLimit, isLudoVariant } from "./games/board-tables.js";
+import { TABLE_GAMES, MAX_SEATS, chosenSeats, TABLE_LOBBY_MS, PARTY_TABLE_WAIT_MS, TURN_MS as TABLE_TURN_MS, startTable, resetTable, playerMove, timeoutMove, tableOver, winnerSeats, seatProgress, stepsTime, cleanLook, seatIsBot, isJewelsRaceTable, isPegsRaceTable, DEFAULT_LOOK, FREE_LOOK_ITEMS, tableVariant, seatLimit, isLudoVariant } from "./games/board-tables.js";
 import { publicJewelsRace, finishJewelsRace } from '../public/assets/js/engines/jewels-race-engine.js';
 import { BALOOT_LOBBY_MS, freeBalootSeat, startBalootRoom, applyBalootMove, balootAlarm, balootPlayers, balootRoomView, balootWinFor } from "./games/baloot-server.js";
 import { validTalk } from "../public/assets/js/engines/baloot-talk.js";
@@ -45,7 +46,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.10.7';
+const RELEASE='33.11.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -1839,7 +1840,7 @@ export class BoardRoom extends DurableObject {
     }
     if(this.room.status==='finished'&&!this.room.rewardsComplete){
       const endedAt=this.room.startedAt;
-      const rewards=this.room.order.map((id,index)=>{const player=this.room.players[id];return {username:player.username,id:'board:'+this.room.code+':'+endedAt+':'+player.id,game:this.room.game,...(isJewelsRaceTable(this.room)&&this.room.state.winner===-1?{draw:true}:{}),win:this.room.game==='baloot'?balootWinFor(this.room,player):this.room.game==='jackaroo'?this.room.state.winnerTeam===index%2:this.room.state.winner===index}});
+      const rewards=this.room.order.map((id,index)=>{const player=this.room.players[id];return {username:player.username,id:'board:'+this.room.code+':'+endedAt+':'+player.id,game:this.room.game,...(isJewelsRaceTable(this.room)&&this.room.state.winner===-1?{draw:true}:{}),win:this.room.game==='baloot'?balootWinFor(this.room,player):this.room.game==='jackaroo'?this.room.state.winnerTeam===index%2:this.room.game==='pegs'&&this.room.state.teams?this.room.state.winnerTeam>=0&&index%(this.room.state.players.length/2)===this.room.state.winnerTeam:this.room.state.winner===index&&!(this.room.game==='pegs'&&this.room.state.ties?.length>1)}});
       try{
         for(const reward of rewards){
           if(!reward.username)continue;
@@ -1909,6 +1910,7 @@ export class BoardRoom extends DurableObject {
   }
   // Jackaroo hands and deck stay private: each player sees only their own cards.
   maskGameState(source, playerId) {
+    if(isPegsRaceTable(this.room))return publicPegsRace(source,this.playerIndex(playerId));
     if (isJewelsRaceTable(this.room)) return publicJewelsRace(source, this.playerIndex(playerId));
     const state = structuredClone(source);
     if (this.room.game === "jackaroo") {
@@ -1967,7 +1969,7 @@ export class BoardRoom extends DurableObject {
       turnTotal: this.room.turnTotal || null,
       state: this.publicGameState(playerId),
       // 33.0.0: the moves since the last update (the player's and the bots'), to animate in order
-      steps: !isJewelsRaceTable(this.room) && steps?.list?.length ? steps.list.map((step) => ({ version: step.version, pendingRoll: step.pendingRoll, state: this.maskGameState(step.state, playerId) })) : undefined,
+      steps: !isPegsRaceTable(this.room) && !isJewelsRaceTable(this.room) && steps?.list?.length ? steps.list.map((step) => ({ version: step.version, pendingRoll: step.pendingRoll, state: this.maskGameState(step.state, playerId) })) : undefined,
     };
   }
 
@@ -2026,6 +2028,7 @@ export class BoardRoom extends DurableObject {
     if (this.room.status==='finished'&&this.room.game==='billiards'&&!this.room.skillReported)candidates.push(this.room.skillRetryAt||now+10000);
     if (this.room.status === 'finished' && !this.room.rewardsComplete) candidates.push(this.room.rewardRetryAt || now + 10000);
     if (this.room.status === "playing" && this.room.turnDeadline) candidates.push(this.room.turnDeadline);
+    if(this.room.status==='playing'&&isPegsRaceTable(this.room)&&this.room.pegsBotAt)candidates.push(this.room.pegsBotAt);
     if (this.room.status === 'playing' && isJewelsRaceTable(this.room) && this.room.jewelsBotAt) candidates.push(this.room.jewelsBotAt);
     if (["lobby", "finished"].includes(this.room.status)) {
       for (const id of this.room.order) {
@@ -2049,6 +2052,7 @@ export class BoardRoom extends DurableObject {
   // 33.0.0: after any move on a board table: the clock for the next person, or the end.
   async settleTable(steps) {
     if (tableOver(this.room)) this.finishGame();
+    else if(isPegsRaceTable(this.room)){this.room.turnTotal=this.room.state.endsAt-this.room.state.startedAt;this.room.turnDeadline=this.room.state.endsAt;}
     else if (isJewelsRaceTable(this.room)) {
       this.room.turnTotal = this.room.state.durationMs;
       this.room.turnDeadline = this.room.state.endsAt;
@@ -2058,7 +2062,7 @@ export class BoardRoom extends DurableObject {
       // 33.9.0: a computer player still on turn (billiards plays a few shots at a time) goes on right after the animation
       let ms = person?.bot ? 700 : person && !person.connected ? TABLE_TURN_MS.away : this.room.publicMatch ? TABLE_TURN_MS.quick : TABLE_TURN_MS.room;
       // 33.10.1: a roll or a pawn in «شطرنج الذاكرة» is one tap, so the clock is shorter
-      if (this.room.game === 'pegs' && !person?.bot) ms = Math.min(ms, this.room.publicMatch ? 20_000 : 30_000);
+      if (this.room.game === 'pegs' && !person?.bot) ms = Math.min(ms, 20_000);
       this.room.turnTotal = ms;
       this.room.turnDeadline = Date.now() + stepsTime(this.room, steps) + ms;
     }
@@ -2309,7 +2313,7 @@ export class BoardRoom extends DurableObject {
         return await this.resetForRematch();
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
-      const independentJewels = isJewelsRaceTable(this.room) && ['jewels_swap','jewels_booster','jewels_finish'].includes(msg.type);
+      const independentJewels = isJewelsRaceTable(this.room) && ['jewels_swap','jewels_booster','jewels_finish'].includes(msg.type)||isPegsRaceTable(this.room)&&['pegs_roll','pegs_pick','pegs_peek'].includes(msg.type);
       if(!independentJewels&&['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank','pool_shot','jewels_swap','jewels_booster','carrom_shot','pegs_roll','pegs_pick','pegs_peek'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
       if (TABLE_GAMES.includes(this.room.game)) {
         let steps;
@@ -2370,7 +2374,7 @@ export class BoardRoom extends DurableObject {
     if (this.abandonIfEmpty()) return await this.saveAndBroadcast();
     const steps = timeoutMove(this.room, secureUnit, () => this.randomDie());
     if (!steps) {
-      if (!isJewelsRaceTable(this.room)) this.room.turnDeadline = Date.now() + TABLE_TURN_MS.room;
+      if (!isJewelsRaceTable(this.room)&&!isPegsRaceTable(this.room)) this.room.turnDeadline = Date.now() + TABLE_TURN_MS.room;
       return await this.saveAndBroadcast();
     }
     return await this.settleTable(steps);
@@ -2380,6 +2384,7 @@ export class BoardRoom extends DurableObject {
   abandonIfEmpty(now = Date.now()) {
     const people = this.room.order.map((id) => this.room.players[id]).filter((p) => p && !p.bot);
     if (!people.length || people.some((p) => p.connected || !p.disconnectedAt || now - p.disconnectedAt < 90_000)) return false;
+    if(isPegsRaceTable(this.room))this.room.state=advancePegsRace(this.room.state,Math.max(now,this.room.state.endsAt));
     if (isJewelsRaceTable(this.room)) this.room.state = finishJewelsRace(this.room.state, {force:true,now});
     this.finishGame();
     this.room.abandoned = true;
@@ -2413,7 +2418,7 @@ export class BoardRoom extends DurableObject {
     p.connected = false;
     p.disconnectedAt = Date.now();
     // a player who left during their turn: the table does not wait the whole minute
-    if (TABLE_GAMES.includes(this.room.game) && !isJewelsRaceTable(this.room) && this.room.status === 'playing' && this.room.state && this.room.order[this.room.state.turn] === p.id && this.room.turnDeadline) this.room.turnDeadline = Math.min(this.room.turnDeadline, Date.now() + TABLE_TURN_MS.away);
+    if (TABLE_GAMES.includes(this.room.game) && !isJewelsRaceTable(this.room) && !isPegsRaceTable(this.room) && this.room.status === 'playing' && this.room.state && this.room.order[this.room.state.turn] === p.id && this.room.turnDeadline) this.room.turnDeadline = Math.min(this.room.turnDeadline, Date.now() + TABLE_TURN_MS.away);
     await this.persist();
     this.broadcast();
     await this.scheduleNextAlarm();
@@ -2455,7 +2460,7 @@ export class BoardRoom extends DurableObject {
       await this.startGame(Boolean(this.room.publicMatch));
       return;
     }
-    if (this.room.status === "playing" && this.room.game !== 'baloot' && ((this.room.turnDeadline && now >= this.room.turnDeadline) || (isJewelsRaceTable(this.room) && this.room.jewelsBotAt && now >= this.room.jewelsBotAt))) {
+    if (this.room.status === "playing" && this.room.game !== 'baloot' && ((this.room.turnDeadline && now >= this.room.turnDeadline) || (isJewelsRaceTable(this.room) && this.room.jewelsBotAt && now >= this.room.jewelsBotAt)||(isPegsRaceTable(this.room)&&this.room.pegsBotAt&&now>=this.room.pegsBotAt))) {
       await this.handleTurnTimeout();
       return;
     }

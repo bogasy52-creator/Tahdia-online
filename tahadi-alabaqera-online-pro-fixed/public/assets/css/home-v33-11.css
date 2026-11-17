@@ -1,0 +1,6 @@
+body.home-v33103 .home-account-button{flex-shrink:0;min-width:58px;min-height:44px;border:1px solid #8297ac66;border-radius:12px;background:#172739;color:#edf2f4;font:700 13px Tajawal,sans-serif;padding:8px 12px;cursor:pointer}
+body.home-v33103 .home-account-button:disabled{opacity:.55}
+body.home-v33103 .mobile-dock [data-social-open]{position:relative}
+body.home-v33103 .mobile-dock .bs-invite-badge{top:2px;inset-inline-end:12px;background:#ef4444!important;color:#fff!important}
+body.home-v33103 .bs-topbar .bs-playerbar{min-width:0;flex-shrink:1}
+@media(max-width:600px){body.home-v33103 .bs-topbar{gap:7px!important}body.home-v33103 .bs-playerbar{max-width:130px}body.home-v33103 .bs-pb-copy{min-width:0}body.home-v33103 .bs-pb-copy b{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}body.home-v33103 .home-account-button{padding:7px 9px;min-width:52px}body.home-v33103 .bs-actions{gap:5px!important}}

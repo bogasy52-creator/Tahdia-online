@@ -213,6 +213,7 @@
   function renderBar() {
     if (typeof location === 'undefined' || /^\/admin/.test(location.pathname)) return;
     const me = meNow(), L = levelInfo(me.card);
+    for(const b of doc.querySelectorAll('[data-open-profile]')){b.disabled=false;b.setAttribute('aria-label','حسابي · '+me.name);if(!b.dataset.boundProfile){b.dataset.boundProfile='1';b.addEventListener('click',openProfile);}}
     for (const brand of doc.querySelectorAll('.bs-topbar .bs-brand')) {
       brand.classList.add('bs-playerbar'); brand.setAttribute('href', '#profile'); brand.setAttribute('aria-label', 'ملفك: ' + me.name);
       const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? (window.BS_CAREER_CORE?.heroFace?.(me.hero) || '') : '', self: true }, 'bs-avatar bs-pb-pic');

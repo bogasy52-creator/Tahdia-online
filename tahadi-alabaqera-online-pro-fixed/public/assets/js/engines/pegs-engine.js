@@ -13,13 +13,18 @@ export const PEG_COLORS = Object.freeze([
   { id: 'blue', name: 'أزرق', hex: '#2a7fe8', dark: '#0d3c8a' },
   { id: 'white', name: 'أبيض', hex: '#f6f3ec', dark: '#9a9486' },
   { id: 'black', name: 'أسود', hex: '#2b2b30', dark: '#000000' },
+  { id: 'orange', name: 'برتقالي', hex: '#ff832b', dark: '#a23e0d' },
+  { id: 'purple', name: 'بنفسجي', hex: '#a271f4', dark: '#5427a0' },
 ]);
 /** Where the holes are on a board of radius 1: twelve round the edge, eight inside them, four in the middle. */
-export const PEG_HOLES = Object.freeze((() => {
-  const out = [];
-  for (const [n, r, off] of [[12, 0.8, 0], [8, 0.52, Math.PI / 8], [4, 0.24, Math.PI / 4]]) for (let i = 0; i < n; i++) { const a = off + i * Math.PI * 2 / n - Math.PI / 2; out.push(Object.freeze({ x: Math.cos(a) * r, y: Math.sin(a) * r })); }
-  return out;
-})());
+export const pegsHoles=(large=false)=>large
+  ? Array.from({length:48},(_,i)=>Object.freeze({x:((i%6)-2.5)*.27,y:(Math.floor(i/6)-3.5)*.265}))
+  : [4,5,6,5,4].flatMap((n,row)=>Array.from({length:n},(_,col)=>Object.freeze({x:(col-(n-1)/2)*.29,y:(row-2)*.31})));
+export const PEG_HOLES=Object.freeze(pegsHoles());
+export const PEG_SYMBOLS=Object.freeze(['triangle','star','plus','diamond','circle','square','hexagon','moon']);
+export const PEG_VARIANTS=Object.freeze(['classic','large','teams','race','race-large']);
+export const pegsOptions=variant=>({large:['large','teams','race-large'].includes(variant),teams:variant==='teams'});
+
 
 const clone = (s) => structuredClone(s);
 const live = (s) => s.pegs.filter((p) => p.taken === null);
@@ -28,11 +33,13 @@ const nextSeat = (s, seat) => (seat + 1) % s.players.length;
 function shuffle(list, rng) { for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; } return list; }
 
 /** A new board: the colours shuffled into the holes, the first player chosen, the opening look. */
-export function createPegsGame(names = ['لاعب 1', 'لاعب 2'], { rng = Math.random, first = null, showMs = PEGS.PEEK_MS, now = Date.now(), swaps = false } = {}) {
-  const n = Math.max(2, Math.min(4, names.length));
-  const colors = shuffle(Array.from({ length: PEGS.COUNT }, (_, i) => i % PEGS.COLORS), rng);
+export function createPegsGame(names = ['لاعب 1', 'لاعب 2'], { rng = Math.random, first = null, showMs = PEGS.PEEK_MS, now = Date.now(), swaps = false, large = false, teams = false } = {}) {
+  const n = Math.max(2, Math.min(6, names.length));
+  if(teams&&![4,6].includes(n))throw Error('teams_require_even_seats');
+  const colorCount=large?8:6;
+  const colors = shuffle(Array.from({ length: large?48:24 }, (_, i) => i % colorCount), rng);
   return {
-    game: 'pegs', seq: 0, turnNo: 0,
+    game: 'pegs', seq: 0, turnNo: 0, large, teams, colorCount, winnerTeam:null,
     players: names.slice(0, n).map((name, i) => ({ name: String(name || 'لاعب ' + (i + 1)).slice(0, 24), score: 0, pegs: [], streak: 0, best: 0, peeks: PEGS.PEEKS, wrong: 0 })),
     pegs: colors.map((c) => ({ c, taken: null })),
     turn: first === null ? Math.floor(rng() * n) : Math.max(0, Math.min(n - 1, first)),
@@ -48,7 +55,7 @@ export function rollPegs(state, seat, rng = Math.random) {
   if (seat !== state.turn) throw new Error('wrong_turn');
   if (state.phase !== 'roll') throw new Error('not_roll');
   const s = clone(state), faces = [];
-  for (let k = 0; k < 40; k++) { const c = Math.floor(rng() * PEGS.COLORS); faces.push(c); if (left(s, c)) break; }
+  for (let k = 0; k < 40; k++) { const c = Math.floor(rng() * (s.colorCount||6)); faces.push(c); if (left(s, c)) break; }
   let c = faces[faces.length - 1];
   if (!left(s, c)) { c = live(s)[0].c; faces.push(c); }
   s.die = c; s.phase = 'pick'; s.seq++; s.peek = null;
@@ -67,7 +74,7 @@ export function pickPegs(state, seat, index, rng = Math.random) {
   let gained = 0, swapped = null;
   if (ok) {
     p.streak++; p.best = Math.max(p.best, p.streak);
-    gained = p.streak >= PEGS.HOT ? 2 : 1; p.score += gained;
+    gained = s.teams ? 1 : p.streak >= PEGS.HOT ? 2 : 1; p.score += gained;
     s.pegs[i].taken = seat; p.pegs.push(s.pegs[i].c);
     s.phase = 'roll';
   } else {
@@ -108,6 +115,7 @@ export function pegsTimeout(state, rng = Math.random) {
 }
 
 function finish(s) {
+  if(s.teams){const count=s.players.length/2,totals=Array.from({length:count},(_,team)=>s.players.reduce((n,p,i)=>n+(i%count===team?p.pegs.length:0),0)),top=Math.max(...totals),winners=totals.map((n,i)=>n===top?i:-1).filter(i=>i>=0);s.winnerTeam=winners.length===1?winners[0]:-1;const seats=s.players.map((_,i)=>i).filter(i=>winners.includes(i%count));s.ties=winners.length>1?seats:[];s.winner=seats[0];s.phase='over';return;}
   const top = Math.max(...s.players.map((p) => p.score));
   let best = s.players.map((p, i) => i).filter((i) => s.players[i].score === top);
   if (best.length > 1) { const streak = Math.max(...best.map((i) => s.players[i].best)); best = best.filter((i) => s.players[i].best === streak); }

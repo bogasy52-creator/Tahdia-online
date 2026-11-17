@@ -110,14 +110,14 @@
     // 33.4.0: how many sit at the table (snakes & ladders: 2, 3 or 4); the seats
     // nobody takes are filled by opponents of every level
     const seatChoices=Array.isArray(options.seats)?options.seats.filter(n=>Number.isInteger(n)&&n>1):[];
-    let seats=null;
+    let seats=null,paintSeats=()=>{};
     if(seatChoices.length){
       const saved=Number(store.get(SEATS_KEY(game)));
       seats=seatChoices.includes(saved)?saved:seatChoices.includes(options.seatsDefault)?options.seatsDefault:seatChoices.at(-1);
       const box=make('div','gm33-seats');box.setAttribute('role','radiogroup');box.setAttribute('aria-label','عدد اللاعبين');
       box.append(make('span','gm33-seats-label','عدد اللاعبين'));
       const row=make('div','gm33-seat-row');
-      const paint=()=>row.querySelectorAll('.gm33-seat').forEach(b=>{const on=Number(b.dataset.seats)===seats;b.classList.toggle('is-on',on);b.setAttribute('aria-checked',String(on));});
+      const paint=()=>{const allowed=modes.find(m=>m.id===mode)?.seats||seatChoices;if(!allowed.includes(seats))seats=allowed.at(-1);row.querySelectorAll('.gm33-seat').forEach(b=>{const on=Number(b.dataset.seats)===seats;b.classList.toggle('is-on',on);b.setAttribute('aria-checked',String(on));b.disabled=pending||!allowed.includes(Number(b.dataset.seats));});};paintSeats=paint;
       for(const count of seatChoices){
         const b=button('gm33-seat',null,()=>{if(pending)return;seats=count;store.set(SEATS_KEY(game),String(count));paint();sound('select');});
         b.dataset.seats=String(count);b.setAttribute('role','radio');b.append(make('b',null,String(count)),make('small',null,'لاعبين'));row.append(b);
@@ -194,7 +194,7 @@
       mode=id;store.set(MODE_KEY(game),id);
       for(const b of menu.querySelectorAll('.gm33-mode')){const on=b.dataset.mode===id;b.classList.toggle('is-on',on);b.setAttribute('aria-checked',String(on));}
       if(modeNote)modeNote.textContent=modes.find(m=>m.id===id)?.note||'';
-      options.onModeChange?.(id);
+      paintSeats();options.onModeChange?.(id);
     }
     if(mode)setMode(mode);
     async function run(task){

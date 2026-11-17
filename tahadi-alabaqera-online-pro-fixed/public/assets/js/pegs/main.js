@@ -2,16 +2,17 @@
    room keeps the colours and sends each step), against the computer, and friends on one phone. The
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.7';
-import { createPegsBoard } from './board.js?v=33.10.7';
-import { createTable } from '../board-table-v33.js?v=33.10.7-pegs2';
-import { guardPegs } from './guard.js?v=33.10.7';
+import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.11.0';
+import { createPegsBoard } from './board.js?v=33.11.0';
+import { createTable } from '../board-table-v33.js?v=33.11.0-pegs2';
+import { guardPegs } from './guard.js?v=33.11.0';
 
+import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.0';
 const $ = (id) => document.getElementById(id);
-const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a'];
-const HEROES = ['robot', 'cyber', 'astronaut'];
+const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a', '#c09bff', '#ff995a'];
+const HEROES = ['robot', 'cyber', 'astronaut', 'samurai', 'viking'];
 const KEY = 'bs-pegs-v33-10-1', TOUR_KEY = 'bs-pegs-tour-v1';
-const prefs = (() => { const base = { mode: 'online', level: 'medium', rivals: 1, local: 2, look: 7, swaps: false, wins: 0 }; try { return { ...base, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return base; } })();
+const prefs = (() => { const base = { mode: 'online', level: 'medium', rivals: 1, local: 2, look: 7, swaps: false, variant:'classic', wins: 0 }; try { return { ...base, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return base; } })();
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {} };
 const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const params = new URLSearchParams(location.search);
@@ -21,7 +22,7 @@ const colorName = (c) => PEG_COLORS[c]?.name || '';
 
 /* ---------- the symbol under each colour (the same shapes as on the pieces and the die) ---------- */
 const STAR = Array.from({ length: 10 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 4 : 9; return (k ? 'L' : 'M') + (12 + Math.cos(a) * r).toFixed(2) + ' ' + (12 + Math.sin(a) * r).toFixed(2); }).join('') + 'Z';
-const SYMBOL_PATHS = ['M12 3.5 21 19.5H3z', STAR, 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', 'M12 2.5 19.5 12 12 21.5 4.5 12z', 'M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M5 5h14v14H5z'];
+const SYMBOL_PATHS = ['M12 3.5 21 19.5H3z', STAR, 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', 'M12 2.5 19.5 12 12 21.5 4.5 12z', 'M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M5 5h14v14H5z','M12 2l8.7 5v10L12 22l-8.7-5V7z','M18 3a9 9 0 1 0 0 18A10 10 0 0 1 18 3z'];
 function gem(c) {
   const el = document.createElement('i'); el.className = 'pg-gem' + (c === 1 || c === 4 ? ' light' : ''); el.style.setProperty('--c', PEG_COLORS[c]?.hex || '#999');
   el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + SYMBOL_PATHS[c] + '"/></svg>';
@@ -60,7 +61,7 @@ const ctl = {
   match: 0, shownSeq: -1, endShown: false, rewarded: false, receipt: null, gen: 0,
   pendingPeg: null, lastTurn: null, aiTimer: 0, scores: [],
 };
-let room = null, table = null;
+let room = null, table = null,stageLarge=false,stageEpoch=0,raceTimer=0;
 const fx = Array.from({ length: PEGS.COUNT }, () => ({}));
 let particles = [], scan = null, hover = -1;
 
@@ -72,12 +73,14 @@ function flatResize() { if (stage !== flat) return; const r = $('pegsStage').get
 if (typeof ResizeObserver === 'function') new ResizeObserver(flatResize).observe($('pegsStage'));
 addEventListener('resize', flatResize, { passive: true });
 async function upgrade3d() {
+  const ticket=++stageEpoch,large=stageLarge;
   if (params.has('flat')) return;
   try {
-    const mod = await import('./stage3d.js?v=33.10.7');
+    const mod = await import('./stage3d.js?v=33.11.0');
     if (!mod.webglAvailable()) return;
-    const s3 = mod.createPegsStage3D();
-    s3.onLost = () => { stage = flat; $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.remove('is-3d'); $('pegsDie').hidden = false; s3.canvas.remove(); s3.overlay.remove(); flatResize(); };
+    const s3 = mod.createPegsStage3D({large});
+    if(ticket!==stageEpoch){s3.dispose?.();return;}
+    s3.onLost = () => { ctl.gen++;tweens.clear();resetFx();ctl.busy=false;ctl.waiting=false;ctl.pendingPeg=null;stage = flat; $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.remove('is-3d'); $('pegsDie').hidden = false; s3.canvas.remove(); s3.overlay.remove(); flatResize(); };
     s3.onLand = (c, last) => { play('diceImpact', last ? 0.6 : 0.4); };
     stage = s3; $('pegsDie').hidden = true;
     if (ctl.running) { $('pegsStage').classList.add('is-3d'); s3.attach($('pegsStage')); }
@@ -130,7 +133,8 @@ function canAct() {
   const s = ctl.state;
   if (!s || !ctl.running || ctl.paused || ctl.busy || ctl.look || ctl.waiting || s.winner !== null) return false;
   // online, nothing is pressed while steps of the room are still being shown
-  if (ctl.mode === 'online' && (room?.status !== 'playing' || table?.busy)) return false;
+  if(ctl.state?.race&&Date.now()+(ctl.mode==='online'?Number(room?.serverNow||Date.now())-Number(room?.clientReceivedAt||Date.now()):0)<ctl.state.race.cooldownUntil)return false;
+  if (ctl.mode === 'online' && (room?.status !== 'playing' || ctl.connected===false || table?.busy)) return false;
   return isHuman(s.turn);
 }
 const canRoll = () => canAct() && ctl.state.phase === 'roll' && !ctl.peeking;
@@ -174,7 +178,7 @@ function renderSeats() {
   const s = ctl.state; if (!s) return;
   s.players.forEach((p, seat) => {
     const card = $('chip' + seat); if (!card) return;
-    const active = s.winner === null && s.turn === seat && !ctl.look;
+    const active = s.winner === null && (s.race||s.turn === seat) && !ctl.look;
     card.classList.toggle('active', active);
     card.classList.toggle('hot', active && p.streak >= PEGS.HOT);
     const score = card.querySelector('.pg-seat-score');
@@ -183,6 +187,8 @@ function renderSeats() {
     if (p.pegs.length !== tray.children.length) { if (p.pegs.length < tray.children.length) tray.replaceChildren(); for (let k = tray.children.length; k < p.pegs.length; k++) tray.append(dot(p.pegs[k], true)); }
     const list = [];
     if (active) list.push(['pg-turn', isHuman(seat) && ctl.mode !== 'hotseat' ? 'دورك' : 'دوره']);
+    if(s.teams)list.push(['pg-team','الفريق '+(seat%(s.players.length/2)+1)]);
+    if(s.race)list.push(['pg-race-score',p.pegs.length+' / '+s.race.goal]);
     if (p.streak >= 2) list.push(['pg-flame', '🔥' + p.streak]);
     card.querySelector('.pg-badges').replaceChildren(...list.map(([cls, text]) => Object.assign(document.createElement('span'), { className: cls, textContent: text })));
   });
@@ -190,7 +196,8 @@ function renderSeats() {
 /** The turn clock as a ring round the face of whoever is playing (online). */
 function paintTimer() {
   const s = ctl.state; if (!s) return;
-  const live = ctl.mode === 'online' && room?.status === 'playing' && room.turnDeadline && !room.stepOf && s.winner === null && !ctl.look && !ctl.busy;
+  if(s.race){const t=ctl.mode==='online'?(Number(room?.serverNow)||Date.now())+(Date.now()-(Number(room?.clientReceivedAt)||Date.now())):Date.now(),remaining=Math.max(0,Math.ceil((s.race.endsAt-t)/1000));$('pegsRaceClock').hidden=false;$('pegsRaceClock').textContent=Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0');$('pegsRoll').disabled=!canRoll();$('pegsPeek').disabled=!(canPeek()||ctl.peeking);}else $('pegsRaceClock').hidden=true;
+  const live = !s.race && ctl.mode === 'online' && room?.status === 'playing' && room.turnDeadline && !room.stepOf && s.winner === null && !ctl.look && !ctl.busy;
   const got = Number(room?.clientReceivedAt) || Date.now(), now = (Number(room?.serverNow) || got) + (Date.now() - got);
   s.players.forEach((_, seat) => {
     const card = $('chip' + seat), run = card?.querySelector('.pg-timer .run'); if (!run) return;
@@ -206,7 +213,8 @@ function renderStatus() {
   const name = ctl.names[s.turn] || 'لاعب', mine = isHuman(s.turn), hot = ctl.mode === 'hotseat';
   const parts = [];
   if (ctl.look) parts.push('احفظ الألوان قبل ما تختفي');
-  else if (s.winner !== null) parts.push('خلصت القطع');
+  else if (s.winner !== null) parts.push('انتهت الجولة');
+  else if(s.race&&s.last?.type==='pick'&&!s.last.ok&&s.race.cooldownUntil>Date.now()+(ctl.mode==='online'?Number(room?.serverNow||Date.now())-Number(room?.clientReceivedAt||Date.now()):0))parts.push('ثانيتان وتكمل');
   else if (ctl.peeking) parts.push('اختر قطعة تشوف لونها بالسر');
   else if (s.phase === 'roll') parts.push(mine ? (hot ? 'دور ' + name + ': ارمِ النرد' : 'دورك: ارمِ النرد') : 'دور ' + name);
   else { parts.push(mine ? (hot ? name + ': اقلب قطعة ' : 'اقلب قطعة ') : name + ' يدوّر على '); parts.push(gem(s.die)); parts.push(colorName(s.die)); }
@@ -227,7 +235,7 @@ function renderStatus() {
   else { const text = document.createElement('div'); text.append(Object.assign(document.createElement('span'), { textContent: 'دور ' + name }), Object.assign(document.createElement('small'), { textContent: 'تابع وين تنقلب القطع' })); target.replaceChildren(text); }
   action.dataset.state = state;
   $('pegsRoll').disabled = !canRoll();
-  hint.textContent = '';
+  hint.textContent = s.race?'سباق متزامن · أول '+s.race.goal+' قطعة يفوز':s.teams?'القطع تُجمع لفريقك · اضغط رأس القطعة':'اضغط رأس القطعة للاختيار الدقيق';
   // the flat board's die
   const die = $('pegsDie'); die.disabled = !canRoll(); die.classList.toggle('ready', canRoll());
   const peek = $('pegsPeek'), mineSeat = ctl.mode === 'online' ? ctl.me : ctl.mode === 'ai' ? 0 : s.turn, left = s.players[mineSeat]?.peeks || 0;
@@ -255,6 +263,7 @@ function announceTurn() {
 const FACE_TURN = [[0, 0], [0, -90], [0, 180], [0, 90], [-90, 0], [90, 0]];
 const cssDie = { x: 0, y: 0 };
 function cssDieTo(c, quick = false) {
+  if(stageLarge){const label=$('pegsDieLabel');label.replaceChildren(gem(c));label.style.setProperty('--die-color',PEG_COLORS[c]?.hex||'#fff');}
   const cube = $('pegsCube'), [tx, ty] = FACE_TURN[c] || [0, 0];
   const turns = quick ? 1 : 2, nx = Math.round((cssDie.x - tx) / 360 + turns + 0.5) * 360 + tx, ny = Math.round((cssDie.y - ty) / 360 + turns) * 360 + ty;
   cube.classList.remove('spin'); cube.classList.toggle('quick', quick);
@@ -359,7 +368,7 @@ async function showPick(next, L, mine) {
   if (L.ok) {
     const col = PEG_COLORS[L.color].hex;
     sfx('right', 0.8); buzz(14); f.glow = col; f.verdict = col; burst(i, L.color); float(i, '+' + L.gained, L.gained > 1 ? '#ffb23f' : '#fff4e0');
-    if (L.streak === PEGS.HOT) { sfx('streak', 0.75); banner('🔥 حامي! كل قطعة بنقطتين', 'hot'); }
+    if (!ctl.state?.race&&!ctl.state?.teams&&L.streak === PEGS.HOT) { sfx('streak', 0.75); banner('🔥 حامي! كل قطعة بنقطتين', 'hot'); }
     else if (L.streak > PEGS.HOT) banner('🔥 ' + L.streak + ' ورا بعض', 'hot');
     await wait(300); if (gen !== ctl.gen) return;
     await flyToSeat(i, L.seat);
@@ -398,11 +407,13 @@ async function showPeek(next, L, mine) {
   const seen = next.peek && next.peek.peg === i && next.peek.c >= 0 && (ctl.mode !== 'online' || next.peek.seat === ctl.me) ? next.peek.c : -1;
   ctl.pendingPeg = null;
   sfx('peek', 0.7); f.top = true; f.color = seen; f.glow = '#5fd4ff';
-  banner(mine ? 'عين الصقر 👁' : (ctl.names[L.seat] || 'لاعب') + ' استخدم عين الصقر', '', '#5fd4ff');
+  $('pegsBanner').hidden=true;
+  const notice=$('pegsPeekNotice');if(notice){notice.textContent=mine?'عين الصقر · اللون ظاهر لك وحدك':(ctl.names[L.seat]||'لاعب')+' يستخدم عين الصقر';notice.hidden=false;}
   await tween(f, { lift: 0.5 }, 180); await tween(f, { tip: 0.95 }, 200);
   await wait(mine && ctl.mode !== 'online' ? 1100 : 560); if (gen !== ctl.gen) return;
   await tween(f, { tip: 0, lift: 0 }, 240, easeIn);
   delete f.color; delete f.glow; f.top = false;
+  if(notice)notice.hidden=true;
 }
 
 /* ---------- local games ---------- */
@@ -413,7 +424,7 @@ async function act(make) {
   const gen = ctl.gen;
   await present(next, isHuman(next.last?.seat ?? next.turn));
   if (gen !== ctl.gen) return;
-  ctl.state = next; resetFx(); ctl.busy = false;
+  ctl.state = ctl.raceState?publicPegsRace(ctl.raceState,0):next; resetFx(); ctl.busy = false;
   afterStep();
 }
 function afterStep() {
@@ -421,6 +432,7 @@ function afterStep() {
   const s = ctl.state; if (!s) return;
   if (s.winner !== null) { finish(); return; }
   announceTurn();
+  if(ctl.raceState)return;
   if (ctl.mode === 'ai' && s.turn !== 0) thinkLater();
 }
 function thinkLater() {
@@ -434,19 +446,29 @@ function thinkLater() {
 }
 function startLocal(mode) {
   primeSound();
-  const n = mode === 'ai' ? 1 + Math.max(1, Math.min(3, Number(prefs.rivals) || 1)) : Math.max(2, Math.min(4, Number(prefs.local) || 2));
+  let n = mode === 'ai' ? 1 + Math.max(1, Math.min(5, Number(prefs.rivals) || 1)) : Math.max(2, Math.min(6, Number(prefs.local) || 2));
+  if(prefs.variant==='teams')n=n>4?6:4;
   const meName = window.BS_GAME_MENU?.playerName?.() || 'أنت';
   ctl.names = mode === 'ai' ? [meName, ...Array.from({ length: n - 1 }, (_, k) => (n === 2 ? 'الكمبيوتر' : 'الكمبيوتر ' + (k + 1)))] : Array.from({ length: n }, (_, k) => 'اللاعب ' + (k + 1));
   ctl.users = mode === 'ai' ? [myUser(), ...HEROES.slice(0, n - 1).map((h) => ({ fallback: '/assets/heroes/face/' + h + '.webp' }))] : ctl.names.map(() => null);
   ctl.levels = ctl.names.map((_, k) => (mode === 'ai' && k > 0 ? prefs.level : null));
-  const state = createPegsGame(ctl.names, { showMs: (Number(prefs.look) || 7) * 1000, swaps: Boolean(prefs.swaps), first: mode === 'ai' ? 0 : null });
+  let state;ctl.raceState=null;clearTimeout(raceTimer);
+  if(prefs.variant.startsWith('race')&&mode==='ai'){ctl.raceState=createPegsRace(ctl.names,{...pegsOptions(prefs.variant),showMs:(Number(prefs.look)||7)*1000});state=publicPegsRace(ctl.raceState,0);}else state = createPegsGame(ctl.names, { ...pegsOptions(prefs.variant),showMs: (Number(prefs.look) || 7) * 1000, swaps: Boolean(prefs.swaps), first: mode === 'ai' ? 0 : null });
   state.salt = Math.floor(Math.random() * 1e6);
   begin(mode, state);
   const gen = ctl.gen;
   ctl.receipt = 'pegs:' + Date.now().toString(36) + ':' + Math.floor(Math.random() * 1e9).toString(36);
+  if(ctl.raceState)raceTimer=setTimeout(raceThink,1900);
   runLook(state.showMs).then(() => { if (gen === ctl.gen && ctl.state) { renderAll(); banner(mode === 'hotseat' ? 'يبدأ ' + ctl.names[state.turn] : 'أنت تبدأ!', '', SEATS[state.turn]); ctl.lastTurn = state.turn; play('go', 0.5); afterStep(); } });
 }
+function configureBoard(state){
+  const large=state.pegs.length>24;
+  while(fx.length<state.pegs.length)fx.push({});fx.length=state.pegs.length;
+  if(stageLarge!==large){stageLarge=large;stageEpoch++;if(stage!==flat)stage.dispose?.();stage=flat;flat.setLayout?.(large);$('pegsStage').classList.remove('is-3d');$('pegsHero').classList.remove('is-3d');$('pegsDie').hidden=false;upgrade3d();}
+  $('pegsGame').classList.toggle('pg-large',large);$('pegsGame').classList.toggle('pg-race',state.mode==='race');$('pegsDie').classList.toggle('pg-octadie',large);
+}
 function begin(mode, state) {
+  configureBoard(state);
   ctl.gen++; clearTimeout(ctl.aiTimer); tweens.clear(); resetFx();
   Object.assign(ctl, { mode, state, running: true, paused: false, busy: false, look: false, peeking: false, waiting: false, endShown: false, rewarded: false, pendingPeg: null, lastTurn: null, shownSeq: state.seq });
   hover = -1; dieStop(); stage.die?.clear();
@@ -457,23 +479,35 @@ function begin(mode, state) {
 function doRoll() {
   if (!canRoll()) return;
   primeSound();
-  if (ctl.mode === 'online') { if (!table?.send('pegs_roll')) return; ctl.waiting = true; dieSpin(); play('dice', 0.7); renderStatus(); return; }
+  if (ctl.mode === 'online') { if (!table?.send('pegs_roll',ctl.state.race?{seq:ctl.state.seq}:{})) return; ctl.waiting = true; dieSpin(); play('dice', 0.7); renderStatus(); return; }
+  if(ctl.raceState)return raceAct({type:'pegs_roll'});
   act((s) => rollPegs(s, s.turn));
 }
 function doPick(i) {
   if (ctl.peeking) return doPeek(i);
   if (!canPick() || ctl.state.pegs[i]?.taken !== null) return;
   if (ctl.mode === 'online') {
-    if (!table?.send('pegs_pick', { peg: i })) return;
+    if (!table?.send('pegs_pick', { peg: i,...(ctl.state.race?{seq:ctl.state.seq}:{}) })) return;
     ctl.waiting = true; ctl.pendingPeg = i; fx[i].top = true; sfx('lift', 0.7); tween(fx[i], { lift: 0.4 }, 150); renderStatus(); return;
   }
+  if(ctl.raceState)return raceAct({type:'pegs_pick',peg:i});
   act((s) => pickPegs(s, s.turn, i));
 }
 function doPeek(i) {
   if (!canPeek() || ctl.state.pegs[i]?.taken !== null) return;
   ctl.peeking = false;
-  if (ctl.mode === 'online') { if (!table?.send('pegs_peek', { peg: i })) { renderStatus(); return; } ctl.waiting = true; ctl.pendingPeg = i; renderStatus(); return; }
+  if (ctl.mode === 'online') { if (!table?.send('pegs_peek', { peg: i,...(ctl.state.race?{seq:ctl.state.seq}:{}) })) { renderStatus(); return; } ctl.waiting = true; ctl.pendingPeg = i; renderStatus(); return; }
+  if(ctl.raceState)return raceAct({type:'pegs_peek',peg:i});
   act((s) => peekPegs(s, s.turn, i));
+}
+function raceAct(msg){
+  act(()=>{ctl.raceState=playPegsRace(ctl.raceState,0,{...msg,seq:ctl.raceState.runs[0].seq});return publicPegsRace(ctl.raceState,0);});
+}
+function raceThink(){
+  if(!ctl.raceState||!ctl.running)return;
+  if(!ctl.paused){ctl.raceState=advancePegsRace(ctl.raceState);for(let seat=1;seat<ctl.names.length&&ctl.raceState.winner===null;seat++){const move=choosePegsRaceMove(ctl.raceState,seat,prefs.level);if(move)ctl.raceState=playPegsRace(ctl.raceState,seat,move);}
+    if(!ctl.busy){ctl.state=publicPegsRace(ctl.raceState,0);renderAll();if(ctl.state.winner!==null)finish();}else{ctl.state.players=publicPegsRace(ctl.raceState,0).players;renderSeats();}}
+  if(ctl.raceState.winner===null)raceTimer=setTimeout(raceThink,1900);
 }
 function pointer(e) { const r = (stage.is3d ? $('pegsStage') : flatCanvas).getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 const stageEl = $('pegsStage');
@@ -507,8 +541,10 @@ function finish() {
   if (ctl.endShown || !ctl.state) return; ctl.endShown = true;
   const s = ctl.state, me = ctl.mode === 'online' ? ctl.me : 0, w = s.winner;
   const tie = s.ties.length > 1 && s.ties.includes(me) && ctl.mode !== 'hotseat';
-  const won = ctl.mode === 'hotseat' || w === me;
+  const won = ctl.mode === 'hotseat' || (s.teams?s.winnerTeam>=0&&me%(s.players.length/2)===s.winnerTeam:w===me);
+  if(s.teams)$('pegsWinner').textContent=s.winnerTeam<0?'تعادل الفرق':'الفريق '+(s.winnerTeam+1)+' فاز!';
   $('pegsWinner').textContent = ctl.mode === 'hotseat' ? (s.ties.length > 1 ? 'تعادل!' : ctl.names[w] + ' فاز!') : tie ? 'تعادل!' : won ? 'فزت!' : (ctl.names[w] || 'المنافس') + ' فاز';
+  if(s.teams)$('pegsWinner').textContent=s.winnerTeam<0?'تعادل الفرق':'الفريق '+(s.winnerTeam+1)+' فاز!';
   $('pegsResultKicker').textContent = ctl.mode === 'hotseat' ? 'انتهت الجولة' : won || tie ? 'ذاكرة حديد' : 'قربت، المرة الجاية لك';
   document.querySelector('.pg-result').classList.toggle('lost', !won && !tie);
   const rows = s.players.map((p, i) => ({ ...p, i })).sort((a, b) => b.score - a.score || b.best - a.best);
@@ -541,11 +577,14 @@ function finish() {
 }
 
 /* ---------- online ---------- */
-async function apply(next, { animate } = {}) {
-  room = next;
+async function apply(next, { animate, signal } = {}) {
+  if(signal?.aborted)return;
+  if(ctl.mode==='online'&&ctl.match===(next.startedAt||0)&&next.state?.seq<ctl.shownSeq)return;
+  room = next;ctl.raceState=null;
   const s = next.state; if (!s || s.game !== 'pegs' || !Array.isArray(s.pegs)) return;
   const n = s.players.length, seat = (i) => next.players?.find((p) => p.index === i);
-  const fresh = ctl.mode !== 'online' || $('pegsGame').hidden || ctl.match !== (next.startedAt || 0);
+  const fresh = Boolean(next.resync) || ctl.mode !== 'online' || $('pegsGame').hidden || ctl.match !== (next.startedAt || 0);
+  if(next.resync)animate=false;
   ctl.me = next.me?.index ?? 0;
   ctl.names = Array.from({ length: n }, (_, i) => seat(i)?.name || s.players[i]?.name || 'لاعب');
   ctl.users = Array.from({ length: n }, (_, i) => { const p = seat(i), fallback = window.BS_CAREER_CORE?.heroFace?.(p?.look?.character) || ''; return p?.username ? { username: p.username, fallback } : fallback ? { fallback } : null; });
@@ -567,7 +606,7 @@ async function apply(next, { animate } = {}) {
     if (gen !== ctl.gen) return;
     ctl.shownSeq = s.seq; ctl.state = s; ctl.waiting = false; ctl.pendingPeg = null; resetFx(); dieStop();
     if (s.phase === 'pick' && s.die !== null && !(s.last?.type === 'roll' && animate)) dieShow(s.die);
-  } else { ctl.state = { ...s, pegs: ctl.state?.pegs || s.pegs }; }
+  } else { ctl.state = s; if(next.resync){resetFx();ctl.busy=false;ctl.waiting=false;ctl.pendingPeg=null;} }
   renderAll();
   if (s.winner !== null) finish(); else announceTurn();
   // once the room's steps are all shown, the buttons come back
@@ -575,14 +614,15 @@ async function apply(next, { animate } = {}) {
 }
 try {
   table = createTable({
-    game: 'pegs', seats: [2, 3, 4], seatsDefault: 2,
+    game: 'pegs', modes:[{id:'classic',label:'الكلاسيكي',hint:'24 قطعة · 6 ألوان'},{id:'large',label:'الطاولة الكبيرة',hint:'48 قطعة · 8 ألوان'},{id:'teams',label:'فرق',hint:'فريقان أو ثلاثة · قطعتك لفريقك',seats:[4,6]},{id:'race',label:'سباق الذاكرة',hint:'الكل يلعب معًا · أول 12 قطعة'},{id:'race-large',label:'السباق الكبير',hint:'48 قطعة · 8 ألوان · متزامن'}],seats: [2, 3, 4,5,6], seatsDefault: 2,
     quickNote: 'نلقى لك منافسين خلال ثواني، واختر كم لاعب على الطاولة.',
-    roomNote: 'أنشئ غرفة وارسل الرمز للربع، من 2 إلى 4 لاعبين.',
+    roomNote: 'أنشئ غرفة وارسل الرمز للربع، من 2 إلى 6 لاعبين.',
     lobbyNote: (next, isPublic) => (isPublic ? 'تبدأ بعد العد.' : 'أرسل الرمز للربع. تبدأ إذا ضغطت «ابدأ».'),
     apply,
     onLobby: () => { if (!$('pegsGame').hidden) showMenu(); setMode('online'); },
     onMenu: () => { if (!$('pegsGame').hidden) showMenu(); },
-    onStatus: () => {},
+    onResync: () => {ctl.gen++;tweens.clear();clearTimeout(ctl.aiTimer);resetFx();ctl.busy=false;ctl.waiting=false;ctl.pendingPeg=null;ctl.look=false;dieStop();},
+    onStatus: (status) => {ctl.connected=status.online;const node=$('pegsNetwork');if(node){node.hidden=Boolean(status.online)||ctl.mode!=='online';node.textContent=status.text||'';}if(ctl.running)renderAll();},
     onError: (message) => {
       if (ctl.waiting) { ctl.waiting = false; dieStop(); const i = ctl.pendingPeg; ctl.pendingPeg = null; if (i !== null && fx[i]) { tween(fx[i], { lift: 0 }, 160).then(() => { fx[i].top = false; }); } renderAll(); }
       window.BS_PLATFORM?.toast?.(message);
@@ -601,7 +641,7 @@ function showGame() {
   kick();
 }
 function showMenu() {
-  ctl.gen++; clearTimeout(ctl.aiTimer); tweens.clear(); resetFx();
+  ctl.gen++; clearTimeout(ctl.aiTimer);clearTimeout(raceTimer);ctl.raceState=null;tweens.clear(); resetFx();
   ctl.running = false; ctl.state = null; ctl.mode = null; ctl.look = false; dieStop();
   $('pegsGame').hidden = true; $('pegsMenu').hidden = false; $('pegsResult').hidden = true; $('pegsPause').hidden = true;
   document.body.classList.remove('pegs-running', 'game-running');
@@ -610,6 +650,8 @@ function showMenu() {
 }
 function pause(on) {
   if (ctl.mode === 'online' || !ctl.running) return;
+  if(on&&!ctl.paused)ctl.pausedAt=Date.now();
+  if(!on&&ctl.paused&&ctl.raceState){const dt=Date.now()-(ctl.pausedAt||Date.now());ctl.raceState.endsAt+=dt;for(const r of ctl.raceState.runs){r.lookUntil+=dt;if(r.cooldownUntil)r.cooldownUntil+=dt;if(r.readyAt)r.readyAt+=dt;}ctl.state=publicPegsRace(ctl.raceState,0);}
   ctl.paused = on; $('pegsPause').hidden = !on;
   if (!on) { renderAll(); if (ctl.mode === 'ai' && ctl.state?.turn !== 0 && !ctl.busy && ctl.state?.winner === null) thinkLater(); }
 }
@@ -640,7 +682,7 @@ function setMode(mode) {
   for (const b of document.querySelectorAll('.pg-modes button')) b.setAttribute('aria-checked', String(b.dataset.mode === mode));
   for (const p of document.querySelectorAll('.pg-panel')) p.hidden = p.dataset.panel !== mode;
   document.querySelector('[data-local-options]').hidden = mode === 'online';
-  prefs.mode = mode; persist();
+  prefs.mode = mode;syncFormat();persist();
 }
 function seg(id, key, cast = String) {
   const paint = () => { for (const b of document.querySelectorAll('#' + id + ' button')) b.setAttribute('aria-checked', String(cast(b.dataset.v) === prefs[key])); };
@@ -648,6 +690,8 @@ function seg(id, key, cast = String) {
   if (![...document.querySelectorAll('#' + id + ' button')].some((b) => cast(b.dataset.v) === prefs[key])) prefs[key] = cast(document.querySelector('#' + id + ' button')?.dataset.v);
   paint();
 }
+function syncFormat(){const select=$('pegsFormat');if(!select)return;for(const o of select.options)o.disabled=prefs.mode==='hotseat'&&o.value.startsWith('race');if(prefs.mode==='hotseat'&&prefs.variant.startsWith('race'))prefs.variant='large';select.value=prefs.variant;const teams=prefs.variant==='teams';if(teams){prefs.local=prefs.local>4?6:4;prefs.rivals=prefs.rivals>3?5:3;}for(const [id,key]of [['pegsLocal','local'],['pegsRivals','rivals']])for(const b of document.querySelectorAll('#'+id+' button')){b.disabled=teams&&![4,6].includes(Number(b.dataset.v)+(key==='rivals'?1:0));b.setAttribute('aria-checked',String(Number(b.dataset.v)===prefs[key]));}}
+$('pegsFormat').addEventListener('change',e=>{prefs.variant=e.target.value;syncFormat();persist();});
 seg('pegsLevel', 'level'); seg('pegsRivals', 'rivals', Number); seg('pegsLocal', 'local', Number); seg('pegsLookTime', 'look', Number);
 $('pegsSwaps').checked = Boolean(prefs.swaps); $('pegsSwaps').addEventListener('change', (e) => { prefs.swaps = e.target.checked; persist(); });
 for (const b of document.querySelectorAll('.pg-modes button')) b.addEventListener('click', () => { setMode(b.dataset.mode); window.BS_AUDIO?.play?.('tap', { volume: 0.4 }); });

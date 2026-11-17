@@ -69,7 +69,8 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/home-v33-8.css",
     "assets/css/club-complete-v33-10.css",
-    "assets/css/home-v33-10-3.css"
+    "assets/css/home-v33-10-3.css",
+    "assets/css/home-v33-11.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -615,7 +616,8 @@
     "assets/css/reactions-v31.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/pegs-v33-10-2.css"
+    "assets/css/pegs-v33-10-2.css",
+    "assets/css/pegs-v33-11.css"
   ],
   "ludo.html": [
     "assets/css/platform.css",

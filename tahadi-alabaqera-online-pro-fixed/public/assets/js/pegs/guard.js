@@ -1,11 +1,10 @@
 /* Tahdia 33.10.7 — «شطرنج الذاكرة» is a memory game, so a screenshot of the colours is cheating.
    A web page can't stop the phone's own screenshot (only a native app can), so the board does what a
    page can: it covers the colours the moment the page leaves the screen or loses focus, while the
-   desktop screenshot keys are held (PrintScreen, ⌘⇧ on a Mac, ⊞⇧ on Windows), and it empties the
-   clipboard after PrintScreen. The cover lifts as soon as the player is back on the board. */
+   desktop screenshot keys are held (PrintScreen, ⌘⇧ on a Mac, ⊞⇧ on Windows), and covers the board during printing. The cover lifts as soon as the player is back on the board. */
 const STYLE = `
 .pegs-shield{position:absolute;inset:0;z-index:60;display:grid;place-content:center;gap:8px;text-align:center;
-  background:rgba(8,10,22,.94);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);color:#fff;
+  background:#080a16;backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);color:#fff;
   font:800 17px/1.5 inherit;border-radius:inherit;padding:18px;pointer-events:auto}
 .pegs-shield[hidden]{display:none}
 .pegs-shield b{font-size:34px;line-height:1}
@@ -46,7 +45,6 @@ export function guardPegs(stage, { toast } = {}) {
   const onUp = (e) => {
     if (shot(e)) {
       cover(1500);
-      try { navigator.clipboard?.writeText?.('')?.catch?.(() => {}); } catch {}
       toast?.('التصوير ممنوع في شطرنج الذاكرة');
       return;
     }

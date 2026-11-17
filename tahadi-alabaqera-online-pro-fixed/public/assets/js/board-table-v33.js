@@ -9,7 +9,7 @@ import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-onli
 
 const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2,pegs:2};
 
-export function createTable({game,page=null,title=null,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError}={}){
+export function createTable({game,page=null,title=null,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError,onResync}={}){
   // 33.10.5: a page that plays another game's rooms (لودو on the tables of الزهرة) keeps its own address and name
   const where=code=>page?page+'?room='+code:undefined;
   const $=selector=>document.querySelector(selector);
@@ -42,7 +42,7 @@ export function createTable({game,page=null,title=null,modes=null,modesLabel,sea
   function clockOf(next){
     if(!clock)return;
     const s=next.state;
-    if(s?.mode==='race'&&game==='jewels'){clock.clear();return;}
+    if(s?.mode==='race'&&['jewels','pegs'].includes(game)){clock.clear();return;}
     if(next.stepOf||next.status!=='playing'||!next.turnDeadline||!s||s.winner!=null||s.winnerTeam!=null){clock.clear();return;}
     const base=Number(next.serverNow)||Date.now(),got=Number(next.clientReceivedAt)||Date.now(),seat=s.turn,mine=seat===next.me?.index;
     const who=(next.players||[]).find(p=>p.index===seat);
@@ -66,7 +66,7 @@ export function createTable({game,page=null,title=null,modes=null,modesLabel,sea
   function connect(){
     leaving=false;client?.close();player.reset();room=null;
     client=new BoardOnlineClient(game,{
-      onState:next=>player.push(next),
+      onState:next=>{if(game==='pegs'&&next.resync){onResync?.(next);player.reset();}player.push(next);},
       onStatus:status=>onStatus?.(status),
       onError:message=>{
         // a public table that started before we got in: find the next one

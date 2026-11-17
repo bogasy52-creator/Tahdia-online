@@ -67,9 +67,9 @@ test('«عين الصقر» once a game; games always end, the challenge table s
   assert.ok(easy > 0.2 && hard > easy + 0.2, easy + ' / ' + hard);
 });
 
-test('the rooms seat 2 to 4, codes start with 05, and a move during the look is refused', () => {
+test('the rooms seat 2 to 6, codes start with 05, and a move during the look is refused', () => {
   assert.ok(TABLE_GAMES.includes('pegs'));
-  assert.equal(MAX_SEATS.pegs, 4);
+  assert.equal(MAX_SEATS.pegs, 6);
   assert.equal(chosenSeats('pegs', 3), 3);
   assert.equal(seatsFor('pegs', 1, true, 4), 4);
   assert.deepEqual(ROOM_FAMILIES.pegs, { from: 5, to: 5, page: '/pegs' });
@@ -138,7 +138,7 @@ test('33.10.2: the 3D table — a trimmed three.js of our own, the flat board ke
   assert.match(main, /createPegsBoard\(flatCanvas\)/, 'the flat board stays as the fallback');
   assert.match(main, /onLost = \(\) =>/, 'a lost WebGL context falls back to the flat board');
   assert.match(stage, /from '\.\.\/\.\.\/vendor\/three-r187-pegs\.js'/);
-  assert.match(stage, /PEG_SYMBOLS = Object\.freeze\(\['triangle', 'star', 'plus', 'diamond', 'circle', 'square'\]\)/, 'a symbol under every colour');
+  assert.match(stage, /PEG_SYMBOLS = Object\.freeze\(\['triangle', 'star', 'plus', 'diamond', 'circle', 'square', 'hexagon', 'moon'\]\)/, 'a symbol under every colour');
   const vendor = await read('public/assets/vendor/three-r187-pegs.js'), license = await read('public/assets/vendor/three-LICENSE.txt');
   assert.match(vendor.slice(0, 300), /three\.js r187 \(MIT/);
   assert.match(license, /The MIT License/);

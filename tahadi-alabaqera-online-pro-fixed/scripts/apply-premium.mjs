@@ -11,7 +11,7 @@ for(const name of await readdir(root)){
  next=next.replace(/<link\b[^>]*href=["']\/?assets\/css\/tahdia-premium-v25\.css[^"']*["'][^>]*>/g,'');
  next=next.replace(/<script\b[^>]*src=["']\/?assets\/js\/tahdia-premium-v25\.js[^"']*["'][^>]*><\/script>/g,'');
  if(!atelier)next=next.replace(/<\/head>/i,css+'</head>').replace(/<\/body>/i,js+'</body>');
- next=next.replace(/(assets\/js\/)([a-z0-9-]+)(\.js\?v=)v?[\d.]+/g,(_all,prefix,file,suffix)=>prefix+file+suffix+release);
+ next=next.replace(/(assets\/js\/)([a-z0-9/-]+)(\.js\?v=)v?[\d.]+/g,(_all,prefix,file,suffix)=>prefix+file+suffix+release);
  if(next!==raw){await writeFile(target,next);count++;}
 }
 console.log('Tahdia '+release+' ready; '+count+' page(s) updated.');

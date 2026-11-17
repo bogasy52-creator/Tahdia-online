@@ -135,7 +135,7 @@ test('شطرنج الذاكرة covers its colours when the page loses focus or 
   assert.equal(shield.hidden, true, 'back on the page, the board shows again');
   fire('doc', 'keyup', { key: 'PrintScreen', code: 'PrintScreen' });
   assert.equal(shield.hidden, false);
-  assert.equal(env.clip, '', 'PrintScreen leaves an empty clipboard');
+  assert.equal(env.clip, undefined, 'Privacy cover leaves the existing clipboard unchanged');
   assert.deepEqual(toasts, ['التصوير ممنوع في شطرنج الذاكرة']);
   timers.splice(0).forEach((fn) => fn());
   fire('doc', 'keydown', { key: 'Shift', metaKey: true, shiftKey: true });

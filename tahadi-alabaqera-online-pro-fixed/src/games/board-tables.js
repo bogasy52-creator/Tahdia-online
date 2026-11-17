@@ -17,6 +17,8 @@ import { createPoolGame, playPoolShot, poolTimeout, choosePoolShot, poolProgress
 // 33.9.10: carrom is a table of two like billiards: the room plays each shot to its end
 import { createCarromDuel, playCarromShot, carromTimeout, chooseCarromShot, carromProgress } from '../../public/assets/js/carrom/engine.js';
 // 33.10.1: «شطرنج الذاكرة» — two to four players, the room keeps the colours under the pawns
+import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove} from '../../public/assets/js/engines/pegs-race-engine.js';
+import {PEG_VARIANTS,pegsOptions} from '../../public/assets/js/engines/pegs-engine.js';
 import { createPegsGame, rollPegs, pickPegs, peekPegs, pegsTimeout, choosePegsMove, pegsProgress } from '../../public/assets/js/engines/pegs-engine.js';
 import { createJewelsDuel, playJewelsSwap, playJewelsBooster, playJewelsAuto, jewelsTimeout, jewelsProgress, jewelsMoveMs } from '../../public/assets/js/engines/jewels-duel-engine.js';
 import {createJewelsRace,playJewelsRaceSwap,playJewelsRaceBooster,finishJewelsRace,advanceJewelsRace,chooseJewelsRaceMove} from '../../public/assets/js/engines/jewels-race-engine.js';
@@ -26,7 +28,7 @@ import { Career } from '../career/core.js';
 // 33.9.0: billiards (8-ball pool) is a table of two: a quick table gives you a person or a computer player
 // 33.9.5: «ماستر الجواهر» is a duel too: one board, two players
 export const TABLE_GAMES = Object.freeze(['snakes', 'zahra', 'jackaroo', 'dice', 'billiards', 'jewels', 'carrom', 'pegs']);
-export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10, billiards: 2, jewels: 2, carrom: 2, pegs: 4 });
+export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10, billiards: 2, jewels: 2, carrom: 2, pegs: 6 });
 export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3, billiards: 2, jewels: 2, carrom: 2, pegs: 2 });
 export const TABLE_LOBBY_MS = 10_000;
 // a group room's table starts when all its players are in, or this long after the first one came
@@ -65,15 +67,17 @@ export function pickBotLevel(rng = Math.random) {
 }
 
 // 33.4.0: snakes & ladders lets you pick the table size: 2, 3 or 4 players
-export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], pegs: [2, 3, 4], ludo: [2, 3, 4] });
+export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], pegs: [2, 3, 4, 5, 6], ludo: [2, 3, 4] });
 /** A table size the player picked, when this game offers one; otherwise null. */
 export function chosenSeats(game, value, variant = null) {
   const n = Number(value);
+  if(game==='pegs'&&variant==='teams')return [4,6].includes(n)?n:6;
   // 33.10.5: «لودو» (a zahra table on the cross board) also lets you pick 2, 3 or 4
   return TABLE_SIZES[game === 'zahra' && isLudoVariant(variant) ? 'ludo' : game]?.includes(n) ? n : null;
 }
 /** How many seats the table gets for this many players (and the size picked, if any). */
 export function seatsFor(game, humans, quick = false, chosen = null, variant = null) {
+  if(game==='pegs'&&variant==='teams')return Math.max(4,humans>4||Number(chosen)>4?6:4);
   if (game === 'jackaroo') return humans > 4 ? 6 : 4;
   if (game === 'billiards' || game === 'jewels' || game === 'carrom') return 2;
   const picked = chosenSeats(game, chosen, variant);
@@ -104,6 +108,7 @@ function makeBot(seat, rng, taken) {
 /** 33.10.4: the ways a table can be played. Snakes keep theirs; جاكارو and الزهرة have «سريع»
     (the first marble or stone home wins); every other game plays its one way. */
 export function tableVariant(game, variant) {
+  if(game==='pegs')return PEG_VARIANTS.includes(variant)?variant:'classic';
   if (game === 'snakes') { try { return normalizeSnakesVariant(variant || 'classic'); } catch { return 'classic'; } }
   if ((game === 'jackaroo' || game === 'zahra') && variant === 'quick') return 'quick';
   // 33.10.5: «لودو» is a zahra table on the classic cross board (2–4 players), with its own «سريع»
@@ -123,7 +128,7 @@ function createState(game, names, variant, rng, now=Date.now()) {
   if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
   if (game === 'jewels') return createJewelsRace(names, { rng,now });
   if (game === 'carrom') return createCarromDuel(names, { rng, first: rng() < 0.5 ? 0 : 1 });
-  if (game === 'pegs') { const g = createPegsGame(names, { rng, now }); g.salt = Math.floor(rng() * 1e6); return g; }
+  if (game === 'pegs') { if(variant==='race'||variant==='race-large')return createPegsRace(names,{rng,now,...pegsOptions(variant)});const g = createPegsGame(names, { rng, now,...pegsOptions(variant) }); g.salt = Math.floor(rng() * 1e6); return g; }
   return createRaceDiceGame(names, DICE_TARGET);
 }
 
@@ -131,6 +136,7 @@ function createState(game, names, variant, rng, now=Date.now()) {
 // server die, so a test can set the dice without touching names or shuffles.
 const rollWith = (rng) => () => 1 + Math.floor(rng() * 6);
 const unitOf = (roll) => () => (roll() - 1) / 6;
+export const isPegsRaceTable=room=>room?.game==='pegs'&&room.state?.mode==='race';
 export const isJewelsRaceTable=room=>room?.game==='jewels'&&room.state?.mode==='race';
 export const tableOver = (room) => {
   const s = room.state;
@@ -145,7 +151,7 @@ export function recordStep(room, steps) {
   steps.list.push({ version: room.version, state: structuredClone(room.state), pendingRoll: room.pendingRoll ?? null });
   if (steps.list.length > MAX_STEPS) steps.list.splice(0, steps.list.length - MAX_STEPS);
 }
-export const stepsTime = (room, steps) => isJewelsRaceTable(room)?0:room.game==='snakes'
+export const stepsTime = (room, steps) => (isJewelsRaceTable(room)||isPegsRaceTable(room))?0:room.game==='snakes'
   ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.pendingChoice?650:snakesTurnDisplayMs(step.state?.lastEvent)),0)
   // a billiards shot takes as long as its balls roll, and a moment to read what happened
   : room.game==='jewels' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?jewelsMoveMs(step.state.last):300),0)
@@ -183,6 +189,7 @@ export function startTable(room, { quick = false, rng = Math.random, roll = roll
     room.turnDeadline=room.state.endsAt;room.turnTotal=room.state.durationMs;
     return steps;
   }
+  if(isPegsRaceTable(room)){room.pegsBotAt=plan.some(id=>room.players[id]?.bot)?now+room.state.runs[0].showMs+1000:null;room.turnDeadline=room.state.endsAt;room.turnTotal=room.state.endsAt-now;return steps;}
   runBots(room, steps, rng, roll);
   return steps;
 }
@@ -273,7 +280,7 @@ const trimDice = (room) => { if (room.state?.history?.length > 30) room.state.hi
 
 /** Bots act until a person must, or the match ends. */
 export function runBots(room, steps, rng, roll = rollWith(rng)) {
-  if(isJewelsRaceTable(room))return steps;
+  if(isJewelsRaceTable(room)||isPegsRaceTable(room))return steps;
   let guard = 0;
   const limit = room.game === 'billiards' || room.game === 'carrom' ? POOL_BOT_SHOTS : 500;
   while (room.status === 'playing' && !tableOver(room) && seatIsBot(room, seatOf(room)) && guard++ < limit) {
@@ -285,6 +292,7 @@ export function runBots(room, steps, rng, roll = rollWith(rng)) {
 /** A person's move. Returns the steps, or throws a short reason. */
 export function playerMove(room, seat, msg, rng, roll = rollWith(rng), now=Date.now()) {
   if (room.status !== 'playing' || !room.state || tableOver(room)) throw new Error('match_not_playing');
+  if(isPegsRaceTable(room)){const steps=beginSteps(room);room.state=playPegsRace(room.state,seat,msg,{now,rng});recordStep(room,steps);return steps;}
   if(isJewelsRaceTable(room)){
     const steps=beginSteps(room),advanced=advanceJewelsRace(room.state,now);
     if(advanced!==room.state){room.state=advanced;room.jewelsBotAt=null;recordStep(room,steps);return steps;}
@@ -357,6 +365,13 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng), now=Date.
 /** The server plays for a person whose time ran out (a fair, plain move; never a power). */
 export function timeoutMove(room, rng, roll = rollWith(rng), now=Date.now()) {
   if (room.status !== 'playing' || !room.state || tableOver(room)) return null;
+  if(isPegsRaceTable(room)){
+    const steps=beginSteps(room),advanced=advancePegsRace(room.state,now);
+    if(advanced!==room.state){room.state=advanced;room.pegsBotAt=null;recordStep(room,steps);return steps;}
+    if(!room.pegsBotAt||now<room.pegsBotAt)return null;
+    for(let seat=0;seat<room.order.length;seat++){if(!seatIsBot(room,seat))continue;const move=choosePegsRaceMove(room.state,seat,room.players[room.order[seat]]?.level||'medium',rng,now);if(move){room.state=playPegsRace(room.state,seat,move,{now,rng});recordStep(room,steps);if(tableOver(room))break;}}
+    room.pegsBotAt=tableOver(room)?null:now+1900;return steps.list.length?steps:null;
+  }
   if(isJewelsRaceTable(room)){
     const steps=beginSteps(room),advanced=advanceJewelsRace(room.state,now);
     if(advanced!==room.state){room.state=advanced;room.jewelsBotAt=null;recordStep(room,steps);return steps;}
@@ -413,6 +428,8 @@ export function winnerSeats(room) {
   const s = room.state;
   if (!s) return [];
   if(isJewelsRaceTable(room)&&s.winner===-1)return[];
+  if(room.game==='pegs'&&s.teams)return s.winnerTeam===-1?[]:room.order.map((_,i)=>i).filter(i=>i%(s.players.length/2)===s.winnerTeam);
+  if(room.game==='pegs'&&s.ties?.length>1)return [];
   if (room.game === 'jackaroo') return s.winnerTeam === null || s.winnerTeam === undefined ? [] : room.order.map((_, i) => i).filter((i) => i % 2 === s.winnerTeam);
   return s.winner === null || s.winner === undefined ? [] : [s.winner];
 }

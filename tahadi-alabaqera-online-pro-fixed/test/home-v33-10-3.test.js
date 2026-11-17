@@ -23,8 +23,8 @@ test('the home opens on a spotlight of five games, then four quick doors, then t
   assert.match(home, /assets\/js\/home-v33-10-3\.js\?v=/);
   assert.ok(home.indexOf('class="home-actions"') < home.indexOf('id="games"'));
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.equal(bundles['index.html'].at(-1), 'assets/css/home-v33-10-3.css');
-  assert.match(await read('scripts/build-styles.mjs'), /'assets\/css\/home-v33-10-3\.css'\]\)finalStyles\.add/);
+  assert.equal(bundles['index.html'].at(-1), 'assets/css/home-v33-11.css');
+  assert.match(await read('scripts/build-styles.mjs'), /'assets\/css\/home-v33-10-3\.css'/);
   const css = await read('public/assets/css/home-v33-10-3.css');
   assert.match(css, /scroll-snap-type:x mandatory/);
   assert.match(css, /\.home-feature:first-child\{grid-column:span 2;grid-row:span 2\}/, 'a bento on wide screens');

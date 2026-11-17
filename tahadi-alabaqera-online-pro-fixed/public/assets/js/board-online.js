@@ -93,7 +93,7 @@ export class BoardOnlineClient {
         if(msg.type==='welcome'){
           if(!msg.state)return;
           this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{}
-          const state=stamp(msg.state);this.onState(state);announceRoom(this,state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
+          const state=stamp(msg.state);if(this.game==='pegs')state.resync=true;this.onState(state);announceRoom(this,state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
           if(!settled){settled=true;clearTimeout(timer);this.cancelOpening=null;resolve(state);}
           clearInterval(this.heartbeat);this.heartbeat=setInterval(()=>{
             if(this.ws!==ws||globalThis.document?.hidden)return;
