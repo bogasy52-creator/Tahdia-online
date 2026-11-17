@@ -1,17 +1,17 @@
 import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.10';
 import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.10';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.10.6-party6';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.10.7-party6';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
 import {createMemoryTile,updateMemoryTile,memoryVariant} from './memory-art-v30.js?v=33.9.10';
-import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.10.6';
+import {renderPartySnakes,renderPartyDice} from './party-boards-v32.js?v=33.10.7';
 let boardSurface=null,boardSurfaceRound='',rankingKey='';
 // 33.10.6: the host picks the categories of «تحدي العباقرة» (several, or none for six at random)
 const QUIZ_EMOJI={saudi:'🇸🇦',gulf:'🌊',history:'📜',geo:'🌍',science:'🔬',space:'🚀',tech:'💻',cars:'🚗',brands:'🏷️',football:'⚽',sports:'🏆',arabic:'✍️',logic:'🧩',food:'🍲',gulfCinema:'🎬',general:'💡',animals:'🐾',inventions:'⚙️',quran:'📖',tafsir:'🕌',meanings:'📚',sounds:'🔊',zoom:'🔍',memory:'🧠',flags:'🚩'};
 let quizCategories=[];
-globalThis.fetch?.('/assets/quiz-catalog.json?v=33.10.6').then(r=>r.ok?r.json():[]).then(rows=>{quizCategories=Array.isArray(rows)?rows.filter(c=>c&&c.id&&c.name):[];if($('playlistDialog')?.open)renderEditor();}).catch(()=>{});
+globalThis.fetch?.('/assets/quiz-catalog.json?v=33.10.7').then(r=>r.ok?r.json():[]).then(rows=>{quizCategories=Array.isArray(rows)?rows.filter(c=>c&&c.id&&c.name):[];if($('playlistDialog')?.open)renderEditor();}).catch(()=>{});
 const quizField=(r)=>{const chosen=new Set(r.categories||[]);if(!quizCategories.length)return'';return`<fieldset class="party-quiz-cats"><legend>أقسام الأسئلة <small>${chosen.size?chosen.size+' مختارة':'بدون اختيار: 6 أقسام عشوائية'}</small></legend><div class="party-quiz-tools"><button type="button" class="party-chip-tool" data-cats="all">الكل</button><button type="button" class="party-chip-tool" data-cats="none">عشوائي</button></div><div class="party-quiz-chips">${quizCategories.map(c=>`<label class="party-quiz-chip ${chosen.has(c.id)?'on':''}"><input type="checkbox" data-cat="${esc(c.id)}" ${chosen.has(c.id)?'checked':''}><span aria-hidden="true">${QUIZ_EMOJI[c.id]||'❓'}</span>${esc(c.name)}</label>`).join('')}</div></fieldset>`;};
 const quizSummary=p=>p.game==='quiz'&&p.categories?.length?`<small class="party-rail-cats">${p.categories.map(id=>quizCategories.find(c=>c.id===id)?.name||'').filter(Boolean).slice(0,4).join('، ')}${p.categories.length>4?' +'+(p.categories.length-4):''}</small>`:'';
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

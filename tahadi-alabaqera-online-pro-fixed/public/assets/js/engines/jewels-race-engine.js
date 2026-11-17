@@ -1,6 +1,6 @@
 /* Independent score runs: the same opening and random stream, a separate board
    per player, and an equal action budget. The server resolves every action. */
-import {BOOSTERS,adjacent,createJewelsDuel,playJewelsSwap,playJewelsBooster,chooseJewelsMove,legalSwaps,chargesOf} from './jewels-duel-engine.js?v=33.10.6-mm5';
+import {BOOSTERS,adjacent,createJewelsDuel,playJewelsSwap,playJewelsBooster,chooseJewelsMove,legalSwaps,chargesOf} from './jewels-duel-engine.js?v=33.10.7-mm5';
 export {BOOSTERS,adjacent,chargesOf};
 // 33.10.5: three stars on the way (a good run has 200), and the beak breaks a gem without a move
 export const JR=Object.freeze({W:8,H:8,MOVES:25,DURATION_MS:180000,STARS:Object.freeze([100,200,300])});

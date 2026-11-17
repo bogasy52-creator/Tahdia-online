@@ -1,5 +1,5 @@
 import {boardGeometry,boardStonePosition} from './engines/board-geometry-v29.js?v=33.9.10';
-import {petalStonePoint} from './board-petals-v29.js?v=33.10.6-r4';
+import {petalStonePoint} from './board-petals-v29.js?v=33.10.7-r4';
 
 // A dedicated Zahra renderer. The engine and move preview retain their 200-unit geometry.
 export const ZAHRA_COLORS=Object.freeze(['#c53d60','#267bc0','#d2a448','#168b78','#805ad5','#d97036']);

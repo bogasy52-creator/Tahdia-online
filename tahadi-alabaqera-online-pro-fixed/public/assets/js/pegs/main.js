@@ -2,9 +2,10 @@
    room keeps the colours and sends each step), against the computer, and friends on one phone. The
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.6';
-import { createPegsBoard } from './board.js?v=33.10.6';
-import { createTable } from '../board-table-v33.js?v=33.10.6-pegs2';
+import { PEGS, PEG_COLORS, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.10.7';
+import { createPegsBoard } from './board.js?v=33.10.7';
+import { createTable } from '../board-table-v33.js?v=33.10.7-pegs2';
+import { guardPegs } from './guard.js?v=33.10.7';
 
 const $ = (id) => document.getElementById(id);
 const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a'];
@@ -73,7 +74,7 @@ addEventListener('resize', flatResize, { passive: true });
 async function upgrade3d() {
   if (params.has('flat')) return;
   try {
-    const mod = await import('./stage3d.js?v=33.10.6');
+    const mod = await import('./stage3d.js?v=33.10.7');
     if (!mod.webglAvailable()) return;
     const s3 = mod.createPegsStage3D();
     s3.onLost = () => { stage = flat; $('pegsStage').classList.remove('is-3d'); $('pegsHero').classList.remove('is-3d'); $('pegsDie').hidden = false; s3.canvas.remove(); s3.overlay.remove(); flatResize(); };
@@ -476,6 +477,8 @@ function doPeek(i) {
 }
 function pointer(e) { const r = (stage.is3d ? $('pegsStage') : flatCanvas).getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 const stageEl = $('pegsStage');
+// 33.10.7: no screenshots of the colours (see guard.js)
+guardPegs(stageEl, { toast: (m) => window.BS_PLATFORM?.toast?.(m) });
 stageEl.addEventListener('pointermove', (e) => { if (!ctl.state || e.pointerType === 'touch') return; const p = pointer(e), i = canPick() || ctl.peeking ? stage.hit(p.x, p.y, ctl.state.pegs) : -1; if (i !== hover) { hover = i; render(); } });
 stageEl.addEventListener('pointerleave', () => { hover = -1; render(); });
 stageEl.addEventListener('click', (e) => {
@@ -613,7 +616,7 @@ function pause(on) {
 
 /* ---------- the first-time tour ---------- */
 const TOUR = [
-  ['احفظ', 'أول الجولة القطع تنقلب وتوريك ألوانها ثواني. ركّز وين كل لون.', '<span class="pawn"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#ffcf24"></i></span><span class="pawn up"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#e8323f"></i></span><span class="pawn"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#2a7fe8"></i></span>'],
+  ['احفظ', 'أول الجولة القطع تنقلب وتوريك ألوانها ثواني. ركّز وين كل لون، بذاكرتك بس: التصوير ممنوع، ولو طلعت من الصفحة تتغطى اللوحة 🔒', '<span class="pawn"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#ffcf24"></i></span><span class="pawn up"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#e8323f"></i></span><span class="pawn"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#2a7fe8"></i></span>'],
   ['ارمِ', 'اضغط «ارمِ النرد» أو النرد نفسه. اللون اللي يطلع هو اللي تدوّر عليه، وتحت كل لون رمز يساعدك تميّزه.', '<span class="tdie"><svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 12 12 21.5 4.5 12z"/></svg></span>'],
   ['اقلب', 'صح؟ تاخذ القطعة وتكمل. غلط؟ تنكشف للكل والدور يروح. ثلاث صح ورا بعض تخلي كل قطعة بنقطتين 🔥، و«عين الصقر» توريك لون قطعة بالسر مرة وحدة.', '<span class="pawn up"><svg viewBox="0 0 24 32"><use href="#i-pawn"/></svg><i style="--c:#22b35b"></i></span><span class="tick">✓</span>'],
 ];

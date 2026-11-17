@@ -8,6 +8,37 @@
   let inboxTimer = null;
   let inboxPending = null;
   let inviteExpiryTimer=null;
+  // 33.10.7: an invitation used to show once, at the bottom, and was gone. Now every pending one waits
+  // in an inbox: a red count on the friends button of every page, and a list on the home page.
+  const pendingInvites = new Map();
+  let friendRequests = [];
+  let inboxTicker = null;
+  const INBOX_STYLE = `
+#bsSocialInvite.bs-social-invite-card{top:calc(10px + env(safe-area-inset-top))!important;bottom:auto!important;left:50%!important;right:auto!important;translate:-50% 0;z-index:13000!important;border:2px solid #ef4444!important;background:linear-gradient(180deg,#3a111b,#1a0a12)!important;box-shadow:0 0 0 4px rgba(239,68,68,.25),0 18px 40px rgba(0,0,0,.55)!important;animation:bsInviteIn .45s cubic-bezier(.2,1.4,.4,1)}
+#bsSocialInvite.bs-social-invite-card .bs-btn.gold{background:#ef4444!important;border-color:#ef4444!important;color:#fff!important}
+#bsSocialInvite.bs-social-invite-card b{color:#fff!important;font-size:17px}
+@keyframes bsInviteIn{from{transform:translateY(-24px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+[data-bs-invite-anchor]{position:relative}
+.bs-invite-badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#ef4444;color:#fff;border:2px solid #0b0d1c;font:800 11px/16px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 3px rgba(239,68,68,.25);animation:bsInvitePulse 1.6s ease-in-out infinite;pointer-events:none}
+.bs-invite-badge[hidden]{display:none}
+@keyframes bsInvitePulse{50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
+.bs-invite-inbox{margin:12px auto;padding:14px;max-width:760px;border:2px solid #ef4444;border-radius:20px;background:linear-gradient(180deg,rgba(239,68,68,.16),rgba(239,68,68,.05));color:#fff}
+.bs-invite-inbox[hidden]{display:none}
+.bs-invite-inbox h2{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:18px}
+.bs-invite-inbox h2 i{font-style:normal;min-width:26px;height:26px;padding:0 7px;border-radius:99px;background:#ef4444;color:#fff;font-size:14px;line-height:26px;text-align:center}
+.bs-invite-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:rgba(10,12,26,.72);border:1px solid rgba(239,68,68,.45)}
+.bs-invite-row+.bs-invite-row{margin-top:8px}
+.bs-invite-row>div:first-child{flex:1;min-width:0}
+.bs-invite-row b{display:block;font-size:15px}
+.bs-invite-row span{display:block;font-size:13px;opacity:.8}
+.bs-invite-row .bs-invite-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.bs-invite-row .bs-btn{min-height:38px;padding:0 14px;text-decoration:none;display:inline-grid;place-items:center}
+.bs-invite-row .bs-invite-join{background:#ef4444;border-color:#ef4444;color:#fff}`;
+  const INBOX_ANCHORS = '[data-social-open], a.bs-icon-btn[href="./"], a.bs-icon-btn[href="/"], a[aria-label="الرئيسية"], a[aria-label="الرجوع للرئيسية"]';
+  function inviteStyle() {
+    if (!document.head || typeof document.getElementById !== 'function' || document.getElementById('bsInviteInboxStyle')) return;
+    const style = document.createElement('style'); style.id = 'bsInviteInboxStyle'; style.textContent = INBOX_STYLE; document.head.appendChild(style);
+  }
   const seenInvites = new Set();
   function seenKey() { return `${SEEN_INVITES_KEY}:${cachedProfile()?.username || token().split('.')[0] || 'guest'}`; }
   function loadSeen() {
@@ -20,8 +51,70 @@
     const recent = [...seenInvites].slice(-80);
     try { localStorage.setItem(seenKey(), JSON.stringify(recent)); } catch {}
   }
+  function inviteOpen(n) { return n?.type === 'game_invite' && !n.read && n.joinPath && INVITE_PATH.test(n.joinPath) && Number(n.expiresAt || 0) > Date.now(); }
+  function trackInvite(n) { if (inviteOpen(n)) { pendingInvites.set(String(n.id || n.createdAt), n); renderInbox(); } }
+  function dropInvites(ids = []) {
+    if (!ids.length) pendingInvites.clear(); else for (const id of ids) pendingInvites.delete(String(id));
+    renderInbox();
+  }
+  function openInvites() {
+    for (const [id, n] of pendingInvites) if (!inviteOpen(n)) pendingInvites.delete(id);
+    return [...pendingInvites.values()].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  }
+  function timeLeft(n) { const s = Math.max(0, Math.round((Number(n.expiresAt || 0) - Date.now()) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function inboxButton(label, className, action) { const b = document.createElement('button'); b.type = 'button'; b.className = 'bs-btn ' + className; b.textContent = label; b.onclick = action; return b; }
+  // the inbox is a convenience: whatever a page lacks, it never stops invitations or the rest of the client
+  function renderInbox() { try { drawInbox(); } catch {} }
+  function drawInbox() {
+    inviteStyle();
+    const signed = Boolean(token());
+    const invites = signed ? openInvites() : [], requests = signed ? friendRequests : [];
+    const count = invites.length + requests.length;
+    // the friends button on the home page, and the home button on every game page (the list is there)
+    document.querySelectorAll(INBOX_ANCHORS).forEach((el) => {
+      let badge = el.querySelector(':scope > .bs-invite-badge');
+      if (!badge) {
+        if (!count) return;
+        el.setAttribute('data-bs-invite-anchor', ''); el.dataset.bsLabel = el.getAttribute('aria-label') || '';
+        badge = document.createElement('span'); badge.className = 'bs-invite-badge'; badge.setAttribute('aria-hidden', 'true'); el.appendChild(badge);
+      }
+      badge.textContent = count > 9 ? '9+' : String(count); badge.hidden = !count;
+      const base = el.dataset.bsLabel || '';
+      if (count) el.setAttribute('aria-label', `${base ? base + ' — ' : ''}عندك ${count} ${count === 1 ? 'دعوة' : 'دعوات'}`); else if (base) el.setAttribute('aria-label', base); else el.removeAttribute('aria-label');
+    });
+    document.querySelectorAll('[data-invite-list]').forEach((box) => {
+      box.hidden = !count; box.replaceChildren();
+      if (!count) return;
+      const head = document.createElement('h2'), num = document.createElement('i');
+      num.textContent = String(count); head.append(num, document.createTextNode(count === 1 ? 'عندك دعوة' : 'عندك دعوات'));
+      box.appendChild(head);
+      for (const n of invites) {
+        const row = document.createElement('div'), copy = document.createElement('div'), title = document.createElement('b'), sub = document.createElement('span'), actions = document.createElement('div');
+        row.className = 'bs-invite-row'; actions.className = 'bs-invite-actions';
+        title.textContent = `🎮 ${n.from?.displayName || n.from?.username || 'صديق'} يدعوك`;
+        sub.textContent = `${gameLabel(n.game)}${n.roomCode ? ' · الغرفة ' + n.roomCode : ''} · باقي ${timeLeft(n)}`;
+        const join = document.createElement('a'); join.className = 'bs-btn bs-invite-join'; join.textContent = 'انضم'; join.href = n.joinPath;
+        join.addEventListener('click', () => { if (n.id) readNotifications([n.id]).catch(() => {}); });
+        actions.append(join, inboxButton('تجاهل', '', () => { if (n.id) readNotifications([n.id]).catch(() => {}); dropInvites([n.id]); }));
+        copy.append(title, sub); row.append(copy, actions); box.appendChild(row);
+      }
+      for (const r of requests) {
+        const row = document.createElement('div'), copy = document.createElement('div'), title = document.createElement('b'), sub = document.createElement('span'), actions = document.createElement('div');
+        row.className = 'bs-invite-row'; actions.className = 'bs-invite-actions';
+        title.textContent = `👥 ${r.displayName || r.username} يبي يصير صديقك`; sub.textContent = 'طلب صداقة';
+        const answer = (accept) => async () => { try { await respondFriend(r.username, accept); friendRequests = friendRequests.filter((x) => x.username !== r.username); renderInbox(); toast(accept ? '✅ صرتوا أصدقاء' : 'تم رفض الطلب'); } catch (error) { toast(error.message); } };
+        actions.append(inboxButton('قبول', 'bs-invite-join', answer(true)), inboxButton('رفض', '', answer(false)));
+        copy.append(title, sub); row.append(copy, actions); box.appendChild(row);
+      }
+    });
+    clearInterval(inboxTicker); inboxTicker = invites.length ? setInterval(renderInbox, 15000) : null;
+  }
   function syncInbox(data) {
     if (!data || !Array.isArray(data.notifications) || !token()) return;
+    pendingInvites.clear();
+    for (const n of data.notifications) if (inviteOpen(n)) pendingInvites.set(String(n.id || n.createdAt), n);
+    friendRequests = Array.isArray(data.incoming) ? data.incoming.filter((r) => r && r.username) : [];
+    renderInbox();
     const latest = [...data.notifications]
       .filter(n => n?.type === 'game_invite' && !n.read && n.joinPath && Number(n.expiresAt || 0) > Date.now())
       .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
@@ -59,13 +152,14 @@
   }
   function setSession(nextToken, profile) {
     const changed=state.token!==String(nextToken||'');
-    if(changed){closeRealtime();state.reconnectAttempt=0;state.dashboard=null;inboxPending=null;clearTimeout(inviteExpiryTimer);document.querySelector('#bsSocialInvite')?.remove();}
+    if(changed){closeRealtime();state.reconnectAttempt=0;state.dashboard=null;inboxPending=null;clearTimeout(inviteExpiryTimer);document.querySelector('#bsSocialInvite')?.remove();pendingInvites.clear();friendRequests=[];}
     state.token = String(nextToken || '');
     state.profile = profile || null;
     writeStorage(STORAGE_KEY, state.token);
     writeStorage(PROFILE_KEY, state.profile ? JSON.stringify(state.profile) : '');
     if (state.token) startInbox(); else stopInbox();
     decorate();
+    renderInbox();
     window.dispatchEvent(new CustomEvent('bs-social-session'));
   }
 
@@ -128,21 +222,22 @@
   async function unblock(username) { const data = await api('/api/social/unblock', { method: 'POST', body: JSON.stringify({ username }) }); state.dashboard = null; return data; }
   async function settings(values) { const data = await api('/api/social/settings', { method: 'POST', body: JSON.stringify(values) }); state.dashboard = null; return data; }
   async function invite(username, game, roomCode, variant) { return api('/api/social/invites', { method: 'POST', body: JSON.stringify({ username, game, roomCode, ...(game === 'journey' && variant ? { variant } : {}) }) }); }
-  async function readNotifications(ids = []) { const data = await api('/api/social/notifications/read', { method: 'POST', body: JSON.stringify({ ids }),keepalive:true }); state.dashboard = null; return data; }
+  async function readNotifications(ids = []) { dropInvites(ids); const data = await api('/api/social/notifications/read', { method: 'POST', body: JSON.stringify({ ids }),keepalive:true }); state.dashboard = null; return data; }
 
   function emit(type, detail) { events.dispatchEvent(new CustomEvent(type, { detail })); }
 
   // 33.6.0: every game that has rooms opens from an invitation — the challenge games (focus, cipher,
   // wordbomb, chaos) were missing here, so their invitations reached the phone and were dropped.
-  const GAME_LABELS = Object.freeze({ party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى' });
-  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
+  const GAME_LABELS = Object.freeze({ party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعبان والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى', ludo: 'لودو', tanks: 'معركة الدبابات', hockey: 'الهوكي', billiards: 'البلياردو', carrom: 'الكيرم', pegs: 'شطرنج الذاكرة', jewels: 'ماستر الجواهر' });
+  // 33.10.7: the newer table games (tanks … pegs) send their rooms too; their invitations were dropped here
+  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|ludo|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos|tanks|hockey|billiards|carrom|pegs|jewels)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
   const gameLabel = (game) => GAME_LABELS[game] || String(game || 'لعبة');
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
     if (!INVITE_PATH.test(notification.joinPath)) return;
     if (notification.id && seenInvites.has(String(notification.id))) return;
-    rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);
+    rememberInvite(notification.id);clearTimeout(inviteExpiryTimer);inviteStyle();trackInvite(notification);
     let wrap = document.querySelector('#bsSocialInvite');
     if (!wrap) {
       wrap = document.createElement('div');
@@ -162,11 +257,11 @@
     const join = document.createElement('a');
     join.className = 'bs-btn gold'; join.textContent = 'انضم الآن'; join.href = notification.joinPath;
     const close = document.createElement('button');
-    close.className = 'bs-btn'; close.textContent = 'لاحقًا'; close.type = 'button'; close.onclick = () => { wrap.remove(); if (notification.id) readNotifications([notification.id]).catch(() => {}); };
+    close.className = 'bs-btn'; close.textContent = 'لاحقًا'; close.type = 'button'; close.onclick = () => { wrap.remove(); };
     join.addEventListener('click', () => { if (notification.id) readNotifications([notification.id]).catch(() => {}); });
     actions.append(join, close); wrap.append(title, sub, actions);
     wrap.setAttribute('role','status');
-    inviteExpiryTimer=setTimeout(()=>wrap.remove(),Math.max(1,Math.min(300000,Number(notification.expiresAt)-Date.now())));
+    inviteExpiryTimer=setTimeout(()=>wrap.remove(),Math.max(1,Math.min(15000,Number(notification.expiresAt)-Date.now())));
   }
 
   function handleMessage(raw) {
@@ -179,8 +274,8 @@
     if (message.type === 'notification') {
       state.dashboard = null;
       const n = message.notification;
-      if (n?.type === 'game_invite') showIncomingInvite(n);
-      else if (n?.type === 'friend_request') toast(`👥 طلب صداقة من ${n.from?.displayName || n.from?.username || 'لاعب'}`);
+      if (n?.type === 'game_invite') { trackInvite(n); showIncomingInvite(n); }
+      else if (n?.type === 'friend_request') { toast(`👥 طلب صداقة من ${n.from?.displayName || n.from?.username || 'لاعب'}`); me(true).catch(() => {}); }
       else if (n?.type === 'friend_accepted') toast(`✅ تم قبول طلب الصداقة`);
       decorate({ unread: Number(document.querySelector('[data-social-badge]')?.textContent || 0) + 1 });
       emit('notification', n); return;
@@ -353,13 +448,14 @@
     recoveryCodes:password=>api('/api/social/recovery/codes',{method:'POST',body:JSON.stringify({password})}),recoveryStatus:()=>api('/api/social/recovery/status',{method:'POST',body:'{}'}),recover:body=>api('/api/social/recovery/reset',{method:'POST',body:JSON.stringify(body)}),
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
-    isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,
+    invites: () => openInvites(), isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,
     accountName: () => accountName(), gameLabel, setPhoto, reportPhoto, moderation,
   };
   window.BS_SOCIAL = apiPublic;
   decorate();
   // pages fill their name fields while they load; lock them again after that
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => decorate());
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { decorate(); renderInbox(); });
+  else renderInbox();
   if (token()) {
     startInbox();
     connectRealtime();

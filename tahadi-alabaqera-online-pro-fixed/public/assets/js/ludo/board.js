@@ -4,7 +4,7 @@
    the arrow into its own column and ends in its triangle in the middle. The whole board turns so the
    player holding the phone always has his yard at the bottom left, nearest to him; the pawns stay
    upright. Pawns hop square by square when they move, and a taken pawn flies home. */
-import { ludoGeometry, globalLudoPosition } from '../engines/ludo-engine.js?v=33.10.6-classic1';
+import { ludoGeometry, globalLudoPosition } from '../engines/ludo-engine.js?v=33.10.7-classic1';
 
 export const LUDO_COLORS = Object.freeze(['#ef3340', '#22b04b', '#1f7cf0', '#f7c51e']);
 export const LUDO_NAMES = Object.freeze(['الأحمر', 'الأخضر', 'الأزرق', 'الأصفر']);

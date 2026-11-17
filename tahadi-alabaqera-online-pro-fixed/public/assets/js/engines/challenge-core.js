@@ -1,4 +1,4 @@
-import {initUno,applyUno,advanceUno,unoView} from './uno-core.js?v=33.10.6-r4';
+import {initUno,applyUno,advanceUno,unoView} from './uno-core.js?v=33.10.7-r4';
 import {initWordHunt,applyWordHunt,advanceWordHunt,wordHuntBot,wordHuntView,wordHuntAlarm,upgradeWordHunt} from './wordbomb-core.js';
 import {raceSim,usePower,changeLane,raceResult} from './chaos-core.js';
 export {usePower as raceUsePower,changeLane as raceChangeLane};
