@@ -1,13 +1,14 @@
+import {pegsDieFace,pegsDiePalette} from './presentation.js?v=33.11.1';
 /* Tahdia 33.10.2 — «شطرنج الذاكرة»: the page. One controller for the three ways to play: online (the
    room keeps the colours and sends each step), against the computer, and friends on one phone. The
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.11.0';
-import { createPegsBoard } from './board.js?v=33.11.0';
-import { createTable } from '../board-table-v33.js?v=33.11.0-pegs2';
-import { guardPegs } from './guard.js?v=33.11.0';
+import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.11.1';
+import { createPegsBoard } from './board.js?v=33.11.1';
+import { createTable } from '../board-table-v33.js?v=33.11.1-pegs2';
+import { guardPegs } from './guard.js?v=33.11.1';
 
-import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.0';
+import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.1';
 const $ = (id) => document.getElementById(id);
 const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a', '#c09bff', '#ff995a'];
 const HEROES = ['robot', 'cyber', 'astronaut', 'samurai', 'viking'];
@@ -76,7 +77,7 @@ async function upgrade3d() {
   const ticket=++stageEpoch,large=stageLarge;
   if (params.has('flat')) return;
   try {
-    const mod = await import('./stage3d.js?v=33.11.0');
+    const mod = await import('./stage3d.js?v=33.11.1');
     if (!mod.webglAvailable()) return;
     const s3 = mod.createPegsStage3D({large});
     if(ticket!==stageEpoch){s3.dispose?.();return;}
@@ -263,8 +264,8 @@ function announceTurn() {
 const FACE_TURN = [[0, 0], [0, -90], [0, 180], [0, 90], [-90, 0], [90, 0]];
 const cssDie = { x: 0, y: 0 };
 function cssDieTo(c, quick = false) {
-  if(stageLarge){const label=$('pegsDieLabel');label.replaceChildren(gem(c));label.style.setProperty('--die-color',PEG_COLORS[c]?.hex||'#fff');}
-  const cube = $('pegsCube'), [tx, ty] = FACE_TURN[c] || [0, 0];
+  pegsDiePalette(c).forEach((color,i)=>{const side=$('pegsCube').querySelector('.s'+i);if(side){side.style.setProperty('--c',PEG_COLORS[color].hex);side.replaceChildren(gem(color));}});
+  const cube = $('pegsCube'), [tx, ty] = FACE_TURN[pegsDieFace(c)];
   const turns = quick ? 1 : 2, nx = Math.round((cssDie.x - tx) / 360 + turns + 0.5) * 360 + tx, ny = Math.round((cssDie.y - ty) / 360 + turns) * 360 + ty;
   cube.classList.remove('spin'); cube.classList.toggle('quick', quick);
   cssDie.x = nx; cssDie.y = ny; cube.style.transform = 'rotateX(' + nx + 'deg) rotateY(' + ny + 'deg)';
@@ -465,7 +466,7 @@ function configureBoard(state){
   const large=state.pegs.length>24;
   while(fx.length<state.pegs.length)fx.push({});fx.length=state.pegs.length;
   if(stageLarge!==large){stageLarge=large;stageEpoch++;if(stage!==flat)stage.dispose?.();stage=flat;flat.setLayout?.(large);$('pegsStage').classList.remove('is-3d');$('pegsHero').classList.remove('is-3d');$('pegsDie').hidden=false;upgrade3d();}
-  $('pegsGame').classList.toggle('pg-large',large);$('pegsGame').classList.toggle('pg-race',state.mode==='race');$('pegsDie').classList.toggle('pg-octadie',large);
+  $('pegsGame').classList.toggle('pg-large',large);$('pegsGame').classList.toggle('pg-race',state.mode==='race');
 }
 function begin(mode, state) {
   configureBoard(state);

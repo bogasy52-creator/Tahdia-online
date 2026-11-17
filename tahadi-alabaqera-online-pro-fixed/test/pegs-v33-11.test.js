@@ -1,3 +1,4 @@
+import * as presentation from '../public/assets/js/pegs/presentation.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createPegsGame,rollPegs,pickPegs,pegsHoles,PEG_COLORS} from '../public/assets/js/engines/pegs-engine.js';
 import {createPegsRace,playPegsRace,publicPegsRace,advancePegsRace} from '../public/assets/js/engines/pegs-race-engine.js';
@@ -67,7 +68,7 @@ async function page(){
  let options,drawn;const h=await createDOM('pegs.html',{requestAnimationFrame:()=>1,cancelAnimationFrame(){},location:{pathname:'/pegs',search:'?debug&flat',href:'https://game.test/pegs?debug&flat'},Event:class{constructor(type){this.type=type}}});
  h.doc.createTextNode=v=>{const n=new MiniElement('#text');n.textContent=v;return n;};
  const board={draw:v=>{drawn=v;},resize(){},setLayout(){},get size(){return {W:390,H:570,cx:195,cy:285,R:170,pawn:55};},middle:()=>({x:100,y:100}),foot:()=>({x:100,y:100}),toBoard:()=>({x:0,y:0}),hit:()=>0};
- await h.runFile('assets/js/pegs/main.js',{...engine,...race,createPegsBoard:()=>board,guardPegs:()=>{},createTable:o=>{options=o;return {busy:false,send:()=>true,leave(){},menu:{}};}});
+ await h.runFile('assets/js/pegs/main.js',{...engine,...race,...presentation,createPegsBoard:()=>board,guardPegs:()=>{},createTable:o=>{options=o;return {busy:false,send:()=>true,leave(){},menu:{}};}});
  return {...h,options,get drawn(){return drawn;}};
 }
 function snapshot(state,patch={}){return {code:'051234',game:'pegs',status:'playing',version:state.seq+1,startedAt:100,serverNow:Date.now(),clientReceivedAt:Date.now(),me:{index:0},players:state.players.map((p,index)=>({index,name:p.name})),state,...patch};}
@@ -88,4 +89,14 @@ test('the real page controller supports a 48-piece six-person board and eight sh
  const h=await page(),s=createPegsGame(names,{large:true,showMs:0});await h.options.apply(snapshot(s,{resync:true}),{animate:false});
  assert.equal(h.context.BS_PEGS.fx.length,48);assert.equal(h.doc.getElementById('players').children.length,6);assert.equal(h.doc.getElementById('pegsGame').classList.contains('pg-large'),true);
  assert.equal(h.doc.getElementById('pegsPeekNotice').closest('#status')?.id,'status');
+});
+test('the fallback cube visibly shows orange and purple after resuming an eight-color result',async()=>{
+ const h=await page();
+ for(const color of [6,7,2]){
+  const base=createPegsGame(names,{large:true,showMs:0,first:0}),s=rollPegs(base,0,()=>((color+.01)/8));
+  h.options.onResync();await h.options.apply(snapshot(s,{resync:true}),{animate:false});
+  const face=h.doc.getElementById('pegsCube').querySelector('.s'+presentation.pegsDieFace(color));
+  assert.equal(face.style['--c'],PEG_COLORS[color].hex);assert.equal(face.children[0].getAttribute('aria-label'),PEG_COLORS[color].name);
+  assert.equal(h.doc.getElementById('pegsDie').classList.contains('pg-octadie'),false);
+ }
 });

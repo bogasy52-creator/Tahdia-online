@@ -5,8 +5,9 @@
    It takes the same instructions as the flat board (board.js): per piece {lift, tip, color, glow, ring,
    mark, at, dx, scale, alpha}, so the page plays every step the same way on either. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { PEG_COLORS, PEG_HOLES, pegsHoles } from '../engines/pegs-engine.js?v=33.11.0';
+import { PEG_COLORS, PEG_HOLES, pegsHoles } from '../engines/pegs-engine.js?v=33.11.1';
 
+import {pegsCameraElevation,pegsPawnScale,pegsDieFace,pegsDiePalette} from './presentation.js?v=33.11.1';
 import {nearestPegsTarget} from './targets.js';
 const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -17,7 +18,7 @@ const DIE_AT = PLAY_DIE.clone();
 // a symbol under each colour as well, for players who tell colours apart with difficulty
 export const PEG_SYMBOLS = Object.freeze(['triangle', 'star', 'plus', 'diamond', 'circle', 'square', 'hexagon', 'moon']);
 
-import {drawSymbol} from './symbols.js?v=33.11.0';
+import {drawSymbol} from './symbols.js?v=33.11.1';
 export {drawSymbol};
 
 function canvasTexture(size, paint) {
@@ -25,11 +26,11 @@ function canvasTexture(size, paint) {
   const g = c.getContext('2d'); paint(g, size);
   const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
 }
-function woodTexture(holes=PEG_HOLES,stretch=1) {
+function woodTexture(holes=PEG_HOLES,stretch=1,holeR=HOLE_R) {
   return canvasTexture(1024, (g, n) => {
     const c = n / 2;
     const base = g.createRadialGradient(c * 0.8, c * 0.7, n * 0.05, c, c, c);
-    base.addColorStop(0, '#9a6236'); base.addColorStop(0.6, '#7a4523'); base.addColorStop(1, '#4e2810');
+    base.addColorStop(0, '#956037'); base.addColorStop(0.6, '#704326'); base.addColorStop(1, '#3e2518');
     g.fillStyle = base; g.fillRect(0, 0, n, n);
     // the rings of the tree, a little off centre, and fine grain across them
     for (let i = 0; i < 70; i++) {
@@ -42,7 +43,7 @@ function woodTexture(holes=PEG_HOLES,stretch=1) {
     g.globalAlpha = 1;
     // the holes: a dark well with light on its far wall
     for (const h of holes) {
-      const x = c + h.x * c, y = c + h.y / stretch * c, r = HOLE_R * c;
+      const x = c + h.x * c, y = c + h.y / stretch * c, r = holeR * c;
       const well = g.createRadialGradient(x, y + r * 0.25, r * 0.15, x, y, r);
       well.addColorStop(0, '#0b0502'); well.addColorStop(0.75, '#1e0f06'); well.addColorStop(1, '#3a1d0b');
       g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = well; g.fill();
@@ -106,8 +107,8 @@ export function webglAvailable() {
 }
 
 export function createPegsStage3D({large=false}={}) {
-  const holes=pegsHoles(large),stretch=large?1.42:1,colors=PEG_COLORS.slice(0,large?8:6);
-  const playDie=new T.Vector3(0,.52,large?-1.66:-1.16);
+  const holes=pegsHoles(large),stretch=1,pawnScale=pegsPawnScale(large),holeR=large?.076:HOLE_R,colors=PEG_COLORS.slice(0,large?8:6);
+  const playDie=PLAY_DIE.clone();
   const renderer = new T.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = T.SRGBColorSpace;
@@ -139,16 +140,16 @@ export function createPegsStage3D({large=false}={}) {
   ground.rotation.x = -Math.PI / 2; ground.position.y = -0.1; ground.receiveShadow = true; world.add(ground);
 
   // the board
-  const wood = woodTexture(holes,stretch);
+  const wood = woodTexture(holes,stretch,holeR);
   const topMat = new T.MeshPhysicalMaterial({ map: wood, roughness: 0.38, clearcoat: 0.75, clearcoatRoughness: 0.18 });
-  const sideMat = new T.MeshPhysicalMaterial({ color: 0x4a2611, roughness: 0.45, clearcoat: 0.6, clearcoatRoughness: 0.25 });
+  const sideMat = new T.MeshPhysicalMaterial({ color: 0x382017, roughness: 0.38, clearcoat: 0.6, clearcoatRoughness: 0.25 });
   const board = new T.Mesh(new T.CylinderGeometry(1, 1.02, 0.09, 128, 1), [sideMat, topMat, sideMat]);
   board.scale.z=stretch;board.position.y = -0.045; board.receiveShadow = true; board.castShadow = true; world.add(board);
-  const gold = new T.MeshStandardMaterial({ color: 0xf2c25a, metalness: 1, roughness: 0.22 });
+  const gold = new T.MeshStandardMaterial({ color: 0xd9b66c, metalness: 1, roughness: 0.26 });
   for (const [r, tube] of [[0.965, 0.008], [0.91, 0.005], [0.115, 0.007]]) { const t = new T.Mesh(new T.TorusGeometry(r, tube, 8, 160), gold); t.scale.y=stretch;t.rotation.x = Math.PI / 2; t.position.y = 0.001; t.receiveShadow = true; world.add(t); }
   const lip = new T.Mesh(new T.TorusGeometry(1.004, 0.012, 10, 160), gold); lip.scale.y=stretch;lip.rotation.x = Math.PI / 2; lip.position.y = -0.002; world.add(lip);
   // a brass ring round each hole
-  const rings = new T.InstancedMesh(new T.TorusGeometry(HOLE_R + 0.004, 0.0055, 8, 40), gold, holes.length);
+  const rings = new T.InstancedMesh(new T.TorusGeometry(holeR + 0.004, 0.0055, 8, 40), gold, holes.length);
   const m4 = new T.Matrix4(), q4 = new T.Quaternion().setFromEuler(new T.Euler(Math.PI / 2, 0, 0));
   holes.forEach((h, i) => rings.setMatrixAt(i, m4.compose(new T.Vector3(h.x, 0.002, h.y), q4, new T.Vector3(1, 1, 1))));
   rings.receiveShadow = true; world.add(rings);
@@ -175,7 +176,7 @@ export function createPegsStage3D({large=false}={}) {
     const root = new T.Group(); root.position.set(h.x, 0, h.y); world.add(root);
     const pivot = new T.Group(); pivot.position.y = PIVOT; root.add(pivot);
     const body = new T.Group(); body.position.y = -PIVOT; pivot.add(body);
-    const mat = new T.MeshPhysicalMaterial({ color: 0xf0e2c8, vertexColors: true, roughness: 0.34, clearcoat: 0.7, clearcoatRoughness: 0.14, iridescence: 0.18, iridescenceIOR: 1.35, transparent: false });
+    const mat = new T.MeshPhysicalMaterial({ color: 0xf4ead6, vertexColors: true, roughness: 0.3, clearcoat: 0.7, clearcoatRoughness: 0.14, iridescence: 0.18, iridescenceIOR: 1.35, transparent: false });
     const mesh = new T.Mesh(lathe, mat); mesh.castShadow = true; mesh.receiveShadow = true; body.add(mesh);
     const collar = new T.Mesh(collarGeo, gold); collar.rotation.x = Math.PI / 2; collar.position.y = 0.157 * SCALE; collar.castShadow = true; body.add(collar);
     const band = new T.Mesh(bandGeo, gold); band.rotation.x = Math.PI / 2; band.position.y = 0.024 * SCALE; body.add(band);
@@ -184,7 +185,7 @@ export function createPegsStage3D({large=false}={}) {
     const foot = new T.Mesh(footGeo, footMat); foot.rotation.x = Math.PI / 2; foot.position.y = -0.0015; body.add(foot);
     const hit = new T.Mesh(hitGeo, new T.MeshBasicMaterial({ visible: false })); hit.position.y = PAWN_H / 2; hit.userData.peg = i; root.add(hit);
     const glow = new T.Sprite(new T.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending })); glow.scale.set(0.62, 0.62, 1); glow.position.y = PIVOT; root.add(glow);
-    const ring = new T.Mesh(new T.RingGeometry(HOLE_R + 0.012, HOLE_R + 0.034, 48), new T.MeshBasicMaterial({ color: 0xffc94d, transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide }));
+    const ring = new T.Mesh(new T.RingGeometry(holeR + 0.012, holeR + 0.034, 48), new T.MeshBasicMaterial({ color: 0xffc94d, transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide }));
     ring.rotation.x = -Math.PI / 2; ring.position.set(h.x, 0.004, h.y); world.add(ring);
     const mark = new T.Sprite(new T.SpriteMaterial({ map: markTex, transparent: true, opacity: 0, depthWrite: false, depthTest: false })); mark.scale.set(0.15, 0.15, 1); mark.position.y = PAWN_H + 0.16; root.add(mark);
     return { root, pivot, mat, footMat, glow, ring, mark, hit, shownColor: undefined, home: new T.Vector3(h.x, 0, h.y) };
@@ -193,22 +194,17 @@ export function createPegsStage3D({large=false}={}) {
 
   // the die
   const dieMats = colors.map((_, c) => new T.MeshPhysicalMaterial({ map: dieFaceTexture(c), roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.08 }));
-  let dieGeometry=new T.RoundedBoxGeometry(DIE,DIE,DIE,5,.04),octaNormals=[];
-  if(large){
-    const positions=[],uv=[];dieGeometry=new T.BufferGeometry();
-    for(let side=0;side<2;side++)for(let k=0;k<4;k++){
-      const a=k*TAU/4,b=(k+1)*TAU/4,top=[0,(side?-1:1)*DIE*.72,0],v=[Math.cos(a)*DIE*.72,0,Math.sin(a)*DIE*.72],w=[Math.cos(b)*DIE*.72,0,Math.sin(b)*DIE*.72];
-      const tri=side?[top,v,w]:[top,w,v];positions.push(...tri.flat());uv.push(.5,1,0,0,1,0);dieGeometry.addGroup((side*4+k)*3,3,side*4+k);
-      octaNormals.push(new T.Vector3((v[0]+w[0])/3,top[1]/3,(v[2]+w[2])/3).normalize());
-    }
-    dieGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(positions),3));dieGeometry.setAttribute('uv',new T.BufferAttribute(new Float32Array(uv),2));dieGeometry.computeVertexNormals();
-  }
-  const die = new T.Mesh(dieGeometry, dieMats);
+  const dieGeometry=new T.RoundedBoxGeometry(DIE,DIE,DIE,5,.04);
+  const die = new T.Mesh(dieGeometry, dieMats.slice(0,6));
   die.position.copy(DIE_AT); scene.add(die);
   const dieHalo = new T.Sprite(new T.SpriteMaterial({ map: glowTex, color: 0xffc94d, transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending })); dieHalo.scale.set(0.7, 0.7, 1); dieHalo.position.copy(DIE_AT); scene.add(dieHalo);
-  const NORMALS = large?octaNormals:[new T.Vector3(1, 0, 0), new T.Vector3(-1, 0, 0), new T.Vector3(0, 1, 0), new T.Vector3(0, -1, 0), new T.Vector3(0, 0, 1), new T.Vector3(0, 0, -1)];
+  const NORMALS = [new T.Vector3(1, 0, 0), new T.Vector3(-1, 0, 0), new T.Vector3(0, 1, 0), new T.Vector3(0, -1, 0), new T.Vector3(0, 0, 1), new T.Vector3(0, 0, -1)];
   const dieState = { anim: null, spin: false, ready: false, color: null, light: 0 };
+  let dieEpoch=0;
+  function cancelDie(){dieEpoch++;const old=dieState.anim;dieState.anim=null;dieState.spin=false;old?.done();}
+  function paintDieFace(c){die.material=pegsDiePalette(c).map(i=>dieMats[i]);}
   function faceQuat(c) {
+    c=pegsDieFace(c);
     const toCam = camera.position.clone().sub(DIE_AT).normalize();
     const q = new T.Quaternion().setFromUnitVectors(NORMALS[c], toCam);
     // keep the face upright: turn about the view axis so the die's top edge stays level
@@ -230,7 +226,7 @@ export function createPegsStage3D({large=false}={}) {
   let showcase = false;
   function frame() {
     const aspect = W / H;
-    const elev = (showcase ? 38 : aspect < 0.75 ? 70 : aspect < 1.1 ? 68 : 65) * Math.PI / 180;
+    const elev = pegsCameraElevation(aspect,showcase) * Math.PI / 180;
     camera.aspect = aspect; camera.clearViewOffset();
     const target = new T.Vector3(0, 0.05, 0), dir = new T.Vector3(0, Math.sin(elev), Math.cos(elev));
     const fit = (d) => {
@@ -277,7 +273,7 @@ export function createPegsStage3D({large=false}={}) {
     const lift = (f.lift || 0) + (hover ? 0.12 + Math.sin(t / 180) * 0.02 : 0);
     if (f.at) p.root.position.set(f.at.x, (f.at.h || 0), f.at.y); else p.root.position.copy(p.home);
     p.root.position.y += lift * LIFT; p.root.position.x += (f.dx || 0) * 0.0035;
-    const s = f.scale ?? 1; p.root.scale.setScalar(s);
+    const s = pawnScale*(f.scale ?? 1); p.root.scale.setScalar(s);
     // turning over: the foot comes round toward the camera
     const elev = Math.atan2(camera.position.y, Math.hypot(camera.position.x, camera.position.z));
     p.pivot.rotation.x = -clamp(f.tip || 0) * (Math.PI / 2 + elev);
@@ -394,31 +390,32 @@ export function createPegsStage3D({large=false}={}) {
     if (!ray.ray.intersectPlane(plane, out)) { out.copy(ray.ray.origin).addScaledVector(ray.ray.direction, 3); }
     return { x: out.x, y: out.z, h };
   }
-  function hit(x,y,pegs){return nearestPegsTarget(x,y,holes.map(h=>project(new T.Vector3(h.x,PAWN_H*.82,h.y))),pegs,28);}
+  function hit(x,y,pegs){return nearestPegsTarget(x,y,holes.map(h=>project(new T.Vector3(h.x,PAWN_H*.82*pawnScale,h.y))),pegs,28);}
 
   function hitDie(x, y) { ray.setFromCamera(toNdc(x, y), camera); return ray.intersectObject(die, false).length > 0; }
 
   const api = {
     is3d: true, canvas, overlay, attach, resize, draw, hit, hitDie, toBoard,
-    dispose(){cancelAnimationFrame(showRaf);scene.traverse(n=>{n.geometry?.dispose?.();for(const m of Array.isArray(n.material)?n.material:[n.material]){m?.map?.dispose?.();m?.dispose?.();}});scene.environment?.dispose?.();pmrem.dispose();renderer.dispose();canvas.remove();overlay.remove();},
     foot: (i) => { const p = project(new T.Vector3(holes[i].x, 0, holes[i].y)); return { ...p, s: 1, wy: holes[i].y }; },
-    middle: (i) => project(new T.Vector3(holes[i].x, PAWN_H*.82, holes[i].y)),
+    middle: (i) => project(new T.Vector3(holes[i].x, PAWN_H*.82*pawnScale, holes[i].y)),
     get size() { const c = project(new T.Vector3(0, 0, 0)), top = project(new T.Vector3(0, PAWN_H, 0)); return { W, H, cx: c.x, cy: c.y, R: Math.abs(project(new T.Vector3(1, 0, 0)).x - c.x), pawn: Math.abs(c.y - top.y) }; },
     die: {
       /** Tumbles onto each face in turn (a colour that is gone makes it roll again). */
       async roll(faces, quiet = false) {
-        dieState.spin = false; dieState.color = null;
+        cancelDie();const epoch=dieEpoch;dieState.color = null;
         for (let k = 0; k < faces.length; k++) {
+          paintDieFace(faces[k]);
           const to = faceQuat(faces[k]), axis = new T.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
           await new Promise((done) => { dieState.anim = { from: die.quaternion.clone(), to, axis, turns: k ? 1 : 2, height: k ? 0.12 : 0.28, start: performance.now(), ms: k ? 520 : 1000, done }; });
+          if(epoch!==dieEpoch)return;
           if (!quiet) api.onLand?.(faces[k], k === faces.length - 1);
         }
         dieState.color = faces[faces.length - 1];
       },
-      spin() { dieState.spin = true; dieState.color = null; },
-      stop() { dieState.spin = false; },
-      show(c) { dieState.spin = false; dieState.anim = null; die.quaternion.copy(faceQuat(c)); die.position.copy(DIE_AT); dieState.color = c; },
-      clear() { dieState.color = null; },
+      spin() { cancelDie();dieState.spin = true; dieState.color = null; },
+      stop() { cancelDie(); },
+      show(c) { cancelDie();paintDieFace(c);dieState.spin = false; dieState.anim = null; die.quaternion.copy(faceQuat(c)); die.position.copy(DIE_AT); dieState.color = c; },
+      clear() { cancelDie();dieState.color = null; },
       ready(on) { dieState.ready = Boolean(on); },
       get point() { return project(DIE_AT); },
     },
@@ -430,7 +427,12 @@ export function createPegsStage3D({large=false}={}) {
     get parts() { return { T, camera, scene, renderer, world, die, pawns, reveal, dieGlow, key }; },
     get lost() { return lost; },
     onLost: null, onLand: null,
-    dispose() { stopShowcase(); ro?.disconnect(); renderer.dispose(); },
+    dispose() {
+      cancelDie();stopShowcase();ro?.disconnect();const geometries=new Set(),materials=new Set(),textures=new Set([wood,glowTex,markTex,unknownTex,...footTex]);
+      scene.traverse(n=>{if(n.geometry)geometries.add(n.geometry);for(const m of Array.isArray(n.material)?n.material:[n.material])if(m)materials.add(m);});
+      for(const m of dieMats)materials.add(m);for(const m of materials){if(m.map)textures.add(m.map);m.dispose();}
+      for(const g of geometries)g.dispose();for(const t of textures)t.dispose();scene.environment?.dispose();pmrem.dispose();renderer.dispose();canvas.remove();overlay.remove();
+    },
   };
   return api;
 }

@@ -1,13 +1,13 @@
-import {drawSymbol} from './symbols.js?v=33.11.0';
-import {PEG_SYMBOLS} from '../engines/pegs-engine.js?v=33.11.0';
+import {drawSymbol} from './symbols.js?v=33.11.1';
+import {PEG_SYMBOLS} from '../engines/pegs-engine.js?v=33.11.1';
 /* Tahdia 33.10.1 — «شطرنج الذاكرة»: the round wooden board drawn on a canvas, seen from the table.
    Twenty-four beech pawns stand in their holes; a pawn that is lifted and tipped shows the colour
    painted under its foot. The page tells each pawn what to do (lift, tip, shake, fly) and this file
    only draws: it never knows a colour it was not told to show. */
-import { PEG_COLORS, PEG_HOLES, pegsHoles } from '../engines/pegs-engine.js?v=33.11.0';
+import { PEG_COLORS, PEG_HOLES, pegsHoles } from '../engines/pegs-engine.js?v=33.11.1';
 
 import {nearestPegsTarget} from './targets.js';
-let TILT = 0.9; // how flat the board looks (1 = seen from straight above); set by the room the board has
+let TILT = 0.62; // how flat the board looks (1 = seen from straight above); set by the room the board has
 const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 
@@ -84,7 +84,7 @@ export function createPegsBoard(canvas) {
     g.beginPath(); g.ellipse(cx, cy + thick, R, R * TILT * stretch, 0, 0, Math.PI); g.lineTo(cx - R, cy); g.ellipse(cx, cy, R, R * TILT * stretch, 0, Math.PI, 0, true); g.closePath(); g.fillStyle = side; g.fill();
     // the top: walnut with the rings of the tree
     const top = g.createRadialGradient(cx - R * 0.25, cy - R * TILT * stretch * 0.4, R * 0.1, cx, cy, R * 1.05);
-    top.addColorStop(0, '#b47a45'); top.addColorStop(0.55, '#8d5730'); top.addColorStop(1, '#5e3418');
+    top.addColorStop(0, '#a87245'); top.addColorStop(0.55, '#7d4c2c'); top.addColorStop(1, '#4c2d1e');
     g.beginPath(); g.ellipse(cx, cy, R, R * TILT * stretch, 0, 0, TAU); g.fillStyle = top; g.fill();
     g.save(); g.beginPath(); g.ellipse(cx, cy, R, R * TILT * stretch, 0, 0, TAU); g.clip();
     for (let i = 1; i < 26; i++) {
@@ -125,10 +125,10 @@ export function createPegsBoard(canvas) {
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
     // a tall stage looks more from above (the pawns stand apart and are easier to tap), a wide one from the side
     const Rw = W * 0.47;
-    TILT = clamp((H * 0.96 / Rw - 0.54) / 1.8, 0.88, 0.96);
+    TILT = clamp((H * 0.96 / Rw - 0.54) / 1.8, 0.6, 0.76);
     R = Math.min(Rw, (H * 0.96) / (1.8 * TILT * stretch + 0.54)); cx = W / 2;
     const top = (H - (1.8 * TILT * stretch + 0.54) * R) / 2; cy = top + (0.8 * TILT * stretch + 0.44) * R;
-    pawnPx = R * 0.32; sprite = pawnSprite(pawnPx, ratio); boardLayer = paintBoard();
+    pawnPx = R * (holes.length===48?.28:.36); sprite = pawnSprite(pawnPx, ratio); boardLayer = paintBoard();
   }
 
   /** Where pawn i stands (its foot), with any travel the page gave it. */
@@ -226,7 +226,7 @@ export function createPegsBoard(canvas) {
 
   return {
     resize, draw, hit,
-    setLayout(large){holes=pegsHoles(large);stretch=large?1.42:1;resize(W,H,ratio);},
+    setLayout(large){holes=pegsHoles(large);stretch=1;resize(W,H,ratio);},
     /** Screen point (css px) of pawn i's foot, and its middle. */
     foot: (i) => footOf(i), middle: (i) => { const f = footOf(i); return { x: f.x, y: f.y - pawnPx * 0.78 * f.s }; },
     /** The board point under a screen point (to fly a pawn to a player's tray). */

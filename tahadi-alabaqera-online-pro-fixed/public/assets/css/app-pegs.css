@@ -853,12 +853,15 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
 
 /* assets/css/pegs-v33-11.css */
-/* Larger touch spacing, independent race status and a notice above the board. */
-.pegs-page .pg-game{position:absolute;overflow-y:auto;overscroll-behavior:contain;grid-template-rows:auto auto auto minmax(420px,1fr) auto;max-width:700px}
-.pegs-page .pg-game.pg-large{grid-template-rows:auto auto auto minmax(570px,1fr) auto}
-.pegs-page .pg-stage{min-height:420px}
-.pegs-page .pg-large .pg-stage{min-height:570px}
-.pegs-page .pg-dock{position:sticky;bottom:0;z-index:40;background:linear-gradient(180deg,#14163aef,#10122c);padding:10px 4px max(12px,env(safe-area-inset-bottom));border-radius:20px 20px 0 0}
+/* The familiar round table: restrained gold, clear player cards and a fixed action dock. */
+.pegs-page .pg-game{position:fixed;overflow:hidden;grid-template-rows:auto auto auto minmax(0,1fr) auto;max-width:660px;gap:8px}
+.pegs-page .pg-stage{min-height:0;isolation:isolate}
+.pegs-page .pg-dock{position:relative;z-index:40;padding:10px;background:linear-gradient(160deg,#292b55,#171a38);border:1px solid #e9c77938;border-radius:24px;box-shadow:0 -4px 24px #0003,inset 0 1px #ffffff0d}
+.pegs-page .pg-players[data-n="2"]{gap:36px}
+.pegs-page .pg-seat{border-radius:18px;background:linear-gradient(160deg,#2a2d56,#171a38);box-shadow:0 8px 20px #0003,inset 0 1px #ffffff09}
+.pegs-page .pg-seat.active{border-color:var(--seat);box-shadow:0 0 0 2px color-mix(in srgb,var(--seat) 20%,transparent),0 8px 22px #0005}
+.pegs-page .pg-tray{gap:3px}
+.pegs-page .pg-tray i{width:9px;height:9px}
 .pegs-page .pg-status{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;min-height:38px;height:auto;overflow:visible}
 .pegs-page .pg-network,.pegs-page .pg-peek-notice{position:static;width:100%;margin:0;padding:7px 12px;border-radius:10px;font-size:12px;line-height:1.6;pointer-events:none}
 .pegs-page .pg-network{color:#ffe1dd;background:#7b2c3480;border:1px solid #f27777}
@@ -875,13 +878,13 @@ body:is(.game-zahra,.game-jackaroo) .rx-fab{bottom:-10px;inset-inline-end:-6px}
 .pg-team,.pg-race-score{font-size:10px;color:#d3e6ff;white-space:nowrap;padding:1px 5px;border-radius:7px;background:#101634}
 .pg-race-clock{font-variant-numeric:tabular-nums;border:1px solid #f9d27d;background:#302d45;color:#ffe4a5;border-radius:20px;padding:2px 12px;font-size:16px}
 .pg-die-label{display:none}
-.pg-octadie .pg-die-tilt{display:none}
-.pg-octadie .pg-die-label{display:grid;place-items:center;position:absolute;inset:8px;background:linear-gradient(140deg,#fff7d1,var(--die-color,#be9ffa) 48%,#413451);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);filter:drop-shadow(0 4px 3px #0008)}
-.pg-octadie .pg-die-label .pg-gem{border:0;background:none;box-shadow:none;width:25px;height:25px}
-.pg-octadie .pg-die-label .pg-gem svg{width:21px;height:21px}
-.pg-octadie .pg-die-label:after{content:'';position:absolute;inset:0;background:linear-gradient(25deg,#0002 50%,#fff2 50%);pointer-events:none}
+.pegs-page .pg-side{display:grid;place-items:center}
+.pegs-page .pg-side .pg-gem{background:none;box-shadow:none;width:30px;height:30px;margin:0;border:0}
+.pegs-page .pg-side .pg-gem svg{width:26px;height:26px;filter:drop-shadow(0 1px 1px #0005)}
 .pegs-page .gm33-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .pegs-page .gm33-modes button:last-child{grid-column:1/-1}
 .pegs-page .gm33-seat-row{flex-wrap:wrap}
 @media(max-width:390px){.pegs-page .pg-game{padding-inline:6px}.pegs-page .pg-players[data-n="5"] .pg-seat,.pegs-page .pg-players[data-n="6"] .pg-seat{grid-template-columns:28px minmax(0,1fr) auto;gap:2px 4px}.pegs-page .pg-players[data-n="5"] .pg-avatar,.pegs-page .pg-players[data-n="6"] .pg-avatar{width:28px;height:28px}.pegs-page .pg-seat-name{font-size:10px}}
 @media print{.pegs-page .pg-stage,.pegs-page .pg-stage *{visibility:hidden!important}}
+
+@media(max-height:700px){.pegs-page .pg-game{gap:5px}.pegs-page .pg-seat{padding:5px}.pegs-page .pg-avatar{width:38px;height:38px}.pegs-page .pg-dock{padding:7px}.pegs-page .pg-action{min-height:54px}.pegs-page .pg-roll,.pegs-page .pg-target{min-height:52px}.pegs-page .pg-status{min-height:30px;font-size:13px}}

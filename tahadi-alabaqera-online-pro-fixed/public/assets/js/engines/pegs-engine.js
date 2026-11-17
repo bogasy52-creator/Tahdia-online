@@ -16,10 +16,11 @@ export const PEG_COLORS = Object.freeze([
   { id: 'orange', name: 'برتقالي', hex: '#ff832b', dark: '#a23e0d' },
   { id: 'purple', name: 'بنفسجي', hex: '#a271f4', dark: '#5427a0' },
 ]);
-/** Where the holes are on a board of radius 1: twelve round the edge, eight inside them, four in the middle. */
-export const pegsHoles=(large=false)=>large
-  ? Array.from({length:48},(_,i)=>Object.freeze({x:((i%6)-2.5)*.27,y:(Math.floor(i/6)-3.5)*.265}))
-  : [4,5,6,5,4].flatMap((n,row)=>Array.from({length:n},(_,col)=>Object.freeze({x:(col-(n-1)/2)*.29,y:(row-2)*.31})));
+/** Concentric rings on the original round table; the larger set adds a ring of pieces. */
+export function pegsHoles(large=false){
+ const rings=large?[[20,.85,0],[16,.59,Math.PI/16],[12,.32,0]]:[[12,.8,0],[8,.52,Math.PI/8],[4,.24,Math.PI/4]];
+ return rings.flatMap(([n,r,offset])=>Array.from({length:n},(_,i)=>{const a=offset+i*Math.PI*2/n-Math.PI/2;return Object.freeze({x:Math.cos(a)*r,y:Math.sin(a)*r});}));
+}
 export const PEG_HOLES=Object.freeze(pegsHoles());
 export const PEG_SYMBOLS=Object.freeze(['triangle','star','plus','diamond','circle','square','hexagon','moon']);
 export const PEG_VARIANTS=Object.freeze(['classic','large','teams','race','race-large']);
