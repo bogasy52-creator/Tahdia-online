@@ -7,7 +7,7 @@
   const doc = document, fmt = new Intl.NumberFormat('en-US');
   const node = (tag, cls, text) => { const el = doc.createElement(tag); if (cls) el.className = cls; if (text != null) el.textContent = text; return el; };
   const css = (href) => { if (doc.querySelector('link[href^="' + href.split('?')[0] + '"]')) return; const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = href; doc.head?.appendChild(l); };
-  css('/assets/css/profile-pro-v33-9-4.css?v=33.9.10');
+  css('/assets/css/profile-pro-v33-9-4.css?v=33.11.5');
 
   // ------------------------------------------------------------ pictures
   // the same list the server accepts: hero faces (h-) and cartoon girls and friends (g-)
@@ -26,6 +26,7 @@
     box.append(letter);
     const src = photoUrl(username, photo) || fallback;
     if (src) { const img = node('img'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy'; img.onerror = () => { if (fallback && img.src.indexOf(fallback) < 0) img.src = fallback; else img.remove(); }; img.src = src; box.append(img); }
+    if(self)window.BS_LEGEND_FRAMES?.decorateAvatar(box,window.BS_CAREER?.get?.()?.equipped?.frame);
     return box;
   }
 
@@ -220,6 +221,7 @@
       const copy = node('span', 'bs-pb-copy');
       copy.append(node('b', '', me.name), node('span', '', 'المستوى ' + L.level + ' · ' + L.tier));
       const bar = node('i', 'bs-pb-xp'); bar.style.setProperty('--x', L.pct + '%'); bar.style.setProperty('--tier', L.color); copy.append(bar);
+      window.BS_LEGEND_FRAMES?.decorateName(copy.querySelector('b'),window.BS_CAREER?.get?.()?.equipped?.frame);
       brand.replaceChildren(pic, copy);
       if (!brand.dataset.pb) { brand.dataset.pb = '1'; brand.addEventListener('click', (e) => { e.preventDefault(); openProfile(); }); }
     }
@@ -232,6 +234,7 @@
       const pic = avatar({ username: me.username, photo: me.photo, name: me.name, fallback: me.hero ? (window.BS_CAREER_CORE?.heroFace?.(me.hero) || '') : '', self: true }, 'bs-avatar xl');
       const side = node('div', 'bs-pp-side');
       const nm = node('div', 'bs-pp-name'); nm.append(node('b', '', me.name)); if (me.username) nm.append(node('small', '', '@' + me.username));
+      window.BS_LEGEND_FRAMES?.decorateName(nm.querySelector('b'),window.BS_CAREER?.get?.()?.equipped?.frame);
       side.append(nm, levelBar(card));
       top.append(pic, side);
       const stats = node('div', 'bs-pp-stats');

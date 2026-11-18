@@ -95,7 +95,7 @@ function crossLayout(seats){
   return {kind:'cross',seats,c,R0,C,track,lanes,gates,finish,yards,bases,angle};
 }
 const layouts=new Map();
-function layoutFor(game,seats,arm=13){const key=game+seats+':'+arm;if(!layouts.has(key))layouts.set(key,game==='jackaroo'?(seats===4?jackCrossLayout(arm):starLayout(seats,arm)):crossLayout(seats));return layouts.get(key);}
+function layoutFor(game,seats,arm=13){const key=game+seats+':'+arm;if(!layouts.has(key))layouts.set(key,game==='jackaroo'?(seats===4?jackCrossLayout(arm):jackSixLayout(arm)):crossLayout(seats));return layouts.get(key);}
 function rawPoint(state,seat,index,progress,game){
   const g=boardGeometry(state),L=layoutFor(game,g.seats,g.arm);
   if(progress<0)return L.bases[seat][index%4];
@@ -439,6 +439,17 @@ function jackCrossLayout(arm){
     finish:[0,1,2,3].map(s=>place({x:0,y:CROSS.cup},s)),
     bases:[0,1,2,3].map(s=>[[-1,-1],[1,-1],[-1,1],[1,1]].map(([i,j])=>place({x:yx+i*g,y:yy+j*g},s)))};
 }
+function jackSixLayout(arm){
+ const L=starLayout(6,arm);L.hole*=.87;L.kind='cross-six';
+ const guides=L.track.map((p,i)=>{if(i%arm===0)return null;const before=L.track[(i-1+L.track.length)%L.track.length],after=L.track[(i+1)%L.track.length];let x=after.y-before.y,y=before.x-after.x;if(x*(p.x-100)+y*(p.y-100)<0){x=-x;y=-y;}const length=Math.hypot(x,y)||1;return {x:x/length,y:y/length};});
+ L.labels=L.track.map((p,i)=>guides[i]?{x:p.x+guides[i].x*(L.hole+2.5),y:p.y+guides[i].y*(L.hole+2.5),num:i%arm}:null);
+ // Spread the numbers around tight bends; the same clearance survives every viewer rotation.
+ const clearance=(p,i)=>{let value=Infinity;L.labels.forEach((q,j)=>{if(q&&j!==i)value=Math.min(value,Math.hypot(p.x-q.x,p.y-q.y)/5.1);});L.track.forEach((q,j)=>{value=Math.min(value,Math.hypot(p.x-q.x,p.y-q.y)/(L.hole*(j%arm===0?1.2:1)+2.4));});return value;};
+ for(let pass=0;pass<3;pass++)L.labels.forEach((label,i)=>{if(!label||clearance(label,i)>=1)return;const p=L.track[i],u=guides[i],initial={...label};let best=label,score=clearance(label,i);
+  for(const d of [L.hole+2.5,L.hole+3.4,L.hole+4.3,L.hole+5.2])for(const t of [0,-.8,.8,-1.6,1.6,-2.4,2.4]){const at={x:p.x+u.x*d-u.y*t,y:p.y+u.y*d+u.x*t,num:label.num};if(at.x<5||at.x>195||at.y<5||at.y>195)continue;const c=Math.min(1.1,clearance(at,i))-.012*Math.hypot(at.x-initial.x,at.y-initial.y);if(c>score){best=at;score=c;}}
+  L.labels[i]=best;
+ });return L;
+}
 // each player's portrait and name, in the corner of the screen by their yard (bottom = you)
 const SEAT_SPOTS=Object.freeze([[-66,64,-66,77],[-64,-66,-64,-53],[66,-64,66,-51],[64,66,64,79]]);
 // the octagon of the picture: corners cut at 54 units, flat sides at 98 from the middle
@@ -469,11 +480,11 @@ export const LOCK_PHRASE='مقفل — صاحب البيت، لا يمكن ال�
 // 33.10.4: the zoom the page will draw the board at (a phone's board fills its width): plates stay inside it
 let VIEW_ZOOM=1;
 function lockBadges(root,overlay,L,state,colors){
-  const locked=state.players.map((p,s)=>s<4&&(p.marbles||[]).some(m=>m===0)).map((on,s)=>on?s:-1).filter(s=>s>=0);
+  const locked=state.players.map((p,s)=>s<L.seats&&(p.marbles||[]).some(m=>m===0)).map((on,s)=>on?s:-1).filter(s=>s>=0);
   if(!locked.length)return;
   const turn=p=>{const r=ROT*Math.PI/180,c=Math.cos(r),q=Math.sin(r),x=p.x-100,y=p.y-100;return{x:100+x*c-y*q,y:100+x*q+y*c};};
   const dots=[...L.track,...L.lanes.flat(),...L.bases.flat()].map(p=>({...turn(p),r:L.hole+1.1})).concat(L.labels.filter(Boolean).map(p=>({...turn(p),r:3.1})),{x:100,y:100,r:29});
-  const view=SEAT_SPOTS.map(([ax,ay,px,py])=>[{x:100+ax,y:100+ay,r:8.6},{x:100+px,y:100+py,w:30,h:7.4}]).flat();
+  const view=L.seats===6?L.seatsAt.flatMap(p=>{const q=turn(p);return [{...q,r:8.6},{x:q.x,y:q.y+10,w:30,h:7.4}];}):SEAT_SPOTS.map(([ax,ay,px,py])=>[{x:100+ax,y:100+ay,r:8.6},{x:100+px,y:100+py,w:30,h:7.4}]).flat();
   const W=16.6,H=7,taken=[];
   const edge=Math.max(9.5,100-100/VIEW_ZOOM+2),clear=(c)=>{const x0=c.x-W/2,x1=c.x+W/2,y0=c.y-H/2,y1=c.y+H/2;if(x0<edge||x1>200-edge||y0<9||y1>191)return false;
     for(const o of [...dots,...view.filter(v=>v.r),...taken]){if(o.w){if(Math.abs(o.x-c.x)<(o.w+W)/2+.6&&Math.abs(o.y-c.y)<(o.h+H)/2+.6)return false;continue;}const dx=Math.max(x0-o.x,0,o.x-x1),dy=Math.max(y0-o.y,0,o.y-y1);if(Math.hypot(dx,dy)<o.r+.5)return false;}
@@ -543,7 +554,7 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
   const names=state.players.map(playerLabel),geo=boardGeometry(state),colors=JACK_COLORS,fill=geo.fill;
   crossFrame(root,defs,prefix,look);
   // the home lanes: a line from the house to the lane, the four holes up the middle of the arm
-  for(let s=0;s<4;s++){
+  for(let s=0;s<L.seats;s++){
     const color=colors[s],house=L.track[s*L.arm],lane=L.lanes[s],g=n('g',{'data-lane':s});
     g.append(n('path',{d:'M'+xy(house)+lane.map(p=>'L'+xy(p)).join(''),fill:'none',stroke:color,'stroke-width':.55,opacity:.9}));
     lane.forEach((p,h)=>{if(look.glow)g.append(n('circle',{cx:p.x,cy:p.y,r:L.hole+1,fill:'none',stroke:color,'stroke-width':1.2,opacity:.25}));g.append(n('circle',{cx:p.x,cy:p.y,r:L.hole*.92,fill:look.lane,stroke:color,'stroke-width':.95,'data-home':s+':'+h,'data-safe':s+':'+h,class:'tbl-hole'}));});
@@ -551,7 +562,7 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
     root.append(g);
   }
   // the yards: four holes, two by two, in the corner by each arm
-  for(let s=0;s<4;s++){
+  for(let s=0;s<L.seats;s++){
     const color=colors[s],on=s===active,g=n('g',{'data-pocket':s,'data-active':String(on)});
     L.bases[s].forEach((b,i)=>g.append(n('circle',{cx:b.x,cy:b.y,r:L.hole,fill:look.lane,stroke:color,'stroke-width':.8,opacity:.9,'data-yard':s+':'+i})));
     root.append(g);
@@ -563,22 +574,23 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
     const seat=Math.floor(i/L.arm),k=i-seat*L.arm,color=colors[seat];
     if(k===0){
       if(look.glow)root.append(n('circle',{cx:p.x,cy:p.y,r:L.hole*1.2+1.6,fill:'none',stroke:color,'stroke-width':2,opacity:.3}));
-      root.append(n('circle',{cx:p.x,cy:p.y,r:+(L.hole*1.2).toFixed(2),fill:look.house,stroke:color,'stroke-width':1.3,'data-track':i,'data-house':seat,class:'tbl-hole'}));
+      root.append(n('circle',{cx:p.x,cy:p.y,r:+(L.hole*1.2).toFixed(2),fill:look.house,stroke:color,'stroke-width':L.seats===6?.8:1.3,'data-track':i,'data-house':seat,class:'tbl-hole'}));
       // the roof stays upright: the icon turns inside its own group
       const roof=n('g',{'pointer-events':'none'});roof.append(n('path',{d:HOUSE_ICON,transform:`translate(${p.x} ${p.y}) scale(${(L.hole*.62).toFixed(2)})`,fill:'none',stroke:look.houseIcon,'stroke-width':(.42/(L.hole*.62)).toFixed(3),'stroke-linecap':'round','stroke-linejoin':'round'}));root.append(up(roof,p.x,p.y));
       return;
     }
     const r=L.hole;
-    root.append(n('circle',{cx:p.x,cy:+(p.y-.3).toFixed(2),r:+(r+.5).toFixed(2),fill:'#ffffff',opacity:.18}),n('circle',{cx:p.x,cy:p.y,r,fill:holeFill,stroke:look.holeRim,'stroke-width':.7,'data-track':i,class:'tbl-hole'}));
-    const at=L.labels[i],size=k<10?4.7:4.3;
+    root.append(n('circle',{cx:p.x,cy:+(p.y-.3).toFixed(2),r:+(r+.5).toFixed(2),fill:'#ffffff',opacity:.18}),n('circle',{cx:p.x,cy:p.y,r,fill:holeFill,stroke:look.holeRim,'stroke-width':L.seats===6?.55:.7,'data-track':i,class:'tbl-hole'}));
+    const at=L.labels[i],size=L.seats===6?(k<10?3.5:3.2):k<10?4.7:4.3;
     root.append(up(n('text',{x:at.x,y:+(at.y+size*.36).toFixed(2),'text-anchor':'middle','font-size':size,'font-weight':900,'font-family':'Arial,sans-serif',direction:'ltr',fill:look.label,'paint-order':'stroke',stroke:look.labelStroke,'stroke-width':.55,'pointer-events':'none','data-track-number':k,class:'tbl-num'},String(k)),at.x,at.y));
   });
   crossMiddle(root,defs,prefix,state,look,pile,colors);
   lockBadges(root,overlay,L,state,colors);
   // the players: on the screen, each in the corner by their own yard; you at the bottom
-  const view=Number.isInteger(viewer)&&viewer>=0&&viewer<4?viewer:0;
-  for(let s=0;s<4&&s<state.players.length;s++){
-    const color=colors[s],on=s===active,[ax,ay,px,py]=SEAT_SPOTS[(s-view+4)%4],face={x:100+ax,y:100+ay},tag={x:100+px,y:100+py},r=6.6;
+  const view=Number.isInteger(viewer)&&viewer>=0&&viewer<L.seats?viewer:0;
+  for(let s=0;s<L.seats&&s<state.players.length;s++){
+    const color=colors[s],on=s===active,spot=SEAT_SPOTS[(s-view+4)%4],raw=L.seats===6?L.seatsAt[s]:null,a=ROT*Math.PI/180;
+    const face=raw?{x:100+(raw.x-100)*Math.cos(a)-(raw.y-100)*Math.sin(a),y:100+(raw.x-100)*Math.sin(a)+(raw.y-100)*Math.cos(a)}:{x:100+spot[0],y:100+spot[1]},tag=raw?{x:face.x,y:face.y+10}:{x:100+spot[2],y:100+spot[3]},r=6.6;
     const g=n('g',{'data-seat':s,'data-player-tag':s,'data-active':String(on),role:'button',tabindex:0,'aria-label':'ملف '+(names[s]||'اللاعب')});
     if(on||look.glow)g.append(n('circle',{cx:face.x,cy:face.y,r:r+1.6,fill:'none',stroke:color,'stroke-width':on?2.2:1.3,opacity:on?.6:.22,class:on?'yard-glow':null}));
     g.append(n('circle',{cx:face.x,cy:face.y,r,fill:mix(color,'#000000',.62),stroke:color,'stroke-width':on?1.3:.9}));
@@ -681,7 +693,7 @@ export function renderPetalBoard(target,state,options={}){
   const defs=n('defs'),root=n('g',{'data-board-root':'','data-rot':ROT,transform:ROT?`rotate(${ROT} 100 100)`:null});svg.append(defs,root);
   // the players' portraits stay upright in the corners of the screen, outside the turned board
   const overlay=n('g',{'data-layer':'players'});
-  if(game==='jackaroo'&&L.kind==='cross')drawJackCross(root,overlay,defs,prefix,state,L,BOARD_LOOKS[lookKey],active,{avatars:avatars||[],pile,viewer:seat});
+  if(game==='jackaroo'&&L.kind.startsWith('cross'))drawJackCross(root,overlay,defs,prefix,state,L,BOARD_LOOKS[lookKey],active,{avatars:avatars||[],pile,viewer:seat});
   else if(game==='jackaroo')drawStar(root,defs,prefix,state,L,LOOKS[STAR_LOOK[lookKey]||'neon'],active,lookKey,{avatars:avatars||[],pile});else drawCross(root,defs,prefix,state,L,theme,active);
   const positions=new Map(),values=new Map(),motions=[],effects=[],traces=[],cellSize=L.c||12.8;
   // a marble a little bigger than its hole, never wider than the step between two holes

@@ -7,7 +7,7 @@
    32.1.0: open play (any card; the other team may claim a cut — «سجّل»),
    Arabic voices for the calls, table talk (phrases and emoji) and effects. */
 import { balootActions, teamOf, legalCards, canClaim, selectProjects } from './engines/baloot-engine.js?v=33.9.10-gameplay3';
-import { BoardOnlineClient } from './board-online.js?v=33.9.10';
+import { BoardOnlineClient } from './board-online.js?v=33.11.5';
 import { BALOOT_PHRASES, BALOOT_EMOJI, BOT_TALK, talkPhrase, talkEmoji } from './engines/baloot-talk.js?v=33.9.10';
 import { BalootVoice } from './baloot-voice.js?v=33.9.10-audio1';
 

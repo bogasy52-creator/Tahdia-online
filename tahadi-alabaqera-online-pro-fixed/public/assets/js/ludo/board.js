@@ -1,14 +1,15 @@
+import {SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.11.4';
 /* Tahdia 33.10.5 — «لودو»: the classic cross board, drawn as one SVG.
    The four yards sit in the corners (red, green, blue, yellow, clockwise from the top left); each
    colour starts on the coloured square next to its yard, walks clockwise round 51 squares, turns at
    the arrow into its own column and ends in its triangle in the middle. The whole board turns so the
    player holding the phone always has his yard at the bottom left, nearest to him; the pawns stay
    upright. Pawns hop square by square when they move, and a taken pawn flies home. */
-import { ludoGeometry, globalLudoPosition } from '../engines/ludo-engine.js?v=33.10.7-classic1';
+import { ludoGeometry, globalLudoPosition } from '../engines/ludo-engine.js?v=33.11.4';
 
-export const LUDO_COLORS = Object.freeze(['#ef3340', '#22b04b', '#1f7cf0', '#f7c51e']);
-export const LUDO_NAMES = Object.freeze(['الأحمر', 'الأخضر', 'الأزرق', 'الأصفر']);
-const DEEP = ['#8f0f1c', '#0f6a2a', '#0b3f8f', '#a77a00'], LIGHT = ['#ff8a92', '#7ff0a0', '#86c3ff', '#ffe58a'];
+export const LUDO_COLORS = Object.freeze(['#ef3340', '#22b04b', '#1f7cf0', '#f7c51e','#9658ed','#f47c24']);
+export const LUDO_NAMES = Object.freeze(['الأحمر', 'الأخضر', 'الأزرق', 'الأصفر','البنفسجي','البرتقالي']);
+const DEEP = ['#8f0f1c', '#0f6a2a', '#0b3f8f', '#a77a00','#4c238d','#a33f0c'], LIGHT = ['#ff8a92', '#7ff0a0', '#86c3ff', '#ffe58a','#d3b0ff','#ffbe83'];
 const NS = 'http://www.w3.org/2000/svg', C = 40, SIZE = 600;
 let ID = 'lb-', serial = 0; // gradient ids of the board being drawn (each board has its own)
 
@@ -36,6 +37,7 @@ const rotate = ({ x, y }, k) => { for (let i = 0; i < k; i++) [x, y] = [SIZE - y
 
 /** Where a pawn stands, before the board is turned. */
 export function ludoSpot(state, seat, token, progress = state.players[seat].tokens[token]) {
+  if(state.players.length===6)return sixSpot(state,seat,token,progress);
   const g = ludoGeometry(state), corner = g.corners[seat];
   if (progress < 0) { const [oy, ox] = YARD_ORIGIN[corner], [sy, sx] = YARD_SPOTS[token]; return { x: ox + sx, y: oy + sy, where: 'yard' }; }
   if (progress >= g.finish) { const f = FINISH[corner], spread = (token - 1.5) * 13; return { x: f.x + (corner % 2 ? spread : 0), y: f.y + (corner % 2 ? 0 : spread), where: 'home', small: true }; }
@@ -116,6 +118,16 @@ function drawBoard(k, active) {
   return g;
 }
 
+function drawSix(P,active){
+ const g=el('g',{'data-ludo-board':'','data-seats':6}),hex=(radius)=>Array.from({length:6},(_,i)=>{const a=i*Math.PI/3-Math.PI/2,p=P({x:300+Math.cos(a)*radius,y:300+Math.sin(a)*radius});return p.x+','+p.y;}).join(' ');
+ g.append(el('polygon',{points:hex(312),fill:'url(#'+ID+'bed)',stroke:'url(#'+ID+'gold)','stroke-width':9,'stroke-linejoin':'round'}),el('polygon',{points:hex(301),fill:'none',stroke:'#ffffff33','stroke-width':2}));
+ SIX_YARDS.forEach((yard,seat)=>{const p=P(yard),on=seat===active;g.append(el('rect',{x:p.x-45,y:p.y-45,width:90,height:90,rx:22,fill:'url(#'+ID+'yard'+seat+')',stroke:'url(#'+ID+'c'+seat+')','stroke-width':8,'data-yard':seat,filter:on?'url(#'+ID+'glow)':undefined}));for(const slot of yard.slots){const q=P(slot);g.append(el('circle',{cx:q.x,cy:q.y,r:15,fill:DEEP[seat],stroke:LIGHT[seat],'stroke-width':1.6}));}});
+ const square=(p,fill,attrs={})=>{const q=P(p);g.append(el('rect',{x:q.x-9,y:q.y-7.5,width:18,height:18,rx:4.5,fill:'#0006'}),el('rect',{x:q.x-9,y:q.y-9,width:18,height:18,rx:4.5,fill,stroke:'#0a153055','stroke-width':.8,...attrs}),el('path',{d:`M${q.x-6} ${q.y-7}h12`,fill:'none',stroke:'#ffffff77','stroke-width':2,'stroke-linecap':'round'}));};
+ SIX_TRACK.forEach((p,i)=>{const seat=i%13===0?Math.floor(i/13):-1;square(p,seat>=0?'url(#'+ID+'c'+seat+')':'url(#'+ID+'tile)',{'data-track':i});if(i%13===0||i%13===8){const q=P(p);g.append(el('path',{d:`M${q.x} ${q.y-6}l5 2v5l-5 4-5-4v-5z`,fill:'#1b2233',stroke:'#e6b445','stroke-width':1.4,'data-safe':i}));}});
+ SIX_LANES.forEach((lane,seat)=>{const entry=P(SIX_TRACK[(seat*13+76)%78]),first=P(lane[0]);g.append(el('path',{d:`M${entry.x} ${entry.y}L${first.x} ${first.y}`,stroke:LIGHT[seat],'stroke-width':3,'stroke-linecap':'round'}));lane.forEach((p,h)=>square(p,'url(#'+ID+'c'+seat+')',{'data-home':seat+':'+h}));const a=sixAngle(seat),left=P({x:300+Math.cos(a-.5)*80,y:300+Math.sin(a-.5)*80}),right=P({x:300+Math.cos(a+.5)*80,y:300+Math.sin(a+.5)*80});g.append(el('polygon',{points:`300,300 ${left.x},${left.y} ${right.x},${right.y}`,fill:'url(#'+ID+'c'+seat+')',stroke:'#0a1530','stroke-width':2,'data-finish':seat}));});
+ g.append(el('circle',{cx:300,cy:300,r:12,fill:'url(#'+ID+'gem)',stroke:'#6b430a','stroke-width':2}));return g;
+}
+
 /** A glossy pawn standing on (0,0): base, body and head, in the colour of its corner. */
 function pawn(seat, number, small) {
   const s = small ? .62 : 1, g = el('g', { class: 'ludo-pawn', transform: `scale(${s})` });
@@ -137,12 +149,13 @@ function pawn(seat, number, small) {
  */
 export function renderLudoBoard(host, state, options = {}) {
   const g0 = ludoGeometry(state), viewer = Number.isInteger(options.viewer) && options.viewer >= 0 ? options.viewer : 0;
-  const k = turnsFor(g0.corners[viewer] ?? 0), active = Number.isInteger(options.active) ? g0.corners[options.active] : -1;
+  const six=state.players.length===6,P=pt=>six?sixRotate(pt,viewer):rotate(pt,k);
+  const k = six?0:turnsFor(g0.corners[viewer] ?? 0), active = Number.isInteger(options.active) ? g0.corners[options.active] : -1;
   host.ludoCleanup?.();
   ID = 'lb' + (++serial).toString(36) + '-';
   const svg = el('svg', { viewBox: '-24 -24 648 648', class: 'ludo-svg', role: 'img', 'aria-label': 'لوحة اللودو' });
   defs(svg);
-  svg.append(drawBoard(k, active));
+  svg.append(six?drawSix(P,active):drawBoard(k, active));
   const layer = el('g', { 'data-pawns': '' });
   svg.append(layer);
   host.replaceChildren(svg);
@@ -155,14 +168,14 @@ export function renderLudoBoard(host, state, options = {}) {
   for (const list of groups.values()) if (list.length > 1) list.forEach((s, i) => { s.x += (i - (list.length - 1) / 2) * 11; s.squeeze = true; });
   const legal = new Set(options.legal || []), nodes = [];
   // draw the far pawns first so the near ones stand in front
-  const placed = spots.map((s) => ({ ...s, at: rotate(s, k) })).sort((a, b) => a.at.y - b.at.y);
+  const placed = spots.map((s) => ({ ...s, at: P(s) })).sort((a, b) => a.at.y - b.at.y);
   for (const s of placed) {
     const node = el('g', { class: 'ludo-pawn-at', 'data-seat': s.seat, 'data-token': s.token, transform: `translate(${s.at.x.toFixed(1)} ${s.at.y.toFixed(1)})` });
     const canPick = s.seat === options.active && legal.has(s.token);
     if (canPick) { node.classList.add('can-pick'); node.append(el('circle', { r: 21, class: 'ludo-pick-ring', fill: 'none', stroke: '#ffffff', 'stroke-width': 3 })); }
-    node.append(el('g', { class: 'ludo-bob' }, [pawn(g0.corners[s.seat] ?? s.seat, s.token + 1, s.small || s.squeeze)]));
+    node.append(el('g', { class: 'ludo-bob' }, [pawn(g0.corners[s.seat] ?? s.seat, s.token + 1, s.small || s.squeeze || six)]));
     if (canPick) {
-      const hit = el('circle', { r: 26, fill: 'transparent', class: 'ludo-hit', tabindex: 0, role: 'button', 'aria-label': `حرّك الحجر ${s.token + 1}` });
+      const hit = el('circle', { r: six?18:26, fill: 'transparent', class: 'ludo-hit', tabindex: 0, role: 'button', 'aria-label': `حرّك الحجر ${s.token + 1}` });
       hit.addEventListener('click', (e) => { e.stopPropagation(); options.onPick?.(s.token); });
       hit.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); options.onPick?.(s.token); } });
       node.append(hit);
@@ -173,7 +186,7 @@ export function renderLudoBoard(host, state, options = {}) {
   if (legal.size && options.onPick) svg.addEventListener('click', (e) => {
     const pt = svg.createSVGPoint?.(); if (!pt) return; pt.x = e.clientX; pt.y = e.clientY;
     const local = pt.matrixTransform(svg.getScreenCTM().inverse());
-    let best = null, bestD = 34;
+    let best = null, bestD = six?23:34;
     for (const n of nodes) if (n.seat === options.active && legal.has(n.token)) { const d = Math.hypot(n.at.x - local.x, n.at.y - local.y); if (d < bestD) { bestD = d; best = n; } }
     if (best) options.onPick(best.token);
   });
@@ -186,7 +199,7 @@ export function renderLudoBoard(host, state, options = {}) {
       const path = [], from = m.from, to = m.to;
       if (from < 0) path.push(ludoSpot(state, m.seat, m.token, -1), ludoSpot(state, m.seat, m.token, 0));
       else for (let p = from; p <= to; p++) path.push(ludoSpot(state, m.seat, m.token, p));
-      const pts = path.map((s) => rotate(s, k));
+      const pts = path.map((s) => P(s));
       pts[pts.length - 1] = mover.at;
       motion = new Promise((resolve) => {
         let i = 0;
@@ -207,7 +220,7 @@ export function renderLudoBoard(host, state, options = {}) {
       for (const c of m.captured || []) {
         const back = nodes.find((n) => n.seat === c.player && n.token === c.token);
         if (!back) continue;
-        const land = rotate(ludoSpot(state, m.seat, m.token, m.to), k);
+        const land = P(ludoSpot(state, m.seat, m.token, m.to));
         back.node.setAttribute('transform', `translate(${land.x} ${land.y})`);
         motion = motion.then(() => new Promise((resolve) => {
           const t0 = performance.now(), dur = 520;
@@ -227,6 +240,7 @@ export function renderLudoBoard(host, state, options = {}) {
 
 /** Where a corner of the board shows on screen once the board is turned: 'tl', 'tr', 'br' or 'bl'. */
 export function screenCorner(state, seat, viewer) {
+  if(state.players.length===6)return ['bm','bl','tl','tm','tr','br'][((seat-viewer)%6+6)%6];
   const g = ludoGeometry(state), k = turnsFor(g.corners[viewer] ?? 0);
   return ['tl', 'tr', 'br', 'bl'][(g.corners[seat] + k) % 4];
 }

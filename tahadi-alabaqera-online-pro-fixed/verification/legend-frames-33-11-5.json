@@ -1,0 +1,53 @@
+{
+  "release": "33.11.5",
+  "baseCommit": "63c80ee6a20d6dc5bbd29ff15fa803e0ebbaa4b1",
+  "published": false,
+  "physicalAndroidAndIphoneVisualQA": false,
+  "unitChecks": {
+    "tests": 1730,
+    "pass": 1730,
+    "fail": 0,
+    "skipped": 0
+  },
+  "nativeChecks": {
+    "ludo": {
+      "runtime": "workerd / SQLite / real WebSockets",
+      "published": false,
+      "checks": [
+        "Six real sockets play 45 classic Ludo commands, preserve six-seat board on resume, reject stale commands and guest paid-cosmetic spoofing",
+        "Party Ludo opens /ludo with six classic seats and the selected quick rules, filling three empty seats with bots"
+      ]
+    },
+    "six": {
+      "runtime": "workerd / SQLite / real WebSockets",
+      "published": false,
+      "checks": [
+        "zahra: six real sockets, legal moves, private hand, stale command rejected, and same seat/board after reconnection",
+        "jackaroo: six real sockets, legal moves, private hand, stale command rejected, and same seat/board after reconnection",
+        "Dice: real roll accepted once, out-of-turn and duplicate-version commands rejected",
+        "Party zahra: three people start their selected quick mode on six seats, with three bots",
+        "Party jackaroo: three people start their selected quick mode on six seats, with three bots"
+      ]
+    },
+    "party": {
+      "runtime": "workerd / SQLite / real WebSockets",
+      "published": false,
+      "checks": [
+        "20 real party sockets preserve memory mode/theme and all final reports advance before the round timer expires",
+        "The next game opens four actual large memory-race tables for all 20 people, with the selected mode and 48 pieces",
+        "All 20 players enter three reserved UNO tables (7/7/6), quick mode deals five private cards, and no room overflows",
+        "Master Jewels opens ten real duel rooms at /jewels, including a live two-player game, rather than the old journey puzzle"
+      ]
+    }
+  },
+  "newChecks": [
+    "independent frame purchase and ownership",
+    "actual entry/win events, no repeat on resync, preference and reduced motion",
+    "actual shop preview cleanup and no implicit purchase",
+    "actual six-seat menu callbacks",
+    "real dice page score ordering, stable tie ranking, unchanged action seat, safe names"
+  ],
+  "staticAssetReferences": 1359,
+  "localNativeSvgPreview": "Albqry-33.11.5-Legend-Frames-Preview.png",
+  "offlineWoffFontSupport": true
+}

@@ -51,7 +51,8 @@ test('reverse with two players, skip, draw-two and legal draw-four apply to the 
  act(m,1,{type:'draw'});assert.equal(m.uno.hands[1].length,5);assert.equal(m.uno.turn,2);
  m=setup();m.uno.hands[0]=[card('x','wild','draw4'),card('b','blue','3')];
  act(m,0,{type:'play',card:'x',color:'blue',uno:true});
- assert.equal(m.uno.hands[1].length,7);assert.equal(m.uno.turn,2);
+ assert.equal(m.uno.pending,4);assert.equal(m.uno.turn,1);
+ act(m,1,{type:'draw'});assert.equal(m.uno.hands[1].length,7);assert.equal(m.uno.turn,2);
 });
 test('a drawn matching card can be played or passed and no other card is legal after drawing',()=>{
  const m=setup(),u=m.uno;

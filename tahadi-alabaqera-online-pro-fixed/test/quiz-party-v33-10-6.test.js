@@ -14,26 +14,12 @@ const pub = (path) => new URL('../public/' + path, import.meta.url);
 const byId = (id) => CATEGORIES.find((c) => c.id === id);
 const oneWord = (s) => /^\S+$/.test(String(s));
 
-test('الزهرة is gone: no card, no party entry, old links and rounds become لودو', async () => {
-  const home = await read('public/index.html');
-  assert.doesNotMatch(home, /href="\/zahra"/);
-  assert.match(home, /24 لعبة عربية/);
-  assert.equal(PARTY_GAMES.some((g) => g.id === 'zahra'), false);
-  assert.equal(partyGame('zahra').id, 'ludo');
-  assert.equal(normalizePlaylist(['zahra'])[0].game, 'ludo');
-  assert.equal('zahra' in LINKED_GAMES, false);
-  assert.equal(linkedGame('zahra'), LINKED_GAMES.ludo);
-  const moved = await read('public/assets/js/zahra-moved.js');
-  assert.match(moved, /query\.get\('room'\)/, 'a room already open still finishes on its own page');
-  assert.match(moved, /location\.replace\('\/ludo'/);
-  // a saved party that still lists الزهرة plays لودو instead
-  const room = createParty({ code: '150001', hostKey: 'k'.repeat(40), playlist: ['quiz', 'memory'], now: 1000 });
-  room.playlist.push({ ...room.playlist[1], game: 'zahra' });
-  retirePartyChallenges(room, 1000);
-  assert.equal(room.playlist.at(-1).game, 'ludo');
-  for (const file of ['public/assets/js/shop-v31.js', 'public/assets/js/game-menu-v33.js', 'src/presence/presence-registry.js']) {
-    assert.doesNotMatch(await read(file), /'الزهرة'|"الزهرة"/, file);
-  }
+test('Legacy Zahra links and future playlist rounds resolve to six-seat Ludo',async()=>{
+ const home=await read('public/index.html');assert.doesNotMatch(home,/href="\/zahra"/);assert.match(home,/href="\/ludo"/);
+ assert.equal(partyGame('zahra').id,'ludo');assert.equal(normalizePlaylist(['zahra'])[0].game,'ludo');
+ assert.equal(linkedGame('zahra'),LINKED_GAMES.ludo);assert.equal(linkedGame('zahra').max,6);
+ const room=createParty({code:'150001',hostKey:'k'.repeat(40),playlist:['quiz','memory'],now:1000});
+ room.playlist.push({...room.playlist[1],game:'zahra'});retirePartyChallenges(room,1000);assert.equal(room.playlist.at(-1).game,'ludo');
 });
 
 test('every quiz answer and every choice is one word', () => {
@@ -124,7 +110,7 @@ test('20 players: every table game seats all of them in balanced tables', () => 
     assert.ok(tables.every((t) => t.length <= max), game);
     assert.ok(Math.max(...tables.map((t) => t.length)) - Math.min(...tables.map((t) => t.length)) <= 1, game + ' balanced');
   }
-  assert.deepEqual(tablesFor('ludo', 20), [4, 4, 4, 4, 4]);
+  assert.deepEqual(tablesFor('ludo', 20), [5, 5, 5, 5]);
   // the party list is in the order players read it: quiz first, then the board games together
   const order = PARTY_GAMES.map((g) => g.id);
   assert.equal(order[0], 'quiz');

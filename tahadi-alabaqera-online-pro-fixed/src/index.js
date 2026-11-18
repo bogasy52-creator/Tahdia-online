@@ -46,7 +46,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.11.1';
+const RELEASE='33.11.5';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -875,10 +875,10 @@ export default {
         const id = env.BOARD_ROOMS.idFromName(code);
         const stub = env.BOARD_ROOMS.get(id);
         if (suffix === "/ws") {
-          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');headers.delete('x-bs-reactions');headers.delete('x-bs-dice');headers.delete('x-bs-pawn');
+          const headers=new Headers(request.headers);headers.delete('x-bs-account');headers.delete('x-bs-characters');headers.delete('x-bs-character');headers.delete('x-bs-reactions');headers.delete('x-bs-dice');headers.delete('x-bs-pawn');headers.delete('x-bs-frame');
           const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
           let named=null;
-          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);named=new URL(request.url);named.searchParams.set('name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));headers.set('x-bs-dice',String(data.career?.equipped?.dice||''));headers.set('x-bs-pawn',String(data.career?.equipped?.pawn||''));}}}
+          if(st){const check=new Request(request.url,{headers:{authorization:'Bearer '+st}});const auth=await authenticate(check,env);if(auth){headers.set('x-bs-account',auth.username);named=new URL(request.url);named.searchParams.set('name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json(),owned=(data.career?.owned||[]).filter(id=>id.startsWith('character-')).map(id=>id.slice(10));headers.set('x-bs-characters',JSON.stringify(owned));headers.set('x-bs-character',(data.career?.equipped?.character||'character-fox').slice(10));headers.set('x-bs-reactions',JSON.stringify((data.career?.owned||[]).filter(id=>PAID_REACTIONS.has(id))));headers.set('x-bs-dice',String(data.career?.equipped?.dice||''));headers.set('x-bs-pawn',String(data.career?.equipped?.pawn||''));headers.set('x-bs-frame',String(data.career?.equipped?.frame||''));}}}
           return await stub.fetch(named?new Request(named,{method:request.method,headers}):new Request(request,{headers}));
         }
         return await stub.fetch("https://board.internal/status");
@@ -1434,6 +1434,13 @@ export class GameRoom extends DurableObject {
   seatForMatch() {
     const humans = this.room.order.filter((id) => !this.room.players[id]?.bot);
     if (this.room.mode !== 'free') {
+      if(this.room.partyLink&&![4,6].includes(humans.length)){
+        const target=humans.length>4?6:4;
+        for(const bot of makeQuizBots(Math.max(0,target-this.room.order.length),this.room.order.map(id=>this.room.players[id]?.name))){
+          this.room.players[bot.id]={...bot,role:'guest',score:0,ready:true,connected:true,powers:{double:false,time:false,block:false}};this.room.order.push(bot.id);
+        }
+        this.room.mode='teams-'+target;this.room.order.forEach((id,i)=>{this.room.players[id].team=i%2?'B':'A';});return null;
+      }
       // two teams of the people here: 2 against 2, or 3 against 3
       if (![4, 6].includes(humans.length)) return "الفريقين يحتاجون 4 أو 6 لاعبين — الحين " + humans.length;
       this.room.mode = 'teams-' + humans.length;
@@ -1803,8 +1810,8 @@ export class BoardRoom extends DurableObject {
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
     // still opens a table sized for exactly its players.
-    const tableSeats=partyLink?null:chosenSeats(game,body.seats,variant);
-    const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,Number(body.playerLimit)||2))):body.publicMatch===true&&tableSeats?tableSeats:MAX_SEATS[game];
+    const tableSeats=partyLink&&!['zahra','jackaroo'].includes(game)?null:chosenSeats(game,body.seats,variant);
+    const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,tableSeats||Number(body.playerLimit)||2))):body.publicMatch===true&&tableSeats?tableSeats:MAX_SEATS[game];
     const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:seatLimit(game,variant,playerLimit),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     // A public table (Baloot quick, or «العب الحين») starts by itself after the lobby countdown.
     room.humansOnly=body.humansOnly===true;
@@ -2128,7 +2135,7 @@ export class BoardRoom extends DurableObject {
         if(this.room.status==='lobby'){
           const account=Boolean(request.headers.get('x-bs-account')),free=new Set(FREE_LOOK_ITEMS);
           const want=(header,param)=>account?request.headers.get(header):(free.has(url.searchParams.get(param))?url.searchParams.get(param):'');
-          player.look=cleanLook({dice:want('x-bs-dice','dice'),pawn:want('x-bs-pawn','pawn'),character:player.character});
+          player.look=cleanLook({dice:want('x-bs-dice','dice'),pawn:want('x-bs-pawn','pawn'),frame:want('x-bs-frame','frame'),character:player.character});
         }
       }
       if(request.headers.get('x-bs-account'))player.username=request.headers.get('x-bs-account');

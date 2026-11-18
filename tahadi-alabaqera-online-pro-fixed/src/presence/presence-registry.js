@@ -17,7 +17,7 @@ export const PRESENCE_PAGES = Object.freeze({
   picture: { key: 'picture', label: 'سباق الصور' },
   baloot: { key: 'baloot', label: 'البلوت' },
   snakes: { key: 'snakes', label: 'الثعبان والسلالم' },
-  zahra: { key: 'zahra', label: 'لودو' },
+  zahra: { key: 'zahra', label: 'الزهرة / لودو' },
   jackaroo: { key: 'jackaroo', label: 'جاكارو' },
   serpent: { key: 'serpent', label: 'حلبة الثعبان' },
   party: { key: 'party', label: 'الألعاب الجماعية' },

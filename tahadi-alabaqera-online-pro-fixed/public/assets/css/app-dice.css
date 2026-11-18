@@ -507,6 +507,9 @@ body.suite-v16{--s-bg:#080e18;--s-panel:#121e30;--s-raised:#192941;--s-line:#304
 .suite-v16 .hunt-intro{border:1px solid #38515f;background:radial-gradient(ellipse at 40% 60%,#24444d,#121d30 72%);border-radius:24px;padding:30px}.suite-v16 .hunt-kicker{color:#9ce5d0;font-size:11px}.suite-v16 .hunt-intro h1{color:#edf5fc;font-size:clamp(36px,4.1vw,56px)}.suite-v16 .hunt-intro h1 em{color:#a8ead4}.suite-v16 .hunt-intro p,.suite-v16 .hunt-rules span,.suite-v16 .hunt-guide{color:#aac1d3}.suite-v16 .hunt-portrait{height:250px;background:none}.suite-v16 .hunt-portrait canvas{display:block;width:100%;height:auto;max-height:280px;object-fit:contain;filter:drop-shadow(0 12px 18px #020b1799)}.suite-v16 .hunt-launch{background:#121f33;border-color:#3c556e;border-radius:24px;box-shadow:none}.suite-v16 .hunt-launch h2{color:#e5f2fc}.suite-v16 .hunt-modes button{background:#182b40;border-color:#466078;color:#e5eff9}.suite-v16 .hunt-modes button.selected{background:#22444a;border-color:#8ee3cc;box-shadow:none}.suite-v16 .hunt-modes small,.suite-v16 .hunt-options,.suite-v16 .hunt-control{color:#abc4d6}.suite-v16 .hunt-launch label>span{color:#a8c1d4}.suite-v16 .hunt-launch .arena-primary{background:#9ce5d0;border-color:#9ce5d0;color:#153638}.suite-v16 .hunt-launch input,.suite-v16 .hunt-launch select{background:#101b2d;color:#edf4fb;border-color:#425f77}.suite-v16 .hunt-launch-footer{border-top-color:#3f576f;color:#a3bdd0}.suite-v16 .arena-quality-v1601{display:grid;grid-template-columns:1fr 150px;align-items:center;gap:12px;margin:15px 0}.suite-v16 .arena-quality-v1601 span{font-size:11px}.suite-v16 .arena-play[data-control=free] .arena-boost{left:18px;right:auto}.suite-v16 .arena-play[data-control=free] .arena-energy{left:auto;right:18px;transform:none}.suite-v16 .arena-play[data-control=free] .arena-live-hint{top:calc(122px + env(safe-area-inset-top));bottom:auto}.suite-v16 .arena-play[data-control=free] .arena-moment{top:calc(163px + env(safe-area-inset-top))}
 @media(max-width:800px){.suite-v16 .arena-home{grid-template-columns:1fr;gap:18px}.suite-v16 .hunt-intro{padding:24px 20px}.suite-v16 .hunt-intro h1{font-size:33px}.suite-v16 .hunt-intro>p{font-size:11px}.suite-v16 .hunt-portrait{width:46%;height:190px;left:0;top:20px;opacity:1}.suite-v16 .hunt-portrait canvas{width:130%;max-width:none;max-height:210px}.suite-v16 .hunt-launch{padding:24px 20px}.suite-v16 .hunt-launch input,.suite-v16 .hunt-launch select{font-size:16px}.suite-v16 .hunt-modes b{font-size:12px}.suite-v16 .hunt-modes small{font-size:9px}.suite-v16 .hunt-rules span{font-size:10px}}
 
+/* assets/css/dice-leaderboard-v33-11-5.css */
+.dice-ranking-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 3px 10px}.dice-ranking-heading b{font-size:15px;color:#f2d8a3}.dice-ranking-heading small{font-size:10px;color:#a3aec2}.game-dice .dice-ranked-row{display:grid;grid-template-columns:28px 9px minmax(0,1fr) auto;gap:9px;padding:12px 10px;position:relative;overflow:hidden}.dice-ranked-copy{min-width:0}.dice-ranked-copy>b{display:block;overflow-wrap:anywhere;font-size:13px}.game-dice .dice-ranked-row .mini-note{font-size:10px}.dice-rank{display:grid;place-items:center;width:27px;height:29px;border-radius:8px;color:#bac7d6;background:#1e2b3e;font-weight:800;box-shadow:inset 0 0 0 1px #ffffff1a}.dice-ranked-row[data-rank="1"] .dice-rank{color:#4c2c07;background:linear-gradient(135deg,#fff3b9,#e6af46);box-shadow:0 2px 12px #d6aa4030}.dice-ranked-row[data-rank="2"] .dice-rank{color:#263b51;background:linear-gradient(135deg,#eff7ff,#9aacc4)}.dice-ranked-row[data-rank="3"] .dice-rank{color:#442511;background:linear-gradient(135deg,#edc3a5,#b67951)}.game-dice .dice-ranked-row.turn{border-color:#f3cc71;box-shadow:inset 3px 0 #f3cc71,0 0 18px #d4a95612}.game-dice .dice-ranked-row .score{font-variant-numeric:tabular-nums;min-width:27px;text-align:center}
+
 /* assets/css/design-system.css */
 /* V17 shared product system. Board coordinates remain owned by each game. */
 :root{--bs-bg:#0b1522;--bs-bg2:#112131;--bs-surface:#142738;--bs-surface2:#1a3043;--bs-line:#355061;--bs-text:#f0f4ed;--bs-muted:#abc0cd;--bs-purple:#87c6b0;--bs-pink:#b6a5d9;--bs-gold:#eed093;--bs-cyan:#8cc9d5;--bs-green:#a4d6a7;--bs-radius:18px;--bs-shadow:0 14px 40px #020a1533}
@@ -1281,3 +1284,63 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 @media(prefers-reduced-motion:reduce){.rx-studio .rx-studio-sprite,.rx-cinema::before,.rx-cinema::after{animation:none!important}}
 
 .rx-studio .rx-prop{position:absolute;right:0;bottom:9%;width:34%;height:34%;filter:drop-shadow(0 3px 2px #00152388);pointer-events:none}
+
+/* assets/css/six-tables-v33-11-3.css */
+/* Six seats share the familiar materials and controls of the four-seat tables. */
+body.game-jackaroo .jack-board-wrap:has(svg[data-seats="6"]){overflow:visible}
+body.game-jackaroo svg[data-seats="6"]{--board-hole-size:1;max-width:100%}
+body.game-jackaroo #board svg[data-seats="6"] .tbl-num{font-weight:800}
+body.game-zahra .zahra-roster .player-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;min-height:220px!important;padding:24px 18px!important;background:radial-gradient(ellipse at 50% 20%,#4b3b7399,transparent 70%),linear-gradient(155deg,#1f2445,#10152c);border:1px solid #f1cf7433;border-radius:26px}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-die{min-width:0;padding:12px 10px!important;gap:10px!important;border-radius:20px;background:#0d132660;border:1px solid #ffffff12}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-pair{min-height:112px!important;display:grid;place-items:center}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .die.pro-die{--die-size:clamp(76px,18vw,108px)!important;flex-shrink:0}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-die small{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-die.is-turn{border-color:#f2d383bb;box-shadow:inset 0 1px #ffe8a655,0 0 24px #e7ba5722}
+body.game-dice #myDieBox[role="button"]{cursor:pointer;touch-action:manipulation}
+body.game-dice #myDieBox[role="button"]:focus-visible{outline:3px solid #f9d988;outline-offset:4px}
+body.game-dice #myDieBox.is-idle{cursor:default}
+body.game-dice #turnTotal{display:flex;justify-content:space-between;align-items:center;gap:14px;border-radius:20px;padding:16px 22px;margin:14px 0 0;background:linear-gradient(120deg,#d1a75122,#ffffff05);border:1px solid #d6b86c40}
+body.game-dice #turnTotal strong{font-size:clamp(34px,8vw,52px);font-variant-numeric:tabular-nums;line-height:1.1;color:#ffe4a1}
+body.game-dice .bank-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+body.game-dice .bank-row .bs-btn{min-height:54px;font-weight:800}
+@media(max-width:520px){:is(html,#v31) body.game-dice #game#game .dice-duel-v33{gap:10px;min-height:196px!important;padding:14px 10px!important}:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-pair{min-height:96px!important}:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .die.pro-die{--die-size:80px!important}body.game-dice #turnTotal{padding:12px 16px}}
+
+/* assets/css/signature-v33-11-4.css */
+/* Six-player Ludo keeps the four-player controls and makes room for every player. */
+.ludo-six .ludo-plates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-height:50px}
+.ludo-six .ludo-plate{min-width:0;justify-content:center;gap:3px}
+.ludo-six .lp-card{padding:5px;gap:5px;min-width:0;border-radius:13px}
+.ludo-six .lp-face{width:29px;height:29px}
+.ludo-six .lp-meta b{font-size:11px;max-width:8ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ludo-six .lp-meta small{font-size:9px}
+.ludo-six .lp-die{--die-size:34px;max-width:39px}
+.ludo-six .lu-board-wrap{width:min(100%,calc(var(--game-vh,100dvh) - 276px))}
+.ludo-page .ludo-plate[hidden]{display:none!important}
+.signature-panel{width:100%;padding:20px;border:1px solid #c3ac7b55;border-radius:20px;background:linear-gradient(145deg,#263244,#101823);display:grid;gap:12px;text-align:right}
+.signature-panel h3{margin:0;color:#fff1d5}
+.signature-kicker{color:#ddc599;font-size:12px;letter-spacing:.03em}
+.signature-features{margin:0;padding-inline-start:20px;display:grid;gap:8px;color:#e3e9f2;line-height:1.7}
+.signature-fair{font-size:12px;color:#b4c2d5;margin:0;line-height:1.7}
+.signature-pair{border:1px solid #b7a47755;background:#ffffff0a;color:#f4e6c4;border-radius:13px;padding:12px;cursor:pointer}
+.sx-art-dice:has([data-dice-skin^="dice-"]){isolation:isolate}
+@media(max-width:380px){.ludo-six .lp-card{gap:3px}.ludo-six .lp-face{width:24px;height:24px}.ludo-six .lp-meta b{max-width:6ch}.ludo-six .lp-die{--die-size:29px;max-width:32px}}
+[data-dice-skin="dice-eclipse"]{--signature-edge:#d8b178}
+[data-dice-skin="dice-eclipse"] .pro-face{background-image:repeating-radial-gradient(ellipse at center,transparent 0 14%,#d8b17822 15% 17%,transparent 18% 25%)}
+[data-dice-skin="dice-eclipse"].is-six .pro-die-glow{background:radial-gradient(ellipse,#d8b178aa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-tide"]{--signature-edge:#7ce6df}
+[data-dice-skin="dice-tide"] .pro-face{background-image:repeating-linear-gradient(155deg,transparent 0 12%,#7ce6df33 13% 15%,transparent 17% 24%)}
+[data-dice-skin="dice-tide"].is-six .pro-die-glow{background:radial-gradient(ellipse,#7ce6dfaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-sakura"]{--signature-edge:#d28caa}
+[data-dice-skin="dice-sakura"] .pro-face{background-image:radial-gradient(ellipse at 20% 15%,#ffffff88,transparent 32%),repeating-conic-gradient(#d28caa22 0deg 12deg,transparent 13deg 60deg)}
+[data-dice-skin="dice-sakura"].is-six .pro-die-glow{background:radial-gradient(ellipse,#d28caaaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-forge"]{--signature-edge:#df713b}
+[data-dice-skin="dice-forge"] .pro-face{background-image:repeating-conic-gradient(from 45deg,#df713b44 0deg 3deg,transparent 4deg 90deg)}
+[data-dice-skin="dice-forge"].is-six .pro-die-glow{background:radial-gradient(ellipse,#df713baa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-astral"]{--signature-edge:#a9baff}
+[data-dice-skin="dice-astral"] .pro-face{background-image:radial-gradient(circle at 18% 25%,#fff 0 1px,transparent 2px),radial-gradient(circle at 80% 70%,#a9baff 0 1px,transparent 2px)}
+[data-dice-skin="dice-astral"].is-six .pro-die-glow{background:radial-gradient(ellipse,#a9baffaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-arabesque"]{--signature-edge:#b38b42}
+[data-dice-skin="dice-arabesque"] .pro-face{background-image:repeating-conic-gradient(from 45deg,#b38b4233 0deg 3deg,transparent 4deg 90deg)}
+[data-dice-skin="dice-arabesque"].is-six .pro-die-glow{background:radial-gradient(ellipse,#b38b42aa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+@media(prefers-reduced-motion:reduce){.pro-die.is-six .pro-die-glow{transform:none!important}}

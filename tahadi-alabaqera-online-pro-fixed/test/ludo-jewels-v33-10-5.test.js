@@ -27,7 +27,7 @@ test('لودو: each colour starts on the square next to its own yard and turns 
   assert.deepEqual([0, 1, 2, 3].map((seat) => PATH[globalLudoPosition(seat, g.lane - 1, s)]), [[7, 0], [0, 7], [7, 14], [14, 7]]);
   assert.equal(globalLudoPosition(0, g.lane, s), null, 'inside its column nobody can reach it');
   assert.deepEqual([...g.safe].sort((a, b) => a - b), [0, 8, 13, 21, 26, 34, 39, 47]);
-  assert.throws(() => createLudoGame(['1', '2', '3', '4', '5'], { layout: 'classic' }), /2_to_4/);
+  assert.throws(() => createLudoGame(['1', '2', '3', '4', '5'], { layout: 'classic' }), /2_3_4_or_6/);
 });
 
 test('لودو: two players sit in opposite corners, a 6 brings a stone out, a capture and a stone home throw again', () => {
@@ -53,9 +53,9 @@ test('لودو: two players sit in opposite corners, a 6 brings a stone out, a c
 test('لودو is played on the tables of الزهرة: its variants, 2 to 4 seats, its own quick tables', () => {
   assert.equal(tableVariant('zahra', 'ludo'), 'ludo'); assert.equal(tableVariant('zahra', 'ludo-quick'), 'ludo-quick');
   assert.equal(tableVariant('dice', 'ludo'), 'classic');
-  assert.equal(seatLimit('zahra', 'ludo', 6), 4); assert.equal(seatLimit('zahra', 'classic', 6), 6);
+  assert.equal(seatLimit('zahra', 'ludo', 6), 6); assert.equal(seatLimit('zahra', 'classic', 6), 6);
   assert.equal(chosenSeats('zahra', 3, 'ludo'), 3); assert.equal(chosenSeats('zahra', 3), null);
-  assert.equal(seatsFor('zahra', 6, true, null, 'ludo'), 4, 'never more than four on the cross');
+  assert.equal(seatsFor('zahra', 6, true, null, 'ludo'), 6, 'six-player Ludo uses the extended classic table');
   const room = { game: 'zahra', variant: 'ludo-quick', tableSeats: 3, order: ['a'], players: { a: { id: 'a', name: 'سعد', role: 'host' } } };
   startTable(room, { quick: true, rng: () => 0.3 });
   assert.equal(room.state.layout, 'classic'); assert.equal(room.state.quick, true); assert.equal(room.state.players.length, 3);
@@ -74,10 +74,10 @@ test('the ludo board turns so the one holding the phone has his yard at the bott
   assert.match(page, /<title>لودو — بوسراج<\/title>/); assert.doesNotMatch(page, /بوت/);
   for (const corner of ['tl', 'tr', 'bl', 'br']) assert.match(page, new RegExp('id="die-' + corner + '"'));
   assert.match(main, /game: 'zahra', page: '\/ludo', title: 'لودو'/);
-  assert.match(main, /\{ id: 'ludo', label: 'الكلاسيك'/); assert.match(main, /seats: \[2, 3, 4\]/);
+  assert.match(main, /\{ id: 'ludo', label: 'الكلاسيك'/); assert.match(main, /seats: \[2, 3, 4, 6\]/);
   assert.match(await read('public/zahra.html'), /location\.replace\("\/ludo\?room=" \+ encodeURIComponent\(next\.code\)\)/, 'a ludo room opened from الزهرة goes to its page');
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.equal(bundles['ludo.html'].at(-1), 'assets/css/ludo-v33-10-5.css');
+  assert.ok(bundles['ludo.html'].includes('assets/css/ludo-v33-10-5.css'));assert.equal(bundles['ludo.html'].at(-1),'assets/css/signature-v33-11-4.css');
   assert.ok((await stat(new URL('../public/assets/brand/ludo-cover-v33-10-5.webp', import.meta.url))).size > 20000);
   assert.match(await read('public/index.html'), /<a href="\/ludo" class="home-game"/);
 });

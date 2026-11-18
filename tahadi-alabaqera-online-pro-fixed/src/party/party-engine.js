@@ -74,7 +74,7 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
  const playing=embedded?room.roster:room.roster.filter(id=>room.players[id]?.connected);
  if(room.links&&linkedGame(game)&&linkable(game,playing.length)){
   const token=()=>uuid().replaceAll('-','')+uuid().replaceAll('-','');
-  const groups=linkTables(game,shuffled(playing,random));
+  const groups=linkTables(game,shuffled(playing,random),settings);
   const tables=groups.map((players,id)=>({id,players,count:players.length,
    seats:groups.length===1?room.roster.length:players.length,token:token(),code:null,done:false,
    ...(embedded?{seatTokens:Object.fromEntries(players.map(player=>[player,token()]))}:{})}));
@@ -93,7 +93,7 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
 function localRound(r){
  const d=r.settings.difficulty,level=d<=1?'casual':d>=4?'expert':'standard';
  const local={page:localGame(r.game),seed:r.seed>>>0,level};
- if(r.game==='memory'){local.mode=r.settings.memoryMode||'pairs';local.theme=r.settings.memoryTheme||['wildlife','space','vehicles','ocean'][r.seed%4];}
+ if(r.game==='memory'){local.mode=r.settings.memoryMode||'pairs';local.theme=r.settings.memoryTheme||'wildlife';}
  if(r.game==='jewels')local.stage=Math.min(60,1+(d-1)*12+r.seed%6);
  return local;
 }
@@ -107,7 +107,7 @@ export function setupRoundGame(room,r,now=Date.now()){
  else if(game==='jewels'){const board=createMatch3(Math.min(60,1+(settings.difficulty-1)*12+seed%6));for(const p of Object.values(r.participants))p.state=clone(board);}
  else if(game==='picture'){r.size=settings.difficulty<=2?3:settings.difficulty===3?4:5;r.image=PICTURE_THEMES[seed%PICTURE_THEMES.length].src;const board=createImageAssembly(r.size,seed);for(const p of Object.values(r.participants))Object.assign(p,{board:[...board.board],tray:[...board.tray]});}
  else if(game==='memory'){
-  r.memoryMode=settings.memoryMode||'pairs';r.memoryTheme=settings.memoryTheme||['wildlife','space','vehicles','ocean'][seed%4];
+  r.memoryMode=settings.memoryMode||'pairs';r.memoryTheme=settings.memoryTheme||'wildlife';
   const pairs=settings.difficulty>=4?12:8,sequence=r.memoryMode==='sequence';r.columns=sequence?3:pairs===12?6:4;
   const faces=shuffled(Array.from({length:16},(_,i)=>i),random).slice(0,sequence?9:pairs),deck=sequence?faces:shuffled([...faces,...faces],random);
   r.memoryPreviewUntil=sequence?now+(Math.min(8,3+settings.difficulty)*800+400):0;
@@ -315,7 +315,7 @@ function publicParticipant(r,p,now){
  if(r.link&&r.link.status!=='failed'||r.local)return base;
  if(r.game==='sudoku')return{...base,board:p.state.board,initial:p.state.initial};
  if(['paths','paths-online'].includes(r.game)){const s=p.state;return{...base,paths:s.paths,size:s.size,pairs:s.pairs,walls:s.walls,gates:s.gates};}
- if(r.game==='jewels'){const {log,history,seed,...state}=p.state;return{...base,state};}
+ if(r.game==='jewels'&&p.state){const {log,history,seed,...state}=p.state;return{...base,state};}
  if(r.game==='picture')return{...base,board:p.board,tray:p.tray,size:r.size,image:r.image};
  if(r.game==='memory'){const preview=r.memoryMode==='sequence'&&now<r.memoryPreviewUntil;return{...base,mode:r.memoryMode||'pairs',theme:r.memoryTheme||'classic',previewStartedAt:r.startedAt,previewUntil:r.memoryPreviewUntil||0,sequence:preview?p.state.sequence:null,sequenceLength:p.state.sequence?.length||0,cursor:p.state.cursor||0,deck:p.state.deck.map((v,i)=>preview||p.state.open.includes(i)||p.state.matched.includes(i)?v:null),matched:p.state.matched,open:p.state.open,locked:p.state.locked,columns:r.columns};}
  if(r.game==='puzzle')return{...base,tiles:p.tiles};
@@ -331,7 +331,7 @@ export function partyRoundView(room,id=null,now=Date.now()){
  if(r.link){const tables=r.link.tables||[],mine=tables.find(t=>t.players.includes(id))||[...tables].filter(t=>t.code).sort((a,b)=>a.players.length-b.players.length)[0];view.link={status:r.link.status,page:r.link.page,code:mine?.code||r.link.code||null,count:r.link.count||0,tables:tables.length,table:mine?mine.id:null,embedded:Boolean(r.link.embedded),list:tables.map(t=>({id:t.id,code:t.code||null,players:[...(t.players||[])]}))};
   if(r.link.embedded&&r.link.status==='open'&&mine?.seatTokens?.[id])view.linkSeat=mine.seatTokens[id];
  }
- if(r.local)view.local={...r.local};
+ if(r.local){view.local={...r.local};const active=room.roster.filter(id=>room.players[id]?.connected).map(id=>r.participants[id]).filter(Boolean);view.completion={done:active.filter(p=>p.done).length,total:active.length};}
  if(r.link&&r.link.status!=='failed'||r.local)return view;
  if(['quiz','logic'].includes(r.game)&&r.questionIndex<r.questions.length){const q=r.questions[r.questionIndex],preview=now<r.answerOpensAt,revealed=Boolean(r.revealUntil);view.quiz={index:r.questionIndex,count:r.questions.length,category:q.category||null,visual:Boolean(q.visual),sequence:q.sequence||null,question:preview?'احفظ ما يظهر…':q.q,options:preview?[]:q.options,opensAt:r.answerOpensAt,deadline:r.questionDeadline,revealUntil:r.revealUntil,answer:revealed?q.a:null,explanation:revealed?q.explanation||'':null,media:q.media?{type:q.media,src:revealed?q.revealSrc||q.src:q.src,zoom:revealed?1:q.zoom||4,hintZoom:q.hintZoom,focusX:q.focusX,focusY:q.focusY,generated:Boolean(q.generated),credit:q.credit,memory:q.media==='memory'&&(preview||revealed)?q.memory:null}:null};}
  if(r.game==='reaction')view.reaction={trial:r.trial,trials:r.trials,signal:r.signal};
@@ -345,9 +345,8 @@ export function partySnapshot(room,id=null,now=Date.now()){
 
 export function retirePartyChallenges(room,now=Date.now()){
  const retired=new Set(['labyrinth','territory','survival']);let changed=false;
+ (room.playlist||[]).forEach((row,i)=>{if(row.game==='zahra'&&!(i===room.cursor&&room.round?.game==='zahra')){row.game='ludo';row.mode=row.mode==='quick'?'ludo-quick':'ludo';changed=true;}});
  for(const row of room.playlist||[])if(retired.has(row.game)){row.game='focus';changed=true;}
- // 33.10.6: الزهرة made way for لودو (the round being played keeps its table)
- (room.playlist||[]).forEach((row,i)=>{if(row.game==='zahra'&&!(i===room.cursor&&room.round?.game==='zahra')){row.game='ludo';changed=true;}});
  if(changed)room.playlistRevision=(room.playlistRevision||0)+1;
  if(retired.has(room.round?.game)){if(room.status==='playing')finishPartyRound(room,now,true);room.round=null;room.returnWait=false;if(room.status==='intermission')room.nextAt=now+PARTY_BREAK_MS;changed=true;}
  return changed;

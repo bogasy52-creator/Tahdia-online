@@ -1016,3 +1016,14 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 .party-quiz-chip.on{border-color:#a5e7cc;background:#a5e7cc22;color:#fff;box-shadow:0 0 0 1px #a5e7cc55}
 .party-quiz-chip:has(input:focus-visible){outline:2px solid #a5e7cc;outline-offset:2px}
 .party-rail-cats{display:block;margin-top:2px;font-size:10.5px;color:#a5e7cc;white-space:normal;max-width:220px}
+
+/* assets/css/party-v33-11-2.css */
+.party-mode-summary{display:block;color:#c5e5ef;font-size:12px;line-height:1.6;margin-top:3px;font-weight:600}
+.party-editor-settings>label{min-width:0}
+.party-editor-settings label small,.party-end-rule{font-size:12px;line-height:1.7;color:#c8c7db;font-weight:500}
+.party-editor-settings [data-field="mode"]{min-height:46px;border-color:#9bbdd366}
+.party-editor-settings select:disabled{opacity:1;color:#d3d4e2;background:#25273e;cursor:default}
+.party-completion{display:block;flex-basis:100%;font-size:12px;line-height:1.7;color:#bce5d8}
+#stageHeader{flex-wrap:wrap}
+.party-end-rule{margin:0;align-self:center;padding:8px 12px;border-radius:12px;background:#ffffff08}
+@media(max-width:600px){.party-editor-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.party-editor-settings>label:first-child{grid-column:1/-1}.party-end-rule{grid-column:1/-1}.party-mode-summary{font-size:11px}}

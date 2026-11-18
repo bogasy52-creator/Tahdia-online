@@ -1,11 +1,11 @@
 import {boardGeometry,boardStonePosition} from './board-geometry-v29.js?v=33.9.10';
 export const JACKAROO_STARTS=Object.freeze([0,13,26,39]);
-// 33.6.0: the rooms deal a table of four on the big board; six seats keep thirteen. A game
-// without `arm` is the old board.
+// New four- and six-seat rooms share 19 places per sector and four filled home holes.
+// Existing states without `arm` retain their original 13-place sectors.
 // 33.7.0: the board of the picture: a seat's quarter is its house and holes 1 to 18 (19 places,
 // the starts at 0, 19, 38, 57), and `home: 'fill'` — the four holes of the home lane are where
 // the marbles end, one marble to a hole, as on a real board.
-export const jackarooArm=seats=>seats===4?19:13;
+export const jackarooArm=()=>19;
 /** Is this marble home: in its lane on a «fill» board, at the finish on the others. */
 export const jackarooHome=(state,m)=>{const g=boardGeometry(state);return g.fill?m>=g.track:m===g.finish;};
 const SUITS=['S','H','D','C'];const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -16,7 +16,7 @@ export function shuffleJackarooDeck(deck=createJackarooDeck(),rng=Math.random){c
 // (seat − 1 is the player on your right; the board itself is drawn as before)
 export const jackarooNext=(state,seat,step=1)=>{const n=state.players.length;return((seat-step)%n+n)%n};
 function dealBatch(state,size){if(state.deck.length<size*state.players.length){state.deck=shuffleJackarooDeck(createJackarooDeck());state.discard=[];state.dealer=jackarooNext(state,state.dealer)}state.hands=state.hands.map(()=>[]);for(let r=0;r<size;r++)for(let i=1;i<=state.players.length;i++){const p=jackarooNext(state,state.dealer,i);state.hands[p].push(state.deck.pop())}state.dealIndex=(state.dealIndex+1)%3}
-export function createJackarooGame(names=['لاعب 1','لاعب 2','لاعب 3','لاعب 4'],options={}){if(!Array.isArray(names)||![4,6].includes(names.length))throw new Error('jackaroo_requires_4_or_6_players');const s={...([13,18,19].includes(options.arm)&&!(options.arm>13&&names.length!==4)?{arm:options.arm}:{}),...(options.home==='fill'&&options.arm===19&&names.length===4?{home:'fill'}:{}),...(options.quick===true?{quick:true}:{}),players:names.map((n,id)=>({id,name:String(n||`لاعب ${id+1}`).slice(0,20),marbles:[-1,-1,-1,-1]})),hands:names.map(()=>[]),deck:options.deck?[...options.deck]:shuffleJackarooDeck(createJackarooDeck(),options.rng||Math.random),discard:[],dealer:options.dealer??0,dealIndex:0,turn:(options.dealer??0)+names.length-1,played:0,winnerTeam:null,lastEvent:null};s.turn%=names.length;dealBatch(s,4);return s}
+export function createJackarooGame(names=['لاعب 1','لاعب 2','لاعب 3','لاعب 4'],options={}){if(!Array.isArray(names)||![4,6].includes(names.length))throw new Error('jackaroo_requires_4_or_6_players');const s={...([13,18,19].includes(options.arm)?{arm:options.arm}:{}),...(options.home==='fill'&&options.arm===19?{home:'fill'}:{}),...(options.quick===true?{quick:true}:{}),players:names.map((n,id)=>({id,name:String(n||`لاعب ${id+1}`).slice(0,20),marbles:[-1,-1,-1,-1]})),hands:names.map(()=>[]),deck:options.deck?[...options.deck]:shuffleJackarooDeck(createJackarooDeck(),options.rng||Math.random),discard:[],dealer:options.dealer??0,dealIndex:0,turn:(options.dealer??0)+names.length-1,played:0,winnerTeam:null,lastEvent:null};s.turn%=names.length;dealBatch(s,4);return s}
 export function globalJackarooPosition(player,progress,state=4){return boardStonePosition(player,progress,state)}
 export const jackarooTeam=p=>p%2;
 // 33.10.4 «سريع»: the first marble of a team that comes home wins the match for its team

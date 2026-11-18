@@ -1,4 +1,4 @@
-import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn,ludoGeometry} from './engines/ludo-engine.js?v=33.10.7-classic1';
+import {createLudoGame,getLegalLudoMoves,applyLudoMove,passLudoTurn,ludoGeometry} from './engines/ludo-engine.js?v=33.11.4';
 import {boardGeometry} from './engines/board-geometry-v29.js?v=33.9.10';
 const BOT_NAMES=['نورة','ماجد','ليان','فهد','سارة'];
 function random(){const bytes=new Uint32Array(1);globalThis.crypto.getRandomValues(bytes);return bytes[0]/4294967296;}
@@ -28,9 +28,9 @@ export function createZahraPractice({onFrame=async()=>{},onError=()=>{},rng=rand
  return {
   get active(){return Boolean(session);},get busy(){return processing;},get snapshot(){return view();},get settled(){return lastTask;},
   start({count=2,mode='ai',name='أنت',look={},quick=false,layout}={}){
-   if(!Number.isInteger(count)||count<2||count>(layout==='classic'?4:6))throw Error('ludo_requires_2_to_6_players');if(!['ai','pass'].includes(mode))throw Error('invalid_practice_mode');
+   if(!Number.isInteger(count)||count<2||count>6||layout==='classic'&&count===5)throw Error('ludo_requires_2_to_6_players');if(!['ai','pass'].includes(mode))throw Error('invalid_practice_mode');
    leave();const names=Array.from({length:count},(_,i)=>i===0?String(name||'أنت').slice(0,20):mode==='ai'?BOT_NAMES[i-1]:'لاعب '+(i+1));
-   session={mode,quick:quick===true,layout:layout==='classic'?'classic':undefined,controller:new AbortController(),startedAt:Date.now(),players:names.map((name,index)=>({id:'local-'+index,index,name,bot:mode==='ai'&&index>0,look:index===0?{pawn:look.pawn||'pawn-classic',dice:look.dice||'dice-ivory',character:look.character||'character-fox'}:{pawn:'pawn-classic',dice:'dice-ivory',character:'character-fox'}}))};game=createLudoGame(names,{quick:quick===true,...(layout==='classic'?{layout:'classic'}:{})});pendingRoll=null;sequence=0;
+   session={mode,quick:quick===true,layout:layout==='classic'?'classic':undefined,controller:new AbortController(),startedAt:Date.now(),players:names.map((name,index)=>({id:'local-'+index,index,name,bot:mode==='ai'&&index>0,look:index===0?{pawn:look.pawn||'pawn-classic',dice:look.dice||'dice-ivory',...(look.frame?{frame:look.frame}:{}),character:look.character||'character-fox'}:{pawn:'pawn-classic',dice:'dice-ivory',character:'character-fox'}}))};game=createLudoGame(names,{quick:quick===true,...(layout==='classic'?{layout:'classic'}:{})});pendingRoll=null;sequence=0;
    return enqueue(async token=>{await frame(token,false);});
   },
   send(type,payload={}){

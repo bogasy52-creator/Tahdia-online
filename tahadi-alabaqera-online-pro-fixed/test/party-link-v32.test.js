@@ -96,7 +96,7 @@ test('each game opens the room its own create button would, sized for the party'
     const res = await createLinkedRoom(env, game, { settings: {}, count: 4, seats: 6, link: LINK });
     assert.equal(res.ok, true, game);
     assert.equal(board.calls[0].body.game, game);
-    assert.equal(board.calls[0].body.playerLimit, 4, 'a board table seats exactly the players who are here');
+    assert.equal(board.calls[0].body.playerLimit, game==='jackaroo'?6:4, 'Jackaroo defaults to six; other boards wait for their expected humans');
   }
 });
 

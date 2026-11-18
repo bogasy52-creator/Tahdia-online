@@ -3,14 +3,14 @@
    The board turns so your yard is at the bottom left, and each player's card sits in the corner of
    the screen where his yard is, with his die next to it. */
 import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.10.7-ludo1';
-import { createZahraPractice } from '../zahra-practice-v33-10.js?v=33.10.7-classic1';
-import { getLegalLudoMoves, ludoGeometry } from '../engines/ludo-engine.js?v=33.10.7-classic1';
-import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.10.7-ludo1';
+import { createZahraPractice } from '../zahra-practice-v33-10.js?v=33.11.4';
+import { getLegalLudoMoves, ludoGeometry } from '../engines/ludo-engine.js?v=33.11.4';
+import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.11.4';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const isLudo = (variant) => variant === 'ludo' || variant === 'ludo-quick';
-const CORNERS = ['tl', 'tr', 'bl', 'br'];
+const CORNERS = ['tl', 'tm', 'tr', 'bl', 'bm', 'br'];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 let room = null, state = null, currentRoll = null, busy = false, practice = null, frameGeneration = 0, remoteTimer = null;
@@ -34,6 +34,7 @@ function face(seat) {
   return url ? `<img src="${esc(url)}" alt="" loading="lazy" decoding="async">` : `<b>${esc(String(name).trim().slice(0, 1))}</b>`;
 }
 function renderPlates() {
+  document.body.classList.toggle('ludo-six',state.players.length===6);
   const turn = visualTurn ?? state.turn, seatAt = {};
   state.players.forEach((_, seat) => { seatAt[cornerOf(seat)] = seat; });
   for (const corner of CORNERS) {
@@ -47,7 +48,7 @@ function renderPlates() {
     plate.classList.toggle('is-winner', state.winner === seat);
     plate.dataset.seat = String(seat);
     const card = plate.querySelector('.lp-card');
-    const key = [seat, p.name, done, mine, seatLook(room, seat).character].join('|');
+    const key = [seat, p.name, done, mine, seatLook(room, seat).character,seatLook(room,seat).frame].join('|');
     if (card.dataset.key !== key) {
       card.dataset.key = key;
       card.dataset.playerTag = String(seat);
@@ -55,6 +56,9 @@ function renderPlates() {
       card.setAttribute('aria-label', `${p.name}، ${colourName(seat)}، ${done} من 4 في الوسط`);
       card.innerHTML = `<span class="lp-face">${face(seat)}</span><span class="lp-meta"><b>${esc(p.name)}</b><small>${mine ? 'أنت · ' : ''}${colourName(seat)}</small><span class="lp-home" aria-hidden="true">${[0, 1, 2, 3].map((k) => `<i class="${k < done ? 'in' : ''}"></i>`).join('')}</span></span>`;
     }
+    const image=plate.querySelector('.lp-face'),frame=seatLook(room,seat).frame;
+    if(image){image.className='lp-face bs-avatar'+(frame&&frame!=='frame-none'?' bs-frame bs-frame-'+frame.replace(/^frame-/,''):'');}
+    window.BS_LEGEND_FRAMES?.decorateAvatar(image,frame);window.BS_LEGEND_FRAMES?.decorateName(plate.querySelector('.lp-meta b'),frame);
     const die = plate.querySelector('.die');
     skinDie(die, seatLook(room, seat).dice);
     plate.classList.toggle('show-die', on || (state.winner === null && seat === state.lastEvent?.player && turn === seat));
@@ -243,7 +247,7 @@ const table = createTable({
     { id: 'ludo-quick', label: 'سريع ⚡', hint: 'أول واحد يوصّل حجر واحد للوسط يفوز' },
   ],
   modesLabel: 'طريقة اللعب',
-  seats: [2, 3, 4], seatsDefault: 4,
+  seats: [2, 3, 4, 6], seatsDefault: 6,
   lobbyNote: (r, quick) => (r?.variant === 'ludo-quick' ? '⚡ سريع: أول حجر يوصل الوسط يفوز. ' : '') + (quick ? 'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.' : 'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
   apply,
   onLobby: (next) => { if (!elsewhere(next)) showMenu(); },
@@ -274,7 +278,7 @@ document.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'E
 // the picture on the menu: the board as it looks to the yellow player, with a game under way
 (() => {
   const art = $('#ludoHeroArt'); if (!art) return;
-  const sample = { layout: 'classic', turn: 3, winner: null, players: ['فهد', 'نورة', 'سارة', 'ماجد'].map((name, k) => ({ name, tokens: [[3, -1, 56, -1], [-1, 21, -1, -1], [9, -1, 53, -1], [30, 0, -1, -1]][k] })) };
+  const sample = {layout:'classic',turn:0,winner:null,players:['فهد','نورة','سارة','ماجد','خالد','ريم'].map((name,k)=>({name,tokens:[k*3,-1,-1,-1]}))};
   renderLudoBoard(art, sample, { viewer: 3, active: 3 });
 })();
 

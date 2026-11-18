@@ -60,11 +60,11 @@
       const cube=el.querySelector('.pro-die-cube'),reduce=reduced();
       el.setAttribute('aria-label','جاري رمي النرد');el.classList.remove('is-landed','is-six');el.classList.add('is-rolling');
       let anims=[];
-      if(!quiet){window.BS_AUDIO?.play?.('dice');window.BS_AUDIO?.vibrate?.([10,30,10]);}
+      if(!quiet){window.BS_AUDIO?.play?.('dice',{skin:el.closest?.('[data-dice-skin]')?.dataset?.diceSkin});window.BS_AUDIO?.vibrate?.([10,30,10]);}
       try{
         if(el.__die3d){
           const duration=reduce?0:ROLL_MS;
-          if(!quiet&&!reduce)setTimeout(()=>window.BS_AUDIO?.play?.('diceImpact',{volume:.3}),Math.round(duration*.36));
+          if(!quiet&&!reduce)setTimeout(()=>window.BS_AUDIO?.play?.('diceImpact',{volume:.3,skin:el.closest?.('[data-dice-skin]')?.dataset?.diceSkin}),Math.round(duration*.36));
           await el.__die3d.roll(value,duration);
         }else if(!reduce&&cube?.animate){
           const [x,y]=rotations[value],spinX=(Math.random()<.5?-1:1)*360,spinY=720;
@@ -93,7 +93,7 @@
             {opacity:.75,scale:'1',offset:0},{opacity:.22,scale:'.5',offset:.2},{opacity:.7,scale:'1.05',offset:.56},{opacity:.4,scale:'.75',offset:.68},{opacity:.75,scale:'1',offset:1}
           ],{duration,easing:'linear'}));
           // The impact sound lands with the cube, not after the animation.
-          if(!quiet)setTimeout(()=>window.BS_AUDIO?.play?.('diceImpact',{volume:.3}),Math.round(duration*.56));
+          if(!quiet)setTimeout(()=>window.BS_AUDIO?.play?.('diceImpact',{volume:.3,skin:el.closest?.('[data-dice-skin]')?.dataset?.diceSkin}),Math.round(duration*.56));
           await anims[0].finished;
         }
       }catch{}
@@ -103,7 +103,7 @@
         el.classList.add('is-landed');if(value===6&&!el.dataset.bonus)el.classList.add('is-six');
         setTimeout(()=>el.classList.remove('is-landed','is-six'),value===6?1100:600);
       }
-      if(!quiet){window.BS_AUDIO?.vibrate?.(18);if(reduce)window.BS_AUDIO?.play?.('diceImpact',{volume:.3});}
+      if(!quiet){window.BS_AUDIO?.vibrate?.(18);if(reduce)window.BS_AUDIO?.play?.('diceImpact',{volume:.3,skin:el.closest?.('[data-dice-skin]')?.dataset?.diceSkin});}
       try{el.dispatchEvent(new CustomEvent('bs-die-landed',{bubbles:true,detail:{value}}));}catch{}
     })().finally(()=>running.delete(el));
     running.set(el,task);return task;

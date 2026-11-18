@@ -34,7 +34,7 @@ async function partyTable(t, { game = 'snakes', expected = 3, playerLimit = expe
 test('the group room tells each board table how many of its players to wait for', async () => {
   const calls = [];
   const env = { BOARD_ROOMS: { idFromName: (n) => n, get: (name) => ({ fetch: async (url, init) => { calls.push({ name, body: JSON.parse(init.body) }); return new Response('{}', { status: 201 }); } }) } };
-  for (const [game, count, limit] of [['snakes', 3, 3], ['zahra', 2, 2], ['jackaroo', 3, 4], ['jackaroo', 5, 6]]) {
+  for (const [game, count, limit] of [['snakes', 3, 3], ['zahra', 2, 2], ['jackaroo', 3, 6], ['jackaroo', 5, 6]]) {
     const res = await createLinkedRoom(env, game, { count, link: LINK });
     assert.equal(res.ok, true);
     const body = calls.at(-1).body;

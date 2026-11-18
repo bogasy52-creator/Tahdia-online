@@ -85,7 +85,7 @@ export function unoLegal(u, seat) {
   const hand = u.hands[seat], top = u.discard.at(-1);
   return hand.filter(card => {
     if (u.drawn && card.id !== u.drawn) return false;
-    if (u.pending) return card.face === u.pendingFace && (card.face !== 'draw4' || !hand.some(c => c.color === u.color));
+    if (u.pending) return card.face === u.pendingFace;
     if (card.face === 'draw4') return !hand.some(c => c.color === u.color);
     return card.color === 'wild' || card.color === u.color || card.face === top.face;
   }).map(card => card.id);
@@ -132,9 +132,8 @@ export function applyUno(m, p, action, now) {
     if (card.face === 'skip' || card.face === 'reverse' && u.hands.length === 2) next = nextSeat(u, seat, 2);
     if (card.face === 'draw2' || card.face === 'draw4') {
       const count = card.face === 'draw2' ? 2 : 4;
-      // 33.10.4: a +2 stacks in every table: whoever gets it answers with a +2 of any colour and it
-      // passes on, bigger; the «سحب متراكم» table stacks +4 on +4 as well
-      if ((u.mode === 'stack' || card.face === 'draw2') && u.hands[seat].length) {
+      // House rule: +2 answers +2 and +4 answers +4 in every mode.
+      if (u.hands[seat].length) {
         u.pending += count; u.pendingFace = card.face;
       } else {
         draw(u, following, count + u.pending);

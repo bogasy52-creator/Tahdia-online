@@ -63,7 +63,8 @@ test('the board is drawn bigger on a phone and its marbles are drawn tokens', as
   assert.match(petals, /ratio=Math\.max\(\.25,Math\.min\(3,height\/width\/z\)\)/, 'everything stays round');
   assert.match(petals, /function jackToken\(defs,prefix,seat,R,style='glass'\)/);
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.equal(bundles['jackaroo.html'].at(-1), 'assets/css/jackaroo-v33-10-4.css');
+  assert.ok(bundles['jackaroo.html'].includes('assets/css/jackaroo-v33-10-4.css'));
+  assert.equal(bundles['jackaroo.html'].at(-1),'assets/css/six-tables-v33-11-3.css');
   const css = await read('public/assets/css/jackaroo-v33-10-4.css');
   assert.match(css, /#actions:empty\{display:none!important\}/, 'no empty row under the cards');
 });

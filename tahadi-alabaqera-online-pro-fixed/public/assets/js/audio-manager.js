@@ -22,6 +22,11 @@
   // 33.9.8: a marble knocked off the board
   samples.knock='assets/sounds/fx-v33-9-3/knock.wav';
   // Create/decode only a sound the player uses, sharing aliases of the same file.
+  const signatureIds=new Set(["eclipse", "tide", "sakura", "forge", "astral", "arabesque"]);
+  for(const id of signatureIds)samples['luxe-'+id]='assets/sounds/luxe-v33-11-4/'+id+'-reveal.wav';
+  const signatureAudio={};
+  function signatureDie(name,skin){const id=String(skin||'').replace(/^dice-/,'');if(!signatureIds.has(id))return null;const key=id+'-'+(name==='diceImpact'?'land':'roll');if(!signatureAudio[key])signatureAudio[key]=new Audio('assets/sounds/luxe-v33-11-4/'+key+'.wav');return signatureAudio[key];}
+  for(const id of ["eclipse", "tide", "sakura", "forge", "astral", "arabesque"])for(const pose of ['entry','win'])samples['legend-'+id+'-'+pose]='assets/sounds/legend-frames-v33-11-5/'+id+'-'+pose+'.wav';
   function sample(name){const src=samples[name]||samples.click;if(!samplePool[src]){const a=new Audio(src);a.preload='none';a.volume=settings.volume*.9;samplePool[src]=a;}return audio[name]=samplePool[src];}
   const diceSamples={soft:['soft-1','soft-2'],wood:['wood-1','wood-2'],crystal:['crystal-1','crystal-2']},diceAudio={},diceCursor={dice:-1,diceImpact:-1};
   function nextDice(name){const family=diceSamples[settings.diceSound]?settings.diceSound:null,pool=name==='diceImpact'?(family?['land-'+family]:['land-soft','land-wood','land-crystal']):(family?diceSamples[family]:Object.values(diceSamples).flat());diceCursor[name]=(diceCursor[name]+1)%pool.length;const id=pool[diceCursor[name]];if(!diceAudio[id]){const a=new Audio('assets/sounds/dice-v133/'+id+'.wav');a.preload='none';diceAudio[id]=a;}return diceAudio[id];}
@@ -37,12 +42,12 @@
   function tone(freq=440,duration=.055,gain=.045,type='sine',delay=0,endFreq=null){if(settings.muted)return;const c=ensure();if(!c)return;const t=c.currentTime+delay;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(endFreq&&o.frequency.exponentialRampToValueAtTime)o.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq),t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(c.destination);o.start(t);o.stop(t+duration+.02)}
   function contentActive(){return [...contentPlayers].some(a=>!a.paused&&!a.ended);}
   function registerContent(player){contentPlayers.add(player);player.muted=Boolean(settings.muted);player.volume=Math.min(1,Math.max(0,settings.volume));return()=>contentPlayers.delete(player);}
-  function applySettings(){for(const a of contentPlayers){a.muted=Boolean(settings.muted);a.volume=settings.volume;}if(settings.muted){for(const a of [...Object.values(samplePool),...Object.values(diceAudio)])try{a.pause();}catch{}}}
+  function applySettings(){for(const a of contentPlayers){a.muted=Boolean(settings.muted);a.volume=settings.volume;}if(settings.muted){for(const a of [...Object.values(samplePool),...Object.values(diceAudio),...Object.values(signatureAudio)])try{a.pause();}catch{}}}
   function play(name,opts={}){
     if(settings.muted||!settings.effects||contentActive())return;
-    unlock();const dice=name==='dice'||name==='diceImpact',a=dice?nextDice(name):sample(name);if(!a)return;lastCue=Date.now();
+    unlock();const dice=name==='dice'||name==='diceImpact',a=dice?(signatureDie(name,opts.skin)||nextDice(name)):sample(name);if(!a)return;lastCue=Date.now();
     if(web(a.src,Math.min(1.6,(opts.volume??(dice?.44:.7))*settings.volume*1.45)))return;
-    try{if(dice)for(const sound of Object.values(diceAudio))sound.pause();a.pause();a.currentTime=0;a.volume=Math.min(1,Math.max(0,(opts.volume??(dice?.44:.7))*settings.volume));a.play().catch(()=>{})}catch{}
+    try{if(dice)for(const sound of [...Object.values(diceAudio),...Object.values(signatureAudio)])sound.pause();a.pause();a.currentTime=0;a.volume=Math.min(1,Math.max(0,(opts.volume??(dice?.44:.7))*settings.volume));a.play().catch(()=>{})}catch{}
   }
   function timerSample(name,volume){const a=sample(name);if(!a)return;if(web(a.src,Math.min(1.4,volume*settings.volume*1.3)))return;try{a.pause();a.currentTime=0;a.volume=Math.min(1,volume*settings.volume);a.play().catch(()=>{})}catch{}}
   function timerTick(seconds){if(settings.muted||!settings.timer||Number(seconds)<=0||contentActive())return;unlock();timerSample('click',Number(seconds)<=5?.65:.28)}

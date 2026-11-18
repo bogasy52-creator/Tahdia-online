@@ -92,3 +92,29 @@
 .sx-look-art{display:block;max-width:82%;height:auto}
 .sx-look-cue{max-width:92%}
 @media (prefers-reduced-motion:reduce){.bs-avatar.bs-frame-neon,.bs-avatar.bs-frame-flame{animation:none;box-shadow:0 0 0 2px #fff,0 0 0 5px var(--bs-frame,#ff8a1c)!important}}
+
+
+/* Signature frames: decorative geometry never obscures the face. */
+.bs-frame[class*="bs-frame-"]{position:relative;isolation:isolate}
+.bs-frame-luxe{overflow:visible!important}
+.bs-frame-eclipse{overflow:visible!important;--signature-edge:#d8b178;box-shadow:0 0 0 2px #d8b178,0 0 20px #d8b17844!important;animation:signatureReveal .7s ease-out}
+.bs-frame-eclipse::after{content:"";position:absolute;inset:-22%;background:url("../collectibles-v33-11-4/frame-eclipse.svg") center/contain no-repeat;pointer-events:none;z-index:3}
+.bs-frame-eclipse::before{content:"";position:absolute;inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:#d8b178;border-bottom-color:#657a93;opacity:.65;animation:signatureOrbit 8s linear infinite;pointer-events:none;z-index:2}
+.bs-frame-tide{overflow:visible!important;--signature-edge:#7ce6df;box-shadow:0 0 0 2px #7ce6df,0 0 20px #7ce6df44!important;animation:signatureReveal .7s ease-out}
+.bs-frame-tide::after{content:"";position:absolute;inset:-22%;background:url("../collectibles-v33-11-4/frame-tide.svg") center/contain no-repeat;pointer-events:none;z-index:3}
+.bs-frame-tide::before{content:"";position:absolute;inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:#7ce6df;border-bottom-color:#79d6e4;opacity:.65;animation:signatureOrbit 9s linear infinite;pointer-events:none;z-index:2}
+.bs-frame-sakura{overflow:visible!important;--signature-edge:#d28caa;box-shadow:0 0 0 2px #d28caa,0 0 20px #d28caa44!important;animation:signatureReveal .7s ease-out}
+.bs-frame-sakura::after{content:"";position:absolute;inset:-22%;background:url("../collectibles-v33-11-4/frame-sakura.svg") center/contain no-repeat;pointer-events:none;z-index:3}
+.bs-frame-sakura::before{content:"";position:absolute;inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:#d28caa;border-bottom-color:#fffaf7;opacity:.65;animation:signatureOrbit 10s linear infinite;pointer-events:none;z-index:2}
+.bs-frame-forge{overflow:visible!important;--signature-edge:#df713b;box-shadow:0 0 0 2px #df713b,0 0 20px #df713b44!important;animation:signatureReveal .7s ease-out}
+.bs-frame-forge::after{content:"";position:absolute;inset:-22%;background:url("../collectibles-v33-11-4/frame-forge.svg") center/contain no-repeat;pointer-events:none;z-index:3}
+.bs-frame-forge::before{content:"";position:absolute;inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:#df713b;border-bottom-color:#a36847;opacity:.65;animation:signatureOrbit 11s linear infinite;pointer-events:none;z-index:2}
+.bs-frame-astral{overflow:visible!important;--signature-edge:#a9baff;box-shadow:0 0 0 2px #a9baff,0 0 20px #a9baff44!important;animation:signatureReveal .7s ease-out}
+.bs-frame-astral::after{content:"";position:absolute;inset:-22%;background:url("../collectibles-v33-11-4/frame-astral.svg") center/contain no-repeat;pointer-events:none;z-index:3}
+.bs-frame-astral::before{content:"";position:absolute;inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:#a9baff;border-bottom-color:#a095d3;opacity:.65;animation:signatureOrbit 12s linear infinite;pointer-events:none;z-index:2}
+.bs-frame-arabesque{overflow:visible!important;--signature-edge:#b38b42;box-shadow:0 0 0 2px #b38b42,0 0 20px #b38b4244!important;animation:signatureReveal .7s ease-out}
+.bs-frame-arabesque::after{content:"";position:absolute;inset:-22%;background:url("../collectibles-v33-11-4/frame-arabesque.svg") center/contain no-repeat;pointer-events:none;z-index:3}
+.bs-frame-arabesque::before{content:"";position:absolute;inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:#b38b42;border-bottom-color:#fff9e8;opacity:.65;animation:signatureOrbit 13s linear infinite;pointer-events:none;z-index:2}
+@keyframes signatureOrbit{to{transform:rotate(360deg)}}
+@keyframes signatureReveal{from{filter:brightness(1.6);transform:scale(.92)}to{filter:brightness(1);transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){[class*="bs-frame-"]::before,[class*="bs-frame-"]{animation:none!important}}

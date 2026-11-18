@@ -68,8 +68,8 @@ test('API and websocket entry points reject foreign origins', async () => {
   assert.equal(protocolGates.length, 2);
 });
 
-test('local board UIs escape player names before using innerHTML', async () => {
-  for (const rel of ['public/dice.html','public/snakes.html','public/zahra.html','public/jackaroo.html']) {
+test('board UIs render names as text or escape them before using innerHTML', async () => {
+  for (const rel of ['public/snakes.html','public/zahra.html','public/jackaroo.html']) {
     const html = await read(rel);
     assert.match(html, /function escHtml\(/, rel);
   }
@@ -77,7 +77,10 @@ test('local board UIs escape player names before using innerHTML', async () => {
   const snakes = await read('public/snakes.html');
   const zahra = await read('public/zahra.html');
   const jack = await read('public/jackaroo.html');
-  assert.match(dice, /\$\{escHtml\(p\.name\)\}/);
+  assert.match(dice, /renderDiceLeaderboard/);
+  const ranks = await read('public/assets/js/dice-leaderboard-v33-11-5.js');
+  assert.match(ranks, /el\.textContent=text/);
+  assert.doesNotMatch(ranks, /innerHTML/);
   assert.match(snakes, /\$\{escHtml\(x\.name\)\}/);
   assert.match(zahra, /\$\{escHtml\(p\.name\)\}/);
   assert.match(jack, /\$\{escHtml\(p\.name\)\}/);

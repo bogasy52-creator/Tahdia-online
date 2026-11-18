@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "33.11.1",
+  "version": "33.11.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
     "check:cloudflare": "wrangler deploy --dry-run",
     "verify:cloudflare": "npm run verify && npm run check:cloudflare",
     "preverify:release": "node scripts/build-core.mjs && node scripts/build-styles.mjs && node scripts/apply-premium.mjs && node scripts/build-offline.mjs && node scripts/refresh-checksums.mjs",
-    "verify:release": "npm run verify && node scripts/verify-club-runtime.mjs && node scripts/verify-pegs-v33-11.mjs && node scripts/verify-v7.mjs",
+    "verify:release": "npm run verify && node scripts/verify-club-runtime.mjs && node scripts/verify-pegs-v33-11.mjs && node scripts/verify-party-v33-11-2.mjs && node scripts/verify-six-v33-11-3.mjs && node scripts/verify-ludo-luxe-v33-11-4.mjs && node scripts/verify-v7.mjs",
     "start:local": "node scripts/play-local.mjs",
     "test:browser": "node scripts/test-browser-v7.mjs",
     "test:motion": "node scripts/test-motion-v7.mjs",

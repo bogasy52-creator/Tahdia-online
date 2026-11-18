@@ -25,8 +25,9 @@ test('a table of four plays the picture board (19 places a seat, the lane fills 
   const big = Jack.createJackarooGame(['أ', 'ب', 'ج', 'د'], { arm: 18 });
   assert.equal(big.arm, 18); assert.equal('home' in big, false); assert.equal(boardGeometry(big).track, 72); assert.equal(boardGeometry(big).finish, 76);
   const six = Jack.createJackarooGame(Array.from({ length: 6 }, (_, i) => 'P' + i), { arm: Jack.jackarooArm(6), home: 'fill' });
-  assert.equal(six.arm, 13); assert.equal('home' in six, false); assert.equal(boardGeometry(six).track, 78);
-  assert.equal('arm' in Jack.createJackarooGame(Array.from({ length: 6 }, (_, i) => 'P' + i), { arm: 18 }), false, 'six seats never take the big board');
+  assert.equal(six.arm, 19); assert.equal(six.home, 'fill'); assert.equal(boardGeometry(six).track, 114);
+  assert.equal(boardGeometry(Jack.createJackarooGame(Array.from({length:6},(_,i)=>'P'+i))).track,78,'saved games without arm keep their original route');
+  assert.equal(Jack.createJackarooGame(Array.from({ length: 6 }, (_, i) => 'P' + i), { arm: 18 }).arm,18);
   const old = Jack.createJackarooGame(['أ', 'ب', 'ج', 'د']);
   assert.equal(boardGeometry(old).track, 52, 'a game saved before the update plays on as it was');
   assert.equal(boardGeometry({ players: [{}, {}, {}, {}], arm: 99 }).track, 52, 'a strange arm is ignored');
@@ -71,7 +72,7 @@ async function board(state, options) {
 const sample = (seats, arm) => ({ turn: 1, ...(arm ? { arm } : {}), discard: ['?', '5D', '8S', 'JH'], lastEvent: { card: 'JH' }, players: Array.from({ length: seats }, (_, i) => ({ name: ['سعد', 'نورة', 'ماجد', 'فاطمة', 'خالد', 'ريم'][i], marbles: [i, -1, -1, -1] })) });
 const apart = (a, b, gap) => a.every((p) => b.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= p.r + q.r + gap));
 
-for (const [seats, arm] of [[6, 13]]) {
+for (const [seats, arm] of [[6, 13], [6, 19]]) {
   test(`the ${seats}-seat star board with ${arm} holes a seat: numbered holes, lanes, yards and seats that never touch`, async () => {
     const { target, circles, svg } = await board(sample(seats, arm === 13 && seats === 4 ? 0 : arm), { game: 'jackaroo', viewer: 0, look: 'neon', avatars: ['fox', 'robot', 'princess', 'fairy', 'viking', 'samurai'].slice(0, seats).map((hero) => '/assets/characters-v33/portraits/' + hero + '.webp') });
     assert.equal(svg.getAttribute('data-arm'), String(arm));
@@ -79,7 +80,8 @@ for (const [seats, arm] of [[6, 13]]) {
     assert.equal(track.length, seats * arm); assert.equal(lanes.length, seats * 4); assert.equal(cups.length, seats);
     // every seat's quarter is numbered 1..arm, starting at its own start
     const numbers = target.querySelectorAll('[data-track-number]').map((t) => Number(t.textContent));
-    for (let n = 1; n <= arm; n++) assert.equal(numbers.filter((x) => x === n).length, seats, 'number ' + n);
+    assert.equal(target.querySelectorAll('[data-house]').length,seats);
+    for (let n = 1; n < arm; n++) assert.equal(numbers.filter((x) => x === n).length, seats, 'number ' + n);
     // the yards: four holes each, by the seat
     const yards = target.querySelectorAll('[data-pocket]');
     assert.equal(yards.length, seats);
@@ -92,13 +94,13 @@ for (const [seats, arm] of [[6, 13]]) {
     assert.ok(apart(yardHoles, lanes, .8), 'the yards clear the lanes');
     for (let i = 0; i < track.length; i++) for (let j = i + 1; j < track.length; j++) assert.ok(Math.hypot(track[i].x - track[j].x, track[i].y - track[j].y) >= track[i].r + track[j].r + .4, `holes ${i} and ${j}`);
     // every player's portrait and name on their side
-    assert.equal(target.querySelectorAll('[data-avatar]').length, seats);
-    assert.equal(target.querySelectorAll('[data-name-plate]').length, seats);
-    assert.ok(target.querySelectorAll('[data-avatar] image').length === seats, 'the characters, not letters');
+    assert.equal(target.querySelectorAll('[data-player-tag]').length,seats);
+    assert.equal(target.querySelectorAll('[data-player-tag] rect').length,seats);
+    assert.ok(target.querySelectorAll('[data-player-tag] image').length === seats, 'the characters, not letters');
     // the middle: the last three cards played, the newest with what it does
     assert.equal(target.querySelector('[data-pile-cards]').getAttribute('data-pile-cards'), '3');
     assert.ok(target.querySelector('[data-pile-act="swap"]'), 'the jack swaps');
-    assert.equal(target.querySelectorAll('[data-quarter]').length, seats);
+    assert.equal(target.querySelectorAll('[data-lane]').length,seats);
   });
 }
 
@@ -133,7 +135,7 @@ test('the page: portraits on the board, the look picker on the menu and in the g
   assert.match(page, /avatars: state\.players\.map\(\(_, i\) => seatLook\(room, i\)\.character\),/);
   assert.match(page, /<div id="jackLooks" class="jk-looks" role="radiogroup" aria-label="شكل اللوحة">/);
   assert.match(page, /<button id="jackLookNext" class="bs-btn jk-look-next" type="button" aria-label="غيّر شكل اللوحة">🎨<\/button>/);
-  assert.match(page, /preview: true, active: -1, viewer: 0, avatars: \["fox", "princess", "robot", "fairy"\], look: jackLook\(\) \}/);
+  assert.match(page, /preview: true, active: -1, viewer: 0, avatars: \["fox", "princess", "robot", "fairy", "viking", "samurai"\], look: jackLook\(\) \}/);
   assert.match(await read('public/assets/js/jackaroo-cards.js'), /window\.BS_JACK_CARDS = Object\.freeze\(\{ INFO, ORDER, ICON, face, legend, info, rankOf, url \}\);/);
   const css = await read('public/assets/css/jackaroo-v33-6.css');
   assert.match(css, /body\.game-jackaroo \.tbl-hero-art\{transform:none;/);

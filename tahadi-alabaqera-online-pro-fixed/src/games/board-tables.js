@@ -29,7 +29,7 @@ import { Career } from '../career/core.js';
 // 33.9.5: «ماستر الجواهر» is a duel too: one board, two players
 export const TABLE_GAMES = Object.freeze(['snakes', 'zahra', 'jackaroo', 'dice', 'billiards', 'jewels', 'carrom', 'pegs']);
 export const MAX_SEATS = Object.freeze({ snakes: 10, zahra: 6, jackaroo: 6, dice: 10, billiards: 2, jewels: 2, carrom: 2, pegs: 6 });
-export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 4, jackaroo: 4, dice: 3, billiards: 2, jewels: 2, carrom: 2, pegs: 2 });
+export const QUICK_SEATS = Object.freeze({ snakes: 4, zahra: 6, jackaroo: 6, dice: 3, billiards: 2, jewels: 2, carrom: 2, pegs: 2 });
 export const TABLE_LOBBY_MS = 10_000;
 // a group room's table starts when all its players are in, or this long after the first one came
 // 33.9.1: the group room's players come straight in, so a missing one is waited for 15 seconds
@@ -51,9 +51,10 @@ export const DEFAULT_LOOK = Object.freeze({ dice: 'dice-ivory', pawn: 'pawn-clas
 export const FREE_LOOK_ITEMS = Object.freeze((Career?.CATALOG || []).filter((item) => (item.type === 'dice' || item.type === 'pawn') && item.price === 0 && !item.source).map((item) => item.id));
 
 /** A seat's look from what its owner equipped; anything unknown falls back to the default. */
-export function cleanLook({ dice, pawn, character } = {}) {
+export function cleanLook({ dice, pawn, character, frame } = {}) {
   const hero = String(character || '').replace(/^character-/, '');
   return {
+    ...(items('frame').includes(frame)&&frame!=='frame-none'?{frame}:{}),
     dice: DICE.includes(dice) ? dice : DEFAULT_LOOK.dice,
     pawn: PAWNS.includes(pawn) ? pawn : DEFAULT_LOOK.pawn,
     character: HEROES.includes(hero) ? hero : DEFAULT_LOOK.character,
@@ -67,7 +68,7 @@ export function pickBotLevel(rng = Math.random) {
 }
 
 // 33.4.0: snakes & ladders lets you pick the table size: 2, 3 or 4 players
-export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], pegs: [2, 3, 4, 5, 6], ludo: [2, 3, 4] });
+export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], zahra:[4,6],jackaroo:[4,6], pegs: [2, 3, 4, 5, 6], ludo: [2, 3, 4, 6] });
 /** A table size the player picked, when this game offers one; otherwise null. */
 export function chosenSeats(game, value, variant = null) {
   const n = Number(value);
@@ -78,11 +79,12 @@ export function chosenSeats(game, value, variant = null) {
 /** How many seats the table gets for this many players (and the size picked, if any). */
 export function seatsFor(game, humans, quick = false, chosen = null, variant = null) {
   if(game==='pegs'&&variant==='teams')return Math.max(4,humans>4||Number(chosen)>4?6:4);
-  if (game === 'jackaroo') return humans > 4 ? 6 : 4;
+  if (game === 'jackaroo') return humans>4||Number(chosen)===6||quick&&Number(chosen)!==4?6:4;
   if (game === 'billiards' || game === 'jewels' || game === 'carrom') return 2;
   const picked = chosenSeats(game, chosen, variant);
   const least = picked || (quick ? QUICK_SEATS[game] : 2);
-  return Math.min(seatLimit(game, variant, MAX_SEATS[game]), Math.max(least, humans));
+  const size=Math.min(seatLimit(game, variant, MAX_SEATS[game]),Math.max(least,humans));
+  return game==='zahra'&&isLudoVariant(variant)&&size===5?6:size;
 }
 
 /** Seat → player id (null for a bot). In Jackaroo the first players in sit as partners. */
@@ -117,7 +119,7 @@ export function tableVariant(game, variant) {
 }
 export const isLudoVariant = (variant) => variant === 'ludo' || variant === 'ludo-quick';
 export function seatLimit(game, variant, limit) {
-  return game === 'zahra' && isLudoVariant(variant) ? Math.min(4, limit) : limit;
+  return limit;
 }
 
 function createState(game, names, variant, rng, now=Date.now()) {

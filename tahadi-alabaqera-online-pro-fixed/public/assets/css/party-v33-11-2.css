@@ -1,0 +1,9 @@
+.party-mode-summary{display:block;color:#c5e5ef;font-size:12px;line-height:1.6;margin-top:3px;font-weight:600}
+.party-editor-settings>label{min-width:0}
+.party-editor-settings label small,.party-end-rule{font-size:12px;line-height:1.7;color:#c8c7db;font-weight:500}
+.party-editor-settings [data-field="mode"]{min-height:46px;border-color:#9bbdd366}
+.party-editor-settings select:disabled{opacity:1;color:#d3d4e2;background:#25273e;cursor:default}
+.party-completion{display:block;flex-basis:100%;font-size:12px;line-height:1.7;color:#bce5d8}
+#stageHeader{flex-wrap:wrap}
+.party-end-rule{margin:0;align-self:center;padding:8px 12px;border-radius:12px;background:#ffffff08}
+@media(max-width:600px){.party-editor-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.party-editor-settings>label:first-child{grid-column:1/-1}.party-end-rule{grid-column:1/-1}.party-mode-summary{font-size:11px}}

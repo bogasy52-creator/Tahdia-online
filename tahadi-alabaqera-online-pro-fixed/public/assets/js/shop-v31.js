@@ -3,7 +3,7 @@
    never the rules. Prices, ownership and checkout go through BS_CAREER, which
    the server checks again. The page keeps the hooks older tests and pages use
    (data-item, data-control, data-view, data-filter, the bag and preview dialogs). */
-import {renderPetalBoard} from './board-petals-v29.js?v=33.10.7-r4';
+import {renderPetalBoard} from './board-petals-v29.js?v=33.11.3';
 const $=id=>document.getElementById(id),core=window.BS_CAREER_CORE,api=()=>window.BS_CAREER;
 const SVG_NS='http://www.w3.org/2000/svg';
 const CATS=[
@@ -136,7 +136,7 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
  }else if(item.type==='dice'){
   stage.dataset.diceSkin=item.id;for(const [name,value]of Object.entries(core.COSMETIC_STYLES[item.id]||{}))stage.style.setProperty(name,value);
   if(DIE_ONE[item.id])stage.style.setProperty('--die-one',DIE_ONE[item.id]);
-  const die=make('div','die');stage.append(die);window.BS_DICE?.mount?.(die);window.BS_DICE?.set?.(die,5);stage.roll=()=>window.BS_DICE?.roll?.(die,window.BS_DICE.random(),{quiet:false});
+  const die=make('div','die');die.dataset.diceSkin=item.id;stage.append(die);window.BS_DICE?.mount?.(die);window.BS_DICE?.set?.(die,5);stage.roll=()=>window.BS_DICE?.roll?.(die,window.BS_DICE.random(),{quiet:false});
  }else if(item.type==='pawn'&&item.id==='pawn-character'){
   // 33.0.0: «شخصيتي» shows the hero you equipped, the one that walks the board
   const id=api()?.get?.()?.equipped?.character||'character-fox';
@@ -155,6 +155,8 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
   const P=window.BS_PROFILE_PRO,me=window.BS_SOCIAL?.profile?.()||{},name=api()?.get?.()?.name||me.displayName||'أنت';
   const pic=P?P.avatar({username:me.username||'',photo:me.photo||null,name},'bs-avatar sx-frame-pic'):make('span','bs-avatar sx-frame-pic',String(name).slice(0,1));
   pic.classList.add('bs-frame','bs-frame-'+(item.design||'none'));stage.append(pic);
+  window.BS_LEGEND_FRAMES?.decorateAvatar(pic,item.id);
+  if(item.collection==='legend-frames-33-11-5'){const label=make('b','legend-nameplate',name);window.BS_LEGEND_FRAMES?.decorateName(label,item.id);stage.append(label);}
  }else if(item.type==='striker'||item.type==='cue'){
   const L=window.BS_LOOKS,cv=document.createElement('canvas');cv.className='sx-look-art sx-look-'+item.type;cv.width=320;cv.height=item.type==='cue'?120:320;stage.append(cv);
   const c=cv.getContext?.('2d');
@@ -345,6 +347,27 @@ function characterShowcase(item){
  const oldCleanup=previewCleanup;previewCleanup=()=>{cleanup();window.BS_HERO_FX.cancel();panel.remove();oldCleanup();};
 }
 
+function signatureShowcase(item){
+ if(item.collection!=='signature-33-11-4')return;
+ const panel=make('section','signature-panel'),list=make('ul','signature-features');
+ panel.append(make('small','signature-kicker','إصدار التواقيع'),make('h3',null,'تفاصيل القطعة'));
+ for(const feature of item.features||[])list.append(make('li',null,feature));panel.append(list);
+ const sound=make('button','sx-try-button','اسمع التوقيع الصوتي');sound.type='button';
+ sound.onclick=()=>{const settings=window.BS_AUDIO?.getSettings?.()||{};if(settings.muted||settings.effects===false||Number(settings.volume??1)===0){message('الصوت مكتوم في إعداداتك؛ فعّله ثم جرّب.');return;}window.BS_AUDIO?.play?.(item.sound,{volume:.65});};panel.append(sound);
+ panel.append(make('p','signature-fair','الشكل والصوت لك؛ احتمالات النرد وقواعد اللعب متساوية للجميع.'));
+ $('previewOptions').append(panel);
+}
+
+function legendShowcase(item){
+ if(item.collection!=='legend-frames-33-11-5')return;
+ const panel=make('section','legend-shop-details'),features=make('ul'),controls=make('div','legend-preview-controls'),note=make('p','legend-preview-note','إطار مستقل؛ جرّب دخوله وفوزه قبل الشراء.');
+ panel.append(make('small','legend-kicker','هوية مستقلة'),make('h3',null,'مميزات '+item.name));
+ for(const feature of item.features||[])features.append(make('li',null,feature));panel.append(features);let scene=null;
+ for(const[pose,label]of[['entry','دخول اللعبة'],['win','احتفال الفوز']]){const button=make('button','sx-try-button',label);button.type='button';button.dataset.legendPreview=pose;button.onclick=()=>{scene?.destroy?.();scene=window.BS_LEGEND_FRAMES?.play(item.id,pose,{name:profile().name||'أنت',container:$('previewArt'),preview:true});note.textContent=pose==='entry'?'هذا دخول إطارك، باسمه وصوته.':'هذا احتفال إطارك عند الفوز.';};controls.append(button);}
+ const stop=make('button','sx-try-button','المظهر فقط');stop.type='button';stop.onclick=()=>{scene?.destroy?.();note.textContent='الإطار والاسم فقط، دون مشهد.';};controls.append(stop);panel.append(controls,note,make('p','signature-fair','المؤثرات تجميلية وتحترم الكتم وتقليل الحركة.'));$('previewOptions').append(panel);
+ const old=previewCleanup;previewCleanup=()=>{scene?.destroy?.();old();};
+}
+
 function openPreview(item){
  if($('bagDialog').open)$('bagDialog').close();previewCleanup();previewId=item.id;$('previewMessage').textContent='';
  const t=tier(item);$('previewType').textContent=TYPE_LABEL[item.type]+' · '+TIER[t];$('previewType').className='sx-chip tier-'+t;$('previewName').textContent=item.name;$('previewMaterial').textContent=item.type==='emote'?item.glyph+' إيموجي متحرك':item.type==='phrase'?'عبارة جاهزة':item.type==='move'?item.glyph+' حركة على اللوحة':subtitle(item);$('previewDescription').textContent=item.description;
@@ -356,7 +379,7 @@ function openPreview(item){
  if(REACTION.has(item.type)){const play=make('button','sx-try-button',item.type==='move'?'شغّل الحركة':'جرّب على الشاشة');play.type='button';play.onclick=()=>window.BS_REACTIONS?.preview?.(item.id,$('previewDialog'));options.append(play);if(!window.BS_REACTIONS?.preview)play.hidden=true;}
  if(item.type==='victory'){const play=make('button','sx-try-button','أعد الاحتفال');play.type='button';play.onclick=()=>replace({});options.append(play);}
  const [href,label]=item.id==='pawn-character'?TRY.character:TRY[item.type]||TRY.pawn;$('previewTry').href=href;$('previewTry').textContent=label;
- updatePreviewControls();previewCleanup=()=>mounted.dispose();if(!$('previewDialog').open)$('previewDialog').showModal();characterShowcase(item);window.dispatchEvent(new CustomEvent('bs-shop-preview',{detail:item}));
+ updatePreviewControls();previewCleanup=()=>mounted.dispose();if(!$('previewDialog').open)$('previewDialog').showModal();characterShowcase(item);signatureShowcase(item);legendShowcase(item);window.dispatchEvent(new CustomEvent('bs-shop-preview',{detail:item}));
 }
 
 /* ---------- bag ---------- */

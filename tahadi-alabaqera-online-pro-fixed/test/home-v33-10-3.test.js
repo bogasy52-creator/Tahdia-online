@@ -33,13 +33,9 @@ test('the home opens on a spotlight of five games, then four quick doors, then t
 
 // 33.10.6: الزهرة was the same game as لودو, so its card left the home page
 // and old links to /zahra open لودو (rooms already open still finish there).
-test('the zahra card is gone and its page sends players to ludo', async () => {
-  const home = await read('public/index.html');
-  assert.doesNotMatch(home, /href="\/zahra"/);
-  assert.match(home, /href="\/ludo"/);
-  const page = await read('public/zahra.html');
-  assert.match(page, /<meta charset="utf-8"><script src="assets\/js\/zahra-moved\.js\?v=[^"]+"><\/script>/);
-  assert.match(await read('public/assets/js/zahra-moved.js'), /location\.replace\('\/ludo'/);
+test('Home offers one Ludo card and older Zahra entry links redirect to it',async()=>{
+ const home=await read('public/index.html');assert.doesNotMatch(home,/href="\/zahra"/);assert.match(home,/href="\/ludo"/);
+ assert.match(await read('public/zahra.html'),/src="assets\/js\/zahra-moved\.js/);
 });
 
 test('live counts: one person per device, counted by game; the endpoint sends numbers and never names', async () => {

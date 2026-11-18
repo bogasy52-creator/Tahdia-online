@@ -1917,3 +1917,42 @@ html[data-effects="off"] .club-sticker *,.bs-effects-off .club-sticker *{animati
 .snake-cell.clash-hit{animation:clash-hit .9s ease-out}
 @keyframes clash-hit{0%{box-shadow:inset 0 0 0 3px #fff,0 0 30px #ff5a6a}100%{box-shadow:none}}
 @media (prefers-reduced-motion:reduce){.clash-ring,.snake-cell.clash-hit{animation:none}}
+
+/* assets/css/signature-v33-11-4.css */
+/* Six-player Ludo keeps the four-player controls and makes room for every player. */
+.ludo-six .ludo-plates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-height:50px}
+.ludo-six .ludo-plate{min-width:0;justify-content:center;gap:3px}
+.ludo-six .lp-card{padding:5px;gap:5px;min-width:0;border-radius:13px}
+.ludo-six .lp-face{width:29px;height:29px}
+.ludo-six .lp-meta b{font-size:11px;max-width:8ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ludo-six .lp-meta small{font-size:9px}
+.ludo-six .lp-die{--die-size:34px;max-width:39px}
+.ludo-six .lu-board-wrap{width:min(100%,calc(var(--game-vh,100dvh) - 276px))}
+.ludo-page .ludo-plate[hidden]{display:none!important}
+.signature-panel{width:100%;padding:20px;border:1px solid #c3ac7b55;border-radius:20px;background:linear-gradient(145deg,#263244,#101823);display:grid;gap:12px;text-align:right}
+.signature-panel h3{margin:0;color:#fff1d5}
+.signature-kicker{color:#ddc599;font-size:12px;letter-spacing:.03em}
+.signature-features{margin:0;padding-inline-start:20px;display:grid;gap:8px;color:#e3e9f2;line-height:1.7}
+.signature-fair{font-size:12px;color:#b4c2d5;margin:0;line-height:1.7}
+.signature-pair{border:1px solid #b7a47755;background:#ffffff0a;color:#f4e6c4;border-radius:13px;padding:12px;cursor:pointer}
+.sx-art-dice:has([data-dice-skin^="dice-"]){isolation:isolate}
+@media(max-width:380px){.ludo-six .lp-card{gap:3px}.ludo-six .lp-face{width:24px;height:24px}.ludo-six .lp-meta b{max-width:6ch}.ludo-six .lp-die{--die-size:29px;max-width:32px}}
+[data-dice-skin="dice-eclipse"]{--signature-edge:#d8b178}
+[data-dice-skin="dice-eclipse"] .pro-face{background-image:repeating-radial-gradient(ellipse at center,transparent 0 14%,#d8b17822 15% 17%,transparent 18% 25%)}
+[data-dice-skin="dice-eclipse"].is-six .pro-die-glow{background:radial-gradient(ellipse,#d8b178aa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-tide"]{--signature-edge:#7ce6df}
+[data-dice-skin="dice-tide"] .pro-face{background-image:repeating-linear-gradient(155deg,transparent 0 12%,#7ce6df33 13% 15%,transparent 17% 24%)}
+[data-dice-skin="dice-tide"].is-six .pro-die-glow{background:radial-gradient(ellipse,#7ce6dfaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-sakura"]{--signature-edge:#d28caa}
+[data-dice-skin="dice-sakura"] .pro-face{background-image:radial-gradient(ellipse at 20% 15%,#ffffff88,transparent 32%),repeating-conic-gradient(#d28caa22 0deg 12deg,transparent 13deg 60deg)}
+[data-dice-skin="dice-sakura"].is-six .pro-die-glow{background:radial-gradient(ellipse,#d28caaaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-forge"]{--signature-edge:#df713b}
+[data-dice-skin="dice-forge"] .pro-face{background-image:repeating-conic-gradient(from 45deg,#df713b44 0deg 3deg,transparent 4deg 90deg)}
+[data-dice-skin="dice-forge"].is-six .pro-die-glow{background:radial-gradient(ellipse,#df713baa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-astral"]{--signature-edge:#a9baff}
+[data-dice-skin="dice-astral"] .pro-face{background-image:radial-gradient(circle at 18% 25%,#fff 0 1px,transparent 2px),radial-gradient(circle at 80% 70%,#a9baff 0 1px,transparent 2px)}
+[data-dice-skin="dice-astral"].is-six .pro-die-glow{background:radial-gradient(ellipse,#a9baffaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-arabesque"]{--signature-edge:#b38b42}
+[data-dice-skin="dice-arabesque"] .pro-face{background-image:repeating-conic-gradient(from 45deg,#b38b4233 0deg 3deg,transparent 4deg 90deg)}
+[data-dice-skin="dice-arabesque"].is-six .pro-die-glow{background:radial-gradient(ellipse,#b38b42aa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+@media(prefers-reduced-motion:reduce){.pro-die.is-six .pro-die-glow{transform:none!important}}

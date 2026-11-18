@@ -91,8 +91,9 @@ test('a game with no online room: one board for everyone, results only go up, th
   assert.deepEqual(rows.map((row) => [row.id, row.rank, row.points]), [[a, 1, 20], [b, 2, 19], [c, 3, 0]]);
   // the jewels stage follows the playlist's difficulty
   advanceParty(room, 4001 + CONTINUOUS_BREAK_MS);
-  assert.equal(room.round.local.page, '/journey');
-  assert.ok(room.round.local.stage >= 13 && room.round.local.stage <= 18);
+  assert.equal(room.round.link.page, '/jewels');
+  assert.equal(room.round.local, undefined);
+  assert.equal(room.round.link.tables.length, 1);
 });
 
 function roomFixture(Room, kind, body) {

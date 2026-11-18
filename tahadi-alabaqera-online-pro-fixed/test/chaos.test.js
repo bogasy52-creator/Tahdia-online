@@ -164,7 +164,7 @@ test('the practice pause moves every clock of the race', () => {
 test('the race has its own code family, room, party seat and catalog card', async () => {
   for (let i = 0; i < 20; i++) { const code = roomCodeFor('chaos'); assert.match(code, /^98\d{4}$/); assert.equal(gameOfCode(code), 'chaos'); }
   assert.equal(CHALLENGES.chaos.title, 'أونو'); assert.equal(CHALLENGES.chaos.players, 8);
-  assert.deepEqual(LINKED_GAMES.chaos, { page: '/uno', min: 1, max: 8 });
+  assert.deepEqual(LINKED_GAMES.chaos, { page: '/uno', min: 1, max: 8, tables:true });
   assert.ok(PARTY_GAMES.some((g) => g.id === 'chaos'));
   const read = (p) => readFile(new URL('../' + p, import.meta.url), 'utf8');
   const room = await read('src/challenges/challenge-room.js');

@@ -12,6 +12,8 @@ for(const name of await readdir(root)){
  next=next.replace(/<script\b[^>]*src=["']\/?assets\/js\/tahdia-premium-v25\.js[^"']*["'][^>]*><\/script>/g,'');
  if(!atelier)next=next.replace(/<\/head>/i,css+'</head>').replace(/<\/body>/i,js+'</body>');
  next=next.replace(/(assets\/js\/)([a-z0-9/-]+)(\.js\?v=)v?[\d.]+/g,(_all,prefix,file,suffix)=>prefix+file+suffix+release);
+ next=next.replace(/<script[^>]+src=["'][^"']*legend-(?:frame-art|frames)-v33-11-5\.js[^"']*["'][^>]*><\/script>/g,'');
+ if(next.includes('profile-core.js'))next=next.replace(/<\/body>/i,'<script src="/assets/js/legend-frame-art-v33-11-5.js?v='+release+'"></script><script src="/assets/js/legend-frames-v33-11-5.js?v='+release+'"></script></body>');
  if(next!==raw){await writeFile(target,next);count++;}
 }
 console.log('Tahdia '+release+' ready; '+count+' page(s) updated.');

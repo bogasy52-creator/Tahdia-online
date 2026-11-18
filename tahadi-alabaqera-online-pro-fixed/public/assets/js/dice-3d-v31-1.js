@@ -15,6 +15,12 @@
   /* Skins: colours come from the shop item; finish decides metal, glass,
      gloss and the pip shape. */
   const SKINS={
+    'dice-eclipse':{"body": "#111c2c", "pip": "#f4dab0", "edge": "#d8b178", "edgeTint": 0.8, "round": 0.1, "pipRound": 0.35, "pipSize": 0.088, "metal": 0.85, "rough": 0.18, "coat": 1.2, "glass": 0, "pattern": 5},
+    'dice-tide':{"body": "#124d70", "pip": "#d5fff3", "edge": "#7ce6df", "edgeTint": 0.8, "round": 0.17, "pipRound": 1, "pipSize": 0.088, "metal": 0.2, "rough": 0.18, "coat": 1.2, "glass": 0.8, "pattern": 6},
+    'dice-sakura':{"body": "#efe1e0", "pip": "#843b63", "edge": "#d28caa", "edgeTint": 0.8, "round": 0.19, "pipRound": 1, "pipSize": 0.088, "metal": 0.05, "rough": 0.18, "coat": 1.2, "glass": 0.15, "pattern": 7},
+    'dice-forge':{"body": "#2c1b1a", "pip": "#ffdb9a", "edge": "#df713b", "edgeTint": 0.8, "round": 0.07, "pipRound": 0.25, "pipSize": 0.088, "metal": 0.7, "rough": 0.18, "coat": 1.2, "glass": 0, "pattern": 8},
+    'dice-astral':{"body": "#302653", "pip": "#f3eaff", "edge": "#a9baff", "edgeTint": 0.8, "round": 0.13, "pipRound": 0.4, "pipSize": 0.088, "metal": 0.4, "rough": 0.18, "coat": 1.2, "glass": 0.45, "pattern": 9},
+    'dice-arabesque':{"body": "#e8dfc7", "pip": "#165b60", "edge": "#b38b42", "edgeTint": 0.8, "round": 0.1, "pipRound": 0.3, "pipSize": 0.088, "metal": 0.25, "rough": 0.18, "coat": 1.2, "glass": 0, "pattern": 10},
     'dice-ivory':{body:'#f4efe4',pip:'#0b1424',edge:'#f4efe4',round:.16,pipRound:1,pipSize:.088,metal:0,rough:.32,coat:1,glass:0,pattern:0},
     'dice-studio':{body:'#efe9db',pip:'#182027',edge:'#efe9db',round:.17,pipRound:1,pipSize:.09,metal:0,rough:.26,coat:1,glass:0,pattern:0},
     'dice-porcelain':{body:'#f1ebdc',pip:'#24313b',edge:'#d9b25e',edgeTint:.85,round:.18,pipRound:1,pipSize:.086,metal:0,rough:.18,coat:1.2,glass:0,pattern:0},
@@ -98,6 +104,12 @@ vec3 shade(vec3 p,vec3 n,vec3 vv){
   vec3 a=abs(o);float mx=max(a.x,max(a.y,a.z)),mn=min(a.x,min(a.y,a.z)),md=a.x+a.y+a.z-mx-mn;
   float edge=smoothstep(.5-uShape.x*1.15,.5-uShape.x*.25,md);
   vec3 albedo=uBody;float metal=uMat.x,rough=uMat.y,glass=uMat.z,coat=uMat.w;
+  if(uPattern==5.){float rings=smoothstep(.88,.98,cos(length(o.xy)*72.));albedo=mix(albedo,uEdge,rings*.55);}
+  if(uPattern==6.){float wave=sin(o.x*28.+sin(o.z*18.)*2.+o.y*14.);albedo=mix(albedo,uEdge,smoothstep(.85,1.,wave)*.38);}
+  if(uPattern==7.){float petal=cos(atan(o.y,o.x)*6.+length(o.xy)*12.);albedo=mix(albedo,vec3(.84,.49,.66),smoothstep(.91,1.,petal)*.28);}
+  if(uPattern==8.){vec2 sc=fract(o.xy*14.);float scale=abs(length(sc-.5)-.48);albedo=mix(albedo,uEdge,smoothstep(.06,.01,scale)*.5);}
+  if(uPattern==9.){albedo+=uEdge*step(.987,hash(floor(o*90.)))*.8;float orbit=abs(length(o.xy)-.65);albedo=mix(albedo,uEdge,smoothstep(.018,.004,orbit)*.5);}
+  if(uPattern==10.){vec2 g=abs(fract(o.xy*11.)-.5);float inlay=smoothstep(.025,.007,abs(g.x+g.y-.44));albedo=mix(albedo,uEdge,inlay*.6);}
   if(uPattern==1.){float ring=sin(length(q)*230.)*.5+.5;rough=clamp(rough+ring*.08-.04,.05,1.);albedo*=.94+.06*ring;}
   if(uPattern==2.){float neb=noise(o*5.+3.)*.6+noise(o*11.)*.4;albedo=mix(albedo,vec3(.26,.1,.42),smoothstep(.45,.85,neb));albedo+=vec3(.9)*step(.985,hash(floor(o*70.)));}
   if(uPattern==3.){float vein=abs(noise(o*6.)-.5);albedo+=vec3(.08,.07,.06)*smoothstep(.06,.0,vein);}

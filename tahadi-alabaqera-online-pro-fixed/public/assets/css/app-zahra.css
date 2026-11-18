@@ -1646,3 +1646,63 @@ html body#zahraStudio.zahra-studio-v33{--z-bg:#10282c;--z-panel:#173338;--z-line
 /* 33.10.4 «سريع» */
 .zahra-arena .jk-quick-tag{display:inline-flex;align-items:center;margin-inline-start:7px;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#ffd36b,#f59e0b);color:#3a2205;font:800 11.5px/1.3 Tajawal,system-ui,sans-serif;vertical-align:middle;box-shadow:0 0 12px #f59e0b66}
 .zahra-arena .jk-quick-tag[hidden]{display:none}
+
+/* assets/css/six-tables-v33-11-3.css */
+/* Six seats share the familiar materials and controls of the four-seat tables. */
+body.game-jackaroo .jack-board-wrap:has(svg[data-seats="6"]){overflow:visible}
+body.game-jackaroo svg[data-seats="6"]{--board-hole-size:1;max-width:100%}
+body.game-jackaroo #board svg[data-seats="6"] .tbl-num{font-weight:800}
+body.game-zahra .zahra-roster .player-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;min-height:220px!important;padding:24px 18px!important;background:radial-gradient(ellipse at 50% 20%,#4b3b7399,transparent 70%),linear-gradient(155deg,#1f2445,#10152c);border:1px solid #f1cf7433;border-radius:26px}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-die{min-width:0;padding:12px 10px!important;gap:10px!important;border-radius:20px;background:#0d132660;border:1px solid #ffffff12}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-pair{min-height:112px!important;display:grid;place-items:center}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .die.pro-die{--die-size:clamp(76px,18vw,108px)!important;flex-shrink:0}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-die small{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-die.is-turn{border-color:#f2d383bb;box-shadow:inset 0 1px #ffe8a655,0 0 24px #e7ba5722}
+body.game-dice #myDieBox[role="button"]{cursor:pointer;touch-action:manipulation}
+body.game-dice #myDieBox[role="button"]:focus-visible{outline:3px solid #f9d988;outline-offset:4px}
+body.game-dice #myDieBox.is-idle{cursor:default}
+body.game-dice #turnTotal{display:flex;justify-content:space-between;align-items:center;gap:14px;border-radius:20px;padding:16px 22px;margin:14px 0 0;background:linear-gradient(120deg,#d1a75122,#ffffff05);border:1px solid #d6b86c40}
+body.game-dice #turnTotal strong{font-size:clamp(34px,8vw,52px);font-variant-numeric:tabular-nums;line-height:1.1;color:#ffe4a1}
+body.game-dice .bank-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+body.game-dice .bank-row .bs-btn{min-height:54px;font-weight:800}
+@media(max-width:520px){:is(html,#v31) body.game-dice #game#game .dice-duel-v33{gap:10px;min-height:196px!important;padding:14px 10px!important}:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .duel-pair{min-height:96px!important}:is(html,#v31) body.game-dice #game#game .dice-duel-v33 .die.pro-die{--die-size:80px!important}body.game-dice #turnTotal{padding:12px 16px}}
+
+/* assets/css/signature-v33-11-4.css */
+/* Six-player Ludo keeps the four-player controls and makes room for every player. */
+.ludo-six .ludo-plates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-height:50px}
+.ludo-six .ludo-plate{min-width:0;justify-content:center;gap:3px}
+.ludo-six .lp-card{padding:5px;gap:5px;min-width:0;border-radius:13px}
+.ludo-six .lp-face{width:29px;height:29px}
+.ludo-six .lp-meta b{font-size:11px;max-width:8ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ludo-six .lp-meta small{font-size:9px}
+.ludo-six .lp-die{--die-size:34px;max-width:39px}
+.ludo-six .lu-board-wrap{width:min(100%,calc(var(--game-vh,100dvh) - 276px))}
+.ludo-page .ludo-plate[hidden]{display:none!important}
+.signature-panel{width:100%;padding:20px;border:1px solid #c3ac7b55;border-radius:20px;background:linear-gradient(145deg,#263244,#101823);display:grid;gap:12px;text-align:right}
+.signature-panel h3{margin:0;color:#fff1d5}
+.signature-kicker{color:#ddc599;font-size:12px;letter-spacing:.03em}
+.signature-features{margin:0;padding-inline-start:20px;display:grid;gap:8px;color:#e3e9f2;line-height:1.7}
+.signature-fair{font-size:12px;color:#b4c2d5;margin:0;line-height:1.7}
+.signature-pair{border:1px solid #b7a47755;background:#ffffff0a;color:#f4e6c4;border-radius:13px;padding:12px;cursor:pointer}
+.sx-art-dice:has([data-dice-skin^="dice-"]){isolation:isolate}
+@media(max-width:380px){.ludo-six .lp-card{gap:3px}.ludo-six .lp-face{width:24px;height:24px}.ludo-six .lp-meta b{max-width:6ch}.ludo-six .lp-die{--die-size:29px;max-width:32px}}
+[data-dice-skin="dice-eclipse"]{--signature-edge:#d8b178}
+[data-dice-skin="dice-eclipse"] .pro-face{background-image:repeating-radial-gradient(ellipse at center,transparent 0 14%,#d8b17822 15% 17%,transparent 18% 25%)}
+[data-dice-skin="dice-eclipse"].is-six .pro-die-glow{background:radial-gradient(ellipse,#d8b178aa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-tide"]{--signature-edge:#7ce6df}
+[data-dice-skin="dice-tide"] .pro-face{background-image:repeating-linear-gradient(155deg,transparent 0 12%,#7ce6df33 13% 15%,transparent 17% 24%)}
+[data-dice-skin="dice-tide"].is-six .pro-die-glow{background:radial-gradient(ellipse,#7ce6dfaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-sakura"]{--signature-edge:#d28caa}
+[data-dice-skin="dice-sakura"] .pro-face{background-image:radial-gradient(ellipse at 20% 15%,#ffffff88,transparent 32%),repeating-conic-gradient(#d28caa22 0deg 12deg,transparent 13deg 60deg)}
+[data-dice-skin="dice-sakura"].is-six .pro-die-glow{background:radial-gradient(ellipse,#d28caaaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-forge"]{--signature-edge:#df713b}
+[data-dice-skin="dice-forge"] .pro-face{background-image:repeating-conic-gradient(from 45deg,#df713b44 0deg 3deg,transparent 4deg 90deg)}
+[data-dice-skin="dice-forge"].is-six .pro-die-glow{background:radial-gradient(ellipse,#df713baa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-astral"]{--signature-edge:#a9baff}
+[data-dice-skin="dice-astral"] .pro-face{background-image:radial-gradient(circle at 18% 25%,#fff 0 1px,transparent 2px),radial-gradient(circle at 80% 70%,#a9baff 0 1px,transparent 2px)}
+[data-dice-skin="dice-astral"].is-six .pro-die-glow{background:radial-gradient(ellipse,#a9baffaa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+[data-dice-skin="dice-arabesque"]{--signature-edge:#b38b42}
+[data-dice-skin="dice-arabesque"] .pro-face{background-image:repeating-conic-gradient(from 45deg,#b38b4233 0deg 3deg,transparent 4deg 90deg)}
+[data-dice-skin="dice-arabesque"].is-six .pro-die-glow{background:radial-gradient(ellipse,#b38b42aa,transparent 68%);filter:blur(5px);transform:scale(1.35)}
+@media(prefers-reduced-motion:reduce){.pro-die.is-six .pro-die-glow{transform:none!important}}

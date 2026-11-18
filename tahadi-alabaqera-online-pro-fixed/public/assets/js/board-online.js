@@ -206,7 +206,7 @@ export function createStepPlayer(apply,{maxBacklog=14,onError}={}){
 
 export function renderRoomPlayers(container,roomState,colors=['#8b5cf6','#22d3ee','#f0b94a','#22c55e']){
   if(!container||!roomState)return;container.innerHTML='';
-  roomState.players.forEach((p,i)=>{const row=document.createElement('div');row.className='room-player'+(p.id===roomState.me?.id?' me':'');row.innerHTML=`<span class="room-avatar" style="--pc:${colors[i%colors.length]}">${escapeHtml((p.name||'؟').slice(0,1))}</span><span class="room-player-copy"><b>${escapeHtml(p.name)}</b><small>${p.role==='host'?'المضيف':'لاعب'} • ${p.connected?'متصل':'يعيد الاتصال'}</small></span><span class="ready-dot ${p.ready?'yes':''}">${p.ready?'جاهز':'انتظار'}</span>`;container.appendChild(row)})
+  roomState.players.forEach((p,i)=>{const row=document.createElement('div');row.className='room-player'+(p.id===roomState.me?.id?' me':'');row.innerHTML=`<span class="room-avatar" style="--pc:${colors[i%colors.length]}">${escapeHtml((p.name||'؟').slice(0,1))}</span><span class="room-player-copy"><b>${escapeHtml(p.name)}</b><small>${p.role==='host'?'المضيف':'لاعب'} • ${p.connected?'متصل':'يعيد الاتصال'}</small></span><span class="ready-dot ${p.ready?'yes':''}">${p.ready?'جاهز':'انتظار'}</span>`;container.appendChild(row);window.BS_LEGEND_FRAMES?.decorateAvatar(row.querySelector('.room-avatar'),p.look?.frame);window.BS_LEGEND_FRAMES?.decorateName(row.querySelector('b'),p.look?.frame);})
 }
 function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 

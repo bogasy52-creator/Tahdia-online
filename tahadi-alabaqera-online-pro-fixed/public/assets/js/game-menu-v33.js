@@ -115,12 +115,12 @@
       const saved=Number(store.get(SEATS_KEY(game)));
       seats=seatChoices.includes(saved)?saved:seatChoices.includes(options.seatsDefault)?options.seatsDefault:seatChoices.at(-1);
       const box=make('div','gm33-seats');box.setAttribute('role','radiogroup');box.setAttribute('aria-label','عدد اللاعبين');
-      box.append(make('span','gm33-seats-label','عدد اللاعبين'));
+      box.append(make('span','gm33-seats-label',seatChoices.includes(6)?'عدد اللاعبين · حتى ٦':'عدد اللاعبين'));
       const row=make('div','gm33-seat-row');
       const paint=()=>{const allowed=modes.find(m=>m.id===mode)?.seats||seatChoices;if(!allowed.includes(seats))seats=allowed.at(-1);row.querySelectorAll('.gm33-seat').forEach(b=>{const on=Number(b.dataset.seats)===seats;b.classList.toggle('is-on',on);b.setAttribute('aria-checked',String(on));b.disabled=pending||!allowed.includes(Number(b.dataset.seats));});};paintSeats=paint;
       for(const count of seatChoices){
         const b=button('gm33-seat',null,()=>{if(pending)return;seats=count;store.set(SEATS_KEY(game),String(count));paint();sound('select');});
-        b.dataset.seats=String(count);b.setAttribute('role','radio');b.append(make('b',null,String(count)),make('small',null,'لاعبين'));row.append(b);
+        b.dataset.seats=String(count);b.setAttribute('role','radio');b.append(make('b',null,String(count)),make('small',null,'لاعبين'));if(count===6)b.setAttribute('aria-label','٦ لاعبين · طاولة كبيرة');row.append(b);
       }
       box.append(row,make('small','gm33-seats-note',options.seatsNote||'الأماكن الفاضية يكمّلها منافسين متنوعي المستوى.'));
       menu.append(box);paint();

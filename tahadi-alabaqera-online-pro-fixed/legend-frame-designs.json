@@ -1,0 +1,122 @@
+[
+  {
+    "id": "eclipse",
+    "name": "تاج السلطان",
+    "price": 1100,
+    "edge": "#f6cf71",
+    "light": "#fff5c8",
+    "dark": "#603b12",
+    "gem": "#dc245a",
+    "accent": "#58233c",
+    "entry": "ستار البلاط",
+    "win": "تتويج السلطان",
+    "kind": "royal",
+    "font": "royal",
+    "notes": [
+      196,
+      247,
+      294,
+      392
+    ]
+  },
+  {
+    "id": "tide",
+    "name": "عرش الأعماق",
+    "price": 850,
+    "edge": "#68e5df",
+    "light": "#d9fffa",
+    "dark": "#10556d",
+    "gem": "#8ce6ff",
+    "accent": "#12435c",
+    "entry": "بوابة المدّ",
+    "win": "لآلئ الانتصار",
+    "kind": "wave",
+    "font": "royal",
+    "notes": [
+      330,
+      440,
+      659,
+      880
+    ]
+  },
+  {
+    "id": "sakura",
+    "name": "تاج اللؤلؤ",
+    "price": 1000,
+    "edge": "#efb4cb",
+    "light": "#fff7ee",
+    "dark": "#834a68",
+    "gem": "#e778b4",
+    "accent": "#60384b",
+    "entry": "تفتّح اللؤلؤ",
+    "win": "مطر البتلات",
+    "kind": "bloom",
+    "font": "royal",
+    "notes": [
+      523,
+      659,
+      784,
+      1047
+    ]
+  },
+  {
+    "id": "forge",
+    "name": "تاج التنين",
+    "price": 1550,
+    "edge": "#ec9850",
+    "light": "#ffe7a6",
+    "dark": "#622310",
+    "gem": "#ff4d32",
+    "accent": "#4b171a",
+    "entry": "صحوة التنين",
+    "win": "عاصفة الجمر",
+    "kind": "fire",
+    "font": "geometric",
+    "notes": [
+      110,
+      165,
+      220,
+      330
+    ]
+  },
+  {
+    "id": "astral",
+    "name": "إمبراطور المجرّة",
+    "price": 1800,
+    "edge": "#b8b0ff",
+    "light": "#f1eaff",
+    "dark": "#473979",
+    "gem": "#9de9ff",
+    "accent": "#2c2355",
+    "entry": "بوابة المجرّة",
+    "win": "انفجار النجوم",
+    "kind": "portal",
+    "font": "geometric",
+    "notes": [
+      220,
+      330,
+      440,
+      660
+    ]
+  },
+  {
+    "id": "arabesque",
+    "name": "سلطان السدو",
+    "price": 1350,
+    "edge": "#e8c77d",
+    "light": "#fff2c5",
+    "dark": "#694817",
+    "gem": "#4dc2ae",
+    "accent": "#164f4f",
+    "entry": "بوابة المجلس",
+    "win": "وسام السدو",
+    "kind": "gate",
+    "font": "geometric",
+    "notes": [
+      196,
+      262,
+      392,
+      523
+    ]
+  }
+]

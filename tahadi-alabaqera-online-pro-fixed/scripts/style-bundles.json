@@ -47,7 +47,10 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/six-tables-v33-11-3.css",
+    "assets/css/signature-v33-11-4.css",
+    "assets/css/dice-leaderboard-v33-11-5.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -107,7 +110,8 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/jackaroo-v33-8.css",
     "assets/css/jackaroo-v33-9.css",
-    "assets/css/jackaroo-v33-10-4.css"
+    "assets/css/jackaroo-v33-10-4.css",
+    "assets/css/six-tables-v33-11-3.css"
   ],
   "journey.html": [
     "assets/css/platform.css",
@@ -243,7 +247,8 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/signature-v33-11-4.css"
   ],
   "snakes.html": [
     "assets/css/platform.css",
@@ -279,7 +284,8 @@
     "assets/css/table-viewport-v33-7.css",
     "assets/css/club-pro-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/snakes-v33-8.css"
+    "assets/css/snakes-v33-8.css",
+    "assets/css/signature-v33-11-4.css"
   ],
   "social.html": [
     "assets/css/platform.css",
@@ -339,7 +345,9 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/zahra-studio-v33-10.css"
+    "assets/css/zahra-studio-v33-10.css",
+    "assets/css/six-tables-v33-11-3.css",
+    "assets/css/signature-v33-11-4.css"
   ],
   "picture.html": [
     "assets/css/platform.css",
@@ -404,7 +412,8 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/party-v33-10-6.css"
+    "assets/css/party-v33-10-6.css",
+    "assets/css/party-v33-11-2.css"
   ],
   "leaderboard.html": [
     "assets/css/platform.css",
@@ -617,7 +626,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/pegs-v33-10-2.css",
-    "assets/css/pegs-v33-11.css"
+    "assets/css/pegs-v33-11.css",
+    "assets/css/signature-v33-11-4.css"
   ],
   "ludo.html": [
     "assets/css/platform.css",
@@ -647,6 +657,8 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/ludo-v33-10-5.css"
+    "assets/css/ludo-v33-10-5.css",
+    "assets/css/profile-pro-v33-9-4.css",
+    "assets/css/signature-v33-11-4.css"
   ]
 }

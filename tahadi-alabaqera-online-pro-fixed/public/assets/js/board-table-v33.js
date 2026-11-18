@@ -5,9 +5,9 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.9.10-gameplay3';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.11.5';
 
-const QUICK_SEATS={snakes:4,zahra:4,jackaroo:4,dice:3,billiards:2,carrom:2,pegs:2};
+const QUICK_SEATS={snakes:4,zahra:6,jackaroo:6,dice:3,billiards:2,carrom:2,pegs:2};
 
 export function createTable({game,page=null,title=null,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError,onResync}={}){
   // 33.10.5: a page that plays another game's rooms (لودو on the tables of الزهرة) keeps its own address and name
@@ -158,7 +158,7 @@ export function seatLook(room,seat){
   const id=room?.order?.[seat];
   const p=(room?.players||[]).find(x=>x.index===seat)||(room?.players||[])[seat];
   const look=p?.look||{};
-  return {dice:look.dice||'dice-ivory',pawn:look.pawn||'pawn-classic',character:look.character||'fox',bot:Boolean(p?.bot),level:p?.level||null,name:p?.name||'',id};
+  return {frame:look.frame||'frame-none',dice:look.dice||'dice-ivory',pawn:look.pawn||'pawn-classic',character:look.character||'fox',bot:Boolean(p?.bot),level:p?.level||null,name:p?.name||'',id};
 }
 export const BOT_LEVEL_NAMES=Object.freeze({easy:'سهل',medium:'متوسط',hard:'صعب'});
 /** Keep the shared renderer API; player rows use names without extra badges. */
