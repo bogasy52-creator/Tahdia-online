@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict';import {Worker as Thread} from 'node:worker_threads';import {createPoolSimulationClient} from '../public/assets/js/billiards/simulation-client-v33-11-6.js';import {createPoolGame,playPoolShot} from '../public/assets/js/engines/pool-engine.js';
+class NativeWorker{
+ constructor(url){const shim=`import {parentPort} from 'node:worker_threads';globalThis.self={postMessage:m=>parentPort.postMessage(m)};await import(${JSON.stringify(String(url))});parentPort.on('message',data=>self.onmessage({data}));`;this.thread=new Thread(new URL('data:text/javascript,'+encodeURIComponent(shim)));this.thread.on('message',data=>this.onmessage?.({data}));this.thread.on('error',e=>this.onerror?.(e));}
+ postMessage(m){this.thread.postMessage(m);}terminate(){this.thread.terminate();}
+}
+const jobs=createPoolSimulationClient({WorkerClass:NativeWorker}),state=createPoolGame(['a','b'],{first:0}),input={dir:[1,0],power:.8};let ticks=0;const timer=setInterval(()=>ticks++,1);
+try{const next=await jobs.play(state,0,input);assert.deepEqual(next,playPoolShot(state,0,input));assert.ok((await jobs.simulate(next.shot)).frames.length);assert.equal(jobs.metrics.fallback,0);assert.equal(jobs.metrics.worker,1);assert.ok(ticks>0);console.log(JSON.stringify({ok:true,checks:['Exact browser worker module executed in an independent native thread','Main-thread timer stayed active while physics ran','Result matches authoritative physics; cached replay avoids a second simulation'],metrics:jobs.metrics},null,2));}finally{clearInterval(timer);jobs.dispose();}

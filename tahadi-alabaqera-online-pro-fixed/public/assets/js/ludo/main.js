@@ -2,10 +2,10 @@
    rooms, quick tables, the party and the stats are the same; the board is the classic cross.
    The board turns so your yard is at the bottom left, and each player's card sits in the corner of
    the screen where his yard is, with his die next to it. */
-import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.10.7-ludo1';
+import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.11.6';
 import { createZahraPractice } from '../zahra-practice-v33-10.js?v=33.11.4';
 import { getLegalLudoMoves, ludoGeometry } from '../engines/ludo-engine.js?v=33.11.4';
-import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.11.4';
+import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.11.6';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -224,6 +224,7 @@ async function apply(next, { animate, signal } = {}) {
         const drawn = render({ seat: event.player, token: event.token, from: event.from, to: event.to, captured: event.captured });
         if (event.from === -1) window.BS_AUDIO?.play?.('select', { volume: 0.6 });
         await drawn; if (!valid()) return;
+        window.BS_AUDIO?.play?.('boardLand',{volume:.35});
         if (caps) {
           window.BS_AUDIO?.play?.('capture'); window.BS_AUDIO?.vibrate?.([50, 30, 70]);
           burst('💥 أكل!', 'capture');
@@ -240,6 +241,7 @@ async function apply(next, { animate, signal } = {}) {
   if (state.winner !== null && prev?.winner === null) window.BS_AUDIO?.play?.(state.winner === me() ? 'win' : 'finish');
 }
 
+window.BS_AUDIO?.prime?.(['move','boardLand','capture','finish','win','select','dice','diceImpact']);
 const table = createTable({
   game: 'zahra', page: '/ludo', title: 'لودو',
   modes: [

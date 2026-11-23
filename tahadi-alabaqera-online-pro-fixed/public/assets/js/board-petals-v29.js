@@ -1,3 +1,4 @@
+import {jackarooSixLayout} from './jackaroo/six-board-v33-11-6.js?v=33.11.6';
 import {boardGeometry,boardStonePosition,stoneOffset} from './engines/board-geometry-v29.js?v=33.9.10';
 /* Tahdia 31.0.0 — the Zahra and Jackaroo tables (file name kept for imports).
    Zahra: a classic cross board — coloured yards, a cream track, home lanes and
@@ -439,19 +440,11 @@ function jackCrossLayout(arm){
     finish:[0,1,2,3].map(s=>place({x:0,y:CROSS.cup},s)),
     bases:[0,1,2,3].map(s=>[[-1,-1],[1,-1],[-1,1],[1,1]].map(([i,j])=>place({x:yx+i*g,y:yy+j*g},s)))};
 }
-function jackSixLayout(arm){
- const L=starLayout(6,arm);L.hole*=.87;L.kind='cross-six';
- const guides=L.track.map((p,i)=>{if(i%arm===0)return null;const before=L.track[(i-1+L.track.length)%L.track.length],after=L.track[(i+1)%L.track.length];let x=after.y-before.y,y=before.x-after.x;if(x*(p.x-100)+y*(p.y-100)<0){x=-x;y=-y;}const length=Math.hypot(x,y)||1;return {x:x/length,y:y/length};});
- L.labels=L.track.map((p,i)=>guides[i]?{x:p.x+guides[i].x*(L.hole+2.5),y:p.y+guides[i].y*(L.hole+2.5),num:i%arm}:null);
- // Spread the numbers around tight bends; the same clearance survives every viewer rotation.
- const clearance=(p,i)=>{let value=Infinity;L.labels.forEach((q,j)=>{if(q&&j!==i)value=Math.min(value,Math.hypot(p.x-q.x,p.y-q.y)/5.1);});L.track.forEach((q,j)=>{value=Math.min(value,Math.hypot(p.x-q.x,p.y-q.y)/(L.hole*(j%arm===0?1.2:1)+2.4));});return value;};
- for(let pass=0;pass<3;pass++)L.labels.forEach((label,i)=>{if(!label||clearance(label,i)>=1)return;const p=L.track[i],u=guides[i],initial={...label};let best=label,score=clearance(label,i);
-  for(const d of [L.hole+2.5,L.hole+3.4,L.hole+4.3,L.hole+5.2])for(const t of [0,-.8,.8,-1.6,1.6,-2.4,2.4]){const at={x:p.x+u.x*d-u.y*t,y:p.y+u.y*d+u.x*t,num:label.num};if(at.x<5||at.x>195||at.y<5||at.y>195)continue;const c=Math.min(1.1,clearance(at,i))-.012*Math.hypot(at.x-initial.x,at.y-initial.y);if(c>score){best=at;score=c;}}
-  L.labels[i]=best;
- });return L;
-}
+function jackSixLayout(arm){return jackarooSixLayout(arm);}
 // each player's portrait and name, in the corner of the screen by their yard (bottom = you)
 const SEAT_SPOTS=Object.freeze([[-66,64,-66,77],[-64,-66,-64,-53],[66,-64,66,-51],[64,66,64,79]]);
+// Same portrait/name treatment as four seats, in the six free spaces outside the fingers.
+const SIX_SEAT_SPOTS=Object.freeze([[-66,79,-66,91],[-86,0,-83,12],[-66,-83,-66,-71],[66,-83,66,-71],[86,0,83,12],[66,79,66,91]]);
 // the octagon of the picture: corners cut at 54 units, flat sides at 98 from the middle
 function octagon(inset){const E=98-inset,K=54.3-inset*.414;return [[-E+K,-E],[E-K,-E],[E,-E+K],[E,E-K],[E-K,E],[-E+K,E],[-E,E-K],[-E,-E+K]].map(([x,y])=>({x:+(100+x).toFixed(2),y:+(100+y).toFixed(2)}));}
 const pathOf=pts=>'M'+pts.map(p=>p.x+' '+p.y).join('L')+'Z';
@@ -484,7 +477,7 @@ function lockBadges(root,overlay,L,state,colors){
   if(!locked.length)return;
   const turn=p=>{const r=ROT*Math.PI/180,c=Math.cos(r),q=Math.sin(r),x=p.x-100,y=p.y-100;return{x:100+x*c-y*q,y:100+x*q+y*c};};
   const dots=[...L.track,...L.lanes.flat(),...L.bases.flat()].map(p=>({...turn(p),r:L.hole+1.1})).concat(L.labels.filter(Boolean).map(p=>({...turn(p),r:3.1})),{x:100,y:100,r:29});
-  const view=L.seats===6?L.seatsAt.flatMap(p=>{const q=turn(p);return [{...q,r:8.6},{x:q.x,y:q.y+10,w:30,h:7.4}];}):SEAT_SPOTS.map(([ax,ay,px,py])=>[{x:100+ax,y:100+ay,r:8.6},{x:100+px,y:100+py,w:30,h:7.4}]).flat();
+  const view=(L.seats===6?SIX_SEAT_SPOTS:SEAT_SPOTS).map(([ax,ay,px,py])=>[{x:100+ax,y:100+ay,r:8.6},{x:100+px,y:100+py,w:30,h:7.4}]).flat();
   const W=16.6,H=7,taken=[];
   const edge=Math.max(9.5,100-100/VIEW_ZOOM+2),clear=(c)=>{const x0=c.x-W/2,x1=c.x+W/2,y0=c.y-H/2,y1=c.y+H/2;if(x0<edge||x1>200-edge||y0<9||y1>191)return false;
     for(const o of [...dots,...view.filter(v=>v.r),...taken]){if(o.w){if(Math.abs(o.x-c.x)<(o.w+W)/2+.6&&Math.abs(o.y-c.y)<(o.h+H)/2+.6)return false;continue;}const dx=Math.max(x0-o.x,0,o.x-x1),dy=Math.max(y0-o.y,0,o.y-y1);if(Math.hypot(dx,dy)<o.r+.5)return false;}
@@ -505,19 +498,21 @@ function lockBadges(root,overlay,L,state,colors){
   }
 }
 // the frame of each look: neon light, a gold band, walnut wood, or a gold line on marble
-function crossFrame(root,defs,prefix,look){
-  const outer=pathOf(octagon(0)),band=pathOf(octagon(3.1)),inner=pathOf(octagon(4));
+function crossFrame(root,defs,prefix,look,seats=4){
+  // Keep the four-seat materials; the reference six-seat table has a round rim.
+  const outline=seats===6?inset=>polygon(72,98-inset,-Math.PI/2):inset=>pathOf(octagon(inset));
+  const outer=outline(0),band=outline(3.1),inner=outline(4);
   root.append(n('path',{d:outer,fill:'#000',opacity:.35,transform:'translate(0 1.6)'}));
   if(look.frame==='neon'){
     root.append(n('path',{d:outer,fill:'#050a1c'}),n('path',{d:band,fill:radial(defs,prefix+'-surface',[[0,look.surface[0]],[.6,look.surface[1]],[1,look.surface[2]]],.5,.5,.72)}));
     const line=(d,attrs)=>root.append(n('path',{d,fill:'none','stroke-linejoin':'round',...attrs}));
-    line(pathOf(octagon(2.6)),{stroke:look.edge,'stroke-width':3.8,opacity:.13});line(pathOf(octagon(2.6)),{stroke:look.edge,'stroke-width':1.8,opacity:.32});
-    line(pathOf(octagon(2.6)),{stroke:mix(look.edge,'#ffffff',.55),'stroke-width':1.1});line(pathOf(octagon(5.6)),{stroke:look.edge,'stroke-width':.45,opacity:.75});
+    line(outline(2.6),{stroke:look.edge,'stroke-width':3.8,opacity:.13});line(outline(2.6),{stroke:look.edge,'stroke-width':1.8,opacity:.32});
+    line(outline(2.6),{stroke:mix(look.edge,'#ffffff',.55),'stroke-width':1.1});line(outline(5.6),{stroke:look.edge,'stroke-width':.45,opacity:.75});
     // the lights along the frame, warm on the sides as in the picture
     const spark=radial(defs,prefix+'-spark',[[0,look.spark[1],1],[.35,look.spark[0],.55],[1,look.spark[0],0]]);
-    for(const [x,y] of [[70,2.6],[130,2.6],[70,197.4],[130,197.4]])root.append(n('ellipse',{cx:x,cy:y,rx:9,ry:3.1,fill:spark,opacity:.9}));
-    for(const [x,y] of [[2.6,73],[2.6,127],[197.4,73],[197.4,127]])root.append(n('ellipse',{cx:x,cy:y,rx:9,ry:3.1,fill:spark,opacity:.9,transform:`rotate(90 ${x} ${y})`}));
-    look.corners.forEach((tint,i)=>{const [x,y,a]=[[31,31,-45],[169,31,45],[169,169,-45],[31,169,45]][i],glow=radial(defs,`${prefix}-corner-${i}`,[[0,'#ffffff',.85],[.3,tint,.6],[1,tint,0]]);root.append(n('ellipse',{cx:x,cy:y,rx:12,ry:3.4,fill:glow,transform:`rotate(${a} ${x} ${y})`}));});
+    for(const [x,y] of (seats===6?[[100,2.6],[100,197.4]]:[[70,2.6],[130,2.6],[70,197.4],[130,197.4]]))root.append(n('ellipse',{cx:x,cy:y,rx:9,ry:3.1,fill:spark,opacity:.9}));
+    for(const [x,y] of (seats===6?[]:[[2.6,73],[2.6,127],[197.4,73],[197.4,127]]))root.append(n('ellipse',{cx:x,cy:y,rx:9,ry:3.1,fill:spark,opacity:.9,transform:`rotate(90 ${x} ${y})`}));
+    (seats===6?Array.from({length:6},(_,i)=>look.corners[i%look.corners.length]):look.corners).forEach((tint,i)=>{const [x,y,a]=seats===6?(()=>{const a=(i*60+30)*Math.PI/180;return[100+Math.cos(a)*97.4,100+Math.sin(a)*97.4,i*60+120]})():[[31,31,-45],[169,31,45],[169,169,-45],[31,169,45]][i],glow=radial(defs,`${prefix}-corner-${i}`,[[0,'#ffffff',.85],[.3,tint,.6],[1,tint,0]]);root.append(n('ellipse',{cx:x,cy:y,rx:12,ry:3.4,fill:glow,transform:`rotate(${a} ${x} ${y})`}));});
   }else{
     const gold=gradient(defs,prefix+'-gold',[[0,'#fff3c4'],[.22,'#e4b552'],[.5,'#9b6b1d'],[.74,'#f2cf74'],[1,'#a4741f']],1,1);
     const wood=gradient(defs,prefix+'-wood',[[0,'#a87444'],[.45,'#6b4424'],[1,'#3a2210']],1,1);
@@ -552,7 +547,7 @@ function crossMiddle(root,defs,prefix,state,look,pile,colors){
 }
 function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],pile=null,viewer=-1}={}){
   const names=state.players.map(playerLabel),geo=boardGeometry(state),colors=JACK_COLORS,fill=geo.fill;
-  crossFrame(root,defs,prefix,look);
+  crossFrame(root,defs,prefix,look,L.seats);
   // the home lanes: a line from the house to the lane, the four holes up the middle of the arm
   for(let s=0;s<L.seats;s++){
     const color=colors[s],house=L.track[s*L.arm],lane=L.lanes[s],g=n('g',{'data-lane':s});
@@ -589,13 +584,14 @@ function drawJackCross(root,overlay,defs,prefix,state,L,look,active,{avatars=[],
   // the players: on the screen, each in the corner by their own yard; you at the bottom
   const view=Number.isInteger(viewer)&&viewer>=0&&viewer<L.seats?viewer:0;
   for(let s=0;s<L.seats&&s<state.players.length;s++){
-    const color=colors[s],on=s===active,spot=SEAT_SPOTS[(s-view+4)%4],raw=L.seats===6?L.seatsAt[s]:null,a=ROT*Math.PI/180;
-    const face=raw?{x:100+(raw.x-100)*Math.cos(a)-(raw.y-100)*Math.sin(a),y:100+(raw.x-100)*Math.sin(a)+(raw.y-100)*Math.cos(a)}:{x:100+spot[0],y:100+spot[1]},tag=raw?{x:face.x,y:face.y+10}:{x:100+spot[2],y:100+spot[3]},r=6.6;
+    const color=colors[s],on=s===active,spot=(L.seats===6?SIX_SEAT_SPOTS:SEAT_SPOTS)[(s-view+L.seats)%L.seats];
+    const face={x:100+spot[0],y:100+spot[1]},tag={x:100+spot[2],y:100+spot[3]},r=6.6;
+    if(L.seats===6){const edge=Math.max(10,100-100/VIEW_ZOOM+15);face.x=Math.max(edge,Math.min(200-edge,face.x));tag.x=Math.max(edge,Math.min(200-edge,tag.x));}
     const g=n('g',{'data-seat':s,'data-player-tag':s,'data-active':String(on),role:'button',tabindex:0,'aria-label':'ملف '+(names[s]||'اللاعب')});
     if(on||look.glow)g.append(n('circle',{cx:face.x,cy:face.y,r:r+1.6,fill:'none',stroke:color,'stroke-width':on?2.2:1.3,opacity:on?.6:.22,class:on?'yard-glow':null}));
     g.append(n('circle',{cx:face.x,cy:face.y,r,fill:mix(color,'#000000',.62),stroke:color,'stroke-width':on?1.3:.9}));
-    const hero=avatars[s],url=hero?(String(hero).includes('/')?String(hero):globalThis.BS_CHARACTERS?.poster?.(hero)):'';
-    if(url){const clip=n('clipPath',{id:`${prefix}-face-${s}`});clip.append(n('circle',{cx:face.x,cy:face.y,r:r-.45}));defs.append(clip);const W=r*4.1,H=W*320/384;g.append(n('image',{href:url,x:(face.x-W/2).toFixed(2),y:(face.y-H*.36).toFixed(2),width:W.toFixed(2),height:H.toFixed(2),preserveAspectRatio:'xMidYMid meet','clip-path':`url(#${prefix}-face-${s})`}));}
+    const hero=avatars[s],faceUrl=L.seats===6?globalThis.BS_CAREER_CORE?.heroFace?.(hero)||'':'',url=faceUrl||(hero?(String(hero).includes('/')?String(hero):globalThis.BS_CHARACTERS?.poster?.(hero)):'');
+    if(url){const clip=n('clipPath',{id:`${prefix}-face-${s}`});clip.append(n('circle',{cx:face.x,cy:face.y,r:r-.45}));defs.append(clip);const W=faceUrl?r*2-.9:r*4.1,H=faceUrl?W:W*320/384;g.append(n('image',{href:url,x:(face.x-W/2).toFixed(2),y:(face.y-(faceUrl?H/2:H*.36)).toFixed(2),width:W.toFixed(2),height:H.toFixed(2),preserveAspectRatio:faceUrl?'xMidYMid slice':'xMidYMid meet','clip-path':`url(#${prefix}-face-${s})`}));}
     else g.append(n('text',{x:face.x,y:(face.y+r*.36).toFixed(2),'text-anchor':'middle','font-size':(r*1.05).toFixed(2),'font-weight':900,'font-family':'Tajawal,Arial,sans-serif',fill:'#ffffff'},([...(names[s]||'؟')][0]||'؟')));
     const fit=fitName(names[s]||'',24,3.2,1),pw=Math.min(28,Math.max(15,fit.width+5)),ph=6.2;
     g.append(n('rect',{x:(tag.x-pw/2).toFixed(2),y:(tag.y-ph/2).toFixed(2),width:pw.toFixed(2),height:ph,rx:ph/2,fill:on?mix(color,look.plate[0],.5):look.plate[0],stroke:color,'stroke-width':on?.9:.55,opacity:.97}),nameText(tag.x,tag.y,fit,{fill:look.plate[1]}));
@@ -682,13 +678,13 @@ export function renderPetalBoard(target,state,options={}){
   const lookKey=game!=='jackaroo'?'':options.look&&BOARD_LOOKS[options.look]?options.look:jackLook();
   // the Jackaroo board turns so your own seat is at the bottom, by your hand
   const seat=Number.isInteger(viewer)&&viewer>=0&&viewer<g.seats?viewer:-1;
-  ROT=game!=='jackaroo'||seat<0?0:g.seats===4?[0,-90,180,90][seat]:((180-seat*360/g.seats)%360+540)%360-180;if(ROT===-180)ROT=180;
+  ROT=game!=='jackaroo'||seat<0?0:g.seats===4?[0,-90,180,90][seat]:((-seat*360/g.seats)%360+540)%360-180;if(ROT===-180)ROT=180;
   const pileCards=game==='jackaroo'?(Array.isArray(pile)?pile:(state.discard||[]).slice(-3)).concat(state.lastEvent?.card||[]):[];
   const signature=JSON.stringify([game,active,themeKey,lookKey,pawnId,legal,legalStones,quiet,looks,avatars,pileCards,g.arm,ROT,seat,state.players.map(p=>[p.name,p.tokens||p.marbles])]),existing=target.querySelector('.petal-board-v30'),previous=existing?motionHistory.get(target):null;
   if(!preview)surfaces.set(target,{state,options});
   if(existing&&previous?.signature===signature)return existing;
   const prefix='tbl-'+(++sequence),L=layoutFor(game,g.seats,g.arm);
-  const svg=n('svg',{viewBox:'0 0 200 200',role:'group','aria-label':game==='zahra'?'لوحة الزهرة؛ أربعة أحجار لكل لاعب':'طاولة جاكارو؛ أربع كرات لكل لاعب','data-material':themeKey,'data-look':lookKey||null,'data-game':game,'data-seats':g.seats,'data-arm':game==='jackaroo'?g.arm:null});
+  const svg=n('svg',{viewBox:'0 0 200 200',role:'group','aria-label':game==='zahra'?'لوحة الزهرة؛ أربعة أحجار لكل لاعب':'طاولة جاكارو؛ أربع كرات لكل لاعب','data-material':themeKey,'data-look':lookKey||null,'data-game':game,'data-seats':g.seats,'data-arm':game==='jackaroo'?g.arm:null,'data-layout':game==='jackaroo'&&g.seats===6?'parallel-six':null});
   svg.classList.add('petal-board-v29','petal-board-v30','table-v31');
   const defs=n('defs'),root=n('g',{'data-board-root':'','data-rot':ROT,transform:ROT?`rotate(${ROT} 100 100)`:null});svg.append(defs,root);
   // the players' portraits stay upright in the corners of the screen, outside the turned board
@@ -697,7 +693,7 @@ export function renderPetalBoard(target,state,options={}){
   else if(game==='jackaroo')drawStar(root,defs,prefix,state,L,LOOKS[STAR_LOOK[lookKey]||'neon'],active,lookKey,{avatars:avatars||[],pile});else drawCross(root,defs,prefix,state,L,theme,active);
   const positions=new Map(),values=new Map(),motions=[],effects=[],traces=[],cellSize=L.c||12.8;
   // a marble a little bigger than its hole, never wider than the step between two holes
-  const marble=game==='jackaroo'?Math.min(L.hole*1.45,L.step*.53):0,marbleScale=+marble.toFixed(3);
+  const marble=game==='jackaroo'?Math.min(L.hole*1.45,L.step*(g.seats===6?.45:.53)):0,marbleScale=+marble.toFixed(3);
   const stoneLayer=n('g',{'data-layer':'stones'});
   // Stones further down the board are drawn later so they overlap correctly.
   const order=[];state.players.forEach((player,seat)=>(player.tokens||player.marbles).forEach((progress,index)=>order.push({seat,index,progress,p:petalStonePoint(state,seat,index,game)})));
@@ -711,7 +707,7 @@ export function renderPetalBoard(target,state,options={}){
     if(can&&!quiet)piece.append(n('ellipse',{cx:0,cy:game==='jackaroo'?0:cellSize*.28,rx:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.42,ry:game==='jackaroo'?+(marble+.9).toFixed(2):cellSize*.2,fill:'none',stroke:'#ffffff','stroke-width':.7,'data-legal-ring':'true',class:'legal-ring'}));
     // 33.9.2: a ring of the seat's colour round every marble: a white or silver one shows on a white hole
     // 33.10.4: the token carries its own rim; a soft halo of the seat's colour lifts it off the board
-    if(game==='jackaroo')piece.append(n('circle',{r:+(marble+.55).toFixed(2),fill:'none',stroke:JACK_COLORS[seat],'stroke-width':.7,opacity:.55,'data-seat-ring':seat}));
+    if(game==='jackaroo')piece.append(n('circle',{r:+(marble+(g.seats===6?.05:.55)).toFixed(2),fill:'none',stroke:JACK_COLORS[seat],'stroke-width':g.seats===6?.45:.7,opacity:.55,'data-seat-ring':seat}));
     const bob=n('g',{class:'stone-bob'});bob.append(stoneGraphic(game,defs,prefix,seat,cellSize,looks?.[seat],marbleScale||.66));piece.append(bob);piece.append(n('text',{x:0,y:game==='jackaroo'?+(marble*.34).toFixed(2):0,'text-anchor':'middle','data-piece-number':true,'pointer-events':'none','font-size':game==='jackaroo'?+(marble*.98).toFixed(2):2.5,'font-weight':800,fill:'#ffffff',stroke:'#0d1524','stroke-width':game==='jackaroo'?.55:.5,'paint-order':'stroke',transform:ROT?`rotate(${-ROT})`:null},String(index+1)));
     if(can){const pick=()=>onSelect?onSelect(seat,index):onPick(index);if(!quiet)piece.onclick=pick;piece.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();pick();}};}
     stoneLayer.append(piece);
@@ -773,17 +769,19 @@ export function fitJackarooViewport(target,width,height,zoom=1){
  // 33.10.4: `zoom` > 1 draws the board bigger and lets its frame run off the left and right edges:
  // the track then fills the width of a phone. Everything stays round.
  const z=Math.max(1,Math.min(1.3,Number(zoom)||1)),ratio=Math.max(.25,Math.min(3,height/width/z));
+ // A six-seat reference board stays round; center it rather than stretching its route.
+ const drawRatio=svg.getAttribute('data-seats')==='6'?1:ratio;
  let fit=svg.querySelector('[data-board-fit]');
  if(!fit){
   fit=n('g',{'data-board-fit':'true'});
   for(const child of [...svg.children])if(child.tagName.toLowerCase()!=='defs')fit.append(child);
   svg.append(fit);
  }
- fit.setAttribute('transform','scale(1 '+ratio+')');
- svg.setAttribute('viewBox',(z>1?(100-100/z).toFixed(3)+' 0 '+(200/z).toFixed(3):'0 0 200')+' '+(200*ratio));
+ fit.setAttribute('transform','scale(1 '+drawRatio+')');
+ svg.setAttribute('viewBox',(z>1?(100-100/z).toFixed(3)+' 0 '+(200/z).toFixed(3):'0 0 200')+' '+(200*drawRatio));
  svg.dataset.fitZoom=String(z);
  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
- svg.dataset.fitRatio=String(ratio);
+ svg.dataset.fitRatio=String(drawRatio);
  const root=svg.querySelector('[data-board-root]'),rot=Number(root?.getAttribute('data-rot'))||0;
  for(const piece of svg.querySelectorAll('[data-stone]')){
   let shape=piece.querySelector('[data-viewport-piece]');
@@ -792,16 +790,16 @@ export function fitJackarooViewport(target,width,height,zoom=1){
    for(const child of [...piece.children])shape.append(child);
    piece.append(shape);
   }
-  fitMark(shape,ratio,rot);
+  fitMark(shape,drawRatio,rot);
  }
- for(const group of svg.querySelectorAll('[data-pile]'))fitMark(group,ratio,rot,100,100);
+ for(const group of svg.querySelectorAll('[data-pile]'))fitMark(group,drawRatio,rot,100,100);
  for(const group of svg.querySelectorAll('[data-player-tag],[data-avatar],[data-lock-badge]')){
   const circle=group.querySelector('circle'),cx=group.getAttribute('data-cx')??circle?.getAttribute('cx'),cy=group.getAttribute('data-cy')??circle?.getAttribute('cy');
-  fitMark(group,ratio,group.getAttribute('data-avatar')!==null?rot:0,Number(cx)||100,Number(cy)||100);
+  fitMark(group,drawRatio,group.getAttribute('data-avatar')!==null?rot:0,Number(cx)||100,Number(cy)||100);
  }
  for(const node of svg.querySelectorAll('circle,ellipse,text')){
   if(node.closest('defs,[data-stone],[data-pile],[data-player-tag],[data-avatar],[data-lock-badge]'))continue;
   const text=node.tagName.toLowerCase()==='text';
-  fitMark(node,ratio,rot,Number(node.getAttribute(text?'x':'cx'))||0,Number(node.getAttribute(text?'y':'cy'))||0,text);
+  fitMark(node,drawRatio,rot,Number(node.getAttribute(text?'x':'cx'))||0,Number(node.getAttribute(text?'y':'cy'))||0,text);
  }
 }

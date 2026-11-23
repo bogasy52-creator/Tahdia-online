@@ -11,7 +11,7 @@ test('home exposes friends entry and loads the social client', () => {
   assert.match(index, /data-social-open/);
   assert.match(index, /assets\/js\/(?:compact\/)?social-client\.js/);
   assert.match(index, /الأصدقاء والدعوات/);
-  assert.match(index, /data-open-profile[^>]*>حسابي<\/button>/);
+  assert.match(index, /data-open-profile[^>]*><img data-palace-avatar/);
 });
 
 test('social page provides account, friends, requests, notifications and privacy surfaces', () => {

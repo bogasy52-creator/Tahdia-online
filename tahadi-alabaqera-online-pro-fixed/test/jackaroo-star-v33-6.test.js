@@ -105,7 +105,7 @@ for (const [seats, arm] of [[6, 13], [6, 19]]) {
 }
 
 test('your side is the bottom one: the board of six turns for every seat and the writing stays upright', async () => {
-  for (const [seat, rot] of [[0, 180], [1, 120], [2, 60], [3, 0], [4, -60], [5, -120]]) {
+  for (const [seat, rot] of [[0, 0], [1, -60], [2, -120], [3, 180], [4, 120], [5, 60]]) {
     const { target } = await board(sample(6, 13), { game: 'jackaroo', viewer: seat, look: 'neon' });
     assert.equal(Number(target.querySelector('[data-board-root]').getAttribute('data-rot')), rot, 'seat ' + seat);
     if (rot) {

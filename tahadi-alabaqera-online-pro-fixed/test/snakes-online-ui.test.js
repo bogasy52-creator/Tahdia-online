@@ -35,9 +35,9 @@ test('the moves of a batch (yours and the bots\') play one after another, each o
  player.push({version:5,status:'playing',state:{n:5},steps:[{version:3,state:{n:3}},{version:4,state:{n:4}}]});
  player.push({version:5,status:'playing',state:{n:5}});
  release();for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));
- assert.deepEqual(played,[2,3,4,5,5],'every step in order; a repeated state is drawn again but never replays the moves');
+ assert.deepEqual(played,[2,3,4,5],'every step stays in order; pending duplicate presence frames are coalesced');
  player.push({version:4,status:'playing',state:{n:4}});for(let i=0;i<5;i++)await new Promise(r=>setImmediate(r));
- assert.equal(played.length,5,'an older state is ignored');
+ assert.equal(played.length,4,'an older state is ignored');
 });
 
 test('an opponent\'s turn plays out by itself and shows both server dice',{timeout:2000},async()=>{

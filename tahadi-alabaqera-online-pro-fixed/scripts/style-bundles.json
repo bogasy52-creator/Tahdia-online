@@ -73,7 +73,8 @@
     "assets/css/home-v33-8.css",
     "assets/css/club-complete-v33-10.css",
     "assets/css/home-v33-10-3.css",
-    "assets/css/home-v33-11.css"
+    "assets/css/home-v33-11.css",
+    "assets/css/palace-lobby-v33-11-6.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -581,7 +582,8 @@
     "assets/css/trio-premium-v33-10.css",
     "assets/css/club-complete-v33-10.css",
     "assets/css/tournament.css",
-    "assets/css/cue-controls-v33-10-3.css"
+    "assets/css/cue-controls-v33-10-3.css",
+    "assets/css/pool-club-v33-11-6.css"
   ],
   "jewels.html": [
     "assets/css/platform.css",
@@ -659,6 +661,7 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/ludo-v33-10-5.css",
     "assets/css/profile-pro-v33-9-4.css",
-    "assets/css/signature-v33-11-4.css"
+    "assets/css/signature-v33-11-4.css",
+    "assets/css/ludo-polish-v33-11-6.css"
   ]
 }

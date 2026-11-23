@@ -14,11 +14,12 @@ export class BoardOnlineClient {
     this.visibility=()=>{if(!globalThis.document?.hidden)this.resume();};
     this.pageShow=event=>{if(event?.persisted)this.resume();};
   }
+  requestHeaders(poolStake){const h={'content-type':'application/json'};if(poolStake)try{const t=localStorage.getItem('bs_social_session');if(t)h.authorization='Bearer '+t;}catch{}return h;}
   tokenKey(code){return `bs_board_${this.game}_${code}`}
-  async create(name,playerLimit,{variant='classic',character='',open=true,seats=null}={}){
+  async create(name,playerLimit,{variant='classic',character='',open=true,seats=null,poolStake=0}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
     this.character=character;
-    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,name,playerLimit,variant,open:open!==false,...(seats?{seats}:{})})});
+    const res=await timedFetch('/api/board/rooms',{method:'POST',headers:this.requestHeaders(poolStake),body:JSON.stringify({game:this.game,name,playerLimit,variant,open:open!==false,...(seats?{seats}:{}),...(poolStake?{poolStake}:{})})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'||/exceeded allowed volume of requests in durable objects free tier/i.test(data.error||'')){
         const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';error.resetAt=data.resetAt;throw error;
@@ -33,9 +34,9 @@ export class BoardOnlineClient {
   }
   // 33.0.0: «العب الحين» — the server seats you at the open public table of this game
   // (and way of playing); it starts ten seconds after it opened, bots in the empty seats.
-  async quick(name,{variant='classic',seats=null,humansOnly=false}={}){
+  async quick(name,{variant='classic',seats=null,humansOnly=false,poolStake=0}={}){
     const epoch=++this.requestEpoch;this.closedByUser=false;
-    const res=await timedFetch('/api/board/quick',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({game:this.game,variant,humansOnly:humansOnly===true,...(seats?{seats}:{})})});
+    const res=await timedFetch('/api/board/quick',{method:'POST',headers:this.requestHeaders(poolStake),body:JSON.stringify({game:this.game,variant,humansOnly:humansOnly===true,...(seats?{seats}:{}),...(poolStake?{poolStake}:{})})});
     const data=await res.json().catch(()=>({}));this.checkRequest(epoch);
     if(!res.ok||!data.ok){
       if(data.code==='DURABLE_REQUEST_LIMIT'){const error=new Error('وصلت خدمة الأونلاين إلى حد الطلبات اليومي. تعود بعد الساعة 3:00 صباحًا بتوقيت السعودية.');error.code='DURABLE_REQUEST_LIMIT';throw error;}
@@ -93,7 +94,7 @@ export class BoardOnlineClient {
         if(msg.type==='welcome'){
           if(!msg.state)return;
           this.retry=0;this.token=msg.token||this.token;try{localStorage.setItem(this.tokenKey(this.code),this.token)}catch{}
-          const state=stamp(msg.state);if(this.game==='pegs')state.resync=true;this.onState(state);announceRoom(this,state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
+          const state=stamp(msg.state);state.resync=true;this.awaitingResync=false;this.onState(state);announceRoom(this,state);this.onStatus({online:true,reconnecting:false,text:'متصل'});
           if(!settled){settled=true;clearTimeout(timer);this.cancelOpening=null;resolve(state);}
           clearInterval(this.heartbeat);this.heartbeat=setInterval(()=>{
             if(this.ws!==ws||globalThis.document?.hidden)return;
@@ -101,8 +102,8 @@ export class BoardOnlineClient {
             if(ws.readyState===WebSocket.OPEN)this.send('ping');
           },20000);this.heartbeat?.unref?.();
         }else if(msg.type==='state'){
-          if(!msg.state||this.version!=null&&(msg.state.version<this.version||msg.state.version===this.version&&identity(msg.state)===this.stateKey))return;
-          const state=stamp(msg.state);this.onState(state);announceRoom(this,state);
+          if(!msg.state||!this.awaitingResync&&this.version!=null&&(msg.state.version<this.version||msg.state.version===this.version&&identity(msg.state)===this.stateKey))return;
+          const state=stamp(msg.state);if(this.awaitingResync){state.resync=true;this.awaitingResync=false;}this.onState(state);announceRoom(this,state);
         }else if(msg.type==='emote'){
           announce('bs-board-emote',{from:msg.from,name:msg.name,emote:msg.emote,at:msg.at,...(msg.to?{to:msg.to}:{})});
         }else if(msg.type==='emote-locked'){
@@ -143,7 +144,7 @@ export class BoardOnlineClient {
   send(type,payload={}){
     if(!this.ws||this.ws.readyState!==WebSocket.OPEN){this.onError('الاتصال غير جاهز — جاري إعادة الاتصال');return false}
     if((this.ws.bufferedAmount||0)>65536){this.onError('الاتصال بطيء؛ انتظر وصول آخر حركة');return false}
-    try{this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}catch{this.onError('تعذر إرسال الحركة؛ نتصل مجددًا');this.recoverSocket(this.ws);return false}
+    try{if(type==='resync')this.awaitingResync=true;this.ws.send(JSON.stringify({type,expectedVersion:this.version,...payload}));return true}catch{this.onError('تعذر إرسال الحركة؛ نتصل مجددًا');this.recoverSocket(this.ws);return false}
   }
   // Table talk (Baloot): a ready phrase or emoji by id; best effort like reactions.
   talk(kind,id){
@@ -181,7 +182,7 @@ export function createStepPlayer(apply,{maxBacklog=14,onError}={}){
     if(running)return;running=true;const current=generation,signal=controller.signal;
     try{
       while(queue.length&&current===generation){
-        const catchUp=queue.length>maxBacklog||globalThis.document?.hidden&&queue.length>1;
+        const catchUp=queue[0]?.resync||queue.length>maxBacklog||globalThis.document?.hidden&&queue.length>1;
         if(catchUp)queue=queue.slice(-1);
         const next=queue.shift();
         try{await apply(next,{animate:!catchUp&&!globalThis.document?.hidden,signal});}catch(error){if(!signal.aborted)onError?.(error);}
@@ -194,9 +195,10 @@ export function createStepPlayer(apply,{maxBacklog=14,onError}={}){
       if(room.version<last)return;
       // the steps newer than what was shown, then the room itself (also when only
       // who is connected changed and the version stayed the same)
-      const list=expandSteps(room,last);
+      if(room.resync){queue=[];generation++;controller.abort();controller=new AbortController();}
+      const list=room.resync?[{...room,steps:undefined}]:expandSteps(room,last);
       last=room.version;
-      queue.push(...list);drain();
+      for(const next of list){const tail=queue.at(-1);if(tail&&tail.version===next.version&&!next.resync)queue[queue.length-1]=next;else queue.push(next);}drain();
     },
     reset(){queue=[];last=-1;generation++;controller.abort();controller=new AbortController();},
     get busy(){return running||queue.length>0;},

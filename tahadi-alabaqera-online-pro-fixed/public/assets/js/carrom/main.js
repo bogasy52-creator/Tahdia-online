@@ -8,7 +8,7 @@
    is its own pull: drag it back, let go to strike. Pulling the striker itself still works as before. */
 import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, readCarromAim, FIXED_DT } from './engine.js?v=33.9.12-quality1';
 import { createCarromRenderer } from './render.js?v=33.9.12-quality1';
-import { createTable } from '../board-table-v33.js?v=33.11.4';
+import { createTable } from '../board-table-v33.js?v=33.11.6';
 
 const $ = (id) => document.getElementById(id), KEY = 'bs-carrom-settings-v1';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}

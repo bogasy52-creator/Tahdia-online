@@ -1,3 +1,4 @@
+import {poolEntryAmount,reservePoolEntry,settlePoolEntry} from './billiards/stakes.js';
 import {publicPegsRace,advancePegsRace} from '../public/assets/js/engines/pegs-race-engine.js';
 import {TournamentRoom,cleanTournamentLink,reportTournament} from './competition/tournament-room.js';
 import {relayGameReaction} from './social/game-reactions.js';
@@ -46,7 +47,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.11.5';
+const RELEASE='33.11.6';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -816,10 +817,12 @@ export default {
       const game = String(body.game || ""), variant = game === 'snakes' ? (['adventure','strategy','clash'].includes(body.variant) ? body.variant : 'classic') : tableVariant(game, body.variant);
       if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
       // 33.4.0: a table size the player picked (snakes: 2, 3 or 4) has its own open table
-      const seats = chosenSeats(game, body.seats, variant),humansOnly=body.humansOnly===true;
+      let poolStake;try{poolStake=poolEntryAmount(body.poolStake??0);}catch{return json({ok:false,error:'اختر مبلغ دخول متاح'},400);}
+      if(poolStake&&(game!=='billiards'||!await authenticate(request,env)))return json({ok:false,error:'سجّل الدخول لطاولات العملات'},401);
+      const seats = chosenSeats(game, body.seats, variant),humansOnly=poolStake>0||body.humansOnly===true;
       try {
-        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + (humansOnly?":humans":"") + ":v33"));
-        return await stub.fetch("https://tablequick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ game, variant, seats, humansOnly }) });
+        const stub = env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName("quick:" + game + ":" + variant + (seats ? ":s" + seats : "") + (humansOnly?":humans":"") + (poolStake?":entry"+poolStake:"")+ ":v33"));
+        return await stub.fetch("https://tablequick.internal/assign", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ game, variant, seats, humansOnly,poolStake }) });
       } catch (err) {
         if (isDurableRequestQuotaError(err)) throw err;
         console.error("board quick failed", err);
@@ -836,6 +839,8 @@ export default {
         try { body = await request.json(); } catch {}
         const game = String(body.game || "");
         if (!["snakes", "zahra", "jackaroo", "dice", "baloot", "billiards", "jewels", "carrom", "pegs"].includes(game)) return json({ ok: false, error: "اللعبة غير مدعومة" }, 400);
+        let poolStake;try{poolStake=poolEntryAmount(body.poolStake??0);}catch{return json({ok:false,error:'اختر مبلغ دخول متاح'},400);}
+        if(poolStake&&(game!=='billiards'||!await authenticate(request,env)))return json({ok:false,error:'سجّل الدخول لطاولات العملات'},401);
         let variant = tableVariant(game, body.variant);
         if (game === 'snakes') {
           try { variant = normalizeSnakesVariant(body.variant); }
@@ -851,7 +856,7 @@ export default {
           const hostKey = token();
           const res = await stub.fetch("https://board.internal/init", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant, open: body.open !== false, seats: chosenSeats(game, body.seats, variant) }),
+            body: JSON.stringify({ code, hostKey, game, playerLimit, name, variant,poolStake,humansOnly:poolStake>0, open: body.open !== false, seats: chosenSeats(game, body.seats, variant) }),
           });
           if (res.status === 201) return json({ ok: true, code, hostKey, game, playerLimit, variant, seats: chosenSeats(game, body.seats, variant) });
           if(res.status!==409){const failure=await res.json().catch(()=>({})),requestId=failure.requestId||crypto.randomUUID();return json({ok:false,code:failure.code==='ROOM_INITIALIZATION_FAILED'?'ROOM_INITIALIZATION_FAILED':'BOARD_ENGINE_UNAVAILABLE',error:'فشل تشغيل غرفة اللعبة على السيرفر. أعد المحاولة؛ إذا تكرر الخطأ افحص نشر محرك الغرف.',requestId,release:RELEASE},503)}
@@ -1806,6 +1811,7 @@ export class BoardRoom extends DurableObject {
     if(this.room){if(body.tournament?.token&&this.room.tournament?.token===body.tournament.token&&this.room.tournament.match===body.tournament.match)return json({ok:true},201);return json({ok:false,error:'room_exists'},409);}
     const game=String(body.game||'');if(!['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom','pegs'].includes(game))return json({ok:false,error:'invalid_game'},400);
     let variant=tableVariant(game,body.variant);if(game==='snakes')try{variant=normalizeSnakesVariant(body.variant)}catch{return json({ok:false,error:'invalid_variant'},400)}
+    let poolStake;try{poolStake=poolEntryAmount(body.poolStake??0);if(poolStake&&game!=='billiards')throw Error();}catch{return json({ok:false,error:'invalid_pool_entry'},400);}
     const tournament=game==='billiards'?cleanTournamentLink(body.tournament):null;if(body.tournament&&!tournament)return json({ok:false,error:'invalid_tournament'},400);
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
@@ -1814,7 +1820,7 @@ export class BoardRoom extends DurableObject {
     const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,tableSeats||Number(body.playerLimit)||2))):body.publicMatch===true&&tableSeats?tableSeats:MAX_SEATS[game];
     const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:seatLimit(game,variant,playerLimit),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     // A public table (Baloot quick, or «العب الحين») starts by itself after the lobby countdown.
-    room.humansOnly=body.humansOnly===true;
+    room.poolStake=poolStake;room.humansOnly=poolStake>0||body.humansOnly===true;
     room.publicMatch=body.publicMatch===true;room.lobbyDeadline=room.publicMatch&&!room.humansOnly?now+(game==='baloot'?BALOOT_LOBBY_MS:TABLE_LOBBY_MS):null;
     if(tournament)room.tournament=tournament;
     if(tableSeats)room.tableSeats=tableSeats;
@@ -1837,6 +1843,7 @@ export class BoardRoom extends DurableObject {
 
   async persist() {
     if (!this.room) return;
+    if(this.room.poolEntry&&(this.room.status==='finished'||this.room.poolEntry.phase==='refunding'||this.room.poolEntry.phase==='paying')){try{await settlePoolEntry(this,u=>getSocialStub(this.env,u));}catch{this.room.poolRetryAt=Date.now()+5000;}}
     this.room.updatedAt = Date.now();
     await this.ctx.storage.put("room", this.room);
     if(this.room.status==='finished'&&this.room.tournament&&!this.room.tournamentReported){const r=this.room,winner=r.state.winner>=0?r.players[r.order[r.state.winner]]?.username:null;r.tournamentReported=await reportTournament(this.env,r.tournament,r.game,winner||null);r.tournamentRetryAt=r.tournamentReported?null:Date.now()+10000;await this.ctx.storage.put('room',r);}
@@ -1954,7 +1961,7 @@ export class BoardRoom extends DurableObject {
     }
     return {
       code: this.room.code,
-      game: this.room.game,
+      game: this.room.game,poolStake:this.room.poolStake||0,poolPrize:(this.room.poolStake||0)*2,poolSettlement:this.room.poolEntry?.phase||null,
       variant: this.room.variant || 'classic',
       serverNow: Date.now(),
       playerLimit: this.room.playerLimit,
@@ -1965,7 +1972,7 @@ export class BoardRoom extends DurableObject {
       players: this.room.order.map((id, index) => {
         const p = this.room.players[id];
         const look = p.look || { ...DEFAULT_LOOK, character: p.character || DEFAULT_LOOK.character };
-        return { id: p.id, index, name: p.name, username: p.bot ? undefined : p.username || undefined, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined, look, character: look.character };
+        return { id: p.id, index, name: p.name,poolAccepted:p.poolAccepted||0, username: p.bot ? undefined : p.username || undefined, role: p.role, ready: Boolean(p.ready), connected: Boolean(p.connected), bot: Boolean(p.bot), level: p.bot ? p.level : undefined, look, character: look.character };
       }),
       me: me ? { id: me.id, index: this.playerIndex(me.id), role: me.role } : null,
       publicMatch: Boolean(this.room.publicMatch),humansOnly:Boolean(this.room.humansOnly),
@@ -2028,7 +2035,7 @@ export class BoardRoom extends DurableObject {
   async scheduleNextAlarm() {
     if (!this.room) return;
     const now = Date.now();
-    const candidates = [this.room.expiresAt];
+    const candidates = [this.room.expiresAt];if(this.room.poolRetryAt)candidates.push(this.room.poolRetryAt);
     if (this.room.status === 'lobby' && (this.room.publicMatch || this.room.partyLink) && this.room.lobbyDeadline) candidates.push(this.room.lobbyDeadline);
     if (this.room.game === 'baloot' && this.room.status === 'playing' && this.room.nextHandAt) candidates.push(this.room.nextHandAt);
     if(this.room.status==='finished'&&this.room.tournament&&!this.room.tournamentReported)candidates.push(this.room.tournamentRetryAt||now+10000);
@@ -2085,7 +2092,7 @@ export class BoardRoom extends DurableObject {
     if (url.hostname === "quizai.internal") { this.quizBank ??= new QuizImageBank(this.ctx, this.env); return this.quizBank.fetch(request); }
     if (url.hostname === "balootvoice.internal") { this.voiceBank ??= new BalootVoiceBank(this.ctx, this.env); return this.voiceBank.fetch(request); }
     if (url.hostname === "balootquick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.balootQuick(body?.open !== false)); }
-    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats, tableVariant(String(body.game || ''), body.variant)),body.humansOnly===true)); }
+    if (url.hostname === "tablequick.internal") { const body = await request.json().catch(() => ({})); return this.ctx.blockConcurrencyWhile(() => this.tableQuick(String(body.game || ''), String(body.variant || 'classic'), chosenSeats(String(body.game || ''), body.seats, tableVariant(String(body.game || ''), body.variant)),body.humansOnly===true,body.poolStake||0)); }
     if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,engine:'BoardRoom',release:RELEASE,games:['snakes','zahra','jackaroo','dice','baloot','billiards','jewels','carrom','pegs'],snakesVariants:['classic','clash','choice','adventure','strategy','portals']});
     if (url.pathname === "/init" && request.method === "POST") {
       const body=await request.json().catch(()=>({}));
@@ -2094,13 +2101,15 @@ export class BoardRoom extends DurableObject {
 
     if (url.pathname === "/status") {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
-      return json({ ok: true, game: this.room.game, variant: this.room.variant || 'classic', status: this.room.status, players: this.room.order.length, playerLimit: this.room.playerLimit });
+      return json({ ok: true, game: this.room.game, variant: this.room.variant || 'classic', status: this.room.status, players: this.room.order.length,poolStake:this.room.poolStake||0, playerLimit: this.room.playerLimit });
     }
 
     if (url.pathname.endsWith("/ws")) {
       if (!this.room) return json({ ok: false, error: "الغرفة غير موجودة" }, 404);
       if (request.headers.get("Upgrade") !== "websocket") return json({ ok: false, error: "WebSocket required" }, 426);
       if(this.room.tournament&&!this.room.tournament.players.includes(request.headers.get('x-bs-account')))return json({ok:false,error:'المواجهة محجوزة للاعبي البطولة.'},403);
+      if(this.room.poolStake&&!request.headers.get('x-bs-account'))return json({ok:false,error:'سجّل الدخول لطاولات العملات'},401);
+      const account=request.headers.get('x-bs-account');
       const expectedGame = url.searchParams.get("game") || "";
       if (expectedGame && expectedGame !== this.room.game) return json({ ok: false, error: "رمز الغرفة يخص لعبة أخرى" }, 409);
       if (this.room.status === "lobby" && this.cleanupStaleLobbyGuests()) await this.persist();
@@ -2115,6 +2124,7 @@ export class BoardRoom extends DurableObject {
       }
       if(!player&&this.room.tournament)player=Object.values(this.room.players).find(p=>p.username===request.headers.get('x-bs-account'))||null;
       if(player?.username&&player.username!==request.headers.get('x-bs-account'))return json({ok:false,error:'account_mismatch'},403);
+      if(this.room.poolStake&&account&&this.room.order.some(id=>this.room.players[id]?.username===account&&id!==player?.id))return json({ok:false,error:'كل لاعب يحتاج حساب مختلف'},409);
       if (!player) {
         if (this.room.order.length === 0 && !this.room.publicMatch && !this.room.partyLink && !this.room.tournament) return json({ ok: false, error: "بانتظار دخول المضيف أولًا" }, 409);
         if (this.room.status !== "lobby") return json({ ok: false, error: "المباراة بدأت ولا يمكن دخول لاعب جديد" }, 409);
@@ -2181,7 +2191,7 @@ export class BoardRoom extends DurableObject {
   // 33.0.0 «العب الحين»: one Durable Object per game hands out seats on an open
   // public table; the table starts by itself after its 10-second lobby and bots
   // take the seats nobody took.
-  async tableQuick(game, variant, seats = null, humansOnly=false) {
+  async tableQuick(game, variant, seats = null, humansOnly=false,poolStake=0) {
     if (!TABLE_GAMES.includes(game)) return json({ ok: false, error: 'اللعبة غير مدعومة' }, 400);
     if (game === 'snakes') try { variant = normalizeSnakesVariant(variant); } catch { variant = 'classic'; } else variant = tableVariant(game, variant);
     const now = Date.now(), key = 'tableQuick';
@@ -2193,7 +2203,7 @@ export class BoardRoom extends DurableObject {
       for (let attempt = 0; attempt < 8 && !open; attempt++) {
         const code = roomCodeFor(game);
         const stub = this.env.BOARD_ROOMS.get(this.env.BOARD_ROOMS.idFromName(code));
-        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game, variant, publicMatch: true, seats, humansOnly }) });
+        const res = await stub.fetch('https://board.internal/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, hostKey: token(), game, variant, publicMatch: true, seats, humansOnly,poolStake }) });
         if (res.status === 201) open = { code, createdAt: now, closesAt: now + (humansOnly?1800000:TABLE_LOBBY_MS - 2500), assigned: 0 };
         else if (res.status !== 409) break;
       }
@@ -2265,10 +2275,12 @@ export class BoardRoom extends DurableObject {
     if(msg.type==='resync'){try{ws.send(JSON.stringify({type:'state',state:this.publicState(player.id)}))}catch{}return;}
     if(msg.type==='emote')return this.relayEmote(player,msg.emote,ws,msg.to);
     if(msg.type==='talk')return this.relayTalk(player,msg);
+    if(msg.type==='pool_accept_entry'){if(this.room.status!=='lobby'||!this.room.poolStake||!player.username||msg.amount!==this.room.poolStake)return this.sendError(ws,'تحقق من مبلغ الطاولة قبل الموافقة');if(player.poolAccepted===msg.amount)return;player.poolAccepted=msg.amount;this.room.version++;await this.saveAndBroadcast();await this.partyTableArrival();return;}
     if(msg.type==='pool_aim')return this.relayAim(player,msg);
     if(msg.type==='carrom_aim')return this.relayCarromAim(player,msg);
     try {
       if (msg.type === "leave") {
+        if(this.room.poolStake&&this.room.status==='playing'&&this.room.state){const seat=this.playerIndex(player.id);this.room.state={...this.room.state,winner:1-seat,phase:'over',last:{by:seat,reason:'forfeit',result:'forfeit',potted:[]}};this.room.version++;this.finishGame();return await this.saveAndBroadcast();}
         if (this.room.status === "lobby") return await this.leaveLobby(player, ws);
         return;
       }
@@ -2346,6 +2358,7 @@ export class BoardRoom extends DurableObject {
   // are in, or 15 seconds after the first one came (bots take the seats of the missing).
   async partyTableArrival() {
     const r = this.room;
+    if(r?.poolStake&&r.order.some(id=>r.players[id]?.poolAccepted!==r.poolStake))return;
     if(r?.humansOnly){if(r.status==='lobby'&&r.order.length===r.playerLimit&&r.order.every(id=>r.players[id]?.connected))await this.startGame(true);return;}
     if(r?.tournament){if(r.status==='lobby'&&r.order.length===2&&r.order.every(id=>r.players[id]?.connected))await this.startGame();return;}
     if (!r?.partyLink || r.status !== 'lobby' || r.startedAt || !TABLE_GAMES.includes(r.game)) return;
@@ -2358,12 +2371,14 @@ export class BoardRoom extends DurableObject {
   async startGame(quick = false) {
     if(this.room.tournament&&(this.room.order.length!==2||!this.room.order.every(id=>this.room.players[id]?.connected)))return;
     if(this.room.humansOnly&&(this.room.order.length!==this.room.playerLimit||!this.room.order.every(id=>this.room.players[id]?.connected)))return;
+    if(this.room.poolStake){if(this.room.order.length!==2||this.room.order.some(id=>this.room.players[id]?.poolAccepted!==this.room.poolStake))return;try{await this.ctx.blockConcurrencyWhile(()=>reservePoolEntry(this,u=>getSocialStub(this.env,u)));}catch(error){for(const id of this.room.order)this.room.players[id].poolAccepted=0;this.room.version++;await this.saveAndBroadcast();for(const ws of this.ctx.getWebSockets())this.sendError(ws,error.message);return;}}
     this.room.skillReported=false;this.room.skillRetryAt=null;
     const steps = startTable(this.room, { quick, rng: secureUnit, roll: () => this.randomDie(), now: Date.now() });
     return await this.settleTable(steps);
   }
 
   async resetForRematch() {
+    if(this.room.poolEntry&&!['settled','refunded'].includes(this.room.poolEntry.phase))return;delete this.room.poolEntry;this.room.poolRetryAt=null;for(const id of this.room.order)this.room.players[id].poolAccepted=0;
     if(this.room.tournament)return;
     if (TABLE_GAMES.includes(this.room.game)) resetTable(this.room);
     this.room.status = "lobby";
@@ -2439,7 +2454,9 @@ export class BoardRoom extends DurableObject {
 
   async alarm() {
     if (!this.room) return;
-    const now = Date.now();
+    const now = Date.now(),poolPhase=this.room.poolEntry?.phase;
+    if(this.room.poolEntry&&((this.room.poolRetryAt&&now>=this.room.poolRetryAt)||now>=this.room.expiresAt)){try{if(this.room.status==='lobby'||now>=this.room.expiresAt){await settlePoolEntry(this,u=>getSocialStub(this.env,u),{refund:this.room.status!=='finished'});}else if(this.room.status==='finished'||['refunding','paying'].includes(this.room.poolEntry.phase))await settlePoolEntry(this,u=>getSocialStub(this.env,u));else this.room.poolRetryAt=null;}catch{this.room.poolRetryAt=now+5000;await this.ctx.storage.put('room',this.room);await this.ctx.storage.setAlarm(this.room.poolRetryAt);return;}}
+    if(poolPhase!==this.room.poolEntry?.phase){if(this.room.status==='lobby'&&this.room.poolEntry?.phase==='refunded'){for(const id of this.room.order)this.room.players[id].poolAccepted=0;this.room.version++;await this.ctx.storage.put('room',this.room);}this.broadcast();}
     if (now >= this.room.expiresAt) {
       await this.ctx.storage.deleteAll();
       this.room = null;

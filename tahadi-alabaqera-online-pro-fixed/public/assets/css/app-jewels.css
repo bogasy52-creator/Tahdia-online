@@ -90,6 +90,10 @@ body.release-v26.jw-studio #gameMenu .gm33-join input{background:#0d1e2f!importa
 @media(max-width:350px){.suite-v17 .bs-brand b{font-size:10px}.suite-v17 .bs-actions{gap:4px}.suite-v17 .home-nav{gap:20px}.suite-v17.home-v14 .home-hero{padding:23px 15px}.suite-v17.home-v14 .home-hero h1{font-size:35px}.suite-v17.home-v14 .home-hero p{max-width:77%;font-size:10px}.suite-v17.home-v14 .home-game{padding:10px}.suite-v17.home-v14 .home-game h3{font-size:13px}.suite-v17.home-v14 .home-game>small{font-size:7px}.suite-v17.home-v14 .game-cover{height:95px}.suite-v17.store-v16 .store-card>h2{font-size:12px}.suite-v17.store-v16 .store-card>p{font-size:9px}.suite-v17.store-v16 .vault-copy h1{font-size:26px}.store-journey-v17 small{font-size:8px}.store-journey-v17 b{font-size:12px}.home-today-heading>a{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.suite-v17 *{animation-duration:.01ms!important;transition:none!important;scroll-behavior:auto!important}.suite-v17.home-v14 .home-game:hover{transform:none}}
 
+/* 33.11.6: shared account wallet */
+.bs-actions .coin-chip{font-variant-numeric:tabular-nums;border:1px solid #e7c57088!important;background:linear-gradient(150deg,#3f2a12,#1a1430 70%)!important;box-shadow:inset 0 1px 1px #ffe9a366,0 2px 5px #0005!important;color:#fff4d8!important;border-radius:24px!important;text-decoration:none;direction:ltr;gap:7px;font-family:system-ui,sans-serif;font-weight:800}
+.bs-actions .coin-chip:before{content:'✦'!important;display:inline-grid!important;place-items:center;width:25px;height:25px;border-radius:50%;background:radial-gradient(circle at 35% 20%,#fff5c6,#eebc37 50%,#ae5d09);box-shadow:inset 0 0 0 2px #ffe091,0 1px 4px #0006;color:#a66012;font-size:19px;text-shadow:0 1px #fff3bc}
+
 /* assets/css/game-menu-v33.css */
 /* Tahdia 33.0.0 — the one game menu (game-menu-v33.js): how to play, «العب الحين»,
    «غرفة مع أصحابك», the room lobby and your online friends. */

@@ -17,7 +17,7 @@ test('the 33.6.0 notes say what changed', async () => {
 
 test('home: «ادخل غرفة برمز» opens a sheet only when asked; the page never jumps to it', async () => {
   const home = await read('public/index.html');
-  assert.match(home, /<button id="homeJoinOpen" class="bs-btn home-join-open" type="button" aria-haspopup="dialog" aria-controls="homeJoinSheet">/);
+  assert.match(home, /<button id="homeJoinOpen" type="button" aria-haspopup="dialog" aria-controls="homeJoinSheet">/);
   assert.match(home, /<div id="homeJoinSheet" class="home-join-sheet" hidden><form id="homeJoinForm"/);
   assert.doesNotMatch(home, /autofocus/);
   assert.doesNotMatch(home, /id="homeRoomJoin"|id="homeRoomCode"/, 'the old box that pulled the page down stays gone');

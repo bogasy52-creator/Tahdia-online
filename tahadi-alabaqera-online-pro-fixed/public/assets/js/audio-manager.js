@@ -27,6 +27,7 @@
   const signatureAudio={};
   function signatureDie(name,skin){const id=String(skin||'').replace(/^dice-/,'');if(!signatureIds.has(id))return null;const key=id+'-'+(name==='diceImpact'?'land':'roll');if(!signatureAudio[key])signatureAudio[key]=new Audio('assets/sounds/luxe-v33-11-4/'+key+'.wav');return signatureAudio[key];}
   for(const id of ["eclipse", "tide", "sakura", "forge", "astral", "arabesque"])for(const pose of ['entry','win'])samples['legend-'+id+'-'+pose]='assets/sounds/legend-frames-v33-11-5/'+id+'-'+pose+'.wav';
+  for(const family of ['ball','rail','cue','pocket'])for(let i=1;i<=3;i++)samples['pool-'+family+'-'+i]='assets/sounds/pool-v33-11-6/'+family+'-'+i+'.wav';
   function sample(name){const src=samples[name]||samples.click;if(!samplePool[src]){const a=new Audio(src);a.preload='none';a.volume=settings.volume*.9;samplePool[src]=a;}return audio[name]=samplePool[src];}
   const diceSamples={soft:['soft-1','soft-2'],wood:['wood-1','wood-2'],crystal:['crystal-1','crystal-2']},diceAudio={},diceCursor={dice:-1,diceImpact:-1};
   function nextDice(name){const family=diceSamples[settings.diceSound]?settings.diceSound:null,pool=name==='diceImpact'?(family?['land-'+family]:['land-soft','land-wood','land-crystal']):(family?diceSamples[family]:Object.values(diceSamples).flat());diceCursor[name]=(diceCursor[name]+1)%pool.length;const id=pool[diceCursor[name]];if(!diceAudio[id]){const a=new Audio('assets/sounds/dice-v133/'+id+'.wav');a.preload='none';diceAudio[id]=a;}return diceAudio[id];}
@@ -36,31 +37,51 @@
   // after the first tap even when it comes from the other player (iPhone blocks late <audio>).
   let bus=null;const buffers={};let lastCue=0;
   function graph(){const c=ensure();if(!c||bus||!c.createDynamicsCompressor)return bus;try{const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.knee.value=12;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.2;const fx=c.createGain(),music=c.createGain();fx.connect(comp);music.connect(c.destination);comp.connect(c.destination);bus={fx,music};}catch{bus=null}return bus}
-  function load(src){if(buffers[src]!==undefined||typeof fetch!=='function'||!ensure()?.decodeAudioData)return buffers[src];buffers[src]=null;fetch(src).then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>new Promise((ok,no)=>ctx.decodeAudioData(b,ok,no))).then(b=>{buffers[src]=b}).catch(()=>{buffers[src]=false});return null}
-  function web(src,volume){const b=load(src);if(!b||!graph()||ctx.state!=='running')return false;try{const n=ctx.createBufferSource(),g=ctx.createGain();n.buffer=b;g.gain.value=volume;n.connect(g).connect(bus.fx);n.start();return true}catch{return false}}
-  async function unlock(){const c=ensure();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch{}if(c&&c.state==='suspended'){try{await c.resume()}catch{}}unlocked=true}
+  const loading={},voices=new Set();let audioEpoch=0;
+  function load(src){
+    if(buffers[src])return Promise.resolve(buffers[src]);
+    if(loading[src])return loading[src];
+    const c=ensure();if(typeof fetch!=='function'||!c?.decodeAudioData)return Promise.resolve(null);
+    return loading[src]=fetch(src).then(r=>{if(!r.ok)throw Error('audio');return r.arrayBuffer();}).then(b=>new Promise((ok,no)=>c.decodeAudioData(b,ok,no))).then(b=>buffers[src]=b).catch(()=>null).finally(()=>{delete loading[src];});
+  }
+  function web(buffer,volume,opts={}){
+    if(!buffer||!graph()||ctx.state!=='running')return false;
+    try{while(voices.size>=16){const first=voices.values().next().value;first.stop();voices.delete(first);}
+      const n=ctx.createBufferSource(),g=ctx.createGain();n.buffer=buffer;if(n.playbackRate)n.playbackRate.value=Math.min(1.25,Math.max(.8,Number(opts.rate)||1));g.gain.value=volume;n.connect(g).connect(bus.fx);voices.add(n);n.onended=()=>{voices.delete(n);try{n.disconnect();g.disconnect();}catch{}};n.start();return true;
+    }catch{return false;}
+  }
+  async function unlock(){const c=ensure();try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch{}if(c&&c.state!=='running'&&c.state!=='closed'){try{await c.resume()}catch{}}unlocked=c?.state==='running';return unlocked;}
+  function emit(a,volume,opts={},timer=false){
+    const epoch=audioEpoch,started=Date.now(),valid=()=>epoch===audioEpoch&&!settings.muted&&(timer?settings.timer:settings.effects)&&!contentActive();
+    const c=ensure();if(c?.decodeAudioData&&typeof fetch==='function'){
+      const resumed=unlock();load(a.src).then(async buffer=>{await resumed;if(!valid()||Date.now()-started>900)return;if(web(buffer,Math.min(1.6,volume*settings.volume*1.45),opts))return;fallback();});
+    }else fallback();
+    function fallback(){if(!valid())return;try{a.pause();a.currentTime=0;a.volume=Math.min(1,Math.max(0,volume*settings.volume));a.play().catch(()=>{});}catch{}}
+  }
   function tone(freq=440,duration=.055,gain=.045,type='sine',delay=0,endFreq=null){if(settings.muted)return;const c=ensure();if(!c)return;const t=c.currentTime+delay;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(endFreq&&o.frequency.exponentialRampToValueAtTime)o.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq),t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain*settings.volume),t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(c.destination);o.start(t);o.stop(t+duration+.02)}
   function contentActive(){return [...contentPlayers].some(a=>!a.paused&&!a.ended);}
   function registerContent(player){contentPlayers.add(player);player.muted=Boolean(settings.muted);player.volume=Math.min(1,Math.max(0,settings.volume));return()=>contentPlayers.delete(player);}
-  function applySettings(){for(const a of contentPlayers){a.muted=Boolean(settings.muted);a.volume=settings.volume;}if(settings.muted){for(const a of [...Object.values(samplePool),...Object.values(diceAudio),...Object.values(signatureAudio)])try{a.pause();}catch{}}}
+  function applySettings(){audioEpoch++;if(settings.muted){for(const n of voices)try{n.stop();}catch{}voices.clear();}for(const a of contentPlayers){a.muted=Boolean(settings.muted);a.volume=settings.volume;}if(settings.muted){for(const a of [...Object.values(samplePool),...Object.values(diceAudio),...Object.values(signatureAudio)])try{a.pause();}catch{}}}
   function play(name,opts={}){
     if(settings.muted||!settings.effects||contentActive())return;
     unlock();const dice=name==='dice'||name==='diceImpact',a=dice?(signatureDie(name,opts.skin)||nextDice(name)):sample(name);if(!a)return;lastCue=Date.now();
-    if(web(a.src,Math.min(1.6,(opts.volume??(dice?.44:.7))*settings.volume*1.45)))return;
-    try{if(dice)for(const sound of [...Object.values(diceAudio),...Object.values(signatureAudio)])sound.pause();a.pause();a.currentTime=0;a.volume=Math.min(1,Math.max(0,(opts.volume??(dice?.44:.7))*settings.volume));a.play().catch(()=>{})}catch{}
+    emit(a,opts.volume??(dice?.44:.7),opts);
   }
-  function timerSample(name,volume){const a=sample(name);if(!a)return;if(web(a.src,Math.min(1.4,volume*settings.volume*1.3)))return;try{a.pause();a.currentTime=0;a.volume=Math.min(1,volume*settings.volume);a.play().catch(()=>{})}catch{}}
+  function timerSample(name,volume){const a=sample(name);if(a)emit(a,volume,{},true);}
   function timerTick(seconds){if(settings.muted||!settings.timer||Number(seconds)<=0||contentActive())return;unlock();timerSample('click',Number(seconds)<=5?.65:.28)}
   function timerEnd(){if(settings.muted||!settings.timer||contentActive())return;unlock();timerSample('quizTimeout',.7);vibrate([80,50,100])}
   function vibrate(pattern=18){if(!settings.haptics)return;try{navigator.vibrate?.(pattern)}catch{}}
   function setMuted(v){settings.muted=Boolean(v);applySettings();save();return settings.muted}function toggleMuted(){return setMuted(!settings.muted)}
   function update(next){const requested=Number(next.volume??settings.volume);settings={...settings,...next,volume:Number.isFinite(requested)?Math.min(1,Math.max(0,requested)):settings.volume};for(const a of Object.values(audio))a.volume=settings.volume*.9;applySettings();save();return {...settings}}
-  function getSettings(){return {...settings}}function dispose(){try{ctx?.close()}catch{}ctx=null;}
+  function getSettings(){return {...settings}}function dispose(){audioEpoch++;for(const n of voices)try{n.stop();}catch{}voices.clear();try{ctx?.close()}catch{}ctx=null;bus=null;unlocked=false;}
     // Fetch the sounds a game is about to need so the first one is not late.
-  function prime(names=[]){for(const name of names){try{const a=sample(name);load(a.src);if(a&&a.preload!=='auto'){a.preload='auto';a.load?.();}}catch{}}}
+  function prime(names=[]){for(const name of names){try{
+    let players;if(name==='dice'||name==='diceImpact'){const ids=name==='diceImpact'?['land-soft','land-wood','land-crystal']:Object.values(diceSamples).flat();players=ids.map(id=>{if(!diceAudio[id])diceAudio[id]=new Audio('assets/sounds/dice-v133/'+id+'.wav');return diceAudio[id];});}else players=[sample(name)];
+    for(const a of players){load(a.src);if(a.preload!=='auto'){a.preload='auto';a.load?.();}}
+  }catch{}}}
   const has=name=>Boolean(samples[name]);const context=()=>{graph();return ctx};const musicBus=()=>graph()?.music||null;const recent=(ms=400)=>Date.now()-lastCue<ms;
   window.BS_AUDIO={play,timerTick,timerEnd,vibrate,setMuted,toggleMuted,update,getSettings,unlock,dispose,tone,registerContent,contentActive,prime,has,context,musicBus,recent};
   // Music and the sounds of play load on their own, after the page.
   try{if(document&&!document.querySelector('script[data-bs-sound]')){const s=document.createElement('script');s.src='/assets/js/sound-v33-9-3.js?v=33.10.7-quality1';s.defer=true;s.dataset.bsSound='1';(document.head||document.documentElement).appendChild(s)}}catch{}
-  const starter=()=>unlock();window.addEventListener('pointerdown',starter,{once:true,passive:true});window.addEventListener('keydown',starter,{once:true})
+  const starter=()=>unlock();window.addEventListener('pointerdown',starter,{passive:true});window.addEventListener('keydown',starter);window.addEventListener('pageshow',starter);try{document.addEventListener('visibilitychange',()=>{if(!document.hidden)unlock();});}catch{}
 })();

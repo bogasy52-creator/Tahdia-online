@@ -6,7 +6,10 @@
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
 import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.12-quality1';
-import { createTable } from '../board-table-v33.js?v=33.11.4';
+import { createTable } from '../board-table-v33.js?v=33.11.6';
+import {createPoolEntryUI} from './entry-tables-v33-11-6.js';
+import {createPoolSimulationClient} from './simulation-client-v33-11-6.js';
+const poolJobs=createPoolSimulationClient();let poolEpoch=0;
 
 const { L, W, R } = POOL;
 const RAIL = 9, CUSHION = 4;
@@ -18,45 +21,12 @@ const BALL = { 1: '#f4c21b', 2: '#1e4fd6', 3: '#d9262d', 4: '#5b2a8e', 5: '#f279
 const colorOf = (n) => BALL[n > 8 ? n - 8 : n] || '#f7f4ec';
 const SOLIDS = [1, 2, 3, 4, 5, 6, 7], STRIPES = [9, 10, 11, 12, 13, 14, 15];
 
-/* ---------- sound: synthesised, so every click and drop is light and instant ---------- */
-const Sound = (() => {
-  let ctx = null, noise = null;
-  const settings = () => window.BS_AUDIO?.getSettings?.() || { muted: false, effects: true, volume: 0.72 };
-  const on = () => { const s = settings(); return !s.muted && s.effects !== false; };
-  function ac() {
-    if (!ctx) {
-      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
-      try { ctx = new C(); } catch { return null; }
-      const len = Math.floor(ctx.sampleRate * 0.6); noise = ctx.createBuffer(1, len, ctx.sampleRate);
-      const d = noise.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    }
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    return ctx;
-  }
-  function burst(freq, q, dur, gain, type = 'bandpass', delay = 0) {
-    const c = ac(); if (!c) return;
-    const t = c.currentTime + delay, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-    src.buffer = noise; f.type = type; f.frequency.value = freq; f.Q.value = q;
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain * settings().volume), t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(f).connect(g).connect(c.destination); src.start(t, Math.random() * 0.3); src.stop(t + dur + 0.02);
-  }
-  function ping(freq, dur, gain, delay = 0, end = null) {
-    const c = ac(); if (!c) return;
-    const t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(freq, t); if (end) o.frequency.exponentialRampToValueAtTime(end, t + dur);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain * settings().volume), t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
-  }
-  return {
-    unlock: () => { if (on()) ac(); },
-    ball(speed) { if (!on()) return; const v = Math.min(1, speed / 420); burst(3300 + v * 900, 3, 0.05, 0.06 + v * 0.55); ping(1850 + v * 500, 0.04, 0.03 + v * 0.16); },
-    rail(speed) { if (!on()) return; const v = Math.min(1, speed / 450); burst(380, 0.9, 0.11, 0.05 + v * 0.42, 'lowpass'); ping(120, 0.09, 0.03 + v * 0.12, 0, 80); },
-    pocket() { if (!on()) return; ping(170, 0.2, 0.42, 0, 70); burst(700, 0.8, 0.12, 0.3, 'lowpass'); burst(260, 0.7, 0.4, 0.12, 'lowpass', 0.09); },
-    cue(power) { window.dispatchEvent(new Event('bs-table-strike')); if (!on()) return; burst(1600, 1.2, 0.06, 0.18 + power * 0.42); ping(980, 0.035, 0.08 + power * 0.1); },
-    foul() { if (!on()) return; ping(240, 0.2, 0.16, 0, 170); ping(180, 0.26, 0.14, 0.14, 120); },
-    good() { if (!on()) return; ping(660, 0.1, 0.12); ping(990, 0.14, 0.1, 0.08); },
-    win() { if (!on()) return; [523, 659, 784, 1046].forEach((f, i) => ping(f, 0.22, 0.13, i * 0.11)); },
-  };
+/* Material impact samples share the site's unlocked, muted audio bus. */
+const Sound=(()=>{const last={},cursor={};
+ const names=['ball','rail','cue','pocket'].flatMap(f=>[1,2,3].map(i=>'pool-'+f+'-'+i));
+ const unlock=()=>{window.BS_AUDIO?.unlock?.();window.BS_AUDIO?.prime?.(names);};
+ function hit(f,strength=1){const now=performance.now();if(now-(last[f]??-1000)<(f==='ball'?20:35))return;last[f]=now;cursor[f]=(cursor[f]||0)%3+1;window.BS_AUDIO?.play?.('pool-'+f+'-'+cursor[f],{volume:Math.min(.92,.12+Math.sqrt(Math.max(0,strength))*.66),rate:.94+Math.min(1,strength)*.1});}
+ return {unlock,ball:s=>hit('ball',Math.min(1,s/420)),rail:s=>hit('rail',Math.min(1,s/450)),pocket:()=>hit('pocket',.8),cue:p=>{window.dispatchEvent(new Event('bs-table-strike'));hit('cue',p);},foul:()=>window.BS_AUDIO?.play?.('error',{volume:.4}),good:()=>window.BS_AUDIO?.play?.('correct',{volume:.35}),win:()=>window.BS_AUDIO?.play?.('win')};
 })();
 
 /* ---------- 3D roll of each ball: an orientation (three axes) turned by the distance it rolls ---------- */
@@ -123,7 +93,7 @@ class TableView {
     roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.fillStyle = '#3a1d0e'; g.fill(); g.restore();
     // walnut rails
     const wood = g.createLinearGradient(0, -RAIL, 0, W + RAIL);
-    wood.addColorStop(0, '#526158'); wood.addColorStop(0.08, '#273c37'); wood.addColorStop(0.5, '#122b2a'); wood.addColorStop(0.92, '#273c37'); wood.addColorStop(1, '#526158');
+    wood.addColorStop(0,'#b27a42');wood.addColorStop(.08,'#58341e');wood.addColorStop(.5,'#24170f');wood.addColorStop(.92,'#633b22');wood.addColorStop(1,'#c08d55');
     roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.fillStyle = wood; g.fill();
     // grain
     g.save(); roundRect(g, -RAIL, -RAIL, L + 2 * RAIL, W + 2 * RAIL, 7); g.clip();
@@ -151,7 +121,7 @@ class TableView {
     // cloth on the cushions, then the bed under the lamp
     g.fillStyle = '#103e38'; g.fillRect(-CUSHION, -CUSHION, L + 2 * CUSHION, W + 2 * CUSHION);
     const bed = g.createRadialGradient(L / 2, W / 2, 6, L / 2, W / 2, L * 0.62);
-    bed.addColorStop(0, '#3b8a70'); bed.addColorStop(0.5, '#206c59'); bed.addColorStop(1, '#0f3e38');
+    bed.addColorStop(0, '#299b79'); bed.addColorStop(0.5, '#147757'); bed.addColorStop(1, '#084e3b');
     g.fillStyle = bed; g.fillRect(0, 0, L, W);
     // 33.9.6: two lamps over the bed, and the edges falling into shade
     for (const lx of [L * 0.3, L * 0.7]) { const lamp = g.createRadialGradient(lx, W * .44, 2, lx, W * .44, W * .75); lamp.addColorStop(0, 'rgba(249,231,189,.15)'); lamp.addColorStop(1, 'rgba(226,244,239,0)'); g.fillStyle = lamp; g.fillRect(0, 0, L, W); }
@@ -169,7 +139,7 @@ class TableView {
       const cy=poly.reduce((sum,p)=>sum+p[1],0)/poly.length,cx=poly.reduce((sum,p)=>sum+p[0],0)/poly.length;
       const vertical=Math.abs(poly[0][0]-poly[1][0])<.1;
       const bevel=vertical?g.createLinearGradient(cx-CUSHION/2,0,cx+CUSHION/2,0):g.createLinearGradient(0,cy-CUSHION/2,0,cy+CUSHION/2);
-      bevel.addColorStop(0,'#123d35');bevel.addColorStop(.35,'#31735b');bevel.addColorStop(.65,'#27644f');bevel.addColorStop(1,'#0e352f');
+      bevel.addColorStop(0,'#063b2b');bevel.addColorStop(.24,'#207854');bevel.addColorStop(.48,'#32865f');bevel.addColorStop(.7,'#19583e');bevel.addColorStop(1,'#072f23');
       g.fillStyle = bevel; g.fill();
       g.beginPath(); g.moveTo(...poly[0]); g.lineTo(...poly[1]); g.lineWidth = this.px(1.4); g.strokeStyle = 'rgba(160,255,210,.16)'; g.stroke();
     }
@@ -185,11 +155,11 @@ class TableView {
       g.save();roundRect(g,-RAIL,-RAIL,L+2*RAIL,W+2*RAIL,7);g.clip();
       if(Math.abs(x-mid)<1){
         const bottom=y>W/2;g.translate(x,bottom?W:0);if(bottom)g.scale(1,-1);
-        roundRect(g,-9.3,-RAIL+.7,18.6,RAIL+5.5,3);g.fillStyle='#1d2423';g.fill();g.lineWidth=.25;g.strokeStyle='#8e826944';g.stroke();
+        roundRect(g,-9.3,-RAIL+.7,18.6,RAIL+5.5,3);g.fillStyle='#201c18';g.fill();g.lineWidth=.25;g.strokeStyle='#ebc98c88';g.stroke();
         roundRect(g,-8.6,-RAIL+1.6,17.2,RAIL+3.6,2.5);
       }else{
         const right=x>L/2,bottom=y>W/2;g.translate(right?L:0,bottom?W:0);g.scale(right?-1:1,bottom?-1:1);
-        g.beginPath();g.moveTo(-RAIL+1,-RAIL+1);g.lineTo(7,-RAIL+1);g.lineTo(7,-3);g.lineTo(-3,7);g.lineTo(-RAIL+1,7);g.closePath();g.fillStyle='#222927';g.fill();g.lineWidth=.3;g.strokeStyle='#9c8c6f55';g.stroke();
+        g.beginPath();g.moveTo(-RAIL+1,-RAIL+1);g.lineTo(7,-RAIL+1);g.lineTo(7,-3);g.lineTo(-3,7);g.lineTo(-RAIL+1,7);g.closePath();g.fillStyle='#302820';g.fill();g.lineWidth=.3;g.strokeStyle='#e5c79799';g.stroke();
         g.beginPath();g.moveTo(-RAIL+2.3,5);g.lineTo(-RAIL+2.3,-RAIL+2.3);g.lineTo(5,-RAIL+2.3);
       }
       g.lineWidth=.16;g.strokeStyle='#b5a48455';g.setLineDash([.45,.5]);g.stroke();g.restore();
@@ -378,6 +348,10 @@ class TableView {
     piece(94, 128, w(94), w(128), L.butt);
     piece(128, 131, w(128), w(131), L.ring);
     piece(131, 146, w(131), w(146), L.end);
+    // Linen wrap, brass collars and contrasting inlays are painted over the selected cue.
+    for(let d=102;d<126;d+=1.4){const [a,b]=at(d,w(d)*.94);g.beginPath();g.moveTo(...a);g.lineTo(...b);g.strokeStyle=d%2<1?'#e8ddc433':'#05050477';g.lineWidth=.35;g.stroke();}
+    for(const d of [95,128,136])piece(d,d+.45,w(d)*1.015,w(d)*1.015,L.ring);
+    for(const d of [83,88]){const [a]=at(d,.18),[b]=at(d+6,.18);g.beginPath();g.moveTo(...a);g.lineTo(...b);g.strokeStyle='#f7ebca77';g.lineWidth=.14;g.stroke();}
     g.shadowBlur = 0; g.shadowColor = 'transparent';
     g.globalAlpha = 1;
   }
@@ -390,7 +364,7 @@ const ctl = {
   aim: { dir: [1, 0], spin: [0, 0] }, display: null, place: null, power: 0,
   busy: false, anim: null, shownSeq: 0, lastKey: '', pending: null, receipt: '', rewarded: false, remote: null, endShown: false,
 };
-let table = null, room = null, loopOn = false, dirty = true, ended = false;
+let table = null, room = null, loopOn = false, dirty = true, ended = false,clockAt=0,clockTimer=null;
 const humanSeat = () => (ctl.mode === 'online' ? ctl.me : ctl.mode === 'ai' ? 0 : ctl.state?.turn ?? 0);
 // whose turn it is by the rules (a person here), and whether that person can act right now
 const humanTurn = () => { const s = ctl.state; if (!s || s.winner !== null) return false; return ctl.mode === 'two' || (ctl.mode === 'ai' ? s.turn === 0 : s.turn === ctl.me); };
@@ -402,9 +376,9 @@ function loop(now) {
   const animating = stepAnimation(now);
   const placing = ctl.state?.inHand && myTurn() && ctl.place;
   if (dirty || animating || placing || view.sinking.length || view.flash.length) { dirty = false; render(); }
-  updateClock();
-  if (animating || placing || view.sinking.length || view.flash.length || ctl.display?.moving || ctl.remote || (ctl.mode === 'online' && room?.turnDeadline)) requestAnimationFrame(loop);
-  else loopOn = false;
+  if(now-clockAt>100){clockAt=now;updateClock();}
+  if (animating || placing || view.sinking.length || view.flash.length || ctl.display?.moving) requestAnimationFrame(loop);
+  else {loopOn = false;if(ctl.mode==='online'&&room?.turnDeadline&&!document.hidden){clearTimeout(clockTimer);clockTimer=setTimeout(()=>invalidate(),100);}}
 }
 
 function render() {
@@ -457,12 +431,15 @@ function stepAnimation(now) {
 }
 const nearestPocket = (b) => { let best = 0, d = Infinity; POCKETS.forEach((p, i) => { const dd = (p.x - b[0]) ** 2 + (p.y - b[1]) ** 2; if (dd < d) { d = dd; best = i; } }); return best; };
 /** Plays a shot (from its starting positions) and ends on `next`'s positions. */
-function animateShot(shot, next, { pull = 0.4 } = {}) {
+async function animateShot(shot, next, { pull = 0.4,signal } = {}) {
+  const epoch=poolEpoch;
   closeReplay();
-  const sim = simulate(shot.before, shot, { record: true });
+  let sim;try{sim=await poolJobs.simulate(shot,{signal});}catch(e){if(e.name==='AbortError')return;throw e;}
+  if(epoch!==poolEpoch||signal?.aborted)return;
   view.balls = shot.before.map((b) => (b ? b.slice() : null));
   return new Promise((resolve) => {
-    const finish = () => { view.balls = next.balls.map((b) => (b ? b.slice() : null)); invalidate(); resolve(sim); };
+    let complete=false;const finish = () => {if(complete)return;complete=true;signal?.removeEventListener('abort',cancel);if(epoch===poolEpoch&&!signal?.aborted){view.balls=next.balls.map(b=>b?b.slice():null);invalidate();}resolve(sim);};
+    const cancel=()=>{if(ctl.anim?.done===finish)ctl.anim=null;finish();};signal?.addEventListener('abort',cancel,{once:true});
     if (reduced() || document.hidden) { finish(); for (const e of sim.events) if (e.type === 'pocket') { Sound.pocket(); break; } return; }
     ctl.anim = { sim, shot, start: performance.now(), ei: 0, strike: 110, pull: Math.max(6, pull * 30), power: pull, done: finish };
     invalidate();
@@ -482,7 +459,7 @@ function paintReplay(){
 function replayFrame(time){replay.frame=0;if(!replay.active||document.hidden)return;if(!replay.paused&&replay.last)replay.elapsed+=Math.min(80,Math.max(0,time-replay.last))*replay.speed;replay.last=time;paintReplay();if(replay.elapsed>=replay.sim.frames.length*(1000/60)){replay.paused=true;paintReplay();}if(!replay.paused)replay.frame=requestAnimationFrame(replayFrame);}
 function scheduleReplay(){if(replay.active&&!replay.frame){replay.last=0;replay.frame=requestAnimationFrame(replayFrame);}}
 function openReplay(){
-  const s=ctl.state;if(!s?.shot||ctl.anim||ctl.pending||ctl.busy)return false;replay.shot=structuredClone(s.shot);replay.sim=simulate(replay.shot.before,replay.shot,{record:true});if(!replay.sim.frames.length)return false;replay.view||=new TableView($('#biReplayCanvas'));
+  const s=ctl.state;if(!s?.shot||ctl.anim||ctl.pending||ctl.busy)return false;replay.shot=structuredClone(s.shot);replay.sim=poolJobs.cached(replay.shot)||simulate(replay.shot.before,replay.shot,{record:true});if(!replay.sim.frames.length)return false;replay.view||=new TableView($('#biReplayCanvas'));
   replay.view.balls=replay.shot.before.map(b=>b?.slice()||null);replay.view.axes.clear();replay.view.previous.clear();replay.seq=s.shot.seq;replay.match=room?.startedAt||0;replay.elapsed=-450;replay.paused=false;replay.speed=.5;replay.active=true;
   setPower(0);drag=null;$('#biReplaySheet').hidden=false;$('#biReplayNote').textContent=ctl.mode==='online'?'إعادة مشاهدة فقط · وقت المباراة الأونلاين مستمر':'إعادة مشاهدة فقط · النتيجة محفوظة';$('#biReplaySpeed').textContent='السرعة ×0.5';fitReplay();paintReplay();renderStatus();scheduleReplay();$('#biReplayClose').focus({preventScroll:true});return true;
 }
@@ -563,7 +540,7 @@ function renderShotContext() {
   else if (l.result === 'win') result = 'حسم المباراة بالثمانية';
   else if (l.result === 'loss') result = 'الثمانية دخلت قبل وقتها';
   else if (l.spotted) result = 'الثمانية عادت لمكانها بعد الكسر';
-  else if (l.potted.length) result = 'دخلت ' + l.potted.join('، ') + (l.result === 'again' ? ' · يكمل دوره' : ' · انتقل الدور');
+  else if (l.potted?.length) result = 'دخلت ' + l.potted.join('، ') + (l.result === 'again' ? ' · يكمل دوره' : ' · انتقل الدور');
   else result = 'لم تدخل كرة · انتقل الدور';
   el.textContent = `${who}: ${result}`;
   el.classList.toggle('foul', Boolean(l.foul));
@@ -592,7 +569,7 @@ function announce(s) {
   if (l.foul) { Sound.foul(); toast(`خطأ: ${byMe ? FOUL_ME[l.foul] : FOUL[l.foul]}<small>البيضاء ${nextName} وين ما ${s.turn === humanSeat() && ctl.mode !== 'two' ? 'تبي' : 'يبي'}</small>`, 'foul', 2300); return; }
   if (l.group) { Sound.good(); const g = s.players[l.by].group; toast(`${byMe ? 'كراتك' : 'كرات ' + name(l.by)}: ${GROUP_NAME[g]} ${g === 'solid' ? '(من 1 إلى 7)' : '(من 9 إلى 15)'}`, 'good', 2200); return; }
   if (l.spotted) { toast('الثمانية دخلت في الكسر ورجعت مكانها'); return; }
-  if (l.result === 'again' && l.potted.length) { if (byMe || ctl.mode === 'two') Sound.good(); toast(byMe || ctl.mode === 'two' ? 'دخلت! كمّل' : `${name(l.by)} دخّل وكمّل`, 'good', 1200); return; }
+  if (l.result === 'again' && l.potted?.length) { if (byMe || ctl.mode === 'two') Sound.good(); toast(byMe || ctl.mode === 'two' ? 'دخلت! كمّل' : `${name(l.by)} دخّل وكمّل`, 'good', 1200); return; }
   if (l.result === 'pass' && ctl.mode !== 'ai') toast('الدور ' + nextName, '', 1100);
 }
 
@@ -648,11 +625,12 @@ async function shoot(power) {
     input.cue = ctl.place.slice();
   }
   Sound.unlock();
+  const epoch=poolEpoch;ctl.busy=true;
   let next;
-  try { next = playPoolShot(s, seat, input); } catch { toast('الضربة ما تنفع، جرّب مرة ثانية', 'foul'); setPower(0); return; }
+  try { next = await poolJobs.play(s, seat, input);if(epoch!==poolEpoch||ctl.state!==s)return; } catch(error) {if(epoch!==poolEpoch||error.name==='AbortError')return;ctl.busy=false; toast('الضربة ما تنفع، جرّب مرة ثانية', 'foul'); setPower(0); return; }
   setPower(0);
   if (ctl.mode === 'online') {
-    if (!table?.send('pool_shot', { dir: input.dir, power: input.power, spin: input.spin, cue: input.cue })) { invalidate(); return; }
+    if (!table?.send('pool_shot', { dir: input.dir, power: input.power, spin: input.spin, cue: input.cue })) {ctl.busy=false;invalidate();return;}
     ctl.busy = true; ctl.place = null; renderStatus();
     const pending = { seq: next.shots, prev: s, next };
     ctl.pending = pending;
@@ -662,6 +640,7 @@ async function shoot(power) {
   }
   ctl.busy = true; ctl.place = null; renderStatus();
   await animateShot(next.shot, next, { pull: power });
+  if(epoch!==poolEpoch)return;
   ctl.state = next; ctl.busy = false;
   afterShot();
 }
@@ -684,22 +663,25 @@ function afterShot() {
 async function aiTurn() {
   if (ctl.mode !== 'ai' || ctl.state?.turn !== 1 || ctl.state.winner !== null || ended) return;
   ctl.busy = true; renderStatus();
-  const s = ctl.state;
+  const s = ctl.state,epoch=poolEpoch;
   await wait(reduced() ? 120 : 520);
-  if (ctl.mode !== 'ai' || ended) return;
-  const shot = choosePoolShot(s, ctl.level, Math.random);
+  if (ctl.mode !== 'ai' || ended||epoch!==poolEpoch) return;
+  let shot;try{shot=await poolJobs.choose(s,ctl.level);}catch{return;}if(epoch!==poolEpoch||ctl.state!==s)return;
   // the player puts the cue ball down, turns the cue onto the line, draws it back, strikes
   if (shot.cue) await glide(s.balls[0] || [L * 0.25, W / 2], shot.cue, 420);
+  if(epoch!==poolEpoch)return;
   const from = ctl.aim.dir.slice();
   await turnTo(from, shot.dir, reduced() ? 60 : 640);
-  await pullBack(shot.power, reduced() ? 60 : 380);
-  const next = playPoolShot(s, 1, shot);
+  if(epoch!==poolEpoch)return;await pullBack(shot.power, reduced() ? 60 : 380);
+  if(epoch!==poolEpoch)return;
+  let next;try{next=await poolJobs.play(s,1,shot);}catch{return;}if(epoch!==poolEpoch||ctl.state!==s)return;
   ctl.display = null;
   await animateShot(next.shot, next, { pull: shot.power });
+  if(epoch!==poolEpoch)return;
   ctl.state = next; ctl.busy = false;
   afterShot();
 }
-function tween(ms, fn) { return new Promise((resolve) => { const t0 = performance.now(); const tick = (now) => { const k = Math.min(1, (now - t0) / ms); fn(k * k * (3 - 2 * k)); invalidate(); if (k < 1) requestAnimationFrame(tick); else resolve(); }; requestAnimationFrame(tick); }); }
+function tween(ms, fn) { const epoch=poolEpoch;return new Promise((resolve) => { const t0 = performance.now(); const tick = (now) => {if(epoch!==poolEpoch){resolve();return;} const k = Math.min(1, (now - t0) / ms); fn(k * k * (3 - 2 * k)); invalidate(); if (k < 1) requestAnimationFrame(tick); else resolve(); }; requestAnimationFrame(tick); }); }
 function glide(from, to, ms) { return tween(ms, (k) => { view.balls[0] = [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]; }); }
 function turnTo(a, b, ms) {
   const a0 = Math.atan2(a[1], a[0]); let d = Math.atan2(b[1], b[0]) - a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
@@ -867,11 +849,13 @@ function showGame() {
   $('#biEnd').hidden = true;
 }
 function showMenu() {
+  cancelPoolWork();
   closeReplay();
   $('#game').hidden = true; $('#biEnd').hidden = true; $('#biSpinSheet').hidden = true; document.body.classList.remove('bi-playing');
   ctl.anim = null; ctl.display = null; ctl.busy = false; ended = true; drawHero();
 }
 function startLocal(mode) {
+  cancelPoolWork();
   closeReplay();
   ended = false; ctl.mode = mode; ctl.endShown = false; ctl.rewarded = false; ctl.receipt = 'billiards:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const me = window.BS_GAME_MENU?.playerName?.() || 'أنت';
@@ -890,7 +874,7 @@ function showEnd() {
   const name = esc(ctl.names[w] || s.players[w]?.name || 'لاعب');
   $('#biEndTitle').innerHTML = ctl.mode === 'two' ? `${name} فاز` : iWon ? 'فزت!' : `${name} فاز`;
   const loser = esc(ctl.names[1 - w] || s.players[1 - w]?.name || '');
-  $('#biEndText').innerHTML = l?.result === 'win' ? (ctl.mode === 'two' || !iWon ? `${name} نظّف كراته ودخّل الثمانية.` : 'نظّفت كراتك ودخّلت الثمانية.') : (l?.foul ? `الثمانية دخلت مع خطأ من ${loser}.` : `الثمانية دخلت قبل وقتها من ${loser}.`);
+  $('#biEndText').innerHTML = l?.reason==='forfeit'?'انتهت المباراة بانسحاب أحد اللاعبين.': l?.result === 'win' ? (ctl.mode === 'two' || !iWon ? `${name} نظّف كراته ودخّل الثمانية.` : 'نظّفت كراتك ودخّلت الثمانية.') : (l?.foul ? `الثمانية دخلت مع خطأ من ${loser}.` : `الثمانية دخلت قبل وقتها من ${loser}.`);
   const counts = s.shotsBySeat;
   $('#biEndStats').innerHTML = `<table class="bi-match-stats"><caption>ملخص المباراة · ${s.shots} ضربة</caption><thead><tr><th scope="col">اللاعب</th>${counts ? '<th scope="col">ضربات</th>' : ''}<th scope="col">أخطاء</th></tr></thead><tbody>${s.players.map((p, seat) => `<tr${seat === w ? ' class="winner"' : ''}><th scope="row">${esc(ctl.names[seat] || p.name)}</th>${counts ? `<td>${counts[seat]}</td>` : ''}<td>${s.fouls[seat]}</td></tr>`).join('')}</tbody></table>`;
   card.classList.toggle('won', iWon);
@@ -914,7 +898,9 @@ $('#biExit').addEventListener('click', () => {
 });
 
 /* ---------- online: one table among the board tables ---------- */
-async function apply(next, { animate }) {
+function cancelPoolWork(){poolEpoch++;poolJobs.clear();clearTimeout(clockTimer);if(ctl.pending)clearTimeout(ctl.pending.timer);ctl.pending=null;if(ctl.anim){const done=ctl.anim.done;ctl.anim=null;done();}ctl.busy=false;}
+async function apply(next, { animate,signal }={}) {
+  if(signal?.aborted)return;if(next.resync)cancelPoolWork();
   if(replay.active&&(next.state?.shot?.seq!==replay.seq||(next.startedAt||0)!==replay.match))closeReplay();
   room = next;
   const s = next.state; if (!s || s.game !== 'pool') return;
@@ -927,8 +913,8 @@ async function apply(next, { animate }) {
   ctl.names = [0, 1].map((i) => next.players?.find((p) => p.index === i)?.name || s.players[i]?.name || 'لاعب');
   ctl.bots = [0, 1].map((i) => Boolean(next.players?.find((p) => p.index === i)?.bot));
   if (s.shot && s.shot.seq > ctl.shownSeq) {
-    if (ctl.pending && ctl.pending.seq === s.shot.seq) { clearTimeout(ctl.pending.timer); await ctl.pending.done; ctl.pending = null; }
-    else if (animate && !document.hidden) { ctl.remote = null; ctl.busy = true; await animateShot(s.shot, s, { pull: 0.5 }); }
+    if (ctl.pending && ctl.pending.seq === s.shot.seq) { clearTimeout(ctl.pending.timer); await ctl.pending.done;if(signal?.aborted)return;ctl.pending = null; }
+    else if (animate && !document.hidden) { ctl.remote = null; ctl.busy = true; await animateShot(s.shot, s, { pull: 0.5,signal });if(signal?.aborted)return; }
     ctl.shownSeq = s.shot.seq;
   }
   ctl.state = s; ctl.busy = Boolean(ctl.pending);
@@ -943,14 +929,16 @@ window.addEventListener('bs-pool-aim', (ev) => {
   const d = ev.detail, s = ctl.state; if (ctl.mode !== 'online' || !s || d.seat !== s.turn || d.seat === ctl.me || ctl.anim) return;
   ctl.remote = { dir: d.dir, power: d.power, cue: d.cue }; invalidate();
 });
+const entryUI=createPoolEntryUI({doc:document,root:window,getClient:()=>table?.client,getRoom:()=>table?.room});
+window.addEventListener('bs-board-room',ev=>entryUI.frame(ev.detail?.state));
 try {
   table = createTable({
-    game: 'billiards',
+    game: 'billiards',roomOptions:()=>entryUI.options(),
     quickNote: 'طاولة لاثنين: نلقى لك منافس خلال ثواني.',
     roomNote: 'أنشئ غرفة وارسل الرمز لخويّك.',
     lobbyNote: (next, isPublic) => (isPublic ? 'تبدأ بعد العد.' : 'أرسل الرمز لخويّك. تبدأ إذا ضغطت «ابدأ».'),
     apply,
-    onLobby: () => { if (!$('#game').hidden) showMenu(); setMode('online'); },
+    onLobby: next => {entryUI.frame(next); if (!$('#game').hidden) showMenu(); setMode('online'); },
     onMenu: () => { if (!$('#game').hidden) showMenu(); },
     onStatus: () => {},
     onError: (message) => { if (ctl.pending) revertPending(message); else window.BS_PLATFORM?.toast?.(message); },
@@ -996,7 +984,7 @@ if (document.fonts?.ready) document.fonts.ready.then(() => { if ($('#game').hidd
 drawHero();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) invalidate(); });
 window.BS_BILLIARDS = {
-  ctl, view, replay, openReplay, closeReplay, get room() { return room; }, startLocal, shoot, setPower, rotateAim, begin: beginTurn, drawHero, heroView: hero,
+  metrics:poolJobs.metrics,ctl, view, replay, openReplay, closeReplay, get room() { return room; }, startLocal, shoot, setPower, rotateAim, begin: beginTurn, drawHero, heroView: hero,
   rack: (seed) => { let x = seed || 5; const rng = () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; return createPoolGame(['', ''], { rng }).balls.map((b) => (b ? b.slice() : null)); },
   tiltHero: (seed) => { let x = seed || 5; const rng = () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; hero.axes.clear(); for (let n = 1; n < 16; n++) rollAxes(hero.axesOf(n), (rng() - 0.5) * 2.6, (rng() - 0.5) * 2.6); },
 };

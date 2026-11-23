@@ -5,11 +5,11 @@
    This module owns the room: the menu, the lobby, the connection, the steps to
    play one by one, and what happens after the match. The page only draws the
    game (`apply`) and sends its moves (`send`). */
-import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.11.5';
+import {BoardOnlineClient,createStepPlayer,bindRoomCountdown} from './board-online.js?v=33.11.6';
 
 const QUICK_SEATS={snakes:4,zahra:6,jackaroo:6,dice:3,billiards:2,carrom:2,pegs:2};
 
-export function createTable({game,page=null,title=null,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError,onResync}={}){
+export function createTable({game,page=null,title=null,modes=null,modesLabel,seats=null,seatsDefault,quickNote,roomNote,lobbyNote,apply,onLobby,onMenu,onStatus,onError,onResync,roomOptions}={}){
   // 33.10.5: a page that plays another game's rooms (لودو on the tables of الزهرة) keeps its own address and name
   const where=code=>page?page+'?room='+code:undefined;
   const $=selector=>document.querySelector(selector);
@@ -27,12 +27,12 @@ export function createTable({game,page=null,title=null,modes=null,modesLabel,sea
     window.BS_GAME_MENU?.remember(game,next.code,{status:next.status==='finished'?'finished':'playing',page:where(next.code)});
     await apply(next,{animate,signal});
     if(!signal?.aborted){clockOf(next);nearWin(next);}
-  },{maxBacklog:game==='snakes'?5:game==='pegs'?40:14,onError:error=>console.error('table state failed',error)});
+  },{maxBacklog:game==='snakes'?5:game==='pegs'?40:game==='billiards'?3:10,onError:error=>console.error('table state failed',error)});
 
   const menu=window.BS_GAME_MENU.mount(menuHost,{
     game,title,modes,modesLabel,seats,seatsDefault,quickNote,roomNote,humanChoice:true,humansOnly:quickHumans,
-    onQuick:async({mode,seats:count,humansOnly=false})=>{quickHumans=humansOnly;quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null,humansOnly:quickHumans});window.BS_AUDIO?.play?.('join');},
-    onCreate:async({mode,seats:count})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic',seats:count||null});window.BS_AUDIO?.play?.('join');},
+    onQuick:async({mode,seats:count,humansOnly=false})=>{quickHumans=humansOnly;quickMode=mode;quickSeats=count||null;retriedQuick=false;connect();await client.quick(menu.name(),{variant:mode||'classic',seats:count||null,humansOnly:quickHumans,...roomOptions?.()});window.BS_AUDIO?.play?.('join');},
+    onCreate:async({mode,seats:count})=>{quickMode=null;connect();await client.create(menu.name(),0,{variant:mode||'classic',seats:count||null,...roomOptions?.()});window.BS_AUDIO?.play?.('join');},
     onJoin:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());window.BS_AUDIO?.play?.('join');},
     onResume:async({code})=>{quickMode=null;connect();await client.join(code,menu.name());}
   });
@@ -93,9 +93,9 @@ export function createTable({game,page=null,title=null,modes=null,modesLabel,sea
       code:next.code,isPublic:Boolean(next.publicMatch),deadline:next.lobbyDeadline,serverNow:next.serverNow,receivedAt:next.clientReceivedAt,
       seats:next.publicMatch?(next.tableSeats||QUICK_SEATS[game]):0,variant:next.variant,
       title:next.publicMatch?'نجمع اللاعبين':'غرفتك جاهزة',
-      note:next.humansOnly?'بانتظار اكتمال اللاعبين الحقيقيين. يمكنك إلغاء البحث والعودة للتدريب.':next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
+      note:next.poolStake?'تبدأ بعد حضور اللاعبين وموافقة كل واحد على مبلغ الدخول. العملات تُحجز مرة واحدة عند بدء المباراة.':next.humansOnly?'بانتظار اكتمال اللاعبين الحقيقيين. يمكنك إلغاء البحث والعودة للتدريب.':next.publicMatch?(lobbyNote?.(next,true)||'تبدأ بعد العد وتكتمل المقاعد بمنافسين متنوعي المستوى.'):(lobbyNote?.(next,false)||'أرسل الرمز لأصحابك. تبدأ بمن حضر، وتكتمل الطاولة تلقائيًا.'),
       players:people.map(p=>({name:p.name,host:p.role==='host'&&!next.publicMatch,me:p.id===next.me?.id,connected:p.connected})),
-      canStart:host,startDisabled:people.some(p=>!p.connected),startLabel:people.length>1?'ابدأ المباراة':'ابدأ المباراة',
+      canStart:host&&!next.poolStake,startDisabled:people.some(p=>!p.connected),startLabel:people.length>1?'ابدأ المباراة':'ابدأ المباراة',
       waitingText:'بانتظار المضيف يبدأ المباراة',
       onStart:()=>client?.send('start'),
       onLeave:()=>leave()
@@ -114,7 +114,7 @@ export function createTable({game,page=null,title=null,modes=null,modesLabel,sea
     if(room.publicMatch){
       const mode=room.variant||quickMode||'classic';
       leave();menu.setMode?.(mode);quickMode=mode;retriedQuick=false;connect();
-      try{await client.quick(menu.name(),{variant:mode,humansOnly:quickHumans});}catch(error){window.BS_PLATFORM?.toast?.(error.message);menu.menu();}
+      try{await client.quick(menu.name(),{variant:mode,humansOnly:quickHumans,...roomOptions?.()});}catch(error){window.BS_PLATFORM?.toast?.(error.message);menu.menu();}
       return;
     }
     if(room.me?.role==='host')client?.send('rematch');
@@ -139,7 +139,7 @@ export function createTable({game,page=null,title=null,modes=null,modesLabel,sea
     connect();
     client.join(invited,menu.name()).then(()=>window.BS_AUDIO?.play?.('join')).catch(error=>{menu.menu();menu.say(error.message,true);window.BS_PLATFORM?.toast?.(error.message);});
   }
-  window.addEventListener('pagehide',()=>{client?.close();});
+  window.addEventListener('pagehide',()=>{client?.stopTransport();});
   return {
     get room(){return room;},
     get client(){return client;},

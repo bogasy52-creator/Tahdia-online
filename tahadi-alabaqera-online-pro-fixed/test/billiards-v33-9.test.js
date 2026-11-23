@@ -250,7 +250,7 @@ test('the page, the room code family and the home page know billiards', async ()
   assert.match(menu, /\['billiards',99,99,'\/billiards'\]/);
   assert.match(menu, /billiards:'بلياردو'/);
   assert.match(home, /href="\/billiards" class="home-game"/);
-  assert.match(home, /class="home-feature" href="\/billiards"/);
+  assert.match(home, /class="palace-game palace-pool" href="\/billiards"/);
   assert.match(presence, /billiards: \{ key: 'billiards', label: 'بلياردو' \}/);
   assert.match(social, /"hockey", "billiards"(?:, "jewels")?(?:, "carrom")?(?:, "pegs")?\]/);
   assert.match(profile, /'hockey','billiards'(?:,'carrom')?(?:,'tanks')?(?:,'pegs')?\]/);

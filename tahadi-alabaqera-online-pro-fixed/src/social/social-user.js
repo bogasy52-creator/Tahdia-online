@@ -1,3 +1,4 @@
+import {poolLedger} from '../billiards/stakes.js';
 import {issueRecovery,recoveryStatus,resetWithRecovery} from './account-recovery.js';
 import {verifyBillingGrant} from '../billing/proof.js';
 import {Career} from '../career/core.js';
@@ -110,6 +111,7 @@ export function createSocialUserClass(DurableObject) {
     if (url.pathname === "/login" && request.method === "POST") return this.ctx.blockConcurrencyWhile(()=>this.login(body));
     if (url.pathname === "/validate" && request.method === "POST") return this.validateSession(body.secret);
     if (url.pathname === "/logout" && request.method === "POST") return this.logout(body.secret);
+    if(url.pathname==='/pool/ledger'&&request.method==='POST'){if(!this.profile||body.action==='hold'&&this.profile.suspended)return json({ok:false,error:'account_unavailable'},403);try{return await this.ctx.blockConcurrencyWhile(async()=>json({ok:true,receipt:await poolLedger(this.ctx.storage,this.profile,body)}));}catch(error){return json({ok:false,error:error.message},409);}}
     if(url.pathname==='/reactions'&&request.method==='GET'){const p=accountCareer(await this.ctx.storage.get('career')||{},this.profile);return json({owned:p.owned.filter(id=>Career.reactionOf(id))});}
     if (url.pathname === "/public" && request.method === "GET") return this.publicData(url.searchParams.get("card") === "1");
     // 33.9.4: the player's picture: a ready one or an uploaded photo, reports and the owner's review

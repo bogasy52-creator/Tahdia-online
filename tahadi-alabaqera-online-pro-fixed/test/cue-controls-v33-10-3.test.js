@@ -116,7 +116,7 @@ test('billiards: turning on the cloth is relative, the ruler is always there, a 
 
 test('the cue controls ship in both tables\' bundles, after every older sheet', async () => {
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  for (const page of ['race.html', 'billiards.html']) assert.equal(bundles[page].at(-1), 'assets/css/cue-controls-v33-10-3.css', page);
+  for (const page of ['race.html', 'billiards.html']) assert.ok(bundles[page].indexOf('assets/css/cue-controls-v33-10-3.css')>bundles[page].indexOf('assets/css/billiards-v33-9.css'), page);
   assert.match(await read('scripts/build-styles.mjs'), /'assets\/css\/cue-controls-v33-10-3\.css'/);
   for (const file of ['public/assets/js/cue-controls-v33-10-3.js', 'public/assets/js/carrom/main.js', 'public/race.html']) assert.doesNotMatch(await read(file), /بوت/, file);
 });

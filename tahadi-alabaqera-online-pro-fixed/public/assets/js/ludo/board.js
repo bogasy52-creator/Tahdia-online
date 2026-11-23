@@ -51,7 +51,7 @@ function defs(root) {
   const rad = (id, stops, cx = .35, cy = .3, r = .75) => d.append(el('radialGradient', { id, cx, cy, r }, stops.map(([o, c]) => el('stop', { offset: o, 'stop-color': c }))));
   lin(ID + 'gold', [[0, '#fff1b8'], [.25, '#e8b84a'], [.5, '#8a5a12'], [.75, '#f2cd6b'], [1, '#7a4c0c']], 1, 1);
   lin(ID + 'tile', [[0, '#ffffff'], [1, '#d7deea']]);
-  rad(ID + 'bed', [[0, '#16305e'], [1, '#081631']], .5, .5, .8);
+  rad(ID + 'bed', [[0, '#36225c'], [1, '#0e0828']], .5, .5, .8);
   rad(ID + 'gem', [[0, '#fff6cc'], [.4, '#f3c548'], [1, '#8a5a0c']], .35, .3, .8);
   LUDO_COLORS.forEach((color, i) => {
     lin(ID + 'c' + i, [[0, LIGHT[i]], [.45, color], [1, DEEP[i]]]);
@@ -134,6 +134,7 @@ function pawn(seat, number, small) {
   g.append(el('ellipse', { cx: 0, cy: 12, rx: 15, ry: 5.5, fill: '#000000', opacity: .45 }));
   g.append(el('path', { d: 'M-13 10 C-13 4 -8 2 -6 1 C-8 -4 -7 -9 -5 -12 L5 -12 C7 -9 8 -4 6 1 C8 2 13 4 13 10 C13 13 -13 13 -13 10 Z', fill: 'url(#' + ID + 'pawn' + seat + ')', stroke: DEEP[seat], 'stroke-width': 1.4 }));
   g.append(el('ellipse', { cx: 0, cy: 9.5, rx: 12, ry: 3, fill: 'none', stroke: '#ffffff', 'stroke-opacity': .35, 'stroke-width': 1 }));
+  g.append(el('path',{d:'M-10 6Q0 12 10 6',fill:'none',stroke:'url(#'+ID+'gold)','stroke-width':2.2}));
   g.append(el('circle', { cx: 0, cy: -17, r: 8.5, fill: 'url(#' + ID + 'pawn' + seat + ')', stroke: DEEP[seat], 'stroke-width': 1.4 }));
   g.append(el('ellipse', { cx: -3, cy: -20, rx: 3.2, ry: 2.2, fill: '#ffffff', opacity: .8 }));
   g.append(el('path', { d: 'M-4 -9 C-3 -4 -3 0 -6 4', fill: 'none', stroke: '#ffffff', 'stroke-opacity': .45, 'stroke-width': 2, 'stroke-linecap': 'round' }));
@@ -234,6 +235,7 @@ export function renderLudoBoard(host, state, options = {}) {
       }
     }
   }
+  if(m){const p=P(ludoSpot(state,m.seat,m.token,m.to)),fx=el('g',{'pointer-events':'none',class:'ludo-landing-fx'});fx.append(el('circle',{cx:p.x,cy:p.y,r:six?14:23,fill:'none',stroke:LIGHT[g0.corners[m.seat]??m.seat],'stroke-width':3}));layer.append(fx);motion=motion.then(()=>{if(fx.isConnected){fx.classList.add('arrived');setTimeout(()=>fx.remove(),650);}});}
   host.ludoCleanup = () => { host.ludoCleanup = null; };
   return motion;
 }

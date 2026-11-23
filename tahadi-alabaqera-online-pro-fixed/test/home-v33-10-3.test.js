@@ -9,26 +9,15 @@ const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 const ID = (n) => ('tab' + n).padEnd(12, '0'), DEV = (n) => ('dev' + n).padEnd(12, '0');
 function registry() { const values = new Map(); return new PresenceRegistry({ storage: { get: async (k) => structuredClone(values.get(k)), put: async (k, v) => values.set(k, structuredClone(v)) } }); }
 
-test('the home opens on a spotlight of five games, then four quick doors, then the library', async () => {
-  const home = await read('public/index.html');
-  assert.match(home, /<body class="[^"]*home-v26 home-v33103">/);
-  const featured = home.slice(home.indexOf('<div class="home-featured"'), home.indexOf('data-spot-dots'));
-  const order = [...featured.matchAll(/class="home-feature" href="([^"]+)"/g)].map((m) => m[1]);
-  // 33.10.5: the new لودو and the new look of ماستر الجواهر lead the spotlight
-  assert.deepEqual(order, ['/ludo', '/jewels', '/tanks', '/billiards', '/jackaroo'], 'the newest games lead the spotlight');
-  for (const href of ['/party', '/tournament', '/leaderboard?period=skill']) assert.match(home, new RegExp('<a class="home-tile" href="' + href.replace('?', '\\?') + '"'));
-  assert.match(home, /id="homeJoinOpen"[^>]*><span class="home-tile-icon" aria-hidden="true">#<\/span><b>ادخل برمز<\/b>/);
-  assert.doesNotMatch(home, /<span class="game-number">\d+<\/span>/, 'running numbers on the cards are gone; «جديد» stays');
-  assert.match(home, /<span class="game-number">جديد<\/span>/);
-  assert.match(home, /assets\/js\/home-v33-10-3\.js\?v=/);
-  assert.ok(home.indexOf('class="home-actions"') < home.indexOf('id="games"'));
-  const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.equal(bundles['index.html'].at(-1), 'assets/css/home-v33-11.css');
-  assert.match(await read('scripts/build-styles.mjs'), /'assets\/css\/home-v33-10-3\.css'/);
-  const css = await read('public/assets/css/home-v33-10-3.css');
-  assert.match(css, /scroll-snap-type:x mandatory/);
-  assert.match(css, /\.home-feature:first-child\{grid-column:span 2;grid-row:span 2\}/, 'a bento on wide screens');
-  assert.match(css, /prefers-reduced-motion/);
+test('the home offers a prominent Ludo table, other live games, room entry and the complete library', async () => {
+ const home=await read('public/index.html');
+ for(const marker of ['home-palace','palace-ludo','palace-jewels','palace-pool','palace-room-actions','id="homeJoinOpen"','id="games"','data-career-coins','data-career-xp','data-open-profile','data-invite-list'])assert.ok(home.includes(marker),marker);
+ const cards=[...home.matchAll(/class="palace-game [^"]+" href="([^"]+)"/g)].map(m=>m[1]);assert.deepEqual(cards,['/ludo','/jewels','/billiards']);
+ for(const href of ['/party','/tournament','/jackaroo','/social'])assert.ok(home.includes('href="'+href+'"'));
+ assert.ok(home.indexOf('palace-room-actions')<home.indexOf('id="games"'));
+ assert.doesNotMatch(home,/1,250,000|8,430|Lv\. 56/);
+ const bundles=JSON.parse(await read('scripts/style-bundles.json'));assert.equal(bundles['index.html'].at(-1),'assets/css/palace-lobby-v33-11-6.css');
+ const css=await read('public/assets/css/palace-lobby-v33-11-6.css');assert.match(css,/prefers-reduced-motion/);assert.match(css,/max-width:350px/);
 });
 
 // 33.10.6: الزهرة was the same game as لودو, so its card left the home page

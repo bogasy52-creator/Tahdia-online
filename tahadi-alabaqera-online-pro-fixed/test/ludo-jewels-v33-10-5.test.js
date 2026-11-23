@@ -77,7 +77,7 @@ test('the ludo board turns so the one holding the phone has his yard at the bott
   assert.match(main, /\{ id: 'ludo', label: 'الكلاسيك'/); assert.match(main, /seats: \[2, 3, 4, 6\]/);
   assert.match(await read('public/zahra.html'), /location\.replace\("\/ludo\?room=" \+ encodeURIComponent\(next\.code\)\)/, 'a ludo room opened from الزهرة goes to its page');
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.ok(bundles['ludo.html'].includes('assets/css/ludo-v33-10-5.css'));assert.equal(bundles['ludo.html'].at(-1),'assets/css/signature-v33-11-4.css');
+  assert.ok(bundles['ludo.html'].includes('assets/css/ludo-v33-10-5.css'));assert.equal(bundles['ludo.html'].at(-1),'assets/css/ludo-polish-v33-11-6.css');
   assert.ok((await stat(new URL('../public/assets/brand/ludo-cover-v33-10-5.webp', import.meta.url))).size > 20000);
   assert.match(await read('public/index.html'), /<a href="\/ludo" class="home-game"/);
 });
