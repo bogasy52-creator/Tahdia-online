@@ -243,7 +243,7 @@ test('online: billiards is a board table of two; a quick table fills the second 
 
 test('the page, the room code family and the home page know billiards', async () => {
   const [html, menu, home, presence, social, profile] = await Promise.all(['public/billiards.html', 'public/assets/js/game-menu-v33.js', 'public/index.html', 'src/presence/presence-registry.js', 'src/social/social-core.js', 'public/assets/js/profile-core.js'].map((f) => readFile(new URL('../' + f, import.meta.url), 'utf8')));
-  assert.match(html, /<title>بلياردو — بوسراج<\/title>/);
+  assert.match(html, /<title>بلياردو — لعبة العباقرة<\/title>/);
   assert.match(html, /assets\/js\/billiards\/main\.js\?v=/);
   assert.match(html, /id="gameMenu"/);
   assert.doesNotMatch(html, /بوت/);

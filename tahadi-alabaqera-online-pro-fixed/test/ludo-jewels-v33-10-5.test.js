@@ -71,7 +71,7 @@ test('the ludo board turns so the one holding the phone has his yard at the bott
   assert.equal(screenCorner(two, 1, 1), 'bl'); assert.equal(screenCorner(two, 0, 1), 'tr', 'the other player sits across');
   assert.equal(turnsFor(3), 0, 'yellow already sits at the bottom left');
   const page = await read('public/ludo.html'), main = await read('public/assets/js/ludo/main.js');
-  assert.match(page, /<title>لودو — بوسراج<\/title>/); assert.doesNotMatch(page, /بوت/);
+  assert.match(page, /<title>لودو — لعبة العباقرة<\/title>/); assert.doesNotMatch(page, /بوت/);
   for (const corner of ['tl', 'tr', 'bl', 'br']) assert.match(page, new RegExp('id="die-' + corner + '"'));
   assert.match(main, /game: 'zahra', page: '\/ludo', title: 'لودو'/);
   assert.match(main, /\{ id: 'ludo', label: 'الكلاسيك'/); assert.match(main, /seats: \[2, 3, 4, 6\]/);

@@ -1,14 +1,14 @@
 {
-  "name": "بوسراج للألعاب",
-  "short_name": "بوسراج",
-  "description": "بوسراج للألعاب: ألعاب ذكاء وحلبة وتحديات مع الأصدقاء، وغرفة واحدة لسلسلة ألعاب ونتائج تراكمية.",
+  "name": "لعبة العباقرة",
+  "short_name": "العباقرة",
+  "description": "لعبة العباقرة: ألعاب ذكاء وحلبة وتحديات مع الأصدقاء، وغرفة واحدة لسلسلة ألعاب ونتائج تراكمية.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0c1324",
-  "theme_color": "#0c1324",
+  "background_color": "#140b2b",
+  "theme_color": "#140b2b",
   "icons": [
     {
       "src": "/icon-192.png?v=29.1.0",

@@ -141,7 +141,7 @@ test('practice pause freezes the round clock and shifts it when resumed',async()
 test('the hunt is «صيد الكلمات» everywhere: page, home card, party catalog, menus and presence',async()=>{
  const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
  assert.equal(CHALLENGES.wordbomb.title,'صيد الكلمات');assert.equal(PARTY_GAMES.find(g=>g.id==='wordbomb').name,'صيد الكلمات');
- const page=await read('public/wordbomb.html');assert.match(page,/<title>صيد الكلمات — بوسراج للألعاب<\/title>/);assert.match(page,/<h1>صيد الكلمات<\/h1>/);assert.match(page,/الجولة الأخيرة كلماتها مخفية/);
+ const page=await read('public/wordbomb.html');assert.match(page,/<title>صيد الكلمات — لعبة العباقرة<\/title>/);assert.match(page,/<h1>صيد الكلمات<\/h1>/);assert.match(page,/الجولة الأخيرة كلماتها مخفية/);
  assert.match(await read('public/index.html'),/<h3>صيد الكلمات<\/h3>/);
  for(const file of ['public/index.html','public/wordbomb.html','public/focus.html','public/cipher.html','public/reaction.html','public/assets/js/social-client.js','public/assets/js/game-menu-v33.js','public/assets/js/engines/party-catalog-v29.js','src/presence/presence-registry.js'])assert.doesNotMatch(await read(file),/قنبلة الكلمات|مرّر القنبلة/,file);
  const art=await read('public/assets/challenges/wordbomb.svg');assert.match(art,/WORD HUNT/);assert.doesNotMatch(art,/BOMB/);

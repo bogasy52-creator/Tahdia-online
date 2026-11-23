@@ -6,7 +6,7 @@
    Three ways to play: online (a person, or a computer player when nobody comes), against the
    computer, and two players on one phone. */
 import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolShot, choosePoolShot, aimGuide, canPlace, nearestPlace, legalTargets, onEight, remaining, groupOf, GROUP_NAME } from '../engines/pool-engine.js?v=33.9.12-quality1';
-import { createTable } from '../board-table-v33.js?v=33.11.6';
+import { createTable } from '../board-table-v33.js?v=33.11.7';
 import {createPoolEntryUI} from './entry-tables-v33-11-6.js';
 import {createPoolSimulationClient} from './simulation-client-v33-11-6.js';
 const poolJobs=createPoolSimulationClient();let poolEpoch=0;

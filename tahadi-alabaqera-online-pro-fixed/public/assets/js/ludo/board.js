@@ -1,4 +1,4 @@
-import {SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.11.4';
+import {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.11.7';
 /* Tahdia 33.10.5 — «لودو»: the classic cross board, drawn as one SVG.
    The four yards sit in the corners (red, green, blue, yellow, clockwise from the top left); each
    colour starts on the coloured square next to its yard, walks clockwise round 51 squares, turns at
@@ -118,14 +118,17 @@ function drawBoard(k, active) {
   return g;
 }
 
-function drawSix(P,active){
- const g=el('g',{'data-ludo-board':'','data-seats':6}),hex=(radius)=>Array.from({length:6},(_,i)=>{const a=i*Math.PI/3-Math.PI/2,p=P({x:300+Math.cos(a)*radius,y:300+Math.sin(a)*radius});return p.x+','+p.y;}).join(' ');
- g.append(el('polygon',{points:hex(312),fill:'url(#'+ID+'bed)',stroke:'url(#'+ID+'gold)','stroke-width':9,'stroke-linejoin':'round'}),el('polygon',{points:hex(301),fill:'none',stroke:'#ffffff33','stroke-width':2}));
- SIX_YARDS.forEach((yard,seat)=>{const p=P(yard),on=seat===active;g.append(el('rect',{x:p.x-45,y:p.y-45,width:90,height:90,rx:22,fill:'url(#'+ID+'yard'+seat+')',stroke:'url(#'+ID+'c'+seat+')','stroke-width':8,'data-yard':seat,filter:on?'url(#'+ID+'glow)':undefined}));for(const slot of yard.slots){const q=P(slot);g.append(el('circle',{cx:q.x,cy:q.y,r:15,fill:DEEP[seat],stroke:LIGHT[seat],'stroke-width':1.6}));}});
- const square=(p,fill,attrs={})=>{const q=P(p);g.append(el('rect',{x:q.x-9,y:q.y-7.5,width:18,height:18,rx:4.5,fill:'#0006'}),el('rect',{x:q.x-9,y:q.y-9,width:18,height:18,rx:4.5,fill,stroke:'#0a153055','stroke-width':.8,...attrs}),el('path',{d:`M${q.x-6} ${q.y-7}h12`,fill:'none',stroke:'#ffffff77','stroke-width':2,'stroke-linecap':'round'}));};
- SIX_TRACK.forEach((p,i)=>{const seat=i%13===0?Math.floor(i/13):-1;square(p,seat>=0?'url(#'+ID+'c'+seat+')':'url(#'+ID+'tile)',{'data-track':i});if(i%13===0||i%13===8){const q=P(p);g.append(el('path',{d:`M${q.x} ${q.y-6}l5 2v5l-5 4-5-4v-5z`,fill:'#1b2233',stroke:'#e6b445','stroke-width':1.4,'data-safe':i}));}});
- SIX_LANES.forEach((lane,seat)=>{const entry=P(SIX_TRACK[(seat*13+76)%78]),first=P(lane[0]);g.append(el('path',{d:`M${entry.x} ${entry.y}L${first.x} ${first.y}`,stroke:LIGHT[seat],'stroke-width':3,'stroke-linecap':'round'}));lane.forEach((p,h)=>square(p,'url(#'+ID+'c'+seat+')',{'data-home':seat+':'+h}));const a=sixAngle(seat),left=P({x:300+Math.cos(a-.5)*80,y:300+Math.sin(a-.5)*80}),right=P({x:300+Math.cos(a+.5)*80,y:300+Math.sin(a+.5)*80});g.append(el('polygon',{points:`300,300 ${left.x},${left.y} ${right.x},${right.y}`,fill:'url(#'+ID+'c'+seat+')',stroke:'#0a1530','stroke-width':2,'data-finish':seat}));});
- g.append(el('circle',{cx:300,cy:300,r:12,fill:'url(#'+ID+'gem)',stroke:'#6b430a','stroke-width':2}));return g;
+function drawSix(P,active,viewer){
+ const g=el('g',{'data-ludo-board':'','data-seats':6,'data-layout':'classic-arms'}),hex=r=>Array.from({length:6},(_,i)=>{const a=i*Math.PI/3-Math.PI/2,p=P({x:300+Math.cos(a)*r,y:300+Math.sin(a)*r});return p.x+','+p.y;}).join(' ');
+ g.append(el('polygon',{points:hex(310),fill:'url(#'+ID+'bed)',stroke:'url(#'+ID+'gold)','stroke-width':9,'stroke-linejoin':'round'}),el('polygon',{points:hex(299),fill:'none',stroke:'#ffffff33','stroke-width':2}));
+ const trackPath=SIX_TRACK.map((p,i)=>{const q=P(p);return(i?'L':'M')+q.x+' '+q.y;}).join(' ')+'Z';
+ g.append(el('path',{d:trackPath,fill:'none',stroke:'#c3cad4','stroke-width':SIX_CELL-1,'stroke-linejoin':'round'}));
+ const rotation=p=>(p.angle||0)+210-viewer*60;
+ const square=(p,fill,attrs={})=>{const q=P(p),cell=el('g',{transform:`translate(${q.x} ${q.y}) rotate(${rotation(p)})`});cell.append(el('rect',{x:-12,y:-10.5,width:24,height:24,rx:4.5,fill:'#0006'}),el('rect',{x:-12,y:-12,width:24,height:24,rx:4.5,fill,stroke:'#0a153055','stroke-width':.8,...attrs}),el('path',{d:'M-8 -9h16',fill:'none',stroke:'#ffffff77','stroke-width':2,'stroke-linecap':'round'}));g.append(cell);};
+ SIX_YARDS.forEach((yard,seat)=>{const p=P(yard),on=seat===active,plate=el('g',{transform:`translate(${p.x} ${p.y}) rotate(${rotation(yard)})`,'data-yard':seat});plate.append(el('rect',{x:-46,y:-46,width:92,height:92,rx:20,fill:'url(#'+ID+'yard'+seat+')',stroke:'url(#'+ID+'c'+seat+')','stroke-width':8,filter:on?'url(#'+ID+'glow)':undefined}),el('rect',{x:-34,y:-34,width:68,height:68,rx:13,fill:DEEP[seat],opacity:.55,stroke:'#ffffff33','stroke-width':1.4}));g.append(plate);for(const slot of yard.slots){const q=P(slot);g.append(el('circle',{cx:q.x,cy:q.y+2,r:15,fill:'#0006'}),el('circle',{cx:q.x,cy:q.y,r:14,fill:LUDO_COLORS[seat],opacity:.26,stroke:LIGHT[seat],'stroke-width':1.7}));}});
+ SIX_TRACK.forEach((p,i)=>{const seat=i%13===0?Math.floor(i/13):-1;square(p,seat>=0?'url(#'+ID+'c'+seat+')':'url(#'+ID+'tile)',{'data-track':i});if(i%13===0||i%13===8){const q=P(p);g.append(el('path',{d:`M${q.x} ${q.y-7}l6 2v6l-6 5-6-5v-6z`,fill:'#1b2233',stroke:'#e6b445','stroke-width':1.5,'data-safe':i}));}});
+ SIX_LANES.forEach((lane,seat)=>{lane.forEach((p,h)=>square(p,'url(#'+ID+'c'+seat+')',{'data-home':seat+':'+h}));const a=sixAngle(seat),left=P({x:300+Math.cos(a-.5)*64,y:300+Math.sin(a-.5)*64}),right=P({x:300+Math.cos(a+.5)*64,y:300+Math.sin(a+.5)*64});g.append(el('polygon',{points:`300,300 ${left.x},${left.y} ${right.x},${right.y}`,fill:'url(#'+ID+'c'+seat+')',stroke:'#0a1530','stroke-width':2,'data-finish':seat}));});
+ g.append(el('circle',{cx:300,cy:300,r:10,fill:'url(#'+ID+'gem)',stroke:'#6b430a','stroke-width':1.8}));return g;
 }
 
 /** A glossy pawn standing on (0,0): base, body and head, in the colour of its corner. */
@@ -156,7 +159,7 @@ export function renderLudoBoard(host, state, options = {}) {
   ID = 'lb' + (++serial).toString(36) + '-';
   const svg = el('svg', { viewBox: '-24 -24 648 648', class: 'ludo-svg', role: 'img', 'aria-label': 'لوحة اللودو' });
   defs(svg);
-  svg.append(six?drawSix(P,active):drawBoard(k, active));
+  svg.append(six?drawSix(P,active,viewer):drawBoard(k, active));
   const layer = el('g', { 'data-pawns': '' });
   svg.append(layer);
   host.replaceChildren(svg);
@@ -173,11 +176,11 @@ export function renderLudoBoard(host, state, options = {}) {
   for (const s of placed) {
     const node = el('g', { class: 'ludo-pawn-at', 'data-seat': s.seat, 'data-token': s.token, transform: `translate(${s.at.x.toFixed(1)} ${s.at.y.toFixed(1)})` });
     const canPick = s.seat === options.active && legal.has(s.token);
-    if (canPick) { node.classList.add('can-pick'); node.append(el('circle', { r: 21, class: 'ludo-pick-ring', fill: 'none', stroke: '#ffffff', 'stroke-width': 3 })); }
+    if (canPick) { node.classList.add('can-pick'); node.append(el('circle', { r: six?15:21, class: 'ludo-pick-ring', fill: 'none', stroke: '#ffffff', 'stroke-width': 3 })); }
     node.append(el('g', { class: 'ludo-bob' }, [pawn(g0.corners[s.seat] ?? s.seat, s.token + 1, s.small || s.squeeze || six)]));
     if (canPick) {
       const hit = el('circle', { r: six?18:26, fill: 'transparent', class: 'ludo-hit', tabindex: 0, role: 'button', 'aria-label': `حرّك الحجر ${s.token + 1}` });
-      hit.addEventListener('click', (e) => { e.stopPropagation(); options.onPick?.(s.token); });
+      hit.addEventListener('click', (e) => {if(six&&Number.isFinite(e.clientX)&&Number.isFinite(e.clientY))return; e.stopPropagation(); options.onPick?.(s.token); });
       hit.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); options.onPick?.(s.token); } });
       node.append(hit);
     }

@@ -93,7 +93,7 @@ test('stored version-one Jewels rooms keep validation and ranking compatibility'
 
 test('the page, the codes and the home page know the duel', async () => {
   const [html, menu, home, codes, presence, main, sound] = await Promise.all(['public/jewels.html', 'public/assets/js/game-menu-v33.js', 'public/index.html', 'src/rooms/room-codes.js', 'src/presence/presence-registry.js', 'public/assets/js/jewels/main.js', 'public/assets/js/sound-v33-9-3.js'].map(read));
-  assert.match(html, /<title>ماستر الجواهر — بوسراج<\/title>/); assert.match(html, /id="gameMenu"/); assert.match(html, /assets\/js\/jewels\/main\.js\?v=/);
+  assert.match(html, /<title>ماستر الجواهر — لعبة العباقرة<\/title>/); assert.match(html, /id="gameMenu"/); assert.match(html, /assets\/js\/jewels\/main\.js\?v=/);
   assert.doesNotMatch(html + main, /بوت(?!ن)|Match Masters|ماستر ماتش/);
   assert.match(menu, /\['jewels',85,89,'\/jewels'\]/);
   assert.match(codes, /jewels: \{ from: 85, to: 89, page: '\/jewels' \}/);

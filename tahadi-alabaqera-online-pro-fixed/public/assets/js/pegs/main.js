@@ -4,8 +4,8 @@ import {pegsDieFace,pegsDiePalette} from './presentation.js?v=33.11.1';
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
 import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.11.1';
-import { createPegsBoard } from './board.js?v=33.11.1';
-import { createTable } from '../board-table-v33.js?v=33.11.6';
+import { createPegsBoard } from './board.js?v=33.11.7';
+import { createTable } from '../board-table-v33.js?v=33.11.7';
 import { guardPegs } from './guard.js?v=33.11.1';
 
 import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.1';
