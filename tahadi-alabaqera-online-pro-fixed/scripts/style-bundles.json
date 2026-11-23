@@ -74,7 +74,7 @@
     "assets/css/club-complete-v33-10.css",
     "assets/css/home-v33-10-3.css",
     "assets/css/home-v33-11.css",
-    "assets/css/palace-lobby-v33-11-7.css"
+    "assets/css/palace-lobby-v33-11-8.css"
   ],
   "jackaroo.html": [
     "assets/css/platform.css",
@@ -662,6 +662,7 @@
     "assets/css/ludo-v33-10-5.css",
     "assets/css/profile-pro-v33-9-4.css",
     "assets/css/signature-v33-11-4.css",
-    "assets/css/ludo-polish-v33-11-6.css"
+    "assets/css/ludo-polish-v33-11-6.css",
+    "assets/css/ludo-viewport-v33-11-8.css"
   ]
 }

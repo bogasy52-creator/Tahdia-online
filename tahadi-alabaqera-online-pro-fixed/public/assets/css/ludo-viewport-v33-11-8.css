@@ -1,0 +1,64 @@
+/* Constrain every grid item in the width chain, including Safari's intrinsic SVG size.
+   Hiding horizontal overflow alone left the board and left players outside the viewport. */
+body.ludo-page.game-running .bs-shell{width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:0}
+body.ludo-page #game.ludo-arena{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr);padding-inline:calc(env(safe-area-inset-left) + 8px) calc(env(safe-area-inset-right) + 8px);box-sizing:border-box}
+body.ludo-page #game .ludo-toolbar,body.ludo-page #game .ludo-livebar,body.ludo-page #game .ludo-dock{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+body.ludo-page #game .ludo-tools{flex:none}
+body.ludo-page #game .ludo-toolbar{grid-row:1}
+body.ludo-page #game .ludo-livebar{grid-row:2}
+body.ludo-page #game .ludo-stage{grid-row:3}
+body.ludo-page #game .ludo-dock{grid-row:4}
+body.ludo-page #game .ludo-title{flex-wrap:wrap;row-gap:3px}
+body.ludo-page #game .ludo-livebar{flex-wrap:wrap;gap:4px 10px}
+body.ludo-page #game .ludo-stage{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;align-items:center;justify-items:center;align-content:stretch;justify-content:normal;min-width:0;min-height:0;width:100%;max-width:100%;height:100%;gap:8px;direction:ltr}
+body.ludo-page #game .lu-board-wrap{grid-column:1;grid-row:2;width:var(--ludo-board-size,min(100%,calc(var(--game-vh,100dvh) - 280px)));height:auto;max-width:100%;max-height:100%;min-width:0;min-height:0;aspect-ratio:1;box-sizing:border-box;justify-self:center;align-self:center;flex:none;margin:0;padding:0}
+body.ludo-page #game .lu-board{width:100%;height:100%;min-width:0;max-width:100%;box-sizing:border-box;inset:0}
+body.ludo-page #game .ludo-svg{width:100%;height:100%;max-width:100%;display:block}
+body.ludo-page #game .ludo-plates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:760px;min-width:0;min-height:62px;gap:8px;align-items:center;box-sizing:border-box}
+body.ludo-page #game .ludo-plates.is-top{grid-column:1;grid-row:1}
+body.ludo-page #game .ludo-plates.is-bottom{grid-column:1;grid-row:3;padding-bottom:12px}
+body.ludo-page #game .ludo-plate{display:flex;min-width:0;max-width:100%;gap:5px;justify-content:flex-start;align-items:center;flex-direction:row;grid-area:auto;justify-self:stretch;align-self:center}
+body.ludo-page #game .ludo-plate[data-corner="tr"],body.ludo-page #game .ludo-plate[data-corner="br"]{flex-direction:row-reverse}
+body.ludo-page #game .ludo-plate[data-corner="tl"],body.ludo-page #game .ludo-plate[data-corner="bl"]{grid-column:1}
+body.ludo-page #game .ludo-plate[data-corner="tr"],body.ludo-page #game .ludo-plate[data-corner="br"]{grid-column:2}
+body.ludo-page #game .ludo-plates .ludo-plate[hidden]{display:none!important}
+body.ludo-page #game .lp-card{flex:0 1 auto;max-width:100%;min-width:0;gap:6px;padding:5px 7px;box-sizing:border-box}
+body.ludo-page #game .lp-face{width:40px;height:40px;flex:none}
+body.ludo-page #game .lp-meta{min-width:0;flex:1}
+body.ludo-page #game .lp-meta b{min-width:0;max-width:100%;font-size:13px}
+body.ludo-page #game .lp-meta small{font-size:11px;white-space:normal;line-height:1.3}
+body.ludo-page #game .lp-home i{width:7px;height:7px;flex:none}
+body.ludo-page #game .lp-die{display:none;width:46px;height:46px;flex:0 0 46px;box-sizing:border-box}
+body.ludo-page #game .ludo-plate.show-die .lp-die{display:grid}
+body.ludo-page #game .lp-die .die{--die-size:36px}
+body.ludo-page.ludo-six #game .ludo-plates{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+body.ludo-page.ludo-six #game .ludo-plate{gap:3px}
+body.ludo-page.ludo-six #game .ludo-plate[data-corner="tr"],body.ludo-page.ludo-six #game .ludo-plate[data-corner="br"]{grid-column:3}
+body.ludo-page.ludo-six #game .ludo-plate[data-corner="tm"],body.ludo-page.ludo-six #game .ludo-plate[data-corner="bm"]{grid-column:2}
+body.ludo-page.ludo-six #game .lp-card{padding:4px;gap:4px;border-radius:12px}
+body.ludo-page.ludo-six #game .lp-face{width:27px;height:27px}
+body.ludo-page.ludo-six #game .lp-meta b{font-size:11px}
+body.ludo-page.ludo-six #game .lp-meta small{font-size:9px}
+body.ludo-page.ludo-six #game .lp-die{width:34px;height:38px;max-width:none;flex-basis:34px;border-radius:11px}
+body.ludo-page.ludo-six #game .lp-die .die{--die-size:28px}
+body.ludo-page #game .ludo-status{min-width:0;overflow-wrap:anywhere}
+@media(orientation:landscape) and (max-height:620px){
+  body.ludo-page #game.ludo-arena{grid-template-rows:auto minmax(0,1fr) auto}
+  body.ludo-page #game .ludo-livebar{display:none}
+  body.ludo-page #game .ludo-stage{grid-row:2}
+  body.ludo-page #game .ludo-dock{grid-row:3}
+  body.ludo-page #game .ludo-stage{grid-template-columns:minmax(0,1fr) var(--ludo-board-size,min(45vw,60dvh)) minmax(0,1fr);grid-template-rows:minmax(0,1fr);column-gap:8px}
+  body.ludo-page #game .lu-board-wrap{grid-column:2;grid-row:1;width:var(--ludo-board-size,min(45vw,60dvh));height:auto;max-height:100%}
+  body.ludo-page #game .ludo-plates,body.ludo-page.ludo-six #game .ludo-plates{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(0,1fr);align-self:stretch;min-height:0;height:100%;width:100%;gap:5px;padding:0}
+  body.ludo-page #game .ludo-plates.is-top{grid-column:1;grid-row:1}
+  body.ludo-page #game .ludo-plates.is-bottom{grid-column:3;grid-row:1}
+  body.ludo-page #game .ludo-plate,body.ludo-page #game .ludo-plate[data-corner],body.ludo-page.ludo-six #game .ludo-plate[data-corner]{flex-direction:row!important;grid-area:auto;justify-self:stretch;align-self:center;min-height:0}
+  body.ludo-page #game .lp-card{padding:4px;gap:4px;border-radius:12px}
+  body.ludo-page #game .lp-face{width:28px;height:28px}
+  body.ludo-page #game .lp-meta b{font-size:11px}
+  body.ludo-page #game .lp-meta small{font-size:9px}
+  body.ludo-page #game .lp-die,body.ludo-page.ludo-six #game .lp-die{width:34px;height:38px;max-width:none;flex-basis:34px;border-radius:11px}
+  body.ludo-page #game .lp-die .die{--die-size:28px}
+  body.ludo-page #game .lp-die:has(.can-roll)::after{bottom:-13px;font-size:9px}
+}
+@media(max-width:350px) and (orientation:portrait){body.ludo-page #game .lp-face{width:32px;height:32px}body.ludo-page #game .lp-meta b{font-size:11px}body.ludo-page.ludo-six #game .lp-face{width:23px;height:23px}body.ludo-page.ludo-six #game .lp-meta b{font-size:10px}body.ludo-page #game .ludo-title{gap:4px}body.ludo-page #game .ludo-title h1{font-size:18px}body.ludo-page #game .ludo-title small{font-size:10px}body.ludo-page #game .ludo-tool{padding-inline:8px}}

@@ -181,7 +181,7 @@ test('home: actual table covers and links survive the palace layout',async()=>{
  const home=await read('public/index.html');for(const route of ['tanks','billiards','jewels','jackaroo'])assert.ok(home.includes('href="/'+route+'"'));
  assert.equal((home.match(/jackaroo-cover-v33-8\.webp/g)||[]).length,2);assert.doesNotMatch(home,/jackaroo-table-v17\.webp/);
  assert.ok((await stat(new URL('../public/assets/brand/jackaroo-cover-v33-8.webp',import.meta.url))).size>20000);
- assert.ok(JSON.parse(await read('scripts/style-bundles.json'))['index.html'].includes('assets/css/palace-lobby-v33-11-7.css'));
+ assert.ok(JSON.parse(await read('scripts/style-bundles.json'))['index.html'].includes('assets/css/palace-lobby-v33-11-8.css'));
 });
 test('the word hunt strikes a found word through in the colour of whoever found it', async () => {
   const css = await read('public/assets/css/wordhunt-v33-5.css');

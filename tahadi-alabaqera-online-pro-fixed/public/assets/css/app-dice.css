@@ -525,7 +525,10 @@ body.suite-v16{--s-bg:#080e18;--s-panel:#121e30;--s-raised:#192941;--s-line:#304
 
 /* 33.11.6: shared account wallet */
 .bs-actions .coin-chip{font-variant-numeric:tabular-nums;border:1px solid #e7c57088!important;background:linear-gradient(150deg,#3f2a12,#1a1430 70%)!important;box-shadow:inset 0 1px 1px #ffe9a366,0 2px 5px #0005!important;color:#fff4d8!important;border-radius:24px!important;text-decoration:none;direction:ltr;gap:7px;font-family:system-ui,sans-serif;font-weight:800}
-.bs-actions .coin-chip:before{content:'✦'!important;display:inline-grid!important;place-items:center;width:25px;height:25px;border-radius:50%;background:radial-gradient(circle at 35% 20%,#fff5c6,#eebc37 50%,#ae5d09);box-shadow:inset 0 0 0 2px #ffe091,0 1px 4px #0006;color:#a66012;font-size:19px;text-shadow:0 1px #fff3bc}
+body .bs-actions .coin-chip:before{content:'✦'!important;display:inline-grid!important;place-items:center;width:25px;height:25px;border-radius:50%;background:radial-gradient(circle at 35% 20%,#fff5c6,#eebc37 50%,#ae5d09);box-shadow:inset 0 0 0 2px #ffe091,0 1px 4px #0006;color:#a66012;font-size:19px;text-shadow:0 1px #fff3bc}
+
+/* The wallet owns its single icon; the amount must never receive a second one. */
+body .bs-actions .coin-chip [data-career-coins]::before,body .bs-actions .coin-chip [data-career-coins]::after{content:none!important;display:none!important}
 
 /* assets/css/mobile-v21.css */
 /* Constrain each layout at its source; numeric grids keep left-to-right coordinates. */
