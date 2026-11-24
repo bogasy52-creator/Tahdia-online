@@ -428,7 +428,8 @@
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
     "assets/css/party-v33-10-6.css",
-    "assets/css/party-v33-11-2.css"
+    "assets/css/party-v33-11-2.css",
+    "assets/css/rooms-v33-13.css"
   ],
   "leaderboard.html": [
     "assets/css/platform.css",
@@ -689,6 +690,7 @@
     "assets/css/profile-pro-v33-9-4.css",
     "assets/css/signature-v33-11-4.css",
     "assets/css/ludo-polish-v33-11-6.css",
+    "assets/css/ludo-world-v33-13.css",
     "assets/css/ludo-viewport-v33-11-8.css"
   ],
   "bridge.html": [

@@ -1,0 +1,60 @@
+/* لعبة العباقرة 33.13.0 — «لودو» with the look of the big Ludo apps.
+   Night-purple room, a white board edge to edge, large player cards with their die beside the
+   face, a calm dock. The rules, sizes the viewport script measures and every id stay as they were. */
+html body.ludo-page{background:radial-gradient(120% 60% at 50% 0,#3a1590 0,#1c0848 45%,#0a0322 100%) fixed!important}
+html body.ludo-page #game .lu-board-wrap,html body.ludo-page #game .lu-board{padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html body.ludo-page #game .lu-board-wrap::before,html body.ludo-page #game .lu-board-wrap::after,html body.ludo-page #game .lu-board::before,html body.ludo-page #game .lu-board::after{display:none!important}
+html body.ludo-page #game .lu-board svg{display:block;width:100%;height:100%;filter:drop-shadow(0 10px 22px #000a)}
+/* six players: the board is a little wider than tall */
+html body.ludo-page.ludo-six #game .lu-board-wrap{aspect-ratio:542/510}
+
+/* the players: big cards, the face, the name, four pips, the die beside */
+html body.ludo-page #game .ludo-plates{min-height:76px;gap:10px}
+html body.ludo-page #game .lp-card{background:linear-gradient(180deg,#3b1890,#22095a)!important;border:2px solid color-mix(in srgb,var(--seat) 75%,#ffffff)!important;border-radius:20px!important;padding:6px 10px!important;box-shadow:0 8px 16px #0007!important}
+html body.ludo-page #game .lp-meta b{font-size:15px;color:#fff}
+html body.ludo-page #game .lp-meta small{color:#d9c8ff}
+html body.ludo-page #game .lp-home i{width:9px;height:9px;border-radius:50%;background:#ffffff26;border:1px solid #ffffff44}
+html body.ludo-page #game .lp-home i.in{background:var(--seat);border-color:#fff;box-shadow:0 0 6px var(--seat)}
+html body.ludo-page #game .ludo-plate.is-turn .lp-card{box-shadow:0 0 0 3px var(--seat),0 0 26px color-mix(in srgb,var(--seat) 70%,transparent),0 8px 18px #0007!important;transform:translateY(-2px) scale(1.02)}
+html body.ludo-page #game .lp-die{border-radius:16px!important;background:linear-gradient(180deg,#ffffff1a,#ffffff08)!important;border:2px solid color-mix(in srgb,var(--seat) 70%,#fff)!important}
+html body.ludo-page:not(.ludo-six) #game .lp-face{width:50px!important;height:50px!important}
+html body.ludo-page:not(.ludo-six) #game .lp-die{width:58px!important;height:58px!important;flex-basis:58px!important}
+html body.ludo-page:not(.ludo-six) #game .lp-die .die{--die-size:44px!important}
+html body.ludo-page.ludo-six #game .ludo-plates{gap:6px}
+html body.ludo-page.ludo-six #game .lp-card{padding:5px 6px!important;border-radius:16px!important}
+html body.ludo-page.ludo-six #game .lp-face{width:34px!important;height:34px!important}
+html body.ludo-page.ludo-six #game .lp-meta b{font-size:12.5px}
+html body.ludo-page.ludo-six #game .lp-meta small{font-size:10.5px}
+html body.ludo-page.ludo-six #game .lp-die{width:42px!important;height:44px!important;flex-basis:42px!important}
+html body.ludo-page.ludo-six #game .lp-die .die{--die-size:33px!important}
+
+/* the dock and the top bar */
+html body.ludo-page #game .ludo-dock{background:linear-gradient(180deg,#341382f2,#1b0846f2)!important;border:1px solid #8a5cf0!important;box-shadow:0 10px 24px #0008!important}
+html body.ludo-page #game .ludo-roll:not(:disabled){background:linear-gradient(180deg,#ffe27a,#e7a51e)!important;color:#3a1d00!important;box-shadow:0 4px 0 #9a5a06!important}
+html body.ludo-page #game .ludo-toolbar h1{color:#ffe38a}
+
+/* the board's life: the yard whose turn it is breathes, sparks for a capture and a stone home */
+.ludo-page .lw-yard-glow{animation:lw-glow 1.2s ease-in-out infinite}
+@keyframes lw-glow{50%{opacity:.2}}
+.ludo-page .lw-burst-ring{transform-box:fill-box;transform-origin:center;animation:lw-burst .7s ease-out forwards}
+@keyframes lw-burst{from{transform:scale(.3);opacity:1}to{transform:scale(1.7);opacity:0}}
+.ludo-page .lw-spark{animation:lw-spark .75s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes lw-spark{from{transform:translateY(0);opacity:1}to{transform:translateY(calc(-1 * var(--d)));opacity:0}}
+.ludo-page .ludo-burst-word{font-size:30px!important;text-shadow:0 3px 0 #0008,0 0 18px #ffcc3e99!important}
+@media (prefers-reduced-motion:reduce){.ludo-page .lw-yard-glow,.ludo-page .lw-burst-ring,.ludo-page .lw-spark{animation:none}html body.ludo-page #game .ludo-plate.is-turn .lp-card{transform:none}}
+
+/* the players sit close to the board, not at the far ends of the screen */
+@media (orientation:portrait){html body.ludo-page #game .ludo-stage{grid-template-rows:auto auto auto;align-content:center;gap:12px}html body.ludo-page #game .ludo-plates.is-bottom{padding-bottom:0}}
+/* the reactions button lives in the dock, beside the dice button, not on the board */
+html body.ludo-page #game .ludo-dock{grid-template-columns:minmax(0,1fr) auto auto}
+html body.ludo-page #game .ludo-dock .rx-fab{position:relative!important;inset:auto!important;width:46px;height:46px;flex:none}
+html body.ludo-page #game .ludo-dock .rx-fab[hidden]{display:none!important}
+/* a long name takes two lines instead of being cut to three letters */
+html body.ludo-page #game .lp-meta b{white-space:normal!important;overflow:hidden;text-overflow:clip!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
+html body.ludo-page:not(.ludo-six) #game .lp-face{width:46px!important;height:46px!important}
+/* six players: one line for the name; the colour is already the card's border */
+html body.ludo-page.ludo-six #game .lp-meta b{-webkit-line-clamp:1;white-space:nowrap!important;text-overflow:ellipsis!important;display:block}
+html body.ludo-page.ludo-six #game .lp-meta small{display:none}
+html body.ludo-page.ludo-six #game .lp-card{min-width:0;overflow:hidden}
+html body.ludo-page.ludo-six #game .ludo-plate.show-die .lp-face{display:none!important}
+html body.ludo-page:not(.ludo-six) #game .ludo-plate.show-die .lp-face{width:36px!important;height:36px!important}html body.ludo-page:not(.ludo-six) #game .ludo-plate.show-die .lp-meta b{font-size:13.5px}html body.ludo-page:not(.ludo-six) #game .ludo-plate.show-die .lp-card{padding:6px 7px!important}

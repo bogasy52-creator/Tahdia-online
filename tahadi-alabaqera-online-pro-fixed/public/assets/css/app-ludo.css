@@ -717,6 +717,29 @@ body.bi-playing .bi-dock .bi-spin-btn{width:52px!important;height:52px!important
 body.carrom-running .cm-dock{overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none}
 body.carrom-running .cm-dock::-webkit-scrollbar{display:none}
 
+/* ---------------------------------------------------------------- 33.13.0: the quick choice before a game */
+.ip-sheet{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;padding:12px 10px max(12px,env(safe-area-inset-bottom));
+  background:radial-gradient(120% 70% at 50% 0,#3a1590 0,#1c0848 50%,#0a0322 100%);font-family:Tajawal,system-ui,sans-serif;direction:rtl;overflow-y:auto}
+.ip-card{margin-top:auto;width:min(520px,100%);display:grid;gap:14px;padding:16px 14px 14px;border-radius:26px;background:linear-gradient(180deg,#341382,#1b0846);border:2px solid #ffcc3e88;box-shadow:0 20px 50px rgba(0,0,0,.55);color:#fff;animation:ip-rise .28s ease-out}
+.ip-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ip-head h2{margin:0;font:800 26px/1.2 Tajawal,system-ui,sans-serif;background:linear-gradient(180deg,#fff,#ffe38a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ip-close{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#ffffff14;border:1px solid #ffffff2a;color:#fff;text-decoration:none;font-size:18px}
+.ip-group{display:grid;gap:7px}
+.ip-label{font-size:13.5px;font-weight:700;color:#d9c8ff}
+.ip-options{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:7px}
+.ip-options.is-many{grid-auto-flow:row;grid-template-columns:repeat(3,1fr)}
+.ip-options button{min-height:46px;padding:6px 8px;border-radius:14px;border:1.5px solid #ffffff22;background:#ffffff0f;color:#fff;font:700 15px/1.25 Tajawal,system-ui,sans-serif;cursor:pointer}
+.ip-options button.is-on{background:linear-gradient(180deg,#ffe27a,#e7a51e);color:#3a1d00;border-color:#ffd24a;box-shadow:0 3px 0 #9a5a06}
+.ip-options button:focus-visible,.ip-play:focus-visible,.ip-more-ways a:focus-visible,.ip-close:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.ip-play{min-height:58px;border:0;border-radius:18px;background:linear-gradient(180deg,#ffe27a,#e7a51e);color:#3a1d00;font:800 22px/1 Tajawal,system-ui,sans-serif;box-shadow:0 5px 0 #9a5a06,0 12px 24px rgba(0,0,0,.35);cursor:pointer}
+.ip-play:active{transform:translateY(3px);box-shadow:0 2px 0 #9a5a06}
+.ip-more-ways{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.ip-more-ways a{display:inline-flex;align-items:center;min-height:40px;padding:0 13px;border-radius:13px;background:#ffffff10;border:1px solid #ffffff26;color:#eee6ff;text-decoration:none;font-size:14px;font-weight:700}
+@keyframes ip-rise{from{transform:translateY(24px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.ip-card{animation:none}}
+.ip-cover{width:100%;aspect-ratio:2.6;object-fit:cover;border-radius:18px;border:2px solid #ffcc3e55;margin:-4px 0 -4px;box-shadow:0 8px 18px #0006}
+@media (max-height:700px){.ip-cover{aspect-ratio:3.4}.ip-card{gap:10px}.ip-options button{min-height:40px}}
+
 /* assets/css/mobile-v21.css */
 /* Constrain each layout at its source; numeric grids keep left-to-right coordinates. */
 body.journey-page,body.picture-page{inline-size:100%;max-inline-size:100%;min-inline-size:0;overflow-x:clip}
@@ -1826,6 +1849,68 @@ body.ludo-page.ludo-my-turn .ludo-roll:not(:disabled){animation:ludo-ready 1.1s 
 .ludo-page{background:radial-gradient(ellipse at 50% 25%,#302451,#0d1029 66%)!important}.ludo-page .lu-board-wrap{border-radius:30px;background:linear-gradient(150deg,#e6c879,#715224 2%,#201430 4%,#100b20 96%,#b78a46);padding:7px;box-shadow:0 14px 28px #0008,inset 0 1px #fff1ba77}.ludo-page .ludo-plate.active{border-color:#f6d58c;box-shadow:0 0 0 1px #ddaf5144,0 0 20px #c98c3d33}.ludo-page .ludo-status{border:1px solid #b69b6b66;background:linear-gradient(130deg,#38254c,#17132a);border-radius:18px}.ludo-page .ludo-pawn path,.ludo-page .ludo-pawn circle{paint-order:stroke fill}.ludo-page .ludo-landing-fx{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.ludo-page .ludo-landing-fx.arrived{animation:ludo-arrival .62s ease-out both}.ludo-page .ludo-burst-word{color:#fff0bc!important;text-shadow:0 2px #8e531a,0 4px 10px #0009;font-weight:900}.ludo-page .ludo-burst-word.capture{color:#ffc0bd!important}.ludo-page .ludo-burst-word.home{color:#ffe39c!important}
 @keyframes ludo-arrival{0%{opacity:.95;transform:scale(.75)}100%{opacity:0;transform:scale(2.2)}}
 @media(prefers-reduced-motion:reduce){.ludo-page .ludo-landing-fx.arrived{animation:none}}
+
+/* assets/css/ludo-world-v33-13.css */
+/* لعبة العباقرة 33.13.0 — «لودو» with the look of the big Ludo apps.
+   Night-purple room, a white board edge to edge, large player cards with their die beside the
+   face, a calm dock. The rules, sizes the viewport script measures and every id stay as they were. */
+html body.ludo-page{background:radial-gradient(120% 60% at 50% 0,#3a1590 0,#1c0848 45%,#0a0322 100%) fixed!important}
+html body.ludo-page #game .lu-board-wrap,html body.ludo-page #game .lu-board{padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html body.ludo-page #game .lu-board-wrap::before,html body.ludo-page #game .lu-board-wrap::after,html body.ludo-page #game .lu-board::before,html body.ludo-page #game .lu-board::after{display:none!important}
+html body.ludo-page #game .lu-board svg{display:block;width:100%;height:100%;filter:drop-shadow(0 10px 22px #000a)}
+/* six players: the board is a little wider than tall */
+html body.ludo-page.ludo-six #game .lu-board-wrap{aspect-ratio:542/510}
+
+/* the players: big cards, the face, the name, four pips, the die beside */
+html body.ludo-page #game .ludo-plates{min-height:76px;gap:10px}
+html body.ludo-page #game .lp-card{background:linear-gradient(180deg,#3b1890,#22095a)!important;border:2px solid color-mix(in srgb,var(--seat) 75%,#ffffff)!important;border-radius:20px!important;padding:6px 10px!important;box-shadow:0 8px 16px #0007!important}
+html body.ludo-page #game .lp-meta b{font-size:15px;color:#fff}
+html body.ludo-page #game .lp-meta small{color:#d9c8ff}
+html body.ludo-page #game .lp-home i{width:9px;height:9px;border-radius:50%;background:#ffffff26;border:1px solid #ffffff44}
+html body.ludo-page #game .lp-home i.in{background:var(--seat);border-color:#fff;box-shadow:0 0 6px var(--seat)}
+html body.ludo-page #game .ludo-plate.is-turn .lp-card{box-shadow:0 0 0 3px var(--seat),0 0 26px color-mix(in srgb,var(--seat) 70%,transparent),0 8px 18px #0007!important;transform:translateY(-2px) scale(1.02)}
+html body.ludo-page #game .lp-die{border-radius:16px!important;background:linear-gradient(180deg,#ffffff1a,#ffffff08)!important;border:2px solid color-mix(in srgb,var(--seat) 70%,#fff)!important}
+html body.ludo-page:not(.ludo-six) #game .lp-face{width:50px!important;height:50px!important}
+html body.ludo-page:not(.ludo-six) #game .lp-die{width:58px!important;height:58px!important;flex-basis:58px!important}
+html body.ludo-page:not(.ludo-six) #game .lp-die .die{--die-size:44px!important}
+html body.ludo-page.ludo-six #game .ludo-plates{gap:6px}
+html body.ludo-page.ludo-six #game .lp-card{padding:5px 6px!important;border-radius:16px!important}
+html body.ludo-page.ludo-six #game .lp-face{width:34px!important;height:34px!important}
+html body.ludo-page.ludo-six #game .lp-meta b{font-size:12.5px}
+html body.ludo-page.ludo-six #game .lp-meta small{font-size:10.5px}
+html body.ludo-page.ludo-six #game .lp-die{width:42px!important;height:44px!important;flex-basis:42px!important}
+html body.ludo-page.ludo-six #game .lp-die .die{--die-size:33px!important}
+
+/* the dock and the top bar */
+html body.ludo-page #game .ludo-dock{background:linear-gradient(180deg,#341382f2,#1b0846f2)!important;border:1px solid #8a5cf0!important;box-shadow:0 10px 24px #0008!important}
+html body.ludo-page #game .ludo-roll:not(:disabled){background:linear-gradient(180deg,#ffe27a,#e7a51e)!important;color:#3a1d00!important;box-shadow:0 4px 0 #9a5a06!important}
+html body.ludo-page #game .ludo-toolbar h1{color:#ffe38a}
+
+/* the board's life: the yard whose turn it is breathes, sparks for a capture and a stone home */
+.ludo-page .lw-yard-glow{animation:lw-glow 1.2s ease-in-out infinite}
+@keyframes lw-glow{50%{opacity:.2}}
+.ludo-page .lw-burst-ring{transform-box:fill-box;transform-origin:center;animation:lw-burst .7s ease-out forwards}
+@keyframes lw-burst{from{transform:scale(.3);opacity:1}to{transform:scale(1.7);opacity:0}}
+.ludo-page .lw-spark{animation:lw-spark .75s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes lw-spark{from{transform:translateY(0);opacity:1}to{transform:translateY(calc(-1 * var(--d)));opacity:0}}
+.ludo-page .ludo-burst-word{font-size:30px!important;text-shadow:0 3px 0 #0008,0 0 18px #ffcc3e99!important}
+@media (prefers-reduced-motion:reduce){.ludo-page .lw-yard-glow,.ludo-page .lw-burst-ring,.ludo-page .lw-spark{animation:none}html body.ludo-page #game .ludo-plate.is-turn .lp-card{transform:none}}
+
+/* the players sit close to the board, not at the far ends of the screen */
+@media (orientation:portrait){html body.ludo-page #game .ludo-stage{grid-template-rows:auto auto auto;align-content:center;gap:12px}html body.ludo-page #game .ludo-plates.is-bottom{padding-bottom:0}}
+/* the reactions button lives in the dock, beside the dice button, not on the board */
+html body.ludo-page #game .ludo-dock{grid-template-columns:minmax(0,1fr) auto auto}
+html body.ludo-page #game .ludo-dock .rx-fab{position:relative!important;inset:auto!important;width:46px;height:46px;flex:none}
+html body.ludo-page #game .ludo-dock .rx-fab[hidden]{display:none!important}
+/* a long name takes two lines instead of being cut to three letters */
+html body.ludo-page #game .lp-meta b{white-space:normal!important;overflow:hidden;text-overflow:clip!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
+html body.ludo-page:not(.ludo-six) #game .lp-face{width:46px!important;height:46px!important}
+/* six players: one line for the name; the colour is already the card's border */
+html body.ludo-page.ludo-six #game .lp-meta b{-webkit-line-clamp:1;white-space:nowrap!important;text-overflow:ellipsis!important;display:block}
+html body.ludo-page.ludo-six #game .lp-meta small{display:none}
+html body.ludo-page.ludo-six #game .lp-card{min-width:0;overflow:hidden}
+html body.ludo-page.ludo-six #game .ludo-plate.show-die .lp-face{display:none!important}
+html body.ludo-page:not(.ludo-six) #game .ludo-plate.show-die .lp-face{width:36px!important;height:36px!important}html body.ludo-page:not(.ludo-six) #game .ludo-plate.show-die .lp-meta b{font-size:13.5px}html body.ludo-page:not(.ludo-six) #game .ludo-plate.show-die .lp-card{padding:6px 7px!important}
 
 /* assets/css/ludo-viewport-v33-11-8.css */
 /* Constrain every grid item in the width chain, including Safari's intrinsic SVG size.

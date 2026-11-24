@@ -1,4 +1,5 @@
 // The classic three-column arm repeated six times. Indices and saved progress remain unchanged.
+// 33.13.0: the yards sit nearer the arms (radius 210, not 239), so the board is drawn a quarter larger.
 export const SIX_CELL=26;
 const center={x:300,y:300},sector=Math.PI/3,angle=s=>s*sector-2*Math.PI/3;
 const inner=SIX_CELL*(Math.sqrt(3)+(1+Math.sqrt(3))/2),tip=inner+5*SIX_CELL;
@@ -12,7 +13,7 @@ for(let s=0;s<6;s++){
 // Start is one square below the cap, just as in four-player Ludo. The home gate is two before start.
 export const SIX_TRACK=Object.freeze(loop.map((_,i)=>Object.freeze(loop[(i+8)%78])));
 export const SIX_LANES=Object.freeze(Array.from({length:6},(_,s)=>Object.freeze(Array.from({length:5},(_,h)=>Object.freeze(local(angle(s),tip-(h+1)*SIX_CELL))))));
-export const SIX_YARDS=Object.freeze(Array.from({length:6},(_,s)=>{const a=angle(s)+sector/2,p=local(a,239),u={x:Math.cos(a),y:Math.sin(a)},v={x:-u.y,y:u.x};return Object.freeze({...p,angle:a*180/Math.PI,slots:Object.freeze([[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,y])=>Object.freeze({x:p.x+u.x*x*20+v.x*y*20,y:p.y+u.y*x*20+v.y*y*20})))});}));
+export const SIX_YARDS=Object.freeze(Array.from({length:6},(_,s)=>{const a=angle(s)+sector/2,p=local(a,210),u={x:Math.cos(a),y:Math.sin(a)},v={x:-u.y,y:u.x};return Object.freeze({...p,angle:a*180/Math.PI,slots:Object.freeze([[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,y])=>Object.freeze({x:p.x+u.x*x*20+v.x*y*20,y:p.y+u.y*x*20+v.y*y*20})))});}));
 export const sixAngle=angle;
 export function sixRotate(p,viewer=0){const a=(210-viewer*60)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),x=p.x-center.x,y=p.y-center.y;return{x:300+x*c-y*s,y:300+x*s+y*c};}
 export function sixSpot(state,seat,token,progress){

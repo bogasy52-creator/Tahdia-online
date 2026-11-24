@@ -3,8 +3,8 @@ import * as Ludo from '../public/assets/js/engines/ludo-engine.js';import * as S
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),signature=el=>[el.tagName,el.attributes,el._text||'',el.children.map(signature)];
 async function renderer(){const h=await createDOM('ludo.html',{...Ludo,...Six});h.doc.createTextNode=t=>{const n=new MiniElement('#text');n.textContent=t;return n;};await h.runFile('assets/js/ludo/board.js');return h;}
 async function render(h,state,options){h.context.args={host:h.doc.getElementById('board'),state,options};await vm.runInContext('renderLudoBoard(args.host,args.state,args.options)',h.context);return h.doc.querySelector('#board svg');}
-test('the four-player board remains exactly the same from every player and turn',async()=>{
- const gold=JSON.parse(await readFile(new URL('./fixtures/ludo-four-v33-11-6.json',import.meta.url),'utf8'));
+test('the four-player royal board (33.13) is drawn the same from every player and turn',async()=>{
+ const gold=JSON.parse(await readFile(new URL('./fixtures/ludo-four-v33-13.json',import.meta.url),'utf8'));
  for(let viewer=0;viewer<4;viewer++)for(let active=0;active<4;active++){const h=await renderer(),svg=await render(h,Ludo.createLudoGame(['A','B','C','D']),{viewer,active,legal:[0,1]});assert.equal(createHash('sha256').update(JSON.stringify(signature(svg))).digest('hex'),gold[viewer+':'+active]);}
 });
 test('six arms have straight parallel columns, larger separate tiles and a direct home gate',()=>{

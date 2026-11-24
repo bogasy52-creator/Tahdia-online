@@ -23,7 +23,7 @@ test('six-player classic matches finish, all turns and every token stay in bound
  }
 });
 test('the actual Ludo page renders all six names, dice and 24 selectable pawn objects',async()=>{
- const h=await createDOM('ludo.html',{...Ludo,...Six,createZahraPractice});h.doc.createTextNode=text=>{const n=new MiniElement('#text');n.textContent=text;return n;};
+ const h=await createDOM('ludo.html',{...Ludo,...Six,createZahraPractice,ludoSound:new Proxy({},{get:()=>()=>{}})});h.doc.createTextNode=text=>{const n=new MiniElement('#text');n.textContent=text;return n;};
  await h.runFile('assets/js/ludo/board.js');await h.runFile('assets/js/ludo/main.js');
  const table=h.context.tables[0],state=six(),players=state.players.map((p,index)=>({id:'p'+index,index,name:p.name,look:{dice:'dice-eclipse',frame:'frame-eclipse'}}));
  await table.apply({code:'450001',status:'playing',variant:'ludo',state,pendingRoll:null,version:1,players,me:{id:'p0',index:0,role:'host'}});

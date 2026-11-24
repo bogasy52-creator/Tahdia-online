@@ -69,7 +69,7 @@ body.ng-page *{box-sizing:border-box}
 .br-board{--cols:3;--rows:10;flex:1;display:flex;flex-direction:column;gap:clamp(3px,.8vh,7px);padding:10px 14px;border-radius:22px;min-height:340px;
   background:linear-gradient(90deg,#c48a1c 0 5px,transparent 5px calc(100% - 5px),#c48a1c calc(100% - 5px)),radial-gradient(90% 60% at 50% 100%,#7b3cff55,transparent 70%),#0a0322;
   border:1px solid #ffcc3e44;box-shadow:inset 0 0 40px #000a}
-.br-row{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:clamp(5px,1.6vw,10px);flex:1 1 0;min-height:30px;max-height:62px;border-radius:12px;transition:background .2s}
+.br-row{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:clamp(5px,1.6vw,10px);flex:1 1 0;min-height:30px;max-height:72px;border-radius:12px;transition:background .2s}
 .br-row.is-next{background:#ffcc3e14;box-shadow:0 0 0 2px #ffcc3e55}
 .br-tile{position:relative;display:flex;align-items:center;justify-content:center;gap:2px;min-width:0;padding:0;border:0;border-radius:10px;cursor:pointer;
   background:linear-gradient(180deg,#ffffffaa,#ffffff10 45%,transparent 46%),var(--tile);box-shadow:inset 0 -4px 0 #0004,0 3px 0 #0006;opacity:.9;transition:transform .15s,opacity .2s,filter .2s}
@@ -91,6 +91,41 @@ body.ng-page *{box-sizing:border-box}
 .br-pawn.is-me{border-color:var(--ng-gold-hi);box-shadow:0 0 0 2px #ffcc3e88,0 3px 6px #0008}
 .br-tile .br-pawn{margin-inline:-5px}
 @keyframes br-hop{0%{transform:translateY(-10px) scale(1.15)}100%{transform:none}}
+
+/* ---------------------------------------------------------------- 33.13.0: جسر الألوان comes alive */
+.br-modes{grid-template-columns:repeat(2,1fr)}
+.ng-levels[hidden]{display:none}
+.br-seat{position:relative;overflow:hidden}
+.br-seat .br-bar{position:absolute;inset:auto 0 0 0;height:4px;background:#ffffff14}
+.br-seat .br-bar::after{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--progress,0)*100%);background:var(--seat);transition:width .3s ease}
+.br-seat.is-down{animation:br-blink .4s 3}
+@keyframes br-blink{50%{opacity:.35}}
+.br-stage{flex:1;display:flex;perspective:1000px;perspective-origin:50% 0%}
+.br-stage .br-board{flex:1;transform:rotateX(12deg);transform-origin:50% 100%;
+  background:linear-gradient(90deg,#c48a1c 0 5px,transparent 5px calc(100% - 5px),#c48a1c calc(100% - 5px)),radial-gradient(70% 40% at 50% 100%,#7b3cff66,transparent 70%),radial-gradient(60% 30% at 50% 0,#2fd6a133,transparent 70%),linear-gradient(180deg,#07021a,#12052e 60%,#1d0a48);
+  box-shadow:inset 0 0 50px #000c,0 18px 40px #0009}
+.br-pawn.is-down{opacity:.45;filter:grayscale(.6)}
+.br-helps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.br-help{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:6px;min-height:46px;padding:4px 12px;border-radius:14px;border:1px solid #8a5cf0;background:linear-gradient(180deg,#4a1fa8,#2a0f66);color:#fff;font:700 14px/1.2 NGText,Tajawal,system-ui;cursor:pointer}
+.br-help i{font-style:normal;font-size:20px}
+.br-help small{display:grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#ffcc3e;color:#3a1d00;font-weight:800}
+.br-help:disabled{opacity:.45;cursor:default}
+.br-help.is-on{border-color:#2fd6a1;box-shadow:0 0 0 2px #2fd6a155,0 0 18px #2fd6a155}
+.br-help:focus-visible{outline:3px solid #ffcc3e;outline-offset:2px}
+.br-fx{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.br-shard{position:fixed;width:12px;height:10px;margin:-5px 0 0 -6px;background:var(--c);clip-path:polygon(0 0,100% 30%,40% 100%);box-shadow:0 0 6px var(--c);animation:br-shard .85s cubic-bezier(.2,.6,.4,1) forwards}
+@keyframes br-shard{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+.br-pawn.br-falling{position:fixed;margin:-13px 0 0 -13px;animation:br-fall .8s ease-in forwards}
+@keyframes br-fall{to{transform:translateY(70px) scale(.15) rotate(220deg);opacity:0}}
+.br-float{position:fixed;left:50%;top:38%;transform:translateX(-50%);padding:8px 16px;border-radius:999px;background:#12052ee6;border:2px solid #ffcc3e;color:#ffe38a;font:800 20px/1.2 NGDisplay,NGText,system-ui;white-space:nowrap;animation:br-float 1.2s ease-out forwards}
+.br-float.good{border-color:#2fd6a1;color:#b9ffe6}.br-float.hot{border-color:#ff8a3d;color:#ffd2b0}
+@keyframes br-float{0%{opacity:0;transform:translate(-50%,10px) scale(.9)}15%{opacity:1;transform:translate(-50%,0) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+.br-confetti{position:fixed;top:-12px;width:9px;height:14px;background:var(--c);border-radius:2px;animation:br-confetti var(--d) ease-in forwards}
+@keyframes br-confetti{to{transform:translate(var(--x),105vh) rotate(720deg)}}
+body.br-race .br-row.is-next .br-tile:not(:disabled){animation-duration:.9s}
+.br-tile.is-glow{animation:br-glow .9s ease-out}
+@keyframes br-glow{0%{transform:scale(1.08)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.br-stage .br-board{transform:none}.br-seat.is-down,.br-tile.is-glow,.br-float{animation:none}}
 
 /* ---------------------------------------------------------------- عشر ثواني */
 .ts-seats{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}

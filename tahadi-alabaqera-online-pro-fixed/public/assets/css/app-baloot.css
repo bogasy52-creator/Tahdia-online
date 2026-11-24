@@ -103,6 +103,29 @@ body.bi-playing .bi-dock .bi-spin-btn{width:52px!important;height:52px!important
 body.carrom-running .cm-dock{overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none}
 body.carrom-running .cm-dock::-webkit-scrollbar{display:none}
 
+/* ---------------------------------------------------------------- 33.13.0: the quick choice before a game */
+.ip-sheet{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;padding:12px 10px max(12px,env(safe-area-inset-bottom));
+  background:radial-gradient(120% 70% at 50% 0,#3a1590 0,#1c0848 50%,#0a0322 100%);font-family:Tajawal,system-ui,sans-serif;direction:rtl;overflow-y:auto}
+.ip-card{margin-top:auto;width:min(520px,100%);display:grid;gap:14px;padding:16px 14px 14px;border-radius:26px;background:linear-gradient(180deg,#341382,#1b0846);border:2px solid #ffcc3e88;box-shadow:0 20px 50px rgba(0,0,0,.55);color:#fff;animation:ip-rise .28s ease-out}
+.ip-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ip-head h2{margin:0;font:800 26px/1.2 Tajawal,system-ui,sans-serif;background:linear-gradient(180deg,#fff,#ffe38a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ip-close{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#ffffff14;border:1px solid #ffffff2a;color:#fff;text-decoration:none;font-size:18px}
+.ip-group{display:grid;gap:7px}
+.ip-label{font-size:13.5px;font-weight:700;color:#d9c8ff}
+.ip-options{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:7px}
+.ip-options.is-many{grid-auto-flow:row;grid-template-columns:repeat(3,1fr)}
+.ip-options button{min-height:46px;padding:6px 8px;border-radius:14px;border:1.5px solid #ffffff22;background:#ffffff0f;color:#fff;font:700 15px/1.25 Tajawal,system-ui,sans-serif;cursor:pointer}
+.ip-options button.is-on{background:linear-gradient(180deg,#ffe27a,#e7a51e);color:#3a1d00;border-color:#ffd24a;box-shadow:0 3px 0 #9a5a06}
+.ip-options button:focus-visible,.ip-play:focus-visible,.ip-more-ways a:focus-visible,.ip-close:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.ip-play{min-height:58px;border:0;border-radius:18px;background:linear-gradient(180deg,#ffe27a,#e7a51e);color:#3a1d00;font:800 22px/1 Tajawal,system-ui,sans-serif;box-shadow:0 5px 0 #9a5a06,0 12px 24px rgba(0,0,0,.35);cursor:pointer}
+.ip-play:active{transform:translateY(3px);box-shadow:0 2px 0 #9a5a06}
+.ip-more-ways{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.ip-more-ways a{display:inline-flex;align-items:center;min-height:40px;padding:0 13px;border-radius:13px;background:#ffffff10;border:1px solid #ffffff26;color:#eee6ff;text-decoration:none;font-size:14px;font-weight:700}
+@keyframes ip-rise{from{transform:translateY(24px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.ip-card{animation:none}}
+.ip-cover{width:100%;aspect-ratio:2.6;object-fit:cover;border-radius:18px;border:2px solid #ffcc3e55;margin:-4px 0 -4px;box-shadow:0 8px 18px #0006}
+@media (max-height:700px){.ip-cover{aspect-ratio:3.4}.ip-card{gap:10px}.ip-options button{min-height:40px}}
+
 /* assets/css/mobile-v21.css */
 /* Constrain each layout at its source; numeric grids keep left-to-right coordinates. */
 body.journey-page,body.picture-page{inline-size:100%;max-inline-size:100%;min-inline-size:0;overflow-x:clip}

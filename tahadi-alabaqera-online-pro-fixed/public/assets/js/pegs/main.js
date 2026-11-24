@@ -6,7 +6,7 @@ import {pegsDieFace,pegsDiePalette} from './presentation.js?v=33.11.1';
 import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.11.1';
 import { createPegsBoard } from './board.js?v=33.11.7';
 import { createTable } from '../board-table-v33.js?v=33.11.7';
-import { guardPegs } from './guard.js?v=33.12.0';
+import { guardPegs } from './guard.js?v=33.13.0';
 
 import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.1';
 const $ = (id) => document.getElementById(id);

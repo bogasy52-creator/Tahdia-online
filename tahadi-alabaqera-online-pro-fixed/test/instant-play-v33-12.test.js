@@ -59,8 +59,9 @@ test('a plain visit plays at once; rooms, parties, frames and ?play=menu keep th
   assert.equal(run('/bridge').instant.partyUrl, '/party?game=bridge');
   assert.equal(run('/').instant, undefined, 'pages that are not games are untouched');
   // the page's own buttons, pressed in order; a failed step leaves the menu (the old behaviour)
-  assert.match(source, /steps: \['\[data-v="ai"\]', '#startBtn'\]/);
-  assert.match(source, /const safety = setTimeout\(show, 6500\)/);
+  // 33.13.0: the page's own choices (opponent, level, goals) are offered first, then pressed in order
+  assert.match(source, /hockey: \{ groups: \[OPPONENT\('\[data-v="ai"\]', '\[data-v="two"\]', \['#startBtn', '#startBtn'\]\)/);
+  assert.match(source, /let safety = setTimeout\(show, 6500\)/);
   assert.match(source, /catch \{ \/\* the page's menu stays/);
 });
 

@@ -1,8 +1,8 @@
-import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.12.0';
+import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.13.0';
 import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.10';
 import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.10';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.12.0';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.13.0';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
@@ -77,6 +77,35 @@ function setSnapshot(value){const old=state?.round?.id;code=value.code;state=val
 async function enterRoom(newCode,key=''){code=safeCode(newCode);if(code.length!==6)throw Error('رمز الغرفة يتكون من 6 أرقام');hostKey=key;token='';try{const saved=JSON.parse(sessionStorage.getItem(storageKey())||'null');if(saved){token=saved.token||'';hostKey=key||saved.hostKey||'';}}catch{}closed=false;retry=0;connect();}
 async function task(button,fn){button.disabled=true;try{await fn();}catch(e){toast(e.message||'تعذر تنفيذ الطلب');}finally{button.disabled=false;}}
 $('create').onclick=()=>task($('create'),async()=>{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);try{const res=await fetch('/api/party/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({capacity:+$('capacity').value,playlist}),signal:controller.signal}),data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'تعذر إنشاء الغرفة');await enterRoom(data.code,data.hostKey);}finally{clearTimeout(timer);}});
+/* 33.13.0: two kinds of room. «غرفة سريعة»: one game, ready in one tap (بلوت has its own room);
+   «غرفة العشرين»: the series of games for up to twenty. */
+const QUICK_ORDER=['ludo','bridge','ten','jackaroo','baloot','chaos','pegs','snakes','dice','billiards','carrom','hockey','quiz','wordbomb','cipher','focus','memory','logic','sudoku','puzzle','paths-online','picture','jewels','serpent','tanks'];
+const quickSeats=id=>Math.min(20,partyGame(id)?.maxPlayers||8);
+const quickGames=()=>QUICK_ORDER.map(id=>id==='baloot'?{id,name:'بلوت',image:'assets/brand/baloot-cover-v32.webp',own:'/baloot?play=room',maxPlayers:4}:partyGame(id)).filter(Boolean);
+let roomKind='quick',quickPick='';
+function setRoomKind(kind){roomKind=kind==='twenty'?'twenty':'quick';try{localStorage.setItem('bs-room-kind',roomKind);}catch{}
+ for(const tab of document.querySelectorAll('[data-room-kind]')){const on=tab.dataset.roomKind===roomKind;tab.setAttribute('aria-selected',String(on));tab.classList.toggle('on',on);}
+ $('rmQuick').hidden=roomKind!=='quick';$('rmTwenty').hidden=roomKind!=='twenty';if(roomKind==='quick')renderQuick();}
+function renderQuick(){
+ const tile=g=>{const seats=g.maxPlayers?(g.maxPlayers===2?'لاعبين اثنين':'حتى '+g.maxPlayers):'حتى 8';const inner=`<img src="${imagePath(g.image)}" alt="" loading="lazy" decoding="async"><b>${esc(g.name)}</b><small>${seats}</small>`;return g.own?`<a class="rm-game" href="${g.own}" data-quick-own="${g.id}">${inner}</a>`:`<button type="button" class="rm-game${g.id===quickPick?' is-picked':''}" data-quick="${g.id}">${inner}</button>`;};
+ $('quickGames').innerHTML=quickGames().map(tile).join('');
+ const picked=quickPick&&partyGame(quickPick);$('quickPicked').hidden=!picked;
+ if(picked)$('quickPicked').innerHTML=`<img src="${art(quickPick)}" alt=""><span><small>غرفة سريعة</small><b>${esc(picked.name)}</b></span><button type="button" class="party-primary" data-quick="${quickPick}">أنشئ الغرفة ←</button>`;
+}
+function createQuick(id,button){
+ if(!partyGame(id))return;
+ return task(button,async()=>{
+  button.classList.add('is-busy');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+  try{playlist=[settings(partyGame(id).id)];
+   const res=await fetch('/api/party/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({capacity:quickSeats(id),playlist}),signal:controller.signal}),data=await res.json();
+   if(!res.ok||!data.ok)throw Error(data.error||'تعذر إنشاء الغرفة');await enterRoom(data.code,data.hostKey);}
+  finally{clearTimeout(timer);button.classList.remove('is-busy');}
+ });
+}
+$('entry').addEventListener('click',e=>{const kind=e.target.closest('[data-room-kind]');if(kind){setRoomKind(kind.dataset.roomKind);return;}const quick=e.target.closest('button[data-quick]');if(quick)createQuick(quick.dataset.quick,quick);});
+{const asked=new URLSearchParams(location.search).get('game');let saved='';try{saved=localStorage.getItem('bs-room-kind')||'';}catch{}
+ if(asked&&partyGame(asked)){quickPick=partyGame(asked).id;setRoomKind('quick');}else setRoomKind(saved||'quick');}
 $('join').onclick=()=>task($('join'),async()=>{const next=safeCode($('joinCode').value);if(next.length!==6)throw Error('اكتب رمز الغرفة من 6 أرقام');const res=await fetch('/api/party/rooms/'+next+'/status',{signal:AbortSignal.timeout(10000)}),data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'الغرفة غير موجودة');await enterRoom(next);});
 $('joinCode').oninput=e=>e.target.value=safeCode(e.target.value);
 function action(data,extra={}){if(pending)return toast('انتظر تسجيل الحركة السابقة');if(!state?.round||!me||state.status!=='playing')return;pending={type:'action',seq:(me.seq||0)+1,sessionId:state.sessionId,roundId:state.round.id,questionIndex:state.round.quiz?.index,trial:state.round.reaction?.trial,action:data,...extra};if(!send('action',Object.fromEntries(Object.entries(pending).filter(([k])=>k!=='type'))))pending=null;}

@@ -2,10 +2,11 @@
    rooms, quick tables, the party and the stats are the same; the board is the classic cross.
    The board turns so your yard is at the bottom left, and each player's card sits in the corner of
    the screen where his yard is, with his die next to it. */
-import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.11.7';
+import { renderLudoBoard, LUDO_COLORS, LUDO_NAMES, screenCorner } from './board.js?v=33.13.0';
 import { createZahraPractice } from '../zahra-practice-v33-10.js?v=33.11.4';
 import { getLegalLudoMoves, ludoGeometry } from '../engines/ludo-engine.js?v=33.11.4';
 import { createTable, seatLook, skinDie } from '../board-table-v33.js?v=33.11.7';
+import { ludoSound } from './sound-v33-13.js?v=33.13.0';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -14,7 +15,7 @@ const CORNERS = ['tl', 'tm', 'tr', 'bl', 'bm', 'br'];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 let room = null, state = null, currentRoll = null, busy = false, practice = null, frameGeneration = 0, remoteTimer = null;
-let receipt = '', rewarded = false, visualTurn = null, leaving = false, motion = null;
+let receipt = '', rewarded = false, visualTurn = null, leaving = false, motion = null, lastCalled = '';
 
 const me = () => room?.me?.index ?? -1;
 // on one phone passed round the table the board stays still; everywhere else it turns to the one holding it
@@ -72,7 +73,7 @@ function renderBoard(move = null) {
   motion = renderLudoBoard($('#board'), state, {
     viewer: viewer(), active: state.winner === null ? (visualTurn ?? state.turn) : -1, legal, move,
     onPick: (token) => moveToken(token),
-    onStep: () => window.BS_AUDIO?.play?.('move', { volume: 0.28 }),
+    onStep: (n) => ludoSound.step(n),
   });
   return motion;
 }
@@ -202,7 +203,7 @@ async function apply(next, { animate, signal } = {}) {
     rewarded = false;
   }
   if ($('#game').classList.contains('hidden')) enterGame();
-  $('#gameRoomCode').textContent = next.local ? (next.localMode === 'ai' ? 'ضد الكمبيوتر' : 'على جهاز واحد') : next.publicMatch ? 'مباراة سريعة' : next.code;
+  $('#gameRoomCode').textContent = next.local ? (next.localMode === 'ai' ? 'تدريب' : 'على جهاز واحد') : next.publicMatch ? 'مباراة سريعة' : next.code;
   $('#boardSeatCount').textContent = state.players.length + ' لاعبين';
   if (next.local) net({ online: true, text: 'تدريب محلي' });
   $('#roomLabel')?.classList.toggle('hidden', Boolean(next.publicMatch || next.local));
@@ -212,7 +213,7 @@ async function apply(next, { animate, signal } = {}) {
     try {
       if (currentRoll !== null && currentRoll !== prevPending) {
         await spin(state.turn, currentRoll); if (!valid()) return;
-        if (currentRoll === 6) burst('6!', 'six');
+        if (currentRoll === 6) { burst('6!', 'six'); ludoSound.six(); }
       } else if (moved && event?.pass) {
         await spin(event.player, event.roll); if (!valid()) return;
         if (event.player === me()) window.BS_PLATFORM?.toast(event.roll === 6 ? 'ما فيه حركة — لك رمية ثانية' : 'ما فيه حركة بهالرمية');
@@ -222,14 +223,14 @@ async function apply(next, { animate, signal } = {}) {
         visualTurn = event.player;
         const caps = event.captured?.length || 0;
         const drawn = render({ seat: event.player, token: event.token, from: event.from, to: event.to, captured: event.captured });
-        if (event.from === -1) window.BS_AUDIO?.play?.('select', { volume: 0.6 });
+        if (event.from === -1) ludoSound.out();
         await drawn; if (!valid()) return;
-        window.BS_AUDIO?.play?.('boardLand',{volume:.35});
+        ludoSound.land();
         if (caps) {
-          window.BS_AUDIO?.play?.('capture'); window.BS_AUDIO?.vibrate?.([50, 30, 70]);
+          ludoSound.capture(); window.BS_AUDIO?.vibrate?.([50, 30, 70]);
           burst('💥 أكل!', 'capture');
           window.BS_PLATFORM?.toast(event.player === me() ? '💥 أكلت حجر! لك رمية زيادة' : `💥 ${state.players[event.player].name} أكل حجر ${caps > 1 ? caps : ''}`.trim());
-        } else if (event.home) { window.BS_AUDIO?.play?.('finish', { volume: 0.6 }); burst('★ وصل!', 'home'); }
+        } else if (event.home) { ludoSound.home(); burst('★ وصل!', 'home'); }
         await wait(caps ? 380 : 140); if (!valid()) return;
       }
     } finally { if (valid()) visualTurn = null; }
@@ -238,7 +239,9 @@ async function apply(next, { animate, signal } = {}) {
   busy = false;
   visualTurn = null;
   render();
-  if (state.winner !== null && prev?.winner === null) window.BS_AUDIO?.play?.(state.winner === me() ? 'win' : 'finish');
+  if (state.winner !== null && prev?.winner === null) (state.winner === me() || room?.localMode === 'pass' ? ludoSound.win : ludoSound.lose)();
+  // 33.13.0: a soft call when it becomes your turn (once for each turn)
+  else if (state.winner === null && canAct() && currentRoll === null) { const key = state.turn + ':' + (state.rollCount || 0); if (key !== lastCalled) { lastCalled = key; ludoSound.turn(); } }
 }
 
 window.BS_AUDIO?.prime?.(['move','boardLand','capture','finish','win','select','dice','diceImpact']);

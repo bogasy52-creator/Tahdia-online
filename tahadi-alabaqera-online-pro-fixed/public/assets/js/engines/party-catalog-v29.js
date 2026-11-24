@@ -1,4 +1,4 @@
-import {partyMode} from './party-modes.js?v=33.12.0';
+import {partyMode} from './party-modes.js?v=33.13.0';
 // 33.9.1: five seconds before the first game, the same as between games
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=5000,PARTY_BREAK_MS=10000;
 // 33.10.6: a list holds every game of the room (there are more than twenty now)

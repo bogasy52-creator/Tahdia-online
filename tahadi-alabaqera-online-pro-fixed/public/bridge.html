@@ -11,8 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
 
-<script src="assets/js/party-link-v32.js?v=33.12.0-room1"></script>
-<script src="/assets/js/instant-play-v33-12.js?v=33.12.0"></script><link rel="stylesheet" href="assets/css/app-bridge.css?v=33.12.0-6a986c3f37"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.12.0"></head>
+<script src="assets/js/party-link-v32.js?v=33.13.0-room1"></script>
+<script src="/assets/js/instant-play-v33-12.js?v=33.13.0"></script><link rel="stylesheet" href="assets/css/app-bridge.css?v=33.13.0-e100cd38f1"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.13.0"></head>
 <body class="release-v26 ng-page bridge-page">
 <main class="ng-app">
   <header class="ng-top">
@@ -22,13 +22,17 @@
   </header>
 
   <section id="brIntro" class="ng-intro" aria-labelledby="brIntroTitle">
-    <img class="ng-cover" src="/assets/brand/bridge-cover-v33-12.svg?v=33.12.0" width="1000" height="600" alt="جسر من بلاطات زجاج ملونة فوق هاوية، وعليه ثلاث قطع ملونة">
+    <img class="ng-cover" src="/assets/brand/bridge-cover-v33-12.svg?v=33.13.0" width="1000" height="600" alt="جسر من بلاطات زجاج ملونة فوق هاوية، وعليه ثلاث قطع ملونة">
     <h1 id="brIntroTitle">احفظ الطريق… وعدِّ</h1>
     <ul class="ng-rules">
-      <li><b>1</b><span>الطريق الآمن يبيّن لك ثواني بس في البداية. احفظه.</span></li>
-      <li><b>2</b><span>كل واحد يتقدّم صف بدوره: بلاطة وحدة في كل صف تتحمّلك.</span></li>
-      <li><b>3</b><span>البلاطة الغلط تنكسر وترجعك للبداية. أول من يعبر يفوز.</span></li>
+      <li><b>1</b><span>الطريق الآمن يضوي صف صف في البداية، وبعدها يختفي. احفظه.</span></li>
+      <li><b>2</b><span>في «سباق» الكل يركض مع بعض، وفي «بالدور» كل واحد خطوة. في كل صف بلاطة وحدة تتحمّلك.</span></li>
+      <li><b>3</b><span>البلاطة الغلط تنكسر للكل وترجّعك للبداية. عندك عين الصقر 👁 ودرع 🛡 مرة وحدة.</span></li>
     </ul>
+    <div class="ng-levels br-modes" role="group" aria-label="طور اللعب">
+      <button type="button" data-br-mode="race">سباق 🏃<small>الكل يركض مع بعض</small></button>
+      <button type="button" data-br-mode="turns">بالدور<small>خطوة لكل واحد</small></button>
+    </div>
     <div class="ng-levels br-levels" role="group" aria-label="مستوى التحدي">
       <button type="button" data-br-level="casual">سهل<small>8 صفوف</small></button>
       <button type="button" data-br-level="standard">متوسط<small>10 صفوف</small></button>
@@ -40,8 +44,13 @@
   <section id="brGame" class="ng-game br-game" hidden aria-label="الجسر">
     <ol id="brPlayers" class="br-seats" aria-label="اللاعبين"></ol>
     <div class="ng-status"><i id="brClock" class="ng-clock" aria-hidden="true"></i><p id="brStatus" role="status" aria-live="polite"></p><button id="brQuit" class="ng-quit" type="button">خروج</button></div>
-    <div id="brBoard" class="br-board"></div>
+    <div class="br-stage"><div id="brBoard" class="br-board"></div></div>
+    <div class="br-helps">
+      <button id="brEye" class="br-help" type="button" disabled><i aria-hidden="true">👁</i><b>عين الصقر</b><small>1</small></button>
+      <button id="brShield" class="br-help" type="button" disabled><i aria-hidden="true">🛡</i><b>درع</b><small>1</small></button>
+    </div>
   </section>
+  <div id="brFx" class="br-fx" aria-hidden="true"></div>
 
   <section id="brResult" class="ng-result" hidden role="dialog" aria-modal="true" aria-labelledby="brResultTitle">
     <div class="ng-result-card">
@@ -56,6 +65,6 @@
     </div>
   </section>
 </main>
-<script src="assets/js/bridge-v33-12.js?v=33.12.0"></script>
-<script src="/assets/js/tahdia-premium-v25.js?v=33.12.0"></script></body>
+<script src="assets/js/bridge-v33-12.js?v=33.13.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.13.0"></script></body>
 </html>

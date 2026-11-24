@@ -1,0 +1,37 @@
+/* لعبة العباقرة 33.13.0 — «الغرف»: two kinds of room, the night-purple and gold of the home page.
+   «غرفة سريعة» is one game in one tap; «غرفة العشرين» is the series for up to twenty. */
+html body.party-app.release-v26{--party-ink:#fff;--party-muted:#c9b9f5;--party-line:#ffffff1c;--pv-surface:#22095a;--pv-raised:#2d0f70;--pv-mint:#ffcc3e;--pv-gold:#ffcc3e;--pv-lav:#d9c8ff;
+  background:radial-gradient(120% 60% at 50% 0,#3a1590 0,#1c0848 45%,#0a0322 100%) fixed!important}
+body.party-app .party-panel{background:linear-gradient(180deg,#2b0f66,#1b0846)!important;border-color:#5b33b8!important}
+body.party-app .party-primary{background:linear-gradient(180deg,#ffe27a,#e7a51e)!important;color:#3a1d00!important;border:0!important;box-shadow:0 4px 0 #9a5a06!important}
+body.party-app .party-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #9a5a06!important}
+
+.rm-hub{display:grid;gap:12px;margin:4px 0 14px}
+.rm-title{margin:0;font:800 32px/1.15 Tajawal,system-ui,sans-serif;background:linear-gradient(180deg,#fff,#ffe38a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rm-lead{margin:0;color:#d9c8ff;font-size:15px;line-height:1.6}
+.rm-hub .party-join-strip{margin:0}
+.rm-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rm-modes button{display:grid;justify-items:start;gap:3px;min-height:92px;padding:12px 14px;border-radius:20px;border:2px solid #5b33b8;background:linear-gradient(180deg,#2b0f66,#1b0846);color:#fff;text-align:start;cursor:pointer;font-family:inherit;box-shadow:0 8px 18px #0006}
+.rm-modes button i{font-style:normal;font-size:24px;line-height:1}
+.rm-modes button b{font-size:18px}
+.rm-modes button small{color:#c9b9f5;font-size:12.5px;line-height:1.4}
+.rm-modes button[aria-selected=true]{border-color:#ffcc3e;background:linear-gradient(180deg,#5a2bc0,#33137f);box-shadow:0 0 0 3px #ffcc3e33,0 8px 18px #0006}
+.rm-modes button:focus-visible,.rm-game:focus-visible{outline:3px solid #ffcc3e;outline-offset:2px}
+.rm-quick{display:grid;gap:10px}
+.rm-quick[hidden],.rm-twenty[hidden],.rm-picked[hidden]{display:none}
+.rm-step{margin:0;color:#d9c8ff;font-size:14px;line-height:1.6}
+.rm-picked{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:10px;padding:10px;border-radius:18px;border:2px solid #ffcc3e;background:linear-gradient(180deg,#3b1890,#22095a)}
+.rm-picked img{width:64px;height:44px;object-fit:cover;border-radius:10px}
+.rm-picked span{display:grid}.rm-picked small{color:#ffe38a;font-size:12px}.rm-picked b{font-size:17px}
+.rm-picked .party-primary{min-height:44px;padding:0 14px;white-space:nowrap}
+.rm-games{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.rm-game{position:relative;display:grid;gap:4px;padding:6px 6px 8px;border-radius:16px;border:1px solid #5b33b8;background:linear-gradient(180deg,#2b0f66,#1b0846);color:#fff;text-decoration:none;text-align:center;cursor:pointer;font-family:inherit;min-width:0}
+.rm-game img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:11px;background:#12052e}
+.rm-game b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-game small{font-size:11px;color:#c9b9f5}
+.rm-game.is-picked{border-color:#ffcc3e;box-shadow:0 0 0 2px #ffcc3e55}
+.rm-game.is-busy::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#12052ecc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='15' fill='none' stroke='%23ffcc3e' stroke-width='4' stroke-dasharray='60 40'/%3E%3C/svg%3E") center/34px no-repeat}
+@media(min-width:620px){.rm-games{grid-template-columns:repeat(5,minmax(0,1fr))}}
+/* the room: inviting comes first */
+body.party-app .party-room-actions #invite,body.party-app .party-room-actions #share{min-height:52px;font-size:16px}
+@media(prefers-reduced-motion:reduce){.rm-modes button,.rm-game{transition:none}}
