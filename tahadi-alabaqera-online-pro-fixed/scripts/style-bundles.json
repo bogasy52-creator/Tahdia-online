@@ -24,6 +24,7 @@
     "assets/css/admin-voice-studio.css"
   ],
   "dice.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/game-kit.css",
     "assets/css/pro-games.css",
@@ -74,9 +75,11 @@
     "assets/css/club-complete-v33-10.css",
     "assets/css/home-v33-10-3.css",
     "assets/css/home-v33-11.css",
-    "assets/css/palace-lobby-v33-11-8.css"
+    "assets/css/palace-lobby-v33-11-8.css",
+    "assets/css/home-motion-v33-12.css"
   ],
   "jackaroo.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/game-kit.css",
     "assets/css/pro-games.css",
@@ -131,6 +134,7 @@
     "assets/css/game-interaction-v34.css"
   ],
   "logic.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/pro-games.css",
     "assets/css/arcade.css",
@@ -147,6 +151,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "memory.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/pro-games.css",
     "assets/css/arcade.css",
@@ -165,6 +170,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "online.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/quiz-luxury.css",
     "assets/css/quiz-board-v2.css",
@@ -184,6 +190,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "puzzle.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/pro-games.css",
     "assets/css/arcade.css",
@@ -199,6 +206,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "reaction.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/challenges.css",
     "assets/css/challenges-v33-5.css",
@@ -211,6 +219,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "serpent.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/serpent.css",
     "assets/css/professional-v13.css",
@@ -252,6 +261,7 @@
     "assets/css/signature-v33-11-4.css"
   ],
   "snakes.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/game-kit.css",
     "assets/css/pro-games.css",
@@ -351,6 +361,7 @@
     "assets/css/signature-v33-11-4.css"
   ],
   "picture.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/picture-v21.css",
@@ -364,6 +375,7 @@
     "assets/css/picture-v33-9.css"
   ],
   "quiz.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/quiz-v19.css",
@@ -373,6 +385,7 @@
     "assets/css/game-interaction-v34.css"
   ],
   "sudoku.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/picture.css",
     "assets/css/sudoku.css",
@@ -387,6 +400,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "paths-online.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/paths-online-v24.css",
     "assets/css/release-v31.css",
@@ -423,6 +437,7 @@
     "assets/css/club-complete-v33-10.css"
   ],
   "baloot.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/mobile-v21.css",
     "assets/css/release-v31.css",
@@ -452,6 +467,7 @@
     "assets/css/game-interaction-v34.css"
   ],
   "focus.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/challenges.css",
     "assets/css/challenges-v33-5.css",
@@ -464,6 +480,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "cipher.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/challenges.css",
     "assets/css/challenges-v33-5.css",
@@ -511,6 +528,7 @@
     "assets/css/game-interaction-v34.css"
   ],
   "chaos.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/challenges.css",
     "assets/css/challenges-v33-5.css",
@@ -527,6 +545,7 @@
     "assets/css/uno-pro-v33-9-12.css"
   ],
   "wordbomb.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/challenges.css",
     "assets/css/challenges-v33-5.css",
@@ -540,6 +559,7 @@
     "assets/css/reactions-live-v33-7.css"
   ],
   "race.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/room-clock-v33-7.css",
@@ -555,6 +575,7 @@
     "assets/css/cue-controls-v33-10-3.css"
   ],
   "hockey.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/hockey-v33-7.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/reactions-v31.css",
@@ -565,6 +586,7 @@
     "assets/css/hockey-v33-8.css"
   ],
   "billiards.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/game-menu-v33.css",
     "assets/css/tables-v33.css",
@@ -586,6 +608,7 @@
     "assets/css/pool-club-v33-11-6.css"
   ],
   "jewels.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/game-menu-v33.css",
     "assets/css/game-interaction-v34.css",
@@ -603,6 +626,7 @@
     "assets/css/game-interaction-v34.css"
   ],
   "tanks.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/mobile-v21.css",
     "assets/css/game-interaction-v34.css",
@@ -617,6 +641,7 @@
     "assets/css/tournament.css"
   ],
   "pegs.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/player-card-v33-7.css",
     "assets/css/room-clock-v33-7.css",
@@ -632,6 +657,7 @@
     "assets/css/signature-v33-11-4.css"
   ],
   "ludo.html": [
+    "assets/css/instant-play-v33-12.css",
     "assets/css/platform.css",
     "assets/css/game-kit.css",
     "assets/css/pro-games.css",
@@ -664,5 +690,15 @@
     "assets/css/signature-v33-11-4.css",
     "assets/css/ludo-polish-v33-11-6.css",
     "assets/css/ludo-viewport-v33-11-8.css"
+  ],
+  "bridge.html": [
+    "assets/css/instant-play-v33-12.css",
+    "assets/css/new-games-v33-12.css",
+    "assets/css/game-interaction-v34.css"
+  ],
+  "ten.html": [
+    "assets/css/instant-play-v33-12.css",
+    "assets/css/new-games-v33-12.css",
+    "assets/css/game-interaction-v34.css"
   ]
 }

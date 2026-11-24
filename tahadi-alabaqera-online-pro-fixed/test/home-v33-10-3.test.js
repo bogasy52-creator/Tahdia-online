@@ -16,7 +16,7 @@ test('the home offers a prominent Ludo table, other live games, room entry and t
  for(const href of ['/party','/tournament','/jackaroo','/social'])assert.ok(home.includes('href="'+href+'"'));
  assert.ok(home.indexOf('palace-room-actions')<home.indexOf('id="games"'));
  assert.doesNotMatch(home,/1,250,000|8,430|Lv\. 56/);
- const bundles=JSON.parse(await read('scripts/style-bundles.json'));assert.equal(bundles['index.html'].at(-1),'assets/css/palace-lobby-v33-11-8.css');
+ const bundles=JSON.parse(await read('scripts/style-bundles.json'));assert.equal(bundles['index.html'].at(-1),'assets/css/home-motion-v33-12.css');assert.equal(bundles['index.html'].at(-2),'assets/css/palace-lobby-v33-11-8.css');
  const css=await read('public/assets/css/palace-lobby-v33-11-8.css');assert.match(css,/prefers-reduced-motion/);assert.match(css,/max-width:350px/);
 });
 

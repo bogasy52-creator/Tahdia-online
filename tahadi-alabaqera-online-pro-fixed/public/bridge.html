@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>جسر الألوان — لعبة العباقرة</title>
+<meta name="description" content="جسر الألوان: احفظ الطريق الآمن، وعدِّ الجسر بلاطة بلاطة قبل منافسينك. بلاطة غلط تنكسر وترجعك للبداية.">
+<meta name="theme-color" content="#12052e">
+<link rel="manifest" href="/manifest.webmanifest?v=33.9.10">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
+
+<script src="assets/js/party-link-v32.js?v=33.12.0-room1"></script>
+<script src="/assets/js/instant-play-v33-12.js?v=33.12.0"></script><link rel="stylesheet" href="assets/css/app-bridge.css?v=33.12.0-6a986c3f37"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.12.0"></head>
+<body class="release-v26 ng-page bridge-page">
+<main class="ng-app">
+  <header class="ng-top">
+    <a class="ng-icon" href="/" aria-label="رجوع للرئيسية">→</a>
+    <div class="ng-title"><b>جسر الألوان</b><small id="brLevel">احفظ الطريق وعدِّ</small></div>
+    <button id="brSound" class="ng-icon" type="button" aria-label="الصوت">🔊</button>
+  </header>
+
+  <section id="brIntro" class="ng-intro" aria-labelledby="brIntroTitle">
+    <img class="ng-cover" src="/assets/brand/bridge-cover-v33-12.svg?v=33.12.0" width="1000" height="600" alt="جسر من بلاطات زجاج ملونة فوق هاوية، وعليه ثلاث قطع ملونة">
+    <h1 id="brIntroTitle">احفظ الطريق… وعدِّ</h1>
+    <ul class="ng-rules">
+      <li><b>1</b><span>الطريق الآمن يبيّن لك ثواني بس في البداية. احفظه.</span></li>
+      <li><b>2</b><span>كل واحد يتقدّم صف بدوره: بلاطة وحدة في كل صف تتحمّلك.</span></li>
+      <li><b>3</b><span>البلاطة الغلط تنكسر وترجعك للبداية. أول من يعبر يفوز.</span></li>
+    </ul>
+    <div class="ng-levels br-levels" role="group" aria-label="مستوى التحدي">
+      <button type="button" data-br-level="casual">سهل<small>8 صفوف</small></button>
+      <button type="button" data-br-level="standard">متوسط<small>10 صفوف</small></button>
+      <button type="button" data-br-level="expert">صعب<small>12 صف</small></button>
+    </div>
+    <button id="brPlay" class="ng-play" type="button">العب الحين</button>
+  </section>
+
+  <section id="brGame" class="ng-game br-game" hidden aria-label="الجسر">
+    <ol id="brPlayers" class="br-seats" aria-label="اللاعبين"></ol>
+    <div class="ng-status"><i id="brClock" class="ng-clock" aria-hidden="true"></i><p id="brStatus" role="status" aria-live="polite"></p><button id="brQuit" class="ng-quit" type="button">خروج</button></div>
+    <div id="brBoard" class="br-board"></div>
+  </section>
+
+  <section id="brResult" class="ng-result" hidden role="dialog" aria-modal="true" aria-labelledby="brResultTitle">
+    <div class="ng-result-card">
+      <h2 id="brResultTitle"></h2>
+      <p id="brResultNote"></p>
+      <ol id="brRanks" class="ng-ranks"></ol>
+      <div class="ng-result-actions">
+        <button id="brAgain" class="ng-play" type="button">جسر جديد</button>
+        <a class="ng-ghost" href="/party?game=bridge">العب مع أصحابك</a>
+        <a class="ng-ghost" href="/">الرئيسية</a>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="assets/js/bridge-v33-12.js?v=33.12.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.12.0"></script></body>
+</html>

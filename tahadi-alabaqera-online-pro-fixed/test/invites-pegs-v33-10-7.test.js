@@ -60,7 +60,7 @@ async function phone(dashboard, { now = Date.now() } = {}) {
 }
 const invite = (game, joinPath, extra = {}) => ({ id: 'inv-' + game, type: 'game_invite', game, roomCode: (joinPath.match(/room=(\d{6})/) || [])[1] || '', joinPath, createdAt: Date.now(), expiresAt: Date.now() + 60000, read: false, from: { displayName: 'أليس' }, ...extra });
 
-for (const [game, path, label] of [['tanks', '/tanks?room=451234', 'معركة الدبابات'], ['hockey', '/hockey?room=461234', 'الهوكي'], ['billiards', '/billiards?room=471234', 'البلياردو'], ['carrom', '/carrom?room=481234', 'الكيرم'], ['pegs', '/pegs?room=491234', 'شطرنج الذاكرة'], ['jewels', '/jewels?room=501234', 'ماستر الجواهر']]) {
+for (const [game, path, label] of [['tanks', '/tanks?room=451234', 'معركة الدبابات'], ['hockey', '/hockey?room=461234', 'الهوكي'], ['billiards', '/billiards?room=471234', 'البلياردو'], ['carrom', '/carrom?room=481234', 'الكيرم'], ['pegs', '/pegs?room=491234', 'سر الألوان'], ['jewels', '/jewels?room=501234', 'ماستر الجواهر']]) {
   test('the phone shows an invitation to ' + game, async () => {
     const { card, badge, list } = await phone({ notifications: [invite(game, path)] });
     assert.ok(card, game);
@@ -111,7 +111,7 @@ test('the home page has the inbox right under the header, and the card sits at t
   assert.match(compact, /bs-invite-inbox/);
 });
 
-test('شطرنج الذاكرة covers its colours when the page loses focus or a screenshot key is pressed', async (t) => {
+test('سر الألوان (formerly شطرنج الذاكرة) covers its colours when the page loses focus or a screenshot key is pressed', async (t) => {
   const { document: doc, Node } = dom();
   const listeners = { doc: {}, win: {} };
   doc.documentElement = { classList: { set: new Set(), add(c) { this.set.add(c); }, remove(c) { this.set.delete(c); }, contains(c) { return this.set.has(c); } } };
@@ -136,7 +136,7 @@ test('شطرنج الذاكرة covers its colours when the page loses focus or 
   fire('doc', 'keyup', { key: 'PrintScreen', code: 'PrintScreen' });
   assert.equal(shield.hidden, false);
   assert.equal(env.clip, undefined, 'Privacy cover leaves the existing clipboard unchanged');
-  assert.deepEqual(toasts, ['التصوير ممنوع في شطرنج الذاكرة']);
+  assert.deepEqual(toasts, ['التصوير ممنوع في سر الألوان']);
   timers.splice(0).forEach((fn) => fn());
   fire('doc', 'keydown', { key: 'Shift', metaKey: true, shiftKey: true });
   timers.splice(0).forEach((fn) => fn());

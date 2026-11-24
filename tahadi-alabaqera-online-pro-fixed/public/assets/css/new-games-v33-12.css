@@ -1,0 +1,124 @@
+/* لعبة العباقرة 33.12.0 — the two new games: «جسر الألوان» (bridge) and «عشر ثواني» (ten).
+   One night-purple and gold look, the same as the home lobby. */
+@font-face{font-family:NGDisplay;src:url(../fonts/busraj-geometric.woff) format("woff");font-weight:700;font-display:swap}
+@font-face{font-family:NGText;src:url(../fonts/tajawal-arabic-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:NGText;src:url(../fonts/tajawal-arabic-700.woff2) format("woff2");font-weight:700;font-display:swap}
+:root{--ng-night:#12052e;--ng-deep:#1b0846;--ng-raise:#2a0f66;--ng-line:#5b33b8;--ng-gold:#ffcc3e;--ng-gold-hi:#ffe38a;--ng-ink:#3a1d00;--ng-text:#fff;--ng-muted:#c9b9f5;--ng-green:#2fd6a1;--ng-red:#ff4d6d}
+html{background:var(--ng-night)}
+body.ng-page{margin:0;min-height:100dvh;color:var(--ng-text);font-family:NGText,Tajawal,"Noto Kufi Arabic",system-ui,sans-serif;background:radial-gradient(120% 70% at 50% 0,#3a1590 0,#1c0848 45%,#0a0322 100%) fixed;-webkit-tap-highlight-color:transparent;overflow-x:clip}
+/* the shared theme paints every page navy (!important); these two pages keep their night purple */
+html body.ng-page.release-v26{background:radial-gradient(120% 70% at 50% 0,#3a1590 0,#1c0848 45%,#0a0322 100%) fixed!important}
+body.ng-page *{box-sizing:border-box}
+.ng-app{max-width:560px;margin:0 auto;padding:max(8px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;min-height:100dvh}
+.ng-top{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px}
+.ng-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;border:1px solid #8a5cf0;background:linear-gradient(180deg,#4a1fa8,#2a0f66);color:#fff;font:700 18px/1 NGText,system-ui;text-decoration:none;cursor:pointer}
+.ng-title{text-align:center;display:grid;gap:2px}
+.ng-title b{font:700 21px/1.2 NGDisplay,NGText,system-ui;background:linear-gradient(180deg,#fff,#ffe38a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ng-title small{color:var(--ng-muted);font-size:12.5px}
+.ng-icon:focus-visible,.ng-play:focus-visible,.ng-ghost:focus-visible,.ng-quit:focus-visible,.ng-levels button:focus-visible{outline:3px solid var(--ng-gold);outline-offset:2px}
+
+/* ---------------------------------------------------------------- the intro */
+.ng-intro{display:grid;gap:12px;padding:12px;border-radius:24px;background:linear-gradient(180deg,#2b0f66,#1b0846);border:1px solid var(--ng-line);box-shadow:0 14px 30px rgba(0,0,0,.4)}
+.ng-cover{width:100%;height:auto;aspect-ratio:5/3;border-radius:18px;display:block;border:2px solid #ffcc3e55}
+.ng-intro h1{margin:2px 0 0;text-align:center;font:700 26px/1.25 NGDisplay,NGText,system-ui;color:#fff}
+.ng-rules{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ng-rules li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;font-size:15px;line-height:1.55;color:#eee6ff}
+.ng-rules b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ng-gold);color:var(--ng-ink);font:700 15px/1 NGText,system-ui}
+.ng-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ng-levels[hidden]{display:none}
+.ng-levels button{display:grid;gap:2px;padding:10px 4px;border-radius:14px;border:1px solid #ffffff22;background:#ffffff0d;color:#fff;font:700 16px/1.2 NGText,system-ui;cursor:pointer}
+.ng-levels button small{font-weight:400;font-size:12px;color:var(--ng-muted)}
+.ng-levels button.is-on{background:linear-gradient(180deg,#ffe27a,#e7a51e);color:var(--ng-ink);border-color:#ffd24a}
+.ng-levels button.is-on small{color:#5a3300}
+.ng-play{min-height:54px;border:0;border-radius:18px;background:linear-gradient(180deg,#ffe27a,#e7a51e);color:var(--ng-ink);font:700 20px/1 NGDisplay,NGText,system-ui;box-shadow:0 5px 0 #9a5a06,0 12px 24px rgba(0,0,0,.35);cursor:pointer}
+.ng-play:active{transform:translateY(3px);box-shadow:0 2px 0 #9a5a06}
+.ng-ghost{display:grid;place-items:center;min-height:46px;padding:0 14px;border-radius:14px;border:1px solid #ffffff2e;background:#ffffff0f;color:#fff;text-decoration:none;font:700 15px/1.2 NGText,system-ui}
+
+/* ---------------------------------------------------------------- the game frame */
+.ng-game{display:flex;flex-direction:column;gap:8px;flex:1}
+.ng-game[hidden],.ng-intro[hidden],.ng-result[hidden]{display:none}
+.ng-status{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border-radius:14px;background:#ffffff0d;border:1px solid #ffffff1a}
+.ng-status p{margin:0;font:700 15px/1.35 NGText,system-ui;color:#fff}
+.ng-clock{--left:1;width:28px;height:28px;border-radius:50%;background:conic-gradient(var(--ng-gold) calc(var(--left)*360deg),#ffffff1a 0);mask:radial-gradient(circle,transparent 52%,#000 54%);-webkit-mask:radial-gradient(circle,transparent 52%,#000 54%)}
+.ng-quit{min-height:34px;padding:0 12px;border-radius:11px;border:1px solid #ffffff2e;background:transparent;color:#e6dcff;font:700 13px/1 NGText,system-ui;cursor:pointer}
+.ng-game.is-shake{animation:ng-shake .45s}
+@keyframes ng-shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+
+/* ---------------------------------------------------------------- results */
+.ng-result{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(6,2,20,.72);backdrop-filter:blur(4px)}
+.ng-result-card{width:min(420px,100%);display:grid;gap:10px;padding:18px;border-radius:24px;background:linear-gradient(180deg,#341382,#1b0846);border:2px solid #ffcc3e88;box-shadow:0 20px 50px rgba(0,0,0,.55);text-align:center;animation:ng-pop .35s ease-out}
+.ng-result-card h2{margin:0;font:700 24px/1.3 NGDisplay,NGText,system-ui;color:var(--ng-gold-hi)}
+.ng-result-card>p{margin:0;color:var(--ng-muted);font-size:15px}
+.ng-ranks{list-style:none;margin:4px 0;padding:0;display:grid;gap:6px;text-align:start}
+.ng-ranks li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;background:#ffffff0d;border-inline-start:4px solid var(--seat,#fff)}
+.ng-ranks li.is-me{background:#ffcc3e1f}
+.ng-ranks li.is-out{opacity:.55}
+.ng-ranks b{font-size:15px}.ng-ranks small{color:var(--ng-muted);font-size:13px}
+.ng-result-actions{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.ng-result-actions .ng-play{grid-column:1/-1}
+@keyframes ng-pop{from{transform:scale(.9);opacity:0}}
+
+/* ---------------------------------------------------------------- جسر الألوان */
+.br-seats{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.br-seat{display:grid;justify-items:center;gap:1px;padding:6px 2px;border-radius:14px;background:#ffffff0d;border:2px solid transparent;transition:border-color .2s,background .2s}
+.br-seat i{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--seat);color:#1a0b3d;font:700 14px/1 NGText,system-ui;font-style:normal;box-shadow:inset 0 -3px 0 #0003}
+.br-seat b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br-seat small{font-size:11px;color:var(--ng-muted)}
+.br-seat.is-turn{border-color:var(--seat);background:#ffffff1a}
+.br-seat.is-me b{color:var(--ng-gold-hi)}
+.br-board{--cols:3;--rows:10;flex:1;display:flex;flex-direction:column;gap:clamp(3px,.8vh,7px);padding:10px 14px;border-radius:22px;min-height:340px;
+  background:linear-gradient(90deg,#c48a1c 0 5px,transparent 5px calc(100% - 5px),#c48a1c calc(100% - 5px)),radial-gradient(90% 60% at 50% 100%,#7b3cff55,transparent 70%),#0a0322;
+  border:1px solid #ffcc3e44;box-shadow:inset 0 0 40px #000a}
+.br-row{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:clamp(5px,1.6vw,10px);flex:1 1 0;min-height:30px;max-height:62px;border-radius:12px;transition:background .2s}
+.br-row.is-next{background:#ffcc3e14;box-shadow:0 0 0 2px #ffcc3e55}
+.br-tile{position:relative;display:flex;align-items:center;justify-content:center;gap:2px;min-width:0;padding:0;border:0;border-radius:10px;cursor:pointer;
+  background:linear-gradient(180deg,#ffffffaa,#ffffff10 45%,transparent 46%),var(--tile);box-shadow:inset 0 -4px 0 #0004,0 3px 0 #0006;opacity:.9;transition:transform .15s,opacity .2s,filter .2s}
+.br-tile:disabled{cursor:default;opacity:.62;filter:saturate(.75)}
+.br-row.is-next .br-tile:not(:disabled){opacity:1;filter:none;animation:br-ready 1.4s ease-in-out infinite}
+.br-row.is-next .br-tile:not(:disabled):hover{transform:translateY(-2px)}
+.br-tile:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.br-tile.is-safe{opacity:1;filter:none;box-shadow:0 0 0 3px #fff,0 0 22px 6px #fff6c2;animation:none}
+.br-tile.is-glow{opacity:1;filter:none;box-shadow:0 0 0 3px var(--ng-gold),0 0 20px 4px #ffcc3e}
+.br-tile.is-broken{background:repeating-linear-gradient(135deg,#ffffff10 0 6px,transparent 6px 12px),#05010f;box-shadow:inset 0 0 0 2px #ffffff22;opacity:1;filter:none}
+.br-tile.is-cracking{animation:br-crack .8s forwards}
+@keyframes br-ready{50%{box-shadow:inset 0 -4px 0 #0004,0 3px 0 #0006,0 0 0 3px #ffffffaa}}
+@keyframes br-crack{30%{transform:scale(1.05) rotate(-2deg);filter:brightness(1.6)}100%{transform:scale(.4) translateY(30px) rotate(12deg);opacity:0}}
+.br-bank{display:flex;align-items:center;justify-content:center;gap:6px;min-height:38px;border-radius:14px;padding:4px 10px;background:linear-gradient(180deg,#3a1d8a,#24105c);border:1px solid #8a5cf0}
+.br-bank b{font-size:13px;color:var(--ng-muted);margin-inline-end:auto}
+.br-goal{border-color:#ffcc3e99;background:linear-gradient(180deg,#5a3aa8,#2d136e)}
+.br-goal b::before{content:"🏁 "}
+.br-pawn{display:grid;place-items:center;width:clamp(18px,5vw,26px);height:clamp(18px,5vw,26px);border-radius:50%;background:var(--seat);border:2px solid #fff;color:#1a0b3d;font:700 11px/1 NGText,system-ui;box-shadow:0 3px 6px #0008;animation:br-hop .35s ease-out}
+.br-pawn.is-me{border-color:var(--ng-gold-hi);box-shadow:0 0 0 2px #ffcc3e88,0 3px 6px #0008}
+.br-tile .br-pawn{margin-inline:-5px}
+@keyframes br-hop{0%{transform:translateY(-10px) scale(1.15)}100%{transform:none}}
+
+/* ---------------------------------------------------------------- عشر ثواني */
+.ts-seats{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ts-seat{display:grid;grid-template-columns:28px 1fr;align-items:center;gap:6px;padding:6px 8px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff14;min-width:0}
+.ts-seat i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--seat);color:#1a0b3d;font:700 13px/1 NGText,system-ui;font-style:normal}
+.ts-seat span{display:grid;min-width:0}
+.ts-seat b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ts-seat small{font-size:11.5px;color:var(--ng-muted);direction:ltr;text-align:end}
+.ts-seat.is-me{border-color:#ffcc3e88}
+.ts-seat.is-out{opacity:.4}
+.ts-seat.is-worst small{color:var(--ng-red)}
+.ts-seat.is-best small{color:var(--ng-green)}
+.ts-stage{flex:1;display:grid;place-items:center;align-content:center;gap:14px;min-height:360px;padding:10px;border-radius:24px;background:radial-gradient(70% 60% at 50% 45%,#4b1aa655,transparent 70%),#0a0322aa;border:1px solid #ffffff14}
+.ts-round{margin:0;color:var(--ng-muted);font-size:14px}
+.ts-dial{--p:0;position:relative;width:min(64vw,260px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(from 0deg,#2fd6a1,#3fa7ff,#b57cff calc(var(--p)*360deg),#ffffff12 0);padding:14px;box-shadow:0 0 0 8px #ffcc3e,0 0 0 11px #9a5a06,0 20px 40px #000a}
+.ts-dial::before{content:"";position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#2b1366,#12052e)}
+.ts-count{position:relative;font:700 clamp(58px,18vw,92px)/1 NGDisplay,NGText,system-ui;color:#fff;direction:ltr;transition:opacity .4s,filter .4s;text-shadow:0 4px 0 #0006}
+.ts-count.is-hidden{opacity:0;filter:blur(8px)}
+.ts-count.is-fake{color:#b57cff}
+.ts-press{width:min(70vw,280px);min-height:76px;border:0;border-radius:999px;background:linear-gradient(180deg,#ff6b8a,#e03158);color:#fff;font:700 28px/1 NGDisplay,NGText,system-ui;box-shadow:0 7px 0 #8f1532,0 16px 30px #0009;cursor:pointer;touch-action:manipulation}
+.ts-press:disabled{background:linear-gradient(180deg,#6d5a9e,#45337a);box-shadow:0 7px 0 #2a1d52;color:#d8ccff;cursor:default}
+.ts-press:not(:disabled):active{transform:translateY(5px);box-shadow:0 2px 0 #8f1532}
+.ts-press:focus-visible{outline:3px solid var(--ng-gold);outline-offset:4px}
+.ts-verdict{margin:0;min-height:28px;font:700 18px/1.4 NGText,system-ui;text-align:center}
+.ts-verdict.is-good{color:var(--ng-green)}.ts-verdict.is-bad{color:var(--ng-red)}
+.ts-next{min-height:48px;padding:0 22px}
+.ts-next[hidden]{display:none}
+
+@media (max-height:700px){.ng-intro .ng-cover{aspect-ratio:2/1;object-fit:cover}.ng-rules li{font-size:14px}.ts-dial{width:min(52vw,200px)}.ts-press{min-height:64px}}
+@media (prefers-reduced-motion:reduce){.br-row.is-next .br-tile:not(:disabled),.br-pawn,.ng-result-card,.br-tile.is-cracking{animation:none}.ng-game.is-shake{animation:none}}

@@ -1,8 +1,8 @@
-import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.11.3';
+import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.12.0';
 import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.10';
 import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.10';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.11.4';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.12.0';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
@@ -18,7 +18,7 @@ const quizSummary=p=>p.game==='quiz'&&p.categories?.length?`<small class="party-
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeCode=value=>String(value||'').replace(/[٠-٩]/g,n=>'٠١٢٣٤٥٦٧٨٩'.indexOf(n)).replace(/[۰-۹]/g,n=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(n)).replace(/\D/g,'').slice(0,6);
 const imagePath=v=>'/'+String(v).replace(/^\//,''),art=g=>imagePath(partyGame(g).image),settings=g=>({game:g,mode:partyMode(g),difficulty:2,duration:180,worldId:'classic',...(g==='memory'?{memoryTheme:'wildlife'}:{})});
-let playlist=[settings(new URLSearchParams(location.search).get('game')&&partyGame(new URLSearchParams(location.search).get('game'))?new URLSearchParams(location.search).get('game'):'quiz'),settings('memory')],draft=[],state=null,me=null,myId='',socket=null,code='',hostKey='',token='',epoch=0,retry=0,reconnectTimer=null,heartbeat=null,closed=false,serverOffset=0,lastPacket=0,opening=false,pending=null,selected=-1,selectedCard=-1,lastViewKey='',roundKey='',lastPhase='',lastCountdown=-1,renderer=null,arenaState=null,arenaRaf=null,arenaRound='',boost=false,inputAngle=0,inputAt=0,toastTimer=null,playingAudio=null,quizMediaKey='',listenPending=false,roomReady=false;
+let playlist=((g)=>g&&partyGame(g)?[settings(partyGame(g).id)]:[settings('quiz'),settings('memory')])(new URLSearchParams(location.search).get('game')),draft=[],state=null,me=null,myId='',socket=null,code='',hostKey='',token='',epoch=0,retry=0,reconnectTimer=null,heartbeat=null,closed=false,serverOffset=0,lastPacket=0,opening=false,pending=null,selected=-1,selectedCard=-1,lastViewKey='',roundKey='',lastPhase='',lastCountdown=-1,renderer=null,arenaState=null,arenaRaf=null,arenaRound='',boost=false,inputAngle=0,inputAt=0,toastTimer=null,playingAudio=null,quizMediaKey='',listenPending=false,roomReady=false;
 try{$('name').value=window.BS_SOCIAL?.accountName?.()||localStorage.getItem('bs_party_name')||'لاعب';}catch{}
 const now=()=>Date.now()+serverOffset,host=()=>state?.players.find(p=>p.id===myId)?.role==='host';
 function toast(text){$('partyToast').textContent=text;$('partyToast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('partyToast').classList.remove('show'),3600);}

@@ -13,7 +13,7 @@ export const PARTY_MODES=Object.freeze({
  memory:rows(['pairs','سباق الأزواج'],['sequence','تذكّر الترتيب']),
  picture:rows(['3','صورة 3 × 3'],['4','صورة 4 × 4'],['5','صورة 5 × 5']),
  jewels:rows(['classic','سباق الجواهر · لوحتان متساويتان']),
- logic:rows(['classic','أنماط وحساب واستنتاج']),wordbomb:rows(['classic','صيد الكلمات']),focus:rows(['classic','تحديات تركيز متنوعة']),cipher:rows(['classic','آخر لاعب']),
+ logic:rows(['classic','أنماط وحساب واستنتاج']),bridge:rows(['classic','نفس الجسر للجميع']),ten:rows(['classic','خمس جولات إقصاء']),wordbomb:rows(['classic','صيد الكلمات']),focus:rows(['classic','تحديات تركيز متنوعة']),cipher:rows(['classic','آخر لاعب']),
  dice:rows(['classic','ارمِ أو ثبّت']),billiards:rows(['classic','كرات 8']),carrom:rows(['classic','مواجهة الملكة']),sudoku:rows(['classic','حل اللوحة']),
  'paths-online':rows(['classic','توصيل الأرقام']),puzzle:rows(['classic','ترتيب الأرقام'])
 });

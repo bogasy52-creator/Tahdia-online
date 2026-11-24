@@ -73,7 +73,9 @@ test('the home header has one currency balance and keeps owner/audio controls in
 
 test('mobile overrides win the header cascade, and the Ludo width chain can shrink',async()=>{
   const manifest=JSON.parse(await read('scripts/style-bundles.json'));
-  assert.equal(manifest['index.html'].at(-1),'assets/css/palace-lobby-v33-11-8.css');
+  // 33.12.0: the motion of the home games comes last; the palace lobby right before it
+  assert.equal(manifest['index.html'].at(-1),'assets/css/home-motion-v33-12.css');
+  assert.equal(manifest['index.html'].at(-2),'assets/css/palace-lobby-v33-11-8.css');
   assert.equal(manifest['ludo.html'].at(-1),'assets/css/ludo-viewport-v33-11-8.css');
   const home=await read('public/assets/css/palace-lobby-v33-11-8.css');
   // Equal selector specificity is essential: the previous phone rule lost to `body.home-palace`.

@@ -42,7 +42,8 @@ export const LINK_ONLY = Object.freeze(new Set(['zahra','ludo', 'billiards', 'ca
 // 33.9.1: the games with no online room are played on their own page inside the group
 // room: every player gets the same board (one seed for all) and each page sends its
 // result back to the room as it plays.
-export const LOCAL_GAMES = Object.freeze({ memory: '/memory', logic: '/logic', puzzle: '/puzzle', jewels: '/journey' });
+// 33.12.0: جسر الألوان and عشر ثواني are played the same way, everyone on the same seed
+export const LOCAL_GAMES = Object.freeze({ memory: '/memory', logic: '/logic', puzzle: '/puzzle', jewels: '/journey', bridge: '/bridge', ten: '/ten' });
 export function localGame(game) { return LOCAL_GAMES[game] || null; }
 
 // 33.10.6: الزهرة made way for لودو; a round that still names it is played as لودو

@@ -306,6 +306,40 @@ body .bs-actions .coin-chip:before{content:'✦'!important;display:inline-grid!i
 /* The wallet owns its single icon; the amount must never receive a second one. */
 body .bs-actions .coin-chip [data-career-coins]::before,body .bs-actions .coin-chip [data-career-coins]::after{content:none!important;display:none!important}
 
+/* assets/css/instant-play-v33-12.css */
+/* لعبة العباقرة 33.12.0 — a game opens straight into play (assets/js/instant-play-v33-12.js).
+   Rooms and online tables are reached from «الغرف»; on the game page itself only two links stay:
+   play with friends, and the full menu. ?play=menu shows the page exactly as before. */
+
+/* the page scrolls as a page: a body that became its own scroll box never moved on some phones */
+html{overflow:visible!important}
+
+/* ---------------------------------------------------------------- the two ways out */
+.ip-ways{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px auto 10px;padding:0 12px;max-width:620px;position:relative;z-index:5}
+.ip-ways a{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:6px 14px;border-radius:14px;text-decoration:none;font:700 14px/1.2 Tajawal,system-ui,sans-serif;color:#fff;background:linear-gradient(180deg,#5a2bc0,#33137f);border:1px solid #8a5cf0;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.ip-ways a.ip-more{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18);color:#e6dcff}
+.ip-ways a:focus-visible{outline:3px solid #ffcc3e;outline-offset:2px}
+.ip-ways span{font-size:16px}
+html.ip-menu .ip-ways{display:none}
+/* while a game fills the screen the links step aside */
+body:is(.game-running,.hockey-running,.bi-playing,.carrom-running,.pegs-running,.ch-in-match,.picture-playing,.memory-playing,.sudoku-playing,.br-running,.ts-running) .ip-ways{display:none}
+
+/* ---------------------------------------------------------------- online and rooms live in «الغرف» */
+html.ip-instant .gm33-friends{display:none!important}
+/* pages that have their own practice table: their online parts leave the page too */
+html.ip-instant :is(.hockey-page,.billiards-page,.carrom-page,.pegs-page,.jewels-page,.ludo-page) :is(.gm33-quick,.gm33-match-choice){display:none!important}
+html.ip-instant :is(.hockey-page [data-v="online"],.billiards-page [data-mode="online"],.carrom-page [data-mode="online"],.pegs-page [data-mode="online"],.jewels-page [data-mode="online"]){display:none!important}
+html.ip-instant .tanks-page :is(#tkOnlineTab,#tkQuick,#tkCreate,#tkJoin,#tkRoomMode,#tkCapacity){display:none!important}
+html.ip-instant .challenge-page :is(#chQuick,#chCreate){display:none!important}
+html.ip-instant .sudoku-page #sudokuOnlineLaunch,html.ip-instant .paths-online-page #pathModeFriends{display:none!important}
+
+/* ---------------------------------------------------------------- screens that were cut at the bottom */
+/* billiards: the spin button was taller than the row it sits in */
+body.bi-playing .bi-dock .bi-spin-btn{width:52px!important;height:52px!important;min-height:0!important}
+/* carrom: «أرقام واختصارات» opens below the screen; the dock scrolls so its buttons stay reachable */
+body.carrom-running .cm-dock{overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none}
+body.carrom-running .cm-dock::-webkit-scrollbar{display:none}
+
 /* assets/css/mobile-v21.css */
 /* Constrain each layout at its source; numeric grids keep left-to-right coordinates. */
 body.journey-page,body.picture-page{inline-size:100%;max-inline-size:100%;min-inline-size:0;overflow-x:clip}

@@ -17,6 +17,7 @@ import {linkedGame,linkable,linkTables,localGame,LINK_ONLY,PARTY_LINK_WAIT_MS,PA
 export const PARTY_VERSION=29;
 export const CONTINUOUS_BREAK_MS=5000;
 const embeddedGames=new Set(['focus','cipher','wordbomb','chaos']);
+const PAGE_ONLY=new Set(['bridge','ten']);
 export const PARTY_BACK_MS=6000; // everyone is back from a game's own page: the standings, briefly
 export const partyName=value=>String(value||'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,24)||'لاعب';
 export function seeded(seed=1){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
@@ -83,7 +84,8 @@ export function startPartyRound(room,now=Date.now(),seed=crypto.getRandomValues(
   r.deadline=now+PARTY_LINK_WAIT_MS;
   return;
  }
- if(room.continuous&&localGame(game)){r.local=localRound(r);return;}
+ // 33.12.0: جسر الألوان and عشر ثواني exist only on their own pages: every room plays them there
+ if((room.continuous||PAGE_ONLY.has(game))&&localGame(game)){r.local=localRound(r);return;}
  // 33.10.5: a game the room has no copy of, with nobody here to play it: on to the next one
  if(LINK_ONLY.has(game)){r.events.push('ما فيه لاعبين متصلين لهذي اللعبة؛ ننتقل للجولة التالية');finishPartyRound(room,now);return;}
  setupRoundGame(room,r,now);

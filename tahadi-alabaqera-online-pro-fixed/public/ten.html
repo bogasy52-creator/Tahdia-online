@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>عشر ثواني — لعبة العباقرة</title>
+<meta name="description" content="عشر ثواني: وقّف الساعة على عشر ثواني بالضبط بدون ما تشوفها. الأبعد يطلع كل جولة، وآخر واحد صامد يفوز.">
+<meta name="theme-color" content="#12052e">
+<link rel="manifest" href="/manifest.webmanifest?v=33.9.10">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
+
+<script src="assets/js/party-link-v32.js?v=33.12.0-room1"></script>
+<script src="/assets/js/instant-play-v33-12.js?v=33.12.0"></script><link rel="stylesheet" href="assets/css/app-ten.css?v=33.12.0-6a986c3f37"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.12.0"></head>
+<body class="release-v26 ng-page ten-page">
+<main class="ng-app">
+  <header class="ng-top">
+    <a class="ng-icon" href="/" aria-label="رجوع للرئيسية">→</a>
+    <div class="ng-title"><b>عشر ثواني</b><small id="tsLevel">عدّ بقلبك</small></div>
+    <button id="tsSound" class="ng-icon" type="button" aria-label="الصوت">🔊</button>
+  </header>
+
+  <section id="tsIntro" class="ng-intro" aria-labelledby="tsIntroTitle">
+    <img class="ng-cover" src="/assets/brand/ten-cover-v33-12.svg?v=33.12.0" width="1000" height="600" alt="ساعة إيقاف ذهبية عليها رقم عشرة وإصبع يضغط">
+    <h1 id="tsIntroTitle">وقّف على العشرة بالضبط</h1>
+    <ul class="ng-rules">
+      <li><b>1</b><span>الساعة تبدأ، وبعد شوي يختفي العدّاد. كمّل العد في قلبك.</span></li>
+      <li><b>2</b><span>اضغط «وقّف!» لما تحس إن عشر ثواني تمّت.</span></li>
+      <li><b>3</b><span>الأبعد عن العشرة يطلع كل جولة، وآخر واحد صامد يفوز.</span></li>
+    </ul>
+    <div class="ng-levels ts-levels" role="group" aria-label="مستوى المنافسين">
+      <button type="button" data-ts-level="casual">سهل<small>منافسين متساهلين</small></button>
+      <button type="button" data-ts-level="standard">متوسط<small>عدّهم زين</small></button>
+      <button type="button" data-ts-level="expert">صعب<small>ساعات بشرية</small></button>
+    </div>
+    <button id="tsPlay" class="ng-play" type="button">العب الحين</button>
+  </section>
+
+  <section id="tsGame" class="ng-game ts-game" hidden aria-label="الجولة">
+    <ol id="tsPlayers" class="ts-seats" aria-label="اللاعبين"></ol>
+    <div class="ts-stage">
+      <p id="tsRound" class="ts-round" role="status" aria-live="polite"></p>
+      <div id="tsDial" class="ts-dial" aria-hidden="true"><span id="tsCount" class="ts-count">3</span></div>
+      <button id="tsPress" class="ts-press" type="button" disabled>استعد</button>
+      <p id="tsVerdict" class="ts-verdict" aria-live="polite"></p>
+      <button id="tsNext" class="ng-play ts-next" type="button" hidden>الجولة التالية</button>
+    </div>
+    <div class="ng-status ts-foot"><span></span><p>عدّ بقلبك… لا تطالع</p><button id="tsQuit" class="ng-quit" type="button">خروج</button></div>
+  </section>
+
+  <section id="tsResult" class="ng-result" hidden role="dialog" aria-modal="true" aria-labelledby="tsResultTitle">
+    <div class="ng-result-card">
+      <h2 id="tsResultTitle"></h2>
+      <p id="tsResultNote"></p>
+      <ol id="tsRanks" class="ng-ranks"></ol>
+      <div class="ng-result-actions">
+        <button id="tsAgain" class="ng-play" type="button">العب مرة ثانية</button>
+        <a class="ng-ghost" href="/party?game=ten">العب مع أصحابك</a>
+        <a class="ng-ghost" href="/">الرئيسية</a>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="assets/js/ten-v33-12.js?v=33.12.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.12.0"></script></body>
+</html>
