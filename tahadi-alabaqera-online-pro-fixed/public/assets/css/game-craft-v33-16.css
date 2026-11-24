@@ -1,0 +1,89 @@
+/* The play surfaces, rather than menu colours, carry the new material direction. */
+html[data-table-studio] body:is(.jw-studio.game-running,.blocks-page,.memory-playing,.game-dice,[data-arcade=puzzle],[data-arcade=logic]){background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--ts-accent) 13%,transparent),transparent 70%),var(--ts-room)!important;background-attachment:fixed!important}
+html[data-table-material=marble] body:is(.jw-studio.game-running,.blocks-page){background:repeating-linear-gradient(124deg,transparent 0 130px,#c4a16b08 132px,transparent 133px 230px),radial-gradient(ellipse at 50% 0,#b39b6311,transparent 60%),var(--ts-room)!important}
+html[data-table-material=wood] body:is(.jw-studio.game-running,.blocks-page){background:repeating-linear-gradient(4deg,transparent 0 4px,#c4a16b04 5px 6px),var(--ts-room)!important}
+
+/* Jewels: quieter player plates, a metal setting, legible charge indicators. */
+body.jw-studio.mm5 #game.jw-game{justify-content:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 12px max(12px,env(safe-area-inset-bottom))}
+body.jw-studio.mm5 #game .jw-arena-decor{display:none}
+body.jw-studio.mm5 #game .jw-bar{width:100%;gap:9px;min-height:44px}
+body.jw-studio.mm5 #game .jw-bar .jw-icon{width:40px;height:40px;border:1px solid #ffffff24;background:var(--ts-well)}
+body.jw-studio.mm5 #game .jw-round b{font-size:16px;letter-spacing:0}
+body.jw-studio.mm5 #game .mm-mode{background:var(--ts-well);color:#d9cfdf;border:1px solid #ffffff14;font-size:12px;padding:7px 10px}
+body.jw-studio.mm5 #game .jw-hud{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);gap:8px;align-items:center}
+body.jw-studio.mm5 #game .jw-plate{border-radius:16px;background:linear-gradient(145deg,#ffffff0b,#ffffff02),var(--ts-well);border:1px solid #ffffff20;box-shadow:0 6px 18px #0003,inset 0 1px #ffffff08;padding:12px 10px!important;gap:5px 8px}
+body.jw-studio.mm5 #game .jw-plate.leading{border-color:var(--ts-edge);box-shadow:inset 0 1px #fff2,0 6px 18px #0004}
+body.jw-studio.mm5 #game .jw-plate .jw-face{width:41px;height:41px;padding:2px;box-shadow:0 0 0 2px var(--ts-well);background:linear-gradient(135deg,var(--ts-light),var(--ts-edge))}
+body.jw-studio.mm5 #game .jw-plate .jw-face>*{background:var(--ts-surface);font-size:19px}
+body.jw-studio.mm5 #game .jw-plate .jw-score{font-size:28px;color:var(--ts-light);-webkit-text-stroke:0;text-shadow:0 2px 4px #0008}
+body.jw-studio.mm5 #game .jw-plate .jw-who small{font-size:12px;color:#c3b6cf}
+body.jw-studio.mm5 #game .mm-starbar{height:7px;margin:7px 3px 2px;background:#0004;border:1px solid #fff2;box-shadow:none}
+body.jw-studio.mm5 #game .mm-starbar em{font-size:15px;-webkit-text-stroke:1px var(--ts-well)}
+body.jw-studio.mm5 #game .mm-vs-word{font-size:21px;color:var(--ts-light);text-shadow:none;-webkit-text-stroke:0;letter-spacing:1px;margin:0}
+body.jw-studio.mm5 #game .mm-crown{width:42px;height:30px;filter:drop-shadow(0 3px 3px #0005)}
+body.jw-studio.mm5 #game .jw-clock{min-width:64px;font-size:14px;border:1px solid var(--ts-edge);background:var(--ts-well);padding:6px 8px;box-shadow:none}
+body.jw-studio.mm5 #game .jw-runline{align-self:stretch;justify-content:space-between;width:100%;border:0;border-radius:0;background:none;padding:2px 3px 0}
+body.jw-studio.mm5 #game .jw-runline strong{display:inline;font-size:13px;color:var(--ts-light)}
+body.jw-studio.mm5 #game .jw-live-dot{display:none}
+body.jw-studio.mm5 #game #jwMovesText{font-size:13px;color:#bdb0ca}
+body.jw-studio.mm5 #game .jw-move-track{width:80px;height:5px;background:#ffffff13}
+body.jw-studio.mm5 #game .jw-move-track i{background:linear-gradient(90deg,var(--ts-edge),var(--ts-light))}
+body.jw-studio.mm5 #game .jw-wrap{border-radius:20px;box-shadow:0 5px 0 var(--ts-well),0 20px 36px #0007}
+body.jw-studio.mm5 #game .jw-board-tools{width:100%;gap:8px;min-height:34px}
+body.jw-studio.mm5 #game #jwBoardHelp{font-size:12px;color:#bcafca}
+body.jw-studio.mm5 #game .jw-tool{min-height:34px;border-radius:10px;background:var(--ts-well);border-color:#ffffff26;font-size:13px}
+body.jw-studio.mm5 #game .jw-boostbar{max-width:500px;gap:7px;padding:0}
+body.jw-studio.mm5 #game .jw-boost{max-width:90px;gap:6px}
+body.jw-studio.mm5 #game .jw-boost-art{border-radius:14px;aspect-ratio:1.25;border:1px solid color-mix(in srgb,var(--boost) 40%,#766384);background:linear-gradient(145deg,#ffffff0d,transparent),var(--ts-well);box-shadow:inset 0 1px #ffffff12,0 3px 0 #0004}
+body.jw-studio.mm5 #game .jw-boost-art canvas{width:65%;height:85%}
+body.jw-studio.mm5 #game .jw-boost-art>i{opacity:.18}
+body.jw-studio.mm5 #game .jw-boost-copy>b{font-size:12px;font-weight:700}
+body.jw-studio.mm5 #game .jw-boost-copy>small{font-size:12px;color:#b9aaca}
+body.jw-studio.mm5 #game .jw-charge-track{display:block;width:80%;height:3px;border-radius:4px;background:#ffffff16;overflow:hidden;margin-top:5px}
+body.jw-studio.mm5 #game .jw-charge-track i{display:block;height:100%;background:var(--boost);transition:width .3s}
+body.jw-studio.mm5 #game .jw-boost.ready .jw-boost-art{box-shadow:inset 0 0 12px color-mix(in srgb,var(--boost) 20%,transparent),0 0 0 1px var(--boost);animation:none;border-color:var(--boost)}
+body.jw-studio.mm5 #game .mm-round{width:42px;height:42px;border:1px solid #ffffff26;background:var(--ts-well);box-shadow:none}
+body.jw-studio.mm5 #game .mm-foot{grid-template-columns:42px minmax(0,1fr) 42px;margin-top:4px}
+body.jw-studio.mm5 #game .mm-foot .jw-status{font-size:13px;color:#d0c5dc}
+body.jw-studio.mm5 .jw-sheet-card{background:linear-gradient(150deg,#322244,#191221)!important;border:1px solid var(--ts-edge);color:#fff!important;box-shadow:0 22px 60px #0008}
+body.jw-studio.mm5 .jw-sheet-card :is(h2,p,.mm-set-help){color:#eee4f4!important}
+body.jw-studio.mm5 .mm-set-row{background:#ffffff08;border-color:#ffffff18;color:#eee4f4}
+body.jw-studio.mm5 .jw-sheet-card .jw-cta{background:linear-gradient(var(--ts-light),var(--ts-edge));color:#21160f;border:0;box-shadow:0 3px 0 #0003}
+
+/* Memory cards: embossed backs and clear, framed illustrations. */
+html[data-table-studio] body[data-arcade=memory] .arcade-game{background:linear-gradient(140deg,#ffffff08,transparent),var(--ts-well)!important;border:1px solid var(--ts-edge)!important;box-shadow:0 18px 50px #0005!important}
+html[data-table-studio] .memory-tile-v30 .memory-back-v30{background:repeating-linear-gradient(45deg,transparent 0 12px,#ffffff06 12px 13px),repeating-linear-gradient(-45deg,transparent 0 12px,#ffffff06 12px 13px),linear-gradient(145deg,var(--ts-alternate),var(--ts-surface))!important;border:1px solid var(--ts-edge)!important;box-shadow:inset 0 0 0 3px var(--ts-well),inset 0 0 0 4px #ffffff15,0 5px 0 #0005}
+html[data-table-studio] .memory-back-v30 svg{color:var(--ts-light)!important;filter:drop-shadow(0 2px 2px #0005)}
+html[data-table-studio] .memory-front-v30{background:radial-gradient(ellipse at 50% 0,#fff,#eee9df)!important;border:2px solid var(--ts-edge)!important;box-shadow:inset 0 0 0 3px #fff,0 4px 0 #0005}
+html[data-table-studio] .memory-tile-v30.matched{filter:saturate(.7);opacity:.55}
+html[data-table-studio] body.memory-playing .arcade-stats b{background:var(--ts-surface)!important;color:#fff7e8!important;border:1px solid #ffffff15!important;border-radius:12px}
+
+/* Blocks: individual chamfered stones on a recessed bed, with a lined tray. */
+html[data-table-studio] .bk-board-wrap{background:linear-gradient(140deg,var(--ts-light),var(--ts-edge) 24%,var(--ts-surface) 52%,var(--ts-edge) 76%,var(--ts-light));box-shadow:0 5px 0 var(--ts-well),0 20px 35px #0007}
+html[data-table-studio] .bk-board{background:radial-gradient(ellipse at 50% 0,var(--ts-surface),var(--ts-well));gap:3px}
+html[data-table-studio] .bk-cell{background:var(--ts-tile);border-radius:4px;box-shadow:inset 0 1px #ffffff0c,inset 0 -1px #0004}
+html[data-table-studio] .bk-cell.is-filled,html[data-table-studio] .bk-piece i{background:linear-gradient(135deg,#ffffff40,transparent 45%,#00000024),var(--c);border:1px solid #ffffff24;border-radius:4px;box-shadow:inset 2px 2px #ffffff40,inset -2px -3px #0004,0 2px 2px #0004}
+html[data-table-studio] .bk-cell.is-filled::after,html[data-table-studio] .bk-piece i::after{inset:12% 13% 43%;border-radius:2px;clip-path:polygon(0 0,100% 0,72% 100%,0 100%);background:linear-gradient(#ffffff30,#ffffff05)}
+html[data-table-studio] .bk-slot{background:repeating-linear-gradient(90deg,transparent 0 2px,#ffffff02 2px 3px),var(--ts-well);border-color:var(--ts-edge);border-radius:15px;box-shadow:inset 0 2px 8px #0004}
+html[data-table-studio] .bk-cell.is-ghost{background:color-mix(in srgb,var(--g) 55%,var(--ts-well));box-shadow:inset 0 0 0 2px #ffffffbb}
+html[data-table-studio] .bk-cell.will-clear{background:color-mix(in srgb,var(--c,#ffd24a) 70%,#fff);box-shadow:inset 0 0 0 2px #ffe38a,0 0 12px #ffd24a}
+html[data-table-studio] .bk-cell.will-clear:not(.is-filled):not(.is-ghost){background:#ffd24a40}
+html[data-table-studio] :is(.bk-score,.bk-best,.bk-help){background:linear-gradient(140deg,#ffffff09,transparent),var(--ts-well);border-color:#ffffff20}
+html[data-table-studio] .bk-score b,html[data-table-studio] .bk-best b{color:var(--ts-light);background:none;-webkit-text-fill-color:var(--ts-light)}
+
+/* Dice: leather-lined throwing compartments, rather than flat gradient boxes. */
+:is(html[data-table-studio],#v31) body.game-dice #game#game .dice-duel-v33{position:relative;background:linear-gradient(140deg,#ffffff08,transparent),var(--ts-surface)!important;border:5px solid var(--ts-edge)!important;border-radius:28px!important;box-shadow:inset 0 0 0 2px var(--ts-well),0 7px 0 var(--ts-well),0 22px 32px #0006!important}
+:is(html[data-table-studio],#v31) body.game-dice #game#game .dice-duel-v33 .duel-die{background:repeating-linear-gradient(45deg,transparent 0 3px,#ffffff02 3px 4px),radial-gradient(ellipse,var(--ts-tile),var(--ts-well))!important;border:1px dashed color-mix(in srgb,var(--ts-edge) 45%,transparent)!important;box-shadow:inset 0 4px 16px #0006!important}
+:is(html[data-table-studio],#v31) body.game-dice #game#game .dice-duel-v33 .duel-die.is-turn{border-color:var(--ts-light)!important;box-shadow:inset 0 4px 16px #0006,0 0 0 2px var(--ts-edge)!important}
+html[data-table-studio] body.game-dice #turnTotal{background:var(--ts-well);border:1px solid var(--ts-edge)}
+
+/* Number puzzle and logic share the same materials while retaining their controls. */
+html[data-table-studio] body[data-arcade=puzzle] .arcade-game,html[data-table-studio] body[data-arcade=logic] .arcade-game{background:linear-gradient(145deg,#ffffff08,transparent),var(--ts-well)!important;border:1px solid var(--ts-edge)!important;box-shadow:0 18px 40px #0005!important}
+html[data-table-studio] :is(.puzzle-grid,.native-puzzle-v33,.puzzle-board-v30){padding:12px!important;border:3px solid var(--ts-edge)!important;border-radius:20px;background:var(--ts-well)!important;box-shadow:inset 0 3px 10px #0008,0 5px 0 #0005}
+html[data-table-studio] :is(.puzzle-grid,.native-puzzle-v33,.puzzle-board-v30) button:not(:disabled){border-radius:10px!important;border:1px solid var(--ts-edge)!important;background:linear-gradient(145deg,var(--ts-alternate),var(--ts-surface))!important;color:var(--ts-light)!important;text-shadow:0 2px #0005;box-shadow:inset 0 2px #ffffff20,0 4px 0 #08050c80!important}
+html[data-table-studio] .cognitive-question-v34{background:radial-gradient(ellipse at 50% 0,#ffffff0b,transparent 80%),var(--ts-surface)!important;border:1px solid var(--ts-edge)!important;border-radius:20px;padding:22px!important}
+@media(max-width:420px){body.jw-studio.mm5 #game.jw-game{gap:7px}body.jw-studio.mm5 #game .jw-hud{gap:5px;grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr)}body.jw-studio.mm5 #game .jw-plate{padding:9px 7px!important;gap:4px 6px}body.jw-studio.mm5 #game .jw-plate .jw-face{width:33px;height:33px}body.jw-studio.mm5 #game .jw-plate .jw-who b{font-size:13px}body.jw-studio.mm5 #game .jw-plate .jw-who small{font-size:11px}body.jw-studio.mm5 #game .jw-plate .jw-score{font-size:25px}body.jw-studio.mm5 #game .mm-mode{font-size:11px;padding:6px}body.jw-studio.mm5 #game .jw-boostbar{gap:6px}body.jw-studio.mm5 #game .jw-boost-copy>b{font-size:11px}body.jw-studio.mm5 #game .jw-boost-copy>small{font-size:11px}}
+@media(max-height:720px){body.jw-studio.mm5 #game.jw-game{gap:6px}body.jw-studio.mm5 #game .jw-plate{padding:8px!important}body.jw-studio.mm5 #game .jw-boost-art{aspect-ratio:1.6}body.jw-studio.mm5 #game .jw-boost-copy{gap:0}}
+@media(prefers-reduced-motion:reduce){html[data-table-studio] .jw-charge-track i{transition:none}}
+
+html[data-table-studio] body.game-dice #game .game-toolbar{background:var(--ts-surface)!important;border:1px solid var(--ts-edge);border-radius:16px;padding:10px 14px}html[data-table-studio] body.game-dice #game .game-side{background:var(--ts-well)!important;border-color:var(--ts-edge)!important}

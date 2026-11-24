@@ -26,7 +26,7 @@ export const PARTY_GAMES=Object.freeze([
  {id:'hockey',name:'هوكي الهواء',kind:'arena',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/air-hockey-cover-v33-7.svg',hint:'مواجهة اثنين على طاولة الهوكي، أول من يسجل 5 أهداف يفوز.'},
  {id:'tanks',name:'معركة الدبابات',kind:'arena',maxPlayers:4,real:true,linkOnly:true,image:'assets/brand/tanks-arena-cover-nov14.webp',hint:'آخر دبابة في الساحة تفوز، أربعة في كل ساحة، والمقاعد الفاضية تكملها دبابات منافسة.'},
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',real:true,image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة نفسها، بقواعد الرأس والذيل والقدرات.'},
- {id:'jewels',name:'ماستر الجواهر',kind:'puzzle',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/jewels-cover-v33-10-5.webp',hint:'بدّل الجواهر واصنع السلاسل؛ يتساوى الجميع في البداية والحركات.'},
+ {id:'jewels',name:'ماستر الجواهر',kind:'puzzle',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/jewels-cover-v33-16.svg',hint:'بدّل الجواهر واصنع السلاسل؛ يتساوى الجميع في البداية والحركات.'},
  {id:'sudoku',name:'سودوكو',kind:'puzzle',real:true,image:'assets/game-cards-v27/sudoku.svg',hint:'نفس اللوحة للجميع، وخمس محاولات خطأ لكل لاعب.'},
  {id:'memory',name:'الذاكرة',kind:'puzzle',real:true,image:'assets/game-cards-v27/memory.svg',hint:'نفس الأزواج للجميع، ولا تُكشف إلا البطاقات التي تقلبها.'},
  {id:'picture',name:'سباق الصور',kind:'puzzle',real:true,image:'assets/ai-v19/garden.webp',hint:'ركّب الصورة قطعة قطعة قبل أصحابك.'},

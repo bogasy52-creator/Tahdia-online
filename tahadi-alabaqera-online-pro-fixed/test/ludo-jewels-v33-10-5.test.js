@@ -99,17 +99,18 @@ test('ماستر الجواهر: five boosters; the beak breaks one gem for free
   assert.deepEqual(J.JR.STARS, [100, 200, 300]); assert.equal(J.starsOf(199), 1); assert.equal(J.starsOf(300), 3);
 });
 
-test('ماستر الجواهر looks like a duel: VS under a crown, star bars, candies, five square boosters, settings and chat', async () => {
+test('ماستر الجواهر looks like a duel: VS under a crown, star bars, crystals, five boosters, settings and chat', async () => {
   const page = await read('public/jewels.html'), main = await read('public/assets/js/jewels/main.js'), art = await read('public/assets/js/jewels/studio-renderer.js');
   assert.match(page, /class="release-v26 jewels-page jw-studio mm5"/);
   assert.match(page, /<svg class="mm-crown"/); assert.match(page, /id="jwSettingsOpen"/); assert.match(page, /class="mm-round mm-chat" type="button" data-reactions-open/);
   assert.match(main, /class=\\"mm-starbar\\"|class="mm-starbar"/); assert.match(main, /'⭐ أول نجمة!'/);
   assert.match(main, /window\.BS_TABLE=Object\.freeze/);
-  assert.match(art, /function candyPath\(ctx,color,r\)/); assert.match(art, /function sprinkleBall\(ctx,r\)/);
+  assert.match(art, /function paintCrystal\(ctx,x,y,size,color=0,special=''\)/); assert.match(art, /const points=studioPoints\(color,r\)/);
   assert.match(art, /else if\(index===3\)/); assert.match(art, /else if\(index===4\)/);
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.equal(bundles['jewels.html'].at(-1), 'assets/css/jewels-mm-v33-10-5.css');
-  assert.ok((await stat(new URL('../public/assets/brand/jewels-cover-v33-10-5.webp', import.meta.url))).size > 20000);
+  assert.ok(bundles['jewels.html'].includes('assets/css/jewels-mm-v33-10-5.css'));
+  assert.equal(bundles['jewels.html'].at(-1), 'assets/css/game-craft-v33-16.css');
+  assert.match(await read('public/assets/brand/jewels-cover-v33-16.svg'), /<svg/);
 });
 
 const LINK = { code: '153000', round: '0b2f8c5e-1111-4a2b-9c3d-123456789abc', token: 'T'.repeat(48) };

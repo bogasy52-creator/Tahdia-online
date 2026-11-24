@@ -51,7 +51,9 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/six-tables-v33-11-3.css",
     "assets/css/signature-v33-11-4.css",
-    "assets/css/dice-leaderboard-v33-11-5.css"
+    "assets/css/dice-leaderboard-v33-11-5.css",
+    "assets/css/table-studio-v33-16.css",
+    "assets/css/game-craft-v33-16.css"
   ],
   "index.html": [
     "assets/css/platform.css",
@@ -148,7 +150,9 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/table-studio-v33-16.css",
+    "assets/css/game-craft-v33-16.css"
   ],
   "memory.html": [
     "assets/css/instant-play-v33-12.css",
@@ -167,7 +171,9 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/table-studio-v33-16.css",
+    "assets/css/game-craft-v33-16.css"
   ],
   "online.html": [
     "assets/css/instant-play-v33-12.css",
@@ -203,7 +209,9 @@
     "assets/css/reactions-v31.css",
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
-    "assets/css/reactions-live-v33-7.css"
+    "assets/css/reactions-live-v33-7.css",
+    "assets/css/table-studio-v33-16.css",
+    "assets/css/game-craft-v33-16.css"
   ],
   "reaction.html": [
     "assets/css/instant-play-v33-12.css",
@@ -620,7 +628,9 @@
     "assets/css/reactions-live-v33-7.css",
     "assets/css/jewels-studio-v33-10.css",
     "assets/css/trio-premium-v33-10.css",
-    "assets/css/jewels-mm-v33-10-5.css"
+    "assets/css/jewels-mm-v33-10-5.css",
+    "assets/css/table-studio-v33-16.css",
+    "assets/css/game-craft-v33-16.css"
   ],
   "crowd.html": [
     "assets/css/platform.css",
@@ -715,6 +725,8 @@
     "assets/css/instant-play-v33-12.css",
     "assets/css/new-games-v33-12.css",
     "assets/css/blocks-v33-15.css",
-    "assets/css/game-interaction-v34.css"
+    "assets/css/game-interaction-v34.css",
+    "assets/css/table-studio-v33-16.css",
+    "assets/css/game-craft-v33-16.css"
   ]
 }
