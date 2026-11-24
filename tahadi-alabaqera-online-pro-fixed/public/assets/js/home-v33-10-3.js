@@ -59,7 +59,7 @@
     const copy = doc.querySelector('.home-hero .hero-copy');
     let line = doc.querySelector('[data-home-live]');
     if (!line && copy) { line = doc.createElement('p'); line.className = 'home-live'; line.dataset.homeLive = ''; copy.append(line); }
-    if (line) { const n = Number(data.people) || 0; line.hidden = n < 2; line.textContent = n + ' لاعب في بوسراج الحين'; }
+    if (line) { const n = Number(data.people) || 0; line.hidden = n < 2; line.textContent = n + ' لاعب في لعبة العباقرة الحين'; }
     for (const card of doc.querySelectorAll('.home-game, .home-feature')) {
       const n = Number(data.games?.[keyOf(card.getAttribute('href'))]) || 0;
       let badge = card.querySelector('.home-playing');

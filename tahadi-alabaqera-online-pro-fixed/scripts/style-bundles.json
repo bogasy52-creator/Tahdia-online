@@ -266,7 +266,9 @@
     "assets/css/mobile-club-v33-7.css",
     "assets/css/reactions-premium-v33-7.css",
     "assets/css/reactions-live-v33-7.css",
-    "assets/css/signature-v33-11-4.css"
+    "assets/css/signature-v33-11-4.css",
+    "assets/css/block-skins-v33-17.css",
+    "assets/css/shop-royal-v33-17.css"
   ],
   "snakes.html": [
     "assets/css/instant-play-v33-12.css",
@@ -725,6 +727,7 @@
     "assets/css/instant-play-v33-12.css",
     "assets/css/new-games-v33-12.css",
     "assets/css/blocks-v33-15.css",
+    "assets/css/block-skins-v33-17.css",
     "assets/css/game-interaction-v34.css",
     "assets/css/table-studio-v33-16.css",
     "assets/css/game-craft-v33-16.css"

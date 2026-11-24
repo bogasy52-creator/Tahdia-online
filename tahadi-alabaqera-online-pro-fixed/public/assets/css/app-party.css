@@ -256,6 +256,26 @@ html body .journey-countdown{background:#ffffff12!important;border-color:#ffd24a
 html body.journey-page button:is(.journey-stage,.daily-game){background:var(--rv-raised)!important;border-color:var(--rv-line)!important}
 html body.journey-page button.journey-stage.current{background:var(--rv-gold)!important;color:var(--rv-ink)!important}
 html body .puzzle-grid .puzzle-tile{background:linear-gradient(180deg,#fff8df,#ffd978 55%,#e7a51e)!important;color:#3a1d00!important;border-color:#fff1b8!important;box-shadow:inset 0 2px 0 #ffffffa0,0 4px 0 #9a5a06!important}
+/* 33.17.0: a potted ball rolls into the tray */
+.billiards-page .bi-collected-ball.is-new{animation:bi-roll-in .6s cubic-bezier(.2,.8,.3,1) both}
+@keyframes bi-roll-in{from{transform:translateX(-46px) rotate(-300deg);opacity:0}60%{opacity:1}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.billiards-page .bi-collected-ball.is-new{animation:none}}
+html body.billiards-page .bi-toast{background:#1c0848ee!important;border-color:#ffd24a88!important}
+html body.billiards-page .bi-toast.good{background:linear-gradient(180deg,#3d1a94f0,#24095ef0)!important;border-color:#ffd24a!important}
+html body.billiards-page .bi-toast.foul{background:#4a0b18ee!important;border-color:#ff8a7a!important}
+/* 33.17.0: the billiards and carrom game screens: royal panels around the tables */
+html body:is(.billiards-page,.carrom-page) section#game:is(.bi-game,.cm-game){background:radial-gradient(90% 70% at 50% 45%,#2d1170 0,#1c0848 60%,#0a0322 100%)!important}
+html body:is(.billiards-page,.carrom-page) :is(.bi-plate,.bi-context,.bi-pocket-tray,.bi-seg,.cm-plate,.cm-context){background:var(--rv-panel)!important;border-color:color-mix(in srgb,var(--rv-line) 70%,transparent)!important}
+html body:is(.billiards-page,.carrom-page) .bi-plate.turn{box-shadow:0 0 0 2px #ffd24a,0 0 18px #ffd24a55!important}
+html body:is(.billiards-page,.carrom-page) .cue-nudge{background:var(--rv-raised)!important;border-color:var(--rv-line)!important;color:#fff!important}
+html body:is(.billiards-page,.carrom-page) .cue-ruler-track{background:linear-gradient(180deg,#12043a,#24095e)!important;border-color:#8a5cf0!important}
+html body:is(.billiards-page,.carrom-page) .bi-power{background:linear-gradient(180deg,#12043a,#24095e)!important;border-color:#8a5cf0!important}
+html body.carrom-page :is(.cm-player,.cm-dock){background:var(--rv-panel)!important;border-color:color-mix(in srgb,var(--rv-line) 70%,transparent)!important}
+html body.carrom-page .cm-player.active{box-shadow:0 0 0 2px #ffd24a,0 0 18px #ffd24a55!important}
+html body.carrom-page .cm-pull{background:linear-gradient(180deg,#12043a,#24095e)!important;border-color:#8a5cf0!important}
+/* 33.17.0: a player's arrival card never sits on the buttons, and taps pass through it */
+.hero-entry{pointer-events:none}
+body.party-app .hero-entry,body.release-v26:not(.game-running) .hero-entry{top:calc(max(8px,env(safe-area-inset-top)) + 64px);bottom:auto}
 
 /* assets/css/design-system.css */
 /* V17 shared product system. Board coordinates remain owned by each game. */

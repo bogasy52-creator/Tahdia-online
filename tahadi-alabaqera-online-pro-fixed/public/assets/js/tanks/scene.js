@@ -33,7 +33,7 @@ export function paintTankTerrain(c,map=0){
   c.lineWidth=2;c.strokeStyle='#bce0c617';for(const y of[H*.17,H*.83]){c.beginPath();c.moveTo(30,y);c.lineTo(W-30,y);c.stroke();}
   for(const[seat,x,y]of[[0,110,140],[1,790,910],[2,790,140],[3,110,910]]){c.strokeStyle=TANK_COLORS[seat]+'58';c.lineWidth=2.2;c.setLineDash([14,7]);c.beginPath();c.arc(x,y,63,0,TAU);c.stroke();c.setLineDash([]);c.fillStyle=TANK_COLORS[seat]+'0c';c.fill();}
   c.save();c.translate(W/2,H/2);c.strokeStyle='#a6c9be12';c.lineWidth=2;for(const r of[155,168]){c.beginPath();c.arc(0,0,r,0,TAU);c.stroke();}c.rotate(-Math.PI/4);c.strokeRect(-80,-80,160,160);c.restore();
-  c.textAlign='center';c.font='600 16px sans-serif';c.fillStyle='#a5c8bf26';c.fillText('B O S R A J   /   A R E N A',W/2,H*.61);
+  c.textAlign='center';c.font='600 16px sans-serif';c.fillStyle='#a5c8bf26';c.font='700 18px Tajawal,system-ui,sans-serif';c.fillText('لعبة العباقرة · الساحة',W/2,H*.61);
 }
 function arenaShell(c,v,terrain,map){
   box(c,v,W/2,H/2,W+40,H+40,-42,38,'#172a32',0,25,{top:.9});plane(c,v,0,()=>{terrain?c.drawImage(terrain,0,0,W,H):paintTankTerrain(c,map);});

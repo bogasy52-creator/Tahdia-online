@@ -10,7 +10,7 @@
   const W = 250, H = 350;
   // court: the palette of the court artwork (yellow, blue, red, black, white) and its frame
   const DECKS = {
-    'deck-classic': { name: 'كلاسيك بوسراج', face: ['#fffefa', '#f5efe2'], edge: '#d8ccb3', red: '#c4253a', black: '#1c2230', gold: ['#f6dd8e', '#c99a3c', '#8c6420'], court: { Y: '#ebb847', B: '#24427f', R: '#c8283c', K: '#1a1d26', W: '#fffdf8', frame: '#1c2230' }, back: 'sadu' },
+    'deck-classic': { name: 'كلاسيك العباقرة', face: ['#fffefa', '#f5efe2'], edge: '#d8ccb3', red: '#c4253a', black: '#1c2230', gold: ['#f6dd8e', '#c99a3c', '#8c6420'], court: { Y: '#ebb847', B: '#24427f', R: '#c8283c', K: '#1a1d26', W: '#fffdf8', frame: '#1c2230' }, back: 'sadu' },
     'deck-night': { name: 'ليل المجلس', face: ['#fffef8', '#e8edf4'], edge: '#a7bad3', red: '#b91d38', black: '#15283f', gold: ['#ffe7a3', '#e0b354', '#9a6d1e'], court: { Y: '#d5a735', B: '#2a3c78', R: '#bc2441', K: '#141a2c', W: '#fffdf6', frame: '#253b59' }, back: 'arabesque', backDark: true },
     'deck-emerald': { name: 'الزمرد', face: ['#fffdf6', '#f1ece0'], edge: '#cfc6ad', red: '#b5243a', black: '#0f3b33', gold: ['#f3dd9a', '#bf9440', '#7e5a1c'], court: { Y: '#e4c46a', B: '#0f5a4a', R: '#b5243a', K: '#0c2c26', W: '#fffdf6', frame: '#0f3b33' }, back: 'emerald' },
     'deck-four': { name: 'أربعة ألوان', face: ['#ffffff', '#f3f4f7'], edge: '#cfd5e1', red: '#d4283e', black: '#161a24', blue: '#1f6fd6', green: '#178a4e', gold: ['#ffe5a0', '#cfa14a', '#8f6a23'], court: { Y: '#efbe4c', B: '#1f4fa8', R: '#d4283e', K: '#161a24', W: '#ffffff', frame: '#161a24' }, back: 'slate', four: true },

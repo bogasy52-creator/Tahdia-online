@@ -27,10 +27,10 @@
   const signatureAudio={};
   function signatureDie(name,skin){const id=String(skin||'').replace(/^dice-/,'');if(!signatureIds.has(id))return null;const key=id+'-'+(name==='diceImpact'?'land':'roll');if(!signatureAudio[key])signatureAudio[key]=new Audio('assets/sounds/luxe-v33-11-4/'+key+'.wav');return signatureAudio[key];}
   for(const id of ["eclipse", "tide", "sakura", "forge", "astral", "arabesque"])for(const pose of ['entry','win'])samples['legend-'+id+'-'+pose]='assets/sounds/legend-frames-v33-11-5/'+id+'-'+pose+'.wav';
-  for(const family of ['ball','rail','cue','pocket'])for(let i=1;i<=3;i++)samples['pool-'+family+'-'+i]='assets/sounds/pool-v33-11-6/'+family+'-'+i+'.wav';
+  for(const family of ['ball','rail','cue','pocket'])for(let i=1;i<=3;i++)samples['pool-'+family+'-'+i]='assets/sounds/pool-v33-17/'+family+'-'+i+'.wav';
   function sample(name){const src=samples[name]||samples.click;if(!samplePool[src]){const a=new Audio(src);a.preload='none';a.volume=settings.volume*.9;samplePool[src]=a;}return audio[name]=samplePool[src];}
   const diceSamples={soft:['soft-1','soft-2'],wood:['wood-1','wood-2'],crystal:['crystal-1','crystal-2']},diceAudio={},diceCursor={dice:-1,diceImpact:-1};
-  function nextDice(name){const family=diceSamples[settings.diceSound]?settings.diceSound:null,pool=name==='diceImpact'?(family?['land-'+family]:['land-soft','land-wood','land-crystal']):(family?diceSamples[family]:Object.values(diceSamples).flat());diceCursor[name]=(diceCursor[name]+1)%pool.length;const id=pool[diceCursor[name]];if(!diceAudio[id]){const a=new Audio('assets/sounds/dice-v133/'+id+'.wav');a.preload='none';diceAudio[id]=a;}return diceAudio[id];}
+  function nextDice(name){const family=diceSamples[settings.diceSound]?settings.diceSound:null,pool=name==='diceImpact'?(family?['land-'+family]:['land-soft','land-wood','land-crystal']):(family?diceSamples[family]:Object.values(diceSamples).flat());diceCursor[name]=(diceCursor[name]+1)%pool.length;const id=pool[diceCursor[name]];if(!diceAudio[id]){const a=new Audio('assets/sounds/dice-v33-17/'+id+'.wav');a.preload='none';diceAudio[id]=a;}return diceAudio[id];}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(settings))}catch{};window.dispatchEvent(new CustomEvent('bs-audio-change',{detail:{...settings}}))}
   function ensure(){if(ctx)return ctx;const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();return ctx}
   // 33.9.3: decoded buffers through one bus: every sound starts on time, overlaps, and plays
@@ -76,7 +76,7 @@
   function getSettings(){return {...settings}}function dispose(){audioEpoch++;for(const n of voices)try{n.stop();}catch{}voices.clear();try{ctx?.close()}catch{}ctx=null;bus=null;unlocked=false;}
     // Fetch the sounds a game is about to need so the first one is not late.
   function prime(names=[]){for(const name of names){try{
-    let players;if(name==='dice'||name==='diceImpact'){const ids=name==='diceImpact'?['land-soft','land-wood','land-crystal']:Object.values(diceSamples).flat();players=ids.map(id=>{if(!diceAudio[id])diceAudio[id]=new Audio('assets/sounds/dice-v133/'+id+'.wav');return diceAudio[id];});}else players=[sample(name)];
+    let players;if(name==='dice'||name==='diceImpact'){const ids=name==='diceImpact'?['land-soft','land-wood','land-crystal']:Object.values(diceSamples).flat();players=ids.map(id=>{if(!diceAudio[id])diceAudio[id]=new Audio('assets/sounds/dice-v33-17/'+id+'.wav');return diceAudio[id];});}else players=[sample(name)];
     for(const a of players){load(a.src);if(a.preload!=='auto'){a.preload='auto';a.load?.();}}
   }catch{}}}
   const has=name=>Boolean(samples[name]);const context=()=>{graph();return ctx};const musicBus=()=>graph()?.music||null;const recent=(ms=400)=>Date.now()-lastCue<ms;

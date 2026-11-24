@@ -108,9 +108,9 @@ function wood(ctx,theme) {
  path(b,star2,theme.wood[0]+'dd',theme.ink,1);
  circle(b,500,500,20,theme.line,theme.ink,1.6);circle(b,500,500,9,theme.wood[0]);
  b.font='700 13px system-ui,sans-serif';b.textAlign='center';b.fillStyle=theme.ink+'88';
- b.fillText('B O S R A J',500,682);
+ b.font='700 26px Tajawal,system-ui,sans-serif';b.fillText('لعبة العباقرة',500,682);
  rounded(b,417,21,166,24,5,'#211912','#d2b98755',1);
- b.font='600 10px system-ui,sans-serif';b.fillStyle='#d0bc98';b.fillText('B O S R A J   ·   C A R R O M',500,37);
+ b.font='600 10px system-ui,sans-serif';b.fillStyle='#d0bc98';b.font='700 13px Tajawal,system-ui,sans-serif';b.fillText('لعبة العباقرة · كيرم',500,37);
  for(const [x,y] of [[270,33],[730,33],[270,967],[730,967]]){circle(b,x,y,3,'#bca67c','#21170e',.8);line(b,x-1.5,y,x+1.5,y,'#413728',.7);}
  return c;
 }

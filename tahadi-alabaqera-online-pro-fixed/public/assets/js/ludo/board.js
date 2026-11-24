@@ -62,7 +62,11 @@ function defs(root) {
     lin(ID + 't' + i, [[0, LIGHT[i]], [.45, color], [1, DEEP[i]]]);
     rad(ID + 'y' + i, [[0, LIGHT[i]], [.4, color], [1, DEEP[i]]], .5, .42, .78);
     rad(ID + 'pawn' + i, [[0, '#ffffff'], [.18, LIGHT[i]], [.6, color], [1, DEEP[i]]], .35, .25, .9);
+    // 33.17.0: glass for the crystal pieces (the board shows through)
+    d.append(el('radialGradient', { id: ID + 'glass' + i, cx: .35, cy: .25, r: .9 }, [[0, '#ffffff', .95], [.25, LIGHT[i], .7], [.7, color, .45], [1, DEEP[i], .75]].map(([o, c, a]) => el('stop', { offset: o, 'stop-color': c, 'stop-opacity': a }))));
   });
+  lin(ID + 'silver', [[0, '#ffffff'], [.3, '#d9dde6'], [.55, '#8a91a3'], [.8, '#eef1f6'], [1, '#6b7284']], 1, 1);
+  rad(ID + 'onyx', [[0, '#7a7a8c'], [.25, '#3a3a48'], [.7, '#15151d'], [1, '#050508']], .35, .25, .9);
   // a fine diamond lattice laid over the yards
   d.append(el('pattern', { id: ID + 'lattice', width: 14, height: 14, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, [el('path', { d: 'M0 0H14M0 0V14', stroke: '#ffffff', 'stroke-width': .8, opacity: .16 })]));
   const soft = el('filter', { id: ID + 'soft', x: '-20%', y: '-20%', width: '140%', height: '140%' }, [el('feDropShadow', { dx: 0, dy: 2, stdDeviation: 2.2, 'flood-color': '#000', 'flood-opacity': .28 })]);
@@ -192,6 +196,11 @@ function drawSix(P,active,viewer){
  // A continuous bed joins all 78 steps, including the six bends between arms.
  const route=SIX_TRACK.map(p=>P(p));g.append(el('polyline',{points:[...route,route[0]].map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'#8b5d25','stroke-width':29,'stroke-linejoin':'round','pointer-events':'none'}));g.append(el('polyline',{points:[...route,route[0]].map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'url(#'+ID+'gold)','stroke-width':27,'stroke-linejoin':'round','data-route-rail':''}));
  SIX_LANES.forEach((lane,seat)=>{const a=sixAngle(seat),gate=SIX_TRACK[(seat*13+76)%78],end={x:300+Math.cos(a)*55,y:300+Math.sin(a)*55};g.append(el('polyline',{points:[gate,...lane,end].map(p=>P(p)).map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'url(#'+ID+'t'+seat+')','stroke-width':25,'stroke-linejoin':'round','data-home-rail':seat}));});
+ // 33.17.0: the six bends between arms are paved, so the road turns from one arm into the next
+ // without a gap (the squares themselves and their order are unchanged).
+ for(let s=0;s<6;s++){const A=P(SIX_TRACK[(s*13+4)%78]),B=P(SIX_TRACK[(s*13+5)%78]),len=Math.hypot(B.x-A.x,B.y-A.y),n={x:-(B.y-A.y)/len*size/2,y:(B.x-A.x)/len*size/2};
+  const d=`M${(A.x+n.x).toFixed(1)} ${(A.y+n.y).toFixed(1)}L${(B.x+n.x).toFixed(1)} ${(B.y+n.y).toFixed(1)}L${(B.x-n.x).toFixed(1)} ${(B.y-n.y).toFixed(1)}L${(A.x-n.x).toFixed(1)} ${(A.y-n.y).toFixed(1)}Z`;
+  g.append(el('path',{d,transform:'translate(0 1.4)',fill:'#5e3a0c',opacity:.42,'pointer-events':'none'}));g.append(el('path',{d,fill:'url(#'+ID+'tile)',stroke:'url(#'+ID+'tile)','stroke-width':3,'stroke-linejoin':'round','data-bend':s,'pointer-events':'none'}));}
  SIX_TRACK.forEach((p,i)=>{const seat=i%13===0?i/13:-1,gate=(i+2)%13===0?((i+2)/13)%6:-1,q=square(p,seat>=0?'url(#'+ID+'t'+seat+')':gate>=0?'url(#'+ID+'t'+gate+')':'url(#'+ID+'tile)',{'data-track':i});if(seat>=0)star(g,q.x,q.y,8,'#ffffff','#00000033');else if(i%13===8)star(g,q.x,q.y,8,'#f1dc9f','#c39443');});
  SIX_LANES.forEach((lane,seat)=>lane.forEach((p,h)=>square(p,'url(#'+ID+'t'+seat+')',{'data-home':seat+':'+h})));
  medallion(g,34,true);return g;
@@ -199,18 +208,24 @@ function drawSix(P,active,viewer){
 
 /** A royal piece standing on (0,0): a gold foot, a bell body with a gold diamond, and a head of
  *  its own — crown, gem, star or ball — so the four stones of a colour are told apart at a glance. */
-function pawn(seat, number, scale = 1) {
-  const s = scale, g = el('g', { class: 'ludo-pawn', transform: `scale(${s})` }), fill = 'url(#' + ID + 'pawn' + seat + ')', line = DEEP[seat], gold = 'url(#' + ID + 'gold)';
+function pawn(seat, number, scale = 1, design = 'royal') {
+  // 33.17.0: the piece sets of the shop — royal (default), crystal, pure gold, onyx and silver
+  const s = scale, g = el('g', { class: 'ludo-pawn' + (design !== 'royal' ? ' is-' + design : ''), transform: `scale(${s})` }), colour = 'url(#' + ID + 'pawn' + seat + ')';
+  const fill = design === 'crystal' ? 'url(#' + ID + 'glass' + seat + ')' : colour;
+  const body = design === 'gold' ? 'url(#' + ID + 'gold)' : design === 'onyx' ? 'url(#' + ID + 'onyx)' : fill;
+  const line = design === 'crystal' ? '#ffffffd0' : design === 'onyx' ? LUDO_COLORS[seat] : design === 'gold' ? GOLD_LINE : DEEP[seat];
+  const gold = design === 'onyx' ? 'url(#' + ID + 'silver)' : 'url(#' + ID + 'gold)';
   const head = ((Number(number) || 4) - 1) % 4;
   g.append(el('ellipse', { cx: 0, cy: 14, rx: 13.5, ry: 4.6, fill: '#000000', opacity: .35 }));
   g.append(el('ellipse', { cx: 0, cy: 12, rx: 12.5, ry: 4.4, fill: gold, stroke: GOLD_LINE, 'stroke-width': .8 }));
-  g.append(el('path', { d: 'M-11 11C-11 4 -6.5 0 -5 -6L5 -6C6.5 0 11 4 11 11C11 13 -11 13 -11 11Z', fill, stroke: line, 'stroke-width': 1.1 }));
-  g.append(el('path', { d: 'M0 -1L3.2 4L0 9L-3.2 4Z', fill: gold, stroke: GOLD_LINE, 'stroke-width': .6 }));
+  g.append(el('path', { d: 'M-11 11C-11 4 -6.5 0 -5 -6L5 -6C6.5 0 11 4 11 11C11 13 -11 13 -11 11Z', fill: body, stroke: line, 'stroke-width': design === 'onyx' ? 1.5 : 1.1 }));
+  if (design === 'gold' || design === 'onyx') g.append(el('ellipse', { cx: 0, cy: 6.5, rx: 9.3, ry: 2.6, fill: 'none', stroke: LUDO_COLORS[seat], 'stroke-width': 2.2 }));
+  g.append(el('path', { d: 'M0 -1L3.2 4L0 9L-3.2 4Z', fill: design === 'gold' || design === 'onyx' ? colour : gold, stroke: GOLD_LINE, 'stroke-width': .6 }));
   g.append(el('ellipse', { cx: 0, cy: -6.5, rx: 6.6, ry: 2.5, fill: gold, stroke: GOLD_LINE, 'stroke-width': .6 }));
   if (head === 0) { // crown
-    g.append(el('circle', { cx: 0, cy: -11.5, r: 5.6, fill, stroke: line, 'stroke-width': .9 }));
+    g.append(el('circle', { cx: 0, cy: -11.5, r: 5.6, fill: design === 'gold' || design === 'onyx' ? colour : fill, stroke: line, 'stroke-width': .9 }));
     g.append(el('path', { d: 'M-8 -12L-9.5 -22L-4.5 -16.5L0 -24.5L4.5 -16.5L9.5 -22L8 -12Z', fill: gold, stroke: GOLD_LINE, 'stroke-width': .8, 'stroke-linejoin': 'round' }));
-    for (const [cx, cy] of [[-9.5, -22], [0, -24.5], [9.5, -22]]) g.append(el('circle', { cx, cy, r: 1.7, fill: '#fff4c8', stroke: GOLD_LINE, 'stroke-width': .5 }));
+    for (const [cx, cy] of [[-9.5, -22], [0, -24.5], [9.5, -22]]) g.append(el('circle', { cx, cy, r: 1.7, fill: design === 'gold' || design === 'onyx' ? colour : '#fff4c8', stroke: GOLD_LINE, 'stroke-width': .5 }));
   } else if (head === 1) { // gem
     g.append(el('path', { d: 'M-8 -17L-4.5 -22.5L4.5 -22.5L8 -17L0 -7.5Z', fill, stroke: line, 'stroke-width': 1, 'stroke-linejoin': 'round' }));
     g.append(el('path', { d: 'M-8 -17H8M-4.5 -22.5L-2.5 -17L0 -7.5M4.5 -22.5L2.5 -17L0 -7.5M-2.5 -17L0 -22.5L2.5 -17', fill: 'none', stroke: '#ffffff', 'stroke-opacity': .55, 'stroke-width': .7 }));
@@ -222,9 +237,20 @@ function pawn(seat, number, scale = 1) {
   }
   if (head === 0) g.append(el('ellipse', { cx: -2.6, cy: -8.6, rx: 1.8, ry: 1, fill: '#ffffff', opacity: .7 }));
   else g.append(el('ellipse', { cx: head === 1 ? -3.2 : -3.4, cy: head === 1 ? -19.4 : head === 2 ? -17.5 : -17, rx: 2.8, ry: 1.7, fill: '#ffffff', opacity: .8 }));
-  g.append(el('path', { d: 'M-7.5 9C-7.5 4 -4.5 1 -3.5 -3', fill: 'none', stroke: '#ffffff', 'stroke-opacity': .45, 'stroke-width': 1.4, 'stroke-linecap': 'round' }));
+  g.append(el('path', { d: 'M-7.5 9C-7.5 4 -4.5 1 -3.5 -3', fill: 'none', stroke: '#ffffff', 'stroke-opacity': design === 'crystal' ? .85 : .45, 'stroke-width': design === 'crystal' ? 1.8 : 1.4, 'stroke-linecap': 'round' }));
   return g;
 }
+
+/** The four pieces of a set (one of each head, in four colours) for the shop's preview. */
+export function ludoPiecesPreview(design = 'royal') {
+  const previous = ID; ID = 'lp' + (++serial).toString(36) + '-';
+  const svg = el('svg', { viewBox: '-58 -32 116 52', class: 'ludo-pieces-preview', role: 'img', 'aria-label': 'أحجار لودو' });
+  defs(svg);
+  [0, 1, 2, 3].forEach((seat, i) => { const g = el('g', { transform: `translate(${-42 + i * 28} 4)` }); g.append(pawn(seat, i + 1, 1.05, design)); svg.append(g); });
+  ID = previous; return svg;
+}
+const PIECE_SETS = { 'ludo-crystal': 'crystal', 'ludo-gold': 'gold', 'ludo-onyx': 'onyx' };
+const myPieces = () => { try { return PIECE_SETS[globalThis.BS_CAREER?.get?.()?.equipped?.ludoset] || 'royal'; } catch { return 'royal'; } };
 
 /** Sparks where something happened: a capture (in the taker's colour) or a stone home (gold). */
 function burst(layer, x, y, colour, big = false) {
@@ -250,6 +276,7 @@ export function renderLudoBoard(host, state, options = {}) {
   const six=state.players.length===6,P=pt=>six?sixRotate(pt,viewer):rotate(pt,k);
   const k = six?0:turnsFor(g0.corners[viewer] ?? 0), active = Number.isInteger(options.active) ? g0.corners[options.active] : -1;
   host.ludoCleanup?.();
+  const mine = options.pieces || myPieces(); // your own set dresses your pieces only
   ID = 'lb' + (++serial).toString(36) + '-';
   const svg = el('svg', { viewBox: six ? '29 45 542 510' : '-13 -13 626 626', class: 'ludo-svg' + (six ? ' is-six' : ''), role: 'img', 'aria-label': 'لوحة اللودو' });
   defs(svg);
@@ -271,7 +298,7 @@ export function renderLudoBoard(host, state, options = {}) {
     const node = el('g', { class: 'ludo-pawn-at', 'data-seat': s.seat, 'data-token': s.token, transform: `translate(${s.at.x.toFixed(1)} ${s.at.y.toFixed(1)})` });
     const canPick = s.seat === options.active && legal.has(s.token);
     if (canPick) { node.classList.add('can-pick'); node.append(el('circle', { r: six?15:s.where==='yard'?26:21, class: 'ludo-pick-ring', fill: 'none', stroke: '#ffffff', 'stroke-width': 3 })); }
-    node.append(el('g', { class: 'ludo-bob' }, [pawn(g0.corners[s.seat] ?? s.seat, s.token + 1, s.where === 'yard' ? (six ? .85 : 1.3) : s.small || s.squeeze || six ? .72 : 1)]));
+    node.append(el('g', { class: 'ludo-bob' }, [pawn(g0.corners[s.seat] ?? s.seat, s.token + 1, s.where === 'yard' ? (six ? .85 : 1.3) : s.small || s.squeeze || six ? .72 : 1, s.seat === viewer ? mine : 'royal')]));
     if (canPick) {
       const hit = el('circle', { r: six?18:s.where==='yard'?32:26, fill: 'transparent', class: 'ludo-hit', tabindex: 0, role: 'button', 'aria-label': `حرّك الحجر ${s.token + 1}` });
       hit.addEventListener('click', (e) => {if(six&&Number.isFinite(e.clientX)&&Number.isFinite(e.clientY))return; e.stopPropagation(); options.onPick?.(s.token); });

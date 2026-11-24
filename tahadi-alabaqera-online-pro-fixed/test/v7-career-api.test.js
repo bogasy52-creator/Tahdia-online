@@ -25,6 +25,8 @@ test('the server charges the daily offer price once and equips the purchased ite
  const env=environment(),account=await signup(env),token=account.data.token;
  await api(env,'/api/social/career/daily',{},token);
  for(let i=0;i<20;i++)await api(env,'/api/social/career/practice',{id:'offer:'+i,game:'snakes',win:true},token);
+ // the offer rotates daily, so the wallet covers any day's price (33.17 added pricier items to the rotation)
+ const holder=env.BOARD_ROOMS.peek('social:user:playera'),saved=await holder.ctx.storage.get('career');await holder.ctx.storage.put('career',Career.normalize({...saved,coins:5000}));
  const offer=Career.dailyOffer(),before=(await api(env,'/api/social/career',undefined,token)).data.career;
  const bought=await api(env,'/api/social/career/purchase',{id:offer.id,price:0},token);
  assert.equal(bought.response.status,200);assert.equal(bought.data.career.coins,before.coins-offer.price);

@@ -14,7 +14,8 @@ test('the store shows every storefront design once, without retired or duplicate
  // 33.4.0 adds «المجلس», a Baloot table
  // 33.7.0 adds seven Jackaroo boards (لوحات الجاكارو), neon among them for free
  // 33.9.10 adds seven frames, six carrom strikers and six billiards cues (three of them free)
- assert.equal(Career.COLLECTION.length,56);assert.equal(new Set(Career.COLLECTION.map(i=>i.id)).size,56);assert.equal(Career.COLLECTION.filter(i=>i.price===0).length,11);
+ // 33.17.0 adds four Ludo stone sets and four block skins (one of each free)
+ assert.equal(Career.COLLECTION.length,64);assert.equal(new Set(Career.COLLECTION.map(i=>i.id)).size,64);assert.equal(Career.COLLECTION.filter(i=>i.price===0).length,13);
  const h=await createDOM('shop.html');h.context.BS_CAREER={get:()=>Career.normalize({coins:5000}),now:()=>now};await loadAtelier(h);
  const shelf=Career.STOREFRONT.filter(id=>Career.CATALOG.find(i=>i.id===id).source!=='owner');
  assert.equal(h.doc.querySelectorAll('.atelier-product').length,shelf.length);assert.equal(new Set(Career.STOREFRONT).size,Career.STOREFRONT.length);
@@ -25,7 +26,7 @@ test('the store shows every storefront design once, without retired or duplicate
  for(const id of ['pawn-jade','pawn-prism','dice-copper','table-cyber','title-manager','snake-sovereign','move-sovereign'])assert.ok(!h.doc.querySelector('[data-item="'+id+'"]'),id);
 });
 test('all replacement pieces can be bought and equipped without losing old ownership or receipts',()=>{
- let p=Career.normalize({coins:20000,owned:['pawn-jade','snake-plasma'],receipts:['earlier-round']});
+ let p=Career.normalize({coins:30000,owned:['pawn-jade','snake-plasma'],receipts:['earlier-round']});
  for(const item of Career.COLLECTION){const before=p.coins,price=p.owned.includes(item.id)?0:Career.itemPrice(item.id,now);p=Career.purchase(p,item.id,{now,expectedPrice:price});assert.equal(p.coins,before-price);assert.equal(p.equipped[item.type],item.id);const retry=Career.purchase(p,item.id,{now});assert.equal(retry.coins,p.coins);}
  assert.ok(p.owned.includes('pawn-jade'));assert.ok(p.owned.includes('snake-plasma'));assert.ok(p.receipts.includes('earlier-round'));
 });

@@ -22,6 +22,11 @@ const BALL = { 1: '#f4c21b', 2: '#1e4fd6', 3: '#d9262d', 4: '#5b2a8e', 5: '#f279
 const colorOf = (n) => BALL[n > 8 ? n - 8 : n] || '#f7f4ec';
 const SOLIDS = [1, 2, 3, 4, 5, 6, 7], STRIPES = [9, 10, 11, 12, 13, 14, 15];
 
+const SINK_MS = 460;
+/* 33.17.0: the soft roar of balls rolling on the cloth, louder while the table moves faster. */
+const Roll=(()=>{let src=null,gain=null,filt=null,level=0;
+ function ensure(){const c=window.BS_AUDIO?.context?.();if(!c||c.state!=='running')return null;if(!src){try{const len=c.sampleRate*2,buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);let b=0;for(let i=0;i<len;i++){b=(b+0.02*(Math.random()*2-1))/1.02;d[i]=b*3.2;}src=c.createBufferSource();src.buffer=buf;src.loop=true;filt=c.createBiquadFilter();filt.type='lowpass';filt.frequency.value=320;gain=c.createGain();gain.gain.value=0;src.connect(filt).connect(gain).connect(c.destination);src.start();}catch{src=null;return null;}}return c;}
+ return {set(v){const st=window.BS_AUDIO?.getSettings?.()||{};if(st.muted||st.effects===false||document.hidden)v=0;v=Math.max(0,Math.min(1,v));if(v<=0.01&&!src){level=0;return;}const c=ensure();if(!c)return;gain.gain.setTargetAtTime(v*0.12*(st.volume??0.72),c.currentTime,v>level?0.03:0.14);filt.frequency.setTargetAtTime(240+v*460,c.currentTime,0.06);level=v;}};})();
 /* Material impact samples share the site's unlocked, muted audio bus. */
 const Sound=(()=>{const last={},cursor={};
  const names=['ball','rail','cue','pocket'].flatMap(f=>[1,2,3].map(i=>'pool-'+f+'-'+i));
@@ -191,7 +196,7 @@ class TableView {
     tg.putImageData(img, 0, 0);
     g.fillStyle = g.createPattern(tile, 'repeat'); g.fillRect(x0, y0, w, h);
     g.setTransform(...this.m);g.save();g.translate(L*.5,W*.73);if(this.vertical)g.rotate(Math.PI/2);
-    g.textAlign='center';g.fillStyle='#eadab122';g.font='600 3.0px Arial,sans-serif';g.fillText('B O S R A J',0,0);g.font='1.35px Arial,sans-serif';g.fillText('T O U R N A M E N T   C L U B',0,3.5);g.restore();
+    g.textAlign='center';g.fillStyle='#eadab122';g.font='700 3.6px Tajawal,system-ui,sans-serif';g.fillText('لعبة العباقرة',0,0);g.font='600 1.6px Tajawal,system-ui,sans-serif';g.fillText('نادي البلياردو',0,3.4);g.restore();
   }
 
   /* one frame */
@@ -205,17 +210,19 @@ class TableView {
     const now = performance.now();
     // pocket flashes
     g.setTransform(...this.m);
-    this.flash = this.flash.filter((f) => now - f.t < 650);
-    for (const f of this.flash) { const k = (now - f.t) / 650, p = POCKETS[f.p]; g.beginPath(); g.arc(p.x, p.y, 7 + k * 9, 0, Math.PI * 2); g.strokeStyle = `rgba(246,220,150,${0.75 * (1 - k)})`; g.lineWidth = this.px(3 * (1 - k) + 1); g.stroke(); }
+    this.flash = this.flash.filter((f) => now - f.t < 420);
+    for (const f of this.flash) { const k = (now - f.t) / 420, p = POCKETS[f.p]; g.beginPath(); g.arc(p.x, p.y, p.r + 0.6 + k * 3.2, 0, Math.PI * 2); g.strokeStyle = `rgba(255,226,150,${0.55 * (1 - k)})`; g.lineWidth = this.px(2 * (1 - k) + 0.6); g.stroke(); }
     if (aim && guide && cue) this.drawGuide(aim, cue, illegal, ghostOnly);
     // balls: shadows first, then the balls
     const list = [];
     for (let n = 0; n < 16; n++) { const b = n === 0 && placing ? placing.at : this.balls[n]; if (b) list.push([n, b[0], b[1], 1, 1]); }
-    this.sinking = this.sinking.filter((s) => now - s.t < 540);
-    for (const s of this.sinking) { const k = Math.min(1, (now - s.t) / 540), p = POCKETS[s.p]; list.push([s.n, s.x + (p.x - s.x) * k, s.y + (p.y - s.y) * k, 1 - 0.72 * k, Math.max(0,1-k*k)]); }
+    // 33.17.0: a potted ball rolls on into the hole, drops and darkens inside the pocket's mouth
+    this.sinking = this.sinking.filter((s) => now - s.t < SINK_MS);
+    for (const s of this.sinking) { const k = Math.min(1, (now - s.t) / SINK_MS), p = POCKETS[s.p], a = Math.min(1, k / 0.38), roll = 1 - (1 - a) ** 3, drop = Math.max(0, (k - 0.3) / 0.7); list.push([s.n, s.x + (p.x - s.x) * roll, s.y + (p.y - s.y) * roll, 1 - 0.1 * roll - 0.4 * drop * drop, drop > 0.8 ? Math.max(0, 1 - (drop - 0.8) / 0.2) : 1, Math.min(0.9, drop * 1.15), s.p, roll]); }
     g.setTransform(1, 0, 0, 1, 0, 0);
     const [cxs, cys] = this.toScreen(L / 2, W / 2);
-    for (const [, x, y, sc, al] of list) {
+    for (const [, x, y, sc, al, , hole] of list) {
+      if (hole !== undefined) continue; // inside the pocket there is no shadow on the cloth
       const [X, Y] = this.toScreen(x, y), r = R * this.s * sc;
       let dx = X - cxs, dy = Y - cys; const dl = Math.sqrt(dx * dx + dy * dy) || 1; dx /= dl; dy /= dl;
       g.globalAlpha = 0.42 * al; g.fillStyle = '#000'; g.beginPath(); g.ellipse(X + dx * r * 0.28, Y + dy * r * 0.28 + r * 0.1, r * 1.05, r * 0.95, 0, 0, Math.PI * 2); g.fill();
@@ -223,7 +230,14 @@ class TableView {
     g.globalAlpha = 1;
     // Motion streaks follow recorded displacement rather than predicting a shot.
     for(const [n,x,y]of list){const old=this.previous.get(n),point=this.toScreen(x,y);if(!reduced()&&old&&now-old.t<100&&Math.hypot(x-old.x,y-old.y)>R*.35){const from=this.toScreen(old.x,old.y),gradient=g.createLinearGradient(from[0],from[1],point[0],point[1]);gradient.addColorStop(0,'#ffffff00');gradient.addColorStop(1,n===0?'#fff0c03a':colorOf(n)+'35');g.strokeStyle=gradient;g.lineWidth=R*this.s*1.25;g.lineCap='round';g.beginPath();g.moveTo(from[0],from[1]);g.lineTo(point[0],point[1]);g.stroke();}this.previous.set(n,{x,y,t:now});}
-    for (const [n, x, y, sc, al] of list) this.drawBall(n, x, y, sc, al);
+    for (const [n, x, y, sc, al, dark, hole, roll] of list) {
+      if (hole === undefined) { this.drawBall(n, x, y, sc, al); continue; }
+      const p = POCKETS[hole], [PX, PY] = this.toScreen(p.x, p.y), [X, Y] = this.toScreen(x, y), mouth = (p.r + R * (1 - roll) * 1.4) * this.s;
+      g.save(); g.beginPath(); g.arc(PX, PY, mouth, 0, Math.PI * 2); g.clip();
+      this.drawBall(n, x, y, sc, al);
+      if (dark > 0) { g.globalAlpha = dark * al; g.fillStyle = '#020403'; g.beginPath(); g.arc(X, Y, R * this.s * sc * 1.04, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; }
+      g.restore();
+    }
     if (placing) this.drawPlacing(placing);
     if (aim && cue && aim.stick !== false) this.drawCue(cue, aim.dir, aim.pull || 0, aim.alpha ?? 1);
     if (this.loupe && aim && guide && cue && !ghostOnly) this.drawLoupe(cue, aim.dir);
@@ -417,16 +431,18 @@ function stepAnimation(now) {
     else if (e.type === 'pocket') { Sound.pocket(); view.flash.push({ p: e.b, t: now }); try { window.BS_AUDIO?.vibrate?.(18); } catch {} }
   }
   const last = frames.length - 1, f0 = frames[Math.min(i0, last)], f1 = frames[Math.min(i0 + 1, last)];
+  let moving = 0;
   for (let n = 0; n < 16; n++) {
     const p0 = f0[n], p1 = f1[n], prev = view.balls[n];
     let pos = null;
-    if (p0 && p1) pos = [p0[0] + (p1[0] - p0[0]) * k, p0[1] + (p1[1] - p0[1]) * k];
+    if (p0 && p1) { pos = [p0[0] + (p1[0] - p0[0]) * k, p0[1] + (p1[1] - p0[1]) * k]; moving += Math.hypot(p1[0] - p0[0], p1[1] - p0[1]); }
     else if (p0) pos = p0;
     if (!pos && prev) { const pe = a.sim.events.find((e) => e.type === 'pocket' && e.a === n); view.sinking.push({ n, x: prev[0], y: prev[1], p: pe ? pe.b : nearestPocket(prev), t: now }); }
     if (pos && prev) rollAxes(view.axesOf(n), pos[0] - prev[0], pos[1] - prev[1]);
     view.balls[n] = pos;
   }
   renderPocketTray();
+  Roll.set(i0 >= last ? 0 : moving / 9);
   if (i0 >= last) { const done = a.done; ctl.anim = null; done(); return false; }
   return true;
 }
@@ -525,7 +541,8 @@ function renderPocketTray() {
   const box=$('#biPottedBalls');if(!box)return;const balls=ctl.anim?view.balls:ctl.state?.balls;
   if(!balls)return;const potted=Array.from({length:15},(_,i)=>i+1).filter(n=>!balls[n]);
   const key=potted.join(',');if(box.dataset.balls===key)return;box.dataset.balls=key;
-  box.innerHTML=potted.length?potted.map(n=>'<i role="listitem" class="bi-collected-ball '+(n>8?'stripe':'')+'" style="--c:'+colorOf(n)+'" aria-label="الكرة '+n+' دخلت"><b>'+n+'</b></i>').join(''):'<span class="bi-tray-empty">الكرات المدخلة تظهر هنا</span>';
+  const before=new Set((box.dataset.seen||'').split(',').filter(Boolean).map(Number));box.dataset.seen=key;
+  box.innerHTML=potted.length?potted.map(n=>'<i role="listitem" class="bi-collected-ball '+(n>8?'stripe':'')+(before.size||potted.length<3?(before.has(n)?'':' is-new'):'')+'" style="--c:'+colorOf(n)+'" aria-label="الكرة '+n+' دخلت"><b>'+n+'</b></i>').join(''):'<span class="bi-tray-empty">الكرات المدخلة تظهر هنا</span>';
   $('#biPottedCount').textContent=potted.length+' / 15';
 }
 function renderShotContext() {

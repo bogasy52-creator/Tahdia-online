@@ -84,7 +84,7 @@ test('الغرف opens with only the game it was asked for', async () => {
 
 test('the newer games: their pages, art and rules (33.15: «رص البلوكات» took the bridge\'s place)', async () => {
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
-  assert.deepEqual(bundles['blocks.html'], ['assets/css/instant-play-v33-12.css', 'assets/css/new-games-v33-12.css', 'assets/css/blocks-v33-15.css', 'assets/css/game-interaction-v34.css', 'assets/css/table-studio-v33-16.css', 'assets/css/game-craft-v33-16.css']);
+  assert.deepEqual(bundles['blocks.html'], ['assets/css/instant-play-v33-12.css', 'assets/css/new-games-v33-12.css', 'assets/css/blocks-v33-15.css', 'assets/css/block-skins-v33-17.css', 'assets/css/game-interaction-v34.css', 'assets/css/table-studio-v33-16.css', 'assets/css/game-craft-v33-16.css']);
   for (const [page, script, cover] of [['blocks', 'blocks-v33-15.js', 'blocks-cover-v33-15.svg'], ['ten', 'ten-v33-12.js', 'ten-cover-v33-12.svg']]) {
     const html = await read('public/' + page + '.html');
     assert.match(html, /<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">/);

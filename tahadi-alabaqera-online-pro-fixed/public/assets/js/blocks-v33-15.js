@@ -403,7 +403,16 @@
   }
 
   /* ---------------------------------------------------------------- the page */
+  // 33.17.0: the look of the blocks you equipped in the shop (جواهر، نيون، حلاوة، سبائك)
+  const SKINS = { 'blocks-neon': 'neon', 'blocks-candy': 'candy', 'blocks-gold': 'gold' };
+  function dress() {
+    let skin = '';
+    try { skin = SKINS[window.BS_CAREER?.get?.()?.equipped?.blockset] || ''; } catch {}
+    for (const c of Object.values(SKINS)) doc.body.classList.remove('bk-skin-' + c);
+    if (skin) doc.body.classList.add('bk-skin-' + skin);
+  }
   function init() {
+    dress(); addEventListener('bs-career-change', dress);
     let level = LEVELS[store.get('bs-blocks-level')] ? store.get('bs-blocks-level') : 'standard';
     let mode = MODES[store.get('bs-blocks-mode')] ? store.get('bs-blocks-mode') : 'classic';
     const paint = () => {

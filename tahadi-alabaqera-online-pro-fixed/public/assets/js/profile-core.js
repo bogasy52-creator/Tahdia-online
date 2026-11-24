@@ -49,7 +49,7 @@
     {id:'board-lava',type:'board',name:'لوحة البركان',description:'بازلت داكن فوق شقوق تتوهج بالحمم، وسلالم من جمر.',price:480,color:'#ff6a1f'},
     {id:'board-galaxy',type:'board',name:'لوحة المجرّة',description:'خانات ليلية مرصّعة بالنجوم تحت سديم بنفسجي، وسلالم من ضوء.',price:520,color:'#8f7cf0'},
     // 32.0.0: playing cards for the Baloot table (face and back)
-    {id:'deck-classic',type:'deck',name:'كلاسيك بوسراج',description:'ورق عاجي بصور ملكية مرسومة وظهر بنقش السدو الأحمر. الورق المجاني.',price:0,color:'#c4253a'},
+    {id:'deck-classic',type:'deck',name:'كلاسيك العباقرة',description:'ورق عاجي بصور ملكية مرسومة وظهر بنقش السدو الأحمر. الورق المجاني.',price:0,color:'#c4253a'},
     {id:'deck-four',type:'deck',name:'أربعة ألوان',description:'لكل شكل لونه: أحمر وأسود وأزرق وأخضر، فتقرأ يدك أسرع.',price:220,color:'#1f6fd6'},
     {id:'deck-night',type:'deck',name:'ليل المجلس',description:'وجه كحلي برموز فاتحة وظهر ليلي بزخرفة ذهبية.',price:300,color:'#3c4b70'},
     {id:'deck-emerald',type:'deck',name:'الزمرد',description:'ورق عاجي بصور ملكية خضراء وظهر زمردي.',price:360,color:'#178a6a'},
@@ -139,8 +139,17 @@
     {id:'cue-desert',type:'cue',name:'الصحراء',subtitle:'رمل وفيروز',design:'desert',price:300,color:'#e08a4c'},
     {id:'cue-neon',type:'cue',name:'النيون',subtitle:'تضوي سماوي ووردي',design:'neon',price:420,color:'#22d8ff'},
     {id:'cue-dragon',type:'cue',name:'التنين',subtitle:'أحمر وأسود وذهب',design:'dragon',price:580,color:'#d4202e'},
-    {id:'cue-royal',type:'cue',name:'الملكية',subtitle:'أبيض وذهب وبنفسجي',design:'royal',price:780,color:'#a07aff'}
-  ].map(item=>Object.freeze({...item,description:item.type==='frame'?(item.price?'إطار '+item.subtitle+' حول صورتك: في شريطك فوق، وفي ملفك، وفي بطاقتك داخل الألعاب.':'صورتك بدون إطار.'):item.type==='striker'?'دافع '+item.subtitle+' تضرب فيه في الكيرم.':item.type==='cue'?'عصا '+item.subtitle+' على طاولة البلياردو.':item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في الثعبان والسلالم تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
+    {id:'cue-royal',type:'cue',name:'الملكية',subtitle:'أبيض وذهب وبنفسجي',design:'royal',price:780,color:'#a07aff'},
+    // 33.17.0: add-ons for the newest games — your own Ludo pieces, and the look of the blocks
+    {id:'ludo-royal',type:'ludoset',name:'الملكية',subtitle:'تاج وجوهرة ونجمة وكرة بلونك',design:'royal',price:0,color:'#ffd24a'},
+    {id:'ludo-crystal',type:'ludoset',name:'الكريستال',subtitle:'زجاج شفاف يلمع بلونك',design:'crystal',price:240,color:'#bfe9ff'},
+    {id:'ludo-gold',type:'ludoset',name:'الذهب الخالص',subtitle:'ذهب بجواهر بلونك',design:'gold',price:380,color:'#ffcf4a'},
+    {id:'ludo-onyx',type:'ludoset',name:'الأبنوس والفضة',subtitle:'أسود لامع بفضة وحلقة بلونك',design:'onyx',price:520,color:'#2b2b34'},
+    {id:'blocks-jewel',type:'blockset',name:'الجواهر',subtitle:'قطع لامعة بألوان الجواهر',design:'jewel',price:0,color:'#9b4dff'},
+    {id:'blocks-neon',type:'blockset',name:'النيون',subtitle:'حواف مضيئة على أسود',design:'neon',price:200,color:'#3ef0ff'},
+    {id:'blocks-candy',type:'blockset',name:'الحلاوة',subtitle:'ألوان باستيل ولمعة سكر',design:'candy',price:320,color:'#ff9ad5'},
+    {id:'blocks-gold',type:'blockset',name:'السبائك',subtitle:'ذهب بجوهرة بلون القطعة',design:'gold',price:480,color:'#ffd24a'},
+  ].map(item=>Object.freeze({...item,description:item.type==='ludoset'?'أحجار لودو '+item.subtitle+'، تلبسها قطعك أنت في كل مباراة.':item.type==='blockset'?'شكل قطع «رص البلوكات»: '+item.subtitle+'.':item.type==='frame'?(item.price?'إطار '+item.subtitle+' حول صورتك: في شريطك فوق، وفي ملفك، وفي بطاقتك داخل الألعاب.':'صورتك بدون إطار.'):item.type==='striker'?'دافع '+item.subtitle+' تضرب فيه في الكيرم.':item.type==='cue'?'عصا '+item.subtitle+' على طاولة البلياردو.':item.type==='stage'?'هوية ألوان لقوائم الألعاب وحواف الساحات وشريط معلوماتك، تعمل في الألعاب كلها.':item.id==='pawn-character'?'في الثعبان والسلالم تمشي شخصيتك المفعّلة من المتجر بدل الحجر، ويشوفها كل اللاعبين. في الجاكارو يبقى الحجر الكلاسيكي.':item.type==='pawn'?'حجر مجسّم بتصميم '+item.name+'؛ يتلوّن بلون اللاعب ويظهر في الجاكارو.':item.type==='table'?'طاولة بلوت كاملة: '+item.subtitle+'.':item.type==='dice'?'نرد '+item.subtitle+' يظهر في ألعاب النرد واللوحات.':item.type==='trail'?'مؤثر '+item.subtitle+' لحركة الأحجار في الجاكارو.':item.type==='victory'?'احتفال '+item.subtitle+' عند فوزك، يحترم الكتم وتقليل الحركة.':'لقب '+item.name+' يظهر في ملفك وشاشة الفوز.',rarity:item.price>=450?'legendary':item.price>=180?'rare':'common',retired:false})));
   // 31.0.0 — reactions bought with game coins: animated emoji, ready-made
   // phrases and board-wide moves. They are owned, never equipped, and the
   // first eight keep the ids older rooms already relay (`legacy`).
@@ -263,6 +272,8 @@
   // retired pieces and no second copy of an identical shape or material.
   const STOREFRONT=Object.freeze([
     ...SIGNATURE_COLLECTION.map(i=>i.id),
+    'ludo-royal','ludo-crystal','ludo-gold','ludo-onyx',
+    'blocks-jewel','blocks-neon','blocks-candy','blocks-gold',
     'frame-none','frame-emerald','frame-gold','frame-neon','frame-diamond','frame-flame','frame-crown',
     'striker-classic','striker-ruby','striker-ocean','striker-gold','striker-galaxy','striker-falcon',
     'cue-classic','cue-ebony','cue-desert','cue-neon','cue-dragon','cue-royal',
@@ -281,7 +292,7 @@
   ]);
   const isReaction=item=>Boolean(item)&&REACTION_TYPES.includes(item.type);
   const reactionOf=value=>{const id=LEGACY_REACTIONS[value]||value;return REACTIONS.find(item=>item.id===id)||null;};
-  const SLOTS=['character','pawn','dice','board','table','jboard','deck','snake','trail','victory','title','stage','frame','striker','cue'];
+  const SLOTS=['character','pawn','dice','board','table','jboard','deck','snake','trail','victory','title','stage','frame','striker','cue','ludoset','blockset'];
   const BUNDLES=Object.freeze([
     {id:'club-banter',name:'جلسة طقطقة',description:'ميت ضحك، طقطقة، كانت قريبة وتحية الحلبة.',color:'#ffd166',items:['emote-wheeze','emote-troll','phrase-nice-try','move-wave']},
     {id:'club-spotlight',name:'دخول البطل',description:'هوية الشفق، تحت الأضواء وسلام يا بطل.',color:'#bda0f4',items:['stage-aurora','move-spotlight','move-salute']},
@@ -377,7 +388,7 @@
     raw=raw&&typeof raw==='object'?raw:{};
     const free=CATALOG.filter(i=>i.price===0&&!i.source).map(i=>i.id);
     const owned=[...new Set([...free,...(Array.isArray(raw.owned)?raw.owned:[])])].filter(id=>CATALOG.some(i=>i.id===id));
-    const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',jboard:'jboard-neon',deck:'deck-classic',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player',stage:'stage-club',frame:'frame-none',striker:'striker-classic',cue:'cue-classic'};
+    const equipped={character:'character-fox',pawn:'pawn-classic',dice:'dice-ivory',board:'board-forest',table:'table-walnut',jboard:'jboard-neon',deck:'deck-classic',snake:'snake-wild',trail:'trail-none',victory:'victory-classic',title:'title-player',stage:'stage-club',frame:'frame-none',striker:'striker-classic',cue:'cue-classic',ludoset:'ludo-royal',blockset:'blocks-jewel'};
     // 33.7.0: a table that used to dress the Jackaroo board brings its Jackaroo board along
     for(const [table,board] of [['table-royal','jboard-royal'],['table-majlis','jboard-majlis'],['table-cyber','jboard-carbon']])if(owned.includes(table)&&!owned.includes(board))owned.push(board);
     for(const [type,id] of Object.entries(raw.equipped||{}))if(SLOTS.includes(type)&&owned.includes(id)&&CATALOG.some(i=>i.id===id&&i.type===type))equipped[type]=id;

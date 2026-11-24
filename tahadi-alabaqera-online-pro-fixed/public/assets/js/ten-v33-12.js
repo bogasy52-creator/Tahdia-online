@@ -32,6 +32,7 @@
   const myName = () => String(link?.name || store.get('bs-player-name-v33') || store.get('bs_player_name') || 'أنت').trim().slice(0, 16) || 'أنت';
   const secs = (ms) => (ms / 1000).toFixed(2);
 
+  const TICK_HEARD_MS = 3000;
   /* ---------------------------------------------------------------- sound */
   let audio = null, muted = store.get('bs-new-games-mute') === '1';
   function tone(freq, ms, type = 'sine', gain = 0.06, when = 0) {
@@ -115,7 +116,8 @@
     sounds.go();
     count.textContent = '0';
     let ticks = 0;
-    const tick = () => { ticks++; sounds.tick(); if (plan.tick !== 1000 && plan.hideAt <= 1000 && !reduce && ticks > 1 && game.random() < 0.35) { count.classList.add('is-fake'); count.classList.remove('is-hidden'); count.textContent = String(ticks); after(220, () => { count.classList.add('is-hidden'); count.classList.remove('is-fake'); }); } ticker = setTimeout(tick, plan.tick); };
+    // 33.17.0: the clock is heard for the first 3 seconds only; after that you count by feel
+    const tick = () => { ticks++; if (performance.now() - game.startedAt < TICK_HEARD_MS) sounds.tick(); if (plan.tick !== 1000 && plan.hideAt <= 1000 && !reduce && ticks > 1 && game.random() < 0.35) { count.classList.add('is-fake'); count.classList.remove('is-hidden'); count.textContent = String(ticks); after(220, () => { count.classList.add('is-hidden'); count.classList.remove('is-fake'); }); } ticker = setTimeout(tick, plan.tick); };
     ticker = setTimeout(tick, plan.tick);
     const paint = () => {
       const t = performance.now() - game.startedAt;

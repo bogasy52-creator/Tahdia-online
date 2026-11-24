@@ -68,7 +68,7 @@ test('board reactions use rendered foley instead of oscillator beeps', async () 
   for(const name of names){
     const {api,started,played}=await loadAudio({muted:false,effects:true,timer:true,volume:1});
     api.play(name);
-    assert.ok(played.some(src=>src.includes('/arena-v9/')||src.includes('/dice-v133/')),`${name} uses a rendered foley sample`);assert.equal(started.length,0,'board effects must not fall back to electronic oscillator beeps');
+    assert.ok(played.some(src=>src.includes('/arena-v9/')||src.includes('/dice-v33-17/')),`${name} uses a rendered foley sample`);assert.equal(started.length,0,'board effects must not fall back to electronic oscillator beeps');
   }
 });
 

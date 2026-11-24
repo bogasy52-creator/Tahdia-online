@@ -1,0 +1,17 @@
+/* 33.17.0: the shop in the royal look */
+:is(html,#x) body.shop31{--sx-bg:#1c0848;--sx-panel:#2d1170;--sx-panel-2:#24095e;--sx-line:#5b3aa8;--sx-muted:#d9c8ff;--sx-ink:#fff;--sx-green:#ffd24a;background:radial-gradient(120% 70% at 50% 0,#3a1590 0,#1c0848 45%,#0a0322 100%) fixed!important}
+html body.shop31 :is(.sx-top,.atelier-header){background:linear-gradient(180deg,#24095ef2,#1c0848e6)!important;border-color:#8a5cf055!important}
+html body.shop31 :is(.sx-card,.atelier-product){background:linear-gradient(180deg,#2d1170,#1b0846)!important;border-color:#8a5cf055!important}
+html body.shop31 :is(.sx-card,.atelier-product).is-equipped{border-color:#ffd24a!important;box-shadow:0 0 0 1px #ffd24a,0 10px 24px #0007!important}
+html body.shop31 .sx-hero{background:radial-gradient(90% 80% at 50% 20%,#5a26b8,#2d1170 55%,#1b0846)!important;border-color:#ffd24a66!important}
+html body.shop31 :is(.sx-rail button,.sx-views button,.sx-search,.sx-sort select){background:#ffffff10!important;border-color:#ffffff24!important;color:#fff!important}
+html body.shop31 :is(.sx-rail button,.sx-views button):is(.active,[aria-pressed=true]){background:linear-gradient(180deg,#ffe27a,#e7a51e)!important;color:#3a1d00!important;border-color:#ffd24a!important}
+html body.shop31 .sx-views button.active{background:transparent!important;color:#ffe38a!important;border-color:transparent!important;box-shadow:inset 0 -3px 0 #ffd24a!important}
+html body.shop31 :is(.sx-home,.sx-bag,.sx-see-all,.atelier-add,.sx-add,.atelier-button.sx-price){background:linear-gradient(180deg,#3d1a94,#24095e)!important;border-color:#8a5cf0!important;color:#fff!important}
+html body.shop31 .sx-card-art{background:radial-gradient(90% 80% at 50% 30%,#4a1fa8,#24095e 60%,#160540)!important}
+html body.shop31 .sx-rail{background:transparent!important}
+html body.shop31 #collectionSearch{background:transparent!important;color:#fff!important}
+html body.shop31 :is(.atelier-button.sx-price.is-owned,.atelier-owned-tag.sx-owned){color:#ffe38a!important;border-color:#ffd24a88!important}
+html body.shop31 .atelier-owned-tag.sx-owned{background:#3a1d00cc!important}
+html body.shop31 .sx-button.primary{background:linear-gradient(180deg,#ffe27a,#e7a51e)!important;color:#3a1d00!important;border-color:#ffd24a!important}
+html body.shop31 .sx-button.primary:disabled{filter:saturate(.6) brightness(.85)}
