@@ -1,1 +1,1 @@
-export {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './classic-six-layout-v33-11-7.js?v=33.13.0';
+export {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './classic-six-layout-v33-11-7.js?v=33.14.0';

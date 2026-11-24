@@ -6,7 +6,7 @@ export const PARTY_MODES=Object.freeze({
  zahra:rows(['classic','الكلاسيكي · ستة لاعبين'],['quick','سريع · أول حجر']),
  ludo:rows(['ludo','الكلاسيكي'],['ludo-quick','سريع · أول حجر']),
  chaos:rows(['classic','كلاسيكي'],['stack','سحب متراكم'],['quick','جولة سريعة']),
- pegs:rows(['classic','24 قطعة · 6 ألوان'],['large','48 قطعة · 8 ألوان'],['teams','فرق'],['race','سباق الذاكرة'],['race-large','السباق الكبير']),
+ pegs:rows(['classic','24 قطعة · 6 ألوان'],['large','48 قطعة · 8 ألوان'],['teams','فرق'],['race','سباق الذاكرة'],['race-large','السباق الكبير'],['bluff','خدعة الألوان'],['vault','خزنة الألوان']),
  tanks:rows(['ffa','الكل ضد الكل'],['teams','فريقان']),
  hockey:rows(['classic','أول 5 أهداف'],['quick','أول 3 أهداف'],['long','أول 7 أهداف']),
  serpent:rows(['timed','سباق النقاط'],['survival','البقاء']),

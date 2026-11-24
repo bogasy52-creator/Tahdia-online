@@ -1,4 +1,4 @@
-import {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.13.0';
+import {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.14.0';
 /* Tahdia 33.10.5 — «لودو»: the classic cross board, drawn as one SVG.
    The four yards sit in the corners (red, green, blue, yellow, clockwise from the top left); each
    colour starts on the coloured square next to its yard, walks clockwise round 51 squares, turns at
@@ -185,9 +185,12 @@ function drawSix(P,active,viewer){
   if(on)plate.append(el('rect',{x:-43,y:-43,width:86,height:86,rx:18,fill:'none',stroke:'#fff2b0','stroke-width':4,class:'lw-yard-glow'}));
   plate.append(el('rect',{x:-40,y:-40,width:80,height:80,rx:16,fill:'url(#'+ID+'y'+seat+')',stroke:'url(#'+ID+'gold)','stroke-width':2.6}));
   plate.append(el('rect',{x:-39,y:-39,width:78,height:78,rx:15,fill:'url(#'+ID+'lattice)'}));
-  plate.append(el('rect',{x:-31,y:-31,width:62,height:62,rx:14,fill:DEEP[seat],'fill-opacity':.3,stroke:'url(#'+ID+'gold)','stroke-width':1.8}));g.append(plate);
+  plate.append(el('rect',{x:-31,y:-31,width:62,height:62,rx:14,fill:DEEP[seat],'fill-opacity':.3,stroke:'url(#'+ID+'gold)','stroke-width':1.8}));crown(plate,0,-34,.38);laurel(plate,-35,0,.32,false);laurel(plate,35,0,.32,true);g.append(plate);
   for(const slot of yard.slots){const q=P(slot);g.append(el('ellipse',{cx:q.x,cy:q.y+10,rx:11.5,ry:4.4,fill:DEEP[seat],'fill-opacity':.45,stroke:'#ffd667','stroke-width':1.4}));}});
  SIX_LANES.forEach((lane,seat)=>{const a=sixAngle(seat),left=P({x:300+Math.cos(a-.5)*64,y:300+Math.sin(a-.5)*64}),right=P({x:300+Math.cos(a+.5)*64,y:300+Math.sin(a+.5)*64});g.append(el('polygon',{points:`300,300 ${left.x},${left.y} ${right.x},${right.y}`,fill:'url(#'+ID+'c'+seat+')',stroke:'url(#'+ID+'gold)','stroke-width':1.5,'stroke-linejoin':'round','data-finish':seat}));});
+ // A continuous bed joins all 78 steps, including the six bends between arms.
+ const route=SIX_TRACK.map(p=>P(p));g.append(el('polyline',{points:[...route,route[0]].map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'#8b5d25','stroke-width':29,'stroke-linejoin':'round','pointer-events':'none'}));g.append(el('polyline',{points:[...route,route[0]].map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'url(#'+ID+'gold)','stroke-width':27,'stroke-linejoin':'round','data-route-rail':''}));
+ SIX_LANES.forEach((lane,seat)=>{const a=sixAngle(seat),gate=SIX_TRACK[(seat*13+76)%78],end={x:300+Math.cos(a)*55,y:300+Math.sin(a)*55};g.append(el('polyline',{points:[gate,...lane,end].map(p=>P(p)).map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'url(#'+ID+'t'+seat+')','stroke-width':25,'stroke-linejoin':'round','data-home-rail':seat}));});
  SIX_TRACK.forEach((p,i)=>{const seat=i%13===0?i/13:-1,gate=(i+2)%13===0?((i+2)/13)%6:-1,q=square(p,seat>=0?'url(#'+ID+'t'+seat+')':gate>=0?'url(#'+ID+'t'+gate+')':'url(#'+ID+'tile)',{'data-track':i});if(seat>=0)star(g,q.x,q.y,8,'#ffffff','#00000033');else if(i%13===8)star(g,q.x,q.y,8,'#f1dc9f','#c39443');});
  SIX_LANES.forEach((lane,seat)=>lane.forEach((p,h)=>square(p,'url(#'+ID+'t'+seat+')',{'data-home':seat+':'+h})));
  medallion(g,34,true);return g;

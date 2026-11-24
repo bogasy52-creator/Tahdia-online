@@ -244,8 +244,8 @@
         copy.append(codeButton);
         const share=button('gm33-share','مشاركة',async()=>{
           const url=root.location.origin+(roomUrl(game,model.code)||root.location.pathname+'?room='+model.code);
-          const text='تعال العب '+(title||'معي')+' في بوسراج — رمز الغرفة '+model.code;
-          try{if(navigator.share){await navigator.share({title:'بوسراج',text,url});return;}}catch{return;}
+          const text='تعال العب '+(title||'معي')+' في لعبة العباقرة — رمز الغرفة '+model.code;
+          try{if(navigator.share){await navigator.share({title:'لعبة العباقرة',text,url});return;}}catch{return;}
           try{await navigator.clipboard.writeText(text+'\n'+url);toast('نسخنا رابط الدعوة');}catch{toast(url);}
         });
         const title=make('div','gm33-lobby-title');title.append(make('h2',null,model.title||'غرفتك جاهزة'),make('p',null,model.note||'أرسل الرمز لأصحابك. أي رمز ينكتب في أي لعبة يوصلهم هنا.'));

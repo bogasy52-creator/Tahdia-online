@@ -3,7 +3,7 @@ import {pegsDieFace,pegsDiePalette} from './presentation.js?v=33.11.1';
    room keeps the colours and sends each step), against the computer, and friends on one phone. The
    board is the 3D table (stage3d.js) wherever WebGL runs, and the flat one (board.js) everywhere else;
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
-import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.11.1';
+import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.14.0';
 import { createPegsBoard } from './board.js?v=33.11.7';
 import { createTable } from '../board-table-v33.js?v=33.11.7';
 import { guardPegs } from './guard.js?v=33.13.0';
@@ -578,7 +578,12 @@ function finish() {
 }
 
 /* ---------- online ---------- */
+function openColorRoom(next){
+  if(!['bluff','vault'].includes(next?.state?.mode||next?.variant))return false;
+  const target=new URL(location.href);target.pathname='/colorbluff';target.searchParams.set('room',next.code);location.replace(target.pathname+target.search+target.hash);return true;
+}
 async function apply(next, { animate, signal } = {}) {
+  if(openColorRoom(next))return;
   if(signal?.aborted)return;
   if(ctl.mode==='online'&&ctl.match===(next.startedAt||0)&&next.state?.seq<ctl.shownSeq)return;
   room = next;ctl.raceState=null;
@@ -620,7 +625,7 @@ try {
     roomNote: 'أنشئ غرفة وارسل الرمز للربع، من 2 إلى 6 لاعبين.',
     lobbyNote: (next, isPublic) => (isPublic ? 'تبدأ بعد العد.' : 'أرسل الرمز للربع. تبدأ إذا ضغطت «ابدأ».'),
     apply,
-    onLobby: () => { if (!$('pegsGame').hidden) showMenu(); setMode('online'); },
+    onLobby: next => { if(openColorRoom(next))return;if (!$('pegsGame').hidden) showMenu(); setMode('online'); },
     onMenu: () => { if (!$('pegsGame').hidden) showMenu(); },
     onResync: () => {ctl.gen++;tweens.clear();clearTimeout(ctl.aiTimer);resetFx();ctl.busy=false;ctl.waiting=false;ctl.pendingPeg=null;ctl.look=false;dieStop();},
     onStatus: (status) => {ctl.connected=status.online;const node=$('pegsNetwork');if(node){node.hidden=Boolean(status.online)||ctl.mode!=='online';node.textContent=status.text||'';}if(ctl.running)renderAll();},

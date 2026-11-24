@@ -1,3 +1,4 @@
+import {isColorState,publicColorTable} from '../public/assets/js/engines/color-tables-v33-14.js';
 import {poolEntryAmount,reservePoolEntry,settlePoolEntry} from './billiards/stakes.js';
 import {publicPegsRace,advancePegsRace} from '../public/assets/js/engines/pegs-race-engine.js';
 import {TournamentRoom,cleanTournamentLink,reportTournament} from './competition/tournament-room.js';
@@ -47,7 +48,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.13.0';
+const RELEASE='33.14.1';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -1816,7 +1817,7 @@ export class BoardRoom extends DurableObject {
     const partyLink=game==='baloot'?null:cleanPartyLink(body.party);
     // 33.0.0: a room takes as many as come (up to the game's table); a group room
     // still opens a table sized for exactly its players.
-    const tableSeats=partyLink&&!['zahra','jackaroo'].includes(game)?null:chosenSeats(game,body.seats,variant);
+    const tableSeats=partyLink&&body.seats===undefined&&!['zahra','jackaroo'].includes(game)?null:chosenSeats(game,body.seats,variant);
     const playerLimit=game==='baloot'?4:partyLink?(game==='jackaroo'?(Number(body.playerLimit)===6?6:4):Math.min(MAX_SEATS[game],Math.max(2,tableSeats||Number(body.playerLimit)||2))):body.publicMatch===true&&tableSeats?tableSeats:MAX_SEATS[game];
     const now=Date.now(),room={code:body.code,hostKey:body.hostKey,game,variant,playerLimit:seatLimit(game,variant,playerLimit),createdAt:now,updatedAt:now,expiresAt:now+24*60*60*1000,status:'lobby',players:{},order:[],state:null,pendingRoll:null,turnDeadline:null,version:0};
     // A public table (Baloot quick, or «العب الحين») starts by itself after the lobby countdown.
@@ -1924,6 +1925,7 @@ export class BoardRoom extends DurableObject {
   }
   // Jackaroo hands and deck stay private: each player sees only their own cards.
   maskGameState(source, playerId) {
+    if(this.room.game==='pegs'&&isColorState(source))return publicColorTable(source,this.playerIndex(playerId));
     if(isPegsRaceTable(this.room))return publicPegsRace(source,this.playerIndex(playerId));
     if (isJewelsRaceTable(this.room)) return publicJewelsRace(source, this.playerIndex(playerId));
     const state = structuredClone(source);
@@ -2076,7 +2078,7 @@ export class BoardRoom extends DurableObject {
       // 33.9.0: a computer player still on turn (billiards plays a few shots at a time) goes on right after the animation
       let ms = person?.bot ? 700 : person && !person.connected ? TABLE_TURN_MS.away : this.room.publicMatch ? TABLE_TURN_MS.quick : TABLE_TURN_MS.room;
       // 33.10.1: a roll or a pawn in «شطرنج الذاكرة» is one tap, so the clock is shorter
-      if (this.room.game === 'pegs' && !person?.bot) ms = Math.min(ms, 20_000);
+      if (this.room.game === 'pegs' && !person?.bot) ms = Math.min(ms, isColorState(this.room.state)?10_000:20_000);
       this.room.turnTotal = ms;
       this.room.turnDeadline = Date.now() + stepsTime(this.room, steps) + ms;
     }
@@ -2333,7 +2335,7 @@ export class BoardRoom extends DurableObject {
       }
       if (this.room.status !== "playing" || !this.room.state) return this.sendError(ws, "المباراة غير نشطة");
       const independentJewels = isJewelsRaceTable(this.room) && ['jewels_swap','jewels_booster','jewels_finish'].includes(msg.type)||isPegsRaceTable(this.room)&&['pegs_roll','pegs_pick','pegs_peek'].includes(msg.type);
-      if(!independentJewels&&['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank','pool_shot','jewels_swap','jewels_booster','carrom_shot','pegs_roll','pegs_pick','pegs_peek'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
+      if(!independentJewels&&['roll','snakes_choose','jackaroo_play','jackaroo_burn_all','ludo_move','dice_roll','dice_bank','pool_shot','jewels_swap','jewels_booster','carrom_shot','pegs_roll','pegs_pick','pegs_peek','color_claim','color_answer','color_roll','color_pick','color_bank','color_continue'].includes(msg.type)&&msg.expectedVersion!==this.room.version)return this.sendError(ws,'تغيرت حالة الجولة — انتظر التحديث ثم حاول');
       if (TABLE_GAMES.includes(this.room.game)) {
         let steps;
         try { steps = playerMove(this.room, this.playerIndex(player.id), msg, secureUnit, () => this.randomDie()); }

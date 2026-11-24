@@ -702,5 +702,13 @@
     "assets/css/instant-play-v33-12.css",
     "assets/css/new-games-v33-12.css",
     "assets/css/game-interaction-v34.css"
+  ],
+  "colorbluff.html": [
+    "assets/css/platform.css",
+    "assets/css/game-interaction-v34.css",
+    "assets/css/game-menu-v33.css",
+    "assets/css/cosmetics.css",
+    "assets/css/profile-pro-v33-9-4.css",
+    "assets/css/color-tables-v33-14.css"
   ]
 }

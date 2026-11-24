@@ -1,3 +1,4 @@
+import {isColorState,createColorTable,playColorTable,colorTimeout,chooseColorMove} from '../../public/assets/js/engines/color-tables-v33-14.js';
 // Tahdia 33.0.0 — the board tables (الثعبان والسلالم، الزهرة، جاكارو، تحدي النرد، والبلياردو من 33.9.0)
 // inside the BoardRoom Durable Object.
 // - A table starts with whoever is in the room. Seats nobody took are given to
@@ -68,7 +69,7 @@ export function pickBotLevel(rng = Math.random) {
 }
 
 // 33.4.0: snakes & ladders lets you pick the table size: 2, 3 or 4 players
-export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], zahra:[4,6],jackaroo:[4,6], pegs: [2, 3, 4, 5, 6], ludo: [2, 3, 4, 6] });
+export const TABLE_SIZES = Object.freeze({ snakes: [2, 3, 4], dice:[2,3,4,5,6,7,8,9,10], zahra:[4,6],jackaroo:[4,6], pegs: [2, 3, 4, 5, 6], ludo: [2, 3, 4, 6] });
 /** A table size the player picked, when this game offers one; otherwise null. */
 export function chosenSeats(game, value, variant = null) {
   const n = Number(value);
@@ -130,7 +131,7 @@ function createState(game, names, variant, rng, now=Date.now()) {
   if (game === 'billiards') return createPoolGame(names, { rng, first: rng() < 0.5 ? 0 : 1 });
   if (game === 'jewels') return createJewelsRace(names, { rng,now });
   if (game === 'carrom') return createCarromDuel(names, { rng, first: rng() < 0.5 ? 0 : 1 });
-  if (game === 'pegs') { if(variant==='race'||variant==='race-large')return createPegsRace(names,{rng,now,...pegsOptions(variant)});const g = createPegsGame(names, { rng, now,...pegsOptions(variant) }); g.salt = Math.floor(rng() * 1e6); return g; }
+  if (game === 'pegs') { if(['bluff','vault'].includes(variant))return createColorTable(names,{mode:variant,rng,now});if(variant==='race'||variant==='race-large')return createPegsRace(names,{rng,now,...pegsOptions(variant)});const g = createPegsGame(names, { rng, now,...pegsOptions(variant) }); g.salt = Math.floor(rng() * 1e6); return g; }
   return createRaceDiceGame(names, DICE_TARGET);
 }
 
@@ -153,7 +154,7 @@ export function recordStep(room, steps) {
   steps.list.push({ version: room.version, state: structuredClone(room.state), pendingRoll: room.pendingRoll ?? null });
   if (steps.list.length > MAX_STEPS) steps.list.splice(0, steps.list.length - MAX_STEPS);
 }
-export const stepsTime = (room, steps) => (isJewelsRaceTable(room)||isPegsRaceTable(room))?0:room.game==='snakes'
+export const stepsTime = (room, steps) => isColorState(room.state)?(steps?.list||[]).reduce((n,x)=>n+(x.state.last?.ms||0),0): (isJewelsRaceTable(room)||isPegsRaceTable(room))?0:room.game==='snakes'
   ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.pendingChoice?650:snakesTurnDisplayMs(step.state?.lastEvent)),0)
   // a billiards shot takes as long as its balls roll, and a moment to read what happened
   : room.game==='jewels' ? (steps?.list||[]).reduce((total,step)=>total+(step.state?.last?jewelsMoveMs(step.state.last):300),0)
@@ -257,6 +258,7 @@ export function botTurn(room, steps, rng, roll = rollWith(rng)) {
     catch { room.state = carromTimeout(s); }
     recordStep(room, steps);
   } else if (room.game === 'pegs') {
+    if(isColorState(s)){room.state=playColorTable(s,seat,chooseColorMove(s,level,rng),{rng,now:Math.max(Date.now(),s.lookUntil)});recordStep(room,steps);return true;}
     const move = choosePegsMove(s, level, rng);
     try { room.state = move.type === 'roll' ? rollPegs(s, seat, rng) : pickPegs(s, seat, move.peg, rng); }
     catch { room.state = pegsTimeout(s, rng); }
@@ -308,6 +310,7 @@ export function playerMove(room, seat, msg, rng, roll = rollWith(rng), now=Date.
   }
   if (seat !== seatOf(room)) throw new Error('wrong_turn');
   const steps = beginSteps(room);
+  if(isColorState(room.state)){room.state=playColorTable(room.state,seat,msg,{rng,now});recordStep(room,steps);runBots(room,steps,rng,roll);return steps;}
   if (room.game === 'snakes') {
     if(room.state.variant==='choice'){
       if(msg.power)throw Error('power_unavailable');
@@ -415,7 +418,7 @@ export function timeoutMove(room, rng, roll = rollWith(rng), now=Date.now()) {
     else { room.state = carromTimeout(s); recordStep(room, steps); }
   } else if (room.game === 'pegs') {
     if (seatIsBot(room, seat)) { botTurn(room, steps, rng, roll); }
-    else { room.state = pegsTimeout(s, rng); recordStep(room, steps); }
+    else { room.state = isColorState(s)?colorTimeout(s,{rng}):pegsTimeout(s, rng); recordStep(room, steps); }
   } else {
     room.state = s.turnTotal > 0 ? bankRaceDice(s) : rollRaceDice(s, roll());
     trimDice(room);
@@ -445,6 +448,6 @@ export function seatProgress(room, seat) {
   if (room.game === 'billiards') return poolProgress(room.state, seat);
   if (room.game === 'jewels') return jewelsProgress(room.state, seat);
   if (room.game === 'carrom') return carromProgress(room.state, seat);
-  if (room.game === 'pegs') return pegsProgress(room.state, seat);
+  if (room.game === 'pegs') return isColorState(room.state)?Number(sp.score)||0:pegsProgress(room.state, seat);
   return Number(sp.score) || 0;
 }

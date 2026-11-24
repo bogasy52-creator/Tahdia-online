@@ -1,10 +1,10 @@
 import {drawSymbol} from './symbols.js?v=33.11.1';
-import {PEG_SYMBOLS} from '../engines/pegs-engine.js?v=33.11.1';
+import {PEG_SYMBOLS} from '../engines/pegs-engine.js?v=33.14.0';
 /* Tahdia 33.10.1 — «شطرنج الذاكرة»: the round wooden board drawn on a canvas, seen from the table.
    Twenty-four beech pawns stand in their holes; a pawn that is lifted and tipped shows the colour
    painted under its foot. The page tells each pawn what to do (lift, tip, shake, fly) and this file
    only draws: it never knows a colour it was not told to show. */
-import { PEG_COLORS, PEG_HOLES, pegsHoles } from '../engines/pegs-engine.js?v=33.11.1';
+import { PEG_COLORS, PEG_HOLES, pegsHoles } from '../engines/pegs-engine.js?v=33.14.0';
 
 import {nearestPegsTarget} from './targets.js';
 let TILT = 0.62; // how flat the board looks (1 = seen from straight above); set by the room the board has

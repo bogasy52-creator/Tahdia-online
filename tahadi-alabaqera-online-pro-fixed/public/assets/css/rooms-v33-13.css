@@ -35,3 +35,6 @@ body.party-app .party-primary:active{transform:translateY(2px);box-shadow:0 2px 
 /* the room: inviting comes first */
 body.party-app .party-room-actions #invite,body.party-app .party-room-actions #share{min-height:52px;font-size:16px}
 @media(prefers-reduced-motion:reduce){.rm-modes button,.rm-game{transition:none}}
+
+/* 33.14.1: choose first; create once after the visible mode and seat count. */
+.rm-picked{display:grid;grid-template-columns:56px minmax(0,1fr);align-items:center;gap:12px;padding:16px;border-radius:22px}.rm-picked>img{width:56px;height:56px;object-fit:cover;border-radius:13px}.rm-picked>span{min-width:0}.rm-quick-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;grid-column:1/-1}.rm-quick-fields label{display:grid;align-content:start;gap:6px;min-width:0;color:#f4dfbb;font-size:13px}.rm-quick-fields select{width:100%;min-width:0;min-height:48px;padding:8px 10px;border:1px solid #ad85bc;border-radius:12px;background:#2b163b;color:#fff;font:700 14px Tajawal,system-ui}.rm-quick-fields small{font-size:10px;color:#c5abcf}.rm-picked>.rm-quick-note{grid-column:1/-1;margin:0;font-size:12px;line-height:1.8;color:#d8c3e5}.rm-picked>button{grid-column:1/-1;width:100%;min-height:48px}.rm-quick-fields select:disabled{opacity:.7}.rm-picked>button:disabled{opacity:.6;cursor:wait}

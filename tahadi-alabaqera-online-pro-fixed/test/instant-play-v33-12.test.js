@@ -134,7 +134,7 @@ test('a group room plays the new games on their own pages, the same seed for eve
 test('home: the library in order, the two new games, the cards fit, and the games move', async () => {
   const home = await read('public/index.html');
   const order = [...home.matchAll(/<a href="([^"]+)" class="home-game/g)].map((m) => m[1]);
-  assert.equal(order.length, 26);
+  assert.equal(order.length, 28);
   assert.deepEqual(order.slice(0, 7), ['/ludo', '/bridge', '/ten', '/jackaroo', '/baloot', '/uno', '/pegs']);
   assert.equal(order.at(-1), '/party');
   assert.doesNotMatch(home, /table-feature/, 'the two wide table cards spilled off the phone');

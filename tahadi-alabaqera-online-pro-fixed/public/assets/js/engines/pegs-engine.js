@@ -23,7 +23,7 @@ export function pegsHoles(large=false){
 }
 export const PEG_HOLES=Object.freeze(pegsHoles());
 export const PEG_SYMBOLS=Object.freeze(['triangle','star','plus','diamond','circle','square','hexagon','moon']);
-export const PEG_VARIANTS=Object.freeze(['classic','large','teams','race','race-large']);
+export const PEG_VARIANTS=Object.freeze(['classic','large','teams','race','race-large','bluff','vault']);
 export const pegsOptions=variant=>({large:['large','teams','race-large'].includes(variant),teams:variant==='teams'});
 
 

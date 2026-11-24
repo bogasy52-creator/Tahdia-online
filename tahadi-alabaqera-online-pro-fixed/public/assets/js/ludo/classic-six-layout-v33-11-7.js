@@ -2,7 +2,7 @@
 // 33.13.0: the yards sit nearer the arms (radius 210, not 239), so the board is drawn a quarter larger.
 export const SIX_CELL=26;
 const center={x:300,y:300},sector=Math.PI/3,angle=s=>s*sector-2*Math.PI/3;
-const inner=SIX_CELL*(Math.sqrt(3)+(1+Math.sqrt(3))/2),tip=inner+5*SIX_CELL;
+const inner=SIX_CELL*(Math.sqrt(3)+1),tip=inner+5*SIX_CELL;
 const local=(a,r,x=0)=>Object.defineProperty({x:300+Math.cos(a)*r-Math.sin(a)*x,y:300+Math.sin(a)*r+Math.cos(a)*x},'angle',{value:a*180/Math.PI});
 const loop=[];
 for(let s=0;s<6;s++){

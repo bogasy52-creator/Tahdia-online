@@ -81,7 +81,7 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   const room = Math.max(1, Math.min(20, Math.max(count, Number(seats) || 0)));
   if(['focus','cipher','wordbomb','chaos'].includes(game))return{ns:'ROOMS',name:'challenge:'+code,url:'https://challenge.internal/init',body:{game,code,hostKey,party,expected:count,capacity:room,...(game==='chaos'?{unoMode:mode}:{})}};
   // 33.10.5: tanks and air hockey have rooms of their own
-  if (game === 'tanks') return { ns: 'ROOMS', name: 'tanks:' + code, url: 'https://tanks.internal/init', body: { code, hostKey, capacity: Math.max(2, Math.min(4, count)), mode, expected: count, party } };
+  if (game === 'tanks') return { ns: 'ROOMS', name: 'tanks:' + code, url: 'https://tanks.internal/init', body: { code, hostKey, capacity: Math.max(2, Math.min(4, Number(settings?.seats)||count)), mode, expected: count, party } };
   if (game === 'hockey') return { ns: 'ROOMS', name: 'hockey:' + code, url: 'https://hockey.internal/init', body: { code, hostKey, quick: true, target: mode==='quick'?3:mode==='long'?7:5, expected: count, party } };
   if (game === 'quiz') {
     // 4 and 6 open a team match; a party plays everyone against everyone
@@ -102,7 +102,7 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   // snakes, zahra, jackaroo, dice, ludo, billiards, carrom, pegs: a board room for the players of
   // this table (bots fill the rest)
   const table = linkedGame(game) || {};
-  return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game: table.board || game, playerLimit: game === 'jackaroo' ? 6 : count,...(['jackaroo','zahra','ludo'].includes(game)?{seats:6}:{}), expected: count, name: '', variant:mode, party } };
+  return { ns: 'BOARD_ROOMS', name: code, url: 'https://board.internal/init', body: { code, hostKey, game: table.board || game, playerLimit: Math.max(count,Number(settings?.seats)|| (game === 'jackaroo'?6:count)),...(settings?.seats?{seats:settings.seats}:['jackaroo','zahra','ludo'].includes(game)?{seats:6}:{}), expected: count, name: '', variant:mode, party } };
 }
 
 /** Opens the real room. Returns { ok, code, page } or { ok: false }. */

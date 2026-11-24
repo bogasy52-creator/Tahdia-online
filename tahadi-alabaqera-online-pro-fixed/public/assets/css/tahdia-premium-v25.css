@@ -194,3 +194,16 @@ html[data-dice=dice-obsidian] .release-v26 .pro-die:not([data-bonus=true]) .pro-
 
 /* Persistent multiplayer rooms v29 */
 .bs-party-entry-v29{display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:1140px;margin:16px auto;padding:16px 20px;background:linear-gradient(110deg,#192d3a,#27243e);border:1px solid #a0d9c54a;border-radius:17px;text-decoration:none!important;color:#c2f0df!important;font-family:Tajawal,sans-serif;font-weight:700}.bs-party-entry-v29>span{font-size:25px}.bs-party-entry-v29 small{font-size:11px;color:#adc0d4;font-weight:400;margin-inline-start:auto}.petal-board-v29{display:block;width:100%;height:auto}.petal-stone-v29.legal{cursor:pointer;filter:drop-shadow(0 0 2px #fff)}.ludo-board.petal-layout-v29{display:block;aspect-ratio:1;padding:0;background:#101e31}.jack-board.petal-layout-v29{background:#101e31!important;aspect-ratio:1;position:relative}.petal-layout-v29:before,.petal-layout-v29:after{display:none!important}@media(max-width:600px){.bs-party-entry-v29{margin:12px 14px;padding:12px 14px;font-size:13px}.bs-party-entry-v29 small{flex-basis:100%;margin-inline-start:0;font-size:10px}}
+
+/* 33.14: the application chrome uses the palace identity. Game canvases keep their own materials. */
+:root{--hub-bg:#160c2b;--hub-surface:#29163e;--hub-surface-2:#39204f;--hub-border:#845b9d;--hub-mint:#d0a5ed;--hub-gold:#f1cd88;--bs-purple:#c49be5}
+html body.release-v26:not(.game-running):not(.serpent-active):not(.arena-playing):not(.home-palace){background:radial-gradient(ellipse at 50% 0,#64358266,transparent 65%),#160c2b!important}
+html body .bs-topbar .bs-mark{display:grid;place-items:center;background:linear-gradient(145deg,#e0bd78,#9f6329)!important;border:1px solid #ffe3a2!important;border-radius:14px!important;color:#39203e!important;font:900 30px/1 Georgia,serif!important;box-shadow:0 0 16px #c7933b22!important;letter-spacing:0!important}
+html body:not(.home-palace) .bs-topbar{border-color:#a57bb333!important}
+html body:not(.home-palace) .bs-topbar .bs-icon-btn{background:linear-gradient(#59306e,#29163e)!important;border-color:#a27ab8!important;border-radius:14px!important;color:#f0e2f7!important}
+html body:not(.home-palace) .bs-topbar .bs-brand-copy b{color:#f9dfa8!important}
+html body .gm33{--gm-bg:#21122e;--gm-panel:#321c46;--gm-line:#805595;--gm-gold:#edca86}
+
+html body :is(.pg-wordmark,.tk-brand,.jw-brand,.cm-brand,.bi-brand){font-family:Tajawal,system-ui,sans-serif!important;font-size:clamp(14px,3.5vw,20px)!important;color:#f4d28e!important;white-space:nowrap;line-height:1.3}
+html body :is(.tk-brand,.jw-brand,.cm-brand,.bi-brand) small{font-size:9px!important;color:#c5aed6!important}
+html body .gm33 .gm33-card{background:linear-gradient(145deg,#382149,#20102f)!important;border-color:#8d669f!important}
