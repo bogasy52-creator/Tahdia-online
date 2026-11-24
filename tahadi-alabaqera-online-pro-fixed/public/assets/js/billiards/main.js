@@ -9,6 +9,7 @@ import { POOL, POCKETS, SHAPE, HEAD_X, FOOT, simulate, createPoolGame, playPoolS
 import { createTable } from '../board-table-v33.js?v=33.11.7';
 import {createPoolEntryUI} from './entry-tables-v33-11-6.js';
 import {createPoolSimulationClient} from './simulation-client-v33-11-6.js';
+const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name
 const poolJobs=createPoolSimulationClient();let poolEpoch=0;
 
 const { L, W, R } = POOL;
@@ -562,7 +563,7 @@ function announce(s) {
   const l = s.last; if (!l) return;
   const key = l.seq + ':' + l.result + ':' + (l.foul || '') + ':' + s.turn; if (key === ctl.lastKey) return; ctl.lastKey = key;
   const byMe = ctl.mode !== 'two' && l.by === humanSeat(), name = (seat) => esc(ctl.names[seat] || s.players[seat]?.name || 'لاعب');
-  // «لـ» before a name; «الكمبيوتر» → «للكمبيوتر»
+  // «لـ» before a name; a name with «ال» takes «لل»
   const toName = (seat) => { const n = name(seat); return n.startsWith('ال') ? 'لل' + n.slice(2) : 'لـ' + n; };
   const nextName = s.turn === humanSeat() && ctl.mode !== 'two' ? 'لك' : toName(s.turn);
   if (l.result === 'win' || l.result === 'loss') return;
@@ -859,12 +860,12 @@ function startLocal(mode) {
   closeReplay();
   ended = false; ctl.mode = mode; ctl.endShown = false; ctl.rewarded = false; ctl.receipt = 'billiards:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const me = window.BS_GAME_MENU?.playerName?.() || 'أنت';
-  ctl.names = mode === 'ai' ? [me, 'الكمبيوتر'] : [$('#biName1').value.trim() || 'لاعب 1', $('#biName2').value.trim() || 'لاعب 2'];
+  ctl.names = mode === 'ai' ? [me, RIVAL_NAME] : [$('#biName1').value.trim() || 'لاعب 1', $('#biName2').value.trim() || 'لاعب 2'];
   ctl.bots = mode === 'ai' ? [false, true] : [false, false];
   ctl.state = createPoolGame(ctl.names, { first: mode === 'ai' ? (Math.random() < 0.5 ? 0 : 1) : 0 });
   ctl.lastKey = ''; ctl.shownSeq = 0; view.axes.clear(); view.balls = ctl.state.balls.map((b) => (b ? b.slice() : null));
   showGame(); beginTurn();
-  toast(ctl.state.turn === 0 || mode === 'two' ? (mode === 'two' ? 'يكسر ' + esc(ctl.names[0]) : 'أنت تكسر') : 'الكمبيوتر يكسر', '', 1300);
+  toast(ctl.state.turn === 0 || mode === 'two' ? (mode === 'two' ? 'يكسر ' + esc(ctl.names[0]) : 'أنت تكسر') : ctl.names[1] + ' يكسر', '', 1300);
   if (mode === 'ai' && ctl.state.turn === 1) aiTurn();
 }
 function showEnd() {

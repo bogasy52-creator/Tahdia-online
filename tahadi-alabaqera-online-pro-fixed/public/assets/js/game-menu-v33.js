@@ -126,11 +126,11 @@
       menu.append(box);paint();
     }
     let humanSelect=null;
-    if(options.humanChoice){const label=make('label','gm33-match-choice','المنافس في اللعب السريع');humanSelect=make('select');humanSelect.setAttribute('aria-label','نوع المنافس');for(const [value,text] of [['human','لاعبون حقيقيون فقط · ننتظر اكتمال العدد'],['mixed','طاولة سريعة · الكمبيوتر يكمل بعد العد']]){const item=make('option',null,text);item.value=value;humanSelect.append(item);}humanSelect.value=options.humansOnly?'human':'mixed';label.append(humanSelect);menu.append(label);}
+    if(options.humanChoice){const label=make('label','gm33-match-choice','المنافس في اللعب السريع');humanSelect=make('select');humanSelect.setAttribute('aria-label','نوع المنافس');for(const [value,text] of [['human','لاعبون حقيقيون فقط · ننتظر اكتمال العدد'],['mixed','طاولة سريعة · نكمّل المقاعد بعد العد']]){const item=make('option',null,text);item.value=value;humanSelect.append(item);}humanSelect.value=options.humansOnly?'human':'mixed';label.append(humanSelect);menu.append(label);}
     // العب الحين
     const quick=button('gm33-quick',null,()=>run(()=>options.onQuick?.({mode,seats,name:playerName(),humansOnly:humanSelect?.value==='human'})));
     quick.append(make('span','gm33-quick-icon','⚡'),make('b',null,options.quickLabel||'العب الحين'),make('small',null,options.quickNote||'تكتمل الطاولة خلال 10 ثوانٍ بمنافسين متنوعي المستوى'));
-    if(humanSelect){const explain=()=>{quick.querySelector('small').textContent=humanSelect.value==='human'?'ننتظر لاعبين حقيقيين. لا نضيف كمبيوتر.':'بعد 10 ثوانٍ يكمل الكمبيوتر المقاعد الفارغة.';};humanSelect.addEventListener('change',explain);explain();}
+    if(humanSelect){const explain=()=>{quick.querySelector('small').textContent=humanSelect.value==='human'?'ننتظر لاعبين حقيقيين فقط.':'بعد 10 ثوانٍ نكمّل المقاعد الفارغة بمنافسين.';};humanSelect.addEventListener('change',explain);explain();}
     if(options.onQuick)menu.append(quick);
     // غرفة مع أصحابك
     const friends=make('details','gm33-friends');
@@ -152,7 +152,7 @@
     const opponentsTitle=make('summary');
     opponentsTitle.append(make('span','gm33-friends-icon','🎮'),make('b',null,'كيف تكتمل المباراة؟'));
     const opponentsBody=make('div','gm33-friends-body');
-    opponentsBody.append(make('p','gm33-friends-note','عند نقص اللاعبين، قد يكمل الكمبيوتر المقاعد الشاغرة بمنافسين متنوعي المستوى.'));
+    opponentsBody.append(make('p','gm33-friends-note','عند نقص اللاعبين، نكمّل المقاعد الشاغرة بمنافسين متنوعي المستوى.'));
     opponents.append(opponentsTitle,opponentsBody);menu.append(opponents);
     // who you are and what you play with
     const foot=make('div','gm33-foot');

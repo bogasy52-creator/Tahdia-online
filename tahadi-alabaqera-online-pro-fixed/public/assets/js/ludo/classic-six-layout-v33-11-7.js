@@ -18,7 +18,7 @@ export const sixAngle=angle;
 export function sixRotate(p,viewer=0){const a=(210-viewer*60)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),x=p.x-center.x,y=p.y-center.y;return{x:300+x*c-y*s,y:300+x*s+y*c};}
 export function sixSpot(state,seat,token,progress){
  if(progress<0)return{...SIX_YARDS[seat].slots[token],where:'yard'};
- if(progress>=82){const p=local(angle(seat),52),a=angle(seat)+Math.PI/2,d=(token-1.5)*10;return{x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d,where:'home',small:true};}
+ if(progress>=82)return{...local(angle(seat),50),where:'home',small:true}; // 33.15.0: one pile with a count
  if(progress>=77)return{...SIX_LANES[seat][progress-77],where:'lane'};
  const cell=(seat*13+progress)%78;return{...SIX_TRACK[cell],where:'track',cell};
 }

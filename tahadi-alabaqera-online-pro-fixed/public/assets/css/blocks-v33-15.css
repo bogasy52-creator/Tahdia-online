@@ -1,0 +1,83 @@
+/* لعبة العباقرة 33.15.0 — «رص البلوكات». Purple room, a gold-framed board, jewel blocks. */
+.blocks-page{--bk-gap:3px}
+.bk-intro-best{margin:0;text-align:center;color:#ffe38a;font:700 14px/1.4 NGText,system-ui}
+.bk-modes{grid-template-columns:repeat(2,1fr)}
+
+/* the score bar */
+.bk-scorebar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.bk-score,.bk-best{display:grid;gap:0;padding:6px 12px;border-radius:16px;background:linear-gradient(180deg,#3b1890,#22095a);border:1px solid #8a5cf0}
+.bk-best{text-align:left}
+.bk-score small,.bk-best small{color:#d9c8ff;font-size:12px}
+.bk-score b{font:800 30px/1.05 NGDisplay,NGText,system-ui;background:linear-gradient(180deg,#fff,#ffe38a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bk-best b{font:800 20px/1.2 NGText,system-ui;color:#ffe38a}
+.bk-mid{display:grid;justify-items:center;gap:4px}
+.bk-combo{padding:3px 12px;border-radius:999px;background:linear-gradient(180deg,#ff7ab8,#c2187a);color:#fff;font:800 16px/1.3 NGText,system-ui;box-shadow:0 0 16px #ff4fa3aa;animation:bk-throb .9s ease-in-out infinite}
+.bk-combo[hidden]{display:none}
+.bk-timer{display:none;align-items:center;gap:6px;color:#fff;font:800 18px/1 NGText,system-ui}
+body.bk-timed .bk-timer{display:flex}
+@keyframes bk-throb{50%{transform:scale(1.08)}}
+.bk-status{grid-template-columns:26px 1fr auto}
+.bk-status i{font-style:normal;font-size:18px}
+.bk-status p[data-tone=warn]{color:#ffd166}
+
+/* the board: a gold frame, a deep purple bed, soft empty squares */
+.bk-board-wrap{position:relative;width:min(100%,calc(100dvh - 330px),480px);margin:0 auto;padding:8px;border-radius:22px;background:linear-gradient(135deg,#fff3c0,#f4c752 22%,#a8701a 50%,#ffe18a 78%,#8a5810);box-shadow:0 14px 30px #000a,inset 0 0 0 1px #6b3f08}
+.bk-board{display:grid;grid-template-columns:repeat(8,1fr);gap:var(--bk-gap);padding:6px;border-radius:15px;background:radial-gradient(120% 120% at 50% 0,#2c0f66,#160540);box-shadow:inset 0 2px 10px #000c;touch-action:none;user-select:none;-webkit-user-select:none}
+.bk-cell{display:block;aspect-ratio:1;border-radius:7px;background:#ffffff0d;box-shadow:inset 0 1px 0 #ffffff12,inset 0 -2px 0 #00000040;position:relative;transition:background .12s}
+.bk-cell.is-filled,.bk-piece i{background:var(--c);box-shadow:inset 0 3px 0 #ffffff70,inset 0 -4px 0 #00000045,inset 3px 0 0 #ffffff26,inset -3px 0 0 #00000026,0 2px 3px #0006}
+.bk-cell.is-filled::after,.bk-piece i::after{content:"";position:absolute;inset:16% 18% 52% 18%;border-radius:40%;background:linear-gradient(180deg,#ffffffa8,#ffffff00)}
+.bk-piece i{position:relative;border-radius:calc(var(--cell) * .2)}
+.bk-cell.is-pop{animation:bk-pop .28s ease-out}
+@keyframes bk-pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+/* where the dragged piece would land, and the lines it would break */
+.bk-cell.is-ghost{background:color-mix(in srgb,var(--g) 55%,transparent);box-shadow:inset 0 0 0 2px #ffffffaa}
+.bk-cell.will-clear{box-shadow:inset 0 0 0 2px #ffe38a,0 0 12px #ffd24a;background-color:color-mix(in srgb,var(--c,#ffd24a) 70%,#fff 30%)}
+.bk-cell.will-clear:not(.is-filled):not(.is-ghost){background:#ffd24a40}
+.bk-cell.is-clearing{animation:bk-clear .42s ease-in var(--d,0ms) forwards}
+@keyframes bk-clear{0%{filter:brightness(1)}35%{filter:brightness(2.2);transform:scale(1.1)}100%{filter:brightness(2);transform:scale(.2);opacity:0}}
+.bk-board.is-bomb .bk-cell{cursor:crosshair}
+.bk-board.is-bomb{box-shadow:inset 0 2px 10px #000c,0 0 0 3px #ff5a5a88}
+.bk-board-wrap.is-shake{animation:bk-shake .35s}
+@keyframes bk-shake{20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}}
+.bk-board-wrap.is-over .bk-cell.is-filled{filter:grayscale(.85) brightness(.75);transition:filter .6s}
+
+/* helps and the tray */
+.bk-helps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bk-help{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;min-height:44px;padding:4px 12px;border-radius:14px;border:1px solid #8a5cf0;background:linear-gradient(180deg,#3b1890,#22095a);color:#fff;font:700 14px/1.2 NGText,system-ui;cursor:pointer}
+.bk-help i{font-style:normal;font-size:20px}
+.bk-help small{display:grid;place-items:center;min-width:24px;height:24px;border-radius:12px;background:#ffd24a;color:#3a1d00;font-weight:800}
+.bk-help:disabled{opacity:.4;cursor:default}
+.bk-help.is-armed{background:linear-gradient(180deg,#ff6b6b,#b4232c);border-color:#ffb3b3;animation:bk-throb .8s ease-in-out infinite}
+.bk-helps.is-call .bk-help:not(:disabled){box-shadow:0 0 0 3px #ffd24a,0 0 18px #ffd24a;animation:bk-throb .9s ease-in-out infinite}
+.bk-tray{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-height:112px;touch-action:none}
+.bk-slot{display:grid;place-items:center;min-height:112px;padding:6px;border-radius:18px;border:1px solid #ffffff1c;background:#ffffff0a;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.bk-slot:disabled{cursor:default;background:#ffffff05}
+.bk-slot.is-lifted .bk-piece{opacity:.18}
+.bk-slot.is-picked{background:#ffd24a24;border-color:#ffd24a;box-shadow:0 0 0 2px #ffd24a inset}
+.bk-slot.is-dead .bk-piece{filter:grayscale(1) brightness(.6)}
+.bk-piece{display:grid;grid-template-columns:repeat(var(--cols),var(--cell));grid-template-rows:repeat(var(--rows),var(--cell));gap:2px;pointer-events:none}
+
+/* the layer for the dragged piece and the effects */
+.bk-fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.bk-drag{position:fixed;left:0;top:0;gap:var(--bk-gap);opacity:.92;filter:drop-shadow(0 10px 12px #000a);transition:opacity .1s}
+.bk-drag:not(.is-fit){opacity:.7}
+.bk-float{position:fixed;transform:translate(-50%,-50%);font:900 28px/1 NGDisplay,NGText,system-ui;color:#fff;text-shadow:0 2px 0 #7a4a0a,0 0 14px #ffd24a;animation:bk-float 1.05s ease-out forwards}
+.bk-float.big{font-size:38px}
+@keyframes bk-float{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-140%) scale(1)}}
+.bk-banner{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);padding:10px 22px;border-radius:999px;font:900 30px/1.2 NGDisplay,NGText,system-ui;color:#3a1d00;background:linear-gradient(180deg,#fff3c0,#ffd24a 55%,#e7a51e);box-shadow:0 8px 24px #000a,0 0 30px #ffd24a99;white-space:nowrap;animation:bk-banner 1.25s cubic-bezier(.2,.8,.3,1) forwards}
+.bk-banner.combo{color:#fff;background:linear-gradient(180deg,#ff8ac4,#d61f80 60%,#8e0e52)}
+.bk-banner.clean{color:#fff;background:linear-gradient(180deg,#7ef0ff,#1aa8d6 60%,#0b5f86)}
+@keyframes bk-banner{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}30%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+.bk-spark{position:fixed;width:8px;height:8px;border-radius:2px;transform:translate(-50%,-50%);animation:bk-spark .7s ease-out forwards}
+@keyframes bk-spark{to{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(220deg) scale(.3);opacity:0}}
+.bk-confetti{position:fixed;top:-12px;width:8px;height:14px;border-radius:2px;animation:bk-confetti 2.2s linear forwards}
+@keyframes bk-confetti{to{transform:translateY(105vh) rotate(var(--r));opacity:.9}}
+
+/* the result */
+.bk-final{display:block;text-align:center;font:900 52px/1.05 NGDisplay,NGText,system-ui;background:linear-gradient(180deg,#fff,#ffe38a 55%,#e7a51e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bk-facts{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px;padding:0}
+.bk-facts li{display:grid;justify-items:center;gap:2px;padding:8px 4px;border-radius:14px;background:#ffffff0d;border:1px solid #ffffff1a}
+.bk-facts b{font:800 20px/1.1 NGText,system-ui;color:#fff}
+.bk-facts small{color:#d9c8ff;font-size:12px}
+@media (max-height:700px){.bk-tray,.bk-slot{min-height:92px}.bk-score b{font-size:24px}}
+@media (prefers-reduced-motion:reduce){.bk-combo,.bk-help.is-armed,.bk-helps.is-call .bk-help,.bk-cell.is-pop{animation:none}}

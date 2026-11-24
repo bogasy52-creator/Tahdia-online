@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#160c2b">
 <title>بلياردو — لعبة العباقرة</title>
-<meta name="description" content="بلياردو 8 كرات بطاولة احترافية: العب أونلاين ضد لاعب حقيقي، أو ضد الكمبيوتر، أو مع خويّك على نفس الجهاز.">
-<link rel="manifest" href="/manifest.webmanifest?v=29.1.0">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=29.1.0">
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=29.1.0">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=29.1.0">
+<meta name="description" content="بلياردو 8 كرات بطاولة احترافية: العب أونلاين، أو تدريب ضد منافس، أو مع خويّك على نفس الجهاز.">
+<link rel="manifest" href="/manifest.webmanifest?v=33.15.0">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.15.0">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.15.0">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.15.0">
 <meta name="application-name" content="لعبة العباقرة">
 <meta name="apple-mobile-web-app-title" content="العباقرة">
 
@@ -24,7 +24,7 @@
 
 
 
-<script src="/assets/js/instant-play-v33-12.js?v=33.14.1"></script><link rel="stylesheet" href="assets/css/app-billiards.css?v=33.14.1-c6ed5f976e"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.14.1"></head>
+<script src="/assets/js/instant-play-v33-12.js?v=33.15.0"></script><link rel="stylesheet" href="assets/css/app-billiards.css?v=33.15.0-a358dee44c"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.15.0"></head>
 <body class="release-v26 billiards-page">
 <main id="app" class="bi-app">
 <section id="menu" class="bi-menu" aria-labelledby="biTitle">
@@ -32,13 +32,13 @@
 <div class="bi-hero"><img class="bi-hero-cover" src="assets/brand/billiards-cover-33-10-nov14.webp" width="1586" height="992" alt="طاولة بلياردو خضراء وثمانية سوداء تحت إضاءة ذهبية" decoding="async" fetchpriority="high"><canvas id="biHero" width="760" height="420" aria-hidden="true"></canvas><div class="bi-hero-copy"><h1 id="biTitle">بلياردو</h1><p>ثمان كرات، طاولة وحدة، والثمانية تحسمها.</p></div></div>
 <div class="bi-modes" role="radiogroup" aria-label="طريقة اللعب">
 <button type="button" data-mode="online" role="radio" aria-checked="true"><b>أونلاين</b><small>لاعب حقيقي</small></button>
-<button type="button" data-mode="ai" role="radio" aria-checked="false"><b>ضد الكمبيوتر</b><small>تدريب</small></button>
+<button type="button" data-mode="ai" role="radio" aria-checked="false"><b>ضد منافس</b><small>تدريب</small></button>
 <button type="button" data-mode="two" role="radio" aria-checked="false"><b>مع خويّك</b><small>جهاز واحد</small></button>
 </div>
 <section class="bi-panel" data-panel="online"><section class="pool-entry-hall" aria-labelledby="poolEntryTitle"><div class="pool-entry-head"><div><h2 id="poolEntryTitle">اختر طاولتك</h2><p>مواجهة لاعبين · عملات داخل اللعبة</p></div><span class="pool-entry-wallet">✦ <b id="poolEntryBalance">—</b></span></div><div id="poolEntryTables" class="pool-entry-tables" role="group" aria-label="مبلغ دخول الطاولة"></div><p id="poolEntryNotice" class="pool-entry-notice" role="status">طاولة مجانية بدون خصم عملات. اختر مبلغًا إذا تبي تتحدى على عملات اللعبة.</p></section><section id="poolEntryConsent" class="pool-entry-consent" hidden><p id="poolEntryTerms"></p><button id="poolEntryAccept" type="button">أوافق على مبلغ الدخول</button></section><div id="gameMenu"></div></section>
 <section class="bi-panel" data-panel="ai" hidden>
-<h2>مستوى الكمبيوتر</h2>
-<div id="biLevel" class="bi-seg" role="radiogroup" aria-label="مستوى الكمبيوتر"><button type="button" data-v="easy" role="radio">سهل</button><button type="button" data-v="medium" role="radio">متوسط</button><button type="button" data-v="hard" role="radio">محترف</button></div>
+<h2>مستوى المنافس</h2>
+<div id="biLevel" class="bi-seg" role="radiogroup" aria-label="مستوى المنافس"><button type="button" data-v="easy" role="radio">سهل</button><button type="button" data-v="medium" role="radio">متوسط</button><button type="button" data-v="hard" role="radio">محترف</button></div>
 <button id="biStartAi" class="bi-cta" type="button">افتح الطاولة</button>
 </section>
 <section class="bi-panel" data-panel="two" hidden>
@@ -91,9 +91,9 @@
 </section>
 </main>
 <div class="bs-toast"></div>
-<script src="assets/js/party-link-v32.js?v=33.14.1-room1"></script><script src="assets/js/compact/audio-manager.js?v=33.14.1"></script><script src="assets/js/room-clock-v33-7.js?v=33.14.1"></script><script src="assets/js/player-card-v33-7.js?v=33.14.1"></script><script src="assets/js/compact/platform.js?v=33.14.1"></script><script src="assets/js/compact/social-client.js?v=33.14.1"></script><script src="assets/js/compact/profile-core.js?v=33.14.1-pro1"></script><script src="assets/js/compact/career-client.js?v=33.14.1"></script><script src="/assets/js/looks-v33-9-10.js?v=33.14.1"></script><script src="assets/js/game-menu-v33.js?v=33.14.1"></script><script src="/assets/js/reaction-performers.js?v=33.14.1-studio1"></script><script src="/assets/js/club-ui.js?v=33.14.1-club1"></script><script src="assets/js/reactions-v31.js?v=33.14.1-studio1"></script><script defer src="assets/js/client-health.js?v=33.14.1"></script>
-<script src="assets/js/cue-controls-v33-10-3.js?v=33.14.1"></script>
-<script type="module" src="assets/js/billiards/main.js?v=33.14.1"></script>
+<script src="assets/js/party-link-v32.js?v=33.15.0-room1"></script><script src="assets/js/compact/audio-manager.js?v=33.15.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.15.0"></script><script src="assets/js/player-card-v33-7.js?v=33.15.0"></script><script src="assets/js/compact/platform.js?v=33.15.0"></script><script src="assets/js/compact/social-client.js?v=33.15.0"></script><script src="assets/js/compact/profile-core.js?v=33.15.0-pro1"></script><script src="assets/js/compact/career-client.js?v=33.15.0"></script><script src="/assets/js/looks-v33-9-10.js?v=33.15.0"></script><script src="assets/js/game-menu-v33.js?v=33.15.0"></script><script src="/assets/js/reaction-performers.js?v=33.15.0-studio1"></script><script src="/assets/js/club-ui.js?v=33.15.0-club1"></script><script src="assets/js/reactions-v31.js?v=33.15.0-studio1"></script><script defer src="assets/js/client-health.js?v=33.15.0"></script>
+<script src="assets/js/cue-controls-v33-10-3.js?v=33.15.0"></script>
+<script type="module" src="assets/js/billiards/main.js?v=33.15.0"></script>
 
-<script defer src="assets/js/tournament-return.js?v=33.14.1-club2"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.14.1"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.14.1"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.14.1"></script></body>
+<script defer src="assets/js/tournament-return.js?v=33.15.0-club2"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.15.0"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.15.0"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.15.0"></script></body>
 </html>

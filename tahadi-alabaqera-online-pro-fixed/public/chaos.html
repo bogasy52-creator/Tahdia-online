@@ -2,14 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#160c2b"><meta name="description" content="أونو لعبة العباقرة. أوراق ملونة وطاولة كاملة، لعب كلاسيكي وسحب متراكم وجولة سريعة، ضد الكمبيوتر أو مع الأصدقاء.">
+<meta name="theme-color" content="#160c2b"><meta name="description" content="أونو لعبة العباقرة. أوراق ملونة وطاولة كاملة، لعب كلاسيكي وسحب متراكم وجولة سريعة، تدريب أو مع الأصدقاء.">
 <title>أونو — لعبة العباقرة</title><link rel="icon" href="/favicon-32.png"><link rel="manifest" href="/manifest.webmanifest">
 
-<script src="/assets/js/instant-play-v33-12.js?v=33.14.1"></script><link rel="stylesheet" href="assets/css/app-chaos.css?v=33.14.1-2766cdc8c3"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.14.1"></head>
+<script src="/assets/js/instant-play-v33-12.js?v=33.15.0"></script><link rel="stylesheet" href="assets/css/app-chaos.css?v=33.15.0-2766cdc8c3"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.15.0"></head>
 <body class="release-v26 challenge-page uno-page" data-challenge="chaos">
 <main class="ch-shell">
 <header class="ch-topbar"><a class="ch-brand" href="/"><span class="ch-brand-mark">♛</span><b>لعبة العباقرة</b></a><nav class="ch-topnav"><a href="/">الألعاب</a><a href="/party?game=chaos">غرفة 20</a><button class="bs-icon-btn" data-audio-toggle aria-label="إعدادات الصوت">♪</button></nav></header>
-<section class="ch-heading"><div><span class="ch-kicker">THE CARD CLUB</span><h1>أونو</h1><p>لون يغيّر الجولة. ورقة تقلب الطاولة.</p></div><span class="ch-badge" id="chConnection">اختر طاولتك</span></section>
+<section class="ch-heading"><div><span class="ch-kicker">نادي الورق</span><h1>أونو</h1><p>لون يغيّر الجولة. ورقة تقلب الطاولة.</p></div><span class="ch-badge" id="chConnection">اختر طاولتك</span></section>
 <div class="ch-layout"><div>
 <section class="ch-panel" id="chSetup" aria-label="إعداد أونو">
 <div class="uno-cover"><img src="assets/challenges/uno-table.svg" width="800" height="400" alt="أوراق أونو ملونة على طاولة"></div>
@@ -22,7 +22,7 @@
 </div>
 <div id="chSetupSecret"></div><div id="chSecretArea" hidden><div id="chSecretPicker"></div></div>
 <button class="ch-button primary ch-quick" id="chQuick">أونلاين سريع · كلاسيكي</button>
-<div class="ch-options"><button class="ch-button primary" id="chPractice">العب ضد الكمبيوتر</button><button class="ch-button" id="chCreate">طاولة خاصة</button></div>
+<div class="ch-options"><button class="ch-button primary" id="chPractice">تدرّب ضد منافسين</button><button class="ch-button" id="chCreate">طاولة خاصة</button></div>
 <div class="ch-join"><input id="chCode" inputmode="numeric" maxlength="6" aria-label="رمز الطاولة" placeholder="رمز الطاولة"><button class="ch-button" id="chJoin">انضم</button></div>
 <details class="uno-help"><summary>قواعد الطاولة</summary><p>طابق اللون أو الرقم أو رمز الحركة. بعد سحب ورقة مسموحة تقدر تلعبها أو تمرّر. العكس بين لاعبين يرجّع الدور لك، والمنع يتجاوز اللاعب التالي.</p><p>ورقة +4 تُلعب إذا ما عندك اللون الحالي. في الكلاسيكي السحب يطبّق مباشرة ويتجاوز الدور. في المتراكم تقدر ترد بنفس نوع ورقة السحب.</p><p>اضغط UNO قبل لعب ورقتك قبل الأخيرة. إذا نسيت، يقدر الخصم يمسكك قبل الحركة التالية وتسحب ورقتين. وقت الدور 30 ثانية.</p></details>
 </div></section>
@@ -32,13 +32,13 @@
 <div class="ch-match-meta"><span id="chRound"></span><b id="chHazard"></b><span id="chTime"></span></div>
 <p id="chSubstatus" class="ch-substatus"></p><div class="ch-studio-hud" id="chStudioHud"></div><div class="ch-flow" id="chFlow" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"></div>
 <div class="ch-stage" id="chStage"><div class="ch-board" id="chBoard"></div><div class="ch-controls" id="chControls"></div><div class="ch-tactics" id="chTactics"></div><p class="ch-log" id="chLog" aria-live="polite"></p>
-<div class="ch-result" id="chResult" role="status" hidden><span class="uno-result-label">THE CARD CLUB</span><h2 id="chResultTitle"></h2><p id="chResultCopy"></p><div id="unoRecap"></div><div id="raceRecap" hidden></div><button class="ch-button primary" id="chRematch" hidden>جولة جديدة</button></div>
+<div class="ch-result" id="chResult" role="status" hidden><span class="uno-result-label">نادي الورق</span><h2 id="chResultTitle"></h2><p id="chResultCopy"></p><div id="unoRecap"></div><div id="raceRecap" hidden></div><button class="ch-button primary" id="chRematch" hidden>جولة جديدة</button></div>
 <div class="ch-paused" id="chPaused" hidden><div><h2>خذ وقتك</h2><button class="ch-button primary" id="chResume">كمّل أونو</button></div></div>
 </div><div class="ch-players" id="chPlayers" hidden></div>
 </section>
 <p id="chNotice" class="ch-notice" role="status" aria-live="polite"></p>
 </div></div><footer class="ch-footer">لعبة العباقرة · ورقة تغيّر كل شيء</footer>
 </main><div class="bs-toast" role="status"></div>
-<script src="assets/js/party-link-v32.js?v=33.14.1-room1"></script>
-<script src="assets/js/compact/audio-manager.js?v=33.14.1"></script><script src="assets/js/room-clock-v33-7.js?v=33.14.1"></script><script src="assets/js/player-card-v33-7.js?v=33.14.1"></script><script src="assets/js/compact/platform.js?v=33.14.1"></script><script src="assets/js/compact/social-client.js?v=33.14.1"></script><script src="assets/js/compact/profile-core.js?v=33.14.1-pro1"></script><script src="assets/js/compact/career-client.js?v=33.14.1"></script><script src="assets/js/character-player.js?v=33.14.1-smooth1"></script><script src="assets/js/hero-effects.js?v=33.14.1-hunt1"></script><script src="assets/js/challenge-studio.js?v=33.14.1-hunt1"></script><script src="assets/js/chaos-stage.js?v=33.14.1-mirage1"></script><script src="assets/js/chaos-ui.js?v=33.14.1-mirage1"></script><script src="assets/js/uno-ui.js?v=33.14.1-quality1"></script><script src="/assets/js/reaction-performers.js?v=33.14.1-studio1"></script><script src="/assets/js/club-ui.js?v=33.14.1-club1"></script><script type="module" src="assets/js/challenge-client.js?v=33.14.1-uno1"></script>
-<script src="/assets/js/reactions-v31.js?v=33.14.1-studio1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.14.1"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.14.1"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.14.1"></script></body></html>
+<script src="assets/js/party-link-v32.js?v=33.15.0-room1"></script>
+<script src="assets/js/compact/audio-manager.js?v=33.15.0"></script><script src="assets/js/room-clock-v33-7.js?v=33.15.0"></script><script src="assets/js/player-card-v33-7.js?v=33.15.0"></script><script src="assets/js/compact/platform.js?v=33.15.0"></script><script src="assets/js/compact/social-client.js?v=33.15.0"></script><script src="assets/js/compact/profile-core.js?v=33.15.0-pro1"></script><script src="assets/js/compact/career-client.js?v=33.15.0"></script><script src="assets/js/character-player.js?v=33.15.0-smooth1"></script><script src="assets/js/hero-effects.js?v=33.15.0-hunt1"></script><script src="assets/js/challenge-studio.js?v=33.15.0-hunt1"></script><script src="assets/js/chaos-stage.js?v=33.15.0-mirage1"></script><script src="assets/js/chaos-ui.js?v=33.15.0-mirage1"></script><script src="assets/js/uno-ui.js?v=33.15.0-quality1"></script><script src="/assets/js/reaction-performers.js?v=33.15.0-studio1"></script><script src="/assets/js/club-ui.js?v=33.15.0-club1"></script><script type="module" src="assets/js/challenge-client.js?v=33.15.0-uno1"></script>
+<script src="/assets/js/reactions-v31.js?v=33.15.0-studio1"></script><script src="/assets/js/tahdia-premium-v25.js?v=33.15.0"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.15.0"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.15.0"></script></body></html>

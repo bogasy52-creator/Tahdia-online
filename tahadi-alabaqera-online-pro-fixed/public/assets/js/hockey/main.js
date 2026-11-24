@@ -2,6 +2,7 @@ import {HockeyOnline,hockeyPerspective} from './online.js?v=33.9.10-studio1';
 // Air Hockey — page controller: menu, touch / mouse / keyboard hands, sound, effects, goal and result screens.
 import { createGame, step, carryPuck, W, L, STRIKER_R, PUCK_R, WIN_SCORE } from './core.js?v=33.9.10-studio1';
 import { createRenderer, THEMES, PUCKS, STRIKER_COLORS, drawTablePreview, drawPuckPreview, drawStrikerPreview } from './render.js?v=33.9.10-studio1';
+const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name
 
 const $ = (id) => document.getElementById(id);
 const KEY = 'bs_hockey_v1';
@@ -150,7 +151,7 @@ let fitT = 0; const refit = () => { clearTimeout(fitT); fitT = setTimeout(() => 
 addEventListener('resize', refit); addEventListener('orientationchange', refit); screen.orientation?.addEventListener?.('change', refit);
 document.addEventListener('fullscreenchange', () => { refit(); $('fsBtn').setAttribute('aria-pressed', String(!!document.fullscreenElement)); });
 
-function names() { if(online?.state){const p=online.state.players,i=online.seat;return[p[i]?.name||'أنت',p[1-i]?.name||'الخصم'];}return prefs.mode === 'ai' ? ['أنت', 'الكمبيوتر'] : ['اللاعب 1', 'اللاعب 2']; }
+function names() { if(online?.state){const p=online.state.players,i=online.seat;return[p[i]?.name||'أنت',p[1-i]?.name||'الخصم'];}return prefs.mode === 'ai' ? ['أنت', RIVAL_NAME] : ['اللاعب 1', 'اللاعب 2']; }
 function startGame(packet=null) {
   // A lost renderer can restart the current online round without requesting a rematch.
   if(!packet?.g&&!running&&online?.state?.status==='playing')packet=online.state;
@@ -236,7 +237,7 @@ function showResult(winner) {
   const ai = ['ai','online'].includes(prefs.mode),draw=winner<0,mine=!draw&&(ai?winner===0:true);
   if(online)window.BS_CAREER?.refresh?.()?.catch?.(()=>{});else window.BS_CAREER?.record?.({id:roundReceipt,game:'hockey',win:winner===0})?.catch?.(()=>{});
   prefs.played++; if (ai && winner === 0) prefs.wins++; save({ played: prefs.played, wins: prefs.wins });
-  $('resTitle').textContent = draw?'انتهت بالتعادل':ai ? (winner === 0 ? 'فزت بالمباراة! 🏆' : (online?'فاز خصمك':'فاز الكمبيوتر')) : `فاز ${names()[winner]}! 🏆`;
+  $('resTitle').textContent = draw?'انتهت بالتعادل':ai ? (winner === 0 ? 'فزت بالمباراة! 🏆' : (online?'فاز خصمك':'فاز '+RIVAL_NAME)) : `فاز ${names()[winner]}! 🏆`;
   $('resEyebrow').textContent = draw?'مواجهة متكافئة':ai ? (winner === 0 ? 'مبروك' : 'حاول مرة ثانية') : 'نهاية المباراة';
   $('resScore').textContent = `${g.score[0]} : ${g.score[1]}`;
   $('resStats').textContent = `أطول تبادل ${g.maxRally} ضربة · المدة ${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;

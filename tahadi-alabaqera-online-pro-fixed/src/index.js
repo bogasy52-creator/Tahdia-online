@@ -48,7 +48,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.14.1';
+const RELEASE='33.15.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -291,12 +291,18 @@ function speedBonus(deadline, answeredAt) {
   return Math.min(50, Math.max(0, Math.round(remain / 1000 * 2)));
 }
 
+const MOVED_PAGES=Object.freeze({'/bridge':'/blocks','/colorbluff':'/pegs','/zahra':'/ludo','/crowd':'/tanks','/v5':'/','/reaction-classic':'/reaction','/local':'/online'});
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if(['/carrom','/carrom.html'].includes(url.pathname)){url.pathname='/race.html';return await env.ASSETS.fetch(new Request(url,request));}
     if(['/uno','/uno.html'].includes(url.pathname)){url.pathname='/chaos.html';return await env.ASSETS.fetch(new Request(url,request));}
     if(/^\/(labyrinth|territory|survival|patterns)(?:\.html)?\/?$/.test(url.pathname))return Response.redirect(new URL('/#games',url).href,302);
+    // 33.15.0: pages that were retired or replaced lead to their new homes (the address keeps its
+    // query, so an old invite such as /zahra?room=123456 still opens the room). «جسر الألوان» gave its
+    // place to «رص البلوكات»; «خدعة الألوان» and «خزنة الألوان» are retired into «سر الألوان».
+    const moved=MOVED_PAGES[url.pathname.replace(/\.html$/,'').replace(/(.)\/$/,'$1')];
+    if(moved){const to=new URL(moved,url);to.search=url.search;return Response.redirect(to.href,302);}
     try {
 
     if (url.pathname.startsWith("/api/") && !sameOrigin(request)) {

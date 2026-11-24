@@ -6,6 +6,7 @@ import { createTable } from '../board-table-v33.js?v=33.11.7';
 import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.10.7-mm5';
 
 import { suggestJewelsSwap } from './advisor.js?v=33.10.7-nov14';
+const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name
 
 const $=selector=>document.querySelector(selector);
 let lightEffects=false;try{lightEffects=localStorage.getItem('bs_jewels_light_effects')==='1';}catch{}
@@ -14,7 +15,7 @@ const W=JR.W,H=JR.H,N=W*H;
 const escapeText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 const reduced=()=>Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
 const cloneValue=value=>structuredClone(value);
-const ctl={starsShown:[0,0],epoch:0,mode:'ai',state:null,level:'medium',names:['أنت','الكمبيوتر'],bots:[false,true],users:[null,null],me:0,seat:0,busy:false,pending:null,aim:-1,shownSeq:0,endShown:false,rewarded:false,receipt:'',match:0,scores:[0,0],idleTimer:0,botTimer:0,botHistory:[],botReady:false,clockTimer:0,clockOffset:0,deadline:null,handover:false,legacy:false,selected:-1,cursor:0,hint:null,aimCell:-1};
+const ctl={starsShown:[0,0],epoch:0,mode:'ai',state:null,level:'medium',names:['أنت',RIVAL_NAME],bots:[false,true],users:[null,null],me:0,seat:0,busy:false,pending:null,aim:-1,shownSeq:0,endShown:false,rewarded:false,receipt:'',match:0,scores:[0,0],idleTimer:0,botTimer:0,botHistory:[],botReady:false,clockTimer:0,clockOffset:0,deadline:null,handover:false,legacy:false,selected:-1,cursor:0,hint:null,aimCell:-1};
 let table=null,room=null,drag=null,bannerTimer=0,endTimer=0,exitArmed=0,audioContext=null;
 const canvas=$('#jwBoard'),wrap=$('#jwWrap');
 const currentMatch=epoch=>epoch===ctl.epoch&&Boolean(ctl.state);
@@ -113,7 +114,7 @@ function tickClock(){
 function afterRun(){
   if(!ctl.state)return;revealBot();renderHud();renderStatus();renderClock();
   if(ctl.state.finished){showEnd();return;}
-  if(player()?.done){clearTimeout(ctl.idleTimer);if(ctl.mode==='two'&&ctl.seat===0){showHandover();return;}$('#jwWait').hidden=false;$('#jwWaitScore').textContent=player().score+' نقطة';$('#jwWaitText').textContent=ctl.mode==='ai'?'الكمبيوتر يكمل حساب نتيجته…':'الخصم يكمل حركاته. نتيجتك محفوظة.';}else{$('#jwWait').hidden=true;scheduleHint();}
+  if(player()?.done){clearTimeout(ctl.idleTimer);if(ctl.mode==='two'&&ctl.seat===0){showHandover();return;}$('#jwWait').hidden=false;$('#jwWaitScore').textContent=player().score+' نقطة';$('#jwWaitText').textContent=ctl.mode==='ai'?ctl.names[1]+' يكمل حساب نتيجته…':'الخصم يكمل حركاته. نتيجتك محفوظة.';}else{$('#jwWait').hidden=true;scheduleHint();}
 }
 async function runLocal(resolve){
   const epoch=ctl.epoch,seat=mySeat();if(!canAct())return false;let next;
@@ -172,7 +173,7 @@ function myUser(){const user=window.BS_SOCIAL?.isLoggedIn?.()?window.BS_SOCIAL.p
 function startLocal(mode){
   table?.leave();
   resetActivity();ctl.mode=mode;ctl.me=0;ctl.seat=0;ctl.rewarded=false;ctl.receipt='jewels:'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);ctl.clockOffset=0;
-  const name=window.BS_GAME_MENU?.playerName?.()||'أنت';ctl.names=mode==='ai'?[name,'الكمبيوتر']:[$('#jwName1').value.trim()||'اللاعب الأول',$('#jwName2').value.trim()||'اللاعب الثاني'];ctl.bots=mode==='ai'?[false,true]:[false,false];ctl.users=mode==='ai'?[myUser(),{photo:{kind:'preset',id:'h-robot'}}]:[myUser(),null];
+  const name=window.BS_GAME_MENU?.playerName?.()||'أنت';ctl.names=mode==='ai'?[name,RIVAL_NAME]:[$('#jwName1').value.trim()||'اللاعب الأول',$('#jwName2').value.trim()||'اللاعب الثاني'];ctl.bots=mode==='ai'?[false,true]:[false,false];ctl.users=mode==='ai'?[myUser(),{photo:{kind:'preset',id:'h-robot'}}]:[myUser(),null];
   ctl.state=createJewelsRace(ctl.names,{durationMs:mode==='two'?0:JR.DURATION_MS});ctl.deadline=mode==='two'?Date.now()+JR.DURATION_MS:null;ctl.shownSeq=0;renderer.setBoard(player().board);showGame();scheduleHint();banner(mode==='two'?'جولتك يا '+ctl.names[0]:'25 حركة… اصنع نتيجتك!');sound('go',.38);if(mode==='ai')prepareBot();
 }
 function showHandover(){

@@ -1,4 +1,4 @@
-import {COLOR_PALETTE,createColorTable,playColorTable,publicColorTable,chooseColorMove,colorTimeout,isColorState} from './engines/color-tables-v33-14.js?v=33.14.1';
+import {COLOR_PALETTE,createColorTable,playColorTable,publicColorTable,chooseColorMove,colorTimeout,isColorState} from './engines/color-tables-v33-14.js?v=33.15.0';
 import {createTable} from './board-table-v33.js?v=33.14.0';
 const $=id=>document.getElementById(id),symbols=['▲','★','✚','◆','☾','⬡'];
 const titles={bluff:'خدعة الألوان',vault:'خزنة الألوان'},rules={bluff:'شوف لون حجرك سرًا، أعلن لونًا، وخلّ خصمك يختار: أصدقك أو أتحداك. ثلاث جولات، والكل يكمل للنهاية.',vault:'احفظ أماكن الألوان. كل إصابة تزيد مكاسب دورك؛ ثبّتها أو أكمل. الغلطة تضيّع مكاسب الدور غير المثبتة. ثلاث جولات أو نفاد القطع.'};

@@ -35,7 +35,7 @@ test('playlist validation retains allowed seat choices and rejects invalid combi
  for(const row of [{game:'ludo',mode:'ludo',seats:5},{game:'jackaroo',mode:'quick',seats:3},{game:'pegs',mode:'teams',seats:3},{game:'billiards',mode:'classic',seats:4}])assert.throws(()=>Catalog.normalizePlaylist([row]));
 });
 test('linked table initialization passes the chosen physical seats and rules through to the game server',async()=>{
- for(const [game,mode,seats]of [['ludo','ludo-quick',4],['ludo','ludo',6],['jackaroo','quick',4],['pegs','teams',6],['pegs','vault',4],['dice','classic',5]]){
+ for(const [game,mode,seats]of [['ludo','ludo-quick',4],['ludo','ludo',6],['jackaroo','quick',4],['pegs','teams',6],['dice','classic',5]]){
   let body;const namespace={idFromName:n=>n,get:()=>({fetch:async(_url,options)=>{body=JSON.parse(options.body);return new Response('{}',{status:201});}})};
   const opened=await createLinkedRoom({BOARD_ROOMS:namespace},game,{settings:{mode,seats},count:2,link:{code:'151234',round:'test',token:'x'.repeat(40)}});
   assert.equal(opened.ok,true);assert.equal(body.seats,seats);assert.equal(body.playerLimit,seats);assert.equal(body.variant,mode);

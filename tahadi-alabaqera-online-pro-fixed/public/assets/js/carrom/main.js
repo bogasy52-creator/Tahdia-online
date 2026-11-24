@@ -9,6 +9,7 @@
 import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, readCarromAim, FIXED_DT } from './engine.js?v=33.9.12-quality1';
 import { createCarromRenderer } from './render.js?v=33.9.12-quality1';
 import { createTable } from '../board-table-v33.js?v=33.11.7';
+const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name
 
 const $ = (id) => document.getElementById(id), KEY = 'bs-carrom-settings-v1';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
@@ -19,7 +20,7 @@ const reduced = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: redu
 const canvas = $('carromBoard'), renderer = createCarromRenderer(canvas);
 
 const CUE = window.BS_CUE_CONTROLS || null;
-const ctl = { mode: 'ai', state: null, anim: null, animDone: null, names: ['أنت', 'الكمبيوتر'], users: [null, null], bots: [false, true], me: 0, viewSeat: 0, pending: null, shownSeq: 0, match: 0, endShown: false, rewarded: false, receipt: '', turnSeen: -1, bot: null, running: false, paused: false };
+const ctl = { mode: 'ai', state: null, anim: null, animDone: null, names: ['أنت', RIVAL_NAME], users: [null, null], bots: [false, true], me: 0, viewSeat: 0, pending: null, shownSeq: 0, match: 0, endShown: false, rewarded: false, receipt: '', turnSeen: -1, bot: null, running: false, paused: false };
 let angle = -Math.PI / 2, power = 0, remote = null, table = null, room = null, frame = 0, last = 0, acc = 0;
 
 /* ---------- who may play ---------- */
@@ -84,7 +85,7 @@ function statusText() {
   if (s.winner !== null) return 'انتهت الطاولة';
   if (ctl.anim) return 'الأحجار تتحرك…';
   if (ctl.pending) return 'الضربة طايرة…';
-  if (ctl.bot) return 'الكمبيوتر يصوّب…';
+  if (ctl.bot) return ctl.names[1] + ' يصوّب…';
   const how = CUE ? 'صوّب ثم اسحب القوة وأفلت' : 'اسحب لورا وأفلت';
   if (canPlay()) return ctl.mode === 'hotseat' ? 'دور ' + ctl.names[s.turn] + ' · ' + how : 'دورك · ' + how;
   return 'دور ' + (ctl.names[s.turn] || 'الخصم') + '…';
@@ -344,7 +345,7 @@ function showGame() {
 function startLocal(mode) {
   cancelPlayback();
   ctl.mode = mode; prefs.mode = mode; persist();
-  ctl.names = mode === 'ai' ? [window.BS_GAME_MENU?.playerName?.() || 'أنت', 'الكمبيوتر'] : ['اللاعب الأول', 'اللاعب الثاني'];
+  ctl.names = mode === 'ai' ? [window.BS_GAME_MENU?.playerName?.() || 'أنت', RIVAL_NAME] : ['اللاعب الأول', 'اللاعب الثاني'];
   ctl.users = mode === 'ai' ? [myUser(), { photo: { kind: 'preset', id: 'h-robot' } }] : [null, null];
   ctl.bots = mode === 'ai' ? [false, true] : [false, false];
   ctl.state = createCarrom({ mode: mode === 'hotseat' ? 'hotseat' : 'ai', difficulty: prefs.level, seed: (Math.random() * 4294967296) >>> 0 });

@@ -6,14 +6,14 @@ export const PARTY_MODES=Object.freeze({
  zahra:rows(['classic','الكلاسيكي · ستة لاعبين'],['quick','سريع · أول حجر']),
  ludo:rows(['ludo','الكلاسيكي'],['ludo-quick','سريع · أول حجر']),
  chaos:rows(['classic','كلاسيكي'],['stack','سحب متراكم'],['quick','جولة سريعة']),
- pegs:rows(['classic','24 قطعة · 6 ألوان'],['large','48 قطعة · 8 ألوان'],['teams','فرق'],['race','سباق الذاكرة'],['race-large','السباق الكبير'],['bluff','خدعة الألوان'],['vault','خزنة الألوان']),
+ pegs:rows(['classic','24 قطعة · 6 ألوان'],['large','48 قطعة · 8 ألوان'],['teams','فرق'],['race','سباق الذاكرة'],['race-large','السباق الكبير']),
  tanks:rows(['ffa','الكل ضد الكل'],['teams','فريقان']),
  hockey:rows(['classic','أول 5 أهداف'],['quick','أول 3 أهداف'],['long','أول 7 أهداف']),
  serpent:rows(['timed','سباق النقاط'],['survival','البقاء']),
  memory:rows(['pairs','سباق الأزواج'],['sequence','تذكّر الترتيب']),
  picture:rows(['3','صورة 3 × 3'],['4','صورة 4 × 4'],['5','صورة 5 × 5']),
  jewels:rows(['classic','سباق الجواهر · لوحتان متساويتان']),
- logic:rows(['classic','أنماط وحساب واستنتاج']),bridge:rows(['classic','نفس الجسر للجميع']),ten:rows(['classic','خمس جولات إقصاء']),wordbomb:rows(['classic','صيد الكلمات']),focus:rows(['classic','تحديات تركيز متنوعة']),cipher:rows(['classic','آخر لاعب']),
+ logic:rows(['classic','أنماط وحساب واستنتاج']),blocks:rows(['classic','نفس القطع · دقيقتين']),ten:rows(['classic','خمس جولات إقصاء']),wordbomb:rows(['classic','صيد الكلمات']),focus:rows(['classic','تحديات تركيز متنوعة']),cipher:rows(['classic','آخر لاعب']),
  dice:rows(['classic','ارمِ أو ثبّت']),billiards:rows(['classic','كرات 8']),carrom:rows(['classic','مواجهة الملكة']),sudoku:rows(['classic','حل اللوحة']),
  'paths-online':rows(['classic','توصيل الأرقام']),puzzle:rows(['classic','ترتيب الأرقام'])
 });

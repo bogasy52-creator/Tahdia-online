@@ -1,5 +1,5 @@
 import {quickRoomSeats} from './quick-room-options-v33-14-1.js';
-import {partyMode} from './party-modes.js?v=33.14.0';
+import {partyMode} from './party-modes.js?v=33.15.0';
 // 33.9.1: five seconds before the first game, the same as between games
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=5000,PARTY_BREAK_MS=10000;
 // 33.10.6: a list holds every game of the room (there are more than twenty now)
@@ -9,13 +9,13 @@ export const PARTY_GAMES=Object.freeze([
 // arenas, then the puzzles
  {id:'quiz',name:'تحدي العباقرة',kind:'quiz',real:true,image:'assets/game-cards-v27/quiz.svg',hint:'نفس الأسئلة والوقت للجميع، مع الصور والصوت والذاكرة.'},
 // 33.12.0: the two new games, each player on the same rounds
- {id:'bridge',name:'جسر الألوان',kind:'puzzle',real:true,image:'assets/brand/bridge-cover-v33-12.svg',hint:'احفظ الطريق الآمن وعدِّ الجسر قبل أصحابك؛ نفس الجسر للجميع.'},
+ {id:'blocks',name:'رص البلوكات',kind:'puzzle',real:true,image:'assets/brand/blocks-cover-v33-15.svg',hint:'نفس القطع للجميع ودقيقتين؛ أعلى نقاط يفوز.'},
  {id:'ten',name:'عشر ثواني',kind:'reaction',real:true,image:'assets/brand/ten-cover-v33-12.svg',hint:'وقّف على عشر ثواني بالضبط بدون عدّاد؛ الأبعد يطلع كل جولة.'},
  {id:'logic',name:'المنطق',kind:'quiz',real:true,image:'assets/game-cards-v27/logic.svg',hint:'أنماط وحساب واستنتاج، بنفس الأسئلة والوقت للجميع.'},
  {id:'wordbomb',name:'صيد الكلمات',kind:'reaction',real:true,image:'assets/challenges/wordbomb.svg',hint:'شبكة حروف وكلمات مخفية؛ أول من يلقى الكلمة ياخذ نقاطها، حتى 20 لاعبًا.'},
  {id:'focus',name:'مواجهة التركيز',kind:'reaction',real:true,image:'assets/challenges/focus.svg',hint:'20 لاعبًا و14 تحدي تركيز متبدّل.'},
  {id:'cipher',name:'ساحة الشفرات',kind:'puzzle',real:true,image:'assets/challenges/cipher.svg',hint:'اختر أي خصم واكشف شفرته لإقصائه؛ الفوز لآخر لاعب.'},
- {id:'ludo',name:'لودو',kind:'board',maxPlayers:6,real:true,linkOnly:true,image:'assets/brand/ludo-cover-v33-10-5.webp',hint:'نفس قواعد لودو؛ اختر أربعة أو ستة لاعبين، ولكل لاعب لونه وبيته.'},
+ {id:'ludo',name:'لودو',kind:'board',maxPlayers:6,real:true,linkOnly:true,image:'assets/brand/ludo-cover-v33-15.webp',hint:'نفس قواعد لودو؛ اختر أربعة أو ستة لاعبين، ولكل لاعب لونه وبيته.'},
  {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، وتكتمل المقاعد تلقائيًا.'},
  {id:'chaos',name:'أونو',kind:'board',maxPlayers:8,real:true,image:'assets/challenges/uno-table.svg',hint:'طابق اللون والرقم، اعكس الدور، ونادِ أونو. طاولات حتى 8 لاعبين.'},
  {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},

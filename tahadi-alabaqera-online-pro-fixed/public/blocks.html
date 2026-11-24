@@ -1,0 +1,60 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>رص البلوكات — لعبة العباقرة</title><meta name="description" content="رص البلوكات: حط القطع على لوحة 8×8، كمّل صف أو عمود يتكسر، واجمع كومبو. كلاسيك أو تحدي دقيقتين، ولحالك أو مع أصحابك في الغرف."><meta name="theme-color" content="#160c2b"><link rel="manifest" href="/manifest.webmanifest?v=33.9.10"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
+<script src="assets/js/party-link-v32.js?v=33.15.0-room1"></script><script src="/assets/js/instant-play-v33-12.js?v=33.15.0"></script><link rel="stylesheet" href="assets/css/app-blocks.css?v=33.15.0-2ead16598b"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.15.0"></head>
+<body class="release-v26 ng-page blocks-page">
+<main class="ng-app">
+  <header class="ng-top"><a class="ng-icon" href="/" aria-label="رجوع للرئيسية">→</a><div class="ng-title"><b>رص البلوكات</b><small id="bkLevel">كمّل الصفوف وكسّرها</small></div><button id="bkSound" class="ng-icon" type="button" aria-label="الصوت">🔊</button></header>
+
+  <section id="bkIntro" class="ng-intro" aria-labelledby="bkIntroTitle">
+    <img class="ng-cover" src="/assets/brand/blocks-cover-v33-15.svg?v=33.15.0" width="1000" height="600" alt="لوحة بلوكات ملونة بإطار ذهبي وصف يتكسر بلمعة">
+    <h1 id="bkIntroTitle">رصّ… وكسّر</h1>
+    <ul class="ng-rules">
+      <li><b>1</b><span>اسحب القطعة من تحت وحطها على اللوحة. تقدر تلمس القطعة وبعدها المربع.</span></li>
+      <li><b>2</b><span>كمّل صف أو عمود كامل وينكسر. صفين أو أكثر مع بعض نقاطهم أكبر.</span></li>
+      <li><b>3</b><span>كسّر ورا بعض تجمع كومبو، ولو نظّفت اللوحة كلها لك 300 نقطة.</span></li>
+      <li><b>4</b><span>تخلص اللعبة إذا ما بقى مكان لأي قطعة. عندك 🔄 قطع جديدة و💣 قنبلة مرة وحدة.</span></li>
+    </ul>
+    <div class="ng-levels bk-modes" role="group" aria-label="الطور">
+      <button type="button" data-bk-mode="classic">كلاسيك<small>لين ما يبقى مكان</small></button>
+      <button type="button" data-bk-mode="timed">دقيقتين ⏱<small>أعلى نتيجة بالوقت</small></button>
+    </div>
+    <div class="ng-levels bk-levels" role="group" aria-label="المستوى">
+      <button type="button" data-bk-level="casual">سهل<small>قطع صغيرة أكثر</small></button>
+      <button type="button" data-bk-level="standard">متوسط<small>مزيج</small></button>
+      <button type="button" data-bk-level="expert">صعب<small>قطع كبيرة</small></button>
+    </div>
+    <p id="bkIntroBest" class="bk-intro-best"></p>
+    <button id="bkPlay" class="ng-play" type="button">العب الحين</button>
+  </section>
+
+  <section id="bkGame" class="ng-game bk-game" hidden aria-label="اللوحة">
+    <div class="bk-scorebar">
+      <div class="bk-score"><small>النقاط</small><b id="bkScore">0</b></div>
+      <div class="bk-mid"><span id="bkCombo" class="bk-combo" hidden></span><span class="bk-timer"><i id="bkClock" class="ng-clock" aria-hidden="true"></i><b id="bkTime">120</b></span></div>
+      <div class="bk-best"><small>الأفضل</small><b id="bkBest">0</b></div>
+    </div>
+    <div class="ng-status bk-status"><i aria-hidden="true">🧩</i><p id="bkStatus" role="status" aria-live="polite"></p><button id="bkQuit" class="ng-quit" type="button">خروج</button></div>
+    <div id="bkBoardWrap" class="bk-board-wrap"><div id="bkBoard" class="bk-board" role="grid" aria-label="لوحة 8×8"></div></div>
+    <div id="bkHelps" class="bk-helps">
+      <button id="bkSwap" class="bk-help" type="button"><i aria-hidden="true">🔄</i><b>قطع جديدة</b><small>1</small></button>
+      <button id="bkBomb" class="bk-help" type="button"><i aria-hidden="true">💣</i><b>قنبلة 3×3</b><small>1</small></button>
+    </div>
+    <div id="bkTray" class="bk-tray" aria-label="القطع"></div>
+  </section>
+  <div id="bkFx" class="bk-fx" aria-hidden="true"></div>
+
+  <section id="bkResult" class="ng-result" hidden role="dialog" aria-modal="true" aria-labelledby="bkResultTitle">
+    <div class="ng-result-card">
+      <h2 id="bkResultTitle"></h2>
+      <b id="bkFinal" class="bk-final">0</b>
+      <p id="bkResultNote"></p>
+      <ul id="bkFacts" class="bk-facts"></ul>
+      <div class="ng-result-actions">
+        <button id="bkAgain" class="ng-play" type="button">جولة جديدة</button>
+        <a class="ng-ghost" href="/party?game=blocks">العب مع أصحابك</a>
+        <a class="ng-ghost" href="/">الرئيسية</a>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="assets/js/blocks-v33-15.js?v=33.15.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.15.0"></script></body></html>

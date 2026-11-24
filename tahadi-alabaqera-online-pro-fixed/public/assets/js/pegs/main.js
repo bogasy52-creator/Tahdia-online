@@ -9,6 +9,8 @@ import { createTable } from '../board-table-v33.js?v=33.11.7';
 import { guardPegs } from './guard.js?v=33.13.0';
 
 import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.1';
+const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name
+const RIVAL_SHIFT=Math.floor(Math.random()*5);
 const $ = (id) => document.getElementById(id);
 const SEATS = ['#ffc94d', '#5fd4ff', '#ff7ab6', '#8ee06a', '#c09bff', '#ff995a'];
 const HEROES = ['robot', 'cyber', 'astronaut', 'samurai', 'viking'];
@@ -450,7 +452,7 @@ function startLocal(mode) {
   let n = mode === 'ai' ? 1 + Math.max(1, Math.min(5, Number(prefs.rivals) || 1)) : Math.max(2, Math.min(6, Number(prefs.local) || 2));
   if(prefs.variant==='teams')n=n>4?6:4;
   const meName = window.BS_GAME_MENU?.playerName?.() || 'أنت';
-  ctl.names = mode === 'ai' ? [meName, ...Array.from({ length: n - 1 }, (_, k) => (n === 2 ? 'الكمبيوتر' : 'الكمبيوتر ' + (k + 1)))] : Array.from({ length: n }, (_, k) => 'اللاعب ' + (k + 1));
+  ctl.names = mode === 'ai' ? [meName, ...Array.from({ length: n - 1 }, (_, k) => ['نورة','ماجد','ليان','فهد','سارة'][(k + RIVAL_SHIFT) % 5])] : Array.from({ length: n }, (_, k) => 'اللاعب ' + (k + 1));
   ctl.users = mode === 'ai' ? [myUser(), ...HEROES.slice(0, n - 1).map((h) => ({ fallback: '/assets/heroes/face/' + h + '.webp' }))] : ctl.names.map(() => null);
   ctl.levels = ctl.names.map((_, k) => (mode === 'ai' && k > 0 ? prefs.level : null));
   let state;ctl.raceState=null;clearTimeout(raceTimer);
@@ -578,10 +580,8 @@ function finish() {
 }
 
 /* ---------- online ---------- */
-function openColorRoom(next){
-  if(!['bluff','vault'].includes(next?.state?.mode||next?.variant))return false;
-  const target=new URL(location.href);target.pathname='/colorbluff';target.searchParams.set('room',next.code);location.replace(target.pathname+target.search+target.hash);return true;
-}
+// 33.15.0: «خدعة الألوان» and «خزنة الألوان» are retired, so a room never hands over to their page.
+function openColorRoom(){ return false; }
 async function apply(next, { animate, signal } = {}) {
   if(openColorRoom(next))return;
   if(signal?.aborted)return;

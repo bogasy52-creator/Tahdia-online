@@ -30,7 +30,7 @@ test('الغرف: a quick room for one game or the room of twenty, both one tap 
   // a quick room: one game, as many seats as that game takes (never above twenty)
   assert.match(js, /quickRoomSeats/);
   assert.match(js, /body:JSON\.stringify\(\{capacity:choice\.seats,playlist\}\)/);
-  for (const id of ['ludo', 'bridge', 'ten', 'quiz', 'memory']) assert.ok(partyGame(id), id + ' can open a quick room');
+  for (const id of ['ludo', 'blocks', 'ten', 'quiz', 'memory']) assert.ok(partyGame(id), id + ' can open a quick room');
   const bundles = JSON.parse(await read('scripts/style-bundles.json'));
   assert.equal(bundles['party.html'].at(-1), 'assets/css/rooms-v33-13.css');
 });

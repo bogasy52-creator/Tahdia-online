@@ -1,4 +1,4 @@
-import {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.14.0';
+import {SIX_CELL,SIX_TRACK,SIX_LANES,SIX_YARDS,sixAngle,sixRotate,sixSpot} from './six-layout.js?v=33.15.0';
 /* Tahdia 33.10.5 — «لودو»: the classic cross board, drawn as one SVG.
    The four yards sit in the corners (red, green, blue, yellow, clockwise from the top left); each
    colour starts on the coloured square next to its yard, walks clockwise round 51 squares, turns at
@@ -41,7 +41,8 @@ export function ludoSpot(state, seat, token, progress = state.players[seat].toke
   if(state.players.length===6)return sixSpot(state,seat,token,progress);
   const g = ludoGeometry(state), corner = g.corners[seat];
   if (progress < 0) { const [oy, ox] = YARD_ORIGIN[corner], [sy, sx] = YARD_SPOTS[token]; return { x: ox + sx, y: oy + sy, where: 'yard' }; }
-  if (progress >= g.finish) { const f = FINISH[corner], spread = (token - 1.5) * 13; return { x: f.x + (corner % 2 ? spread : 0), y: f.y + (corner % 2 ? 0 : spread), where: 'home', small: true }; }
+  // 33.15.0: the stones that reach the middle stand together on their colour's point, with a count
+  if (progress >= g.finish) { const f = FINISH[corner]; return { x: f.x, y: f.y, where: 'home', small: true }; }
   if (progress >= g.lane) { const [r, c] = HOME_COLUMN[corner][progress - g.lane]; return { ...cellXY(r, c), where: 'lane' }; }
   const [r, c] = LUDO_PATH[globalLudoPosition(seat, progress, state)]; return { ...cellXY(r, c), where: 'track', cell: globalLudoPosition(seat, progress, state) };
 }
@@ -219,7 +220,8 @@ function pawn(seat, number, scale = 1) {
   } else { // ball
     g.append(el('circle', { cx: 0, cy: -14, r: 8, fill, stroke: line, 'stroke-width': 1 }));
   }
-  g.append(el('ellipse', { cx: -3.4, cy: head === 2 ? -17.5 : -17, rx: 2.8, ry: 1.7, fill: '#ffffff', opacity: .8 }));
+  if (head === 0) g.append(el('ellipse', { cx: -2.6, cy: -8.6, rx: 1.8, ry: 1, fill: '#ffffff', opacity: .7 }));
+  else g.append(el('ellipse', { cx: head === 1 ? -3.2 : -3.4, cy: head === 1 ? -19.4 : head === 2 ? -17.5 : -17, rx: 2.8, ry: 1.7, fill: '#ffffff', opacity: .8 }));
   g.append(el('path', { d: 'M-7.5 9C-7.5 4 -4.5 1 -3.5 -3', fill: 'none', stroke: '#ffffff', 'stroke-opacity': .45, 'stroke-width': 1.4, 'stroke-linecap': 'round' }));
   return g;
 }
@@ -277,6 +279,15 @@ export function renderLudoBoard(host, state, options = {}) {
       node.append(hit);
     }
     layer.append(node); nodes.push({ node, ...s });
+  }
+  // a gold count on each colour's pile in the middle (×2, ×3, ×4)
+  const home = new Map();
+  for (const s of placed) if (s.where === 'home') home.set(s.seat, [...(home.get(s.seat) || []), s]);
+  for (const [seat, list] of home) if (list.length > 1) {
+    const { x, y } = list[0].at, r = six ? 6.5 : 8.5, badge = el('g', { class: 'ludo-home-count', 'data-home-count': seat, transform: `translate(${(x + r * 1.15).toFixed(1)} ${(y - r * 2).toFixed(1)})`, 'pointer-events': 'none' });
+    badge.append(el('circle', { r, fill: 'url(#' + ID + 'gold)', stroke: GOLD_LINE, 'stroke-width': 1.2 }));
+    badge.append(el('text', { y: r * .38, 'text-anchor': 'middle', 'font-size': (r * 1.15).toFixed(1), 'font-weight': 900, fill: '#3a1d00', 'font-family': 'system-ui,sans-serif' }, [document.createTextNode(String(list.length))]));
+    layer.append(badge);
   }
   // a tap on a square with a movable pawn moves it too (a fingertip misses a small pawn)
   if (legal.size && options.onPick) svg.addEventListener('click', (e) => {

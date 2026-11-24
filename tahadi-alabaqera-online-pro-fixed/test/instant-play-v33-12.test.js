@@ -56,7 +56,7 @@ test('a plain visit plays at once; rooms, parties, frames and ?play=menu keep th
   assert.equal(run('/uno').instant.partyUrl, '/party?game=chaos');
   assert.equal(run('/carrom').instant.page, 'carrom');
   assert.equal(run('/race.html').instant.page, 'carrom');
-  assert.equal(run('/bridge').instant.partyUrl, '/party?game=bridge');
+  assert.equal(run('/blocks').instant.partyUrl, '/party?game=blocks');
   assert.equal(run('/').instant, undefined, 'pages that are not games are untouched');
   // the page's own buttons, pressed in order; a failed step leaves the menu (the old behaviour)
   // 33.13.0: the page's own choices (opponent, level, goals) are offered first, then pressed in order
@@ -82,12 +82,14 @@ test('الغرف opens with only the game it was asked for', async () => {
   assert.match(party, /let playlist=\(\(g\)=>g&&partyGame\(g\)\?\[settings\(partyGame\(g\)\.id\)\]:\[settings\('quiz'\),settings\('memory'\)\]\)/);
 });
 
-test('the two new games: their pages, art and rules', async () => {
-  for (const [page, script, cover] of [['bridge', 'bridge-v33-12.js', 'bridge-cover-v33-12.svg'], ['ten', 'ten-v33-12.js', 'ten-cover-v33-12.svg']]) {
+test('the newer games: their pages, art and rules (33.15: «رص البلوكات» took the bridge\'s place)', async () => {
+  const bundles = JSON.parse(await read('scripts/style-bundles.json'));
+  assert.deepEqual(bundles['blocks.html'], ['assets/css/instant-play-v33-12.css', 'assets/css/new-games-v33-12.css', 'assets/css/blocks-v33-15.css', 'assets/css/game-interaction-v34.css']);
+  for (const [page, script, cover] of [['blocks', 'blocks-v33-15.js', 'blocks-cover-v33-15.svg'], ['ten', 'ten-v33-12.js', 'ten-cover-v33-12.svg']]) {
     const html = await read('public/' + page + '.html');
     assert.match(html, /<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">/);
     assert.match(html, /assets\/js\/party-link-v32\.js/);
-    assert.deepEqual(JSON.parse(await read('scripts/style-bundles.json'))[page + '.html'], ['assets/css/instant-play-v33-12.css', 'assets/css/new-games-v33-12.css', 'assets/css/game-interaction-v34.css']);
+    if (page === 'ten') assert.deepEqual(bundles[page + '.html'], ['assets/css/instant-play-v33-12.css', 'assets/css/new-games-v33-12.css', 'assets/css/game-interaction-v34.css']);
     assert.match(html, new RegExp('assets/css/app-' + page + '\\.css\\?v='));
     assert.match(html, new RegExp('assets/js/' + script.replace('.', '\\.')));
     assert.match(html, /href="\/party\?game=/);
@@ -97,12 +99,8 @@ test('the two new games: their pages, art and rules', async () => {
     assert.match(js, /prefers-reduced-motion/);
     const svg = await read('public/assets/brand/' + cover);
     assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-    assert.doesNotMatch(svg, /<script|<image|href="http|<text/);
+    assert.doesNotMatch(svg, /<script|<image|href="http/);
   }
-  const bridge = await read('public/assets/js/bridge-v33-12.js');
-  assert.match(bridge, /casual: \{ label: 'سهل', rows: 8, cols: 2/);
-  assert.match(bridge, /expert: \{ label: 'صعب', rows: 12, cols: 4/);
-  assert.match(bridge, /a tile is never replaced under a finger/);
   const ten = await read('public/assets/js/ten-v33-12.js');
   assert.match(ten, /const TARGET = 10000/);
   assert.match(ten, /pointerdown/);
@@ -110,7 +108,7 @@ test('the two new games: their pages, art and rules', async () => {
 });
 
 test('a group room plays the new games on their own pages, the same seed for everyone', () => {
-  for (const id of ['bridge', 'ten']) {
+  for (const id of ['blocks', 'ten']) {
     assert.ok(partyGame(id), id);
     assert.ok(PARTY_MODES[id]?.length, id);
     assert.equal(localGame(id), '/' + id);
@@ -128,14 +126,17 @@ test('a group room plays the new games on their own pages, the same seed for eve
       assert.notEqual(room.status, 'playing', id + ': the round ends once everyone has a result');
     }
   }
-  assert.ok(PARTY_GAMES.findIndex((g) => g.id === 'bridge') < PARTY_GAMES.findIndex((g) => g.id === 'logic'));
+  assert.ok(PARTY_GAMES.findIndex((g) => g.id === 'blocks') < PARTY_GAMES.findIndex((g) => g.id === 'logic'));
+  assert.equal(partyGame('bridge'), null, 'the bridge is retired from the rooms');
 });
 
-test('home: the library in order, the two new games, the cards fit, and the games move', async () => {
+test('home: the library in order, the newer games, the cards fit, and the games move', async () => {
   const home = await read('public/index.html');
   const order = [...home.matchAll(/<a href="([^"]+)" class="home-game/g)].map((m) => m[1]);
-  assert.equal(order.length, 28);
-  assert.deepEqual(order.slice(0, 7), ['/ludo', '/bridge', '/ten', '/jackaroo', '/baloot', '/uno', '/pegs']);
+  // 33.15.0: «خدعة الألوان» and «خزنة الألوان» are retired, «رص البلوكات» replaced «جسر الألوان»
+  assert.equal(order.length, 26);
+  assert.deepEqual(order.slice(0, 7), ['/ludo', '/blocks', '/ten', '/jackaroo', '/baloot', '/uno', '/pegs']);
+  assert.doesNotMatch(home, /href="\/(?:bridge|colorbluff)/);
   assert.equal(order.at(-1), '/party');
   assert.doesNotMatch(home, /table-feature/, 'the two wide table cards spilled off the phone');
   assert.match(home, /<h3>سر الألوان<\/h3>/);
@@ -148,5 +149,5 @@ test('home: the library in order, the two new games, the cards fit, and the game
   assert.match(css, /\.hm-reel\.is-held \.hm-reel-track\{animation-play-state:paused\}/);
   const tail = await read('public/assets/css/app-index-tail.css');
   assert.ok(tail.includes('hm-reel-item'), 'the built home bundle carries the motion');
-  for (const file of ['public/assets/brand/bridge-cover-v33-12.svg', 'public/assets/brand/ten-cover-v33-12.svg']) await access(new URL(file, root));
+  for (const file of ['public/assets/brand/blocks-cover-v33-15.svg', 'public/assets/brand/ten-cover-v33-12.svg']) await access(new URL(file, root));
 });
