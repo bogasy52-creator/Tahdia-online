@@ -3,7 +3,7 @@
    light, ground far below, floating scenery and drifting particles; every challenge has its own
    pieces; runners are small toy figures with interchangeable headwear. All art is drawn here. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.18.1';
+import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.19.0';
 
 const TAU = Math.PI * 2;
 const col = (c) => new T.Color(c);
@@ -41,6 +41,10 @@ export const OUTFITS = Object.freeze([
   { id: 'horns', slot: 'hat', name: 'قرون حلاوة', price: 150 },
   { id: 'helmet', slot: 'hat', name: 'خوذة فضاء', price: 260 },
   { id: 'crown', slot: 'hat', name: 'تاج', price: 400 },
+  { id: 'pinwheel', slot: 'hat', name: 'مروحة العاصفة', price: 0, season: 'storm' },
+  { id: 'halo', slot: 'hat', name: 'هالة القمر', price: 0, season: 'moon' },
+  { id: 'racer', slot: 'hat', name: 'خوذة السباق', price: 0, season: 'speed' },
+  { id: 'wings', slot: 'hat', name: 'عصابة الجناحين', price: 0, season: 'giants' },
   { id: 'noface', slot: 'face', name: 'بدون', price: 0 },
   { id: 'shades', slot: 'face', name: 'نظارة شمس', price: 70 },
   { id: 'litham', slot: 'face', name: 'لثام', price: 110 },
@@ -103,7 +107,7 @@ export function buildCharacter(look = {}) {
   const hat = new T.Group(); head.add(hat); dressHat(hat, look.hat, ch);
   const face = new T.Group(); head.add(face); dressFace(face, look.face);
   if (look.hat && look.hat !== 'none' && ['shmagh', 'helmet', 'beanie', 'taqiya', 'cap', 'crown'].includes(look.hat)) top.visible = false;
-  root.userData = { body, head, hands, feet, arms, mat };
+  root.userData = { body, head, hands, feet, arms, mat, spin: hat.userData.spin, float: hat.userData.float };
   placeArms(root);
   return root;
 }
@@ -119,6 +123,11 @@ function dressHat(g, id, ch) {
   }
   if (id === 'horns') for (const s of [-1, 1]) { const h = new T.Mesh(new T.CylinderGeometry(0, 0.07, 0.34, 10), m(s > 0 ? '#ff6fb7' : '#7ee7d0')); h.position.set(s * 0.18, 0.36, 0); h.rotation.z = -s * 0.35; g.add(h); }
   if (id === 'helmet') { const h = new T.Mesh(new T.SphereGeometry(0.47, 28, 20), new T.MeshPhysicalMaterial({ color: '#bfefff', transparent: true, opacity: 0.32, roughness: 0.05, metalness: 0, clearcoat: 1 })); const ring = new T.Mesh(new T.TorusGeometry(0.4, 0.05, 10, 28), m('#e9ecf5', { metalness: 0.6, roughness: 0.3 })); ring.rotation.x = Math.PI / 2; ring.position.y = -0.3; g.add(h, ring); }
+  // 33.19.0: the season outfits (won, never bought)
+  if (id === 'pinwheel') { const st = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 0.34, 6), m('#e9ecf5', { metalness: 0.5 })); st.position.y = 0.48; g.add(st); const hub = new T.Group(); hub.position.set(0, 0.66, 0.02); ['#ff4a5a', '#ffcf45', '#2fb5a8', '#7b4dff'].forEach((c, i) => { const bl = new T.Mesh(new T.CylinderGeometry(0, 0.12, 0.2, 3), m(c, { side: T.DoubleSide })); bl.scale.z = 0.15; bl.position.set(Math.cos(i * Math.PI / 2) * 0.1, Math.sin(i * Math.PI / 2) * 0.1, 0); bl.rotation.z = i * Math.PI / 2; hub.add(bl); }); g.add(hub); g.userData.spin = hub; }
+  if (id === 'halo') { const h = new T.Mesh(new T.TorusGeometry(0.26, 0.035, 10, 36), m('#ffe27a', { emissive: '#ffcf45', emissiveIntensity: 1.1, metalness: 0.6 })); h.rotation.x = Math.PI / 2; h.position.y = 0.6; g.add(h); g.userData.float = h; }
+  if (id === 'racer') { const hm = new T.Mesh(new T.SphereGeometry(0.39, 28, 14, 0, TAU, 0, Math.PI / 1.85), m('#e3243b', { metalness: 0.3, roughness: 0.25 })); hm.position.y = 0.02; const stripe = new T.Mesh(new T.TorusGeometry(0.3, 0.035, 8, 30, Math.PI), m('#ffffff')); stripe.rotation.y = Math.PI / 2; stripe.position.y = 0.04; const visor = new T.Mesh(new T.SphereGeometry(0.4, 24, 10, -Math.PI * 0.32, Math.PI * 0.64, Math.PI * 0.42, Math.PI * 0.2), new T.MeshPhysicalMaterial({ color: '#1a2233', roughness: 0.05, metalness: 0.4, clearcoat: 1, side: T.DoubleSide })); g.add(hm, stripe, visor); }
+  if (id === 'wings') { const band = new T.Mesh(new T.TorusGeometry(0.34, 0.035, 8, 30), m('#ffd23e', { metalness: 0.7, roughness: 0.3 })); band.rotation.x = Math.PI / 2; band.position.y = 0.12; g.add(band); for (const s2 of [-1, 1]) { const w = new T.Mesh(new T.SphereGeometry(0.2, 14, 10), m('#ffffff', { roughness: 0.5 })); w.scale.set(0.35, 0.9, 1.2); w.position.set(s2 * 0.38, 0.26, -0.05); w.rotation.z = s2 * 0.5; g.add(w); } }
   if (id === 'crown') {
     const gold = m('#ffd23e', { metalness: 0.9, roughness: 0.25 }), band = new T.Mesh(new T.CylinderGeometry(0.26, 0.28, 0.16, 24, 1, true), gold); band.position.y = 0.36; g.add(band);
     for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU, p = new T.Mesh(new T.CylinderGeometry(0, 0.06, 0.16, 6), gold); p.position.set(Math.sin(a) * 0.26, 0.5, Math.cos(a) * 0.26); g.add(p); const j = new T.Mesh(new T.SphereGeometry(0.035, 8, 6), m(i % 2 ? '#e0313b' : '#2fb5a8', { metalness: 0.2, roughness: 0.2 })); j.position.set(Math.sin(a) * 0.27, 0.36, Math.cos(a) * 0.27); g.add(j); }
@@ -138,8 +147,18 @@ function placeArms(fig) {
   const { hands, arms } = fig.userData; if (!arms) return;
   arms.forEach((a, i) => { const from = a.userData.shoulder, to = hands[i].position; tmp.subVectors(to, from); const len = Math.max(0.05, tmp.length() - 0.08); a.position.copy(from).addScaledVector(tmp, 0.5); a.scale.set(1, len, 1); a.quaternion.setFromUnitVectors(UP, tmp.normalize()); });
 }
-export function animateCharacter(fig, anim, phase, t) {
+export function animateCharacter(fig, anim, phase, t, emote = null) {
   const { body, head, hands, feet } = fig.userData, s = Math.sin(phase * 2.2);
+  if (fig.userData.spin) fig.userData.spin.rotation.z = t * 7; if (fig.userData.float) fig.userData.float.position.y = 0.6 + Math.sin(t * 2.5) * 0.04;
+  if (emote && anim !== 'run' && anim !== 'dash') {
+    feet.forEach((f) => { f.position.z = 0.04; f.position.y = 0.07; });
+    if (emote === 'wave') { hands[1].position.set(0.5, 1.15 + Math.sin(t * 12) * 0.08, 0.15 + Math.sin(t * 12) * 0.12); hands[0].position.set(-0.55, 0.6, 0.02); body.rotation.z = Math.sin(t * 6) * 0.05; }
+    if (emote === 'dance') { body.rotation.y = Math.sin(t * 7) * 0.6; body.position.y = Math.abs(Math.sin(t * 7)) * 0.12; hands.forEach((h, i) => h.position.set((i ? 1 : -1) * 0.58, 0.95 + Math.sin(t * 7 + i * Math.PI) * 0.2, 0.05)); }
+    if (emote === 'laugh') { body.rotation.x = -0.2 + Math.sin(t * 22) * 0.05; head.rotation.x = -0.25; hands.forEach((h, i) => h.position.set((i ? 1 : -1) * 0.42, 0.55, 0.28)); }
+    placeArms(fig); return;
+  }
+  body.rotation.y *= 0.8; head.rotation.x *= 0.8;
+  if (anim === 'dash') { body.rotation.x = 0.55; body.position.y = 0.05; hands.forEach((h, i) => h.position.set((i ? 1 : -1) * 0.5, 0.75, 0.38)); feet[0].position.z = -0.15; feet[1].position.z = 0.2; placeArms(fig); return; }
   if (anim === 'run') { feet[0].position.z = 0.04 + s * 0.2; feet[1].position.z = 0.04 - s * 0.2; feet[0].position.y = 0.07 + Math.max(0, s) * 0.1; feet[1].position.y = 0.07 + Math.max(0, -s) * 0.1; hands[0].position.z = -s * 0.25; hands[1].position.z = s * 0.25; body.position.y = Math.abs(s) * 0.07; body.rotation.x = 0.12; }
   else if (anim === 'jump' || anim === 'fall') { feet.forEach((f, i) => { f.position.z = i ? -0.08 : 0.16; f.position.y = 0.12; }); hands.forEach((h) => { h.position.y = 0.95; h.position.z = 0; }); body.rotation.x = anim === 'jump' ? -0.1 : 0.05; body.position.y = 0; }
   else if (anim === 'stun') { body.rotation.z = Math.sin(t * 18) * 0.25; head.rotation.y = Math.sin(t * 9) * 0.6; }
@@ -157,7 +176,7 @@ export class TowerScene {
     r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 0.98;
     r.shadowMap.enabled = true; r.shadowMap.type = T.PCFSoftShadowMap;
     this.scene = new T.Scene(); this.scene.environmentIntensity = 0.5;
-    const pm = new T.PMREMGenerator(r); this.scene.environment = pm.fromScene(new T.RoomEnvironment(), 0.04).texture; pm.dispose();
+    const pm = new T.PMREMGenerator(r); this.envMap = this.scene.environment = pm.fromScene(new T.RoomEnvironment(), 0.04).texture; pm.dispose();
     this.camera = new T.PerspectiveCamera(60, 1, 0.1, 900);
     this.hemi = new T.HemisphereLight('#ffffff', '#445', 1.1); this.scene.add(this.hemi);
     const sun = this.sun = new T.DirectionalLight('#fff4dd', 2.2); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
@@ -172,7 +191,14 @@ export class TowerScene {
     this.renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, this.quality)); this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h; this.camera.fov = w / h < 0.8 ? 68 : 56; this.camera.updateProjectionMatrix();
   }
-  clear() { if (this.group) { this.scene.remove(this.group); this.group.traverse((o) => { o.geometry?.dispose?.(); }); } this.group = null; this.dyn = []; this.pads = []; this.doors = new Map(); this.bumps = new Map(); this.winds = []; this.gemMeshes = []; this.crownMesh = null; this.lavaTex = null; this.stars = null; this.dust = null; this.skyMesh = null; this.runners.forEach((r) => this.scene.remove(r.fig)); this.runners.clear(); }
+  /** 33.19.0: «خفيفة» drops shadows, reflections, half the particles and far scenery, and draws at 1x. */
+  setQuality(mode) {
+    this.low = mode === 'low'; this.quality = this.low ? 1 : (globalThis.devicePixelRatio || 1) > 2.5 ? 1.5 : 1.75;
+    this.renderer.shadowMap.enabled = !this.low; this.sun.castShadow = !this.low; this.scene.environment = this.low ? null : this.envMap;
+    this.renderer.toneMappingExposure = this.low ? 1.08 : 0.98; this.resize();
+    this.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
+  }
+  clear() { if (this.group) { this.scene.remove(this.group); this.group.traverse((o) => { o.geometry?.dispose?.(); }); } this.group = null; this.dyn = []; this.pads = []; this.doors = new Map(); this.bumps = new Map(); this.winds = []; this.gemMeshes = []; this.rises = []; this.ghost = null; this.bubbles = []; this.crownMesh = null; this.lavaTex = null; this.stars = null; this.dust = null; this.skyMesh = null; this.runners.forEach((r) => this.scene.remove(r.fig)); this.runners.clear(); }
   padKick(x, z) { let best = null, bd = 3; for (const pd of this.pads) { const d = Math.hypot(pd.p.x - x, pd.p.z - z); if (d < bd) { bd = d; best = pd; } } if (best) best.kick = 1; }
 
   /** Builds the world and every piece of a course. */
@@ -186,6 +212,7 @@ export class TowerScene {
     const cols = [];
     for (const p of course.pieces) { const m = this.piece(p, W); if (m) g.add(m); if ((p.k === 'box' && !p.mv && !/blink|crumble|wall|push/.test(p.m)) || (p.k === 'disk' && !p.w)) cols.push(p); }
     this.columns(cols, course, W); this.scenery(course, W); this.particles(W);
+    if (this.low) { this.scene.fog.far = Math.min(this.scene.fog.far, 120); if (this.dust) this.dust.pts.geometry.setDrawRange(0, this.dust.n / 2); }
   }
   sky(W) {
     const geo = new T.SphereGeometry(600, 32, 18), c = [], a = geo.attributes.position, top = col(W.sky[0]), low = col(W.sky[1]);
@@ -238,6 +265,12 @@ export class TowerScene {
       case 'bump': { const g = new T.Group(); g.position.set(p.x, p.y, p.z); const c = new T.Mesh(new T.CylinderGeometry(p.r, p.r * 1.05, p.h, 24), M.white); c.position.y = p.h / 2; c.castShadow = true; for (const y of [0.35, 0.95]) { const ring = new T.Mesh(new T.TorusGeometry(p.r * 1.02, 0.08, 8, 24), M.red); ring.rotation.x = Math.PI / 2; ring.position.y = y * p.h; g.add(ring); } const lamp = new T.Mesh(new T.SphereGeometry(p.r * 0.5, 14, 10), M.pad); lamp.position.y = p.h; g.add(c, lamp); if (p.mv) this.dyn.push({ p, m: g, base: g.position.clone() }); this.bumps ??= new Map(); this.bumps.set(p.id, g); return g; }
       case 'pad': { const g = new T.Group(); g.position.set(p.x, p.y, p.z); const disc = new T.Mesh(new T.CylinderGeometry(p.r, p.r * 1.1, 0.25, 28), M.pad); disc.position.y = 0.12; const ring = new T.Mesh(new T.TorusGeometry(p.r * 1.05, 0.08, 8, 28), M.gold); ring.rotation.x = Math.PI / 2; ring.position.y = 0.22; g.add(disc, ring); this.pads ??= []; this.pads.push({ p, g, kick: 0 }); return g; }
       case 'wind': { this.winds ??= []; this.winds.push(p); for (const s of [-1, 1]) { const fan = new T.Group(); fan.position.set(s * 6.6, p.y0 + 2.2, p.z); const ring = new T.Mesh(new T.TorusGeometry(1.4, 0.18, 8, 24), M.metal); ring.rotation.y = Math.PI / 2; const hub = new T.Mesh(new T.SphereGeometry(0.3, 10, 8), M.gold); fan.add(ring, hub); for (let i = 0; i < 3; i++) { const blade = new T.Mesh(new T.RoundedBoxGeometry(0.1, 1.1, 0.4, 1, 0.04), M.white); blade.position.y = 0.55; const h = new T.Group(); h.rotation.x = i * TAU / 3; h.add(blade); fan.add(h); } this.group.add(fan); this.dyn.push({ p, m: fan, fan: s }); } return null; }
+      case 'rise': { // the floor that climbs after you
+        const tex = canvasTex(128, (g, n) => { g.fillStyle = p.lava ? '#ff4a12' : '#e2b26a'; g.fillRect(0, 0, n, n); for (let i = 0; i < 50; i++) { g.fillStyle = p.lava ? (i % 2 ? '#ffb02e' : '#8a1a08') : (i % 2 ? '#f6d39a' : '#b98a4a'); g.globalAlpha = 0.5; g.beginPath(); g.arc(Math.random() * n, Math.random() * n, 4 + Math.random() * 12, 0, TAU); g.fill(); } }, [4, 8]);
+        const m = new T.Mesh(new T.PlaneGeometry(p.w, p.z1 - p.z0 + 8), new T.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.94 })); m.rotation.x = -Math.PI / 2; m.position.set(p.x, p.y0, (p.z0 + p.z1) / 2 + 1);
+        if (p.lava) { const glow = new T.PointLight('#ff6a1f', 2.2, 14, 1.8); glow.position.y = 1.2; m.add(glow); }
+        this.rises.push({ p, m, tex }); return m;
+      }
       case 'door': { const m = new T.Mesh(new T.RoundedBoxGeometry(p.w, p.h, p.d, 2, 0.12), M.door); const hinge = new T.Group(); hinge.position.set(p.x - p.w / 2, p.y, p.z); m.position.set(p.w / 2, p.h / 2, 0); m.castShadow = true; const knob = new T.Mesh(new T.SphereGeometry(0.1, 10, 8), M.doorFace); knob.position.set(p.w * 0.3, 0, p.d / 2 + 0.05); m.add(knob); const mark = new T.Mesh(new T.TorusGeometry(0.28, 0.05, 6, 20), M.doorFace); mark.position.set(0, 0.6, -p.d / 2 - 0.03); m.add(mark); hinge.add(m); this.doors ??= new Map(); this.doors.set(p.id, { hinge, open: 0 }); const frame = new T.Mesh(new T.RoundedBoxGeometry(p.w + 0.2, 0.3, p.d + 0.2, 1, 0.08), M.gold); frame.position.set(p.x, p.y + p.h + 0.15, p.z); this.group.add(frame); return hinge; }
       case 'fin': { const g = new T.Group(); g.position.set(p.x, p.y, p.z); const arch = new T.Mesh(new T.TorusGeometry(p.w / 2, 0.38, 14, 40, Math.PI), M.gold); arch.castShadow = true; g.add(arch); const banner = new T.Mesh(new T.PlaneGeometry(p.w * 0.8, 0.9), new T.MeshStandardMaterial({ map: this.label('القمة', '#ffd45a', '#3a1590'), transparent: true, side: T.DoubleSide })); banner.position.y = p.w / 2 - 0.9; banner.rotation.y = Math.PI; g.add(banner); this.crown(g, p); this.spire(p); return g; }
       default: return null;
@@ -257,7 +290,7 @@ export class TowerScene {
     mesh.receiveShadow = true; this.group.add(mesh);
   }
   scenery(course, W) {
-    const r = rng(course.seed ^ 0x5eed), L = course.length, g = this.group, kill = course.kill;
+    const r = rng(course.seed ^ 0x5eed), L = course.length, g = this.group, kill = course.kill, few = this.low ? 0.4 : 1;
     // the ground far below
     if (W.lava) {
       const tex = canvasTex(256, (c, s) => { c.fillStyle = '#ff4a12'; c.fillRect(0, 0, s, s); for (let i = 0; i < 90; i++) { c.fillStyle = i % 3 ? '#ffb02e' : '#8a1a08'; c.globalAlpha = 0.5; c.beginPath(); c.arc(Math.random() * s, Math.random() * s, 6 + Math.random() * 22, 0, TAU); c.fill(); } }, [12, 12]);
@@ -266,7 +299,7 @@ export class TowerScene {
       const ground = new T.Mesh(new T.CircleGeometry(700, 48), new T.MeshStandardMaterial({ color: W.id === 'forest' ? '#6fbf73' : W.id === 'ice' ? '#f4fbff' : W.id === 'candy' ? '#ffd1ea' : '#f0c27e', roughness: 1 }));
       ground.rotation.x = -Math.PI / 2; ground.position.set(0, kill - 30, L / 2); g.add(ground);
     }
-    const inst = (geo, mat, n, place) => { const mesh = new T.InstancedMesh(geo, mat, n), m = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), s = new T.Vector3(), v = new T.Vector3(); for (let i = 0; i < n; i++) { const o = place(i); e.set(o.rx || 0, o.ry || 0, o.rz || 0); q.setFromEuler(e); m.compose(v.set(o.x, o.y, o.z), q, s.set(o.sx, o.sy ?? o.sx, o.sz ?? o.sx)); mesh.setMatrixAt(i, m); } g.add(mesh); return mesh; };
+    const inst = (geo, mat, n0, place) => { const n = Math.max(1, Math.round(n0 * few)), mesh = new T.InstancedMesh(geo, mat, n), m = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), s = new T.Vector3(), v = new T.Vector3(); for (let i = 0; i < n; i++) { const o = place(i); e.set(o.rx || 0, o.ry || 0, o.rz || 0); q.setFromEuler(e); m.compose(v.set(o.x, o.y, o.z), q, s.set(o.sx, o.sy ?? o.sx, o.sz ?? o.sx)); mesh.setMatrixAt(i, m); } g.add(mesh); return mesh; };
     const side = () => r.sign() * r.range(16, 70), along = () => r.range(-40, L + 60), lowY = (k = 0) => kill - 10 + r.range(0, 30) + k;
     const std = (c, o = {}) => new T.MeshStandardMaterial({ color: c, roughness: 0.8, ...o });
     if (W.id === 'forest') {
@@ -300,7 +333,7 @@ export class TowerScene {
   }
   clouds(r, L, top, color) {
     const mat = new T.MeshStandardMaterial({ color, roughness: 1, transparent: true, opacity: 0.92 }), geo = new T.SphereGeometry(1, 12, 8);
-    for (let i = 0; i < 16; i++) { const c = new T.Group(); c.position.set(r.sign() * r.range(20, 80), r.range(top - 30, top + 20), r.range(-30, L + 60)); for (let k = 0; k < 4; k++) { const b = new T.Mesh(geo, mat); b.position.set(k * 2.2 - 3, r.range(-0.4, 0.6), r.range(-1, 1)); b.scale.setScalar(r.range(1.6, 2.8)); c.add(b); } this.group.add(c); }
+    for (let i = 0; i < (this.low ? 6 : 16); i++) { const c = new T.Group(); c.position.set(r.sign() * r.range(20, 80), r.range(top - 30, top + 20), r.range(-30, L + 60)); for (let k = 0; k < 4; k++) { const b = new T.Mesh(geo, mat); b.position.set(k * 2.2 - 3, r.range(-0.4, 0.6), r.range(-1, 1)); b.scale.setScalar(r.range(1.6, 2.8)); c.add(b); } this.group.add(c); }
   }
   particles(W) {
     const n = 420, pos = new Float32Array(n * 3), r = rng(7);
@@ -321,6 +354,22 @@ export class TowerScene {
     this.scene.add(fig); const r = { fig, me, x: 0, y: 0, z: 0, ry: 0, anim: 'idle', phase: 0, tx: 0, ty: 0, tz: 0, tr: 0 }; this.runners.set(id, r); return r;
   }
   removeRunner(id) { const r = this.runners.get(id); if (r) { this.scene.remove(r.fig); this.runners.delete(id); } }
+  /** 33.19.0: your best run, running beside you as a see-through figure */
+  addGhost(look, label = 'أفضل وقت لك') {
+    if (this.ghost) this.scene.remove(this.ghost.fig);
+    const fig = buildCharacter(look); fig.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.material = [].concat(o.material).map((m) => { const c = m.clone(); c.transparent = true; c.opacity = 0.36; c.depthWrite = false; if (c.color) c.color.lerp(new T.Color('#9fe7ff'), 0.45); return c; }); if (o.material.length === 1) o.material = o.material[0]; } });
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: this.label(label, '#e9fbff', '#1a5d8acc'), transparent: true, depthWrite: false })); sp.scale.set(2.2, 2.2, 1); sp.position.y = 2.2; fig.add(sp);
+    this.scene.add(fig); this.ghost = { fig, phase: 0 }; return this.ghost;
+  }
+  moveGhost(g, dt, t) { if (!this.ghost) return; const f = this.ghost.fig; f.visible = Boolean(g); if (!g) return; f.position.set(g.x, g.y, g.z); f.rotation.y = g.ry; this.ghost.phase += dt * (g.a === 'run' ? 11 : 0); animateCharacter(f, g.a || 'run', this.ghost.phase, t); }
+  /** a reaction over a runner's head: 👋 😂 💃 */
+  emote(id, kind) {
+    const r = this.runners.get(id); if (!r) return;
+    const icon = { wave: '👋', laugh: '😂', dance: '💃' }[kind] || '👋';
+    const tex = canvasTex(128, (g, n) => { g.fillStyle = '#ffffffee'; g.beginPath(); g.arc(n / 2, n / 2 - 6, 44, 0, TAU); g.fill(); g.beginPath(); g.moveTo(n / 2 - 10, n / 2 + 34); g.lineTo(n / 2, n / 2 + 52); g.lineTo(n / 2 + 10, n / 2 + 34); g.fill(); g.font = '56px system-ui, "Apple Color Emoji", "Noto Color Emoji"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(icon, n / 2, n / 2 - 2); });
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false })); sp.scale.set(1.3, 1.3, 1); sp.position.y = r.me ? 2.7 : 3.35; r.fig.add(sp);
+    r.emote = kind; r.emoteUntil = performance.now() + 2400; this.bubbles.push({ r, sp, until: r.emoteUntil });
+  }
   /** A remote runner's latest reported place; drawn smoothly toward it. */
   target(id, x, y, z, ry, anim) { const r = this.runners.get(id); if (!r) return; if (Math.hypot(r.x - x, r.z - z) > 8) { r.x = x; r.y = y; r.z = z; } Object.assign(r, { tx: x, ty: y, tz: z, tr: ry, anim }); }
   burst(x, y, z, color = '#ffd45a', n = 26) {
@@ -350,11 +399,13 @@ export class TowerScene {
     if (this.doors && me) for (const [id, dr] of this.doors) { const want = me.opened.has(id) ? 1 : 0; dr.open += (want - dr.open) * Math.min(1, dt * 7); dr.hinge.rotation.y = -dr.open * 1.6; }
     this.gemMeshes?.forEach((m, i) => { const got = me?.gems.has(i); m.visible = !got; m.rotation.y = t * 2; m.position.y = this.course.gems[i].y + Math.sin(t * 2.5 + i) * 0.15; });
     if (this.crownMesh) this.crownMesh.rotation.y = t * 0.8;
+    for (const rs of this.rises) { const at = me?.riseAt?.get(rs.p.id); rs.m.position.y = at === undefined ? rs.p.y0 : rs.p.y0 + rs.p.v * (t - at); rs.tex.offset.y = (t * 0.05) % 1; }
+    const nowMs = performance.now(); for (let i = this.bubbles.length - 1; i >= 0; i--) { const b = this.bubbles[i]; b.sp.position.y = 2.9 + Math.sin(nowMs / 200) * 0.05; if (nowMs > b.until) { b.r.fig.remove(b.sp); if (b.r.emoteUntil <= nowMs) b.r.emote = null; this.bubbles.splice(i, 1); } }
     if (this.lavaTex) { this.lavaTex.offset.x = t * 0.01; this.lavaTex.offset.y = t * 0.006; }
     // runners: mine follows the simulation, the others glide to their reports
     for (const r of this.runners.values()) {
       if (!r.me) { const k = Math.min(1, dt * 10); r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.z += (r.tz - r.z) * k; let a = r.tr - r.ry; a = Math.atan2(Math.sin(a), Math.cos(a)); r.ry += a * k; r.phase += dt * (r.anim === 'run' ? 11 : 0); }
-      r.fig.position.set(r.x, r.y, r.z); r.fig.rotation.y = r.ry; animateCharacter(r.fig, r.anim, r.phase, t);
+      r.fig.position.set(r.x, r.y, r.z); r.fig.rotation.y = r.ry; animateCharacter(r.fig, r.anim, r.phase, t, r.emote);
     }
     // particles drift around the camera
     if (this.dust) { const { pos, n, kind } = this.dust, c = this.camera.position; for (let i = 0; i < n; i++) { const k = i * 3; if (kind === 'lava') pos[k + 1] += dt * 2.2; else if (kind === 'space') pos[k + 2] -= dt * 0.6; else if (kind === 'desert') pos[k] += dt * 5; else pos[k + 1] -= dt * (kind === 'ice' ? 1.6 : 0.5); for (const [a, lo, hi] of [[0, -30, 30], [1, -12, 28], [2, -10, 60]]) { const rel = pos[k + a] - (a === 0 ? c.x : a === 1 ? c.y : c.z); if (rel < lo) pos[k + a] += hi - lo; else if (rel > hi) pos[k + a] -= hi - lo; } } this.dust.pts.geometry.attributes.position.needsUpdate = true; }

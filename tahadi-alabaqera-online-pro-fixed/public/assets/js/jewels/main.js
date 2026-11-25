@@ -2,8 +2,8 @@ import {createEffectsChannel} from '../audio-effects.js?v=33.10.7-club2';
 /* Jewels Studio: independent, equal-opening score runs. The engine owns results;
    the local Canvas replay owns animation. Opponent progress never redraws this board. */
 import { JR, BOOSTERS, adjacent, createJewelsRace, playJewelsRaceSwap, playJewelsRaceBooster, finishJewelsRace, chooseJewelsRaceMove, legalRaceSwaps, advanceJewelsRace, starsOf } from '../engines/jewels-race-engine.js?v=33.10.7-mm5';
-import { createTable } from '../board-table-v33.js?v=33.18.1';
-import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.18.1';
+import { createTable } from '../board-table-v33.js?v=33.19.0';
+import { createJewelsRenderer, drawStudioHero, drawBoosterIcon, GEM_COLORS } from './studio-renderer.js?v=33.19.0';
 
 import { suggestJewelsSwap } from './advisor.js?v=33.10.7-nov14';
 const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name

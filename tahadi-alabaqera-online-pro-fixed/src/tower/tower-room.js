@@ -5,7 +5,8 @@
 // allows) and decides the places. Modes: سباق (race), إقصاء (rounds until one is left) and فرق (two
 // teams add up their places). Public races fill their empty seats with runners the room moves itself.
 // The same class answers the queue (tower:queue:<mode>) and the leaderboard (tower:board).
-import { roundCourse, spineAt } from '../../public/assets/js/tower/course.js';
+import { roundCourse, spineAt, dailyCourse, dayKey } from '../../public/assets/js/tower/course.js';
+import { cleanPartyLink, settlePartyLink, standings as partyStandings } from '../party/party-link.js';
 
 const json = (v, status = 200) => Response.json(v, { status, headers: { 'cache-control': 'no-store' } });
 const clean = (v) => String(v || 'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f‪-‮⁦-⁩]/g, '').trim().slice(0, 20) || 'لاعب';
@@ -13,6 +14,26 @@ const rand = () => crypto.getRandomValues(new Uint32Array(1))[0];
 export const TOWER_MODES = Object.freeze(['race', 'elim', 'teams']);
 export const TOWER_TICK = 100, TOWER_QUICK_WAIT = 12000, TOWER_COUNTDOWN = 4000, TOWER_RECONNECT = 20000, TOWER_BETWEEN = 6000;
 export const TOWER_POINTS = Object.freeze([100, 75, 60, 50, 40, 32, 26, 20]);
+export const TOWER_PARTY_WAIT = 40000;
+const EMOTES = new Set(['wave', 'laugh', 'dance']);
+/** 33.19.0: a daily run counts only if its recorded path could really have been run: ten samples a
+    second, no jump faster than a pad or a shove allows (a fall back to a checkpoint is fine), every
+    checkpoint passed in order, the last sample at the top, and as long as the time it claims. */
+export function verifyTowerRun(course, time, path) {
+  if (!Array.isArray(path) || path.length < 20 || path.length > 4000 || !(time > 0)) return 'path';
+  if (Math.abs(path.length * 0.1 - time) > 0.6) return 'time';
+  if (time < Math.max(8, course.nominal * 0.5)) return 'fast';
+  let next = 1;
+  for (let i = 0; i < path.length; i++) {
+    const p = path[i]; if (!Array.isArray(p) || p.length < 3 || !p.every(Number.isFinite)) return 'path';
+    if (i) { const q = path[i - 1], d = Math.hypot(p[0] - q[0], p[2] - q[2]), back = course.checkpoints.some((c) => Math.hypot(p[0] - c.x, p[2] - c.z) < 3.5); if (d > 2.4 && !back) return 'jump'; }
+    const c = course.checkpoints[next]; if (c && p[2] >= c.z - 2.5 && p[1] >= c.y - 1.5) next++;
+  }
+  if (next < course.checkpoints.length) return 'checkpoints';
+  const f = course.finish, last = path[path.length - 1];
+  if (Math.abs(last[2] - f.z) > 3 || Math.abs(last[0] - f.x) > f.w / 2 + 1.5 || last[1] < f.y - 1) return 'finish';
+  return '';
+}
 const GEMS = [30, 20, 15, 10, 8, 8, 8, 8];
 const FILL_NAMES = ['فهد', 'نورة', 'سلطان', 'ريم', 'بدر', 'هيا', 'ماجد', 'دانة', 'خالد', 'لولوة', 'عبدالله', 'شهد'];
 const LOOKS = ['zafran', 'nakhla', 'thalj', 'mouj', 'halawa', 'sahab', 'qamar', 'neon', 'jamra', 'saqr', 'sadu'], HATS = ['none', 'taqiya', 'cap', 'beanie', 'shmagh', 'horns'];
@@ -40,7 +61,7 @@ export class TowerRoom {
   alive() { return this.r.players.filter((p) => !p.out); }
   view() {
     const r = this.r;
-    return { code: r.code, quick: r.quick, mode: r.mode, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, startAt: r.startAt, startsIn: r.status === 'lobby' && r.quick ? r.lobbyUntil : null, qualify: r.qualify, winnerTeam: r.winnerTeam ?? null,
+    return { code: r.code, quick: r.quick, party: Boolean(r.partyLink), mode: r.mode, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, startAt: r.startAt, startsIn: r.status === 'lobby' && (r.quick || r.partyLink) ? r.lobbyUntil : null, qualify: r.qualify, winnerTeam: r.winnerTeam ?? null,
       players: r.players.map((p) => ({ id: p.sid, name: p.name, user: p.bot ? null : p.username || null, look: p.look, host: Boolean(p.host), ready: Boolean(p.ready), team: p.team ?? null, fin: p.fin ?? null, place: p.place ?? null, out: Boolean(p.out), points: p.points || 0, gems: p.gems || 0, connected: p.bot ? true : Boolean(p.connected) })) };
   }
   send(ws, m) { try { ws.send(JSON.stringify(m)); } catch { /* gone */ } }
@@ -50,13 +71,15 @@ export class TowerRoom {
     await this.ready;
     return this.enqueue(async () => {
       const u = new URL(req.url); let b = {};
-      if (req.method === 'POST') { const raw = await req.text(); if (raw.length > 8192) return json({ ok: false }, 413); try { b = JSON.parse(raw || '{}'); } catch { return json({ ok: false }, 400); } }
-      if (u.pathname === '/board' || u.pathname === '/board/add') return this.board(u, b);
+      if (req.method === 'POST') { const raw = await req.text(); if (raw.length > (u.pathname === '/board/day' ? 120_000 : 8192)) return json({ ok: false }, 413); try { b = JSON.parse(raw || '{}'); } catch { return json({ ok: false }, 400); } }
+      if (u.pathname === '/board' || u.pathname === '/board/add' || u.pathname === '/board/day') return this.board(u, b);
       if (u.pathname === '/queue') return this.queue(b);
       if (u.pathname === '/init') {
         if (this.r && this.r.expiresAt > Date.now()) return json({ ok: false }, 409);
         const mode = TOWER_MODES.includes(b.mode) ? b.mode : 'race', capacity = Math.max(2, Math.min(8, Number(b.capacity) || 8));
-        this.r = { code: String(b.code), hostKey: String(b.hostKey || ''), quick: Boolean(b.quick), mode, capacity, status: 'lobby', players: [], seed: rand(), round: 0, startAt: 0, qualify: 0, lobbyUntil: 0, createdAt: Date.now(), expiresAt: Date.now() + 3 * 3_600_000, match: 0, nextSid: 0 };
+        const partyLink = cleanPartyLink(b.party);
+        this.r = { code: String(b.code), hostKey: String(b.hostKey || ''), quick: Boolean(b.quick), mode: partyLink ? 'race' : mode, capacity, status: 'lobby', players: [], seed: rand(), round: 0, startAt: 0, qualify: 0, lobbyUntil: partyLink ? Date.now() + TOWER_PARTY_WAIT : 0, createdAt: Date.now(), expiresAt: Date.now() + 3 * 3_600_000, match: 0, nextSid: 0,
+          ...(partyLink ? { partyLink, expected: Math.max(1, Math.min(8, Math.floor(Number(b.expected)) || 1)) } : {}) };
         await this.save(); return json({ ok: true }, 201);
       }
       const r = this.r;
@@ -74,9 +97,9 @@ export class TowerRoom {
       if (!p) {
         const humans = r.players.filter((x) => !x.bot);
         if (r.status !== 'lobby' || humans.length >= r.capacity) return json({ ok: false, error: 'الغرفة ممتلئة أو السباق بدأ' }, 409);
-        const host = !r.quick && !humans.length;
+        const host = !r.quick && !r.partyLink && !humans.length;
         if (host && read('hk.') !== r.hostKey) return json({ ok: false, error: 'بانتظار صاحب الغرفة' }, 403);
-        p = { sid: 'a' + r.nextSid++, token: crypto.randomUUID() + crypto.randomUUID(), name: clean(req.headers.get('x-bs-name') || u.searchParams.get('name')), username, look: cleanLook(u.searchParams.get('look')), host, ready: r.quick, connected: false, bot: false, pos: [0, 0, 0, 0, 0], cp: 0, fin: null, out: false, points: 0 };
+        p = { sid: 'a' + r.nextSid++, token: crypto.randomUUID() + crypto.randomUUID(), name: clean(req.headers.get('x-bs-name') || u.searchParams.get('name')), username, look: cleanLook(u.searchParams.get('look')), host, ready: r.quick || Boolean(r.partyLink), connected: false, bot: false, pos: [0, 0, 0, 0, 0], cp: 0, fin: null, out: false, points: 0 };
         // two players with one name are told apart
         if (r.players.some((x) => x.name === p.name)) p.name = (p.name + ' ' + (r.players.length + 1)).slice(0, 20);
         r.players.push(p);
@@ -111,6 +134,25 @@ export class TowerRoom {
   async board(u, b) {
     const s = (await this.ctx.storage.get('towerBoard')) || { week: towerWeek(), weekRows: {}, all: {} };
     if (s.week !== towerWeek()) { s.week = towerWeek(); s.weekRows = {}; }
+    // 33.19.0: today's level — the best time of each account, checked against the course
+    s.days ||= {};
+    for (const k of Object.keys(s.days)) if (k < dayKey(Date.now() - 2 * DAY)) delete s.days[k];
+    if (u.pathname === '/board/day') {
+      const day = String(b.day || ''), today = dayKey(), yesterday = dayKey(Date.now() - DAY);
+      if (![today, yesterday].includes(day)) return json({ ok: false, error: 'انتهى يوم هالمرحلة' }, 409);
+      if (!/^[a-z0-9_]{3,20}$/.test(b.username || '')) return json({ ok: false, error: 'سجّل دخول' }, 401);
+      const time = Math.round(Number(b.time) * 100) / 100, why = verifyTowerRun(dailyCourse(day), time, b.path);
+      if (why) return json({ ok: false, error: 'ما قدرنا نتحقق من الجولة (' + why + ')' }, 422);
+      const table = (s.days[day] ||= {}), mine = table[b.username];
+      if (!mine || time < mine.t) table[b.username] = { n: clean(b.name), t: time };
+      await this.ctx.storage.put('towerBoard', s);
+      const order = Object.entries(table).sort((x, y) => x[1].t - y[1].t), rank = order.findIndex(([k]) => k === b.username) + 1;
+      return json({ ok: true, rank, best: table[b.username].t, players: order.length });
+    }
+    if (u.searchParams.get('period') === 'day') {
+      const me = u.searchParams.get('me') || '', order = Object.entries(s.days[dayKey()] || {}).sort((x, y) => x[1].t - y[1].t), at = order.findIndex(([k]) => k === me);
+      return json({ ok: true, day: dayKey(), rows: order.slice(0, 50).map(([k, e]) => ({ name: e.n, user: k, time: e.t, me: k === me })), me: at >= 0 ? { rank: at + 1, time: order[at][1].t } : null });
+    }
     if (u.pathname === '/board/add') {
       for (const row of Array.isArray(b.rows) ? b.rows.slice(0, 8) : []) {
         if (!/^[a-z0-9_]{3,20}$/.test(row?.username || '')) continue;
@@ -131,9 +173,9 @@ export class TowerRoom {
   start() {
     const r = this.r;
     // public races: seats nobody took are filled so the race is never empty
-    if (r.quick) {
+    if (r.quick || r.partyLink) {
       const humans = r.players.filter((p) => !p.bot && p.connected); r.players = humans;
-      let want = Math.max(6, humans.length); if (r.mode === 'teams' && want % 2) want++; want = Math.min(8, want);
+      let want = r.partyLink ? Math.max(4, r.expected || 0, humans.length) : Math.max(6, humans.length); if (r.mode === 'teams' && want % 2) want++; want = Math.min(8, want);
       const taken = new Set(r.players.map((p) => p.name)), names = FILL_NAMES.filter((n) => !taken.has(n));
       for (let k = 0; r.players.length < want; k++) r.players.push({ sid: 'a' + r.nextSid++, name: names[(rand() + k) % names.length], bot: true, look: { char: LOOKS[rand() % LOOKS.length], hat: HATS[rand() % HATS.length], face: 'noface' }, pos: [0, 0, 0, 0, 0], cp: 0, fin: null, out: false, points: 0, sf: 0.74 + (rand() % 1000) / 1000 * 0.22 });
       for (let i = r.players.length - 1; i > 0; i--) { const j = rand() % (i + 1); [r.players[i], r.players[j]] = [r.players[j], r.players[i]]; }
@@ -190,6 +232,7 @@ export class TowerRoom {
     }
     r.status = 'finished'; await this.save(); this.broadcast();
     await this.report(ranked);
+    if (r.partyLink && !r.partyReported) { await settlePartyLink(this.env, r, 'tower', partyStandings(ranked.filter((p) => !p.bot).map((p) => ({ name: p.name, username: p.username || null, score: p.points, won: p.place === 1 })), (a, b) => a.score === b.score)); await this.save(); }
   }
   async report(ranked) {
     const r = this.r; if (r.reported) return; r.reported = true;
@@ -208,7 +251,7 @@ export class TowerRoom {
       if (b?.type === 'pos') {
         if (r.status !== 'playing' || p.out || p.fin != null) return;
         const now = Date.now(); if (now - (p.last || 0) < 60) return;
-        const x = num(b.x, -60, 60), y = num(b.y, -200, 400), z = num(b.z, -20, 600), ry = num(b.ry, -50, 50), an = Number.isInteger(b.a) ? Math.max(0, Math.min(4, b.a)) : 0;
+        const x = num(b.x, -60, 60), y = num(b.y, -200, 400), z = num(b.z, -20, 600), ry = num(b.ry, -50, 50), an = Number.isInteger(b.a) ? Math.max(0, Math.min(5, b.a)) : 0;
         if (x === null || y === null || z === null) return;
         const course = this.courseOf(), dt = Math.max(0.06, (now - (p.last || now)) / 1000), moved = Math.hypot(x - p.pos[0], z - p.pos[2]);
         const back = course.checkpoints.some((c) => Math.abs(z - c.z) < 3); // a fall sends you back to a checkpoint
@@ -225,6 +268,17 @@ export class TowerRoom {
       }
       if (b?.type === 'start' && p.host && !r.quick && this.canStart()) { r.players = r.players.filter((x) => x.connected); this.start(); await this.save(); this.broadcast(); this.run(); return; }
       if (b?.type === 'leave') { await this.depart(p, true); try { ws.close(1000, 'bye'); } catch { /* gone */ } return; }
+      // 'gesture', not 'emote': the shared room relay catches {type:'emote'} before it reaches the tower
+      if (b?.type === 'gesture' && EMOTES.has(b.e)) { const now = Date.now(); if (now - (p.lastEmote || 0) < 1000) return; p.lastEmote = now; this.broadcast({ type: 'gesture', id: p.sid, e: b.e }); return; }
+      if (b?.type === 'push' && r.status === 'playing' && !p.out && p.fin == null) {
+        // a shove only lands on someone really next to you, once a second at most
+        const now = Date.now(), target = r.players.find((x) => x.sid === b.id && !x.out && x.fin == null); if (!target || now - (p.lastPush || 0) < 1000) return;
+        const d = Math.hypot(target.pos[0] - p.pos[0], target.pos[2] - p.pos[2]); if (d > 3 || Math.abs(target.pos[1] - p.pos[1]) > 2.5) return;
+        p.lastPush = now; const nx = num(b.nx, -1, 1) ?? 0, nz = num(b.nz, -1, 1) ?? 0;
+        if (target.bot) { const elapsed = (now - r.startAt) / 1000; (target.slips ||= []).push(elapsed); target.slips.sort((x, y) => x - y); return; }
+        for (const w of this.ctx.getWebSockets()) { const a2 = w.deserializeAttachment(); if (a2?.tower && a2.id === target.sid) this.send(w, { type: 'pushed', from: p.sid, nx, nz }); }
+        return;
+      }
       if (b?.type === 'ping') this.send(ws, { type: 'pong', now: Date.now() });
     });
   }
@@ -242,7 +296,8 @@ export class TowerRoom {
   }
   async step() {
     const r = this.r; if (!r) return;
-    if (r.status === 'lobby' && r.quick && r.lobbyUntil && Date.now() >= r.lobbyUntil && r.players.some((p) => !p.bot && p.connected)) { this.start(); await this.save(); this.broadcast(); return; }
+    const inRoom = r.players.filter((p) => !p.bot && p.connected).length;
+    if (r.status === 'lobby' && (r.quick || r.partyLink) && r.lobbyUntil && inRoom && (Date.now() >= r.lobbyUntil || (r.partyLink && inRoom >= r.expected))) { this.start(); await this.save(); this.broadcast(); return; }
     if (r.status === 'between' && Date.now() >= r.nextAt) { this.startRound(); await this.save(); this.broadcast(); return; }
     if (r.status === 'playing') await this.tick();
   }

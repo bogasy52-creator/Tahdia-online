@@ -42,6 +42,18 @@ export const CHALLENGES = Object.freeze({
   gates: { name: 'البوابات المتحركة', tip: 'الفتحة تتحرك، اعبر وقت ما تكون قدامك' },
 });
 export const CHALLENGE_IDS = Object.freeze(Object.keys(CHALLENGES));
+/** 33.19.0: the boss at the summit of each world */
+export const BOSSES = Object.freeze({
+  forest: { id: 'bossroll', name: 'الجذع العملاق', tip: 'اقفز فوق الجذوع وأنت طالع، وكل وحدة أكبر من اللي قبلها' },
+  ice: { id: 'bosssweep', name: 'الذراع الجليدي', tip: 'ذراع تحت وذراع فوق، والأرض زلقة' },
+  candy: { id: 'bossham', name: 'مطارق الحلوى', tip: 'المطارق عملاقة، اعبر بعد ما تمر' },
+  desert: { id: 'bossrise', name: 'الرمال المتحركة', tip: 'الرمل يرتفع وراك، اطلع بسرعة' },
+  space: { id: 'bossspin', name: 'المدار', tip: 'الأقراص تلف والأذرع تكنس، والجاذبية خفيفة' },
+  lava: { id: 'bossrise', name: 'الحمم ترتفع', tip: 'الحمم ترتفع وراك، لا توقف' },
+});
+const BOSS_NAMES = Object.freeze(Object.fromEntries(Object.values(BOSSES).map((b) => [b.id, b.name])));
+export const sectionName = (kind, world) => CHALLENGES[kind]?.name || (world && BOSSES[world]?.id === kind ? BOSSES[world].name : BOSS_NAMES[kind]) || '';
+export const sectionTip = (kind, world) => CHALLENGES[kind]?.tip || (world && BOSSES[world]?.id === kind ? BOSSES[world].tip : Object.values(BOSSES).find((b) => b.id === kind)?.tip) || '';
 
 /* ------------------------------------------------------------------ randomness */
 export function rng(seed) {
@@ -88,7 +100,8 @@ function makeLevels() {
       seen.add(key);
       // the lead challenge sits in the middle of the course, where it is hardest to miss
       const list = support.slice(); list.splice(Math.min(1, list.length), 0, lead);
-      out.push(Object.freeze({ n, world: world.id, lead, challenges: Object.freeze(list), d: Math.round(d * 1000) / 1000, finale, seed: n * 104729 + 3, title: (finale ? 'قمة ' + world.name + ': ' : '') + CHALLENGES[lead].name }));
+      if (finale) list.push(BOSSES[world.id].id);
+      out.push(Object.freeze({ n, world: world.id, lead, challenges: Object.freeze(list), d: Math.round(d * 1000) / 1000, finale, seed: n * 104729 + 3, boss: finale ? BOSSES[world.id].name : null, title: finale ? 'قمة ' + world.name + ': ' + BOSSES[world.id].name : CHALLENGES[lead].name }));
     }
   }
   return Object.freeze(out);
@@ -289,6 +302,41 @@ function section(kind, c) {
       gem(-2.8, c.y, c.z + len - 1.4); c.z += len; spine(0, c.y, c.z, len / 3.4, 0);
       break;
     }
+    // 33.19.0: the summit of every world ends with its boss
+    case 'bossroll': { // الجذع العملاق: a long climb with giant logs rolling down it
+      const steps = 22, rise = 0.3, depth = 1.2, z0 = c.z, y0 = c.y;
+      for (let i = 0; i < steps; i++) plat(0, c.y + rise * (i + 1), c.z + depth * (i + 0.5), 9, depth, { h: 0.9 + rise * (i + 1) });
+      c.z += steps * depth; c.y += steps * rise;
+      for (let i = 0; i < 4; i++) P({ k: 'roll', x: 0, z0: c.z - 0.5, z1: z0, y0: c.y, y1: y0, w: 8.6, r: 1.15, p: 3.3, ph: i / 4, giant: true });
+      gem(3.4, c.y, c.z - 1); spine(0, c.y, c.z, steps * depth / 3.6, 0); break;
+    }
+    case 'bosssweep': { // الذراع الجليدي: a wide icy ring with a low and a high arm
+      const R = 8.5, z = c.z + 1 + R;
+      P({ k: 'disk', x: 0, y: c.y, z, r: R, h: 1.2, w: 0, m: 'ice' });
+      P({ k: 'bar', x: 0, y: c.y + 0.55, z, len: R - 0.2, r: 0.45, w: 1.5, ph: 0, arms: 2, giant: true });
+      P({ k: 'bar', x: 0, y: c.y + 2.5, z, len: R - 0.8, r: 0.4, w: -1.05, ph: 0.8, arms: 1, giant: true });
+      gem(-4.5, c.y, z); c.z = z + R; spine(0, c.y, z, 4, 0); spine(0, c.y, c.z, 2, 0); break;
+    }
+    case 'bossham': { // مطارق الحلوى: giant hammers over a wide bridge
+      const len = 26; plat(0, c.y, c.z + len / 2, 6, len, { m: W.jelly ? 'jelly' : 'floor' });
+      for (let i = 0; i < 4; i++) P({ k: 'ham', x: 0, y: c.y + 9, z: c.z + 3.5 + i * 6, L: 8, hr: 1.7, amp: 0.95, p: 3.2, ph: i * 0.37, giant: true });
+      gem(0, c.y, c.z + len * 0.5); c.z += len; spine(0, c.y, c.z, len / 3.6, 0); break;
+    }
+    case 'bossspin': { // المدار: big turning discs with arms, under light gravity
+      for (let i = 0; i < 3; i++) {
+        const R = 4.2; c.z += 1.4; c.y += 0.6; const z = c.z + R;
+        P({ k: 'disk', x: 0, y: c.y, z, r: R, h: 1, w: (i % 2 ? -1 : 1) * 0.7 });
+        P({ k: 'bar', x: 0, y: c.y + 0.5, z, len: R - 0.3, r: 0.36, w: (i % 2 ? 1 : -1) * 1.3, ph: i, arms: 2, giant: true });
+        c.z += R * 2; spine(0, c.y, z, 2.6, 1);
+      }
+      gem(2, c.y, c.z - 3); break;
+    }
+    case 'bossrise': { // الحمم ترتفع / الرمال المتحركة: climb before the floor catches you
+      const n = 9, zStart = c.z, yStart = c.y;
+      for (let i = 0; i < n; i++) { const x = (i % 3 - 1) * 2.6; c.z += 1.3; c.y += 1.05; plat(x, c.y, c.z + 1.4, 3, 2.8); c.z += 2.8; spine(x, c.y, c.z - 1.4, 0.95, 1); if (i === 4) gem(x, c.y, c.z - 1.4); }
+      P({ k: 'rise', x: 0, z0: zStart + 1, z1: c.z + 1, y0: yStart - 3.5, v: 0.8 + 0.2 * d, w: 14, lava: Boolean(W.lava) }); // the reference path clears it with ~5 s to spare
+      break;
+    }
     default: land(6);
   }
 }
@@ -334,6 +382,40 @@ export function roundCourse(seed, round = 0, players = 8) {
   while (list.length < 4) list.push(bag.splice(r.int(0, bag.length - 1), 1)[0]);
   return buildCourse({ challenges: list, d: 0.42 + 0.12 * round, seed: seed ^ (round * 7919), world, players });
 }
+
+/* ------------------------------------------------------------------ 33.19.0: the day and the season */
+const RIYADH_MS = 3 * 3_600_000;
+export const dayKey = (now = Date.now()) => new Date(now + RIYADH_MS).toISOString().slice(0, 10);
+export const monthKey = (now = Date.now()) => new Date(now + RIYADH_MS).toISOString().slice(0, 7);
+export const nextDayAt = (now = Date.now()) => { const d = new Date(now + RIYADH_MS); d.setUTCHours(24, 0, 0, 0); return d.getTime() - RIYADH_MS; };
+const hash = (text) => { let h = 2166136261; for (const ch of String(text)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+/** One level for everybody today: four challenges in a world that changes every day. */
+export function dailyLevel(day = dayKey()) {
+  const seed = hash('tower-day:' + day), r = rng(seed), world = WORLDS[Math.floor(Date.parse(day + 'T00:00:00Z') / 86_400_000) % WORLDS.length].id, bag = CHALLENGE_IDS.slice(), list = [];
+  while (list.length < 4) list.push(bag.splice(r.int(0, bag.length - 1), 1)[0]);
+  return Object.freeze({ key: 'day:' + day, day, world, challenges: Object.freeze(list), d: 0.55, seed, title: 'مرحلة اليوم' });
+}
+export const dailyCourse = (day = dayKey()) => { const L = dailyLevel(day); return buildCourse({ challenges: L.challenges, d: L.d, seed: L.seed, world: L.world }); };
+
+/** A season a month, each with its own idea, ten levels and an outfit you can only earn that month. */
+export const SEASONS = Object.freeze([
+  { id: 'storm', name: 'موسم العاصفة', world: 'desert', sign: ['wind', 'cannons', 'pistons'], reward: 'pinwheel', about: 'الريح ما توقف، والمدافع تطلق من الجنبين' },
+  { id: 'moon', name: 'موسم القمر', world: 'space', sign: ['blink', 'lifts', 'pads'], reward: 'halo', about: 'منصات تختفي ومصاعد تحت جاذبية خفيفة' },
+  { id: 'speed', name: 'موسم السرعة', world: 'forest', sign: ['conveyor', 'movers', 'gates'], reward: 'racer', about: 'كل شي يتحرك، والوقت الذهبي أقصر' },
+  { id: 'giants', name: 'موسم العمالقة', world: 'lava', sign: ['hammers', 'sweeper', 'rollers'], reward: 'wings', about: 'كل مرحلة فيها عملاق، والأخيرة أكبرهم' },
+]);
+export function seasonOf(now = Date.now()) {
+  const month = monthKey(now), [y, m] = month.split('-').map(Number), S = SEASONS[((y * 12 + m) % SEASONS.length + SEASONS.length) % SEASONS.length];
+  const end = Date.UTC(y, m, 1) - RIYADH_MS;
+  return Object.freeze({ ...S, month, key: S.id + ':' + month, endsAt: end });
+}
+export function seasonLevel(season, i) {
+  const r = rng(hash(season.key + ':' + i)), others = CHALLENGE_IDS.filter((c) => !season.sign.includes(c)), list = [season.sign[i % season.sign.length]];
+  while (list.length < (i < 3 ? 2 : 3)) { const pick = r.pick(i % 2 ? others : season.sign); if (!list.includes(pick)) list.push(pick); }
+  if (i === 9 || season.id === 'giants' && i % 3 === 2) list.push(BOSSES[season.world].id);
+  return Object.freeze({ key: season.key + ':' + i, i, world: season.world, challenges: Object.freeze(list), d: 0.3 + 0.06 * i, seed: hash(season.key + '#' + i), title: season.name + ' · ' + (i + 1) });
+}
+export const seasonCourse = (season, i) => { const L = seasonLevel(season, i), c = buildCourse({ challenges: L.challenges, d: L.d, seed: L.seed, world: L.world }); if (season.id === 'speed') c.gold = Math.round(c.gold * 0.9); return c; };
 
 /* ------------------------------------------------------------------ where things are at time t */
 export function offset(p, t) {

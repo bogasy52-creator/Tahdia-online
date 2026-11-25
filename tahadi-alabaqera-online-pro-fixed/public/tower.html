@@ -1,5 +1,5 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>برج التحديات — لعبة العباقرة</title><meta name="description" content="برج التحديات: سباق عقبات ثلاثي الأبعاد. 100 مرحلة في 6 عوالم تلعبها لحالك، وسباقات أونلاين من 2 إلى 8 لاعبين: سباق، إقصاء وفرق."><meta name="theme-color" content="#160c2b"><meta name="color-scheme" content="only light"><link rel="manifest" href="/manifest.webmanifest?v=33.9.10"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
-<link rel="stylesheet" href="assets/css/app-tower.css?v=33.18.1-e2d7473b67"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.18.1"></head>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>برج التحديات — لعبة العباقرة</title><meta name="description" content="برج التحديات: سباق عقبات ثلاثي الأبعاد. 100 مرحلة في 6 عوالم وزعيم في قمة كل عالم، ومرحلة اليوم وموسم كل شهر، وسباقات أونلاين من 2 إلى 8 لاعبين: سباق، إقصاء وفرق."><meta name="theme-color" content="#160c2b"><meta name="color-scheme" content="only light"><link rel="manifest" href="/manifest.webmanifest?v=33.9.10"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
+<link rel="stylesheet" href="assets/css/app-tower.css?v=33.19.0-70cb2df294"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.19.0"></head>
 <body class="release-v26 tower-page" data-world="forest">
 <canvas id="twCanvas" class="tw-canvas" aria-hidden="true"></canvas>
 <main class="tw-app">
@@ -8,12 +8,14 @@
     <header class="tw-bar">
       <a class="tw-back" href="/" aria-label="رجوع للرئيسية">→</a>
       <div class="tw-brand"><b id="twLobbyTitle">برج التحديات</b><small id="twWorldName">الغابة</small></div>
-      <div class="tw-wallet"><span title="النجوم">⭐ <b id="twStars">0</b><small id="twStarMax">/300</small></span><span title="الجواهر">💎 <b id="twGems">0</b></span></div>
+      <div class="tw-wallet"><span title="النجوم">⭐ <b id="twStars">0</b><small id="twStarMax">/300</small></span><span title="الجواهر">💎 <b id="twGems">0</b></span></div><button id="twSettingsBtn" class="tw-back tw-gear" type="button" aria-label="الإعدادات">⚙️</button>
     </header>
     <div class="tw-lobby-foot">
       <button id="twContinue" class="tw-cta" type="button"><b>المرحلة 1</b><small>الغابة</small></button>
       <div class="tw-tiles">
         <button id="twMapBtn" class="tw-tile" type="button"><i aria-hidden="true">🗺️</i><b>المراحل</b></button>
+        <button id="twDailyBtn" class="tw-tile tw-tile-hot" type="button"><i aria-hidden="true">📅</i><b>مرحلة اليوم</b><small>جديدة</small></button>
+        <button id="twSeasonBtn" class="tw-tile tw-tile-hot" type="button"><i aria-hidden="true">🏵️</i><b>الموسم</b><small></small></button>
         <button id="twOnlineBtn" class="tw-tile" type="button"><i aria-hidden="true">🌐</i><b>أونلاين</b></button>
         <button id="twWardrobeBtn" class="tw-tile" type="button"><i aria-hidden="true">👕</i><b>الأزياء</b></button>
         <button id="twBoardBtn" class="tw-tile" type="button"><i aria-hidden="true">🏆</i><b>المتصدرين</b></button>
@@ -26,6 +28,24 @@
     <div id="twWorldTabs" class="tw-worlds"></div>
     <p id="twMapInfo" class="tw-note"></p>
     <div id="twLevels" class="tw-levels"></div>
+  </section>
+
+  <section id="twDaily" class="tw-screen tw-sheet" hidden aria-labelledby="twDailyTitle">
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twDailyTitle">مرحلة اليوم</b><small id="twDailyLeft"></small></div></header>
+    <div class="tw-online">
+      <div class="tw-roomhead tw-dayhead"><small>عالم اليوم</small><b id="twDailyWorld"></b><span id="twDailyMix"></span></div>
+      <p id="twDailyMine" class="tw-note"></p>
+      <button id="twDailyPlay" class="tw-cta" type="button"><b>العب مرحلة اليوم</b><small>نفس المرحلة لكل اللاعبين، وأسرع وقت يتصدر</small></button>
+      <h2 class="tw-h2">ترتيب اليوم</h2>
+      <ol id="twDailyBoard" class="tw-board"></ol>
+    </div>
+  </section>
+
+  <section id="twSeason" class="tw-screen tw-sheet" hidden aria-labelledby="twSeasonName">
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twSeasonName">الموسم</b><small id="twSeasonLeft"></small></div></header>
+    <p id="twSeasonAbout" class="tw-note"></p>
+    <div id="twSeasonReward" class="tw-reward"></div>
+    <div id="twSeasonLevels" class="tw-levels"></div>
   </section>
 
   <section id="twWardrobe" class="tw-screen tw-sheet tw-ward" hidden aria-labelledby="twWardTitle">
@@ -77,6 +97,8 @@
     <div class="tw-prog" aria-hidden="true"><span id="twProgOthers"></span><i id="twProgMe"></i></div>
     <div id="twStickZone" class="tw-stickzone" aria-label="منطقة الحركة"><div id="twStick" class="tw-stick"><i id="twKnob"></i></div><p class="tw-stick-hint">اسحب هنا للحركة</p></div>
     <button id="twJump" class="tw-jump" type="button" aria-label="اقفز"><span aria-hidden="true">⤒</span><small>اقفز</small></button>
+    <button id="twDash" class="tw-dash" type="button" aria-label="دفّة: اندفع وادفع اللي قدامك"><span aria-hidden="true">💨</span><small>دفّة</small></button>
+    <div class="tw-emotes" role="group" aria-label="ردود سريعة"><button type="button" data-emote="wave" aria-label="تلويحة">👋</button><button type="button" data-emote="laugh" aria-label="ضحكة">😂</button><button type="button" data-emote="dance" aria-label="رقصة">💃</button></div>
   </section>
 </main>
 
@@ -87,7 +109,11 @@
   <div class="tw-modal-card"><h2 id="twPauseTitle">وقفة</h2>
     <button id="twResume" class="tw-cta" type="button"><b>كمّل</b></button>
     <button id="twRestart" class="tw-btn" type="button">عيد المرحلة</button>
-    <button id="twSound" class="tw-btn" type="button">الصوت</button>
+    <button id="twMusic" class="tw-btn" type="button">الموسيقى</button>
+    <button id="twSound" class="tw-btn" type="button">الأصوات</button>
+    <button id="twGfx" class="tw-btn" type="button">الرسومات</button>
+    <button id="twGhostToggle" class="tw-btn" type="button">الشبح</button>
+    <button id="twSettingsClose" class="tw-cta tw-cta-sm" type="button" hidden><b>تمام</b></button>
     <button id="twQuit" class="tw-btn tw-ghost" type="button">اطلع للقائمة</button>
   </div>
 </div>
@@ -109,10 +135,10 @@
     <h2 id="twRoundTitle"></h2>
     <ol id="twRoundList" class="tw-board tw-board-sm"></ol>
     <p id="twRoundNote" class="tw-note"></p>
-    <div class="tw-row"><button id="twRoundAgain" class="tw-cta tw-cta-sm" type="button"><b>سباق ثاني</b></button><button id="twRoundLeave" class="tw-btn tw-ghost" type="button">اطلع</button></div>
+    <div class="tw-row"><button id="twRoundAgain" class="tw-cta tw-cta-sm" type="button"><b>سباق ثاني</b></button><button id="twRoundParty" class="tw-cta tw-cta-sm" type="button" hidden><b>ارجع لغرفة الأصدقاء</b></button><button id="twRoundLeave" class="tw-btn tw-ghost" type="button">اطلع</button></div>
   </div>
 </div>
 
-<script src="assets/js/compact/platform.js?v=33.18.1"></script><script src="assets/js/compact/social-client.js?v=33.18.1"></script><script src="assets/js/compact/profile-core.js?v=33.18.1-pro1"></script><script src="assets/js/compact/career-client.js?v=33.18.1"></script>
-<script type="module" src="assets/js/tower/main.js?v=33.18.1"></script>
-<script src="/assets/js/tahdia-premium-v25.js?v=33.18.1"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.18.1"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.18.1"></script></body></html>
+<script src="assets/js/party-link-v32.js?v=33.19.0-room1"></script><script src="assets/js/compact/platform.js?v=33.19.0"></script><script src="assets/js/compact/social-client.js?v=33.19.0"></script><script src="assets/js/compact/profile-core.js?v=33.19.0-pro1"></script><script src="assets/js/compact/career-client.js?v=33.19.0"></script>
+<script type="module" src="assets/js/tower/main.js?v=33.19.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.19.0"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.19.0"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.19.0"></script></body></html>

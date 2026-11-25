@@ -82,7 +82,7 @@ body.tower-page .tw-lobby{pointer-events:none}
 body.tower-page .tw-lobby>*{pointer-events:auto}
 body.tower-page .tw-lobby::before{content:"";position:absolute;inset:auto 0 0;height:46%;background:linear-gradient(180deg,transparent,#12072bd9 38%,#12072b);pointer-events:none}
 body.tower-page .tw-lobby-foot{position:relative;margin-top:auto;display:grid;gap:12px;width:min(560px,100%);margin-inline:auto}
-body.tower-page .tw-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+body.tower-page .tw-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 body.tower-page .tw-tile{display:grid;justify-items:center;gap:4px;padding:10px 4px;min-height:74px;border-radius:18px;border:1px solid #9b77ff55;background:linear-gradient(180deg,#3a1a8acc,#1d0b4acc);backdrop-filter:blur(8px);font-size:13.5px;font-weight:800}
 body.tower-page .tw-tile i{font-style:normal;font-size:24px;line-height:1}
 
@@ -233,3 +233,33 @@ body.tower-page .tw-players li small{grid-column:2}
 body.tower-page .tw-players li small:empty{display:none}
 body.tower-page .tw-players li small:empty~*,body.tower-page .tw-players li:has(small:empty) .tw-swatch{grid-row:auto}
 body.tower-page .tw-item .tw-about{font-size:11px;line-height:1.35;color:#cbbcf0;font-weight:600;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* 33.19.0: the day, the season, settings, the push and the reactions */
+body.tower-page .tw-tile small{font-size:11px;color:var(--tw-gold);font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.tower-page .tw-tile-hot{border-color:#ffcf4580;background:linear-gradient(180deg,#5a2bc0cc,#2a1066cc)}
+body.tower-page .tw-gear{font-size:18px}
+body.tower-page .tw-h2{margin:6px 2px 0;font-size:17px;font-weight:800;color:#fff}
+body.tower-page .tw-dayhead b{font-size:30px;letter-spacing:0;direction:rtl}
+body.tower-page .tw-dayhead span{text-align:center;line-height:1.5}
+body.tower-page .tw-reward{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:12px 14px;margin:4px 0 10px;border-radius:18px;background:linear-gradient(180deg,#ffcf4526,#ffcf450d);border:1.5px solid #ffcf4580}
+body.tower-page .tw-reward .tw-swatch{grid-row:span 2;width:52px;height:52px}
+body.tower-page .tw-reward b{font-size:17px}
+body.tower-page .tw-reward small{color:var(--tw-gold);font-size:12.5px;font-weight:700}
+body.tower-page .tw-dash{display:none;position:absolute;right:calc(max(22px,env(safe-area-inset-right)) + 106px);bottom:calc(30px + env(safe-area-inset-bottom));width:70px;height:70px;border-radius:50%;border:0;pointer-events:auto;touch-action:none;place-items:center;align-content:center;background:radial-gradient(circle at 40% 30%,#e6dcff,#9b77ff 55%,#5a2bc0);color:#fff;box-shadow:0 5px 0 #33137f,0 12px 24px #0008}
+body.tower-page.tw-has-dash .tw-dash{display:grid}
+body.tower-page .tw-dash span{font-size:24px;line-height:1}
+body.tower-page .tw-dash small{font-size:11.5px;font-weight:800}
+body.tower-page .tw-dash.down{transform:translateY(3px) scale(.95);box-shadow:0 2px 0 #33137f}
+body.tower-page .tw-emotes{display:none;position:absolute;top:calc(max(8px,env(safe-area-inset-top)) + 74px);right:10px;flex-direction:column;gap:6px;pointer-events:auto}
+body.tower-page.tw-has-dash .tw-emotes{display:flex}
+body.tower-page .tw-emotes button{width:42px;height:42px;border-radius:14px;border:1px solid var(--tw-line);background:#12072bb3;backdrop-filter:blur(6px);font-size:20px}
+body.tower-page .tw-emotes button:active{transform:scale(.92)}
+body.tower-page .tw-icon-pinwheel::before{content:"🌀"}body.tower-page .tw-icon-halo::before{content:"💫"}body.tower-page .tw-icon-racer::before{content:"🏁"}body.tower-page .tw-icon-wings::before{content:"🪽"}
+body.tower-page .tw-lobby .tw-bar{gap:7px}
+body.tower-page .tw-lobby .tw-brand b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.tower-page .tw-lobby .tw-wallet{gap:5px}
+body.tower-page .tw-lobby .tw-wallet span{padding:6px 8px;font-size:13px}
+body.tower-page .tw-lobby .tw-gear{width:40px;height:40px}
+@media (max-width:420px){body.tower-page #twStarMax{display:none}body.tower-page .tw-lobby .tw-brand small{display:none}}
+/* 33.19.0: inside the group room's frame the room is the way out; the floating «الجمعة» stays off the race */
+body.tower-page.tw-embedded :is(#twOnline .tw-back,#twRoomLeave,#twRoundLeave,#twRoundParty,#twQuit){display:none!important}
+body.tower-page.tw-has-dash .bs-party-back{display:none!important}

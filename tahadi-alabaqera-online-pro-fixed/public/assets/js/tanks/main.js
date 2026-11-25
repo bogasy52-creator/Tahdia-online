@@ -1,5 +1,5 @@
 import {TANKS,TANK_COLORS,WEAPONS,createTankBattle,stepTankBattle,setTankInput,tankLineBlocked} from './core.js?v=33.15.0';
-import {createTankRenderer,sampleTankView,screenVectorToTank} from './render.js?v=33.18.1';
+import {createTankRenderer,sampleTankView,screenVectorToTank} from './render.js?v=33.19.0';
 import {TanksOnline,tankCode} from './online.js?v=33.10.7-tanks2';
 import {createTankAudio} from './audio.js?v=33.10.7-tanks2';
 const $=id=>document.getElementById(id),canvas=$('tkCanvas'),audio=createTankAudio(),keys=new Set(),cache={},stickResets=[];

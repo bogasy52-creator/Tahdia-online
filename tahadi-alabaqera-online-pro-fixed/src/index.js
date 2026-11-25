@@ -49,7 +49,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.18.1';
+const RELEASE='33.19.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -629,7 +629,9 @@ export default {
         for(let i=0;i<8;i++){const code=roomCodeFor('tower'),hostKey=token(),res=await env.ROOMS.get(env.ROOMS.idFromName('tower:'+code)).fetch('https://tower.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:b.capacity,mode:b.mode})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذّر فتح غرفة'},503);
       }
-      if(url.pathname==='/api/tower/board'&&request.method==='GET'){const auth=await authenticate(request,env).catch(()=>null),period=url.searchParams.get('period')==='all'?'all':'week';return await env.ROOMS.get(env.ROOMS.idFromName('tower:board')).fetch('https://tower.internal/board?period='+period+(auth?.username?'&me='+encodeURIComponent(auth.username):''));}
+      // 33.19.0: today's level — a signed-in player's time, with the path that proves it
+      if(url.pathname==='/api/tower/daily'&&request.method==='POST'){const auth=await authenticate(request,env).catch(()=>null);if(!auth)return json({ok:false,error:'سجّل دخول عشان يدخل وقتك الترتيب'},401);const raw=await request.text();if(raw.length>120000)return json({ok:false},413);let b;try{b=JSON.parse(raw);}catch{return json({ok:false},400);}return await env.ROOMS.get(env.ROOMS.idFromName('tower:board')).fetch('https://tower.internal/board/day',{method:'POST',body:JSON.stringify({day:b?.day,time:b?.time,path:b?.path,username:auth.username,name:accountRoomName(auth)})});}
+      if(url.pathname==='/api/tower/board'&&request.method==='GET'){const auth=await authenticate(request,env).catch(()=>null),period=['all','day'].includes(url.searchParams.get('period'))?url.searchParams.get('period'):'week';return await env.ROOMS.get(env.ROOMS.idFromName('tower:board')).fetch('https://tower.internal/board?period='+period+(auth?.username?'&me='+encodeURIComponent(auth.username):''));}
       const m=url.pathname.match(/^\/api\/tower\/rooms\/(04\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
       const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
       if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}

@@ -3,7 +3,7 @@
    steps up low ledges, slides on ice, is carried by belts, bounced by jelly and bumpers, and knocked
    about by bars, hammers, barrels and cannon balls. Everything is checked a few times per frame, so a
    fast hammer cannot pass through a runner on a slow phone. */
-import { GRAVITY, JUMP, RUN, PLAYER_R as R, PLAYER_H as H, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt } from './course.js?v=33.18.1';
+import { GRAVITY, JUMP, RUN, PLAYER_R as R, PLAYER_H as H, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt } from './course.js?v=33.19.0';
 
 const STEP = 1 / 120, STEP_UP = 0.42, COYOTE = 0.12, BUFFER = 0.14;
 const near = (p, z, pad) => {
@@ -23,24 +23,31 @@ export class Runner {
     this.course = course; this.g = GRAVITY * (course.g || 1);
     this.crumbled = new Map(); this.opened = new Set(); this.gems = new Set(); this.events = [];
     this.cp = cp; this.falls = 0; this.finished = false; this.slot = slot;
+    this.others = []; this.dashT = 0; this.dashCool = 0; this.pushed = new Set(); this.riseAt = new Map();
     this.spawn(true);
   }
   spawn(start = false) {
     const c = this.course.checkpoints[this.cp] || this.course.checkpoints[0];
     const col = Math.max(0, this.slot) % 4, row = Math.max(0, Math.floor(this.slot / 4));
     this.x = c.x + (start ? (this.slot < 0 ? 0 : (col - 1.5) * 2.2) : (Math.random() - 0.5) * 2); this.y = c.y + 0.02; this.z = c.z + (start ? row * 1.8 : 0);
+    this.riseAt = new Map(); this.dashT = 0;
     this.vx = 0; this.vy = 0; this.vz = 0; this.ry = 0; this.ground = null; this.grounded = true; this.coyote = 0; this.buffer = 0; this.stun = 0; this.airTime = 0; this.run = 0;
   }
   /** One frame. input: {x, z} from −1 to 1 (z forward), jump: true on the frame it is pressed. */
   update(dt, t, input) {
     if (input.jump) this.buffer = BUFFER;
+    // 33.19.0: a short push forward (دفّة) that shoves whoever it hits
+    this.dashCool -= dt;
+    if (input.dash && this.dashCool <= 0 && this.stun <= 0) { this.dashCool = 1.6; this.dashT = 0.3; this.pushed.clear(); const f = 7.5; this.vx += Math.sin(this.ry) * f; this.vz += Math.cos(this.ry) * f; const sp = Math.hypot(this.vx, this.vz); if (sp > 11) { this.vx *= 11 / sp; this.vz *= 11 / sp; } if (this.grounded) this.vy = 3; this.emit('dash'); }
     let left = Math.min(dt, 0.1);
     while (left > 1e-6) { const h = Math.min(STEP, left); this.step(h, t - left + h, input); left -= h; }
     const speed = Math.hypot(this.vx, this.vz);
     if (speed > 0.6 && this.stun <= 0) { const want = Math.atan2(this.vx, this.vz); let d = want - this.ry; d = Math.atan2(Math.sin(d), Math.cos(d)); this.ry += d * Math.min(1, dt * 14); }
     this.run += dt * speed * 1.7;
   }
-  get anim() { return this.stun > 0 ? 'stun' : !this.grounded ? (this.vy > 0 ? 'jump' : 'fall') : Math.hypot(this.vx, this.vz) > 0.8 ? 'run' : 'idle'; }
+  /** Another runner shoved this one (their دفّة reached us). */
+  shove(nx, nz, power = 10) { const d = Math.hypot(nx, nz) || 1; this.vx += nx / d * power; this.vz += nz / d * power; this.vy = Math.max(this.vy, 5); this.stun = 0.45; this.grounded = false; this.ground = null; this.emit('shoved'); }
+  get anim() { return this.dashT > 0 ? 'dash' : this.stun > 0 ? 'stun' : !this.grounded ? (this.vy > 0 ? 'jump' : 'fall') : Math.hypot(this.vx, this.vz) > 0.8 ? 'run' : 'idle'; }
   emit(type, data = {}) { this.events.push({ type, ...data }); }
 
   step(dt, t, input) {
@@ -66,6 +73,7 @@ export class Runner {
     // jumping, with a moment of grace after leaving an edge and before landing
     this.coyote = this.grounded ? COYOTE : this.coyote - dt; this.buffer -= dt; this.stun -= dt;
     if (this.buffer > 0 && this.coyote > 0 && this.stun < 0.2) { this.vy = JUMP; this.grounded = false; this.ground = null; this.coyote = 0; this.buffer = 0; this.emit('jump'); }
+    this.dashT -= dt;
     this.vy -= this.g * dt; if (this.vy < -38) this.vy = -38;
     const py = this.y;
     this.x += this.vx * dt; this.y += this.vy * dt; this.z += this.vz * dt;
@@ -81,6 +89,23 @@ export class Runner {
       else if (p.k === 'ham') this.hammer(p, t);
       else if (p.k === 'roll') this.roller(p, t);
       else if (p.k === 'ball') this.ball(p, t);
+    }
+    // other runners: nobody walks through anybody; a fast one knocks you; your دفّة shoves them
+    for (const o of this.others) {
+      const dx = this.x - o.x, dz = this.z - o.z, d = Math.hypot(dx, dz);
+      if (d >= R * 2 + (this.dashT > 0 ? 0.3 : 0) || Math.abs(this.y - o.y) > H * 0.8) continue;
+      const nx = d > 1e-4 ? dx / d : 1, nz = d > 1e-4 ? dz / d : 0;
+      if (d < R * 2) { const pen = R * 2 - d; this.x += nx * pen; this.z += nz * pen; const vn = this.vx * nx + this.vz * nz; if (vn < 0) { this.vx -= vn * nx; this.vz -= vn * nz; } }
+      // how fast they close in on us (n points from them to us): a full-speed run knocks, a brush does not
+      const into = ((o.vx || 0) - this.vx) * nx + ((o.vz || 0) - this.vz) * nz;
+      if (into > 5.2 && this.stun <= 0) { this.vx += nx * Math.min(8, into); this.vz += nz * Math.min(8, into); this.vy = Math.max(this.vy, 3); this.stun = 0.2; this.emit('bump', { id: o.id }); }
+      if (this.dashT > 0 && !this.pushed.has(o.id)) { this.pushed.add(o.id); this.emit('push', { id: o.id, nx: -nx, nz: -nz }); }
+    }
+    // rising lava or sand: it starts when you step in, and catches you if you stop
+    for (const p of pieces) if (p.k === 'rise') {
+      if (!this.riseAt.has(p.id)) { if (this.z > p.z0 && this.z < p.z1) this.riseAt.set(p.id, t); continue; }
+      const level = p.y0 + p.v * (t - this.riseAt.get(p.id));
+      if (this.z > p.z0 - 2 && this.z < p.z1 + 3 && this.y < level - 0.2) { this.falls++; this.emit('fall', { by: 'rise' }); this.spawn(false); return; }
     }
     // pads fire when stood on
     if (this.grounded) for (const p of pieces) if (p.k === 'pad' && Math.abs(this.y - p.y) < 0.15 && Math.hypot(this.x - p.x, this.z - p.z) < p.r + R * 0.5) { this.vy = p.pw; this.grounded = false; this.ground = null; this.emit('pad'); }

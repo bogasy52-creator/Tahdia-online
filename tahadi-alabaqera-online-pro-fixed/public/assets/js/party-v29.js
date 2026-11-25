@@ -1,9 +1,9 @@
 import {quickRoomModes,quickRoomSeats,normalizeQuickRoomChoice} from './engines/quick-room-options-v33-14-1.js?v=33.15.0';
-import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.15.0';
+import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.19.0';
 import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.10';
 import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.10';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.18.1';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.19.0';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
@@ -81,7 +81,7 @@ async function task(button,fn){button.disabled=true;try{await fn();}catch(e){toa
 $('create').onclick=()=>task($('create'),async()=>{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);try{const res=await fetch('/api/party/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({capacity:+$('capacity').value,playlist}),signal:controller.signal}),data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'تعذر إنشاء الغرفة');await enterRoom(data.code,data.hostKey);}finally{clearTimeout(timer);}});
 /* 33.13.0: two kinds of room. «غرفة سريعة»: one game, ready in one tap (بلوت has its own room);
    «غرفة العشرين»: the series of games for up to twenty. */
-const QUICK_ORDER=['ludo','blocks','ten','jackaroo','baloot','chaos','pegs','snakes','dice','billiards','carrom','hockey','quiz','wordbomb','cipher','focus','memory','logic','sudoku','puzzle','paths-online','picture','jewels','serpent','tanks'];
+const QUICK_ORDER=['ludo','tower','blocks','ten','jackaroo','baloot','chaos','pegs','snakes','dice','billiards','carrom','hockey','quiz','wordbomb','cipher','focus','memory','logic','sudoku','puzzle','paths-online','picture','jewels','serpent','tanks'];
 const quickGames=()=>QUICK_ORDER.map(id=>id==='baloot'?{id,name:'بلوت',image:'assets/brand/baloot-cover-v32.webp',own:'/baloot?play=room',maxPlayers:4}:partyGame(id)).filter(Boolean);
 let roomKind='quick',quickPick='',quickCreating=false,quickChoices={};try{quickChoices=JSON.parse(localStorage.getItem('bs-quick-room-choices')||'{}')||{};}catch{}
 const quickGame=id=>quickGames().find(g=>g.id===id);

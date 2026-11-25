@@ -1,5 +1,5 @@
 import {quickRoomSeats} from './quick-room-options-v33-14-1.js';
-import {partyMode} from './party-modes.js?v=33.15.0';
+import {partyMode} from './party-modes.js?v=33.19.0';
 // 33.9.1: five seconds before the first game, the same as between games
 export const PARTY_CAPACITY=20,PARTY_COUNTDOWN_MS=5000,PARTY_BREAK_MS=10000;
 // 33.10.6: a list holds every game of the room (there are more than twenty now)
@@ -25,6 +25,7 @@ export const PARTY_GAMES=Object.freeze([
  {id:'carrom',name:'كيرم',kind:'board',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/carrom-cover-v33-9-6.webp',hint:'دخّل أقراصك والملكة قبل خصمك، اثنين في كل طاولة.'},
  {id:'hockey',name:'هوكي الهواء',kind:'arena',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/air-hockey-cover-v33-7.svg',hint:'مواجهة اثنين على طاولة الهوكي، أول من يسجل 5 أهداف يفوز.'},
  {id:'tanks',name:'معركة الدبابات',kind:'arena',maxPlayers:4,real:true,linkOnly:true,image:'assets/brand/tanks-arena-cover-nov14.webp',hint:'آخر دبابة في الساحة تفوز، أربعة في كل ساحة، والمقاعد الفاضية تكملها دبابات منافسة.'},
+ {id:'tower',name:'برج التحديات',kind:'arena',maxPlayers:8,real:true,linkOnly:true,image:'assets/brand/tower-cover-v33-18.webp',hint:'سباق عقبات ثلاثي الأبعاد: أول واحد يوصل القمة يفوز، وتقدرون تتدافعون في الطريق.'},
  {id:'serpent',name:'حلبة الثعابين',kind:'arena',real:true,image:'assets/brand/sovereign-hero.webp',hint:'الجميع في الحلبة نفسها، بقواعد الرأس والذيل والقدرات.'},
  {id:'jewels',name:'ماستر الجواهر',kind:'puzzle',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/jewels-cover-v33-16.svg',hint:'بدّل الجواهر واصنع السلاسل؛ يتساوى الجميع في البداية والحركات.'},
  {id:'sudoku',name:'سودوكو',kind:'puzzle',real:true,image:'assets/game-cards-v27/sudoku.svg',hint:'نفس اللوحة للجميع، وخمس محاولات خطأ لكل لاعب.'},
