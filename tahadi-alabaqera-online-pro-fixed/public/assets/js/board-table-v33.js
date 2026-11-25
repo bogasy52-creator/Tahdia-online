@@ -1,4 +1,4 @@
-/* Tahdia 33.0.0 — one online flow for the table games (الثعبان والسلالم،
+/* Tahdia 33.0.0 — one online flow for the table games (الثعابين والسلالم،
    الزهرة، جاكارو، تحدي النرد). Every match is online: «العب الحين» seats you at
    a public table that starts ten seconds after it opened, a friends' room
    starts with whoever came, and bots of every strength take the empty seats.

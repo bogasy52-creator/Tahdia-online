@@ -31,6 +31,8 @@ export const ROOM_FAMILIES = Object.freeze({
   tanks: { from: 7, to: 7, page: '/tanks' },
   // 33.10.1: «شطرنج الذاكرة» — codes 05xxxx
   pegs: { from: 5, to: 5, page: '/pegs' },
+  // 33.18.0: «برج التحديات» — codes 04xxxx
+  tower: { from: 4, to: 4, page: '/tower' },
 });
 
 const random = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
@@ -59,7 +61,7 @@ export const pageOfGame = (game) => ROOM_FAMILIES[game]?.page || null;
 function probeFor(kind, env, code) {
   const usable = (ns) => typeof ns?.idFromName === 'function' && typeof ns?.get === 'function';
   if (kind === 'board') return usable(env.BOARD_ROOMS) && { stub: env.BOARD_ROOMS.get(env.BOARD_ROOMS.idFromName(code)), url: 'https://board.internal/status' };
-  const names = { tournament:['tournament:'+code,'https://tournament.internal/status'],tanks:['tanks:'+code,'https://tanks.internal/status'],hockey:['hockey:'+code,'https://hockey.internal/status'],challenge:['challenge:'+code,'https://challenge.internal/status'], quiz: [code, 'https://room.internal/status'], party: ['party:' + code, 'https://party.internal/status'], sudoku: ['sudoku:' + code, 'https://sudoku.internal/status'], paths: ['paths:' + code, 'https://paths.internal/status'], picture: ['picture:' + code, 'https://picture.internal/status'], serpent: ['__serpent__:' + code, 'https://serpent.internal/status'], duel: ['duel:' + code, 'https://duel.internal/status'] };
+  const names = { tournament:['tournament:'+code,'https://tournament.internal/status'],tanks:['tanks:'+code,'https://tanks.internal/status'],tower:['tower:'+code,'https://tower.internal/status'],hockey:['hockey:'+code,'https://hockey.internal/status'],challenge:['challenge:'+code,'https://challenge.internal/status'], quiz: [code, 'https://room.internal/status'], party: ['party:' + code, 'https://party.internal/status'], sudoku: ['sudoku:' + code, 'https://sudoku.internal/status'], paths: ['paths:' + code, 'https://paths.internal/status'], picture: ['picture:' + code, 'https://picture.internal/status'], serpent: ['__serpent__:' + code, 'https://serpent.internal/status'], duel: ['duel:' + code, 'https://duel.internal/status'] };
   const [name, url] = names[kind] || [];
   return name && usable(env.ROOMS) && { stub: env.ROOMS.get(env.ROOMS.idFromName(name)), url };
 }

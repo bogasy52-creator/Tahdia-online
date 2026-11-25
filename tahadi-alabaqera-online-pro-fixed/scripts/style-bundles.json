@@ -731,5 +731,9 @@
     "assets/css/game-interaction-v34.css",
     "assets/css/table-studio-v33-16.css",
     "assets/css/game-craft-v33-16.css"
+  ],
+  "tower.html": [
+    "assets/css/game-interaction-v34.css",
+    "assets/css/tower-v33-18.css"
   ]
 }

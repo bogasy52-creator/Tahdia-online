@@ -142,7 +142,7 @@ test('billiards: a page, a cover and a mission', async () => {
   assert.match(shop, /billiards:\{name:'بلياردو',href:'\/billiards'\}/);
 });
 
-test('the snakes game is «الثعبان والسلالم» in every text a player reads', async () => {
+test('the snakes game is «الثعابين والسلالم» in every text a player reads', async () => {
   for (const file of ['public/assets/js/profile-core.js', 'public/assets/js/shop-v31.js', 'public/snakes.html', 'public/assets/js/table-viewport-v33-7.js', 'public/assets/js/play-feedback-v24-1.js', 'src/presence/presence-registry.js']) {
     const text = await read(file);
     assert.doesNotMatch(text, /السلم والثعبان|سلم وثعبان/, file);

@@ -16,7 +16,7 @@ const GAME_PAGES = ['hockey', 'billiards', 'race', 'pegs', 'tanks', 'jewels', 'p
 function boot(path, { search = '', framed = false } = {}) {
   const classes = new Set(), replaced = [], appended = [];
   const documentElement = { classList: { add: (...c) => c.forEach((x) => classes.add(x)), remove: (...c) => c.forEach((x) => classes.delete(x)), contains: (c) => classes.has(c) } };
-  const document = { documentElement, readyState: 'loading', head: { appendChild: (el) => appended.push(el) }, createElement: () => ({ style: {}, setAttribute() {}, append() {} }), querySelector: () => null };
+  const document = { documentElement, readyState: 'loading', head: { appendChild: (el) => appended.push(el) }, createElement: () => ({ style: {}, setAttribute() {}, append() {} }), querySelector: () => null, addEventListener() {} };
   const window = { document, location: { pathname: path, search, replace: (url) => replaced.push(url) }, addEventListener() {}, setTimeout: () => 0 };
   window.top = framed ? {} : window; window.self = window;
   const source = this.source;
@@ -134,8 +134,9 @@ test('home: the library in order, the newer games, the cards fit, and the games 
   const home = await read('public/index.html');
   const order = [...home.matchAll(/<a href="([^"]+)" class="home-game/g)].map((m) => m[1]);
   // 33.15.0: «خدعة الألوان» and «خزنة الألوان» are retired, «رص البلوكات» replaced «جسر الألوان»
-  assert.equal(order.length, 26);
-  assert.deepEqual(order.slice(0, 7), ['/ludo', '/blocks', '/ten', '/jackaroo', '/baloot', '/uno', '/pegs']);
+  // 33.18.0: «برج التحديات» joins, right after لودو
+  assert.equal(order.length, 27);
+  assert.deepEqual(order.slice(0, 8), ['/ludo', '/tower', '/blocks', '/ten', '/jackaroo', '/baloot', '/uno', '/pegs']);
   assert.doesNotMatch(home, /href="\/(?:bridge|colorbluff)/);
   assert.equal(order.at(-1), '/party');
   assert.doesNotMatch(home, /table-feature/, 'the two wide table cards spilled off the phone');

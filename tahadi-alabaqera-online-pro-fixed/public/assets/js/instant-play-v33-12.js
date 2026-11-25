@@ -52,7 +52,27 @@
     quiz: { go: '/online' },
   });
   // the name and picture each game's sheet shows
-  const ART = Object.freeze({ ludo: ['لودو', 'brand/ludo-cover-v33-15.webp'], blocks: ['رص البلوكات', 'brand/blocks-cover-v33-15.svg'], bridge: ['جسر الألوان', 'brand/bridge-cover-v33-12.svg'], ten: ['عشر ثواني', 'brand/ten-cover-v33-12.svg'], jackaroo: ['جاكارو', 'brand/jackaroo-cover-v33-8.webp'], baloot: ['بلوت', 'brand/baloot-cover-v32.webp'], uno: ['أونو', 'challenges/uno-table.svg'], pegs: ['سر الألوان', 'brand/pegs-cover-v33-10-3.webp'], snakes: ['الثعبان والسلالم', 'brand/snakes-studio-v29-1.webp'], billiards: ['بلياردو', 'brand/billiards-cover-33-10-nov14.webp'], carrom: ['كيرم', 'brand/carrom-cover-v33-9-6.webp'], hockey: ['هوكي الهواء', 'brand/air-hockey-cover-v33-7.svg'], memory: ['الذاكرة', 'game-cards-v27/memory.svg'], logic: ['المنطق', 'game-cards-v27/logic.svg'], puzzle: ['ترتيب الأرقام', 'game-cards-v27/puzzle.svg'], 'paths-online': ['توصيل الأرقام', 'game-cards-v27/paths-online.svg'], picture: ['سباق الصور', 'ai-v19/garden.webp'], jewels: ['ماستر الجواهر', 'brand/jewels-cover-v33-16.svg'], tanks: ['معركة الدبابات', 'brand/tanks-arena-cover-nov14.webp'] });
+  const ART = Object.freeze({ ludo: ['لودو', 'brand/ludo-cover-v33-15.webp'], blocks: ['رص البلوكات', 'brand/blocks-cover-v33-15.svg'], bridge: ['جسر الألوان', 'brand/bridge-cover-v33-12.svg'], ten: ['عشر ثواني', 'brand/ten-cover-v33-12.svg'], jackaroo: ['جاكارو', 'brand/jackaroo-cover-v33-8.webp'], baloot: ['بلوت', 'brand/baloot-cover-v32.webp'], uno: ['أونو', 'challenges/uno-table.svg'], pegs: ['سر الألوان', 'brand/pegs-cover-v33-10-3.webp'], snakes: ['الثعابين والسلالم', 'brand/snakes-studio-v29-1.webp'], billiards: ['بلياردو', 'brand/billiards-cover-33-10-nov14.webp'], carrom: ['كيرم', 'brand/carrom-cover-v33-9-6.webp'], hockey: ['هوكي الهواء', 'brand/air-hockey-cover-v33-7.svg'], memory: ['الذاكرة', 'game-cards-v27/memory.svg'], logic: ['المنطق', 'game-cards-v27/logic.svg'], puzzle: ['ترتيب الأرقام', 'game-cards-v27/puzzle.svg'], 'paths-online': ['توصيل الأرقام', 'game-cards-v27/paths-online.svg'], picture: ['سباق الصور', 'ai-v19/garden.webp'], jewels: ['ماستر الجواهر', 'brand/jewels-cover-v33-16.svg'], tanks: ['معركة الدبابات', 'brand/tanks-arena-cover-nov14.webp'] });
+  // one line under each game's name, saying what it is
+  const ABOUT = Object.freeze({
+    ludo: 'لوحة ملكية من لاعبين لين ستة: ارمِ النرد ووصّل أحجارك الأربعة للوسط.',
+    baloot: 'صن وحكم ومشاريع، مع منافسين على نفس مستواك.',
+    billiards: 'بلياردو 8 كور: خطّط ضربتك ودخّل كورك قبل خصمك.',
+    carrom: 'طاولة كيرم خشب: صوّب المضرب ودخّل حباتك في الجيوب.',
+    snakes: 'ارمِ النرد، اطلع السلالم وانتبه من الثعابين.',
+    jackaroo: 'حرّك أحجارك بالأوراق ووصّلها البيت قبل الكل.',
+    pegs: 'احزر ترتيب الألوان المخفي قبل خصمك.',
+    uno: 'نزّل ورقة بنفس اللون أو الرقم، وخلّص أوراقك أول واحد.',
+    blocks: 'حط القطع على اللوحة، كمّل الصفوف وكسّرها، واجمع أكبر كومبو.',
+    tanks: 'دبابات من لاعبين لين أربعة: صوّب ودمّر وخذ الجولة.',
+    hockey: 'سدّد على مرمى خصمك ودافع عن مرماك.',
+    memory: 'اقلب البطاقات ولقّ الأزواج بأقل محاولات.',
+    logic: 'ألغاز منطق تتصعّب شوي شوي.',
+    puzzle: 'رتّب الأرقام بأقل عدد حركات.',
+    'paths-online': 'وصّل الأرقام بالترتيب وعبّي كل المربعات.',
+    jewels: 'بدّل الجواهر وكوّن صفوف قبل ما يخلص الوقت.',
+    ten: 'وقّف العداد على 10 بالضبط، والصوت معك أول 3 ثواني بس.',
+  });
   const key = GAMES[page]?.alias || page, game = GAMES[key];
   if (!game) return;
   const params = new URLSearchParams(loc.search), play = params.get('play') || '';
@@ -67,6 +87,10 @@
   const html = doc.documentElement;
   html.classList.add(instant ? 'ip-instant' : 'ip-menu');
   function ready(fn) { if (doc.readyState === 'complete') setTimeout(fn, 60); else root.addEventListener('load', () => setTimeout(fn, 60), { once: true }); }
+  // 33.18.0: the choice comes up as soon as the page's HTML is in (images and fonts can take long on a
+  // slow line, and the page sat on a spinner); pressing «العب» waits for the page to finish loading.
+  function domReady(fn) { if (doc.readyState !== 'loading') setTimeout(fn, 0); else doc.addEventListener('DOMContentLoaded', () => setTimeout(fn, 0), { once: true }); }
+  const loaded = new Promise((resolve) => ready(resolve));
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   async function find(selector, tries, text) {
     for (let i = 0; i < tries; i++) {
@@ -159,6 +183,8 @@
   /* ---------------------------------------------------------------- the sheet */
   function sheet() {
     const [title = (doc.title.split('—')[0] || '').trim(), image] = ART[key] || [];
+    const meta = ((doc.querySelector('meta[name="description"]')?.content || '').split(/[.؟!]/)[0] || '').replace(/^[^:]{1,24}:\s*/, '').trim();
+    const about = ABOUT[key] || (meta.length > 24 && !/لعبة العباقرة|تحدي العباقرة/.test(meta) ? meta.slice(0, 140) : '');
     const chosen = picks();
     const box = doc.createElement('div');
     box.className = 'ip-sheet';
@@ -170,6 +196,7 @@
     const h = doc.createElement('h2'); h.id = 'ipSheetTitle'; h.textContent = title || 'جاهز؟';
     const back = doc.createElement('a'); back.href = '/'; back.className = 'ip-close'; back.setAttribute('aria-label', 'رجوع للرئيسية'); back.textContent = '✕';
     head.append(h, back); card.append(head);
+    if (about) { const p = doc.createElement('p'); p.className = 'ip-about'; p.textContent = about; card.append(p); }
     if (image) { const pic = doc.createElement('img'); pic.className = 'ip-cover'; pic.src = '/assets/' + image; pic.alt = ''; pic.decoding = 'async'; card.insertBefore(pic, head); }
     (game.groups || []).forEach(([label, list], g) => {
       const row = doc.createElement('div'); row.className = 'ip-group'; row.setAttribute('role', 'radiogroup'); row.setAttribute('aria-label', label);
@@ -184,9 +211,13 @@
       row.append(opts); card.append(row);
     });
     const go = doc.createElement('button'); go.type = 'button'; go.className = 'ip-play'; go.textContent = game.quick ? 'العب الحين' : 'العب';
-    go.addEventListener('click', () => {
+    go.addEventListener('click', async () => {
+      if (go.disabled) return;
       const memory = {}; (game.groups || []).forEach(([label, list], g) => { memory[label] = list[chosen[g]][0]; }); save(memory);
-      html.classList.remove('ip-asking'); box.remove(); clearTimeout(safety); safety = setTimeout(show, 6500); start(chosen);
+      go.disabled = true; go.classList.add('is-busy'); go.textContent = 'نجهّز اللعبة…'; box.classList.add('is-busy');
+      await loaded;
+      html.classList.remove('ip-asking'); clearTimeout(safety); safety = setTimeout(() => { box.remove(); show(); }, 6500);
+      await start(chosen); box.remove();
     });
     card.append(go);
     const more = doc.createElement('div'); more.className = 'ip-more-ways';
@@ -201,9 +232,10 @@
     go.focus({ preventScroll: true });
     doc.addEventListener('keydown', function esc(e) { if (e.key === 'Escape' && box.isConnected) { doc.removeEventListener('keydown', esc); loc.href = '/'; } });
   }
+  domReady(() => { if (game.groups?.length) { clearTimeout(safety); sheet(); } });
   ready(() => {
+    if (game.groups?.length) return;
     clearTimeout(safety);
-    if (game.groups?.length) { sheet(); return; }
     safety = setTimeout(show, 6500);
     start([]);
   });

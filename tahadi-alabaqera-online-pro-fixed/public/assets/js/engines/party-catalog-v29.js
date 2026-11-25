@@ -18,7 +18,7 @@ export const PARTY_GAMES=Object.freeze([
  {id:'ludo',name:'لودو',kind:'board',maxPlayers:6,real:true,linkOnly:true,image:'assets/brand/ludo-cover-v33-15.webp',hint:'نفس قواعد لودو؛ اختر أربعة أو ستة لاعبين، ولكل لاعب لونه وبيته.'},
  {id:'jackaroo',name:'جاكارو',kind:'board',maxPlayers:6,real:true,image:'assets/arena/jackaroo-table-v17.webp',hint:'فريقان على الطاولة نفسها لأربعة أو ستة، وتكتمل المقاعد تلقائيًا.'},
  {id:'chaos',name:'أونو',kind:'board',maxPlayers:8,real:true,image:'assets/challenges/uno-table.svg',hint:'طابق اللون والرقم، اعكس الدور، ونادِ أونو. طاولات حتى 8 لاعبين.'},
- {id:'snakes',name:'الثعبان والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
+ {id:'snakes',name:'الثعابين والسلالم',kind:'board',maxPlayers:10,real:true,image:'assets/brand/snakes-studio-v29-1.webp',hint:'اللوحة الكبيرة نفسها بثعابينها وسلالمها، عشرة في كل طاولة.'},
  {id:'dice',name:'تحدي النرد',kind:'board',real:true,maxPlayers:10,image:'assets/brand/dice-studio-v26.webp',hint:'ارمِ أو ثبّت رصيدك؛ الحظ والخطة يصنعان الفارق.'},
  {id:'pegs',name:'سر الألوان',kind:'board',maxPlayers:6,real:true,linkOnly:true,image:'assets/brand/pegs-cover-v33-10-3.webp',hint:'احفظ الألوان واقلب القطعة الصح، حتى ستة في كل طاولة.'},
  {id:'billiards',name:'بلياردو',kind:'board',maxPlayers:2,real:true,linkOnly:true,image:'assets/brand/billiards-cover-33-10-nov14.webp',hint:'كرات 8 بين اثنين؛ الغرفة تنقسم طاولات، اثنين في كل طاولة.'},

@@ -44,7 +44,7 @@ test('the page and the server agree on which game every code belongs to', async 
   assert.equal(api.roomUrl('snakes', '401234'), '/snakes?room=401234');
   // 33.9.5: «ماستر الجواهر» became a duel with its own page
   assert.equal(api.roomUrl('jewels', '851234'), '/jewels?room=851234');
-  assert.equal(api.gameOfCode('991234'), 'billiards');assert.equal(api.gameOfCode('041234'), null);assert.equal(api.gameOfCode('051234'), 'pegs', '05 is «شطرنج الذاكرة» (33.10.1)');assert.equal(api.gameOfCode('091234'),'wordbomb','09 identifies the word hunt');
+  assert.equal(api.gameOfCode('991234'), 'billiards');assert.equal(api.gameOfCode('041234'), 'tower', '04 is «برج التحديات» (33.18.0)');assert.equal(api.gameOfCode('031234'), null);assert.equal(api.gameOfCode('051234'), 'pegs', '05 is «شطرنج الذاكرة» (33.10.1)');assert.equal(api.gameOfCode('091234'),'wordbomb','09 identifies the word hunt');
 });
 
 test('you play under your account name, then the party name, then your own guest name', async () => {

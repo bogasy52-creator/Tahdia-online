@@ -1,5 +1,5 @@
 import {isColorState,createColorTable,playColorTable,colorTimeout,chooseColorMove} from '../../public/assets/js/engines/color-tables-v33-14.js';
-// Tahdia 33.0.0 — the board tables (الثعبان والسلالم، الزهرة، جاكارو، تحدي النرد، والبلياردو من 33.9.0)
+// Tahdia 33.0.0 — the board tables (الثعابين والسلالم، الزهرة، جاكارو، تحدي النرد، والبلياردو من 33.9.0)
 // inside the BoardRoom Durable Object.
 // - A table starts with whoever is in the room. Seats nobody took are given to
 //   bots, a mix of easy, medium and hard; a quick table (العب الحين) is filled

@@ -16,7 +16,7 @@ export const PRESENCE_PAGES = Object.freeze({
   v5: { key: 'quiz-local', label: 'تحدي العباقرة · جهاز واحد' },
   picture: { key: 'picture', label: 'سباق الصور' },
   baloot: { key: 'baloot', label: 'البلوت' },
-  snakes: { key: 'snakes', label: 'الثعبان والسلالم' },
+  snakes: { key: 'snakes', label: 'الثعابين والسلالم' },
   zahra: { key: 'zahra', label: 'الزهرة / لودو' },
   jackaroo: { key: 'jackaroo', label: 'جاكارو' },
   serpent: { key: 'serpent', label: 'حلبة الثعبان' },

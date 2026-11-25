@@ -1,0 +1,118 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>برج التحديات — لعبة العباقرة</title><meta name="description" content="برج التحديات: سباق عقبات ثلاثي الأبعاد. 100 مرحلة في 6 عوالم تلعبها لحالك، وسباقات أونلاين من 2 إلى 8 لاعبين: سباق، إقصاء وفرق."><meta name="theme-color" content="#160c2b"><meta name="color-scheme" content="only light"><link rel="manifest" href="/manifest.webmanifest?v=33.9.10"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
+<link rel="stylesheet" href="assets/css/app-tower.css?v=33.18.0-ec3437e560"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.18.0"></head>
+<body class="release-v26 tower-page" data-world="forest">
+<canvas id="twCanvas" class="tw-canvas" aria-hidden="true"></canvas>
+<main class="tw-app">
+
+  <section id="twLobby" class="tw-screen tw-lobby" aria-labelledby="twLobbyTitle">
+    <header class="tw-bar">
+      <a class="tw-back" href="/" aria-label="رجوع للرئيسية">→</a>
+      <div class="tw-brand"><b id="twLobbyTitle">برج التحديات</b><small id="twWorldName">الغابة</small></div>
+      <div class="tw-wallet"><span title="النجوم">⭐ <b id="twStars">0</b><small id="twStarMax">/300</small></span><span title="الجواهر">💎 <b id="twGems">0</b></span></div>
+    </header>
+    <div class="tw-lobby-foot">
+      <button id="twContinue" class="tw-cta" type="button"><b>المرحلة 1</b><small>الغابة</small></button>
+      <div class="tw-tiles">
+        <button id="twMapBtn" class="tw-tile" type="button"><i aria-hidden="true">🗺️</i><b>المراحل</b></button>
+        <button id="twOnlineBtn" class="tw-tile" type="button"><i aria-hidden="true">🌐</i><b>أونلاين</b></button>
+        <button id="twWardrobeBtn" class="tw-tile" type="button"><i aria-hidden="true">👕</i><b>الأزياء</b></button>
+        <button id="twBoardBtn" class="tw-tile" type="button"><i aria-hidden="true">🏆</i><b>المتصدرين</b></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="twMap" class="tw-screen tw-sheet" hidden aria-labelledby="twMapTitle">
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twMapTitle">المراحل</b><small>100 مرحلة في 6 عوالم</small></div></header>
+    <div id="twWorldTabs" class="tw-worlds"></div>
+    <p id="twMapInfo" class="tw-note"></p>
+    <div id="twLevels" class="tw-levels"></div>
+  </section>
+
+  <section id="twWardrobe" class="tw-screen tw-sheet tw-ward" hidden aria-labelledby="twWardTitle">
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twWardTitle">الشخصيات والأزياء</b><small><span id="twWardStars">0 ★</span> · <span id="twWardGems">0 💎</span></small></div></header>
+    <div class="tw-ward-space" aria-hidden="true"></div>
+    <div class="tw-ward-panel">
+      <div class="tw-tabs" role="group" aria-label="القسم"><button type="button" data-ward-tab="char">الشخصيات</button><button type="button" data-ward-tab="hat">على الراس</button><button type="button" data-ward-tab="face">على الوجه</button></div>
+      <div id="twWardGrid" class="tw-items"></div>
+      <p class="tw-note">الشخصيات تنفتح بالنجوم، والأزياء تشتريها بالجواهر اللي تجمعها من المراحل والسباقات.</p>
+    </div>
+  </section>
+
+  <section id="twOnline" class="tw-screen tw-sheet" hidden aria-labelledby="twOnlineTitle">
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twOnlineTitle">أونلاين</b><small>من 2 إلى 8 لاعبين</small></div></header>
+    <div id="twOnlineHome" class="tw-online">
+      <div class="tw-modes" role="group" aria-label="الطور">
+        <button type="button" data-tw-mode="race"><b>سباق</b><small>أول واحد يوصل القمة</small></button>
+        <button type="button" data-tw-mode="elim"><b>إقصاء</b><small>جولات لين يبقى واحد</small></button>
+        <button type="button" data-tw-mode="teams"><b>فرق</b><small>الأحمر ضد الأزرق</small></button>
+      </div>
+      <label id="twNameRow" class="tw-field"><span>اسمك</span><input id="twName" maxlength="20" autocomplete="nickname" placeholder="اكتب اسمك"></label>
+      <button id="twQuick" class="tw-cta" type="button"><b>العب الحين</b><small>سباق عام، يبدأ خلال ثواني</small></button>
+      <div class="tw-split">
+        <div class="tw-card"><b>غرفة مع أصحابك</b><label class="tw-inline">عدد اللاعبين <select id="twCapacity"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option></select></label><button id="twCreate" class="tw-btn" type="button">افتح غرفة</button></div>
+        <div class="tw-card"><b>عندك كود؟</b><input id="twCode" class="tw-code" inputmode="numeric" maxlength="6" placeholder="000000" aria-label="كود الغرفة"><button id="twJoin" class="tw-btn" type="button">ادخل</button></div>
+      </div>
+    </div>
+    <div id="twRoomBox" class="tw-online" hidden>
+      <div class="tw-roomhead"><small>كود الغرفة</small><b id="twRoomCode"></b><span id="twRoomMode"></span></div>
+      <ul id="twRoomPlayers" class="tw-players"></ul>
+      <p id="twRoomNote" class="tw-note"></p>
+      <div class="tw-row"><button id="twRoomStart" class="tw-cta tw-cta-sm" type="button"><b>ابدأ السباق</b></button><button id="twRoomShare" class="tw-btn" type="button">ادعُ أصحابك</button><button id="twRoomLeave" class="tw-btn tw-ghost" type="button">اطلع</button></div>
+    </div>
+  </section>
+
+  <section id="twBoard" class="tw-screen tw-sheet" hidden aria-labelledby="twBoardTitle">
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twBoardTitle">المتصدرين</b><small>من نقاط السباقات الأونلاين</small></div></header>
+    <div class="tw-tabs" role="group" aria-label="الفترة"><button type="button" data-tw-board="week">هذا الأسبوع</button><button type="button" data-tw-board="all">عالمي</button></div>
+    <ol id="twBoardList" class="tw-board"></ol>
+    <p id="twBoardMe" class="tw-note"></p>
+  </section>
+
+  <section id="twHud" class="tw-hud" hidden aria-label="السباق">
+    <div class="tw-hud-top">
+      <button id="twPauseBtn" class="tw-round-btn" type="button" aria-label="إيقاف مؤقت">II</button>
+      <div class="tw-hud-title"><b id="twTitle"></b><span id="twTime">0.0</span></div>
+      <div class="tw-hud-side"><span id="twGemSlots" class="tw-gems"></span><small id="twFalls"></small></div>
+    </div>
+    <div class="tw-prog" aria-hidden="true"><span id="twProgOthers"></span><i id="twProgMe"></i></div>
+    <div id="twStickZone" class="tw-stickzone" aria-label="منطقة الحركة"><div id="twStick" class="tw-stick"><i id="twKnob"></i></div><p class="tw-stick-hint">اسحب هنا للحركة</p></div>
+    <button id="twJump" class="tw-jump" type="button" aria-label="اقفز"><span aria-hidden="true">⤒</span><small>اقفز</small></button>
+  </section>
+</main>
+
+<div id="twCount" class="tw-count" aria-live="assertive"></div>
+<div id="twToast" class="tw-toast" role="status" aria-live="polite"></div>
+
+<div id="twPause" class="tw-modal" hidden role="dialog" aria-modal="true" aria-labelledby="twPauseTitle">
+  <div class="tw-modal-card"><h2 id="twPauseTitle">وقفة</h2>
+    <button id="twResume" class="tw-cta" type="button"><b>كمّل</b></button>
+    <button id="twRestart" class="tw-btn" type="button">عيد المرحلة</button>
+    <button id="twSound" class="tw-btn" type="button">الصوت</button>
+    <button id="twQuit" class="tw-btn tw-ghost" type="button">اطلع للقائمة</button>
+  </div>
+</div>
+
+<div id="twResult" class="tw-modal" hidden role="dialog" aria-modal="true" aria-labelledby="twResTitle">
+  <div class="tw-modal-card tw-result">
+    <button id="twResClose" class="tw-x" type="button" aria-label="سكّر">✕</button>
+    <h2 id="twResTitle">وصلت القمة!</h2>
+    <div id="twResStars" class="tw-stars" aria-label="النجوم"></div>
+    <dl class="tw-facts"><div><dt>الوقت</dt><dd id="twResTime"></dd></div><div><dt>الجواهر</dt><dd id="twResGems"></dd></div><div><dt>المكسب</dt><dd id="twResEarned"></dd></div></dl>
+    <p id="twResGoal" class="tw-note"></p>
+    <p id="twResUnlock" class="tw-unlock"></p>
+    <div class="tw-row"><button id="twResNext" class="tw-cta tw-cta-sm" type="button"><b>المرحلة الجاية</b></button><button id="twResAgain" class="tw-btn" type="button">عيدها</button><button id="twResMap" class="tw-btn tw-ghost" type="button">المراحل</button></div>
+  </div>
+</div>
+
+<div id="twRound" class="tw-modal" hidden role="dialog" aria-modal="true" aria-labelledby="twRoundTitle">
+  <div class="tw-modal-card tw-result">
+    <h2 id="twRoundTitle"></h2>
+    <ol id="twRoundList" class="tw-board tw-board-sm"></ol>
+    <p id="twRoundNote" class="tw-note"></p>
+    <div class="tw-row"><button id="twRoundAgain" class="tw-cta tw-cta-sm" type="button"><b>سباق ثاني</b></button><button id="twRoundLeave" class="tw-btn tw-ghost" type="button">اطلع</button></div>
+  </div>
+</div>
+
+<script src="assets/js/compact/platform.js?v=33.18.0"></script><script src="assets/js/compact/social-client.js?v=33.18.0"></script><script src="assets/js/compact/profile-core.js?v=33.18.0-pro1"></script><script src="assets/js/compact/career-client.js?v=33.18.0"></script>
+<script type="module" src="assets/js/tower/main.js?v=33.18.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.18.0"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.18.0"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.18.0"></script></body></html>

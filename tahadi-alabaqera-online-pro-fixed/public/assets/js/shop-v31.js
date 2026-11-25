@@ -10,12 +10,12 @@ const CATS=[
  ['ludoset','أحجار لودو','👑','أحجارك في لودو: أربع قطع بتاج وجوهرة ونجمة وكرة، بلبس يميزك عن الباقين.'],
  ['blockset','قطع البلوكات','🧩','شكل القطع في «رص البلوكات»: جواهر، نيون، حلاوة، أو سبائك ذهب.'],
  ['frame','إطارات الصورة','🖼️','إطار حول صورتك في شريطك فوق، وفي ملفك، وفي بطاقتك داخل الألعاب.'],
- ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في الثعبان والسلالم، وتصير كرات زجاجية في الجاكارو.'],
- ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في الثعبان والسلالم، وتكون صورتك على طاولة البلوت.'],
+ ['pawn','الأحجار','♟️','أحجار مجسّمة تتلوّن بلونك في الثعابين والسلالم، وتصير كرات زجاجية في الجاكارو.'],
+ ['character','الشخصيات','🪖','شخصيات مجسّمة بخوذ وأقنعة تمشي بدل الأحجار في الثعابين والسلالم، وتكون صورتك على طاولة البلوت.'],
  ['dice','النرد','🎲','نرد ثلاثي الأبعاد يظهر في كل ألعاب النرد.'],
  ['table','الطاولات','🪵','طاولتك في البلوت: الإطار والسطح والزخرفة.'],
  ['jboard','لوحات الجاكارو','🎯','لوحة الجاكارو نفسها بممشاها وأرقامها، بلبس ثاني: ذهب، زمرد، رخام، كربون، قصر، مجلس.'],
- ['board','ألواح السلالم','🪜','لوح الثعبان والسلالم بخاناته وإطاره وسلالمه.'],
+ ['board','ألواح السلالم','🪜','لوح الثعابين والسلالم بخاناته وإطاره وسلالمه.'],
  ['deck','ورق البلوت','🃏','ورق اللعب على طاولة البلوت: الوجه والظهر في يدك وعلى الطاولة.'],
  ['snake','الثعابين','🐍','إطلالتك في حلبة الثعبان أمام بقية اللاعبين.'],
  ['emote','إيموجي','😎','إيموجي متحرك تطلقه داخل الغرف، ويظهر لكل اللاعبين.'],
@@ -34,7 +34,7 @@ const SLOTS=['ludoset','blockset','frame','pawn','dice','table','jboard','board'
 const TABLE_MATERIAL={'table-club':'club','table-gallery':'ivory','table-nocturne':'carbon','table-botanic':'jade','table-royal':'royal','table-walnut':'walnut','table-cyber':'reactor','table-majlis':'majlis'};
 const BOARD_LOOK={'board-forest':{cell:'#18323e',alt:'#213f4a',num:'#e0edf0',frame:'#1b303e',dark:'#0c1d28',hi:'#45606c',snake:'#52f1c5',ladder:'#8fe2ef'},'board-lava':{cell:'#1d1513',alt:'#261b17',num:'#ffb27a',frame:'#24140d',dark:'#0b0604',hi:'#ff7a2e',snake:'#ff2d55',ladder:'#ff8a3d'},'board-galaxy':{cell:'#141238',alt:'#1a1745',num:'#d6ceff',frame:'#2f2868',dark:'#0c0a22',hi:'#a59cec',snake:'#ff4fa3',ladder:'#cdc4ff'},'board-royal':{cell:'#fbf8f1',alt:'#efe6d2',num:'#8a6a2f',frame:'#c8a159',dark:'#7c5a1c',hi:'#fff0c4',snake:'#8b5cf6'},'board-cyber':{cell:'#13283c',alt:'#0f2131',num:'#7fe7ff',frame:'#0e3550',dark:'#061a28',hi:'#3fd0f5',snake:'#34e0ff'}};
 const DIE_ONE={'dice-obsidian':'#ebc677','dice-crystal':'#d6fff1','dice-smoke':'#ffdf9d','dice-nebula':'#ffdf9d'};
-const TRY={ludoset:['/ludo','جرّبها في لودو'],blockset:['/blocks','جرّبها في رص البلوكات'],frame:['/','شوفه في شريطك فوق'],striker:['/carrom','جرّبه في الكيرم'],cue:['/billiards','جرّبها في البلياردو'],stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/snakes','جرّبها في الثعبان والسلالم'],character:['/snakes','جرّبها في الثعبان والسلالم'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح الثعبان والسلالم'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/snakes','جرّبه في الثعبان والسلالم'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
+const TRY={ludoset:['/ludo','جرّبها في لودو'],blockset:['/blocks','جرّبها في رص البلوكات'],frame:['/','شوفه في شريطك فوق'],striker:['/carrom','جرّبه في الكيرم'],cue:['/billiards','جرّبها في البلياردو'],stage:['/focus','جرّب هويتك في ساحة التركيز'],deck:['/baloot','جرّبه في البلوت'],pawn:['/snakes','جرّبها في الثعابين والسلالم'],character:['/snakes','جرّبها في الثعابين والسلالم'],dice:['/dice','افتح تحدي النرد'],table:['/jackaroo','جرّبها في الجاكارو'],board:['/snakes','افتح الثعابين والسلالم'],snake:['/serpent','افتح حلبة الثعبان'],emote:['/snakes','استخدمه في غرفة لعب'],phrase:['/snakes','استخدمها في غرفة لعب'],move:['/snakes','أطلقها في غرفة لعب'],trail:['/snakes','جرّبه في الثعابين والسلالم'],victory:['/snakes','العب واربح'],title:['/social','ملفك الشخصي']};
 let missionKind='daily';
 let heroParts=null,view='shop',filter='all',query='',sort='featured',pending=false,previewId=null,previewCleanup=()=>{},bag=[],favorites=[],accountKey='',checkout=null,observer=null,clock=null,artSequence=0;
 
@@ -161,7 +161,7 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
   if(item.collection==='legend-frames-33-11-5'){const label=make('b','legend-nameplate',name);window.BS_LEGEND_FRAMES?.decorateName(label,item.id);stage.append(label);}
  }else if(item.type==='ludoset'){
   // 33.17.0: the four pieces of the set, drawn by the Ludo board itself
-  stage.classList.add('sx-ludoset-stage');import('./ludo/board.js?v=33.17.0').then(m=>{if(stage.isConnected!==false)stage.append(m.ludoPiecesPreview(item.design||'royal'))}).catch(()=>{});
+  stage.classList.add('sx-ludoset-stage');import('./ludo/board.js?v=33.18.0').then(m=>{if(stage.isConnected!==false)stage.append(m.ludoPiecesPreview(item.design||'royal'))}).catch(()=>{});
  }else if(item.type==='blockset'){
   const wrap=make('div','sx-blocks-art bk-skin-'+(item.design||'jewel')),grid=make('div','bk-piece');grid.style.setProperty('--rows','3');grid.style.setProperty('--cols','4');grid.style.setProperty('--cell','26px');
   for(const [r,c,col] of [[1,1,'#ef3b45'],[2,1,'#ef3b45'],[2,2,'#ef3b45'],[1,3,'#2f74ff'],[1,4,'#2f74ff'],[2,3,'#2f74ff'],[2,4,'#2f74ff'],[3,1,'#ffc21a'],[3,2,'#22b04b'],[3,3,'#22b04b'],[3,4,'#9b4dff']]){const b=make('i');b.style.gridRow=String(r);b.style.gridColumn=String(c);b.style.setProperty('--c',col);grid.append(b);}
@@ -287,7 +287,7 @@ function renderSets(p){
  }
  $('setsSection').hidden=view!=='shop'||!target.children.length;
 }
-const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'الثعبان والسلالم',href:'/snakes'},zahra:{name:'لودو',href:'/ludo'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},hockey:{name:'هوكي الهواء',href:'/hockey'},focus:{name:'مواجهة التركيز',href:'/focus'},chaos:{name:'أونو',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'},billiards:{name:'بلياردو',href:'/billiards'}};
+const MISSION_GAMES={baloot:{name:'بلوت',href:'/baloot'},snakes:{name:'الثعابين والسلالم',href:'/snakes'},zahra:{name:'لودو',href:'/ludo'},quiz:{name:'تحدي الأسئلة',href:'/quiz'},jackaroo:{name:'جاكارو',href:'/jackaroo'},dice:{name:'تحدي النرد',href:'/dice'},serpent:{name:'حلبة الثعابين',href:'/serpent'},sudoku:{name:'سودوكو',href:'/sudoku'},hockey:{name:'هوكي الهواء',href:'/hockey'},focus:{name:'مواجهة التركيز',href:'/focus'},chaos:{name:'أونو',href:'/chaos'},wordbomb:{name:'صيد الكلمات',href:'/wordbomb'},cipher:{name:'ساحة الشفرات',href:'/cipher'},billiards:{name:'بلياردو',href:'/billiards'}};
 function renderRewards(p){
  const status=core.dailyStatus(p,{now:now()}),gift=$('dailyGift');gift.replaceChildren();
  const head=make('div','sx-daily-head'),copy=make('div');copy.append(make('span','sx-eyebrow','سلسلة الحضور · اليوم '+status.streak+' من 7'),make('h3',null,status.claimed?'هدية اليوم في رصيدك.':'هدية اليوم: '+status.coins+' عملة'),make('p',null,'ادخل كل يوم لترتفع الهدية حتى 120 عملة.'));
