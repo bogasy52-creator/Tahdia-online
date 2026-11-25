@@ -3,7 +3,7 @@ import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33
 import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.10';
 import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.10';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.18.0';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.18.1';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';

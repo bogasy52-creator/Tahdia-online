@@ -161,7 +161,7 @@ export function mountCollectible(target,item,{live=false,playerColor,boardGame,s
   if(item.collection==='legend-frames-33-11-5'){const label=make('b','legend-nameplate',name);window.BS_LEGEND_FRAMES?.decorateName(label,item.id);stage.append(label);}
  }else if(item.type==='ludoset'){
   // 33.17.0: the four pieces of the set, drawn by the Ludo board itself
-  stage.classList.add('sx-ludoset-stage');import('./ludo/board.js?v=33.18.0').then(m=>{if(stage.isConnected!==false)stage.append(m.ludoPiecesPreview(item.design||'royal'))}).catch(()=>{});
+  stage.classList.add('sx-ludoset-stage');import('./ludo/board.js?v=33.18.1').then(m=>{if(stage.isConnected!==false)stage.append(m.ludoPiecesPreview(item.design||'royal'))}).catch(()=>{});
  }else if(item.type==='blockset'){
   const wrap=make('div','sx-blocks-art bk-skin-'+(item.design||'jewel')),grid=make('div','bk-piece');grid.style.setProperty('--rows','3');grid.style.setProperty('--cols','4');grid.style.setProperty('--cell','26px');
   for(const [r,c,col] of [[1,1,'#ef3b45'],[2,1,'#ef3b45'],[2,2,'#ef3b45'],[1,3,'#2f74ff'],[1,4,'#2f74ff'],[2,3,'#2f74ff'],[2,4,'#2f74ff'],[3,1,'#ffc21a'],[3,2,'#22b04b'],[3,3,'#22b04b'],[3,4,'#9b4dff']]){const b=make('i');b.style.gridRow=String(r);b.style.gridColumn=String(c);b.style.setProperty('--c',col);grid.append(b);}

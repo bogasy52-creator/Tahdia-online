@@ -5,7 +5,7 @@ import {pegsDieFace,pegsDiePalette} from './presentation.js?v=33.11.1';
    both take the same per-piece instructions, so every step is shown the same way whoever made it. */
 import { PEGS, PEG_COLORS, pegsOptions, createPegsGame, rollPegs, pickPegs, peekPegs, choosePegsMove } from '../engines/pegs-engine.js?v=33.14.0';
 import { createPegsBoard } from './board.js?v=33.11.7';
-import { createTable } from '../board-table-v33.js?v=33.18.0';
+import { createTable } from '../board-table-v33.js?v=33.18.1';
 import { guardPegs } from './guard.js?v=33.13.0';
 
 import {createPegsRace,playPegsRace,advancePegsRace,choosePegsRaceMove,publicPegsRace} from '../engines/pegs-race-engine.js?v=33.11.1';

@@ -2,9 +2,9 @@
    A hundred levels on your own (no waiting), and races for 2 to 8 in public or private rooms:
    سباق (first to the top), إقصاء (rounds until one is left) and فرق (two teams add up their places).
    Stars and gems unlock characters and outfits; progress is kept on this device. */
-import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, starsFor, STAR_MAX } from './course.js?v=33.18.0';
-import { Runner } from './physics.js?v=33.18.0';
-import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.18.0';
+import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, starsFor, STAR_MAX } from './course.js?v=33.18.1';
+import { Runner } from './physics.js?v=33.18.1';
+import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.18.1';
 
 const doc = document, $ = (id) => doc.getElementById(id), body = doc.body;
 const el = (tag, cls, text) => { const n = doc.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
@@ -18,7 +18,10 @@ const persist = () => { try { localStorage.setItem(SAVE, JSON.stringify(save)); 
 const totalStars = () => Object.values(save.best).reduce((a, b) => a + (b.s || 0), 0);
 const unlocked = (n) => n === 1 || Boolean(save.best[n - 1]);
 const nextLevel = () => { for (const L of LEVELS) if (!save.best[L.n]) return L.n; return LEVELS.length; };
-const charOpen = (c) => totalStars() >= c.stars;
+// 33.18.1: the owner's account has every character and outfit open
+const isOwner = () => { try { return globalThis.BS_SOCIAL?.profile?.()?.role === 'owner'; } catch { return false; } };
+const charOpen = (c) => isOwner() || totalStars() >= c.stars;
+const hasOutfit = (id) => isOwner() || save.owned.includes(id);
 
 /* ------------------------------------------------------------------ sound */
 let ac = null;
@@ -60,7 +63,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (scene) {
     if (game) game.tick(dt);
-    else if (showcase) { showcase.a += dt * 0.35; const t = now / 1000; scene.update(t, dt, null); const c = scene.camera; if (showcase.view === 'ward') { c.position.set(Math.sin(showcase.a) * 0.6, 0.9, 2.2 - 5); c.lookAt(0, -1.25, 2.2); } else { c.position.set(Math.sin(showcase.a) * 0.8, 2.1, 2.2 - 4.4); c.lookAt(0, 1.25, 2.2); } showcase.r.ry = Math.PI + Math.sin(showcase.a * 1.7) * 0.45; showcase.r.anim = 'idle'; }
+    else if (showcase) { showcase.a += dt * 0.35; const t = now / 1000; scene.update(t, dt, null); const c = scene.camera; if (showcase.view === 'ward') { c.position.set(Math.sin(showcase.a) * 0.6, 0.95, 2.2 - 5.6); c.lookAt(0, -1.05, 2.2); } else { c.position.set(Math.sin(showcase.a) * 0.8, 2.1, 2.2 - 4.4); c.lookAt(0, 1.25, 2.2); } showcase.r.ry = Math.PI + Math.sin(showcase.a * 1.7) * 0.45; showcase.r.anim = 'idle'; }
     scene.render();
   }
   requestAnimationFrame(frame);
@@ -207,18 +210,18 @@ function openMap(world) {
   $('twMapInfo').textContent = 'كل مرحلة فيها تحدي مختلف. النجمة الأولى توصلك للقمة، الثانية بوقت أسرع، والثالثة بالوقت الذهبي مع الجواهر الثلاث.';
 }
 function openWardrobe(tab = 'char') {
-  show('twWardrobe'); $('twWardStars').textContent = totalStars() + ' ★'; $('twWardGems').textContent = save.wallet + ' 💎';
+  show('twWardrobe'); $('twWardStars').textContent = totalStars() + ' ★'; $('twWardGems').textContent = isOwner() ? 'حساب المدير: كلها مفتوحة' : save.wallet + ' 💎';
   doc.querySelectorAll('#twWardrobe [data-ward-tab]').forEach((b) => b.classList.toggle('on', b.dataset.wardTab === tab));
   const grid = $('twWardGrid'); grid.replaceChildren();
   const refresh = () => { stage(); openWardrobe(tab); };
   if (tab === 'char') for (const c of CHARACTERS) {
     const open = charOpen(c), on = save.look.char === c.id, b = el('button', 'tw-item' + (on ? ' on' : '') + (open ? '' : ' locked')); b.type = 'button';
     const sw = el('i', 'tw-swatch'); sw.style.background = c.pattern === 'sadu' ? 'repeating-linear-gradient(135deg,#b3262c 0 8px,#1d1414 8px 12px,#f4e9d4 12px 16px)' : `radial-gradient(circle at 35% 30%,#fff8,${c.body} 45%,${c.trim})`;
-    b.append(sw, el('b', '', c.name), el('small', '', on ? 'لابسها' : open ? 'البسها' : '🔒 ' + c.stars + ' ★'));
+    b.append(sw, el('b', '', c.name), el('span', 'tw-about', c.about || ''), el('small', '', on ? 'لابسها' : open ? 'البسها' : '🔒 ' + c.stars + ' ★'));
     b.onclick = () => { if (!open) { toast('اجمع ' + c.stars + ' نجمة عشان تفتحها'); return; } save.look.char = c.id; persist(); refresh(); };
     grid.append(b);
   } else for (const o of OUTFITS.filter((x) => x.slot === tab)) {
-    const owned = save.owned.includes(o.id), on = save.look[tab] === o.id, b = el('button', 'tw-item' + (on ? ' on' : '') + (owned ? '' : ' shop')); b.type = 'button';
+    const owned = hasOutfit(o.id), on = save.look[tab] === o.id, b = el('button', 'tw-item' + (on ? ' on' : '') + (owned ? '' : ' shop')); b.type = 'button';
     b.append(el('i', 'tw-swatch tw-icon-' + o.id), el('b', '', o.name), el('small', '', on ? 'لابسه' : owned ? 'البسه' : o.price + ' 💎'));
     b.onclick = () => {
       if (!owned) { if (save.wallet < o.price) { toast('تحتاج ' + (o.price - save.wallet) + ' 💎 زيادة. خلّص مراحل واجمع الجواهر'); return; } save.wallet -= o.price; save.owned.push(o.id); toast('صار لك: ' + o.name); SFX.gem(); }
@@ -228,24 +231,46 @@ function openWardrobe(tab = 'char') {
   }
 }
 
+/* ------------------------------------------------------------------ pictures */
+// 33.18.1: players with an account show their profile picture (a ready one or an uploaded photo);
+// a guest, or an account without a picture, shows the colours of the runner they picked.
+function swatch(look) { const c = CHARACTERS.find((x) => x.id === look?.char) || CHARACTERS[0], sw = el('i', 'tw-swatch'); sw.style.background = c.pattern === 'sadu' ? 'repeating-linear-gradient(135deg,#b3262c 0 8px,#1d1414 8px 12px,#f4e9d4 12px 16px)' : `radial-gradient(circle at 35% 30%,#fff8,${c.body} 45%,${c.trim})`; return sw; }
+function face(user, look, name = '') {
+  const sw = swatch(look); if (!user || !/^[a-zA-Z0-9_]{3,20}$/.test(user)) return sw;
+  const img = el('img'); img.alt = name ? 'صورة ' + name : ''; img.decoding = 'async'; img.loading = 'lazy';
+  img.onload = () => sw.classList.add('has-photo'); img.onerror = () => img.remove(); img.src = '/api/social/photo/' + encodeURIComponent(user);
+  sw.append(img); return sw;
+}
+
 /* ------------------------------------------------------------------ online */
 const account = () => { try { return localStorage.getItem('bs_social_session') || ''; } catch { return ''; } };
 const guestName = () => { try { return localStorage.getItem('bs-player-name-v33') || ''; } catch { return ''; } };
 const MODES = { race: 'سباق', elim: 'إقصاء', teams: 'فرق' };
 class TowerOnline {
   constructor() { this.ws = null; this.state = null; this.offset = 0; this.code = ''; this.hostKey = ''; this.token = ''; this.run = null; this.snaps = new Map(); }
-  async quick(mode) { const res = await fetch('/api/tower/quick', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode }) }); const d = await res.json().catch(() => ({})); if (!res.ok || !d.code) throw Error(d.error || 'ما قدرنا نلقى سباق الحين'); return this.connect(d.code); }
-  async create(mode, capacity) { const res = await fetch('/api/tower/rooms', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode, capacity }) }); const d = await res.json().catch(() => ({})); if (!res.ok || !d.code) throw Error(d.error || 'ما قدرنا نفتح الغرفة'); this.hostKey = d.hostKey; return this.connect(d.code); }
+  // 33.18.1: every failure says what failed and its code, and the room's socket is tried twice
+  async api(path, body, what) {
+    let res; try { res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' }); }
+    catch { throw Error('ما وصلنا للسيرفر. تأكد من النت وجرّب مرة ثانية'); }
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok || !d.code) throw Error((typeof d.error === 'string' && d.error.length < 90 && !/_/.test(d.error) ? d.error : 'ما قدرنا ' + what) + ' (' + res.status + ')');
+    return d;
+  }
+  async join(code) { try { return await this.connect(code); } catch (first) { if (this.closed && !this.code) throw first; await new Promise((r) => setTimeout(r, 900)); return this.connect(code); } }
+  async quick(mode) { const d = await this.api('/api/tower/quick', { mode }, 'نلقى سباق الحين'); return this.join(d.code); }
+  async create(mode, capacity) { const d = await this.api('/api/tower/rooms', { mode, capacity }, 'نفتح الغرفة'); this.hostKey = d.hostKey; return this.join(d.code); }
   connect(code) {
     this.close(); this.code = String(code).replace(/\D/g, '').slice(0, 6); this.closed = false;
     try { this.token = sessionStorage.getItem('bs_tower_room:' + this.code) || ''; } catch { this.token = ''; }
     const protocols = ['bs-tower-v1', ...(this.hostKey ? ['hk.' + this.hostKey] : []), ...(this.token ? ['rt.' + this.token] : []), ...(account() ? ['st.' + account()] : [])];
     const name = ($('twName').value || guestName() || 'لاعب').trim().slice(0, 20);
     return new Promise((resolve, reject) => {
-      let ok = false; const ws = this.ws = new WebSocket((location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/api/tower/rooms/' + this.code + '/ws?name=' + encodeURIComponent(name) + '&look=' + encodeURIComponent(JSON.stringify(save.look)), protocols);
-      const timer = setTimeout(() => { if (!ok) { ws.close(); reject(Error('الغرفة ما ردت، جرّب مرة ثانية')); } }, 9000);
+      let ok = false, ws;
+      try { ws = this.ws = new WebSocket((location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/api/tower/rooms/' + this.code + '/ws?name=' + encodeURIComponent(name) + '&look=' + encodeURIComponent(JSON.stringify(save.look)), protocols); }
+      catch { reject(Error('المتصفح ما قبل الاتصال بالغرفة (ws)')); return; }
+      const timer = setTimeout(() => { if (!ok) { try { ws.close(); } catch { /* gone */ } reject(Error('الغرفة ما ردت، جرّب مرة ثانية (مهلة)')); } }, 12000);
       ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch { return; } if (m.type === 'hello') { ok = true; clearTimeout(timer); this.me = m.id; this.offset = m.now - Date.now(); try { sessionStorage.setItem('bs_tower_room:' + this.code, m.token); } catch { /* private */ } resolve(this); } this.message(m); };
-      ws.onclose = (ev) => { clearTimeout(timer); if (!ok) reject(Error(ev.reason || 'الغرفة غير متاحة')); else if (!this.closed) { this.lost(); } };
+      ws.onclose = (ev) => { clearTimeout(timer); if (!ok) reject(Error((ev.reason || 'الغرفة ما فتحت') + ' (' + (ev.code || 0) + ')')); else if (!this.closed) { this.lost(); } };
       ws.onerror = () => {};
     });
   }
@@ -301,11 +326,11 @@ function lobbyView(s, o) {
   show('twOnline'); $('twOnlineHome').hidden = true; $('twRoomBox').hidden = false;
   $('twRoomCode').textContent = s.quick ? 'سباق عام' : s.code; $('twRoomMode').textContent = MODES[s.mode] + ' · ' + s.players.length + '/' + s.capacity;
   const list = $('twRoomPlayers'); list.replaceChildren();
-  for (const p of s.players) { const li = el('li', p.id === o.me ? 'me' : ''); const sw = el('i', 'tw-swatch'); const c = CHARACTERS.find((x) => x.id === p.look?.char) || CHARACTERS[0]; sw.style.background = `radial-gradient(circle at 35% 30%,#fff8,${c.body} 45%,${c.trim})`; li.append(sw, el('b', '', p.name), el('small', '', p.host ? 'صاحب الغرفة' : p.ready ? 'جاهز' : '')); if (s.mode === 'teams') li.dataset.team = p.team; list.append(li); }
+  for (const p of s.players) { const li = el('li', p.id === o.me ? 'me' : ''); li.append(face(p.user, p.look, p.name), el('b', '', p.name), el('small', '', p.host ? 'صاحب الغرفة' : p.ready ? 'جاهز' : '')); if (s.mode === 'teams') li.dataset.team = p.team; list.append(li); }
   const me = s.players.find((p) => p.id === o.me);
   $('twRoomStart').hidden = !me?.host || s.quick; $('twRoomStart').disabled = s.players.length < 2;
-  $('twRoomShare').hidden = s.quick;
-  $('twRoomNote').textContent = s.quick ? (s.startsIn ? 'السباق يبدأ بعد ' + Math.max(1, Math.ceil((s.startsIn - o.now()) / 1000)) + ' ثانية' : 'ندوّر لك على لاعبين…') : me?.host ? (s.players.length < 2 ? 'ارسل الكود لأصحابك. تقدر تبدأ أول ما يدخل واحد.' : 'اضغط ابدأ لما يكتمل أصحابك') : 'انتظر صاحب الغرفة يبدأ';
+  $('twRoomShare').hidden = s.quick; $('twRoomFriend').hidden = s.quick;
+  $('twRoomNote').textContent = s.quick ? (s.startsIn ? 'السباق يبدأ بعد ' + Math.max(1, Math.ceil((s.startsIn - o.now()) / 1000)) + ' ثانية' : 'ندوّر لك على لاعبين…') : me?.host ? (s.players.length < 2 ? 'ادعُ صديق من قائمة أصحابك أو شارك الرابط. تقدر تبدأ أول ما يدخل واحد.' : 'اضغط ابدأ لما يكتمل أصحابك') : 'انتظر صاحب الغرفة يبدأ';
   clearTimeout(lobbyView.timer); if (s.quick && s.startsIn) lobbyView.timer = setTimeout(() => o.state?.status === 'lobby' && lobbyView(o.state, o), 500);
 }
 function roundView(s, o) {
@@ -314,14 +339,14 @@ function roundView(s, o) {
   $('twRoundTitle').textContent = final ? (s.mode === 'teams' ? (s.winnerTeam === me?.team ? 'فاز فريقك!' : 'فاز الفريق الثاني') : me?.place === 1 ? 'أنت البطل!' : 'انتهى السباق') : me?.out ? 'طلعت من السباق' : 'تأهلت للجولة الجاية!';
   const list = $('twRoundList'); list.replaceChildren();
   const rows = s.players.slice().sort((a, b) => (a.place || 99) - (b.place || 99));
-  rows.forEach((p) => { const li = el('li', (p.id === o.me ? 'me ' : '') + (p.out ? 'out' : '')); if (s.mode === 'teams') li.dataset.team = p.team; li.append(el('b', '', p.place ? '#' + p.place : '—'), el('span', '', p.name), el('small', '', p.fin != null ? fmt(p.fin) : p.out ? 'طلع' : 'ما وصل'), el('em', '', p.points ? '+' + p.points : '')); list.append(li); });
+  rows.forEach((p) => { const li = el('li', (p.id === o.me ? 'me ' : '') + (p.out ? 'out' : '')); if (s.mode === 'teams') li.dataset.team = p.team; li.append(el('b', '', p.place ? '#' + p.place : '—'), el('span', 'tw-who'), el('small', '', p.fin != null ? fmt(p.fin) : p.out ? 'طلع' : 'ما وصل'), el('em', '', p.points ? '+' + p.points : '')); li.querySelector('.tw-who').append(face(p.user, p.look, p.name), el('bdi', '', p.name)); list.append(li); });
   $('twRoundNote').textContent = final ? (me?.points ? 'نقاطك للمتصدرين: +' + me.points : '') + (account() ? '' : ' — سجّل دخول عشان تنحسب نقاطك') : 'الجولة الجاية تبدأ بعد شوي';
   const host = s.players.find((p) => p.id === o.me)?.host; $('twRoundAgain').hidden = !final || (!s.quick && !host); $('twRoundAgain').querySelector('b').textContent = s.quick ? 'سباق ثاني' : 'جولة ثانية بنفس الغرفة'; $('twRoundLeave').hidden = false;
   if (final && !o.paid) { o.paid = true; save.wallet += me?.gems || 0; persist(); lobby(); }
 }
 async function goQuick() {
   try { $('twQuick').disabled = true; online = new TowerOnline(); await online.quick(save.mode); }
-  catch (e) { toast(e.message || 'ما قدرنا نوصل للسيرفر'); online = null; } finally { $('twQuick').disabled = false; }
+  catch (e) { toast(e.message || 'ما قدرنا نوصل للسيرفر', 6000); online = null; } finally { $('twQuick').disabled = false; }
 }
 
 /* ------------------------------------------------------------------ leaderboard */
@@ -332,7 +357,7 @@ async function openBoard(period = 'week') {
     const res = await fetch('/api/tower/board?period=' + period, { headers: account() ? { authorization: 'Bearer ' + account() } : {} }); const d = await res.json();
     list.replaceChildren();
     if (!d.rows?.length) list.append(el('li', 'tw-empty', period === 'week' ? 'ما أحد لعب هالأسبوع للحين. كن أول واحد!' : 'الترتيب فاضي للحين'));
-    d.rows?.forEach((r, i) => { const li = el('li', r.me ? 'me' : ''); li.append(el('b', '', i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1)), el('span', '', r.name), el('small', '', r.wins + ' فوز'), el('em', '', r.points + ' نقطة')); list.append(li); });
+    d.rows?.forEach((r, i) => { const li = el('li', r.me ? 'me' : ''); const who = el('span', 'tw-who'); who.append(face(r.user, null, r.name), el('bdi', '', r.name)); li.append(el('b', '', i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1)), who, el('small', '', r.wins + ' فوز'), el('em', '', r.points + ' نقطة')); list.append(li); });
     $('twBoardMe').textContent = d.me ? 'ترتيبك: ' + d.me.rank + ' · ' + d.me.points + ' نقطة' : account() ? 'العب سباقات أونلاين عشان تدخل الترتيب' : 'سجّل دخول والعب أونلاين عشان يطلع اسمك هنا';
   } catch { list.replaceChildren(el('li', 'tw-empty', 'ما قدرنا نحمّل الترتيب. تأكد من النت.')); }
 }
@@ -348,10 +373,12 @@ doc.querySelectorAll('#twWardrobe [data-ward-tab]').forEach((b) => { b.onclick =
 doc.querySelectorAll('#twBoard [data-tw-board]').forEach((b) => { b.onclick = () => openBoard(b.dataset.twBoard); });
 doc.querySelectorAll('#twOnline [data-tw-mode]').forEach((b) => { b.onclick = () => { save.mode = b.dataset.twMode; persist(); onlineView(); }; });
 $('twQuick').onclick = goQuick;
-$('twCreate').onclick = async () => { try { online = new TowerOnline(); await online.create(save.mode, Number($('twCapacity').value) || 8); } catch (e) { toast(e.message); online = null; } };
-$('twJoin').onclick = async () => { const code = $('twCode').value.replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 1632)).replace(/\D/g, ''); if (code.length !== 6) { toast('الكود ستة أرقام'); return; } try { online = new TowerOnline(); await online.connect(code); } catch (e) { toast(e.message); online = null; } };
+$('twCreate').onclick = async () => { const b = $('twCreate'); if (b.disabled) return; b.disabled = true; b.textContent = 'نفتح الغرفة…'; try { online = new TowerOnline(); await online.create(save.mode, Number($('twCapacity').value) || 8); } catch (e) { toast(e.message, 6000); online?.close(); online = null; } finally { b.disabled = false; b.textContent = 'افتح غرفة'; } };
+$('twJoin').onclick = async () => { const code = $('twCode').value.replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 1632)).replace(/\D/g, ''); if (code.length !== 6) { toast('الكود ستة أرقام'); return; } try { online = new TowerOnline(); await online.join(code); } catch (e) { toast(e.message, 6000); online?.close(); online = null; } };
 $('twRoomStart').onclick = () => online?.send({ type: 'start' });
 $('twRoomShare').onclick = async () => { const url = location.origin + '/tower?room=' + online?.code; try { if (navigator.share) await navigator.share({ title: 'برج التحديات', text: 'تعال سابقني في برج التحديات! الكود ' + online?.code, url }); else { await navigator.clipboard.writeText(url); toast('نسخنا الرابط'); } } catch { /* cancelled */ } };
+// 33.18.1: a direct invitation to a friend (it pops up on their screen), beside the shareable link
+$('twRoomFriend').onclick = () => { const code = online?.code; if (!code) return; if (window.BS_SOCIAL?.openInvitePicker) window.BS_SOCIAL.openInvitePicker({ game: 'tower', roomCode: code, title: 'برج التحديات' }); else $('twRoomShare').click(); };
 $('twRoomLeave').onclick = leaveOnline;
 $('twRoundLeave').onclick = leaveOnline;
 $('twRoundAgain').onclick = () => { if (online?.state && !online.state.quick) { online.send({ type: 'start' }); return; } leaveOnline(); goQuick(); };
@@ -367,5 +394,5 @@ doc.addEventListener('visibilitychange', () => { if (doc.hidden && game?.solo &&
 // an invite link opens its room straight away
 const params = new URLSearchParams(location.search), invite = (params.get('room') || '').replace(/\D/g, '');
 show('twLobby'); lobby();
-if (invite.length === 6) { show('twOnline'); onlineView(); online = new TowerOnline(); online.connect(invite).catch((e) => { toast(e.message); online = null; }); }
+if (invite.length === 6) { show('twOnline'); onlineView(); online = new TowerOnline(); online.join(invite).catch((e) => { toast(e.message, 6000); online?.close(); online = null; }); }
 globalThis.BS_TOWER = Object.freeze({ play, openMap, levels: LEVELS.length, get state() { return { level: game?.level?.n || null, t: game ? game.clock() : null, runner: game ? { x: game.runner.x, y: game.runner.y, z: game.runner.z, cp: game.runner.cp, falls: game.runner.falls, finished: game.runner.finished } : null }; } });

@@ -228,9 +228,9 @@
 
   // 33.6.0: every game that has rooms opens from an invitation — the challenge games (focus, cipher,
   // wordbomb, chaos) were missing here, so their invitations reached the phone and were dropped.
-  const GAME_LABELS = Object.freeze({ party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعابين والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى', ludo: 'لودو', tanks: 'معركة الدبابات', hockey: 'الهوكي', billiards: 'البلياردو', carrom: 'الكيرم', pegs: 'سر الألوان', jewels: 'ماستر الجواهر' });
+  const GAME_LABELS = Object.freeze({ tower: 'برج التحديات', party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعابين والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى', ludo: 'لودو', tanks: 'معركة الدبابات', hockey: 'الهوكي', billiards: 'البلياردو', carrom: 'الكيرم', pegs: 'سر الألوان', jewels: 'ماستر الجواهر' });
   // 33.10.7: the newer table games (tanks … pegs) send their rooms too; their invitations were dropped here
-  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|ludo|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos|tanks|hockey|billiards|carrom|pegs|jewels)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
+  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|ludo|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos|tanks|tower|hockey|billiards|carrom|pegs|jewels)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
   const gameLabel = (game) => GAME_LABELS[game] || String(game || 'لعبة');
 
   function showIncomingInvite(notification) {

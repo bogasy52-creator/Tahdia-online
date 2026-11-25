@@ -15,7 +15,7 @@ export const TOWER_TICK = 100, TOWER_QUICK_WAIT = 12000, TOWER_COUNTDOWN = 4000,
 export const TOWER_POINTS = Object.freeze([100, 75, 60, 50, 40, 32, 26, 20]);
 const GEMS = [30, 20, 15, 10, 8, 8, 8, 8];
 const FILL_NAMES = ['فهد', 'نورة', 'سلطان', 'ريم', 'بدر', 'هيا', 'ماجد', 'دانة', 'خالد', 'لولوة', 'عبدالله', 'شهد'];
-const LOOKS = ['zafran', 'nakhla', 'thalj', 'halawa', 'qamar', 'jamra', 'sadu'], HATS = ['none', 'taqiya', 'cap', 'beanie', 'shmagh', 'horns'];
+const LOOKS = ['zafran', 'nakhla', 'thalj', 'mouj', 'halawa', 'sahab', 'qamar', 'neon', 'jamra', 'saqr', 'sadu'], HATS = ['none', 'taqiya', 'cap', 'beanie', 'shmagh', 'horns'];
 const cleanLook = (raw) => { let v = {}; try { v = JSON.parse(raw || '{}') || {}; } catch { /* default */ } const id = (x, d) => (typeof x === 'string' && /^[a-z]{2,12}$/.test(x) ? x : d); return { char: id(v.char, 'zafran'), hat: id(v.hat, 'none'), face: id(v.face, 'noface') }; };
 const num = (v, lo, hi) => (Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : null);
 const DAY = 86_400_000, RIYADH = 3 * 3_600_000;
@@ -41,7 +41,7 @@ export class TowerRoom {
   view() {
     const r = this.r;
     return { code: r.code, quick: r.quick, mode: r.mode, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, startAt: r.startAt, startsIn: r.status === 'lobby' && r.quick ? r.lobbyUntil : null, qualify: r.qualify, winnerTeam: r.winnerTeam ?? null,
-      players: r.players.map((p) => ({ id: p.sid, name: p.name, look: p.look, host: Boolean(p.host), ready: Boolean(p.ready), team: p.team ?? null, fin: p.fin ?? null, place: p.place ?? null, out: Boolean(p.out), points: p.points || 0, gems: p.gems || 0, connected: p.bot ? true : Boolean(p.connected) })) };
+      players: r.players.map((p) => ({ id: p.sid, name: p.name, user: p.bot ? null : p.username || null, look: p.look, host: Boolean(p.host), ready: Boolean(p.ready), team: p.team ?? null, fin: p.fin ?? null, place: p.place ?? null, out: Boolean(p.out), points: p.points || 0, gems: p.gems || 0, connected: p.bot ? true : Boolean(p.connected) })) };
   }
   send(ws, m) { try { ws.send(JSON.stringify(m)); } catch { /* gone */ } }
   broadcast(m) { const text = JSON.stringify(m || { type: 'state', state: this.view() }); for (const ws of this.ctx.getWebSockets()) { const a = ws.deserializeAttachment(); if (a?.tower) try { ws.send(text); } catch { /* gone */ } } }
@@ -68,6 +68,8 @@ export class TowerRoom {
       const username = req.headers.get('x-bs-account') || null, rt = read('rt.');
       let p = rt ? r.players.find((x) => x.token === rt) : null;
       if (!p && username) p = r.players.find((x) => x.username === username && !x.bot);
+      // whoever holds the host key is the host, even if their first try never heard back
+      if (!p && r.hostKey && read('hk.') === r.hostKey) p = r.players.find((x) => x.host && !x.bot) || null;
       if (p?.username && p.username !== username) return json({ ok: false, error: 'جلسة غير صالحة' }, 403);
       if (!p) {
         const humans = r.players.filter((x) => !x.bot);
@@ -120,7 +122,7 @@ export class TowerRoom {
     }
     const table = u.searchParams.get('period') === 'all' ? s.all : s.weekRows, me = u.searchParams.get('me') || '';
     const sorted = Object.entries(table).sort((a, b2) => b2[1].p - a[1].p || b2[1].w - a[1].w);
-    const rows = sorted.slice(0, 50).map(([k, e]) => ({ name: e.n, points: e.p, wins: e.w, me: k === me }));
+    const rows = sorted.slice(0, 50).map(([k, e]) => ({ name: e.n, user: k, points: e.p, wins: e.w, me: k === me }));
     const at = sorted.findIndex(([k]) => k === me);
     return json({ ok: true, week: s.week, rows, me: at >= 0 ? { rank: at + 1, points: sorted[at][1].p } : null });
   }

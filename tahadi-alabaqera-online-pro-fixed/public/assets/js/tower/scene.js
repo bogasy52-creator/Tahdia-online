@@ -3,7 +3,7 @@
    light, ground far below, floating scenery and drifting particles; every challenge has its own
    pieces; runners are small toy figures with interchangeable headwear. All art is drawn here. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.18.0';
+import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.18.1';
 
 const TAU = Math.PI * 2;
 const col = (c) => new T.Color(c);
@@ -19,14 +19,18 @@ const shade = (hex, f) => { const c = col(hex); c.multiplyScalar(f); return '#' 
 
 /* ------------------------------------------------------------------ characters */
 export const CHARACTERS = Object.freeze([
-  { id: 'zafran', name: 'زعفران', body: '#ffc83d', trim: '#ff8a1f', stars: 0 },
-  { id: 'nakhla', name: 'نخلة', body: '#5cc46e', trim: '#2f8a45', stars: 12, top: 'leaves' },
-  { id: 'thalj', name: 'ثلجي', body: '#eaf6ff', trim: '#59b8ff', stars: 30, top: 'muffs' },
-  { id: 'halawa', name: 'حلاوة', body: '#ff8fc8', trim: '#ffffff', stars: 60, top: 'swirl' },
-  { id: 'qamar', name: 'قمر', body: '#4146b8', trim: '#9df6ff', stars: 100, top: 'antenna' },
-  { id: 'jamra', name: 'جمرة', body: '#ff5a36', trim: '#ffd23e', stars: 150, top: 'flame' },
-  { id: 'sadu', name: 'سدو', body: '#b3262c', trim: '#1d1414', stars: 210, pattern: 'sadu' },
-  { id: 'dhahab', name: 'الذهبي', body: '#ffd45a', trim: '#b8860b', stars: 270, metal: true },
+  { id: 'zafran', name: 'زعفران', about: 'أول عدّاء في البرج، بوشاحه البرتقالي', body: '#ffc83d', trim: '#ff8a1f', stars: 0, extra: 'scarf' },
+  { id: 'nakhla', name: 'نخلة', about: 'من واحات الغابة، سعفته ما تطيح', body: '#5cc46e', trim: '#2f8a45', stars: 12, top: 'leaves', extra: 'vest' },
+  { id: 'thalj', name: 'ثلجي', about: 'ما يبرد أبد، حتى فوق الجليد', body: '#eaf6ff', trim: '#59b8ff', stars: 30, top: 'muffs', extra: 'scarf' },
+  { id: 'mouj', name: 'موج', about: 'يركض كأنه موجة على البحر', body: '#2fa8ff', trim: '#e8fbff', stars: 40, top: 'wave' },
+  { id: 'halawa', name: 'حلاوة', about: 'من عالم الحلوى، ونطّاطها المفضل', body: '#ff8fc8', trim: '#ffffff', stars: 60, top: 'swirl', extra: 'bow' },
+  { id: 'sahab', name: 'سحاب', about: 'خفيف مثل الغيم فوق القمة', body: '#f4f7ff', trim: '#9fb7ff', stars: 80, top: 'cloud' },
+  { id: 'qamar', name: 'قمر', about: 'رائد الفضاء، وضوّه على صدره', body: '#4146b8', trim: '#9df6ff', stars: 100, top: 'antenna', extra: 'light' },
+  { id: 'neon', name: 'نيون', about: 'يلمع في الليل وفي الحمم', body: '#1d1b33', trim: '#39ffb0', stars: 120, glow: true, extra: 'light' },
+  { id: 'jamra', name: 'جمرة', about: 'من قلب البركان، ما يخاف الحمم', body: '#ff5a36', trim: '#ffd23e', stars: 150, top: 'flame', glowEyes: true },
+  { id: 'saqr', name: 'صقر', about: 'عينه على القمة من أول خطوة', body: '#8a5a2b', trim: '#ffd23e', stars: 180, top: 'crest', beak: true },
+  { id: 'sadu', name: 'سدو', about: 'لابس نقشة السدو من راسه لرجوله', body: '#b3262c', trim: '#1d1414', stars: 210, pattern: 'sadu', extra: 'band' },
+  { id: 'dhahab', name: 'الذهبي', about: 'بطل القمة، والعباءة الحمرا تشهد', body: '#ffd45a', trim: '#b8860b', stars: 270, metal: true, extra: 'cape' },
 ]);
 export const OUTFITS = Object.freeze([
   { id: 'none', slot: 'hat', name: 'بدون', price: 0 },
@@ -68,18 +72,39 @@ export function buildCharacter(look = {}) {
   }
   const smile = new T.Mesh(new T.TorusGeometry(0.07, 0.016, 6, 16, Math.PI), dark); smile.position.set(0, -0.08, 0.31); smile.rotation.z = Math.PI; head.add(smile);
   const hands = [-1, 1].map((s) => { const h = new T.Mesh(new T.SphereGeometry(0.12, 14, 10), trim); h.position.set(s * 0.55, 0.6, 0.02); h.castShadow = true; body.add(h); return h; });
-  const feet = [-1, 1].map((s) => { const f = new T.Mesh(new T.RoundedBoxGeometry(0.22, 0.14, 0.34, 2, 0.06), trim); f.position.set(s * 0.17, 0.07, 0.04); f.castShadow = true; root.add(f); return f; });
+  // 33.18.1: arms join the hands to the shoulders, so the runner is one figure
+  const arms = [-1, 1].map((s) => { const a = new T.Mesh(new T.CylinderGeometry(0.065, 0.08, 1, 10), mat); a.castShadow = true; a.userData.shoulder = new T.Vector3(s * 0.36, 0.84, 0); body.add(a); return a; });
+  const shine = new T.MeshBasicMaterial({ color: '#ffffff' }), brow = new T.MeshStandardMaterial({ color: ch.glow ? ch.trim : '#2a1d2e', roughness: 0.6, emissive: ch.glow ? ch.trim : '#000000', emissiveIntensity: ch.glow ? 0.8 : 0 });
+  for (const s of [-1, 1]) {
+    const sp = new T.Mesh(new T.SphereGeometry(0.022, 8, 6), shine); sp.position.set(s * 0.12 + 0.025, 0.085, 0.365); head.add(sp);
+    const b = new T.Mesh(new T.RoundedBoxGeometry(0.12, 0.028, 0.03, 1, 0.012), brow); b.position.set(s * 0.12, 0.19, 0.3); b.rotation.z = -s * 0.12; head.add(b);
+  }
+  if (ch.glowEyes || ch.glow) head.children.forEach((m) => { if (m.material === dark) { m.material = new T.MeshStandardMaterial({ color: ch.trim, emissive: ch.trim, emissiveIntensity: 1.2 }); } });
+  if (ch.beak) { const bk = new T.Mesh(new T.CylinderGeometry(0, 0.07, 0.16, 8), new T.MeshStandardMaterial({ color: '#ffb02e', roughness: 0.4 })); bk.rotation.x = Math.PI / 2; bk.position.set(0, -0.02, 0.38); head.add(bk); smile.visible = false; }
+  if (ch.glow) { const neonLine = new T.MeshStandardMaterial({ color: ch.trim, emissive: ch.trim, emissiveIntensity: 1.4 }); for (const y of [0.3, 0.7]) { const ln = new T.Mesh(new T.TorusGeometry(0.44 - Math.abs(y - 0.5) * 0.1, 0.018, 6, 32), neonLine); ln.rotation.x = Math.PI / 2; ln.position.y = y; body.add(ln); } belt.material = neonLine; }
+  if (ch.extra === 'scarf') { const sc = new T.Mesh(new T.TorusGeometry(0.3, 0.075, 10, 28), trim); sc.rotation.x = Math.PI / 2; sc.position.y = 0.98; body.add(sc); const tail = new T.Mesh(new T.RoundedBoxGeometry(0.13, 0.34, 0.05, 1, 0.025), trim); tail.position.set(0.16, 0.8, 0.3); tail.rotation.z = 0.25; body.add(tail); }
+  if (ch.extra === 'vest') { const v = new T.Mesh(new T.CylinderGeometry(0.43, 0.45, 0.36, 28, 1, true, Math.PI * 0.62, Math.PI * 1.76), new T.MeshStandardMaterial({ color: ch.trim, roughness: 0.7, side: T.DoubleSide })); v.position.y = 0.66; body.add(v); }
+  if (ch.extra === 'bow') { const bowMat = new T.MeshStandardMaterial({ color: '#7ee7d0', roughness: 0.4 }); for (const s of [-1, 1]) { const w = new T.Mesh(new T.CylinderGeometry(0, 0.09, 0.16, 8), bowMat); w.rotation.z = s * Math.PI / 2; w.position.set(s * 0.08, 0.92, 0.33); body.add(w); } const k = new T.Mesh(new T.SphereGeometry(0.04, 8, 6), bowMat); k.position.set(0, 0.92, 0.35); body.add(k); }
+  if (ch.extra === 'light') { const l = new T.Mesh(new T.CylinderGeometry(0.09, 0.09, 0.03, 20), new T.MeshStandardMaterial({ color: ch.trim, emissive: ch.trim, emissiveIntensity: 1.5 })); l.rotation.x = Math.PI / 2; l.position.set(0, 0.68, 0.43); body.add(l); }
+  if (ch.extra === 'band') { const bd = new T.Mesh(new T.TorusGeometry(0.335, 0.035, 8, 30), new T.MeshStandardMaterial({ color: '#f4e9d4', roughness: 0.7 })); bd.rotation.x = Math.PI / 2 - 0.12; bd.position.y = 0.12; head.add(bd); }
+  if (ch.extra === 'cape') { const cape = new T.Mesh(new T.CylinderGeometry(0.36, 0.56, 0.95, 24, 1, true, Math.PI * 0.62, Math.PI * 0.76), new T.MeshStandardMaterial({ color: '#c8202c', roughness: 0.55, side: T.DoubleSide })); cape.position.set(0, 0.5, -0.04); cape.castShadow = true; body.add(cape); }
+  const sole = new T.MeshStandardMaterial({ color: '#f7f3ea', roughness: 0.7 });
+  const feet = [-1, 1].map((s) => { const f = new T.Mesh(new T.RoundedBoxGeometry(0.22, 0.14, 0.34, 2, 0.06), trim); f.position.set(s * 0.17, 0.07, 0.04); f.castShadow = true; const so = new T.Mesh(new T.RoundedBoxGeometry(0.23, 0.04, 0.35, 1, 0.015), sole); so.position.y = -0.06; f.add(so); root.add(f); return f; });
   // the character's own top
   const top = new T.Group(); head.add(top);
   if (ch.top === 'leaves') for (let i = 0; i < 5; i++) { const l = new T.Mesh(new T.CylinderGeometry(0, 0.06, 0.42, 6), trim); l.position.set(0, 0.36, 0); l.rotation.set(0.7 * Math.cos(i * 1.26), 0, 0.7 * Math.sin(i * 1.26)); l.position.x += Math.sin(i * 1.26) * 0.12; l.position.z += Math.cos(i * 1.26) * 0.12; top.add(l); }
   if (ch.top === 'muffs') { const band = new T.Mesh(new T.TorusGeometry(0.33, 0.03, 6, 24, Math.PI), trim); band.position.y = 0.05; top.add(band); for (const s of [-1, 1]) { const m = new T.Mesh(new T.SphereGeometry(0.11, 12, 10), trim); m.position.set(s * 0.33, 0.02, 0); top.add(m); } }
   if (ch.top === 'swirl') { const sw = new T.Mesh(new T.TorusGeometry(0.12, 0.05, 8, 20), trim); sw.position.y = 0.38; sw.rotation.x = Math.PI / 2; top.add(sw); }
   if (ch.top === 'antenna') { const a = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 0.3, 6), dark); a.position.y = 0.45; const b = new T.Mesh(new T.SphereGeometry(0.06, 10, 8), new T.MeshStandardMaterial({ color: ch.trim, emissive: ch.trim, emissiveIntensity: 1.2 })); b.position.y = 0.62; top.add(a, b); }
+  if (ch.top === 'wave') { const wv = new T.Mesh(new T.TorusGeometry(0.16, 0.06, 8, 20, Math.PI * 1.3), trim); wv.position.set(0, 0.36, -0.02); wv.rotation.set(0, Math.PI / 2, -0.5); top.add(wv); const drop = new T.Mesh(new T.SphereGeometry(0.06, 10, 8), trim); drop.position.set(0, 0.47, 0.1); top.add(drop); }
+  if (ch.top === 'cloud') for (const [x, y, r] of [[-0.14, 0.33, 0.11], [0.02, 0.38, 0.14], [0.17, 0.32, 0.1]]) { const c = new T.Mesh(new T.SphereGeometry(r, 12, 10), trim); c.position.set(x, y, -0.03); top.add(c); }
+  if (ch.top === 'crest') for (let i = 0; i < 5; i++) { const f = new T.Mesh(new T.CylinderGeometry(0, 0.05, 0.3, 6), trim); f.position.set((i - 2) * 0.06, 0.38, -0.1 - Math.abs(i - 2) * 0.02); f.rotation.set(-0.5, 0, (i - 2) * 0.25); top.add(f); }
   if (ch.top === 'flame') for (let i = 0; i < 3; i++) { const f = new T.Mesh(new T.CylinderGeometry(0, 0.09 - i * 0.015, 0.36 - i * 0.06, 8), new T.MeshStandardMaterial({ color: i ? '#ffd23e' : '#ff8a1f', emissive: '#ff6a00', emissiveIntensity: 0.6 })); f.position.set(0, 0.42, -0.08 + i * 0.09); f.rotation.x = -0.3; top.add(f); }
   const hat = new T.Group(); head.add(hat); dressHat(hat, look.hat, ch);
   const face = new T.Group(); head.add(face); dressFace(face, look.face);
   if (look.hat && look.hat !== 'none' && ['shmagh', 'helmet', 'beanie', 'taqiya', 'cap', 'crown'].includes(look.hat)) top.visible = false;
-  root.userData = { body, head, hands, feet, mat };
+  root.userData = { body, head, hands, feet, arms, mat };
+  placeArms(root);
   return root;
 }
 function dressHat(g, id, ch) {
@@ -108,6 +133,11 @@ function dressFace(g, id) {
   if (id === 'litham') { const l = new T.Mesh(new T.SphereGeometry(0.352, 24, 12, -Math.PI * 0.55, Math.PI * 1.1, Math.PI * 0.52, Math.PI * 0.4), new T.MeshStandardMaterial({ color: '#1b1622', roughness: 0.9, side: T.DoubleSide })); g.add(l); }
 }
 /** Moves a figure's limbs: run, jump, fall, stunned or idle; `phase` is the stride. */
+const UP = new T.Vector3(0, 1, 0), tmp = new T.Vector3();
+function placeArms(fig) {
+  const { hands, arms } = fig.userData; if (!arms) return;
+  arms.forEach((a, i) => { const from = a.userData.shoulder, to = hands[i].position; tmp.subVectors(to, from); const len = Math.max(0.05, tmp.length() - 0.08); a.position.copy(from).addScaledVector(tmp, 0.5); a.scale.set(1, len, 1); a.quaternion.setFromUnitVectors(UP, tmp.normalize()); });
+}
 export function animateCharacter(fig, anim, phase, t) {
   const { body, head, hands, feet } = fig.userData, s = Math.sin(phase * 2.2);
   if (anim === 'run') { feet[0].position.z = 0.04 + s * 0.2; feet[1].position.z = 0.04 - s * 0.2; feet[0].position.y = 0.07 + Math.max(0, s) * 0.1; feet[1].position.y = 0.07 + Math.max(0, -s) * 0.1; hands[0].position.z = -s * 0.25; hands[1].position.z = s * 0.25; body.position.y = Math.abs(s) * 0.07; body.rotation.x = 0.12; }
@@ -116,6 +146,7 @@ export function animateCharacter(fig, anim, phase, t) {
   else { feet.forEach((f) => { f.position.z = 0.04; f.position.y = 0.07; }); hands.forEach((h) => { h.position.z = 0.02; h.position.y = 0.6 + Math.sin(t * 2.4) * 0.03; }); body.position.y = Math.sin(t * 2.4) * 0.02; body.rotation.x = 0; }
   if (anim !== 'jump' && anim !== 'fall') hands.forEach((h) => { h.position.y = anim === 'run' ? 0.62 : h.position.y; });
   if (anim !== 'stun') { body.rotation.z *= 0.8; head.rotation.y *= 0.8; }
+  placeArms(fig);
 }
 
 /* ------------------------------------------------------------------ the scene */

@@ -7,8 +7,8 @@
    (it never jumps to the touch), the ruler under the board turns it a hair at a time, and the strength
    is its own pull: drag it back, let go to strike. Pulling the striker itself still works as before. */
 import { createCarrom, placeStriker, shootCarrom, stepCarrom, chooseCarromShot, carromScore, replayCarromShot, readCarromAim, FIXED_DT } from './engine.js?v=33.9.12-quality1';
-import { createCarromRenderer } from './render.js?v=33.18.0';
-import { createTable } from '../board-table-v33.js?v=33.18.0';
+import { createCarromRenderer } from './render.js?v=33.18.1';
+import { createTable } from '../board-table-v33.js?v=33.18.1';
 const RIVAL_NAME=(n=>n[Math.floor(Math.random()*n.length)])(['نورة','ماجد','ليان','فهد','سارة','خالد','ريم','سعود']); // 33.15.0: the practice rival has a name
 
 const $ = (id) => document.getElementById(id), KEY = 'bs-carrom-settings-v1';

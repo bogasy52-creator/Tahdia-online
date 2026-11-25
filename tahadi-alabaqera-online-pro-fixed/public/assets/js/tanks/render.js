@@ -1,4 +1,4 @@
-import {makeTankCamera,projectTankPoint,unprojectTankPoint,tankScreenVector,paintTankTerrain,drawTankScene} from './scene.js?v=33.18.0';
+import {makeTankCamera,projectTankPoint,unprojectTankPoint,tankScreenVector,paintTankTerrain,drawTankScene} from './scene.js?v=33.18.1';
 import {TANKS,TANK_COLORS} from './core.js?v=33.15.0';
 const{W,H}=TANKS,TAU=Math.PI*2,clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 function rect(c,x,y,w,h,r=6){c.beginPath();c.roundRect(x,y,w,h,r);}
