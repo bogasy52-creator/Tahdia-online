@@ -4,7 +4,7 @@
   const colors = ['#62f4c8', '#53b7ff', '#c98cff', '#ffd166', '#ff6e91', '#ffffff'];
   const gameRoutes = new Set(['dice', 'jackaroo', 'journey', 'local', 'logic', 'memory', 'online', 'paths-online', 'picture', 'puzzle', 'quiz', 'reaction', 'serpent', 'snakes', 'sudoku', 'zahra']);
   const titles = {dice:'تحدي النرد',jackaroo:'جاكارو',journey:'رحلة النجوم',local:'تحدي العباقرة',logic:'تحدي المنطق',memory:'تحدي الذاكرة',online:'العباقرة أونلاين','paths-online':'توصيل الأرقام',picture:'سباق الصور',puzzle:'ترتيب الأرقام',quiz:'تحدي العباقرة',reaction:'سرعة الاستجابة',serpent:'حلبة الثعبان',snakes:'الثعابين والسلالم',billiards:'بلياردو',sudoku:'سودوكو',zahra:'لودو'};
-  const inviteGames = {'paths-online':'paths',online:'quiz'};
+  const inviteGames = {'paths-online':'paths',online:'quiz',uno:'chaos',race:'carrom',ludo:'zahra'};
   const route = new URL(location.href).pathname.replace(/\.html$/, '').replace(/^\//, '') || 'index';
   const enabled = () => root.BS_AUDIO?.getSettings?.().effects !== false;
   const reduced = () => Boolean(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches);

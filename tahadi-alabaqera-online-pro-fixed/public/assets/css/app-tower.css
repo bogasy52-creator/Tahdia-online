@@ -263,3 +263,26 @@ body.tower-page .tw-lobby .tw-gear{width:40px;height:40px}
 /* 33.19.0: inside the group room's frame the room is the way out; the floating «الجمعة» stays off the race */
 body.tower-page.tw-embedded :is(#twOnline .tw-back,#twRoomLeave,#twRoundLeave,#twRoundParty,#twQuit){display:none!important}
 body.tower-page.tw-has-dash .bs-party-back{display:none!important}
+
+/* Tower crown edition: keep the world as the focal point above the controls. */
+body.tower-page .tw-lobby-foot{
+  background:linear-gradient(172deg,#351d50ec,#1c102ce8);
+  border:1px solid #c29bce8c;border-radius:22px;padding:12px;
+  box-shadow:0 14px 38px #1a0b3566,inset 0 1px #f3d38955;
+}
+body.tower-page .tw-lobby-foot .tw-cta{
+  background:linear-gradient(180deg,#ffe9a8,#e0b363 56%,#bb7b35);
+  border-color:#ffe8a6;color:#281532;text-shadow:none;
+}
+body.tower-page .tw-lobby-foot .tw-cta small{color:#422342}
+body.tower-page .tw-lobby-foot .tw-tile{background:linear-gradient(#5a3879,#34204e);border-color:#a278bc}
+body.tower-page .tw-lobby-foot .tw-tile-hot{border-color:#e1b47c}
+body.tower-page .tw-prog{top:calc(max(8px,env(safe-area-inset-top)) + 79px);height:8px;background:#1c0e2ed9;border-color:#ead9ff8c}
+body.tower-page .tw-cp-mark{position:absolute;top:50%;width:9px;height:9px;margin-inline-start:-4px;transform:translateY(-50%) rotate(45deg);background:#d5b5fa;border:1px solid #332345;border-radius:2px}
+body.tower-page .tw-prog #twProgMe{box-shadow:0 0 9px #fede9c;z-index:2}
+body.tower-page #twCheckpoint{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ffe5ac;font-size:11px;line-height:1.2}
+body.tower-page .tw-connection{position:fixed;z-index:30;top:calc(max(8px,env(safe-area-inset-top)) + 106px);inset-inline:12px;width:max-content;max-width:calc(100% - 24px);margin:0 auto;padding:8px 13px;background:#342548;color:#ffe7b7;border:1px solid #ffd997;border-radius:13px;font-size:13px}
+body.tower-page .tw-dash{--dash-ready:1}
+body.tower-page .tw-dash::after{content:'';position:absolute;inset:5px;border-radius:inherit;background:conic-gradient(#ffe2a5 calc(var(--dash-ready)*1turn),transparent 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);pointer-events:none}
+@media(max-width:420px){body.tower-page .tw-lobby-foot{padding:9px;gap:8px;border-radius:18px}}
+@media(max-height:650px) and (orientation:landscape){body.tower-page .tw-lobby-foot{margin-inline-start:auto;margin-inline-end:0;width:min(410px,52vw)}}

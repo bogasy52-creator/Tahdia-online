@@ -126,5 +126,5 @@ test('the phone sends a room mode only for the journey', async () => {
   await window.BS_SOCIAL.invite('alice_1', 'journey', '', 'jewels');
   const bodies = sent.filter((x) => x.path === '/api/social/invites').map((x) => x.body);
   assert.deepEqual(bodies, [{ username: 'alice_1', game: 'jackaroo', roomCode: '123456' }, { username: 'alice_1', game: 'journey', roomCode: '', variant: 'jewels' }]);
-  assert.equal(window.BS_SOCIAL.gameLabel('chaos'), 'سباق الفوضى');
+  assert.equal(window.BS_SOCIAL.gameLabel('chaos'), 'أونو');
 });

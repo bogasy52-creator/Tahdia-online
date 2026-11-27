@@ -27,7 +27,7 @@ export const ROOM_FAMILIES = Object.freeze({
   cipher: { from: 97, to: 97, page: '/cipher' },
   chaos: { from: 98, to: 98, page: '/chaos' },
   billiards: { from: 99, to: 99, page: '/billiards' },
-  carrom: { from: 8, to: 8, page: '/carrom' },
+  carrom: { from: 8, to: 8, page: '/race' },
   tanks: { from: 7, to: 7, page: '/tanks' },
   // 33.10.1: «شطرنج الذاكرة» — codes 05xxxx
   pegs: { from: 5, to: 5, page: '/pegs' },

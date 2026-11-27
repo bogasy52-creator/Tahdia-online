@@ -97,7 +97,7 @@ async function validateInviteRoom(env, game, roomCode) {
     const response=await stub.fetch('https://'+hostname+'.internal/status');
     const data = await readJson(response);
     if (!response.ok || !data.ok) return { ok: false, status: 404, error: "الغرفة غير موجودة" };
-    if (game !== "quiz" && data.game !== game) return { ok: false, status: 409, error: "رمز الغرفة يخص لعبة أخرى" };
+    if (data.game !== game && (game !== "quiz" || data.game)) return { ok: false, status: 409, error: "رمز الغرفة يخص لعبة أخرى" };
     if (data.status !== "lobby" && !(["sudoku","paths"].includes(game)&&data.status==="countdown") && !(challenge&&data.status==="finished")) return { ok: false, status: 409, error: "لا يمكن إرسال دعوة بعد بدء المباراة" };
     const count=Array.isArray(data.players)?data.players.length:Number(data.players),limit=Number(data.playerLimit||data.capacity);
     if(Number.isFinite(count)&&limit>0&&count>=limit)return {ok:false,status:409,error:'الغرفة ممتلئة؛ أنشئ غرفة جديدة لأصدقائك'};
@@ -250,7 +250,7 @@ export async function handleSocialRequest(request, env, options = {}) {
     const { response, auth } = await requireAuth(request, env);
     if (response) return response;
     const body = await request.json().catch(() => ({}));
-    const targetUsername = normalizeUsername(body.username);
+    const targetUsername = normalizeUsername(body?.username);
     if (!validUsername(targetUsername) || targetUsername === auth.username) return json({ ok: false, error: "اسم المستخدم غير صالح" }, 400);
     const targetProfile = await publicProfile(env, targetUsername);
     if (!targetProfile) return json({ ok: false, error: "الحساب غير موجود" }, 404);
@@ -360,17 +360,27 @@ export async function handleSocialRequest(request, env, options = {}) {
     return json(result.data, result.response.status);
   }
 
+  if (request.method === "POST" && url.pathname === "/api/social/invites/check") {
+    const {response} = await requireAuth(request, env);
+    if (response) return response;
+    const body = await request.json().catch(() => null);
+    const game = normalizeGame(body?.game), code = normalizeRoomCode(body?.roomCode);
+    if (!code || !SOCIAL_ONLINE_GAMES.has(game)) return json({ok:false,error:'بيانات الدعوة غير صالحة'},400);
+    const room = await validateInviteRoom(env, game, code);
+    return json(room, room.ok ? 200 : room.status);
+  }
+
   if (request.method === "POST" && url.pathname === "/api/social/invites") {
     const { response, auth } = await requireAuth(request, env);
     if (response) return response;
     const body = await request.json().catch(() => ({}));
-    const targetUsername = normalizeUsername(body.username);
-    const game = normalizeGame(body.game);
-    const roomCode = normalizeRoomCode(body.roomCode);
+    const targetUsername = normalizeUsername(body?.username);
+    const game = normalizeGame(body?.game);
+    const roomCode = normalizeRoomCode(body?.roomCode);
     // 33.6.0: only the journey has kinds of challenge (paths/jewels). A room's own mode (classic, teams…)
     // travels with its code, so the board-game lobbies' «variant: classic» no longer turns the invite away.
     const variant=game==='journey'&&['paths','jewels'].includes(body.variant)?body.variant:undefined;
-    if (!validUsername(targetUsername) || !game || (body.roomCode && !roomCode)) return json({ ok: false, error: "بيانات الدعوة غير صالحة" }, 400);
+    if (!validUsername(targetUsername) || !game || (body?.roomCode && !roomCode)) return json({ ok: false, error: "بيانات الدعوة غير صالحة" }, 400);
     const targetStub = stubFor(env, targetUsername);
     if (!targetStub || !(await publicProfile(env, targetUsername))) return json({ ok: false, error: "الحساب غير موجود" }, 404);
     if (roomCode) {

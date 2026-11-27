@@ -1,6 +1,6 @@
 {
   "name": "busraj-games",
-  "version": "33.19.0",
+  "version": "33.20.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
     "check:cloudflare": "wrangler deploy --dry-run",
     "verify:cloudflare": "npm run verify && npm run check:cloudflare",
     "preverify:release": "node scripts/build-core.mjs && node scripts/build-styles.mjs && node scripts/apply-premium.mjs && node scripts/build-offline.mjs && node scripts/refresh-checksums.mjs",
-    "verify:release": "npm run verify && node scripts/verify-club-runtime.mjs && node scripts/verify-pegs-v33-11.mjs && node scripts/verify-party-v33-11-2.mjs && node scripts/verify-six-v33-11-3.mjs && node scripts/verify-ludo-luxe-v33-11-4.mjs && node scripts/verify-v7.mjs && node scripts/verify-pool-entry-v33-11-6.mjs && node scripts/verify-pool-worker-v33-11-6.mjs && node scripts/verify-colors-v33-14.mjs && node scripts/verify-quick-rooms-v33-14-1.mjs",
+    "verify:release": "npm run verify && node scripts/verify-club-runtime.mjs && node scripts/verify-pegs-v33-11.mjs && node scripts/verify-party-v33-11-2.mjs && node scripts/verify-six-v33-11-3.mjs && node scripts/verify-ludo-luxe-v33-11-4.mjs && node scripts/verify-v7.mjs && node scripts/verify-pool-entry-v33-11-6.mjs && node scripts/verify-pool-worker-v33-11-6.mjs && node scripts/verify-colors-v33-14.mjs && node scripts/verify-quick-rooms-v33-14-1.mjs && node scripts/verify-tower-invites-v33-20.mjs",
     "start:local": "node scripts/play-local.mjs",
     "test:browser": "node scripts/test-browser-v7.mjs",
     "test:motion": "node scripts/test-motion-v7.mjs",

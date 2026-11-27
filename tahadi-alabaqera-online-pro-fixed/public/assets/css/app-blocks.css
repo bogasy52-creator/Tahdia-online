@@ -159,6 +159,9 @@ body.br-race .br-row.is-next .br-tile:not(:disabled){animation-duration:.9s}
 @media (max-height:700px){.ng-intro .ng-cover{aspect-ratio:2/1;object-fit:cover}.ng-rules li{font-size:14px}.ts-dial{width:min(52vw,200px)}.ts-press{min-height:64px}}
 @media (prefers-reduced-motion:reduce){.br-row.is-next .br-tile:not(:disabled),.br-pawn,.ng-result-card,.br-tile.is-cracking{animation:none}.ng-game.is-shake{animation:none}}
 
+.ng-intro .ng-friends-entry{display:flex;align-items:center;justify-content:center;width:min(100%,340px);min-height:44px;margin:10px auto 0;border:1px solid #9874bc;border-radius:14px;color:#f4e5ff;background:#35204c;text-decoration:none}
+.party-embedded .ng-friends-entry{display:none}
+
 /* assets/css/design-system.css */
 /* V17 shared product system. Board coordinates remain owned by each game. */
 :root{--bs-bg:#0b1522;--bs-bg2:#112131;--bs-surface:#142738;--bs-surface2:#1a3043;--bs-line:#355061;--bs-text:#f0f4ed;--bs-muted:#abc0cd;--bs-purple:#87c6b0;--bs-pink:#b6a5d9;--bs-gold:#eed093;--bs-cyan:#8cc9d5;--bs-green:#a4d6a7;--bs-radius:18px;--bs-shadow:0 14px 40px #020a1533}

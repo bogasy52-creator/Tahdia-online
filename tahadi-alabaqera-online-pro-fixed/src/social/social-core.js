@@ -10,7 +10,7 @@ export const SOCIAL_INVITE_TTL_MS = 5 * 60 * 1000;
 export const SOCIAL_ONLINE_GAMES = new Set(["party", "quiz", "picture", "jackaroo", "snakes", "zahra", "serpent", "sudoku", "paths", "baloot", "dice", "focus", "cipher", "wordbomb", "chaos", "tanks", "hockey", "billiards", "jewels", "carrom", "pegs", "tower"]);
 export const SOCIAL_CHALLENGE_GAMES = new Set([
   ...SOCIAL_ONLINE_GAMES,
-  "dice", "journey", "local", "logic", "memory", "puzzle", "reaction",
+  "dice", "journey", "local", "logic", "memory", "puzzle", "reaction", "blocks", "ten",
 ]);
 
 export function normalizeUsername(value) {
@@ -60,8 +60,11 @@ export function parseSessionToken(value) {
   return { username, secret, token };
 }
 
+const GAME_ALIASES = new Map([['ludo','zahra'], ['uno','chaos'], ['race','carrom'], ['paths-online','paths'], ['online','quiz'], ['bridge','blocks']]);
+const JOIN_ROUTES = new Map([['zahra','/ludo'], ['carrom','/race'], ['chaos','/chaos'], ['paths','/paths-online'], ['quiz','/online'], ['local','/online']]);
 export function normalizeGame(value) {
-  const game = String(value || "").trim().toLowerCase();
+  const key = String(value || "").trim().toLowerCase();
+  const game = GAME_ALIASES.get(key) || key;
   return SOCIAL_CHALLENGE_GAMES.has(game) ? game : "";
 }
 
@@ -69,17 +72,10 @@ export function gameJoinPath(game, roomCode, variant) {
   const normalizedGame = normalizeGame(game);
   const code = normalizeRoomCode(roomCode);
   if (!normalizedGame) return "";
-  if (code) {
-    if (!SOCIAL_ONLINE_GAMES.has(normalizedGame)) return "";
-    if (normalizedGame === "paths") return `/paths-online?room=${encodeURIComponent(code)}`;
-    if (normalizedGame === "picture") return `/picture?room=${encodeURIComponent(code)}`;
-    if (normalizedGame === "quiz") return `/online?room=${encodeURIComponent(code)}`;
-    return `/${normalizedGame}?room=${encodeURIComponent(code)}`;
-  }
-  // the same-device quiz moved online in 33.0.0
-  const direct = {paths:"/paths-online",quiz:"/online",local:"/online"};
-  if(normalizedGame==='journey'&&['paths','jewels'].includes(variant))return '/journey?game='+variant;
-  return direct[normalizedGame] || `/${normalizedGame}`;
+  const page = JOIN_ROUTES.get(normalizedGame) || `/${normalizedGame}`;
+  if (code) return SOCIAL_ONLINE_GAMES.has(normalizedGame) ? `${page}?room=${code}` : '';
+  if (normalizedGame === 'journey' && ['paths','jewels'].includes(variant)) return '/journey?game='+variant;
+  return page;
 }
 
 export function publicProfile(profile, presence = {}) {

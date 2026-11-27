@@ -55,13 +55,16 @@ export class TowerRoom {
   async save() {
     if (!this.r) return; await this.ctx.storage.put('tower', this.r);
     const r = this.r, next = r.status === 'lobby' && r.lobbyUntil ? r.lobbyUntil : r.status === 'between' ? r.nextAt : Date.now() + 60_000;
-    await this.ctx.storage.setAlarm(Math.min(r.expiresAt, Math.max(Date.now() + 200, next)));
+    const releaseSeatsAt = r.status === 'lobby' || r.status === 'finished'
+      ? Math.min(Infinity, ...r.players.filter(p => !p.bot && !p.connected && p.awayAt).map(p => p.awayAt + TOWER_RECONNECT))
+      : Infinity;
+    await this.ctx.storage.setAlarm(Math.min(r.expiresAt, Math.max(Date.now() + 200, Math.min(next,releaseSeatsAt))));
   }
   courseOf() { const r = this.r; if (!this.course || this.course.key !== r.seed + ':' + r.round) { this.course = roundCourse(r.seed, r.round, r.players.length); this.course.key = r.seed + ':' + r.round; } return this.course; }
   alive() { return this.r.players.filter((p) => !p.out); }
   view() {
     const r = this.r;
-    return { code: r.code, quick: r.quick, party: Boolean(r.partyLink), mode: r.mode, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, startAt: r.startAt, startsIn: r.status === 'lobby' && (r.quick || r.partyLink) ? r.lobbyUntil : null, qualify: r.qualify, winnerTeam: r.winnerTeam ?? null,
+    return { code: r.code, match: r.match, quick: r.quick, party: Boolean(r.partyLink), mode: r.mode, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, startAt: r.startAt, startsIn: r.status === 'lobby' && (r.quick || r.partyLink) ? r.lobbyUntil : null, qualify: r.qualify, winnerTeam: r.winnerTeam ?? null,
       players: r.players.map((p) => ({ id: p.sid, name: p.name, user: p.bot ? null : p.username || null, look: p.look, host: Boolean(p.host), ready: Boolean(p.ready), team: p.team ?? null, fin: p.fin ?? null, place: p.place ?? null, out: Boolean(p.out), points: p.points || 0, gems: p.gems || 0, connected: p.bot ? true : Boolean(p.connected) })) };
   }
   send(ws, m) { try { ws.send(JSON.stringify(m)); } catch { /* gone */ } }
@@ -84,6 +87,8 @@ export class TowerRoom {
       }
       const r = this.r;
       if (!r || r.expiresAt < Date.now()) return json({ ok: false, error: 'الغرفة انتهت' }, 404);
+      const released = this.releaseSeats();
+      if (released) { await this.save(); this.broadcast(); }
       if (u.pathname === '/status') return json({ ok: true, game: 'tower', status: r.status, mode: r.mode, players: r.players.filter((p) => !p.bot).length, playerLimit: r.capacity });
       if (u.pathname !== '/ws' || req.headers.get('upgrade') !== 'websocket') return json({ ok: false }, 404);
       const protocols = String(req.headers.get('sec-websocket-protocol') || '').split(',').map((v) => v.trim()), read = (k) => protocols.find((v) => v.startsWith(k))?.slice(k.length);
@@ -106,11 +111,16 @@ export class TowerRoom {
         if (r.quick && !r.lobbyUntil) r.lobbyUntil = Date.now() + TOWER_QUICK_WAIT;
         if (r.quick && r.players.filter((x) => !x.bot).length >= r.capacity) r.lobbyUntil = Date.now() + 1500;
       }
+      if (!p.username && username && r.status === 'lobby' && !r.players.some(x => x.username === username)) {
+        p.username = username;
+        p.name = clean(req.headers.get('x-bs-name') || p.name);
+      }
       const old = p.connection; p.connection = crypto.randomUUID(); p.connected = true; p.awayAt = null;
       for (const ws of this.ctx.getWebSockets()) if (ws.deserializeAttachment()?.connection === old) try { ws.close(4001, 'resumed'); } catch { /* gone */ }
       const pair = new WebSocketPair(), ws = pair[1]; this.ctx.acceptWebSocket(ws); ws.serializeAttachment({ tower: true, id: p.sid, connection: p.connection });
       await this.save();
-      this.send(ws, { type: 'hello', id: p.sid, token: p.token, now: Date.now() });
+      const resume = r.status === 'playing' && p.last ? { cp: p.cp, pos: p.pos, fin: p.fin, match: r.match, round: r.round } : null;
+      this.send(ws, { type: 'hello', id: p.sid, token: p.token, now: Date.now(), resume });
       this.broadcast(); this.run();
       return new Response(null, { status: 101, webSocket: pair[0], headers: { 'sec-websocket-protocol': 'bs-tower-v1' } });
     });
@@ -240,7 +250,10 @@ export class TowerRoom {
     if (rows.length && this.env.ROOMS) try { await this.env.ROOMS.get(this.env.ROOMS.idFromName('tower:board')).fetch('https://tower.internal/board/add', { method: 'POST', body: JSON.stringify({ rows }) }); } catch { r.reported = false; }
     await this.save();
   }
-  canStart() { const r = this.r; return ['lobby', 'finished'].includes(r.status) && r.players.filter((p) => !p.bot && p.connected).length >= 2; }
+  canStart() {
+    const r=this.r, count=r.players.filter(p=>!p.bot && p.connected).length;
+    return ['lobby','finished'].includes(r.status) && count>=2 && (r.mode!=='teams'||count%2===0);
+  }
 
   async webSocketMessage(ws, raw) {
     await this.ready;
@@ -284,18 +297,29 @@ export class TowerRoom {
   }
   async depart(p, explicit = false) {
     const r = this.r; p.connected = false; p.awayAt = Date.now() - (explicit ? TOWER_RECONNECT + 1 : 0);
-    if (r.status === 'lobby' || r.status === 'finished') {
-      r.players = r.players.filter((x) => x !== p);
-      if (p.host && r.players.length) r.players.find((x) => !x.bot).host = true;
-    }
+    this.releaseSeats();
     await this.save(); this.broadcast();
+  }
+  releaseSeats(now = Date.now()) {
+    const r = this.r;
+    if (!r || !['lobby','finished'].includes(r.status)) return false;
+    const players = r.players.filter(p => p.bot || p.connected || !p.awayAt || now - p.awayAt < TOWER_RECONNECT);
+    if (players.length === r.players.length) return false;
+    const departedHost = r.players.some(p => p.host && !players.includes(p));
+    r.players = players;
+    if (departedHost) {
+      const successor = players.find(p => !p.bot && p.connected) || players.find(p => !p.bot);
+      if (successor) successor.host = true;
+    }
+    return true;
   }
   run() {
     if (this.timer || !this.r || !['playing', 'lobby', 'between'].includes(this.r.status) || !this.r.players.some((p) => !p.bot && p.connected)) return;
-    this.timer = setTimeout(() => { this.timer = null; this.enqueue(() => this.step()).finally(() => this.run()); }, this.r.status === 'playing' ? TOWER_TICK : 500);
+    this.timer = setTimeout(() => { this.timer = null; this.enqueue(() => this.step()).catch(console.error).finally(() => this.run()); }, this.r.status === 'playing' ? TOWER_TICK : 500);
   }
   async step() {
     const r = this.r; if (!r) return;
+    if (this.releaseSeats()) { await this.save(); this.broadcast(); }
     const inRoom = r.players.filter((p) => !p.bot && p.connected).length;
     if (r.status === 'lobby' && (r.quick || r.partyLink) && r.lobbyUntil && inRoom && (Date.now() >= r.lobbyUntil || (r.partyLink && inRoom >= r.expected))) { this.start(); await this.save(); this.broadcast(); return; }
     if (r.status === 'between' && Date.now() >= r.nextAt) { this.startRound(); await this.save(); this.broadcast(); return; }

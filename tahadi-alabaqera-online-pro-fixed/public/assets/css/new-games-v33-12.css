@@ -157,3 +157,6 @@ body.br-race .br-row.is-next .br-tile:not(:disabled){animation-duration:.9s}
 
 @media (max-height:700px){.ng-intro .ng-cover{aspect-ratio:2/1;object-fit:cover}.ng-rules li{font-size:14px}.ts-dial{width:min(52vw,200px)}.ts-press{min-height:64px}}
 @media (prefers-reduced-motion:reduce){.br-row.is-next .br-tile:not(:disabled),.br-pawn,.ng-result-card,.br-tile.is-cracking{animation:none}.ng-game.is-shake{animation:none}}
+
+.ng-intro .ng-friends-entry{display:flex;align-items:center;justify-content:center;width:min(100%,340px);min-height:44px;margin:10px auto 0;border:1px solid #9874bc;border-radius:14px;color:#f4e5ff;background:#35204c;text-decoration:none}
+.party-embedded .ng-friends-entry{display:none}

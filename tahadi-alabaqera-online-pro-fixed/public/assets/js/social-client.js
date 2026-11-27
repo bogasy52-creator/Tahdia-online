@@ -33,8 +33,24 @@
 .bs-invite-row span{display:block;font-size:13px;opacity:.8}
 .bs-invite-row .bs-invite-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .bs-invite-row .bs-btn{min-height:38px;padding:0 14px;text-decoration:none;display:inline-grid;place-items:center}
-.bs-invite-row .bs-invite-join{background:#ef4444;border-color:#ef4444;color:#fff}`;
-  const INBOX_ANCHORS = '[data-social-open], a.bs-icon-btn[href="./"], a.bs-icon-btn[href="/"], a[aria-label="الرئيسية"], a[aria-label="الرجوع للرئيسية"]';
+.bs-invite-row .bs-invite-join{background:#ef4444;border-color:#ef4444;color:#fff}
+#bsSocialInvite{position:fixed;width:min(390px,calc(100% - 24px));display:grid;gap:8px;padding:14px;border-radius:18px;box-shadow:0 14px 42px #0008}
+#bsSocialInvite .bs-social-invite-actions{display:flex;gap:8px;flex-wrap:wrap}
+#bsInviteFriendsModal{display:none;position:fixed;inset:0;z-index:14000;place-items:center;padding:12px;background:#130b23d9}
+#bsInviteFriendsModal.open{display:grid}
+#bsInviteFriendsModal .bs-social-picker{box-sizing:border-box;width:min(460px,100%);max-height:min(86vh,640px);max-height:min(86dvh,640px);min-width:0;padding:18px;display:flex;flex-direction:column;gap:12px;border:1px solid #b58ada;border-radius:22px;color:#fff5ff;background:linear-gradient(145deg,#382155,#211230);box-shadow:0 18px 55px #0007}
+#bsInviteFriendsModal .bs-social-picker-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+#bsInviteFriendsModal h2{font-size:21px;line-height:1.3;margin:0 0 5px}
+#bsInviteFriendsModal small{display:block;color:#e1cce9}
+#bsInviteFriendsModal .bs-social-picker-list{min-height:0;overflow:auto;overscroll-behavior:contain;display:grid;gap:7px}
+#bsInviteFriendsModal .bs-social-picker-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px 10px;border:1px solid #82599c;border-radius:12px;background:#21152f;overflow-wrap:anywhere}
+#bsInviteFriendsModal .bs-social-picker-footer{text-align:center;color:#f9dba1;min-height:36px}
+#bsInviteFriendsModal .bs-btn,#bsInviteFriendsModal .bs-icon-btn,#bsSocialInvite .bs-btn{border:1px solid #aa78c1;border-radius:11px;min-height:44px;padding:7px 12px;background:#452861;color:#fff8ff;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-grid;place-items:center}
+#bsInviteFriendsModal .bs-btn.cyan{border-color:#ffe299;background:linear-gradient(#fff1ae,#d49a4c);color:#2b1632}
+#bsInviteFriendsModal .bs-btn:disabled{opacity:.65}
+#bsInviteFriendsModal [role=status]{margin:0;color:#ffdb9a}
+`;
+  const INBOX_ANCHORS = '[data-social-open], [data-game-invite-anchor], a.bs-icon-btn[href="./"], a.bs-icon-btn[href="/"], a[aria-label="الرئيسية"], a[aria-label="الرجوع للرئيسية"]';
   function inviteStyle() {
     if (!document.head || typeof document.getElementById !== 'function' || document.getElementById('bsInviteInboxStyle')) return;
     const style = document.createElement('style'); style.id = 'bsInviteInboxStyle'; style.textContent = INBOX_STYLE; document.head.appendChild(style);
@@ -93,8 +109,7 @@
         row.className = 'bs-invite-row'; actions.className = 'bs-invite-actions';
         title.textContent = `🎮 ${n.from?.displayName || n.from?.username || 'صديق'} يدعوك`;
         sub.textContent = `${gameLabel(n.game)}${n.roomCode ? ' · الغرفة ' + n.roomCode : ''} · باقي ${timeLeft(n)}`;
-        const join = document.createElement('a'); join.className = 'bs-btn bs-invite-join'; join.textContent = 'انضم'; join.href = n.joinPath;
-        join.addEventListener('click', () => { if (n.id) readNotifications([n.id]).catch(() => {}); });
+        const join = document.createElement('a'); join.className = 'bs-btn bs-invite-join'; join.textContent = 'انضم'; bindInviteLink(join, n);
         actions.append(join, inboxButton('تجاهل', '', () => { if (n.id) readNotifications([n.id]).catch(() => {}); dropInvites([n.id]); }));
         copy.append(title, sub); row.append(copy, actions); box.appendChild(row);
       }
@@ -116,7 +131,7 @@
     friendRequests = Array.isArray(data.incoming) ? data.incoming.filter((r) => r && r.username) : [];
     renderInbox();
     const latest = [...data.notifications]
-      .filter(n => n?.type === 'game_invite' && !n.read && n.joinPath && Number(n.expiresAt || 0) > Date.now())
+      .filter(inviteOpen)
       .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
       .find(n => !seenInvites.has(String(n.id)));
     if (latest) showIncomingInvite(latest);
@@ -228,10 +243,50 @@
 
   // 33.6.0: every game that has rooms opens from an invitation — the challenge games (focus, cipher,
   // wordbomb, chaos) were missing here, so their invitations reached the phone and were dropped.
-  const GAME_LABELS = Object.freeze({ tower: 'برج التحديات', party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعابين والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'سباق الفوضى', ludo: 'لودو', tanks: 'معركة الدبابات', hockey: 'الهوكي', billiards: 'البلياردو', carrom: 'الكيرم', pegs: 'سر الألوان', jewels: 'ماستر الجواهر' });
+  const GAME_LABELS = Object.freeze({ tower: 'برج التحديات', blocks: 'رص البلوكات', ten: 'عشر ثواني', party: 'غرفة الأصدقاء', quiz: 'تحدي العباقرة', picture: 'سباق الصور', jackaroo: 'جاكارو', baloot: 'بلوت', snakes: 'الثعابين والسلالم', zahra: 'لودو', serpent: 'حلبة الثعابين', sudoku: 'سودوكو', paths: 'توصيل الأرقام', dice: 'تحدي النرد', journey: 'رحلة النجوم', local: 'تحدي الأسئلة', logic: 'تحدي المنطق', memory: 'تحدي الذاكرة', puzzle: 'ترتيب الأرقام', reaction: 'مواجهة التركيز', focus: 'مواجهة التركيز', cipher: 'ساحة الشفرات', wordbomb: 'صيد الكلمات', chaos: 'أونو', ludo: 'لودو', tanks: 'معركة الدبابات', hockey: 'الهوكي', billiards: 'البلياردو', carrom: 'الكيرم', pegs: 'سر الألوان', jewels: 'ماستر الجواهر' });
   // 33.10.7: the newer table games (tanks … pegs) send their rooms too; their invitations were dropped here
-  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|ludo|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos|tanks|tower|hockey|billiards|carrom|pegs|jewels)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
+  const INVITE_PATH = /^(?:\/(?:party|online|picture|jackaroo|baloot|snakes|zahra|ludo|serpent|sudoku|paths-online|dice|journey|local|logic|memory|puzzle|reaction|focus|cipher|wordbomb|chaos|tanks|tower|hockey|billiards|carrom|pegs|jewels|uno|race|blocks|ten|bridge)(?:\?room=\d{6})?|\/journey\?game=(?:paths|jewels))$/;
   const gameLabel = (game) => GAME_LABELS[game] || String(game || 'لعبة');
+
+  function inviteDestination(path) {
+    const [page, query] = path.split('?');
+    const current = new Map([['/zahra','/ludo'],['/uno','/chaos'],['/carrom','/race'],['/bridge','/blocks'],['/local','/online']]).get(page) || page;
+    return current + (query ? '?' + query : '');
+  }
+
+  function bindInviteLink(link, notification) {
+    if (!notification?.joinPath || !INVITE_PATH.test(notification.joinPath)) return false;
+    link.href = inviteDestination(notification.joinPath);
+    let checking = false;
+    link.addEventListener('click', async (event) => {
+      if (!notification.roomCode) {
+        if (notification.id) readNotifications([notification.id]).catch(() => {});
+        return;
+      }
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (checking) return;
+      checking = true;
+      const label = link.textContent;
+      link.textContent = 'نتحقق من الغرفة…';
+      link.setAttribute('aria-busy','true');
+      const session = token();
+      try {
+        if (Date.now() >= Number(notification.expiresAt)) throw Error('انتهت الدعوة. اطلب من صديقك دعوة جديدة');
+        await api('/api/social/invites/check',{method:'POST',body:JSON.stringify({game:notification.game,roomCode:notification.roomCode})});
+        if (token() !== session) return;
+        if (notification.id) readNotifications([notification.id]).catch(() => {});
+        location.href = link.href;
+      } catch (error) {
+        toast(error.message || 'تعذر التحقق من الغرفة. جرّب مرة ثانية');
+      } finally {
+        checking = false;
+        link.textContent = label;
+        link.removeAttribute('aria-busy');
+      }
+    });
+    return true;
+  }
 
   function showIncomingInvite(notification) {
     if (!notification?.joinPath || Date.now() >= Number(notification.expiresAt || 0)) return;
@@ -255,10 +310,9 @@
     const actions = document.createElement('div');
     actions.className = 'bs-social-invite-actions';
     const join = document.createElement('a');
-    join.className = 'bs-btn gold'; join.textContent = 'انضم الآن'; join.href = notification.joinPath;
+    join.className = 'bs-btn gold'; join.textContent = 'انضم الآن'; bindInviteLink(join, notification);
     const close = document.createElement('button');
     close.className = 'bs-btn'; close.textContent = 'لاحقًا'; close.type = 'button'; close.onclick = () => { wrap.remove(); };
-    join.addEventListener('click', () => { if (notification.id) readNotifications([notification.id]).catch(() => {}); });
     actions.append(join, close); wrap.append(title, sub, actions);
     wrap.setAttribute('role','status');
     inviteExpiryTimer=setTimeout(()=>wrap.remove(),Math.max(1,Math.min(15000,Number(notification.expiresAt)-Date.now())));
@@ -402,9 +456,12 @@
   async function openInvitePicker({ game, roomCode, variant, title:gameTitle, roundClosed, share } = {}) {
     if (!token()) {
       toast('سجّل الدخول أولًا لإرسال دعوة لصديق');
-      setTimeout(() => { location.href = `/social?next=${encodeURIComponent(location.pathname + location.search)}`; }, 650);
+      const returnTo = new URL(location.href);
+      if (roomCode) returnTo.searchParams.set('room',roomCode);
+      setTimeout(() => { location.href = '/social?auth=1&next=' + encodeURIComponent(returnTo.pathname + returnTo.search); }, 400);
       return;
     }
+    inviteStyle();
     const openedSession=token(),source=document.activeElement;let data;
     try { data = await me(true); } catch (error) { toast(error.message); return; }
     if(!data||openedSession!==token())return;
@@ -428,10 +485,11 @@
       const row = document.createElement('div'); row.className = 'bs-social-picker-row';
       const who = document.createElement('div'); const name = document.createElement('b'); name.textContent = `${friend.online ? '🟢' : '⚫'} ${friend.displayName}`; const user = document.createElement('small'); user.textContent = `@${friend.username}`; who.append(name, user);
       const send = document.createElement('button'); send.type = 'button'; send.className = 'bs-btn cyan'; send.textContent = 'دعوة';
-      send.onclick = async () => {if(openedSession!==token()){toast('تغيّر الحساب؛ افتح قائمة الأصدقاء مجددًا');dismiss();return;} send.disabled = true; try { await invite(friend.username, game, roomCode, variant); send.textContent = 'أُرسلت ✓'; toast(friend.online?`أُرسلت الدعوة إلى ${friend.displayName}`:`حُفظت الدعوة لدى ${friend.displayName} وستظهر عند اتصاله`); } catch (error) { send.disabled = false; toast(error.message); } };
+      send.onclick = async () => {if(openedSession!==token()){toast('تغيّر الحساب؛ افتح قائمة الأصدقاء مجددًا');dismiss();return;} send.disabled = true; feedback.hidden = true; try { await invite(friend.username, game, roomCode, variant); send.textContent = 'أُرسلت ✓'; feedback.textContent = 'أُرسلت الدعوة إلى ' + friend.displayName; feedback.hidden = false; } catch (error) { send.disabled = false; feedback.textContent = error.message === 'invites_not_allowed' ? 'صديقك لا يستقبل هذه الدعوة حسب إعدادات الخصوصية.' : error.message; feedback.hidden = false; } };
       row.append(who, send); list.appendChild(row);
     }
-    panel.appendChild(list);
+    const feedback = document.createElement('p'); feedback.setAttribute('role','status'); feedback.hidden = true;
+    panel.append(list, feedback);
     if(typeof share==='function'){const button=document.createElement('button');button.type='button';button.className='bs-btn';button.textContent='مشاركة رابط اللعبة';button.onclick=share;panel.append(button);}
     const footer = document.createElement('a'); footer.href = '/social'; footer.className = 'bs-social-picker-footer'; footer.textContent = 'إدارة الأصدقاء ←'; panel.appendChild(footer);
     modal.appendChild(panel); modal.classList.add('open');
@@ -449,7 +507,7 @@
     signup, login, logout, me, user, requestFriend, respondFriend, removeFriend, block, unblock,
     settings, invite, readNotifications, connectRealtime, closeRealtime, openInvitePicker,
     invites: () => openInvites(), isLoggedIn: () => Boolean(token()), profile: () => (token() ? cachedProfile() : null), events,
-    accountName: () => accountName(), gameLabel, setPhoto, reportPhoto, moderation,
+    accountName: () => accountName(), gameLabel, bindInviteLink, setPhoto, reportPhoto, moderation,
   };
   window.BS_SOCIAL = apiPublic;
   decorate();

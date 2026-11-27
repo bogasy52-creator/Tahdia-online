@@ -2,12 +2,13 @@
    A hundred levels on your own (no waiting), and races for 2 to 8 in public or private rooms:
    سباق (first to the top), إقصاء (rounds until one is left) and فرق (two teams add up their places).
    Stars and gems unlock characters and outfits; progress is kept on this device. */
-import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, worldById, starsFor, STAR_MAX, dailyLevel, dailyCourse, dayKey, nextDayAt, seasonOf, seasonLevel, seasonCourse, sectionName, sectionTip } from './course.js?v=33.19.0';
-import { TowerAudio } from './audio.js?v=33.19.0';
-import { SEASONS } from './course.js?v=33.19.0';
+import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, worldById, starsFor, STAR_MAX, dailyLevel, dailyCourse, dayKey, nextDayAt, seasonOf, seasonLevel, seasonCourse, sectionName, sectionTip } from './course.js?v=33.20.0';
+import { TowerAudio } from './audio.js?v=33.20.0';
+import { normalizeRoomCode } from '../online/connection-utils.js';
+import { SEASONS } from './course.js?v=33.20.0';
 const SEASON_NAMES = Object.freeze(Object.fromEntries(SEASONS.map((x) => [x.id, x.name])));
-import { Runner } from './physics.js?v=33.19.0';
-import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.19.0';
+import { Runner } from './physics.js?v=33.20.0';
+import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.20.0';
 
 const doc = document, $ = (id) => doc.getElementById(id), body = doc.body;
 const el = (tag, cls, text) => { const n = doc.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
@@ -47,15 +48,20 @@ addEventListener('resize', () => scene?.resize());
 function stage() {
   if (!scene) return;
   const n = save.last || 1, W = worldOf(n);
-  const course = buildCourse({ challenges: [], world: W.id, seed: 9 });
-  scene.setCourse(course); const r = scene.addRunner('me', save.look, '', true); r.x = 0; r.y = 0; r.z = 2.2; r.ry = Math.PI;
-  showcase = { r, a: 0, view: current === 'twWardrobe' ? 'ward' : 'lobby' }; game = null;
+  const view = current === 'twWardrobe' ? 'ward' : 'lobby';
+  const key = W.id + ':' + view;
+  const course = showcase?.key === key && scene.course ? scene.course
+    : buildCourse({ challenges: view === 'ward' ? [] : ['steps','spinners'], world: W.id, seed: 9 });
+  if (scene.course !== course) scene.setCourse(course);
+  const r = scene.addRunner('me', save.look, '', true); r.x = 0; r.y = 0; r.z = 2.2; r.ry = Math.PI;
+  showcase = {r, a: 0, view, key}; game = null;
 }
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const dt = Math.min(0.05, Math.max(0,(now - last) / 1000)); last = now;
+  if (doc.hidden) { requestAnimationFrame(frame); return; }
   if (scene) {
     if (game) game.tick(dt);
-    else if (showcase) { showcase.a += dt * 0.35; const t = now / 1000; scene.update(t, dt, null); const c = scene.camera; if (showcase.view === 'ward') { c.position.set(Math.sin(showcase.a) * 0.6, 0.95, 2.2 - 5.6); c.lookAt(0, -1.05, 2.2); } else { c.position.set(Math.sin(showcase.a) * 0.8, 2.1, 2.2 - 4.4); c.lookAt(0, 1.25, 2.2); } showcase.r.ry = Math.PI + Math.sin(showcase.a * 1.7) * 0.45; showcase.r.anim = 'idle'; }
+    else if (showcase) { showcase.a += dt * 0.35; const t = now / 1000; scene.update(t, dt, null); const c = scene.camera; if (showcase.view === 'ward') { c.position.set(Math.sin(showcase.a) * 0.6, 0.95, 2.2 - 5.6); c.lookAt(0, -1.05, 2.2); } else { c.position.set(3.65 + Math.sin(showcase.a) * 0.45, 4.3, -5.8); c.lookAt(0.25, 1.75, 5.5); } showcase.r.ry = Math.PI + Math.sin(showcase.a * 1.7) * 0.45; showcase.r.anim = 'idle'; }
     scene.render();
   }
   requestAnimationFrame(frame);
@@ -71,7 +77,10 @@ const input = { x: 0, z: 0, jump: false, dash: false, keys: new Set() };
   zone.addEventListener('pointerdown', (e) => { if (id !== null) return; body.classList.add('tw-moved'); id = e.pointerId; ox = e.clientX; oy = e.clientY; pad.style.left = ox - 70 + 'px'; pad.style.top = oy - 70 + 'px'; pad.classList.add('on'); move(ox, oy); zone.setPointerCapture?.(id); e.preventDefault(); });
   zone.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e.clientX, e.clientY); });
   const end = (e) => { if (e.pointerId !== id) return; id = null; input.x = 0; input.z = 0; knob.style.transform = ''; pad.classList.remove('on'); };
-  zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end);
+  zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end); zone.addEventListener('lostpointercapture', end);
+  const reset = () => { end({pointerId:id}); input.keys.clear(); input.x = input.z = 0; input.jump = input.dash = false; };
+  addEventListener('blur', reset);
+  doc.addEventListener('visibilitychange', () => { if (doc.hidden) reset(); });
   $('twJump').addEventListener('pointerdown', (e) => { e.preventDefault(); input.jump = true; $('twJump').classList.add('down'); });
   for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('twJump').addEventListener(ev, () => $('twJump').classList.remove('down'));
   $('twDash').addEventListener('pointerdown', (e) => { e.preventDefault(); input.dash = true; $('twDash').classList.add('down'); setTimeout(() => $('twDash').classList.remove('down'), 160); });
@@ -101,13 +110,25 @@ function ghostAt(rows, t) { if (!rows?.length || t < 0) return rows?.[0] ? { x: 
 class Run {
   constructor({ course, kind = 'level', solo = true, level = null, online = null, slot = -1, key = null, title = '' }) {
     this.course = course; this.kind = online ? 'online' : kind; this.solo = solo && !online; this.level = level; this.online = online; this.key = key; this.title = title;
-    this.runner = new Runner(course, { slot }); this.t = -3.2; this.done = false; this.paused = false; this.sent = 0; this.tickShown = 4; this.rec = []; this.bossCp = course.challenges.findIndex((c) => c.startsWith('boss'));
-    scene?.setCourse(course); this.me = scene?.addRunner('me', save.look, '', true, online?.myTeam ?? null);
+    const resume = online?.resumeData;
+    const sameRound = resume && resume.match === online.state?.match && resume.round === online.state?.round;
+    this.runner = new Runner(course, { slot, cp: sameRound ? resume.cp : 0 });
+    if (sameRound && resume.pos?.length >= 4) {
+      const [x,y,z,ry] = resume.pos;
+      Object.assign(this.runner, {x,y,z,ry});
+    }
+    if (online) online.resumeData = null; this.t = -3.2; this.done = Boolean(sameRound && resume.fin != null); this.paused = false; this.sent = 0; this.tickShown = 4; this.rec = []; this.bossCp = course.challenges.findIndex((c) => c.startsWith('boss'));
+    showcase = null; scene?.setCourse(course); this.me = scene?.addRunner('me', save.look, '', true, online?.myTeam ?? null);
     scene?.snapCamera(this.runner.x, this.runner.y, this.runner.z);
     this.ghost = this.solo && key && save.ghost !== false ? loadGhost(key) : null;
     if (this.ghost?.rows?.length) scene?.addGhost(save.look, 'أفضل وقت لك · ' + fmt(this.ghost.t));
     audio.intensity(0); audio.play(course.world);
     body.classList.toggle('tw-has-dash', Boolean(online)); this.hud();
+    const track = $('twProgCheckpoints'); track.replaceChildren();
+    for (const [index,point] of course.checkpoints.entries()) {
+      if (!index) continue;
+      const mark = el('b','tw-cp-mark'); mark.style.insetInlineStart = Math.min(100,point.z/course.finish.z*100)+'%'; track.append(mark);
+    }
     if (online) online.attach(this);
   }
   clock() { return this.online ? this.online.raceTime() : this.t; }
@@ -115,6 +136,7 @@ class Run {
     if (this.paused) return;
     if (!this.online) this.t += dt;
     const t = this.clock(), r = this.runner;
+    if (this.online?.reconnecting) { input.jump = input.dash = false; return; }
     if (t < 0) { const n = Math.ceil(-t); if (n !== this.tickShown && n <= 3) { this.tickShown = n; count(String(n)); SFX.tick(); } }
     else if (this.tickShown) { this.tickShown = 0; count('انطلق!', true); SFX.go(); }
     if (this.online) r.others = this.online.others();
@@ -127,7 +149,8 @@ class Run {
     if (this.ghost?.rows) scene.moveGhost(ghostAt(this.ghost.rows, t), dt, t);
     if (this.spectate && this.online) { const o = this.online.leader(); if (o) scene.follow(o.x, o.y, o.z, dt); } else scene.follow(r.x, r.y, r.z, dt, t < 0 ? Math.min(1, -t / 3.2) : 0);
     this.online?.frame(this, t);
-    if (!this.done) $('twTime').textContent = fmt(Math.max(0, t));
+    if (this.online && t >= 0) $('twDash').style.setProperty('--dash-ready', String(Math.max(0,1-this.runner.dashCool/1.6)));
+    if (!this.done) { const clock=fmt(Math.max(0,t)); if($('twTime').textContent!==clock)$('twTime').textContent=clock; }
     const prog = Math.max(0, Math.min(1, r.z / this.course.finish.z)); $('twProgMe').style.insetInlineStart = prog * 100 + '%';
     watchFps(dt);
   }
@@ -148,7 +171,7 @@ class Run {
       case 'push': this.online?.send({ type: 'push', id: e.id, nx: +e.nx.toFixed(2), nz: +e.nz.toFixed(2) }); break;
       case 'fall': SFX.fall(); buzz(60); this.hud(); toast(e.by === 'rise' ? (this.course.world === 'lava' ? 'لحقتك الحمم! رجعت لآخر نقطة حفظ' : 'لحقك الرمل! رجعت لآخر نقطة حفظ') : 'رجعت لآخر نقطة حفظ'); if (e.by === 'rise') audio.intensity(0); break;
       case 'checkpoint': {
-        SFX.cp(); const next = this.course.challenges[e.i];
+        SFX.cp(); this.hud(); scene?.burst(r.x,r.y+.35,r.z,'#fbe4a4',16); const next = this.course.challenges[e.i];
         if (e.i === this.bossCp) { audio.intensity(1); audio.fx('boss'); toast('👑 الزعيم: ' + sectionName(next, this.course.world) + ' — ' + sectionTip(next, this.course.world), 3800); }
         else toast(next ? '✓ نقطة حفظ — الجاي: ' + sectionName(next, this.course.world) : '✓ نقطة حفظ');
         break;
@@ -162,6 +185,8 @@ class Run {
     const gems = $('twGemSlots'); gems.replaceChildren(); gems.hidden = !this.solo;
     for (let i = 0; i < 3; i++) gems.append(el('i', r.gems.has(i) ? 'got' : '', '💎'));
     $('twFalls').textContent = r.falls ? '↓' + r.falls : '';
+    const next = this.course.challenges[r.cp];
+    $('twCheckpoint').textContent = next ? sectionName(next,this.course.world) : 'القمة أمامك';
   }
   finish(t) {
     if (this.done) return; this.done = true; SFX.win(); audio.intensity(0); buzz([20, 40, 20]); scene.burst(this.runner.x, this.runner.y + 2, this.runner.z, '#ffd45a', 60);
@@ -186,6 +211,7 @@ class Run {
 function count(text, go = false) { const c = $('twCount'); c.textContent = text; c.className = 'tw-count on' + (go ? ' go' : ''); clearTimeout(count.timer); count.timer = setTimeout(() => { c.className = 'tw-count'; }, go ? 700 : 850); }
 
 function startRun(opts, firstTip) {
+  if (!scene) { toast('الرسومات ثلاثية الأبعاد غير متاحة. فعّل WebGL أو افتح اللعبة من متصفح آخر.',6000); return; }
   $('twResult').hidden = true; show('twHud'); body.dataset.world = opts.course.world;
   game = new Run(opts);
   const first = opts.course.challenges[0]; toast(firstTip || sectionName(first, opts.course.world) + ': ' + sectionTip(first, opts.course.world), 3200);
@@ -361,11 +387,19 @@ class TowerOnline {
     if (!res.ok || !d.code) throw Error((typeof d.error === 'string' && d.error.length < 90 && !/_/.test(d.error) ? d.error : 'ما قدرنا ' + what) + ' (' + res.status + ')');
     return d;
   }
-  async join(code) { try { return await this.connect(code); } catch (first) { if (this.closed && !this.code) throw first; await new Promise((r) => setTimeout(r, 900)); return this.connect(code); } }
-  async quick(mode) { const d = await this.api('/api/tower/quick', { mode }, 'نلقى سباق الحين'); return this.join(d.code); }
-  async create(mode, capacity) { const d = await this.api('/api/tower/rooms', { mode, capacity }, 'نفتح الغرفة'); this.hostKey = d.hostKey; return this.join(d.code); }
+  async join(code) { try { return await this.connect(code); } catch (first) { if (this.closed) throw first; await new Promise((r) => setTimeout(r, 900)); if(this.closed)throw first; return this.connect(code); } }
+  async quick(mode) { const d = await this.api('/api/tower/quick', { mode }, 'نلقى سباق الحين'); if(this.closed)return; return this.join(d.code); }
+  async create(mode, capacity) {
+    const d = await this.api('/api/tower/rooms', { mode, capacity }, 'نفتح الغرفة');
+    if(this.closed)return;
+    this.hostKey = d.hostKey;
+    try { sessionStorage.setItem('bs_tower_host:' + d.code, d.hostKey); } catch { /* private */ }
+    return this.join(d.code);
+  }
   connect(code) {
-    this.close(); this.code = String(code).replace(/\D/g, '').slice(0, 6); this.closed = false;
+    this.detachSocket(); this.code = normalizeRoomCode(code); this.closed = false;
+    if (!/^04\d{4}$/.test(this.code)) return Promise.reject(Error('هذا الرمز لا يخص برج التحديات'));
+    try { this.hostKey ||= sessionStorage.getItem('bs_tower_host:' + this.code) || ''; } catch { /* private */ }
     try { this.token = sessionStorage.getItem('bs_tower_room:' + this.code) || ''; } catch { this.token = ''; }
     const protocols = ['bs-tower-v1', ...(this.hostKey ? ['hk.' + this.hostKey] : []), ...(this.token ? ['rt.' + this.token] : []), ...(account() ? ['st.' + account()] : [])];
     const name = ($('twName').value || guestName() || 'لاعب').trim().slice(0, 20);
@@ -374,14 +408,28 @@ class TowerOnline {
       try { ws = this.ws = new WebSocket((location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/api/tower/rooms/' + this.code + '/ws?name=' + encodeURIComponent(name) + '&look=' + encodeURIComponent(JSON.stringify(save.look)), protocols); }
       catch { reject(Error('المتصفح ما قبل الاتصال بالغرفة (ws)')); return; }
       const timer = setTimeout(() => { if (!ok) { try { ws.close(); } catch { /* gone */ } reject(Error('الغرفة ما ردت، جرّب مرة ثانية (مهلة)')); } }, 12000);
-      ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch { return; } if (m.type === 'hello') { ok = true; clearTimeout(timer); this.me = m.id; this.offset = m.now - Date.now(); try { sessionStorage.setItem('bs_tower_room:' + this.code, m.token); } catch { /* private */ } resolve(this); } this.message(m); };
-      ws.onclose = (ev) => { clearTimeout(timer); if (!ok) reject(Error((ev.reason || 'الغرفة ما فتحت') + ' (' + (ev.code || 0) + ')')); else if (!this.closed) { this.lost(); } };
+      ws.onmessage = (ev) => { if(this.ws!==ws)return; let m; try { m = JSON.parse(ev.data); } catch { return; } if (m.type === 'hello') { ok = true; clearTimeout(timer); this.me = m.id; this.offset = m.now - Date.now(); this.reconnecting = false; this.resumeData = m.resume;
+        if (!LINK?.embedded) { const roomUrl = new URL(location.href); roomUrl.searchParams.set('room',this.code); history.replaceState(null,'',roomUrl); }
+        $('twConnection').hidden = true; try { sessionStorage.setItem('bs_tower_room:' + this.code, m.token); } catch { /* private */ } resolve(this); } this.message(m); };
+      ws.onclose = (ev) => { clearTimeout(timer); if (!ok) reject(Error((ev.reason || 'الغرفة ما فتحت') + ' (' + (ev.code || 0) + ')')); else if (!this.closed && this.ws === ws) { if(ev.code===4001){toast('تم فتح الغرفة في تبويب آخر'); leaveOnline(false);}else this.lost(); } };
       ws.onerror = () => {};
     });
   }
-  lost() { if (this.closed) return; setTimeout(() => { if (!this.closed && this.code) this.connect(this.code).catch(() => { toast('انقطع الاتصال بالغرفة'); leaveOnline(); }); }, 1200); }
+  async lost() {
+    if (this.closed || this.reconnecting) return;
+    this.reconnecting = true;
+    $('twConnection').hidden = false;
+    this.snaps.clear();
+    for (const wait of [600,1500,3200]) {
+      await new Promise(resolve => setTimeout(resolve,wait));
+      if (this.closed || online !== this) return;
+      try { await this.connect(this.code); return; } catch { /* next attempt */ }
+    }
+    if (!this.closed && online === this) { toast('انقطع الاتصال. تقدر ترجع بالكود.',6000); leaveOnline(false); }
+  }
   send(m) { try { if (this.ws?.readyState === 1) this.ws.send(JSON.stringify(m)); } catch { /* closed */ } }
-  close() { this.closed = true; try { this.ws?.close(1000, 'bye'); } catch { /* fine */ } this.ws = null; }
+  detachSocket() { const ws = this.ws; this.ws = null; try { ws?.close(1000,'bye'); } catch { /* gone */ } }
+  close() { this.closed = true; this.reconnecting = false; this.detachSocket(); $('twConnection').hidden = true; }
   now() { return Date.now() + this.offset; }
   raceTime() { return this.state?.startAt ? (this.now() - this.state.startAt) / 1000 : -3; }
   get myTeam() { const p = this.state?.players?.find((x) => x.id === this.me); return this.state?.mode === 'teams' ? p?.team ?? null : null; }
@@ -392,11 +440,14 @@ class TowerOnline {
   leader() { let best = null; for (const [id, p] of this.snaps) if (id !== this.me && (!best || p.z > best.z)) best = p; return best; }
   message(m) {
     if (m.type === 'state') { const prev = this.state; this.state = m.state; this.paint(prev); }
-    if (m.type === 'snap' && this.run) for (const row of m.p) {
+    if (m.type === 'snap' && this.run) {
+      for (const row of m.p) {
       const [id, x, y, z, ry, a] = row; if (id === this.me) continue;
       const prev = this.snaps.get(id), now = performance.now(), dt = prev ? Math.max(0.05, (now - prev.at) / 1000) : 1;
       this.snaps.set(id, { id, x, y, z, at: now, vx: prev ? (x - prev.x) / dt : 0, vz: prev ? (z - prev.z) / dt : 0 });
       scene?.target(id, x, y, z, ry, POSES[a] || 'run');
+      }
+      this.placeHud();
     }
     if (m.type === 'gesture' && m.id !== this.me) { scene?.emote(m.id, m.e); audio.fx(m.e); }
     if (m.type === 'pushed' && game?.online === this && !game.done) game.runner.shove(m.nx, m.nz);
@@ -407,7 +458,13 @@ class TowerOnline {
     const started = s.status === 'playing' && (!prev || prev.status !== 'playing' || prev.round !== s.round);
     if (started) this.begin();
     if (s.status === 'lobby') lobbyView(s, this);
-    if (this.run) this.placeHud();
+    if (this.run) {
+      const own = s.players.find(p => p.id === this.me);
+      if (own?.fin != null) this.run.finishPending = false;
+      else if(this.resumeData && this.run.done && this.run.runner.finished)this.run.finishPending = true;
+      this.resumeData = null;
+      this.placeHud();
+    }
     if (s.status === 'between' || s.status === 'finished') roundView(s, this);
   }
   begin() {
@@ -419,19 +476,36 @@ class TowerOnline {
     for (const p of s.players) if (p.id !== this.me && !p.out) scene?.addRunner(p.id, p.look || {}, p.name, false, s.mode === 'teams' ? p.team : null);
     toast(MODES[s.mode] + (s.mode === 'elim' ? ': يتأهل أول ' + s.qualify : s.mode === 'teams' ? ': مراكزكم تنجمع للفريق' : ': أول واحد يوصل القمة'), 3000);
   }
-  attach(run) { this.run = run; }
+  attach(run) { this.run = run; $('twProgOthers').replaceChildren(); this.progressMarkers = new Map(); }
   detach() { this.run = null; }
-  frame(run, t) { if (t > -0.5 && performance.now() - run.sent > 95 && !run.done) { run.sent = performance.now(); const r = run.runner; this.send({ type: 'pos', x: +r.x.toFixed(2), y: +r.y.toFixed(2), z: +r.z.toFixed(2), ry: +r.ry.toFixed(2), a: Math.max(0, POSES.indexOf(r.anim)), cp: r.cp }); } }
-  finished() { this.send({ type: 'fin' }); toast('وصلت! انتظر الباقين…', 2600); }
+  frame(run, t) {
+    if (t <= -.5 || this.state?.status !== 'playing' || (run.done && !run.finishPending)) return;
+    const now = performance.now();
+    if (now-run.sent < (run.finishPending ? 350 : 95)) return;
+    run.sent = now;
+    const r = run.runner;
+    this.send({type:'pos', x:+r.x.toFixed(2), y:+r.y.toFixed(2), z:+r.z.toFixed(2), ry:+r.ry.toFixed(2), a:Math.max(0,POSES.indexOf(r.anim)), cp:r.cp});
+    if (run.finishPending) this.send({type:'fin'});
+  }
+  finished() { if(this.run)this.run.finishPending = true; toast('وصلت! انتظر الباقين…', 2600); }
   placeHud() {
     const s = this.state, done = s.players.filter((p) => p.fin != null).length;
-    $('twFalls').textContent = s.mode === 'elim' ? done + '/' + s.qualify + ' تأهلوا' : done + '/' + s.players.length + ' وصلوا';
-    const prog = $('twProgOthers'); prog.replaceChildren();
-    for (const [id, p] of this.snaps) { const d = el('i'); d.style.insetInlineStart = Math.max(0, Math.min(1, p.z / (this.run?.course.finish.z || 1))) * 100 + '%'; prog.append(d); }
+    const summary = s.mode === 'elim' ? done + '/' + s.qualify + ' تأهلوا' : done + '/' + s.players.length + ' وصلوا';
+    if ($('twFalls').textContent !== summary) $('twFalls').textContent = summary;
+    const prog = $('twProgOthers'), markers = this.progressMarkers ||= new Map();
+    for (const [id, mark] of markers) if (!this.snaps.has(id)) {mark.remove(); markers.delete(id);}
+    for (const [id, p] of this.snaps) {
+      let mark = markers.get(id);
+      if (!mark) {mark=el('i');markers.set(id,mark);prog.append(mark);}
+      mark.style.insetInlineStart = Math.max(0, Math.min(1, p.z / (this.run?.course.finish.z || 1))) * 100 + '%';
+    }
   }
 }
 let online = null;
-function leaveOnline() { online?.send({ type: 'leave' }); online?.close(); online = null; game?.end?.(); body.classList.remove('tw-online'); $('twRound').hidden = true; show('twOnline'); onlineView(); }
+function leaveOnline(explicit = true) {
+  if (online?.code) $('twCode').value = online.code;
+  if (explicit !== false) online?.send({ type: 'leave' });
+  if (!LINK?.embedded) { const url = new URL(location.href); url.searchParams.delete('room'); history.replaceState(null,'',url); } online?.close(); online = null; game?.end?.(); body.classList.remove('tw-online'); $('twRound').hidden = true; show('twOnline'); onlineView(); }
 function onlineView() {
   $('twOnlineHome').hidden = false; $('twRoomBox').hidden = true;
   doc.querySelectorAll('#twOnline [data-tw-mode]').forEach((b) => b.classList.toggle('on', b.dataset.twMode === save.mode));
@@ -441,11 +515,12 @@ function lobbyView(s, o) {
   show('twOnline'); $('twOnlineHome').hidden = true; $('twRoomBox').hidden = false;
   $('twRoomCode').textContent = s.party ? 'غرفة الأصدقاء' : s.quick ? 'سباق عام' : s.code; $('twRoomMode').textContent = MODES[s.mode] + ' · ' + s.players.length + '/' + s.capacity;
   const list = $('twRoomPlayers'); list.replaceChildren();
-  for (const p of s.players) { const li = el('li', p.id === o.me ? 'me' : ''); li.append(face(p.user, p.look, p.name), el('b', '', p.name), el('small', '', p.host ? 'صاحب الغرفة' : p.ready ? 'جاهز' : '')); if (s.mode === 'teams') li.dataset.team = p.team; list.append(li); }
+  for (const p of s.players) { const li = el('li', p.id === o.me ? 'me' : ''); li.append(face(p.user, p.look, p.name), el('b', '', p.name), el('small', '', !p.connected ? 'يعيد الاتصال' : p.host ? 'صاحب الغرفة' : p.ready ? 'جاهز' : '')); if (s.mode === 'teams') li.dataset.team = p.team; list.append(li); }
   const me = s.players.find((p) => p.id === o.me);
-  $('twRoomStart').hidden = !me?.host || s.quick; $('twRoomStart').disabled = s.players.length < 2;
+  const present = s.players.filter(p=>p.connected).length;
+  $('twRoomStart').hidden = !me?.host || s.quick || Boolean(s.party); $('twRoomStart').disabled = present < 2 || (s.mode === 'teams' && present % 2 !== 0);
   $('twRoomShare').hidden = s.quick || Boolean(s.party); $('twRoomFriend').hidden = s.quick || Boolean(s.party);
-  $('twRoomNote').textContent = s.party ? 'السباق يبدأ أول ما يدخل كل أصحابك (أو بعد شوي)' : s.quick ? (s.startsIn ? 'السباق يبدأ بعد ' + Math.max(1, Math.ceil((s.startsIn - o.now()) / 1000)) + ' ثانية' : 'ندوّر لك على لاعبين…') : me?.host ? (s.players.length < 2 ? 'ادعُ صديق من قائمة أصحابك أو شارك الرابط. تقدر تبدأ أول ما يدخل واحد.' : 'اضغط ابدأ لما يكتمل أصحابك') : 'انتظر صاحب الغرفة يبدأ';
+  $('twRoomNote').textContent = me?.host && s.mode==='teams' && present>1 && present%2 ? 'طور الفرق يحتاج عددًا زوجيًا. ادعُ لاعبًا آخر.' : s.party ? 'السباق يبدأ أول ما يدخل كل أصحابك (أو بعد شوي)' : s.quick ? (s.startsIn ? 'السباق يبدأ بعد ' + Math.max(1, Math.ceil((s.startsIn - o.now()) / 1000)) + ' ثانية' : 'ندوّر لك على لاعبين…') : me?.host ? (s.players.length < 2 ? 'ادعُ صديق من قائمة أصحابك أو شارك الرابط. تقدر تبدأ أول ما يدخل واحد.' : 'اضغط ابدأ لما يكتمل أصحابك') : 'انتظر صاحب الغرفة يبدأ';
   clearTimeout(lobbyView.timer); if (s.quick && s.startsIn) lobbyView.timer = setTimeout(() => o.state?.status === 'lobby' && lobbyView(o.state, o), 500);
 }
 function roundView(s, o) {
@@ -457,12 +532,27 @@ function roundView(s, o) {
   rows.forEach((p) => { const li = el('li', (p.id === o.me ? 'me ' : '') + (p.out ? 'out' : '')); if (s.mode === 'teams') li.dataset.team = p.team; li.append(el('b', '', p.place ? '#' + p.place : '—'), el('span', 'tw-who'), el('small', '', p.fin != null ? fmt(p.fin) : p.out ? 'طلع' : 'ما وصل'), el('em', '', p.points ? '+' + p.points : '')); li.querySelector('.tw-who').append(face(p.user, p.look, p.name), el('bdi', '', p.name)); list.append(li); });
   $('twRoundNote').textContent = final ? (me?.points ? 'نقاطك للمتصدرين: +' + me.points : '') + (account() ? '' : ' — سجّل دخول عشان تنحسب نقاطك') : 'الجولة الجاية تبدأ بعد شوي';
   const host = s.players.find((p) => p.id === o.me)?.host; $('twRoundAgain').hidden = !final || Boolean(s.party) || (!s.quick && !host); $('twRoundParty').hidden = !final || !PARTY || Boolean(LINK?.embedded); $('twRoundAgain').querySelector('b').textContent = s.quick ? 'سباق ثاني' : 'جولة ثانية بنفس الغرفة'; $('twRoundLeave').hidden = false;
-  if (final && !o.paid) { o.paid = true; save.wallet += me?.gems || 0; persist(); lobby(); }
+  if (final && !o.paid) {
+    o.paid = true;
+    const receipt = s.code + ':' + s.seed + ':' + (s.match ?? '');
+    const recent = Array.isArray(save.paidOnline) ? save.paidOnline : [];
+    if (!recent.includes(receipt) && me?.gems) {
+      save.paidOnline = [...recent.slice(-79),receipt];save.wallet += me.gems;persist();
+    }
+    lobby();
+  }
 }
-async function goQuick() {
-  try { $('twQuick').disabled = true; online = new TowerOnline(); await online.quick(save.mode); }
-  catch (e) { toast(e.message || 'ما قدرنا نوصل للسيرفر', 6000); online = null; } finally { $('twQuick').disabled = false; }
+let joining = null;
+async function enterRoom(action) {
+  if (joining || online?.state?.status === 'lobby') return;
+  const client = joining = online = new TowerOnline();
+  const buttons=['twQuick','twCreate','twJoin'].map($);
+  buttons.forEach(b=>{b.disabled=true;});
+  try {await action(client);}
+  catch(error) {if (online === client) {toast(error.message,6000);client.close();online=null;}}
+  finally {if (joining===client) {joining=null;buttons.forEach(b=>{b.disabled=false;});}}
 }
+function goQuick(){return enterRoom(client=>client.quick(save.mode));}
 
 /* ------------------------------------------------------------------ leaderboard */
 async function openBoard(period = 'week') {
@@ -498,8 +588,8 @@ doc.querySelectorAll('#twWardrobe [data-ward-tab]').forEach((b) => { b.onclick =
 doc.querySelectorAll('#twBoard [data-tw-board]').forEach((b) => { b.onclick = () => openBoard(b.dataset.twBoard); });
 doc.querySelectorAll('#twOnline [data-tw-mode]').forEach((b) => { b.onclick = () => { save.mode = b.dataset.twMode; persist(); onlineView(); }; });
 $('twQuick').onclick = goQuick;
-$('twCreate').onclick = async () => { const b = $('twCreate'); if (b.disabled) return; b.disabled = true; b.textContent = 'نفتح الغرفة…'; try { online = new TowerOnline(); await online.create(save.mode, Number($('twCapacity').value) || 8); } catch (e) { toast(e.message, 6000); online?.close(); online = null; } finally { b.disabled = false; b.textContent = 'افتح غرفة'; } };
-$('twJoin').onclick = async () => { const code = $('twCode').value.replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 1632)).replace(/\D/g, ''); if (code.length !== 6) { toast('الكود ستة أرقام'); return; } try { online = new TowerOnline(); await online.join(code); } catch (e) { toast(e.message, 6000); online?.close(); online = null; } };
+$('twCreate').onclick = async () => { const b = $('twCreate'); if (b.disabled) return; b.textContent = 'نفتح الغرفة…'; try {await enterRoom(client=>client.create(save.mode, Number($('twCapacity').value) || 8));} finally {b.textContent='افتح غرفة';} };
+$('twJoin').onclick = async () => { const code = normalizeRoomCode($('twCode').value); if (code.length !== 6) { toast('الكود ستة أرقام'); return; } await enterRoom(client=>client.join(code)); };
 $('twRoomStart').onclick = () => online?.send({ type: 'start' });
 $('twRoomShare').onclick = async () => { const url = location.origin + '/tower?room=' + online?.code; try { if (navigator.share) await navigator.share({ title: 'برج التحديات', text: 'تعال سابقني في برج التحديات! الكود ' + online?.code, url }); else { await navigator.clipboard.writeText(url); toast('نسخنا الرابط'); } } catch { /* cancelled */ } };
 // 33.18.1: a direct invitation to a friend (it pops up on their screen), beside the shareable link
@@ -509,7 +599,12 @@ $('twRoundLeave').onclick = leaveOnline;
 $('twRoundAgain').onclick = () => { if (online?.state && !online.state.quick) { online.send({ type: 'start' }); return; } leaveOnline(); goQuick(); };
 $('twPauseBtn').onclick = () => (game?.solo ? pause() : null);
 $('twResume').onclick = resume;
-$('twRestart').onclick = () => { resume(); const n = game?.level?.n; game?.end(); if (n) play(n); };
+$('twRestart').onclick = () => {
+  const active=game;
+  if (!active?.solo) return;
+  resume();active.end();
+  startRun({kind:active.kind,course:active.course,level:active.level,key:active.key,title:active.title});
+};
 $('twQuit').onclick = () => { resume(); game?.end(); show('twLobby'); lobby(); };
 $('twSound').onclick = () => { save.sound = save.sound === false; persist(); audio.sfx = save.sound; settingsView(Boolean(game)); };
 $('twResClose').onclick = () => { $('twResult').hidden = true; game?.end(); show('twLobby'); lobby(); };
@@ -517,12 +612,12 @@ doc.addEventListener('visibilitychange', () => { if (doc.hidden && game?.solo &&
 
 // an invite link (or the friends' room) opens its room straight away
 const PARTY = (new URLSearchParams(location.search).get('party') || '').replace(/\D/g, '').slice(0, 6);
-const params = new URLSearchParams(location.search), invite = (params.get('room') || '').replace(/\D/g, '');
+const params = new URLSearchParams(location.search), invite = normalizeRoomCode(params.get('room'));
 // a round of «الغرف»: a guest races under the name the group room knows (that is how the result finds
 // them), and inside the group room's frame the room itself is the way out, so the page's own exits hide
 const LINK = globalThis.BS_PARTY_LINK || null;
 if (LINK?.name && !account()) $('twName').value = LINK.name;
 if (LINK?.embedded) body.classList.add('tw-embedded');
 show('twLobby'); lobby();
-if (invite.length === 6) { show('twOnline'); onlineView(); online = new TowerOnline(); online.join(invite).catch((e) => { toast(e.message, 6000); online?.close(); online = null; }); }
+if (invite.length === 6) { show('twOnline'); onlineView(); enterRoom(client=>client.join(invite)); }
 globalThis.BS_TOWER = Object.freeze({ play, openMap, levels: LEVELS.length, get state() { return { level: game?.level?.n || null, t: game ? game.clock() : null, runner: game ? { x: game.runner.x, y: game.runner.y, z: game.runner.z, cp: game.runner.cp, falls: game.runner.falls, finished: game.runner.finished } : null }; } });
