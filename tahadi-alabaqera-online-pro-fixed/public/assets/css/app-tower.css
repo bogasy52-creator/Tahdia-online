@@ -295,3 +295,29 @@ body.tower-page .tw-friends-banner i{font:normal 28px/1 system-ui;color:#ffd780}
 body.tower-page .tw-modes{grid-template-columns:repeat(2,minmax(0,1fr))}
 body.tower-page #twRoomReady[aria-pressed="true"]{color:#d5ffdf;border-color:#6ee0a3}
 body.tower-page #twPrivate select{max-width:54%}
+/* 33.21.2: the online result — a podium for the first three, your own line, then the rest */
+body.tower-page #twRound .tw-modal-card{gap:12px;padding-top:22px}
+body.tower-page #twRound .tw-modal-card.tw-won{border-color:var(--tw-gold);box-shadow:0 0 0 4px #ffcf4533,0 24px 60px #000a}
+body.tower-page #twRound .tw-modal-card.tw-won h2{font-size:30px}
+body.tower-page .tw-round-sub{margin:-6px 0 0;text-align:center;font-size:14px;font-weight:700;color:var(--tw-soft)}
+body.tower-page .tw-podium{display:grid;grid-template-columns:repeat(3,1fr);align-items:end;gap:8px;margin-top:4px;direction:ltr}
+body.tower-page .tw-step{display:grid;justify-items:center;gap:4px;min-width:0;direction:rtl;animation:tw-rise .35s ease-out both}
+body.tower-page .tw-step-1{animation-delay:.15s}body.tower-page .tw-step-3{animation-delay:.08s}
+body.tower-page .tw-step .tw-medal{font-size:24px;line-height:1}
+body.tower-page .tw-step .tw-swatch{width:44px;height:44px}
+body.tower-page .tw-step-1 .tw-swatch{width:58px;height:58px;box-shadow:0 0 0 3px var(--tw-gold),0 6px 16px #0007}
+body.tower-page .tw-step bdi{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;font-size:14px}
+body.tower-page .tw-step small{min-height:16px;font-size:12px;color:var(--tw-soft)}
+body.tower-page .tw-plinth{display:grid;place-items:center;width:100%;border-radius:14px 14px 6px 6px;background:linear-gradient(180deg,#ffffff2b,#ffffff0d);border:1px solid var(--tw-line);font-size:20px;font-weight:900}
+body.tower-page .tw-step-1 .tw-plinth{height:74px;background:linear-gradient(180deg,#ffe486,var(--tw-gold2));color:#3a1d00;border:0}
+body.tower-page .tw-step-2 .tw-plinth{height:54px}
+body.tower-page .tw-step-3 .tw-plinth{height:40px}
+body.tower-page .tw-step.me bdi{color:var(--tw-gold)}
+body.tower-page .tw-round-mine{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px;border-radius:16px;background:#ffcf4514;border:1px solid #ffcf4566}
+body.tower-page .tw-round-mine div{display:grid;justify-items:center;gap:2px;min-width:0}
+body.tower-page .tw-round-mine small{font-size:11.5px;color:var(--tw-soft)}
+body.tower-page .tw-round-mine b{font-size:15px;white-space:nowrap}
+body.tower-page #twRound .tw-board{margin-top:0;max-height:34dvh;overflow-y:auto}
+body.tower-page #twRound .tw-board li[data-team="0"]{box-shadow:inset -4px 0 0 #4a8dff}
+body.tower-page #twRound .tw-board li[data-team="1"]{box-shadow:inset -4px 0 0 #ff4a5a}
+@media (prefers-reduced-motion:reduce){body.tower-page .tw-step{animation:none}}

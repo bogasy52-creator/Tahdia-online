@@ -50,7 +50,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.21.1';
+const RELEASE='33.21.2';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -636,7 +636,7 @@ export default {
       if(url.pathname==='/api/tower/board'&&request.method==='GET'){const auth=await authenticate(request,env).catch(()=>null),period=['all','day'].includes(url.searchParams.get('period'))?url.searchParams.get('period'):'week';return await env.ROOMS.get(env.ROOMS.idFromName('tower:board')).fetch('https://tower.internal/board?period='+period+(auth?.username?'&me='+encodeURIComponent(auth.username):''));}
       const m=url.pathname.match(/^\/api\/tower\/rooms\/(04\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
       const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
-      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
+      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);/* 33.21.2: an expired sign-in races as a guest instead of failing to open the room */if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
       return await env.ROOMS.get(env.ROOMS.idFromName('tower:'+m[1])).fetch(new Request('https://tower.internal/'+m[2]+url.search,{headers:h}));
     }
     // 33.21.1: «عشر ثواني» live: a public table, a friends room, and the room's socket

@@ -2,17 +2,18 @@
    A hundred levels on your own (no waiting), and races for 2 to 8 in public or private rooms:
    سباق (first to the top), إقصاء (rounds until one is left) and فرق (two teams add up their places).
    Stars and gems unlock characters and outfits; progress is kept on this device. */
-import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, worldById, starsFor, STAR_MAX, dailyLevel, dailyCourse, dayKey, nextDayAt, seasonOf, seasonLevel, seasonCourse, sectionName, sectionTip } from './course.js?v=33.21.1';
-import { TowerAudio } from './audio.js?v=33.21.1';
+import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, worldById, starsFor, STAR_MAX, dailyLevel, dailyCourse, dayKey, nextDayAt, seasonOf, seasonLevel, seasonCourse, sectionName, sectionTip } from './course.js?v=33.21.2';
+import { TowerAudio } from './audio.js?v=33.21.2';
 import { normalizeRoomCode } from '../online/connection-utils.js';
-import { SEASONS } from './course.js?v=33.21.1';
+import { SEASONS } from './course.js?v=33.21.2';
 const SEASON_NAMES = Object.freeze(Object.fromEntries(SEASONS.map((x) => [x.id, x.name])));
-import { Runner } from './physics.js?v=33.21.1';
-import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.21.1';
+import { Runner } from './physics.js?v=33.21.2';
+import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.21.2';
 
 const doc = document, $ = (id) => doc.getElementById(id), body = doc.body;
 const el = (tag, cls, text) => { const n = doc.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
-const fmt = (s) => { s = Math.max(0, s); const m = Math.floor(s / 60), r = s - m * 60; return (m ? m + ':' + String(Math.floor(r)).padStart(2, '0') : Math.floor(r)) + '.' + Math.floor((r % 1) * 10); };
+// 33.21.2: counted in tenths, so 41.3 no longer shows as 41.2
+const fmt = (s) => { const d = Math.round(Math.max(0, s) * 10), m = Math.floor(d / 600), r = Math.floor(d / 10) - m * 60; return (m ? m + ':' + String(r).padStart(2, '0') : r) + '.' + (d % 10); };
 
 /* ------------------------------------------------------------------ saved progress */
 const SAVE = 'bs-tower-v1';
@@ -144,7 +145,8 @@ class Run {
     input.jump = false; input.dash = false;
     for (const e of r.events.splice(0)) this.event(e, t);
     if (this.solo && t >= 0 && !this.done && t >= this.rec.length * 0.1) this.rec.push([r.x, r.y, r.z, r.ry, Math.max(0, POSES.indexOf(r.anim))]);
-    if (this.me) { Object.assign(this.me, { x: r.x, y: r.y, z: r.z, ry: r.ry, anim: r.anim }); this.me.phase = r.run; }
+    // 33.21.2: once at the top (or knocked out) the runner stands there instead of running in place
+    if (this.me) { Object.assign(this.me, { x: r.x, y: r.y, z: r.z, ry: r.ry, anim: this.pose() }); this.me.phase = r.run; }
     scene.update(Math.max(0, t), dt, r);
     if (this.ghost?.rows) scene.moveGhost(ghostAt(this.ghost.rows, t), dt, t);
     if (this.spectate && this.online) { const o = this.online.leader(); if (o) scene.follow(o.x, o.y, o.z, dt); } else scene.follow(r.x, r.y, r.z, dt, t < 0 ? Math.min(1, -t / 3.2) : 0);
@@ -179,6 +181,7 @@ class Run {
       case 'finish': this.finish(t); break;
     }
   }
+  pose() { return this.done || this.out ? 'idle' : this.runner.anim; }
   hud() {
     const L = this.level, r = this.runner;
     $('twTitle').textContent = this.kind === 'level' && L ? 'المرحلة ' + L.n + ' · ' + L.title : this.title || this.online?.title() || 'سباق';
@@ -189,8 +192,10 @@ class Run {
     $('twCheckpoint').textContent = next ? sectionName(next,this.course.world) : 'القمة أمامك';
   }
   finish(t) {
-    if (this.done) return; this.done = true; SFX.win(); audio.intensity(0); buzz([20, 40, 20]); scene.burst(this.runner.x, this.runner.y + 2, this.runner.z, '#ffd45a', 60);
-    if (this.online) { this.online.finished(); return; }
+    if (this.done) return; this.done = true; audio.intensity(0); const r0 = this.runner; r0.vx = r0.vz = 0;
+    // 33.21.2: online, reaching the top is not winning — the fanfare waits for the room to say who was first
+    if (this.online) { SFX.cp(); buzz(20); scene.burst(r0.x, r0.y + 2, r0.z, '#ffd45a', 30); this.online.finished(); return; }
+    SFX.win(); buzz([20, 40, 20]); scene.burst(r0.x, r0.y + 2, r0.z, '#ffd45a', 60);
     const c = this.course, gemsNow = this.runner.gems, stars = starsFor(c, t, gemsNow.size);
     const prior = this.ghost?.t, beat = prior ? prior - t : null;
     if (this.key && (!prior || t < prior)) keepGhost(this.key, t, this.rec);
@@ -467,6 +472,12 @@ class TowerOnline {
     if (s.status === 'lobby') lobbyView(s, this);
     if (this.run) {
       const own = s.players.find(p => p.id === this.me);
+      const before = prev?.players?.find(p => p.id === this.me);
+      if (own?.fin != null && before && before.fin == null && s.status === 'playing') {
+        // 33.21.2: the room confirmed the time; say the real place (and only the first is told they lead)
+        const place = s.players.filter(p => p.fin != null && p.fin <= own.fin).length, left = s.players.filter(p => p.fin == null && !p.out).length;
+        toast(s.mode === 'elim' && s.final === false ? (place <= s.qualify ? 'تأهلت! مركزك ' + place : 'وصلت متأخر · مركزك ' + place) : place === 1 ? '🥇 أنت الأول! ' + (left ? 'ننتظر الباقين…' : '') : 'وصلت في المركز ' + place + (left ? ' · ننتظر الباقين…' : ''), 3200);
+      }
       if (own?.fin != null) this.run.finishPending = false;
       else if(this.resumeData && this.run.done && this.run.runner.finished)this.run.finishPending = true;
       this.resumeData = null;
@@ -475,7 +486,7 @@ class TowerOnline {
     if (s.status === 'between' || s.status === 'finished') roundView(s, this);
   }
   begin() {
-    const s = this.state, players = s.players.length, course = roundCourse(s.seed, s.round, players, s), slot = Math.max(0, s.players.findIndex((p) => p.id === this.me));
+    const s = this.state, seats = s.seats || s.players.length, course = roundCourse(s.seed, s.round, seats, s), slot = Math.max(0, s.players.findIndex((p) => p.id === this.me)) % Math.max(1, seats);
     $('twResult').hidden = true; $('twRound').hidden = true; show('twHud'); body.dataset.world = course.world; body.classList.add('tw-online');
     game?.end?.(); this.paid = false; game = new Run({ course, solo: false, online: this, slot }); this.snaps.clear();
     const me = s.players.find((p) => p.id === this.me);
@@ -491,10 +502,10 @@ class TowerOnline {
     if (now-run.sent < (run.finishPending ? 350 : 95)) return;
     run.sent = now;
     const r = run.runner;
-    this.send({type:'pos', x:+r.x.toFixed(2), y:+r.y.toFixed(2), z:+r.z.toFixed(2), ry:+r.ry.toFixed(2), a:Math.max(0,POSES.indexOf(r.anim)), cp:r.cp});
+    this.send({type:'pos', x:+r.x.toFixed(2), y:+r.y.toFixed(2), z:+r.z.toFixed(2), ry:+r.ry.toFixed(2), a:Math.max(0,POSES.indexOf(run.pose())), cp:r.cp});
     if (run.finishPending) this.send({type:'fin'});
   }
-  finished() { if(this.run)this.run.finishPending = true; toast('وصلت! انتظر الباقين…', 2600); }
+  finished() { if(this.run)this.run.finishPending = true; toast('وصلت القمة! نتأكد من مركزك…', 2600); }
   placeHud() {
     const s = this.state, done = s.players.filter((p) => p.fin != null).length;
     const summary = s.mode === 'elim' ? done + '/' + s.qualify + ' تأهلوا' : done + '/' + s.players.length + ' وصلوا';
@@ -544,15 +555,53 @@ function lobbyView(s, o) {
   $('twRoomNote').textContent = me?.host && s.mode==='teams' && present>1 && present%2 ? 'طور الفرق يحتاج عددًا زوجيًا. ادعُ لاعبًا آخر.' : s.party ? 'تبدأ الجولة عند اكتمال أصحابك أو انتهاء الانتظار' : s.quick ? (s.startsIn ? 'السباق يبدأ بعد ' + Math.max(1, Math.ceil((s.startsIn - o.now()) / 1000)) + ' ثانية' : 'ندوّر لك على لاعبين…') : me?.host ? (s.players.length < 2 ? 'ادعُ صديق من قائمة أصحابك أو شارك الرابط. تقدر تبدأ أول ما يدخل واحد.' : 'اضغط ابدأ لما يكتمل أصحابك') : 'انتظر صاحب الغرفة يبدأ';
   clearTimeout(lobbyView.timer); if (s.quick && s.startsIn) lobbyView.timer = setTimeout(() => o.state?.status === 'lobby' && lobbyView(o.state, o), 500);
 }
+// 33.21.2: the result, laid out: who won on a podium, your own place and time, then everyone else
 function roundView(s, o) {
-  const box = $('twRound'); box.hidden = false; const me = s.players.find((p) => p.id === o.me);
-  const final = s.status === 'finished';
-  $('twRoundTitle').textContent = final ? (s.mode === 'teams' ? (s.winnerTeam === me?.team ? 'فاز فريقك!' : 'فاز الفريق الثاني') : me?.place === 1 ? 'أنت البطل!' : 'انتهى السباق') : me?.out ? 'طلعت من السباق' : 'تأهلت للجولة الجاية!';
+  const box = $('twRound'), card = box.querySelector('.tw-modal-card'), wasHidden = box.hidden; box.hidden = false;
+  const me = s.players.find((p) => p.id === o.me), final = s.status === 'finished';
+  const rows = s.players.slice().sort((a, b) => (a.place || 99) - (b.place || 99) || (a.out - b.out));
+  const anyFin = s.players.some((p) => p.fin != null), ended = s.ended || (anyFin ? 'done' : 'time');
+  const iWon = final && me && (s.mode === 'teams' ? s.winnerTeam != null && s.winnerTeam === me.team : me.place === 1 && (me.fin != null || s.mode === 'elim')) && ended !== 'abandoned';
+  const champ = rows[0], champWon = champ && (champ.fin != null || s.mode === 'elim');
+  let title, sub = '';
+  if (!final) { title = me?.out ? 'طلعت من السباق' : 'تأهلت للجولة الجاية!'; sub = 'تأهل أول ' + s.qualify + ' للجولة الجاية'; }
+  else if (ended === 'abandoned') { title = 'انتهى السباق'; sub = 'الكل طلع قبل لا يخلص السباق، فما انحسبت نقاط'; }
+  else if (s.mode === 'teams') { title = iWon ? 'فاز فريقك! 🏆' : 'فاز الفريق ' + (s.winnerTeam === 1 ? 'الأحمر' : 'الأزرق'); sub = 'مراكز الفريق تنجمع، والأعلى يفوز'; }
+  else if (iWon) title = 'أنت البطل! 🏆';
+  else if (ended === 'time' && s.mode !== 'elim') { title = 'خلص الوقت'; sub = 'محد وصل القمة، والترتيب حسب أبعد واحد'; }
+  else if (me?.fin != null) title = 'وصلت في المركز ' + me.place;
+  else title = 'انتهى السباق';
+  if (final && !sub && champ && champWon && !iWon) sub = 'الفائز: ' + champ.name + (champ.fin != null ? ' · ' + fmt(champ.fin) : '');
+  card.classList.toggle('tw-won', Boolean(iWon)); card.classList.toggle('tw-final', final);
+  $('twRoundTitle').textContent = title; $('twRoundSub').textContent = sub; $('twRoundSub').hidden = !sub;
+  // the podium: the first three of a finished race (a time-out race has no podium)
+  const podium = $('twRoundPodium'); podium.replaceChildren();
+  const top = final && ended !== 'abandoned' && s.mode !== 'teams' ? rows.filter((p) => p.place && p.place <= 3 && (p.fin != null || s.mode === 'elim')) : [];
+  podium.hidden = !top.length;
+  for (const p of [top[1], top[0], top[2]]) {
+    if (!p) continue;
+    const step = el('div', 'tw-step tw-step-' + p.place + (p.id === o.me ? ' me' : ''));
+    step.append(el('span', 'tw-medal', ['🥇', '🥈', '🥉'][p.place - 1]), face(p.user, p.look, p.name), el('bdi', '', p.name), el('small', '', p.fin != null ? fmt(p.fin) : ''), el('b', 'tw-plinth', String(p.place)));
+    podium.append(step);
+  }
+  // your own line, always in sight
+  const mine = $('twRoundMine'); mine.replaceChildren(); mine.hidden = !final || !me;
+  if (final && me) {
+    const cell = (k, v) => { const d = el('div'); d.append(el('small', '', k), el('b', '', v)); return d; };
+    mine.append(cell('مركزك', me.place ? me.place + ' من ' + s.players.length : '—'), cell('وقتك', me.fin != null ? fmt(me.fin) : me.out ? 'طلعت' : 'ما وصلت'), cell('نقاط', me.points ? '+' + me.points : '0'), cell('جواهر', me.gems ? '+' + me.gems + ' 💎' : '0'));
+  }
   const list = $('twRoundList'); list.replaceChildren();
-  const rows = s.players.slice().sort((a, b) => (a.place || 99) - (b.place || 99));
-  rows.forEach((p) => { const li = el('li', (p.id === o.me ? 'me ' : '') + (p.out ? 'out' : '')); if (s.mode === 'teams') li.dataset.team = p.team; li.append(el('b', '', p.place ? '#' + p.place : '—'), el('span', 'tw-who'), el('small', '', p.fin != null ? fmt(p.fin) : p.out ? 'طلع' : 'ما وصل'), el('em', '', p.points ? '+' + p.points : '')); li.querySelector('.tw-who').append(face(p.user, p.look, p.name), el('bdi', '', p.name)); list.append(li); });
-  $('twRoundNote').textContent = final ? (me?.points ? 'نقاطك للمتصدرين: +' + me.points : '') + (account() ? '' : ' — سجّل دخول عشان تنحسب نقاطك') : 'الجولة الجاية تبدأ بعد شوي';
-  const host = s.players.find((p) => p.id === o.me)?.host; $('twRoundAgain').hidden = !final || Boolean(s.party) || (!s.quick && !host); $('twRoundParty').hidden = !final || !PARTY || Boolean(LINK?.embedded); $('twRoundAgain').querySelector('b').textContent = s.quick ? 'سباق ثاني' : 'جولة ثانية بنفس الغرفة'; $('twRoundLeave').hidden = false;
+  rows.forEach((p) => {
+    if (top.includes(p)) return;
+    const li = el('li', (p.id === o.me ? 'me ' : '') + (p.out ? 'out' : '')); if (s.mode === 'teams') li.dataset.team = p.team;
+    li.append(el('b', '', p.place ? String(p.place) : '—'), el('span', 'tw-who'), el('small', '', p.fin != null ? fmt(p.fin) : p.out ? 'طلع' : !p.connected ? 'انقطع' : 'ما وصل'), el('em', '', p.points ? '+' + p.points : ''));
+    li.querySelector('.tw-who').append(face(p.user, p.look, p.name), el('bdi', '', p.name + (p.id === o.me ? ' (أنت)' : '')));
+    list.append(li);
+  });
+  list.hidden = !list.children.length;
+  $('twRoundNote').textContent = final ? (account() ? '' : 'سجّل دخول عشان تنحسب نقاطك في المتصدرين') : 'الجولة الجاية تبدأ بعد شوي';
+  const host = me?.host; $('twRoundAgain').hidden = !final || Boolean(s.party) || (!s.quick && !host); $('twRoundParty').hidden = !final || !PARTY || Boolean(LINK?.embedded); $('twRoundAgain').querySelector('b').textContent = s.quick ? 'سباق ثاني' : 'جولة ثانية بنفس الغرفة'; $('twRoundLeave').hidden = false;
+  if (final && wasHidden && iWon) { SFX.win(); buzz([20, 40, 20]); }
   if (final && !o.paid) {
     o.paid = true;
     const receipt = s.code + ':' + s.seed + ':' + (s.match ?? '');

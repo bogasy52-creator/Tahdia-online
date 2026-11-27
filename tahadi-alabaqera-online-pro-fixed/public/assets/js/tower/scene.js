@@ -3,9 +3,9 @@
    light, ground far below, floating scenery and drifting particles; every challenge has its own
    pieces; runners are small toy figures with interchangeable headwear. All art is drawn here. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.21.1';
+import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.21.2';
 
-import {worldArt,paintTiles,addAtmosphere,installLandmarks,disposeArt,crystalGeometry} from './art.js?v=33.21.1';
+import {worldArt,paintTiles,addAtmosphere,installLandmarks,disposeArt,crystalGeometry} from './art.js?v=33.21.2';
 
 const TAU = Math.PI * 2;
 const col = (c) => new T.Color(c);
@@ -160,10 +160,12 @@ export function animateCharacter(fig, anim, phase, t, emote = null) {
     placeArms(fig); return;
   }
   body.rotation.y *= 0.8; head.rotation.x *= 0.8;
+  // 33.21.2: after a wave, laugh or dance the hands go back to the sides (they used to stay where the dance left them)
+  hands.forEach((h, i) => { h.position.x += ((i ? 1 : -1) * 0.55 - h.position.x) * 0.35; });
   if (anim === 'dash') { body.rotation.x = 0.55; body.position.y = 0.05; hands.forEach((h, i) => h.position.set((i ? 1 : -1) * 0.5, 0.75, 0.38)); feet[0].position.z = -0.15; feet[1].position.z = 0.2; placeArms(fig); return; }
   if (anim === 'run') { feet[0].position.z = 0.04 + s * 0.2; feet[1].position.z = 0.04 - s * 0.2; feet[0].position.y = 0.07 + Math.max(0, s) * 0.1; feet[1].position.y = 0.07 + Math.max(0, -s) * 0.1; hands[0].position.z = -s * 0.25; hands[1].position.z = s * 0.25; body.position.y = Math.abs(s) * 0.07; body.rotation.x = 0.12; }
   else if (anim === 'jump' || anim === 'fall') { feet.forEach((f, i) => { f.position.z = i ? -0.08 : 0.16; f.position.y = 0.12; }); hands.forEach((h) => { h.position.y = 0.95; h.position.z = 0; }); body.rotation.x = anim === 'jump' ? -0.1 : 0.05; body.position.y = 0; }
-  else if (anim === 'stun') { body.rotation.z = Math.sin(t * 18) * 0.25; head.rotation.y = Math.sin(t * 9) * 0.6; }
+  else if (anim === 'stun') { body.rotation.z = Math.sin(t * 18) * 0.25; head.rotation.y = Math.sin(t * 9) * 0.6; body.position.y *= 0.6; body.rotation.x *= 0.8; }
   else { feet.forEach((f) => { f.position.z = 0.04; f.position.y = 0.07; }); hands.forEach((h) => { h.position.z = 0.02; h.position.y = 0.6 + Math.sin(t * 2.4) * 0.03; }); body.position.y = Math.sin(t * 2.4) * 0.02; body.rotation.x = 0; }
   if (anim !== 'jump' && anim !== 'fall') hands.forEach((h) => { h.position.y = anim === 'run' ? 0.62 : h.position.y; });
   if (anim !== 'stun') { body.rotation.z *= 0.8; head.rotation.y *= 0.8; }
@@ -295,6 +297,13 @@ export class TowerScene {
     const m = new T.Mesh(new T.LatheGeometry(prof, 36), new T.MeshStandardMaterial({ color: W.stone, roughness: 0.8 })); m.position.set(p.x, p.y - 1, p.z + 12); m.receiveShadow = true; this.group.add(m);
     const band = new T.Mesh(new T.TorusGeometry(3.7, 0.25, 8, 40), new T.MeshStandardMaterial({ color: W.accent, emissive: W.accent, emissiveIntensity: 0.5 })); band.rotation.x = Math.PI / 2; band.position.set(p.x, p.y + 12.6, p.z + 12); this.group.add(band);
   }
+  nameTag(text, bg) {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128; const g = cv.getContext('2d');
+    let size = 64; const font = (n) => '800 ' + n + 'px Tajawal, system-ui, sans-serif'; g.font = font(size); while (size > 34 && g.measureText(text).width > 430) g.font = font(size -= 4);
+    const w = Math.min(500, g.measureText(text).width + 56); g.fillStyle = bg; g.beginPath(); if (g.roundRect) g.roundRect((512 - w) / 2, 22, w, 84, 42); else g.rect((512 - w) / 2, 22, w, 84); g.fill();
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.direction = 'rtl'; g.fillText(text, 256, 66);
+    const t = new T.CanvasTexture(cv); t.colorSpace = T.SRGBColorSpace; return t;
+  }
   label(text, fg, bg) { return canvasTex(256, (g, s) => { g.fillStyle = bg; g.beginPath(); if (g.roundRect) g.roundRect(4, s / 2 - 40, s - 8, 80, 30); else g.rect(4, s / 2 - 40, s - 8, 80); g.fill(); g.fillStyle = fg; g.font = '800 54px Tajawal, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.direction = 'rtl'; g.fillText(text, s / 2, s / 2 + 4); }); }
   columns(list, course, W) {
     if (!list.length) return;
@@ -362,9 +371,10 @@ export class TowerScene {
   addRunner(id, look, name, me = false, team = null) {
     this.removeRunner(id);
     const fig = buildCharacter(look); fig.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-    if (!me && name) { const sp = new T.Sprite(new T.SpriteMaterial({ map: this.label(name, '#fff', team === 1 ? '#c8202cdd' : team === 0 ? '#2059d8dd' : '#2a1360cc'), depthWrite: false, transparent: true })); sp.scale.set(2.4, 2.4, 1); sp.position.y = 2.25; fig.add(sp); }
+    // 33.21.2: a slim name tag (it was a big square that hid the course) that fades when the runner is close to you
+    let tag = null; if (!me && name) { tag = new T.Sprite(new T.SpriteMaterial({ map: this.nameTag(name, team === 1 ? '#c8202ccc' : team === 0 ? '#2059d8cc' : '#2a1360b3'), depthWrite: false, transparent: true })); tag.scale.set(1.7, 0.425, 1); tag.position.y = 2.0; tag.renderOrder = 2; fig.add(tag); }
     if (team !== null) { const ring = new T.Mesh(new T.TorusGeometry(0.5, 0.05, 6, 24), new T.MeshBasicMaterial({ color: team ? '#ff4a5a' : '#4a8dff' })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.03; fig.add(ring); }
-    this.scene.add(fig); const r = { fig, me, x: 0, y: 0, z: 0, ry: 0, anim: 'idle', phase: 0, tx: 0, ty: 0, tz: 0, tr: 0 }; this.runners.set(id, r); return r;
+    this.scene.add(fig); const r = { fig, me, tag, x: 0, y: 0, z: 0, ry: 0, anim: 'idle', phase: 0, tx: 0, ty: 0, tz: 0, tr: 0, vx: 0, vy: 0, vz: 0, at: 0 }; this.runners.set(id, r); return r;
   }
   removeRunner(id) { const r = this.runners.get(id); if (r) { this.scene.remove(r.fig); this.bubbles=this.bubbles.filter(b=>b.r!==r); disposeArt(r.fig,[],[saduTex,shmaghTex]); this.runners.delete(id); } }
   /** 33.19.0: your best run, running beside you as a see-through figure */
@@ -380,11 +390,19 @@ export class TowerScene {
     const r = this.runners.get(id); if (!r) return;
     const icon = { wave: '👋', laugh: '😂', dance: '💃' }[kind] || '👋';
     const tex = canvasTex(128, (g, n) => { g.fillStyle = '#ffffffee'; g.beginPath(); g.arc(n / 2, n / 2 - 6, 44, 0, TAU); g.fill(); g.beginPath(); g.moveTo(n / 2 - 10, n / 2 + 34); g.lineTo(n / 2, n / 2 + 52); g.lineTo(n / 2 + 10, n / 2 + 34); g.fill(); g.font = '56px system-ui, "Apple Color Emoji", "Noto Color Emoji"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(icon, n / 2, n / 2 - 2); });
-    const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false })); sp.scale.set(1.3, 1.3, 1); sp.position.y = r.me ? 2.7 : 3.35; r.fig.add(sp);
-    r.emote = kind; r.emoteUntil = performance.now() + 2400; this.bubbles.push({ r, sp, until: r.emoteUntil });
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false })); sp.scale.set(1.3, 1.3, 1); sp.position.y = r.me ? 2.5 : 2.75; r.fig.add(sp);
+    r.emote = kind; r.emoteUntil = performance.now() + 2400; this.bubbles.push({ r, sp, base: sp.position.y, until: r.emoteUntil });
   }
   /** A remote runner's latest reported place; drawn smoothly toward it. */
-  target(id, x, y, z, ry, anim) { const r = this.runners.get(id); if (!r) return; if (Math.hypot(r.x - x, r.z - z) > 8) { r.x = x; r.y = y; r.z = z; } Object.assign(r, { tx: x, ty: y, tz: z, tr: ry, anim }); }
+  target(id, x, y, z, ry, anim) {
+    const r = this.runners.get(id); if (!r) return;
+    // 33.21.2: keep the speed between reports, so the runner moves on between them instead of stopping and jumping
+    const now = performance.now(), gap = r.at ? Math.min(0.4, Math.max(0.05, (now - r.at) / 1000)) : 0, far = Math.hypot(r.tx - x, r.tz - z) > 6;
+    if (Math.hypot(r.x - x, r.z - z) > 8 || far || !gap) { r.x = x; r.y = y; r.z = z; r.vx = r.vy = r.vz = 0; }
+    else { r.vx = (x - r.tx) / gap; r.vy = (y - r.ty) / gap; r.vz = (z - r.tz) / gap; }
+    if (anim === 'idle') r.vx = r.vy = r.vz = 0;
+    Object.assign(r, { tx: x, ty: y, tz: z, tr: ry, anim, at: now });
+  }
   burst(x, y, z, color = '#ffd45a', n = 26) {
     n = this.low || this.reduced ? Math.min(n,12) : n;
     const pos = new Float32Array(n * 3), vel = []; for (let i = 0; i < n; i++) { pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z; vel.push([(Math.random() - 0.5) * 8, Math.random() * 7 + 2, (Math.random() - 0.5) * 8]); }
@@ -421,12 +439,24 @@ export class TowerScene {
       }
     }
     for (const rs of this.rises) { const at = me?.riseAt?.get(rs.p.id); rs.m.position.y = at === undefined ? rs.p.y0 : rs.p.y0 + rs.p.v * (t - at); rs.tex.offset.y = (t * 0.05) % 1; }
-    const nowMs = performance.now(); for (let i = this.bubbles.length - 1; i >= 0; i--) { const b = this.bubbles[i]; b.sp.position.y = 2.9 + Math.sin(nowMs / 200) * 0.05; if (nowMs > b.until) { b.r.fig.remove(b.sp);disposeArt(b.sp); if (b.r.emoteUntil <= nowMs) b.r.emote = null; this.bubbles.splice(i, 1); } }
+    const nowMs = performance.now(); for (let i = this.bubbles.length - 1; i >= 0; i--) { const b = this.bubbles[i]; b.sp.position.y = b.base + Math.sin(nowMs / 200) * 0.05; if (nowMs > b.until) { b.r.fig.remove(b.sp);disposeArt(b.sp); if (b.r.emoteUntil <= nowMs) b.r.emote = null; this.bubbles.splice(i, 1); } }
     if (this.lavaTex) { this.lavaTex.offset.x = t * 0.01; this.lavaTex.offset.y = t * 0.006; }
     // runners: mine follows the simulation, the others glide to their reports
+    // 33.21.2: poses and emotes run on the wall clock: during the countdown the race clock stands at 0,
+    // which froze a dance or a wave half way
+    const clock = nowMs / 1000, mine = [...this.runners.values()].find((x) => x.me), cam = this.camera.position;
     for (const r of this.runners.values()) {
-      if (!r.me) { const k = Math.min(1, dt * 10); r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.z += (r.tz - r.z) * k; let a = r.tr - r.ry; a = Math.atan2(Math.sin(a), Math.cos(a)); r.ry += a * k; r.phase += dt * (r.anim === 'run' ? 11 : 0); }
-      r.fig.position.set(r.x, r.y, r.z); r.fig.rotation.y = r.ry; animateCharacter(r.fig, r.anim, r.phase, t, r.emote);
+      if (!r.me) {
+        const ahead = Math.min(0.15, (nowMs - r.at) / 1000), k = 1 - Math.exp(-dt * 14);
+        r.x += (r.tx + r.vx * ahead - r.x) * k; r.y += (r.ty + Math.max(0, r.vy) * ahead - r.y) * k; r.z += (r.tz + r.vz * ahead - r.z) * k;
+        let a = r.tr - r.ry; a = Math.atan2(Math.sin(a), Math.cos(a)); r.ry += a * k; r.phase += dt * (r.anim === 'run' ? 11 : 0);
+        if (r.tag) {
+          // a runner right next to you, or between the camera and you, keeps its name faint
+          const d = Math.hypot(r.x - cam.x, r.y - cam.y, r.z - cam.z), near = mine && Math.hypot(r.x - mine.x, r.z - mine.z) < 3.2 && r.z <= mine.z + 1.5;
+          const want = near ? 0.18 : Math.max(0.2, Math.min(1, (d - 4) / 4)); r.tag.material.opacity += (want - r.tag.material.opacity) * Math.min(1, dt * 8);
+        }
+      }
+      r.fig.position.set(r.x, r.y, r.z); r.fig.rotation.y = r.ry; animateCharacter(r.fig, r.anim, r.phase, clock, r.emote);
     }
     // particles drift around the camera
     if (this.dust) { const { pos, n, kind } = this.dust, c = this.camera.position; for (let i = 0; i < n; i++) { const k = i * 3; if (kind === 'lava') pos[k + 1] += dt * 2.2; else if (kind === 'space') pos[k + 2] -= dt * 0.6; else if (kind === 'desert') pos[k] += dt * 5; else pos[k + 1] -= dt * (kind === 'ice' ? 1.6 : 0.5); for (const [a, lo, hi] of [[0, -30, 30], [1, -12, 28], [2, -10, 60]]) { const rel = pos[k + a] - (a === 0 ? c.x : a === 1 ? c.y : c.z); if (rel < lo) pos[k + a] += hi - lo; else if (rel > hi) pos[k + a] -= hi - lo; } } this.dust.pts.geometry.attributes.position.needsUpdate = true; }

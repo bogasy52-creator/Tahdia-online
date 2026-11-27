@@ -20,6 +20,8 @@ const towerWorld = world => WORLDS.some(w => w.id === world) ? world : null;
 export const TOWER_TICK = 100, TOWER_QUICK_WAIT = 12000, TOWER_COUNTDOWN = 4000, TOWER_RECONNECT = 20000, TOWER_BETWEEN = 6000;
 export const TOWER_POINTS = Object.freeze([100, 75, 60, 50, 40, 32, 26, 20]);
 export const TOWER_PARTY_WAIT = 40000;
+// 33.21.2: someone a little late (a slow phone, a slow page) still gets in during the first seconds of a race
+export const TOWER_LATE_JOIN = 15000;
 const EMOTES = new Set(['wave', 'laugh', 'dance']);
 /** 33.19.0: a daily run counts only if its recorded path could really have been run: ten samples a
     second, no jump faster than a pad or a shove allows (a fall back to a checkpoint is fine), every
@@ -74,11 +76,12 @@ export class TowerRoom {
     if (active.some(p => p.connected)) return 0;
     return Math.max(0, ...active.map(p => p.awayAt ? p.awayAt + TOWER_RECONNECT : 0));
   }
-  courseOf() { const r = this.r; if (!this.course || this.course.key !== r.seed + ':' + r.round) { this.course = roundCourse(r.seed, r.round, r.players.length, r); this.course.key = r.seed + ':' + r.round; } return this.course; }
+  // 33.21.2: the course is sized when the round starts, so someone joining late does not change it under everyone
+  courseOf() { const r = this.r, seats = r.seats || r.players.length, key = r.seed + ':' + r.round + ':' + seats; if (!this.course || this.course.key !== key) { this.course = roundCourse(r.seed, r.round, seats, r); this.course.key = key; } return this.course; }
   alive() { return this.r.players.filter((p) => !p.out); }
   view() {
     const r = this.r;
-    return { code: r.code, match: r.match, quick: r.quick, party: Boolean(r.partyLink), mode: r.mode, world: r.world ?? null, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, startAt: r.startAt, startsIn: r.status === 'lobby' && (r.quick || r.partyLink) ? r.lobbyUntil : null, qualify: r.qualify, winnerTeam: r.winnerTeam ?? null,
+    return { code: r.code, match: r.match, quick: r.quick, party: Boolean(r.partyLink), mode: r.mode, world: r.world ?? null, capacity: r.capacity, status: r.status, round: r.round, seed: r.seed, seats: r.seats || r.players.length, startAt: r.startAt, startsIn: r.status === 'lobby' && (r.quick || r.partyLink) ? r.lobbyUntil : null, qualify: r.qualify, final: Boolean(r.final), winnerTeam: r.winnerTeam ?? null, ended: r.status === 'finished' ? r.ended || 'done' : null,
       players: r.players.map((p) => ({ id: p.sid, name: p.name, user: p.bot ? null : p.username || null, look: p.look, host: Boolean(p.host), ready: Boolean(p.ready), team: p.team ?? null, fin: p.fin ?? null, place: p.place ?? null, out: Boolean(p.out), points: p.points || 0, gems: p.gems || 0, connected: p.bot ? true : Boolean(p.connected) })) };
   }
   send(ws, m) { try { ws.send(JSON.stringify(m)); } catch { /* gone */ } }
@@ -114,13 +117,17 @@ export class TowerRoom {
       if (!p && r.hostKey && read('hk.') === r.hostKey) p = r.players.find((x) => x.host && !x.bot) || null;
       if (p?.username && p.username !== username) return json({ ok: false, error: 'جلسة غير صالحة' }, 403);
       if (!p) {
-        const humans = r.players.filter((x) => !x.bot);
-        if (r.status !== 'lobby' || humans.length >= r.capacity) return json({ ok: false, error: 'الغرفة ممتلئة أو السباق بدأ' }, 409);
+        const humans = r.players.filter((x) => !x.bot), late = this.lateSeat();
+        // 33.21.2: a private room takes newcomers again once a race is over, and any race lets in
+        // someone who arrives in its first seconds (in a bot's seat if the race is full)
+        const open = r.status === 'lobby' || (r.status === 'finished' && !r.quick && !r.partyLink) || late;
+        if (!open || humans.length >= r.capacity) return json({ ok: false, error: r.status === 'lobby' || r.status === 'finished' ? 'الغرفة ممتلئة' : 'السباق بدأ من بدري، ادخل الجولة الجاية' }, 409);
         const host = !r.quick && !r.partyLink && !humans.length;
         if (host && read('hk.') !== r.hostKey) return json({ ok: false, error: 'بانتظار صاحب الغرفة' }, 403);
         p = { sid: 'a' + r.nextSid++, token: crypto.randomUUID() + crypto.randomUUID(), name: clean(req.headers.get('x-bs-name') || u.searchParams.get('name')), username, look: cleanLook(u.searchParams.get('look')), host, ready: r.quick || Boolean(r.partyLink), connected: false, bot: false, pos: [0, 0, 0, 0, 0], cp: 0, fin: null, out: false, points: 0 };
         // two players with one name are told apart
         if (r.players.some((x) => x.name === p.name)) p.name = (p.name + ' ' + (r.players.length + 1)).slice(0, 20);
+        if (late) this.seatLate(p);
         r.players.push(p);
         if (r.quick && !r.lobbyUntil) r.lobbyUntil = Date.now() + TOWER_QUICK_WAIT;
         if (r.quick && r.players.filter((x) => !x.bot).length >= r.capacity) r.lobbyUntil = Date.now() + 1500;
@@ -194,23 +201,39 @@ export class TowerRoom {
   }
 
   /* ------------------------------------------------------------ playing */
+  /** 33.21.2: a race still takes a newcomer in its first seconds (not an elimination, where rounds count). */
+  lateSeat(now = Date.now()) {
+    const r = this.r;
+    return Boolean(r && r.status === 'playing' && r.mode !== 'elim' && r.round === 0 && now < r.startAt + TOWER_LATE_JOIN);
+  }
+  seatLate(p) {
+    const r = this.r;
+    Object.assign(p, { ready: true, out: false, fin: null, cp: 0, pos: [0, 0, 0, 0, 0], last: 0, place: null, gems: 0, outRound: null, gaveUp: false });
+    // a full race gives up a bot's seat; in teams the newcomer takes that bot's side
+    const bot = r.players.length >= 8 || r.mode === 'teams' ? r.players.findIndex((x) => x.bot) : -1;
+    if (bot >= 0) { p.team = r.players[bot].team ?? null; r.players.splice(bot, 1); }
+    else if (r.mode === 'teams') { const a = r.players.filter((x) => x.team === 0).length, b = r.players.filter((x) => x.team === 1).length; p.team = a <= b ? 0 : 1; }
+    else p.team = null;
+  }
+  /** someone whose phone dropped a moment ago keeps their seat when the race begins */
+  staying(p, now = Date.now()) { return !p.bot && (p.connected || (p.awayAt && now - p.awayAt < TOWER_RECONNECT)); }
   start() {
     const r = this.r;
     // public races: seats nobody took are filled so the race is never empty
     if (r.quick || r.partyLink) {
-      const humans = r.players.filter((p) => !p.bot && p.connected); r.players = humans;
+      const humans = r.players.filter((p) => this.staying(p)); r.players = humans;
       let want = r.partyLink ? r.capacity : Math.max(6, humans.length); if (r.mode === 'teams' && want % 2) want++; want = Math.min(8, want);
       const taken = new Set(r.players.map((p) => p.name)), names = FILL_NAMES.filter((n) => !taken.has(n));
       for (let k = 0; r.players.length < want; k++) r.players.push({ sid: 'a' + r.nextSid++, name: names[(rand() + k) % names.length], bot: true, look: { char: LOOKS[rand() % LOOKS.length], hat: HATS[rand() % HATS.length], face: 'noface' }, pos: [0, 0, 0, 0, 0], cp: 0, fin: null, out: false, points: 0, sf: 0.74 + (rand() % 1000) / 1000 * 0.22 });
       for (let i = r.players.length - 1; i > 0; i--) { const j = rand() % (i + 1); [r.players[i], r.players[j]] = [r.players[j], r.players[i]]; }
     }
     r.players.forEach((p, i) => { p.team = r.mode === 'teams' ? i % 2 : null; p.out = false; p.gaveUp = false; p.points = 0; p.place = null; p.gems = 0; p.outRound = null; });
-    r.seed = rand(); r.round = 0; r.match++; r.winnerTeam = null; r.reported = false;
+    r.seed = rand(); r.round = 0; r.match++; r.winnerTeam = null; r.reported = false; r.ended = null;
     this.startRound();
   }
   startRound() {
     const r = this.r, alive = this.alive(), course = this.courseOf();
-    r.status = 'playing'; r.startAt = Date.now() + TOWER_COUNTDOWN; r.firstFin = 0;
+    r.status = 'playing'; r.startAt = Date.now() + TOWER_COUNTDOWN; r.firstFin = 0; r.seats = r.players.length; this.course = null;
     const left = alive.length; r.final = r.mode !== 'elim' || left <= 3 || r.round >= 2;
     r.qualify = r.mode === 'elim' ? (r.final ? 1 : Math.max(1, Math.min(left - 1, Math.ceil(left * (r.round === 0 ? 0.6 : 0.5))))) : left;
     for (const p of alive) { p.fin = null; p.cp = 0; p.pos = [0, 0, 0, 0, 0]; p.last = 0; if (p.bot) { const falls = rand() % 3; p.slips = Array.from({ length: falls }, () => 4 + (rand() % 1000) / 1000 * course.nominal * 0.9).sort((a, b) => a - b); } }
@@ -228,6 +251,8 @@ export class TowerRoom {
         if (p.fin == null) { const s = spineAt(course, this.botTime(p, elapsed)); const prev = p.pos; p.pos = [s.x, s.y, s.z, Math.atan2(s.x - prev[0], Math.max(0.01, s.z - prev[2])), s.z - prev[2] > 0.05 ? 1 : 0]; if (s.done) { p.fin = Math.round(elapsed * 10) / 10; r.firstFin ||= now; } }
         else p.pos[4] = 0;
       }
+      // 33.21.2: a runner who reached the top, dropped, or went quiet stands still instead of running in place
+      if (!p.bot && (p.fin != null || !p.connected || now - (p.last || 0) > 700)) p.pos[4] = 0;
       rows.push([p.sid, ...p.pos.map((v, i) => (i < 4 ? Math.round(v * 100) / 100 : v))]);
     }
     this.broadcast({ type: 'snap', t: now, p: rows });
@@ -236,7 +261,8 @@ export class TowerRoom {
     const alive = this.alive(), done = alive.filter((p) => p.fin != null).length, waiting = alive.filter((p) => p.fin == null && !p.gaveUp);
     const enough = r.mode === 'elim' ? done >= r.qualify : waiting.length === 0;
     const grace = r.mode !== 'elim' && r.firstFin && now - r.firstFin > 25_000;
-    const abandoned = !alive.some(p => !p.bot && p.connected);
+    // nobody left watching at all (players knocked out of an elimination still watch the rest)
+    const abandoned = !r.players.some(p => !p.bot && p.connected);
     if (enough || grace || elapsed > this.limit() || abandoned) await this.endRound(abandoned);
   }
   progress(p) { return (p.fin != null ? 1e6 - p.fin * 100 : 0) + p.cp * 1000 + (p.pos?.[2] || 0); }
@@ -261,13 +287,17 @@ export class TowerRoom {
       for (const p of ranked) p.points = p.gems = 0;
       r.winnerTeam = null;
     }
+    // 33.21.2: why it ended, so nobody is told they won a race nobody finished
+    r.ended = abandoned ? 'abandoned' : ranked.some((p) => p.fin != null) ? 'done' : 'time';
     r.status = 'finished'; await this.save(); this.broadcast();
     if (!abandoned) await this.report(ranked);
-    if (r.partyLink && !r.partyReported) { await settlePartyLink(this.env, r, 'tower', partyStandings((abandoned ? [] : ranked).filter((p) => !p.bot).map((p) => ({ name: p.name, username: p.username || null, score: p.points, won: p.place === 1 })), (a, b) => a.score === b.score)); await this.save(); }
+    if (r.partyLink && !r.partyReported) { await settlePartyLink(this.env, r, 'tower', partyStandings((abandoned ? [] : ranked).filter((p) => !p.bot).map((p) => ({ name: p.name, username: p.username || null, score: p.points, won: this.won(p) })), (a, b) => a.score === b.score)); await this.save(); }
   }
+  /** first to the top (in an elimination, the last one standing); in teams, the winning side */
+  won(p) { const r = this.r; return r.mode === 'teams' ? r.winnerTeam != null && p.team === r.winnerTeam : p.place === 1 && (p.fin != null || r.mode === 'elim'); }
   async report(ranked) {
     const r = this.r; if (r.reported) return; r.reported = true;
-    const rows = ranked.filter((p) => !p.bot && p.username).map((p) => ({ username: p.username, name: p.name, points: p.points, win: r.mode === 'teams' ? p.team === r.winnerTeam : p.place === 1 }));
+    const rows = ranked.filter((p) => !p.bot && p.username).map((p) => ({ username: p.username, name: p.name, points: p.points, win: this.won(p) }));
     if (rows.length && this.env.ROOMS) try { await this.env.ROOMS.get(this.env.ROOMS.idFromName('tower:board')).fetch('https://tower.internal/board/add', { method: 'POST', body: JSON.stringify({ rows }) }); } catch { r.reported = false; }
     await this.save();
   }
@@ -300,7 +330,7 @@ export class TowerRoom {
         if (p.cp < course.checkpoints.length - 1 || p.pos[2] < course.finish.z - 4 || elapsed < Math.max(4, course.nominal * 0.5)) return;
         p.fin = Math.round(elapsed * 10) / 10; r.firstFin ||= Date.now(); await this.save(); this.broadcast(); return;
       }
-      if (b?.type === 'start' && p.host && !r.quick && this.canStart()) { r.players = r.players.filter((x) => x.connected); this.start(); await this.save(); this.broadcast(); this.run(); return; }
+      if (b?.type === 'start' && p.host && !r.quick && this.canStart()) { r.players = r.players.filter((x) => this.staying(x)); this.start(); await this.save(); this.broadcast(); this.run(); return; }
       if (b?.type === 'ready' && r.status === 'lobby' && !r.quick && !r.partyLink) { p.ready = b.ready === true; await this.save(); this.broadcast(); return; }
       if (b?.type === 'leave') { await this.depart(p, true); try { ws.close(1000, 'bye'); } catch { /* gone */ } return; }
       // 'gesture', not 'emote': the shared room relay catches {type:'emote'} before it reaches the tower
