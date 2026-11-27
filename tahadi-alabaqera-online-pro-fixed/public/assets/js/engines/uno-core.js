@@ -2,6 +2,8 @@
 export const UNO_COLORS = Object.freeze(['red', 'gold', 'green', 'blue']);
 export const UNO_MODES = Object.freeze(['classic', 'stack', 'quick']);
 const TURN_MS = 30000;
+// 33.21.3: a player who is not in the room (a dropped phone, a page still loading) is played for after a few seconds
+export const UNO_AWAY_MS = 8000;
 const nextSeat = (u, seat, steps = 1) => (seat + u.direction * steps + u.hands.length * steps) % u.hands.length;
 function random(u) {
   u.random = (u.random + 0x6D2B79F5) >>> 0;
@@ -84,9 +86,10 @@ export function unoLegal(u, seat) {
   if (seat !== u.turn) return [];
   const hand = u.hands[seat], top = u.discard.at(-1);
   return hand.filter(card => {
-    if (u.drawn && card.id !== u.drawn) return false;
-    if (u.pending) return card.face === u.pendingFace;
-    if (card.face === 'draw4') return !hand.some(c => c.color === u.color);
+    // 33.21.3 (house rules, as people play at home):
+    // +2 is answered with +2 or +4, and +4 with +4; the +4 is played whenever you like, like any wild;
+    // after drawing you may play any card that fits, not only the one you drew.
+    if (u.pending) return card.face === 'draw4' || card.face === u.pendingFace;
     return card.color === 'wild' || card.color === u.color || card.face === top.face;
   }).map(card => card.id);
 }
@@ -134,7 +137,7 @@ export function applyUno(m, p, action, now) {
       const count = card.face === 'draw2' ? 2 : 4;
       // House rule: +2 answers +2 and +4 answers +4 in every mode.
       if (u.hands[seat].length) {
-        u.pending += count; u.pendingFace = card.face;
+        u.pending += count; u.pendingFace = card.face === 'draw4' || u.pendingFace === 'draw4' ? 'draw4' : 'draw2';
       } else {
         draw(u, following, count + u.pending);
         u.pending = 0; u.pendingFace = null; next = nextSeat(u, seat, 2);
@@ -152,7 +155,7 @@ export function applyUno(m, p, action, now) {
     u.pending = 0; u.pendingFace = null; u.drawn = drawn[0]?.id || null;
     if (drawn.length) u.blocked = 0; else u.blocked++;
     event(m, 'draw', seat, p.name + ' سحب ' + drawn.length + (penalty ? ' ورقة جزاء' : ' ورقة'));
-    if (!penalty && u.drawn && unoLegal(u, seat).includes(u.drawn)) {
+    if (!penalty && u.drawn && unoLegal(u, seat).length) {
       u.deadline = m.turnDeadline = now + TURN_MS;
       p.score = Math.max(0, 100 - u.hands[seat].length); return;
     }
@@ -179,7 +182,7 @@ export function unoBotAction(m, seat) {
 export function advanceUno(m, now) {
   if (now >= m.endsAt) { finish(m, null, now); m.version++; return; }
   const u = m.uno, player = m.players[u.turn];
-  if (player.bot && now >= u.thinkAt) {
+  if ((player.bot || player.away && now >= u.deadline - TURN_MS + UNO_AWAY_MS) && now >= u.thinkAt) {
     applyUno(m, player, unoBotAction(m, u.turn), now);
     u.thinkAt = now + 1050; m.version++;
   } else if (now >= u.deadline) {

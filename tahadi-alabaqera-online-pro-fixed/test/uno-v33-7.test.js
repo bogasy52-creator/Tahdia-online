@@ -32,7 +32,7 @@ test('legal plays, color selection and out-of-turn rejection preserve the hand',
  const m=setup(),u=m.uno;
  u.hands[0].push(card('w','wild','wild'),card('four','wild','draw4'));
  assert.ok(unoLegal(u,0).includes('r0'));
- assert.ok(!unoLegal(u,0).includes('four'));
+ assert.ok(unoLegal(u,0).includes('four'),'33.21.3: +4 plays whenever you like, like any wild');
  assert.throws(()=>act(m,1,{type:'play',card:'r1'}),/دورك/);
  const before=structuredClone(u);
  assert.throws(()=>act(m,0,{type:'play',card:'w',color:'pink'}),/اللون/);
@@ -54,12 +54,13 @@ test('reverse with two players, skip, draw-two and legal draw-four apply to the 
  assert.equal(m.uno.pending,4);assert.equal(m.uno.turn,1);
  act(m,1,{type:'draw'});assert.equal(m.uno.hands[1].length,7);assert.equal(m.uno.turn,2);
 });
-test('a drawn matching card can be played or passed and no other card is legal after drawing',()=>{
+test('33.21.3: after drawing, any fitting card can be played (not only the drawn one), or the turn passed',()=>{
  const m=setup(),u=m.uno;
  u.deck.push(card('new','red','9'));act(m,0,{type:'draw'});
- assert.equal(u.turn,0);assert.deepEqual(unoLegal(u,0),['new']);
- assert.throws(()=>act(m,0,{type:'play',card:'r0'}),/تطابق/);
+ assert.equal(u.turn,0);assert.ok(unoLegal(u,0).includes('new')&&unoLegal(u,0).includes('r0'));
  act(m,0,{type:'pass'});assert.equal(u.turn,1);
+ const n=setup(),v=n.uno;v.deck.push(card('new2','red','9'));act(n,0,{type:'draw'});
+ act(n,0,{type:'play',card:'r0'});assert.equal(v.turn,1,'played a card from the hand after drawing');
 });
 test('stack mode accumulates the same draw symbol and settles the penalty once',()=>{
  const m=setup('stack'),u=m.uno;

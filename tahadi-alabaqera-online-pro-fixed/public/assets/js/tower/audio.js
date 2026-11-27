@@ -2,7 +2,7 @@
    No sound files: everything is played live by the browser. Every world has its own scale, tempo and
    instruments (the desert plucks an oud-like string on maqam Hijaz), the boss of a summit doubles the
    drums, and the effects are layered (a whoosh and a blip for a jump, a bell for a gem). */
-import { rng } from './course.js?v=33.21.2';
+import { rng } from './course.js?v=33.21.3';
 
 const STYLE = Object.freeze({
   forest: { bpm: 112, root: 62, scale: [0, 2, 4, 7, 9], lead: 'pluck', bass: 'triangle', drums: 'light', pad: false },

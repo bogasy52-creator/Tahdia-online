@@ -58,9 +58,9 @@ export class PartyRoom{
   const resume=protocols.find(x=>x.startsWith('rt.'))?.slice(3),host=protocols.find(x=>x.startsWith('hk.'))?.slice(3),account=request.headers.get('x-bs-account')||null;let p=resume?Object.values(this.room.players).find(p=>p.token===resume):null;if(!p&&host===this.room.hostKey&&this.room.originalHost)p=this.room.players[this.room.originalHost];
   if(resume&&!p)return json({ok:false,error:'تعذر استعادة المقعد؛ رمز العودة غير صالح'},403);
   if(!p&&this.room.order.length===0&&host!==this.room.hostKey)return json({ok:false,error:'بانتظار المضيف'},409);
-  if(!p&&account&&this.room.order.some(id=>this.room.players[id].username===account))return json({ok:false,error:'حسابك موجود؛ ارجع من نفس المتصفح لاستعادة المقعد'},409);
+  /* 33.21.3: an account takes back its own seat from any device (the old one is closed) */if(!p&&account)p=this.room.order.map(id=>this.room.players[id]).find(x=>x.username===account)||null;
   if(!p)try{p=addPartyPlayer(this.room,{name:url.searchParams.get('name'),username:account});if(p.role==='host')this.room.originalHost=p.id;}catch(e){return json({ok:false,error:e.message},409);}
-  if(p.username&&account!==p.username)return json({ok:false,error:'account_mismatch'},403);
+  /* 33.21.3: the seat token is the proof; a signed-out device (an expired sign-in) still gets its seat back */if(p.username&&account&&account!==p.username)return json({ok:false,error:'account_mismatch'},403);
   p.connection=crypto.randomUUID();for(const old of this.ctx.getWebSockets())try{if(old.deserializeAttachment()?.playerId===p.id)old.close(4001,'replaced');}catch{}
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];this.ctx.acceptWebSocket(server);server.serializeAttachment({party:true,playerId:p.id,connection:p.connection,arenaKeyframes:url.searchParams.get('arena')==='keyframe-v1'});p.connected=true;p.disconnectedAt=null;this.room.expiresAt=Date.now()+24*3600000;await this.step(Date.now());await this.save();await this.schedule();this.send(server,{type:'welcome',playerId:p.id,token:p.token,state:partySnapshot(this.room,p.id)});this.lastFrame=null;this.broadcast([],false);this.run();return new Response(null,{status:101,webSocket:client,headers:{'sec-websocket-protocol':PROTOCOL}});
  }

@@ -2,13 +2,13 @@
    A hundred levels on your own (no waiting), and races for 2 to 8 in public or private rooms:
    سباق (first to the top), إقصاء (rounds until one is left) and فرق (two teams add up their places).
    Stars and gems unlock characters and outfits; progress is kept on this device. */
-import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, worldById, starsFor, STAR_MAX, dailyLevel, dailyCourse, dayKey, nextDayAt, seasonOf, seasonLevel, seasonCourse, sectionName, sectionTip } from './course.js?v=33.21.2';
-import { TowerAudio } from './audio.js?v=33.21.2';
+import { LEVELS, WORLDS, CHALLENGES, levelInfo, levelCourse, roundCourse, buildCourse, worldOf, worldById, starsFor, STAR_MAX, dailyLevel, dailyCourse, dayKey, nextDayAt, seasonOf, seasonLevel, seasonCourse, sectionName, sectionTip } from './course.js?v=33.21.3';
+import { TowerAudio } from './audio.js?v=33.21.3';
 import { normalizeRoomCode } from '../online/connection-utils.js';
-import { SEASONS } from './course.js?v=33.21.2';
+import { SEASONS } from './course.js?v=33.21.3';
 const SEASON_NAMES = Object.freeze(Object.fromEntries(SEASONS.map((x) => [x.id, x.name])));
-import { Runner } from './physics.js?v=33.21.2';
-import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.21.2';
+import { Runner } from './physics.js?v=33.21.3';
+import { TowerScene, CHARACTERS, OUTFITS } from './scene.js?v=33.21.3';
 
 const doc = document, $ = (id) => doc.getElementById(id), body = doc.body;
 const el = (tag, cls, text) => { const n = doc.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };

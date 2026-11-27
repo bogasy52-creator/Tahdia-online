@@ -1,4 +1,4 @@
-import {initUno,applyUno,advanceUno,unoView} from './uno-core.js?v=33.11.2';
+import {initUno,applyUno,advanceUno,unoView} from './uno-core.js?v=33.21.3';
 import {initWordHunt,applyWordHunt,advanceWordHunt,wordHuntBot,wordHuntView,wordHuntAlarm,upgradeWordHunt} from './wordbomb-core.js';
 import {raceSim,usePower,changeLane,raceResult} from './chaos-core.js';
 export {usePower as raceUsePower,changeLane as raceChangeLane};
@@ -203,7 +203,7 @@ export function challengeView(m,id,now=Date.now()){
  if(m.game==='cipher'&&m.rules===2){view.me.secret=[...m.secrets[id]];view.me.intel=Object.fromEntries(Object.entries(p.intel).map(([id,rows])=>[id,structuredClone(rows.slice(-30))]));view.me.historyCounts={...p.historyCounts};const threat=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,name:x.name,exact:Math.max(0,...((x.intel||{})[id]||[]).map(r=>r.exact||0))})).sort((a,b)=>b.exact-a.exact)[0];view.me.pressure=threat?.exact>0?threat:null;view.revealed=m.players.filter(x=>x.id!==id&&x.alive).map(x=>({id:x.id,digits:m.secrets[x.id].map((v,i)=>i<(m.overtime?4:Math.min(3,Math.floor((now-m.startedAt)/90000)))?v:null)}));}return view;
 }
 export function nextChallengeAlarm(m,now=Date.now()){
- if(m.phase!=='playing')return now+60000;const times=[m.endsAt];if(m.players.some(p=>p.bot)&&m.game!=='chaos')times.push(m.nextBotAt);if(m.game==='wordbomb')times.push(wordHuntAlarm(m));if(m.game==='chaos'){if(m.uno)times.push(m.players[m.uno.turn].bot?m.uno.thinkAt:m.uno.deadline);else times.push(now<m.race.startAt?m.race.startAt:Math.min(m.race.endsAt,now+2000));}if(m.game==='focus')times.push(m.task.deadline);if(m.game==='labyrinth')times.push(m.turnDeadline);if(m.game==='survival')times.push(m.board.collapsed?m.board.recoverAt:m.board.collapseAt);return Math.max(now+10,Math.min(...times));
+ if(m.phase!=='playing')return now+60000;const times=[m.endsAt];if(m.players.some(p=>p.bot)&&m.game!=='chaos')times.push(m.nextBotAt);if(m.game==='wordbomb')times.push(wordHuntAlarm(m));if(m.game==='chaos'){if(m.uno){const t=m.players[m.uno.turn];times.push(t.bot?m.uno.thinkAt:t.away?Math.max(m.uno.thinkAt,m.uno.deadline-30000+8000):m.uno.deadline);}else times.push(now<m.race.startAt?m.race.startAt:Math.min(m.race.endsAt,now+2000));}if(m.game==='focus')times.push(m.task.deadline);if(m.game==='labyrinth')times.push(m.turnDeadline);if(m.game==='survival')times.push(m.board.collapsed?m.board.recoverAt:m.board.collapseAt);return Math.max(now+10,Math.min(...times));
 }
 
 export const validSecret=(s,radix=10)=>Array.isArray(s)&&s.length===4&&s.every(x=>Number.isInteger(x)&&x>=0&&x<radix);

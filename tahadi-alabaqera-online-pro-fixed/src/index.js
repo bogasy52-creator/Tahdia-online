@@ -50,7 +50,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.21.2';
+const RELEASE='33.21.3';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -531,7 +531,7 @@ export default {
       }
       const m=url.pathname.match(/^\/api\/party\/rooms\/(\d{6})\/(ws|status)$/);if(!m)return json({ok:false,error:'not_found'},404);if(request.method!=='GET')return json({ok:false,error:'method_not_allowed'},405);
       const headers=new Headers(request.headers);headers.delete('x-bs-account');
-      if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}}
+      if(m[2]==='ws'){const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);/* 33.21.3: an expired sign-in joins as a guest */if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}}
       return await env.ROOMS.get(env.ROOMS.idFromName('party:'+m[1])).fetch(new Request('https://party.internal/'+m[2]+url.search,{headers}));
     }
 
@@ -557,7 +557,7 @@ export default {
       if(m[2]==='ws'){
         const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
         const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
-        if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);
+        /* 33.21.3: an expired sign-in joins as a guest */
         if(auth){headers.set('x-bs-account',auth.username);headers.set('x-bs-name',accountRoomName(auth));const result=await auth.stub.fetch('https://social.internal/career/get',{method:'POST',body:JSON.stringify({secret:auth.secret})});if(result.ok){const data=await result.json();headers.set('x-bs-character',String(data.career?.equipped?.character||'character-fox').replace(/^character-/,''));}}
       }
       return await env.ROOMS.get(env.ROOMS.idFromName('challenge:'+m[1])).fetch(new Request('https://challenge.internal/'+m[2]+url.search,{headers}));
@@ -580,7 +580,7 @@ export default {
       if(m[2]==='ws'){
         const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
         const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
-        if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
+        /* 33.21.3: an expired sign-in joins as a guest */
         if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}
       }
       return await env.ROOMS.get(env.ROOMS.idFromName('paths:'+m[1])).fetch(new Request('https://paths.internal/'+m[2]+url.search,{headers}));
@@ -603,7 +603,7 @@ export default {
       if(m[2]==='ws'){
         const st=String(headers.get('sec-websocket-protocol')||'').split(',').map(x=>x.trim()).find(x=>x.startsWith('st.'))?.slice(3);
         const auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);
-        if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب؛ سجل الدخول مجددًا'},401);
+        /* 33.21.3: an expired sign-in joins as a guest */
         if(auth){headers.set('x-bs-account',auth.username);url.searchParams.set('name',accountRoomName(auth));}
       }
       return await env.ROOMS.get(env.ROOMS.idFromName('sudoku:'+m[1])).fetch(new Request('https://sudoku.internal/'+m[2]+url.search,{headers}));
@@ -652,7 +652,7 @@ export default {
       }
       const m=url.pathname.match(/^\/api\/ten\/rooms\/(03\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
       const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
-      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
+      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);/* 33.21.3: an expired sign-in joins as a guest */if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
       return await env.ROOMS.get(env.ROOMS.idFromName('ten:'+m[1])).fetch(new Request('https://ten.internal/'+m[2]+url.search,{headers:h}));
     }
     if(url.pathname.startsWith('/api/tanks/')){
@@ -667,7 +667,7 @@ export default {
       }
       const m=url.pathname.match(/^\/api\/tanks\/rooms\/(07\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
       const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
-      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
+      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);/* 33.21.3: an expired sign-in joins as a guest */if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
       return await env.ROOMS.get(env.ROOMS.idFromName('tanks:'+m[1])).fetch(new Request('https://tanks.internal/'+m[2]+url.search,{headers:h}));
     }
 
