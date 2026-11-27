@@ -33,6 +33,8 @@ export const ROOM_FAMILIES = Object.freeze({
   pegs: { from: 5, to: 5, page: '/pegs' },
   // 33.18.0: «برج التحديات» — codes 04xxxx
   tower: { from: 4, to: 4, page: '/tower' },
+  // 33.21.0: «عشر ثواني» live — codes 03xxxx
+  ten: { from: 3, to: 3, page: '/ten' },
 });
 
 const random = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;

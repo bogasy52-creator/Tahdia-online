@@ -92,7 +92,8 @@ test('the newer games: their pages, art and rules (33.15: «رص البلوكا�
     if (page === 'ten') assert.deepEqual(bundles[page + '.html'], ['assets/css/instant-play-v33-12.css', 'assets/css/new-games-v33-12.css', 'assets/css/game-interaction-v34.css']);
     assert.match(html, new RegExp('assets/css/app-' + page + '\\.css\\?v='));
     assert.match(html, new RegExp('assets/js/' + script.replace('.', '\\.')));
-    assert.match(html, /href="\/party\?game=/);
+    // 33.21.0: «عشر ثواني» opens its own live friends room; «رص البلوكات» still sends friends to «الغرف»
+    assert.match(html, page === 'ten' ? /id="tsFriendsBtn"/ : /href="\/party\?game=/);
     const js = await read('public/assets/js/' + script);
     for (const text of [html, js]) assert.doesNotMatch(text, /بوت|كمبيوتر/, 'the other players are named players');
     assert.match(js, /link\.report\(\{ progress/);
@@ -108,7 +109,9 @@ test('the newer games: their pages, art and rules (33.15: «رص البلوكا�
 });
 
 test('a group room plays the new games on their own pages, the same seed for everyone', () => {
-  for (const id of ['blocks', 'ten']) {
+  // 33.21.0: «عشر ثواني» left this list: the group room now seats everyone at one live table
+  assert.ok(partyGame('ten')); assert.equal(localGame('ten'), null); assert.equal(LOCAL_GAMES.ten, undefined);
+  for (const id of ['blocks']) {
     assert.ok(partyGame(id), id);
     assert.ok(PARTY_MODES[id]?.length, id);
     assert.equal(localGame(id), '/' + id);

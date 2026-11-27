@@ -65,7 +65,27 @@ try {
   assert.equal(hello.resume,null);
   console.log('Tower: real invite, red inbox delivery source, actual route, joins, short lobby and in-race reconnect, closed-room errors');
 
-  for(const game of ['blocks','ten']){
+  // 33.21.0: «عشر ثواني» has live rooms of its own (codes 03xxxx); its page opens them instead of «الغرف»
+  {
+    const made=await api('/api/ten/rooms',{capacity:4},a);assert.equal(made.status,200,JSON.stringify(made));assert.match(made.data.code,/^03\d{4}$/);
+    const code=made.data.code,path='/api/ten/rooms/'+code+'/ws?name=Host';
+    const note=await api('/api/social/invites',{username:'towercharlie',game:'ten',roomCode:code},a);
+    assert.equal(note.status,200,JSON.stringify(note));assert.equal(note.data.invite.joinPath,'/ten?room='+code);
+    assert.equal((await api('/api/social/invites/check',{game:'ten',roomCode:code},c)).status,200);
+    assert.equal((await request(note.data.invite.joinPath)).status,200);
+    const host=await connect(path,'bs-ten-v1','hk.'+made.data.hostKey,'st.'+a);await host.wait(m=>m.type==='hello');
+    const guest=await connect('/api/ten/rooms/'+code+'/ws?name=Guest','bs-ten-v1','st.'+c);await guest.wait(m=>m.type==='hello');
+    const lobby=await host.wait(m=>m.type==='state'&&m.state.players.length===2);assert.equal(lobby.state.status,'lobby');
+    host.send('start');
+    const counting=await guest.wait(m=>m.type==='state'&&m.state.status==='count');
+    assert.equal(counting.state.players.length,2,'a friends room is only the friends');assert.ok(counting.state.goIn>0);
+    assert.equal((await api('/api/social/invites/check',{game:'ten',roomCode:code},c)).status,409);
+    assert.equal((await request('/api/ten/rooms/'+code+'/ws?name=Late',{headers:{upgrade:'websocket','sec-websocket-protocol':'bs-ten-v1'}})).status,409);
+    const quick=await api('/api/ten/quick',{},undefined);assert.equal(quick.status,200,JSON.stringify(quick));assert.match(quick.data.code,/^03\d{4}$/);
+    const page=await (await request('/ten')).text();assert.match(page,/id="tsFriendsBtn"/);assert.match(page,/id="tsOnlineBtn"/);
+    console.log('Ten: a live friends room, an invite to its code, two real sockets, the start, and the closed-room refusals');
+  }
+  for(const game of ['blocks']){
     const party=await api('/api/party/rooms',{capacity:4,playlist:[{game}]},a);
     assert.ok(party.data.code,JSON.stringify(party));
     const sent=await api('/api/social/invites',{username:'towercharlie',game:'party',roomCode:party.data.code},a);
@@ -74,7 +94,7 @@ try {
     const direct=await api('/api/social/invites',{username:'towerbob',game},a);assert.equal(direct.status,200);assert.equal(direct.data.invite.joinPath,'/'+game);
     assert.match(await (await request(direct.data.invite.joinPath)).text(),new RegExp('/party\\?game='+game));
   }
-  console.log('Blocks + Ten: create real party rooms, invite and validate those codes, direct pages link to the correct game');
+  console.log('Blocks: create a real party room, invite and validate its code, the direct page links to the group room');
   const uno=await api('/api/challenges/rooms',{game:'chaos',capacity:4},a);assert.ok(uno.data.code,JSON.stringify(uno));
   const unoInvite=await api('/api/social/invites',{username:'towercharlie',game:'uno',roomCode:uno.data.code},a);
   assert.equal(unoInvite.status,200,JSON.stringify(unoInvite));assert.equal(unoInvite.data.invite.joinPath,'/chaos?room='+uno.data.code);

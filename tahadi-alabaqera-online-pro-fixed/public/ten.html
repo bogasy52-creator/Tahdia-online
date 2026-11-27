@@ -11,8 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.19.0">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.19.0">
 
-<script src="assets/js/party-link-v32.js?v=33.20.0-room1"></script>
-<script src="/assets/js/instant-play-v33-12.js?v=33.20.0"></script><link rel="stylesheet" href="assets/css/app-ten.css?v=33.20.0-712de841ad"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.20.0"></head>
+<script src="assets/js/party-link-v32.js?v=33.21.0-room1"></script>
+<script src="/assets/js/instant-play-v33-12.js?v=33.21.0"></script><link rel="stylesheet" href="assets/css/app-ten.css?v=33.21.0-3ac6ba9b3f"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.21.0"></head>
 <body class="release-v26 ng-page ten-page">
 <main class="ng-app">
   <header class="ng-top">
@@ -35,7 +35,24 @@
       <button type="button" data-ts-level="expert">صعب<small>ساعات بشرية</small></button>
     </div>
     <button id="tsPlay" class="ng-play" type="button">العب الحين</button>
-    <a class="ng-ghost ng-friends-entry" href="/party?game=ten">غرفة مع الأصدقاء</a>
+    <div class="ts-live-ways">
+      <button id="tsOnlineBtn" class="ng-ghost" type="button">🌐 أونلاين مع ناس</button>
+      <button id="tsFriendsBtn" class="ng-ghost" type="button">👥 غرفة مع أصحابك</button>
+    </div>
+    <p id="tsIntroError" class="ts-error" role="alert"></p>
+  </section>
+
+  <section id="tsLobby" class="ng-intro ts-lobby" hidden aria-labelledby="tsLobbyTitle">
+    <h1 id="tsLobbyTitle">غرفة أصحابك</h1>
+    <div id="tsCodeBox" class="ts-code"><small>رمز الغرفة</small><b id="tsCode">——</b></div>
+    <p id="tsLobbyNote" class="ts-lobby-note" role="status" aria-live="polite"></p>
+    <ol id="tsLobbyPlayers" class="ts-lobby-list" aria-label="اللاعبين في الغرفة"></ol>
+    <div class="ts-live-ways">
+      <button id="tsInvite" class="ng-ghost" type="button">ادعُ صديق</button>
+      <button id="tsShare" class="ng-ghost" type="button">أرسل الرابط</button>
+    </div>
+    <button id="tsStart" class="ng-play" type="button" hidden>ابدأ</button>
+    <button id="tsLeave" class="ng-ghost ts-leave" type="button">اطلع من الغرفة</button>
   </section>
 
   <section id="tsGame" class="ng-game ts-game" hidden aria-label="الجولة">
@@ -57,12 +74,15 @@
       <ol id="tsRanks" class="ng-ranks"></ol>
       <div class="ng-result-actions">
         <button id="tsAgain" class="ng-play" type="button">العب مرة ثانية</button>
-        <a class="ng-ghost" href="/party?game=ten">العب مع أصحابك</a>
+        <p id="tsResultWait" class="ts-lobby-note" hidden>بانتظار صاحب الغرفة يبدأ جولة ثانية</p>
+        <button id="tsResultFriends" class="ng-ghost" type="button">👥 العب مع أصحابك</button>
+        <button id="tsResultSolo" class="ng-ghost" type="button" hidden>العب لحالك</button>
         <a class="ng-ghost" href="/">الرئيسية</a>
       </div>
     </div>
   </section>
 </main>
-<script src="assets/js/ten-v33-12.js?v=33.20.0"></script>
-<script src="/assets/js/tahdia-premium-v25.js?v=33.20.0"></script></body>
+<script src="assets/js/compact/social-client.js?v=33.21.0"></script>
+<script src="assets/js/ten-v33-12.js?v=33.21.0"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.21.0"></script></body>
 </html>

@@ -73,7 +73,7 @@ test('a friend can be invited straight into a tower room, not only sent a link',
   assert.ok(SOCIAL_ONLINE_GAMES.has('tower'));
   assert.equal(gameJoinPath('tower', '041234'), '/tower?room=041234');
   const api = await read('src/social/social-api.js');
-  assert.match(api, /\['party','quiz','serpent','picture','sudoku','paths','hockey','tanks','tower'\]\.includes\(game\)/);
+  assert.match(api, /\['party','quiz','serpent','picture','sudoku','paths','hockey','tanks','tower'(?:,'ten')?\]\.includes\(game\)/);
   assert.match(api, /tower:'tower:'/); assert.match(api, /tower:'tower'/);
   const client = await read('public/assets/js/social-client.js');
   assert.match(client, /\|tanks\|tower\|hockey\|/); assert.match(client, /tower: 'برج التحديات'/);

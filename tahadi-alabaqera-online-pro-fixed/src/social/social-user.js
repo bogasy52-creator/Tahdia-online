@@ -305,20 +305,26 @@ export function createSocialUserClass(DurableObject) {
       const name=cleanDisplayName(body.text);
       if(isOwner(this.profile)||!name||name.length<2)return json({ok:false,error:'invalid_name'},400);
       nextProfile.displayName=name;nextProfile.updatedAt=Date.now();p=Career.normalize({...p,name});
+    }else if(action==='password'){
+      // 33.21.0: the owner sets a new password for an account (a player locked out, or a taken account).
+      // Hashed like a signup; every device signed in to the account is signed out.
+      const problem=validatePassword(body.password);if(problem)return json({ok:false,error:problem},400);
+      nextProfile.password=await hashPassword(String(body.password));nextProfile.updatedAt=Date.now();
     }else if(['suspend','restore','revoke'].includes(action)){
       if(action!=='revoke'){nextProfile.suspended=action==='suspend';nextProfile.updatedAt=Date.now()}
       if(action!=='restore'){nextPresence.online=false;nextPresence.lastSeen=Date.now()}
     }else return json({ok:false,error:'invalid_action'},400);
     await this.ctx.storage.transaction(async tx=>{
       await tx.put('career',p);await tx.put(key,{fingerprint:body.fingerprint,at:Date.now()});
-      if(['suspend','restore','revoke','rename'].includes(action)){
+      if(['suspend','restore','revoke','rename','password'].includes(action)){
         await tx.put('profile',nextProfile);await tx.put('presence',nextPresence);
-        if(['suspend','revoke'].includes(action)){const sessions=await tx.list({prefix:'session:'});if(sessions.size)await tx.delete([...sessions.keys()])}
+        // the owner changing their own password stays signed in on the device that asked
+        if(['suspend','revoke','password'].includes(action)){const sessions=await tx.list({prefix:'session:'}),gone=[...sessions.keys()].filter(k=>!(action==='password'&&body.keep&&k==='session:'+body.keep));if(gone.length)await tx.delete(gone)}
       }
     });
     this.profile=nextProfile;this.presence=nextPresence;
     if(action==='rename')this.defer(this.notifyFriendsPresence());
-    if(['suspend','revoke'].includes(action))for(const ws of this.ctx.getWebSockets())try{if(ws.deserializeAttachment()?.username)ws.close(1008,'session_revoked')}catch{}
+    if(['suspend','revoke'].includes(action)||action==='password'&&!body.keep)for(const ws of this.ctx.getWebSockets())try{if(ws.deserializeAttachment()?.username)ws.close(1008,'session_revoked')}catch{}
     return this.managedAccount();
   }
 
@@ -339,6 +345,9 @@ export function createSocialUserClass(DurableObject) {
     const text=String(body.text||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,240);
     const hours=Number.isFinite(body.hours)?Math.max(0,Math.min(720,Math.floor(body.hours))):0,level=['info','warn','success'].includes(body.level)?body.level:'info';
     const command={actor:OWNER_USERNAME,username,action:body.action,amount:body.amount,item:body.item,requestId,reason,text,...(['announcement'].includes(body.action)?{hours,level}:{})};
+    // a new password travels to the account only: never in the command, its fingerprint or the audit log
+    const password=body.action==='password'?String(body.password||''):'';
+    if(body.action==='password'){const problem=validatePassword(password);if(problem)return json({ok:false,error:problem},400)}
     const fingerprint=await sha256(JSON.stringify(command)),key='admin:receipt:'+requestId,previous=await this.ctx.storage.get(key);
     if(previous){
       if(previous.fingerprint!==fingerprint)return json({ok:false,error:'request_conflict'},409);
@@ -354,8 +363,9 @@ export function createSocialUserClass(DurableObject) {
     }else{
       if(!stub)return json({ok:false,error:'invalid_username'},400);
       let response;
-      if(username===this.profile.username)response=await this.managementApply({...command,fingerprint});
-      else response=await stub.fetch('https://social.internal/management/apply',{method:'POST',body:JSON.stringify({...command,fingerprint})});
+      const secret=body.action==='password'?{password,...(username===this.profile.username?{keep:await sha256(String(body.secret||''))}:{})}:{};
+      if(username===this.profile.username)response=await this.managementApply({...command,fingerprint,...secret});
+      else response=await stub.fetch('https://social.internal/management/apply',{method:'POST',body:JSON.stringify({...command,fingerprint,...secret})});
       result=await response.json();if(!response.ok)return json(result,response.status);
     }
     const at=Date.now(),entry={requestId,action:body.action,username:['announcement','clear-announcement'].includes(body.action)?null:username,amount:body.amount||null,item:body.item||null,reason,at,actor:OWNER_USERNAME,...(['rename','announcement'].includes(body.action)?{text:text.slice(0,80)}:{}),...(body.action==='announcement'&&hours?{hours}:{})};

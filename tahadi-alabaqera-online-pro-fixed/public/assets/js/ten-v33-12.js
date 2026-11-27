@@ -1,4 +1,4 @@
-/* لعبة العباقرة 33.12.0 — «عشر ثواني».
+/* لعبة العباقرة 33.12.0 / 33.21.0 — «عشر ثواني» (alone against five, or live with real players).
    Stop the clock at exactly ten seconds, without seeing it. Six players; after each round
    the one farthest from ten seconds leaves. Every round hides the clock sooner, and the later
    rounds tick at the wrong speed on purpose. Last one standing wins.
@@ -29,7 +29,7 @@
   function seeded(seed) { let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 4294967296; }; }
   const shuffle = (list, random) => { const a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const gauss = (random) => { let u = 0, v = 0; while (!u) u = random(); while (!v) v = random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-  const myName = () => String(link?.name || store.get('bs-player-name-v33') || store.get('bs_player_name') || 'أنت').trim().slice(0, 16) || 'أنت';
+  const myName = () => String(window.BS_PARTY_LINK?.name || store.get('bs-player-name-v33') || store.get('bs_player_name') || 'أنت').trim().slice(0, 16) || 'أنت';
   const secs = (ms) => (ms / 1000).toFixed(2);
 
   const TICK_HEARD_MS = 3000;
@@ -79,8 +79,8 @@
       li.style.setProperty('--seat', p.colour);
       const dot = doc.createElement('i'); dot.textContent = p.name.slice(0, 1);
       const copy = doc.createElement('span');
-      const name = doc.createElement('b'); name.textContent = p.me ? 'أنت' : p.name;
-      const time = doc.createElement('small'); time.textContent = p.out ? 'طلع' : p.last == null ? '—' : secs(p.last) + 's';
+      const name = doc.createElement('b'); name.textContent = p.me ? 'أنت' : p.name; if (p.host && net) name.title = 'صاحب الغرفة';
+      const time = doc.createElement('small'); time.textContent = p.out ? 'طلع' : p.last != null ? secs(p.last) + 's' : p.stopped ? '✓ وقّف' : p.away ? 'انقطع' : '—';
       copy.append(name, time); li.append(dot, copy); box.append(li);
     }
   }
@@ -123,7 +123,7 @@
       const t = performance.now() - game.startedAt;
       if (t < plan.hideAt) { count.textContent = String(Math.floor(t / 1000)); dial.style.setProperty('--p', String(Math.min(1, t / TARGET))); }
       else if (!count.classList.contains('is-hidden') && !count.classList.contains('is-fake')) { count.classList.add('is-hidden'); dial.style.setProperty('--p', '0'); }
-      if (t >= LIMIT) return stop(LIMIT);
+      if (t >= LIMIT) return net ? netStop(LIMIT) : stop(LIMIT);
       frame = requestAnimationFrame(paint);
     };
     if (plan.hideAt === 0) { count.classList.add('is-hidden'); }
@@ -202,7 +202,7 @@
       const s = doc.createElement('small'); s.textContent = p.out ? 'طلع في الجولة ' + p.outRound : 'صامد';
       li.append(n, s); list.append(li);
     });
-    $('tsAgain').hidden = Boolean(link);
+    $('tsAgain').hidden = Boolean(link); $('tsAgain').textContent = 'العب مرة ثانية'; $('tsResultWait').hidden = true; $('tsResultFriends').hidden = Boolean(link); $('tsResultSolo').hidden = true;
     $('tsResult').hidden = false;
     report(true, won);
     void me;
@@ -216,6 +216,194 @@
     link.report({ progress, score: Math.round(survived * 1000 + me.total / 10 + (won ? 3000 : 0)), mistakes: me.out ? 1 : 0, done, won });
   }
 
+
+  /* ---------------------------------------------------------------- 33.21.0: the live room
+     Everyone at the table starts the same round at the same moment, each phone measures its own
+     clock, and the room says who left. The screens are the solo ones, fed by the room. */
+  let net = null;
+  const account = () => { try { return localStorage.getItem('bs_social_session') || ''; } catch { return ''; } };
+  const note = (text) => { $('tsLobbyNote').textContent = text; };
+  function share() {
+    if (!net?.code) return;
+    const url = location.origin + '/ten?room=' + net.code;
+    if (navigator.share) navigator.share({ title: 'عشر ثواني', text: 'تعال نلعب عشر ثواني، رمز الغرفة ' + net.code, url }).catch(() => {});
+    else navigator.clipboard?.writeText(url).then(() => note('نسخت الرابط، أرسله لأصحابك'), () => note('رمز الغرفة: ' + net.code));
+  }
+  class TenOnline {
+    constructor() { this.ws = null; this.code = ''; this.hostKey = ''; this.token = ''; this.state = null; this.me = ''; this.closed = false; }
+    async api(path, body, what) {
+      let res; try { res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' }); }
+      catch { throw Error('ما وصلنا للسيرفر. تأكد من النت وجرّب مرة ثانية'); }
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || !d.code) throw Error((typeof d.error === 'string' && d.error.length < 90 && !/_/.test(d.error) ? d.error : 'ما قدرنا ' + what) + ' (' + res.status + ')');
+      return d;
+    }
+    async quick() { const d = await this.api('/api/ten/quick', {}, 'نلقى طاولة الحين'); return this.join(d.code); }
+    async create() {
+      const d = await this.api('/api/ten/rooms', { capacity: 8 }, 'نفتح الغرفة');
+      this.hostKey = d.hostKey; try { sessionStorage.setItem('bs_ten_host:' + d.code, d.hostKey); } catch { /* private */ }
+      return this.join(d.code);
+    }
+    async join(code) { try { return await this.connect(code); } catch (first) { if (this.closed || /ممتلئة|بدأت|صاحب/.test(first.message)) throw first; await new Promise((r) => setTimeout(r, 900)); return this.connect(code); } }
+    connect(code) {
+      this.code = code; this.detach();
+      try { this.hostKey ||= sessionStorage.getItem('bs_ten_host:' + code) || ''; this.token = sessionStorage.getItem('bs_ten_room:' + code) || ''; } catch { /* private */ }
+      const protocols = ['bs-ten-v1', ...(this.hostKey ? ['hk.' + this.hostKey] : []), ...(this.token ? ['rt.' + this.token] : []), ...(account() ? ['st.' + account()] : [])];
+      return new Promise((resolve, reject) => {
+        let ok = false, ws;
+        try { ws = this.ws = new WebSocket((location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/api/ten/rooms/' + code + '/ws?name=' + encodeURIComponent(myName()), protocols); }
+        catch { reject(Error('المتصفح ما قبل الاتصال بالغرفة')); return; }
+        const timer = setTimeout(() => { if (!ok) { try { ws.close(); } catch { /* gone */ } reject(Error('الغرفة ما ردت، جرّب مرة ثانية')); } }, 12000);
+        ws.onmessage = (ev) => {
+          if (this.ws !== ws) return; let m; try { m = JSON.parse(ev.data); } catch { return; }
+          if (m.type === 'hello') {
+            ok = true; clearTimeout(timer); this.me = m.id; this.lostAt = 0;
+            try { sessionStorage.setItem('bs_ten_room:' + code, m.token); } catch { /* private */ }
+            if (!window.BS_PARTY_LINK?.embedded) { const url = new URL(location.href); url.searchParams.set('room', code); url.searchParams.delete('play'); history.replaceState(null, '', url); }
+            resolve(this);
+          }
+          if (m.type === 'state') { this.state = m.state; paintNet(m.state, performance.now()); }
+        };
+        ws.onclose = (ev) => {
+          clearTimeout(timer);
+          // the room refuses with a reason before the socket opens: the join request says why
+          if (!ok) { fetch('/api/ten/rooms/' + code + '/status', { cache: 'no-store' }).then((r) => r.json()).then((d) => reject(Error(!d?.ok ? 'الغرفة انتهت أو الرمز غلط' : d.status !== 'lobby' && d.status !== 'finished' ? 'الجولة بدأت؛ انتظر اللي بعدها أو افتح غرفة ثانية' : d.players >= d.playerLimit ? 'الغرفة ممتلئة' : 'ما قدرنا ندخل الغرفة')), () => reject(Error('ما قدرنا ندخل الغرفة'))); }
+          else if (!this.closed && this.ws === ws) this.lost();
+        };
+        ws.onerror = () => {};
+      });
+    }
+    async lost() {
+      if (this.closed || this.lostAt) return; this.lostAt = Date.now();
+      $('tsRound').textContent = 'انقطع الاتصال… نرجعك'; note('انقطع الاتصال… نرجعك');
+      for (const wait of [500, 1400, 3000]) { await new Promise((r) => setTimeout(r, wait)); if (this.closed || net !== this) return; try { await this.connect(this.code); return; } catch { /* next try */ } }
+      if (!this.closed && net === this) { leave(); $('tsIntroError').textContent = 'انقطع الاتصال بالغرفة. تقدر ترجع بالرابط نفسه.'; }
+    }
+    send(m) { try { if (this.ws?.readyState === 1) this.ws.send(JSON.stringify(m)); } catch { /* closed */ } }
+    detach() { if (this.ws) { const ws = this.ws; this.ws = null; ws.onclose = null; try { ws.close(1000); } catch { /* gone */ } } }
+    close() { this.closed = true; this.send({ type: 'leave' }); this.detach(); }
+  }
+
+  async function online(open) {
+    const err = $('tsIntroError'); err.textContent = '';
+    stopAll(); net?.close();
+    const client = net = new TenOnline();
+    shown = { match: -1, round: -1, status: '' };
+    show('lobby'); note('نجهّز الغرفة…'); $('tsCode').textContent = '——'; $('tsLobbyPlayers').replaceChildren(); $('tsStart').hidden = true;
+    try { await open(client); }
+    catch (e) { if (net !== client) return; net = null; show('intro'); err.textContent = e.message; }
+  }
+  function leave() {
+    stopAll(); net?.close(); net = null; game = null;
+    if (!window.BS_PARTY_LINK?.embedded) { const url = new URL(location.href); url.searchParams.delete('room'); history.replaceState(null, '', url); }
+    doc.body.classList.remove('ts-running', 'ts-live'); show('intro');
+  }
+  function show(which) {
+    $('tsIntro').hidden = which !== 'intro'; $('tsLobby').hidden = which !== 'lobby'; $('tsGame').hidden = which !== 'game';
+    if (which !== 'result') $('tsResult').hidden = true;
+    doc.body.classList.toggle('ts-live', Boolean(net));
+  }
+
+  // the room's state, drawn: a lobby, a round counting down or running, a reveal, or the final places
+  let shown = { match: -1, round: -1, status: '' };
+  function netPlayers(s) {
+    return s.players.map((p, i) => ({ ...p, me: p.id === net.me, colour: SEATS[i % SEATS.length], away: !p.connected, outRound: p.outRound || 0 }));
+  }
+  function paintNet(s, now) {
+    const players = netPlayers(s), me = players.find((p) => p.me);
+    if (s.status === 'lobby') return paintLobby(s, players, me);
+    // a round (or the reveal of one): the solo game object, filled from the room
+    game ??= { level: LEVELS.standard, players: [], round: 0, phase: 'ready', random: Math.random };
+    game.players = players; game.round = s.round;
+    if (s.status === 'finished') { if (shown.status !== 'finished' || shown.match !== s.match) { shown = { match: s.match, round: s.round, status: 'finished' }; netFinish(s, players, me); } return; }
+    show('game'); doc.body.classList.add('ts-running');
+    $('tsLevel').textContent = (s.party ? 'جولة الغرفة' : s.quick ? 'أونلاين' : 'غرفة ' + s.code) + ' · ' + players.length + ' لاعبين';
+    $('tsNext').hidden = true;
+    const fresh = shown.match !== s.match || shown.round !== s.round;
+    if ((s.status === 'count' || s.status === 'run') && fresh) { shown = { match: s.match, round: s.round, status: s.status }; netRound(s, me, now); }
+    else if (s.status === 'reveal' && shown.status !== 'reveal') { shown = { match: s.match, round: s.round, status: 'reveal' }; netReveal(s, players, me); }
+    else if (s.status !== 'reveal') drawSeats();
+  }
+  function paintLobby(s, players, me) {
+    stopAll(); show('lobby'); doc.body.classList.remove('ts-running');
+    $('tsCode').textContent = s.code; $('tsCodeBox').hidden = s.quick || s.party;
+    $('tsInvite').hidden = $('tsShare').hidden = s.quick || s.party;
+    const list = $('tsLobbyPlayers'); list.replaceChildren();
+    players.forEach((p) => { const li = doc.createElement('li'); li.style.setProperty('--seat', p.colour); li.className = (p.me ? 'is-me' : '') + (p.away ? ' is-away' : ''); const b = doc.createElement('b'); b.textContent = p.me ? p.name + ' (أنت)' : p.name; const t = doc.createElement('small'); t.textContent = p.host ? 'صاحب الغرفة' : p.away ? 'يرجع…' : 'جاهز'; li.append(b, t); list.append(li); });
+    const humans = players.length, startsIn = s.startsIn != null ? Math.ceil(s.startsIn / 1000) : null;
+    $('tsStart').hidden = s.quick || s.party || !me?.host;
+    $('tsStart').disabled = humans < 2;
+    $('tsLobbyTitle').textContent = s.party ? 'جولة «عشر ثواني»' : s.quick ? 'طاولة أونلاين' : 'غرفة أصحابك';
+    note(s.party ? (startsIn != null ? 'نبدأ أول ما يدخل الكل، أو بعد ' + startsIn + ' ثانية' : 'ننتظر الباقين…')
+      : s.quick ? (startsIn != null ? 'نبدأ بعد ' + startsIn + ' ثانية' : 'ننتظر لاعبين…')
+      : me?.host ? (humans < 2 ? 'ادعُ صديق أو أرسل الرابط، وتقدر تبدأ أول ما يدخل واحد' : 'كلكم هنا؟ اضغط «ابدأ»') : 'بانتظار صاحب الغرفة يبدأ');
+    // the countdown keeps moving between the room's messages
+    if (startsIn != null) { const end = performance.now() + s.startsIn, base = net.state, line = s.party ? 'نبدأ أول ما يدخل الكل، أو بعد ' : 'نبدأ بعد '; const down = () => { if (net?.state !== base) return; const n = Math.max(0, Math.ceil((end - performance.now()) / 1000)); note(line + n + ' ثانية'); if (n > 0) after(500, down); }; down(); }
+  }
+  function netRound(s, me, now) {
+    stopAll(); game.phase = 'count'; game.mine = null;
+    const plan = s.plan, goAt = now + (s.goIn ?? 0);
+    drawSeats();
+    $('tsRound').textContent = 'الجولة ' + s.round + ' · ' + plan.note;
+    $('tsVerdict').textContent = me?.out ? 'طلعت من المباراة، تابع الباقين' : ''; $('tsVerdict').className = 'ts-verdict';
+    const count = $('tsCount'), dial = $('tsDial'), press = $('tsPress');
+    count.classList.remove('is-hidden', 'is-fake'); dial.style.setProperty('--p', '0');
+    press.disabled = true; press.textContent = me?.out ? 'تتفرج' : 'استعد';
+    const wait = () => {
+      const left = goAt - performance.now();
+      if (left > 0) { const n = Math.ceil(left / 1000); if (count.textContent !== String(n)) { count.textContent = String(n); sounds.count(); } after(Math.min(120, left), wait); return; }
+      if (me?.out) { count.textContent = '…'; game.phase = 'watch'; return; }
+      // back after a drop with the time already in: show it and wait with the others
+      if (me?.last != null) { count.textContent = secs(me.last); game.phase = 'sent'; press.textContent = 'ننتظر الباقين…'; return; }
+      // the clock is the room's: a phone that came back mid-round still counts from the start
+      run(plan); game.startedAt = goAt;
+    };
+    wait();
+  }
+  function netStop(forced) {
+    if (game?.phase !== 'run') return;
+    const t = Math.round(forced ?? (performance.now() - game.startedAt));
+    stopAll(); sounds.stop(); game.phase = 'sent';
+    net.send({ type: 'stop', round: game.round, ms: t });
+    const count = $('tsCount'), press = $('tsPress'), offBy = t - TARGET, verdict = $('tsVerdict');
+    count.classList.remove('is-hidden', 'is-fake'); count.textContent = secs(t);
+    $('tsDial').style.setProperty('--p', String(Math.min(1, t / TARGET)));
+    press.disabled = true; press.textContent = 'ننتظر الباقين…';
+    verdict.textContent = Math.abs(offBy) <= 50 ? 'مضبوطة! ' + secs(t) + ' ثانية' : (offBy > 0 ? 'متأخر ' : 'مستعجل ') + secs(Math.abs(offBy)) + ' ثانية';
+    verdict.className = 'ts-verdict ' + (Math.abs(offBy) <= 400 ? 'is-good' : 'is-bad');
+  }
+  function netReveal(s, players, me) {
+    stopAll(); game.phase = 'between';
+    const left = players.filter((p) => s.left.includes(p.id)), standing = players.filter((p) => !p.out && p.last != null);
+    const best = [...standing].sort((a, b) => Math.abs(a.last - TARGET) - Math.abs(b.last - TARGET))[0];
+    drawSeats(left[0], best);
+    const press = $('tsPress'), verdict = $('tsVerdict'); press.disabled = true;
+    if (me && s.left.includes(me.id)) { sounds.out(); verdict.textContent = 'طلعت هالجولة (' + secs(me.last) + ' ثانية). تقدر تتفرج على الباقين'; verdict.className = 'ts-verdict is-bad'; }
+    else verdict.textContent = (me?.last != null ? secs(me.last) + ' ثانية · ' : '') + 'طلع ' + left.map((p) => (p.me ? 'أنت' : p.name)).join(' و');
+    press.textContent = 'الجولة الجاية بعد ' + Math.ceil((s.nextIn || 0) / 1000);
+    const end = performance.now() + (s.nextIn || 0), tickDown = () => { const n = Math.ceil((end - performance.now()) / 1000); if (n <= 0 || game?.phase !== 'between') return; press.textContent = 'الجولة الجاية بعد ' + n; after(250, tickDown); };
+    tickDown();
+  }
+  function netFinish(s, players, me) {
+    stopAll(); game.phase = 'over'; doc.body.classList.remove('ts-running');
+    const won = me?.place === 1;
+    if (won) sounds.win();
+    $('tsResultTitle').textContent = won ? 'أنت ساعة الشلة! فزت' : 'مركزك ' + (me?.place || '—') + ' من ' + players.length;
+    $('tsResultNote').textContent = won ? 'آخر واحد صامد بعد ' + s.round + ' جولات' : me?.outRound ? 'طلعت في الجولة ' + me.outRound : '';
+    const list = $('tsRanks'); list.replaceChildren();
+    [...players].sort((a, b) => (a.place || 99) - (b.place || 99)).forEach((p) => {
+      const li = doc.createElement('li'); li.className = (p.me ? 'is-me' : '') + (p.out && p.place !== 1 ? ' is-out' : ''); li.style.setProperty('--seat', p.colour);
+      const n = doc.createElement('b'); n.textContent = p.place + '. ' + (p.me ? 'أنت' : p.name);
+      const t = doc.createElement('small'); t.textContent = p.place === 1 ? 'الفايز' : 'طلع في الجولة ' + p.outRound; li.append(n, t); list.append(li);
+    });
+    // again: a public table finds a new one; a friends room starts again when its owner says
+    const again = $('tsAgain'); again.hidden = s.party || (!s.quick && !me?.host);
+    again.textContent = s.quick ? 'طاولة ثانية' : 'جولة ثانية بنفس الغرفة';
+    $('tsResultWait').hidden = s.party || s.quick || Boolean(me?.host);
+    $('tsResultFriends').hidden = !s.quick; $('tsResultSolo').hidden = Boolean(s.party);
+    $('tsResult').hidden = false;
+  }
+
   /* ---------------------------------------------------------------- the page */
   function init() {
     const saved = store.get('bs-ten-level');
@@ -224,20 +412,36 @@
     doc.querySelectorAll('[data-ts-level]').forEach((b) => b.addEventListener('click', () => { level = b.dataset.tsLevel; store.set('bs-ten-level', level); paint(); }));
     paint();
     $('tsPlay').addEventListener('click', () => start(level));
-    $('tsAgain').addEventListener('click', () => start(level));
+    $('tsAgain').addEventListener('click', () => { if (!net) return start(level); if (net.state?.quick) return online((c) => c.quick()); net.send({ type: 'start' }); });
     $('tsNext').addEventListener('click', () => { if (game?.phase === 'between') nextRound(); });
     // pointerdown: the moment the finger lands is the time that counts
-    $('tsPress').addEventListener('pointerdown', (event) => { if (game?.phase === 'run') { event.preventDefault(); stop(); } });
-    $('tsPress').addEventListener('click', () => { if (game?.phase === 'run') stop(); });
-    doc.addEventListener('keydown', (event) => { if (game?.phase === 'run' && (event.code === 'Space' || event.key === 'Enter')) { event.preventDefault(); stop(); } });
-    $('tsQuit').addEventListener('click', () => { stopAll(); game = null; doc.body.classList.remove('ts-running'); $('tsGame').hidden = true; $('tsResult').hidden = true; $('tsIntro').hidden = false; });
+    const press = () => (net ? netStop() : stop());
+    $('tsPress').addEventListener('pointerdown', (event) => { if (game?.phase === 'run') { event.preventDefault(); press(); } });
+    $('tsPress').addEventListener('click', () => { if (game?.phase === 'run') press(); });
+    doc.addEventListener('keydown', (event) => { if (game?.phase === 'run' && (event.code === 'Space' || event.key === 'Enter')) { event.preventDefault(); press(); } });
+    $('tsQuit').addEventListener('click', () => { if (net) return leave(); stopAll(); game = null; doc.body.classList.remove('ts-running'); $('tsGame').hidden = true; $('tsResult').hidden = true; $('tsIntro').hidden = false; });
+    $('tsResultSolo').addEventListener('click', () => { leave(); start(level); });
     // leaving the page mid-count stops the round where it was: no counting in the background
-    doc.addEventListener('visibilitychange', () => { if (doc.hidden && game?.phase === 'run') stop(); });
+    doc.addEventListener('visibilitychange', () => { if (doc.hidden && game?.phase === 'run') press(); });
     const sound = $('tsSound');
     const paintSound = () => { sound.textContent = muted ? '🔇' : '🔊'; sound.setAttribute('aria-pressed', String(!muted)); };
     sound.addEventListener('click', () => { muted = !muted; store.set('bs-new-games-mute', muted ? '1' : '0'); paintSound(); });
     paintSound();
-    if (link) { $('tsIntro').querySelector('.ts-levels').hidden = true; start(link.local.level); }
+    $('tsOnlineBtn').addEventListener('click', () => online((c) => c.quick()));
+    $('tsFriendsBtn').addEventListener('click', () => online((c) => c.create()));
+    $('tsResultFriends').addEventListener('click', () => online((c) => c.create()));
+    $('tsStart').addEventListener('click', () => net?.send({ type: 'start' }));
+    $('tsLeave').addEventListener('click', () => leave());
+    $('tsInvite').addEventListener('click', () => { if (!net?.code) return; if (window.BS_SOCIAL?.openInvitePicker) window.BS_SOCIAL.openInvitePicker({ game: 'ten', roomCode: net.code, title: 'عشر ثواني' }); else share(); });
+    $('tsShare').addEventListener('click', share);
+    if (link) { $('tsIntro').querySelector('.ts-levels').hidden = true; start(link.local.level); return; }
+    // a room in the address: an invite, a shared link, or a round of «الغرف»
+    const code = String(new URLSearchParams(location.search).get('room') || '').replace(/\D/g, '');
+    if (/^03\d{4}$/.test(code)) online((c) => c.join(code));
+    else if (new URLSearchParams(location.search).get('play') === 'online') online((c) => c.quick());
+    else if (new URLSearchParams(location.search).get('play') === 'room') online((c) => c.create());
+    // inside the group room's frame the room is the way out
+    if (window.BS_PARTY_LINK?.embedded) doc.body.classList.add('ts-embedded');
   }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init); else init();
 })();

@@ -6,6 +6,7 @@ import {relayGameReaction} from './social/game-reactions.js';
 import {HockeyRoom} from './hockey/hockey-room.js';
 import {TanksRoom} from './tanks/tanks-room.js';
 import {TowerRoom,TOWER_MODES} from './tower/tower-room.js';
+import {TenRoom} from './ten/ten-room.js';
 import {ChallengeRoom,ChallengeQueue} from './challenges/challenge-room.js';
 import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
 import {PartyRoom} from './party/party-room.js';
@@ -49,7 +50,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.20.0';
+const RELEASE='33.21.0';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -312,7 +313,7 @@ export default {
 
     const quotaReset = DURABLE_QUOTA_RESETS.get(env);
     if (quotaReset && quotaReset <= Date.now()) DURABLE_QUOTA_RESETS.delete(env);
-    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence|challenges|tanks|tower|hockey|tournament)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
+    else if (quotaReset && /^\/api\/(?:health|board|rooms|social|quick|serpent|picture|sudoku|paths|party|leaderboard|presence|challenges|tanks|tower|ten|hockey|tournament)(?:\/|$)/.test(url.pathname)) return durableQuotaResponse(env);
 
     if(url.pathname.startsWith('/api/billing/'))return handleBillingRequest(request,env,{rateLimit});
     if(['/accuracy','/accuracy.html'].includes(url.pathname))return Response.redirect(new URL('/#games',url),302);
@@ -636,6 +637,22 @@ export default {
       const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
       if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
       return await env.ROOMS.get(env.ROOMS.idFromName('tower:'+m[1])).fetch(new Request('https://tower.internal/'+m[2]+url.search,{headers:h}));
+    }
+    // 33.21.0: «عشر ثواني» live: a public table, a friends room, and the room's socket
+    if(url.pathname.startsWith('/api/ten/')){
+      if(!env.ROOMS)return json({ok:false,error:'الغرف غير متاحة الآن'},503);
+      const limited=await rateLimit(request,env,'ten-api',120,60000);if(limited)return limited;
+      const body=async()=>{const raw=await request.text();if(raw.length>1024)return null;try{return JSON.parse(raw||'{}');}catch{return null;}};
+      if(url.pathname==='/api/ten/quick'&&request.method==='POST')return await env.ROOMS.get(env.ROOMS.idFromName('ten:queue')).fetch('https://ten.internal/queue',{method:'POST',body:'{}'});
+      if(url.pathname==='/api/ten/rooms'&&request.method==='POST'){
+        const b=await body(),capacity=Number.isInteger(b?.capacity)?b.capacity:8;if(!b||capacity<2||capacity>8)return json({ok:false,error:'من 2 إلى 8 لاعبين'},400);
+        for(let i=0;i<8;i++){const code=roomCodeFor('ten'),hostKey=token(),res=await env.ROOMS.get(env.ROOMS.idFromName('ten:'+code)).fetch('https://ten.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity})});if(res.status===201)return json({ok:true,code,hostKey});}
+        return json({ok:false,error:'تعذّر فتح غرفة'},503);
+      }
+      const m=url.pathname.match(/^\/api\/ten\/rooms\/(03\d{4})\/(ws|status)$/);if(!m||request.method!=='GET')return json({ok:false},404);
+      const h=new Headers(request.headers);for(const key of ['x-bs-account','x-bs-name'])h.delete(key);
+      if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
+      return await env.ROOMS.get(env.ROOMS.idFromName('ten:'+m[1])).fetch(new Request('https://ten.internal/'+m[2]+url.search,{headers:h}));
     }
     if(url.pathname.startsWith('/api/tanks/')){
       if(!env.ROOMS)return json({ok:false,error:'خدمة المعارك غير متاحة الآن'},503);
@@ -984,6 +1001,8 @@ export class GameRoom extends DurableObject {
   async tanksDelegate(){if(!this.tanksRoom)this.tanksRoom=new TanksRoom(this.ctx,this.env);await this.tanksRoom.ready;return this.tanksRoom;}
   // 33.18.0: «برج التحديات» rooms, its public queue and its leaderboard
   async towerDelegate(){if(!this.towerRoom)this.towerRoom=new TowerRoom(this.ctx,this.env);await this.towerRoom.ready;return this.towerRoom;}
+  // 33.21.0: «عشر ثواني» live tables and their public queue
+  async tenDelegate(){if(!this.tenRoom)this.tenRoom=new TenRoom(this.ctx,this.env);await this.tenRoom.ready;return this.tenRoom;}
 
   async hockeyDelegate(){if(!this.hockeyRoom)this.hockeyRoom=new HockeyRoom(this.ctx,this.env);await this.hockeyRoom.ready;return this.hockeyRoom;}
 
@@ -1003,6 +1022,7 @@ export class GameRoom extends DurableObject {
     if(new URL(request.url).hostname==='tournament.internal')return (await this.tournamentDelegate()).fetch(request);
     if(new URL(request.url).hostname==='tanks.internal')return (await this.tanksDelegate()).fetch(request);
     if(new URL(request.url).hostname==='tower.internal')return (await this.towerDelegate()).fetch(request);
+    if(new URL(request.url).hostname==='ten.internal')return (await this.tenDelegate()).fetch(request);
     if(new URL(request.url).hostname==='hockey.internal')return (await this.hockeyDelegate()).fetch(request);
     const url = new URL(request.url);
     if(url.hostname==='party.internal')return (await this.partyDelegate()).fetch(request);
@@ -1184,6 +1204,7 @@ export class GameRoom extends DurableObject {
 
     if(ws.deserializeAttachment()?.tanks)return (await this.tanksDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.tower)return (await this.towerDelegate()).webSocketMessage(ws,raw);
+    if(ws.deserializeAttachment()?.ten)return (await this.tenDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketMessage(ws,raw);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketMessage(ws,raw);
@@ -1310,6 +1331,7 @@ export class GameRoom extends DurableObject {
   async webSocketClose(ws) {
     if(ws.deserializeAttachment()?.tanks)return (await this.tanksDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.tower)return (await this.towerDelegate()).webSocketClose(ws);
+    if(ws.deserializeAttachment()?.ten)return (await this.tenDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketClose(ws);
@@ -1334,6 +1356,7 @@ export class GameRoom extends DurableObject {
   async webSocketError(ws) {
     if(ws.deserializeAttachment()?.tanks)return (await this.tanksDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.tower)return (await this.towerDelegate()).webSocketClose(ws);
+    if(ws.deserializeAttachment()?.ten)return (await this.tenDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.hockey)return (await this.hockeyDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.challenge)return (await this.challengeDelegate()).webSocketClose(ws);
     if(ws.deserializeAttachment()?.party)return (await this.partyDelegate()).webSocketError(ws);
@@ -1739,6 +1762,7 @@ export class GameRoom extends DurableObject {
     if(this.tournamentRoom||await this.ctx.storage.get('tournament'))return (await this.tournamentDelegate()).alarm();
     if(this.tanksRoom||(await this.ctx.storage.get('tanks')))return (await this.tanksDelegate()).alarm();
     if(this.towerRoom||(await this.ctx.storage.get('tower')))return (await this.towerDelegate()).alarm();
+    if(this.tenRoom||(await this.ctx.storage.get('ten')))return (await this.tenDelegate()).alarm();
     if(this.hockeyRoom||(await this.ctx.storage.get('hockey')))return (await this.hockeyDelegate()).alarm();
     if(this.challengeRoom||await this.ctx.storage.get('challenge'))return (await this.challengeDelegate()).alarm();
     if(this.partyRoom||await this.ctx.storage.get('partyRoom'))return (await this.partyDelegate()).alarm();

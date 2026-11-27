@@ -17,7 +17,7 @@ import {linkedGame,linkable,linkTables,localGame,LINK_ONLY,PARTY_LINK_WAIT_MS,PA
 export const PARTY_VERSION=29;
 export const CONTINUOUS_BREAK_MS=5000;
 const embeddedGames=new Set(['focus','cipher','wordbomb','chaos']);
-const PAGE_ONLY=new Set(['blocks','ten']);
+const PAGE_ONLY=new Set(['blocks']);
 export const PARTY_BACK_MS=6000; // everyone is back from a game's own page: the standings, briefly
 export const partyName=value=>String(value||'لاعب').normalize('NFKC').replace(/[<>\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,24)||'لاعب';
 export function seeded(seed=1){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}

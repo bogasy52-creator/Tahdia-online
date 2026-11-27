@@ -10,7 +10,7 @@ export const PARTY_GAMES=Object.freeze([
  {id:'quiz',name:'تحدي العباقرة',kind:'quiz',real:true,image:'assets/game-cards-v27/quiz.svg',hint:'نفس الأسئلة والوقت للجميع، مع الصور والصوت والذاكرة.'},
 // 33.12.0: the two new games, each player on the same rounds
  {id:'blocks',name:'رص البلوكات',kind:'puzzle',real:true,image:'assets/brand/blocks-cover-v33-15.svg',hint:'نفس القطع للجميع ودقيقتين؛ أعلى نقاط يفوز.'},
- {id:'ten',name:'عشر ثواني',kind:'reaction',real:true,image:'assets/brand/ten-cover-v33-12.svg',hint:'وقّف على عشر ثواني بالضبط بدون عدّاد؛ الأبعد يطلع كل جولة.'},
+ {id:'ten',name:'عشر ثواني',kind:'reaction',maxPlayers:8,real:true,linkOnly:true,image:'assets/brand/ten-cover-v33-12.svg',hint:'وقّف على عشر ثواني بالضبط بدون عدّاد؛ الأبعد يطلع كل جولة.'},
  {id:'logic',name:'المنطق',kind:'quiz',real:true,image:'assets/game-cards-v27/logic.svg',hint:'أنماط وحساب واستنتاج، بنفس الأسئلة والوقت للجميع.'},
  {id:'wordbomb',name:'صيد الكلمات',kind:'reaction',real:true,image:'assets/challenges/wordbomb.svg',hint:'شبكة حروف وكلمات مخفية؛ أول من يلقى الكلمة ياخذ نقاطها، حتى 20 لاعبًا.'},
  {id:'focus',name:'مواجهة التركيز',kind:'reaction',real:true,image:'assets/challenges/focus.svg',hint:'20 لاعبًا و14 تحدي تركيز متبدّل.'},

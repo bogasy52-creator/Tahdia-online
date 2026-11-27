@@ -42,7 +42,7 @@
     sudoku: { steps: ['#sudokuContinue'], running: 'body.sudoku-playing' },
     bridge: { groups: [['الطور', [['سباق', '[data-br-mode="race"]'], ['بالدور', '[data-br-mode="turns"]']]], ['المستوى', [['سهل', '[data-br-level="casual"]'], ['متوسط', '[data-br-level="standard"]'], ['صعب', '[data-br-level="expert"]']]]], start: '#brPlay', running: 'body.br-running' },
     blocks: { groups: [['الطور', [['كلاسيك', '[data-bk-mode="classic"]'], ['دقيقتين ⏱', '[data-bk-mode="timed"]']]], ['المستوى', [['سهل', '[data-bk-level="casual"]'], ['متوسط', '[data-bk-level="standard"]'], ['صعب', '[data-bk-level="expert"]']]]], start: '#bkPlay', running: 'body.bk-running' },
-    ten: { groups: [['المنافسين', [['سهل', '[data-ts-level="casual"]'], ['متوسط', '[data-ts-level="standard"]'], ['صعب', '[data-ts-level="expert"]']]]], start: '#tsPlay', running: 'body.ts-running' },
+    ten: { groups: [['المنافسين', [['سهل', '[data-ts-level="casual"]'], ['متوسط', '[data-ts-level="standard"]'], ['صعب', '[data-ts-level="expert"]']]]], start: '#tsPlay', running: 'body.ts-running', online: true },
     // games that are played online only: the quick table, completed by the computer
     snakes: { quick: true, groups: [['الطور', [['عادي', '.gm33-mode[data-mode="classic"]'], ['الصدام', '.gm33-mode[data-mode="clash"]'], ['مطوّر', '.gm33-mode[data-mode="adventure"]']]], ['اللاعبين', [['2', '.gm33-seat[data-seats="2"]'], ['3', '.gm33-seat[data-seats="3"]'], ['4', '.gm33-seat[data-seats="4"]']]]] },
     jackaroo: { quick: true, groups: [['الطور', [['الكلاسيك', '.gm33-mode[data-mode="classic"]'], ['سريع ⚡', '.gm33-mode[data-mode="quick"]']]], ['اللاعبين', [['4', '.gm33-seat[data-seats="4"]'], ['6', '.gm33-seat[data-seats="6"]']]]] },
@@ -81,7 +81,8 @@
   const instant = Boolean(game) && !own && !['menu', 'online', 'room'].includes(play) && !root.BS_PARTY_LINK && root.top === root.self;
   const party = { carrom: 'carrom', uno: 'chaos', online: 'quiz', 'paths-online': 'paths-online' }[key] || key;
   // بلوت has no seat in the group room: its friends play in its own room
-  const partyUrl = key === 'baloot' ? loc.pathname + '?play=room' : '/party?game=' + encodeURIComponent(party);
+  // 33.21.0: «عشر ثواني» has its own live rooms now: its friends room opens on its own page
+  const partyUrl = key === 'baloot' || key === 'ten' ? loc.pathname + '?play=room' : '/party?game=' + encodeURIComponent(party);
   const hasOnline = Boolean(game.quick || game.online || game.groups?.some(([, list]) => list.some(([, sel]) => /online/.test(sel))) || ['hockey', 'billiards', 'carrom', 'pegs', 'jewels', 'tanks'].includes(key));
   root.BS_INSTANT = Object.freeze({ page: key, instant, play, partyUrl, menuUrl: loc.pathname + '?play=menu', onlineUrl: loc.pathname + '?play=online' });
   const html = doc.documentElement;

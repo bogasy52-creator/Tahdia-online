@@ -37,15 +37,17 @@ export const LINKED_GAMES = Object.freeze({
   hockey: { page: '/hockey', min: 1, max: 2, tables: true },
   // 33.19.0: «برج التحديات» — one race of up to eight; runners fill the seats nobody came for
   tower: { page: '/tower', min: 1, max: 8, tables: true },
+  // 33.21.0: «عشر ثواني» — everyone at one live table (eight a table), no longer each phone alone
+  ten: { page: '/ten', min: 1, max: 8, tables: true },
 });
 /** 33.10.5: games the group room can only play in their own room (it has no copy of them). */
-export const LINK_ONLY = Object.freeze(new Set(['zahra','ludo', 'billiards', 'carrom', 'pegs', 'tanks', 'hockey', 'jewels', 'tower']));
+export const LINK_ONLY = Object.freeze(new Set(['zahra','ludo', 'billiards', 'carrom', 'pegs', 'tanks', 'hockey', 'jewels', 'tower', 'ten']));
 
 // 33.9.1: the games with no online room are played on their own page inside the group
 // room: every player gets the same board (one seed for all) and each page sends its
 // result back to the room as it plays.
 // 33.12.0: جسر الألوان and عشر ثواني are played the same way, everyone on the same seed
-export const LOCAL_GAMES = Object.freeze({ memory: '/memory', logic: '/logic', puzzle: '/puzzle', jewels: '/journey', blocks: '/blocks', ten: '/ten' });
+export const LOCAL_GAMES = Object.freeze({ memory: '/memory', logic: '/logic', puzzle: '/puzzle', jewels: '/journey', blocks: '/blocks' });
 export function localGame(game) { return LOCAL_GAMES[game] || null; }
 
 // 33.10.6: الزهرة made way for لودو; a round that still names it is played as لودو
@@ -70,7 +72,7 @@ export function cleanPartyLink(value) {
 }
 
 // 33.0.0: the code carries the game (see rooms/room-codes.js)
-const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo', dice: 'dice', ludo: 'zahra', billiards: 'billiards', carrom: 'carrom', pegs: 'pegs', jewels:'jewels', tanks: 'tanks', hockey: 'hockey', tower: 'tower' };
+const FAMILY = { quiz: 'quiz', sudoku: 'sudoku', 'paths-online': 'paths', picture: 'picture', serpent: 'serpent', snakes: 'snakes', zahra: 'zahra', jackaroo: 'jackaroo', dice: 'dice', ludo: 'zahra', billiards: 'billiards', carrom: 'carrom', pegs: 'pegs', jewels:'jewels', tanks: 'tanks', hockey: 'hockey', tower: 'tower', ten: 'ten' };
 const roomCode = (game) => roomCodeFor(FAMILY[game] || game);
 const secret = () => crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
 
@@ -84,6 +86,7 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   if(['focus','cipher','wordbomb','chaos'].includes(game))return{ns:'ROOMS',name:'challenge:'+code,url:'https://challenge.internal/init',body:{game,code,hostKey,party,expected:count,capacity:room,...(game==='chaos'?{unoMode:mode}:{})}};
   // 33.10.5: tanks and air hockey have rooms of their own
   if (game === 'tanks') return { ns: 'ROOMS', name: 'tanks:' + code, url: 'https://tanks.internal/init', body: { code, hostKey, capacity: Math.max(2, Math.min(4, Number(settings?.seats)||count)), mode, expected: count, party } };
+  if (game === 'ten') return { ns: 'ROOMS', name: 'ten:' + code, url: 'https://ten.internal/init', body: { code, hostKey, capacity: 8, expected: count, party } };
   if (game === 'tower') return { ns: 'ROOMS', name: 'tower:' + code, url: 'https://tower.internal/init', body: { code, hostKey, capacity: 8, mode: 'race', expected: count, party } };
   if (game === 'hockey') return { ns: 'ROOMS', name: 'hockey:' + code, url: 'https://hockey.internal/init', body: { code, hostKey, quick: true, target: mode==='quick'?3:mode==='long'?7:5, expected: count, party } };
   if (game === 'quiz') {
