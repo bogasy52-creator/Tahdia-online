@@ -1,9 +1,9 @@
-import {quickRoomModes,quickRoomSeats,normalizeQuickRoomChoice} from './engines/quick-room-options-v33-14-1.js?v=33.15.0';
-import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.19.0';
+import {quickRoomModes,quickRoomSeats,normalizeQuickRoomChoice} from './engines/quick-room-options-v33-14-1.js?v=33.21.1';
+import {partyModes,partyMode,partyModeLabel} from './engines/party-modes.js?v=33.21.1';
 import {MEMORY_THEMES} from './memory-themes-v34.js?v=33.9.10';
 import {createLogicQuestion} from './cognitive-ui-v34.js?v=33.9.10';
 import {markSudokuError,clearSudokuError} from './sudoku-feedback-v29-1.js?v=29.1.0';
-import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.21.0';
+import {PARTY_GAMES,PARTY_COUNTDOWN_MS,PLAYLIST_MAX,partyGame,playlistCapacity,gameCapacity,tableSize,playersLabel,limitingGame,capacityMessage} from './engines/party-catalog-v29.js?v=33.21.1';
 import {renderPetalBoard,BOARD_COLORS} from './board-petals-v29.js';
 import {SerpentRenderer} from './serpent-renderer.js';
 import {applySerpentFrame} from './serpent-network.js';
@@ -115,7 +115,11 @@ $('entry').addEventListener('click',e=>{const kind=e.target.closest('[data-room-
 $('entry').addEventListener('change',e=>{const field=e.target.dataset.quickField;if(!field||quickCreating||!quickPick)return;const current=quickChoice(quickPick);current[field]=field==='seats'?Number(e.target.value):e.target.value;rememberQuick(quickPick,normalizeQuickRoomChoice(quickPick,current,quickGame(quickPick)?.maxPlayers||20));renderQuick();});
 {const params=new URLSearchParams(location.search),asked=params.get('game');let saved='';try{saved=localStorage.getItem('bs-room-kind')||'';}catch{}
  if(asked&&(partyGame(asked)||asked==='baloot')){quickPick=asked==='baloot'?'baloot':partyGame(asked).id;setRoomKind('quick');}else setRoomKind(saved||'quick');}
-$('join').onclick=()=>task($('join'),async()=>{const next=safeCode($('joinCode').value);if(next.length!==6)throw Error('اكتب رمز الغرفة من 6 أرقام');const res=await fetch('/api/party/rooms/'+next+'/status',{signal:AbortSignal.timeout(10000)}),data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'الغرفة غير موجودة');await enterRoom(next);});
+$('join').onclick=()=>task($('join'),async()=>{
+ const code=safeCode($('joinCode').value);
+ if(code.length!==6)throw Error('اكتب رمز الغرفة من 6 أرقام');
+ await window.BS_GAME_MENU.joinAnywhere(code,{game:'party',onJoin:enterRoom});
+});
 $('joinCode').oninput=e=>e.target.value=safeCode(e.target.value);
 function action(data,extra={}){if(pending)return toast('انتظر تسجيل الحركة السابقة');if(!state?.round||!me||state.status!=='playing')return;pending={type:'action',seq:(me.seq||0)+1,sessionId:state.sessionId,roundId:state.round.id,questionIndex:state.round.quiz?.index,trial:state.round.reaction?.trial,action:data,...extra};if(!send('action',Object.fromEntries(Object.entries(pending).filter(([k])=>k!=='type'))))pending=null;}
 $('ready').onclick=()=>send('ready',{ready:!state.players.find(p=>p.id===myId)?.ready});$('start').onclick=()=>send(state.status==='countdown'?'cancel':'start');$('next').onclick=()=>send('next');$('skip').onclick=()=>{if(confirm('تجاوز هذه الجولة دون منح نقاط لأي لاعب؟'))send('skip');};$('rematch').onclick=()=>send('rematch');

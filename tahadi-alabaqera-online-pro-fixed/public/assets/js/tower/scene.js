@@ -3,9 +3,9 @@
    light, ground far below, floating scenery and drifting particles; every challenge has its own
    pieces; runners are small toy figures with interchangeable headwear. All art is drawn here. */
 import * as T from '../../vendor/three-r187-pegs.js';
-import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.21.0';
+import { worldById, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt, rng } from './course.js?v=33.21.1';
 
-import {worldArt,paintTiles,addAtmosphere,installLandmarks,disposeArt,crystalGeometry} from './art.js?v=33.21.0';
+import {worldArt,paintTiles,addAtmosphere,installLandmarks,disposeArt,crystalGeometry} from './art.js?v=33.21.1';
 
 const TAU = Math.PI * 2;
 const col = (c) => new T.Color(c);

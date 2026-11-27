@@ -59,7 +59,7 @@ export function linkable(game, count) {
 }
 /** The players of a linked round, split into tables no bigger than the game's (balanced). */
 export function linkTables(game, players,settings={}) {
-  const g = linkedGame(game), size = game==='quiz'&&partyMode(game,settings)==='teams'?6:g?.tables ? g.max : Infinity, count = Math.max(1, Math.ceil(players.length / size));
+  const g = linkedGame(game), size = game==='tower'&&settings.seats>=2?Math.min(g.max,settings.seats):game==='quiz'&&partyMode(game,settings)==='teams'?6:g?.tables ? g.max : Infinity, count = Math.max(1, Math.ceil(players.length / size));
   const tables = Array.from({ length: count }, () => []);
   players.forEach((id, i) => tables[i % count].push(id));
   return tables;
@@ -87,7 +87,11 @@ function initFor(game, settings, count, code, hostKey, party, seats = count) {
   // 33.10.5: tanks and air hockey have rooms of their own
   if (game === 'tanks') return { ns: 'ROOMS', name: 'tanks:' + code, url: 'https://tanks.internal/init', body: { code, hostKey, capacity: Math.max(2, Math.min(4, Number(settings?.seats)||count)), mode, expected: count, party } };
   if (game === 'ten') return { ns: 'ROOMS', name: 'ten:' + code, url: 'https://ten.internal/init', body: { code, hostKey, capacity: 8, expected: count, party } };
-  if (game === 'tower') return { ns: 'ROOMS', name: 'tower:' + code, url: 'https://tower.internal/init', body: { code, hostKey, capacity: 8, mode: 'race', expected: count, party } };
+  if (game === 'tower') {
+    const size = Math.max(2, count, Number(settings?.seats) || Math.min(Number(seats) || count, 8));
+    const capacity = Math.min(8, mode === 'teams' && size % 2 ? size + 1 : size);
+    return { ns: 'ROOMS', name: 'tower:' + code, url: 'https://tower.internal/init', body: { code, hostKey, capacity, mode, expected: count, party } };
+  }
   if (game === 'hockey') return { ns: 'ROOMS', name: 'hockey:' + code, url: 'https://hockey.internal/init', body: { code, hostKey, quick: true, target: mode==='quick'?3:mode==='long'?7:5, expected: count, party } };
   if (game === 'quiz') {
     // 4 and 6 open a team match; a party plays everyone against everyone

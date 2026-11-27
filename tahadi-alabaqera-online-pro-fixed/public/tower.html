@@ -1,5 +1,5 @@
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>برج التحديات — لعبة العباقرة</title><meta name="description" content="برج التحديات: سباق عقبات ثلاثي الأبعاد. 100 مرحلة في 6 عوالم وزعيم في قمة كل عالم، ومرحلة اليوم وموسم كل شهر، وسباقات أونلاين من 2 إلى 8 لاعبين: سباق، إقصاء وفرق."><meta name="theme-color" content="#160c2b"><meta name="color-scheme" content="only light"><link rel="manifest" href="/manifest.webmanifest?v=33.9.10"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=33.9.10"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=33.9.10"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=33.9.10">
-<link rel="stylesheet" href="assets/css/app-tower.css?v=33.21.0-99a9f3c657"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.21.0"></head>
+<link rel="stylesheet" href="assets/css/app-tower.css?v=33.21.1-85649924c9"><link rel="stylesheet" href="/assets/css/tahdia-premium-v25.css?v=33.21.1"></head>
 <body class="release-v26 tower-page" data-world="forest">
 <canvas id="twCanvas" class="tw-canvas" aria-hidden="true"></canvas>
 <main class="tw-app">
@@ -11,6 +11,7 @@
       <div class="tw-wallet"><span title="النجوم">⭐ <b id="twStars">0</b><small id="twStarMax">/300</small></span><span title="الجواهر">💎 <b id="twGems">0</b></span></div><button id="twSettingsBtn" class="tw-back tw-gear" type="button" aria-label="الإعدادات">⚙️</button>
     </header>
     <div class="tw-lobby-foot">
+      <button id="twFriendsBtn" class="tw-friends-banner" type="button"><span><b>غرفة الأصدقاء</b><small>أنشئ غرفة أو ادخل بالكود</small></span><i aria-hidden="true">‹</i></button>
       <button id="twContinue" class="tw-cta" type="button"><b>المرحلة 1</b><small>الغابة</small></button>
       <div class="tw-tiles">
         <button id="twMapBtn" class="tw-tile" type="button"><i aria-hidden="true">🗺️</i><b>المراحل</b></button>
@@ -59,17 +60,18 @@
   </section>
 
   <section id="twOnline" class="tw-screen tw-sheet" hidden aria-labelledby="twOnlineTitle">
-    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twOnlineTitle">أونلاين</b><small>من 2 إلى 8 لاعبين</small></div></header>
+    <header class="tw-bar"><button class="tw-back" data-back type="button" aria-label="رجوع">→</button><div class="tw-brand"><b id="twOnlineTitle">غرف برج التحديات</b><small>من 2 إلى 8 لاعبين</small></div></header>
     <div id="twOnlineHome" class="tw-online">
       <div class="tw-modes" role="group" aria-label="الطور">
         <button type="button" data-tw-mode="race"><b>سباق</b><small>أول واحد يوصل القمة</small></button>
+        <button type="button" data-tw-mode="sprint"><b>اندفاع القمة</b><small>عقبتان في سباق خاطف</small></button>
         <button type="button" data-tw-mode="elim"><b>إقصاء</b><small>جولات لين يبقى واحد</small></button>
         <button type="button" data-tw-mode="teams"><b>فرق</b><small>الأحمر ضد الأزرق</small></button>
       </div>
       <label id="twNameRow" class="tw-field"><span>اسمك</span><input id="twName" maxlength="20" autocomplete="nickname" placeholder="اكتب اسمك"></label>
-      <button id="twQuick" class="tw-cta" type="button"><b>العب الحين</b><small>سباق عام، يبدأ خلال ثواني</small></button>
+      <button id="twQuick" class="tw-cta" type="button"><b>العب الحين</b><small id="twQuickHint">مطابقة عامة</small></button>
       <div class="tw-split">
-        <div class="tw-card"><b>غرفة مع أصحابك</b><label class="tw-inline">عدد اللاعبين <select id="twCapacity"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option></select></label><button id="twCreate" class="tw-btn" type="button">افتح غرفة</button></div>
+        <div id="twPrivate" class="tw-card"><b>غرفة خاصة</b><label class="tw-inline">عدد اللاعبين <select id="twCapacity"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option></select></label><label class="tw-inline">العالم <select id="twWorldChoice"><option value="">عشوائي</option><option value="forest">الغابة</option><option value="ice">الجليد</option><option value="candy">الحلوى</option><option value="desert">الصحراء</option><option value="space">الفضاء</option><option value="lava">الحمم</option></select></label><button id="twCreate" class="tw-btn" type="button">افتح غرفة</button></div>
         <div class="tw-card"><b>عندك كود؟</b><input id="twCode" class="tw-code" inputmode="numeric" maxlength="6" placeholder="000000" aria-label="كود الغرفة"><button id="twJoin" class="tw-btn" type="button">ادخل</button></div>
       </div>
     </div>
@@ -77,7 +79,7 @@
       <div class="tw-roomhead"><small>كود الغرفة</small><b id="twRoomCode"></b><span id="twRoomMode"></span></div>
       <ul id="twRoomPlayers" class="tw-players"></ul>
       <p id="twRoomNote" class="tw-note"></p>
-      <div class="tw-row"><button id="twRoomStart" class="tw-cta tw-cta-sm" type="button"><b>ابدأ السباق</b></button><button id="twRoomFriend" class="tw-btn" type="button">ادعُ صديق</button><button id="twRoomShare" class="tw-btn tw-ghost" type="button">شارك الرابط</button><button id="twRoomLeave" class="tw-btn tw-ghost" type="button">اطلع</button></div>
+      <div class="tw-row"><button id="twRoomReady" class="tw-btn" type="button" aria-pressed="false">أنا جاهز</button><button id="twRoomStart" class="tw-cta tw-cta-sm" type="button"><b>ابدأ السباق</b></button><button id="twRoomFriend" class="tw-btn" type="button">ادعُ صديق</button><button id="twRoomShare" class="tw-btn tw-ghost" type="button">شارك الرابط</button><button id="twRoomLeave" class="tw-btn tw-ghost" type="button">اطلع</button></div>
     </div>
   </section>
 
@@ -140,6 +142,6 @@
   </div>
 </div>
 
-<script src="assets/js/party-link-v32.js?v=33.21.0-room1"></script><script src="assets/js/compact/platform.js?v=33.21.0"></script><script src="assets/js/compact/social-client.js?v=33.21.0"></script><script src="assets/js/compact/profile-core.js?v=33.21.0-pro1"></script><script src="assets/js/compact/career-client.js?v=33.21.0"></script>
-<script type="module" src="assets/js/tower/main.js?v=33.21.0"></script>
-<script src="/assets/js/tahdia-premium-v25.js?v=33.21.0"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.21.0"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.21.0"></script></body></html>
+<script src="assets/js/party-link-v32.js?v=33.21.1-room1"></script><script src="assets/js/compact/platform.js?v=33.21.1"></script><script src="assets/js/compact/social-client.js?v=33.21.1"></script><script src="assets/js/compact/profile-core.js?v=33.21.1-pro1"></script><script src="assets/js/compact/career-client.js?v=33.21.1"></script>
+<script type="module" src="assets/js/tower/main.js?v=33.21.1"></script>
+<script src="/assets/js/tahdia-premium-v25.js?v=33.21.1"></script><script src="/assets/js/legend-frame-art-v33-11-5.js?v=33.21.1"></script><script src="/assets/js/legend-frames-v33-11-5.js?v=33.21.1"></script></body></html>

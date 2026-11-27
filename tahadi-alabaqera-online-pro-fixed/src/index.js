@@ -5,7 +5,7 @@ import {TournamentRoom,cleanTournamentLink,reportTournament} from './competition
 import {relayGameReaction} from './social/game-reactions.js';
 import {HockeyRoom} from './hockey/hockey-room.js';
 import {TanksRoom} from './tanks/tanks-room.js';
-import {TowerRoom,TOWER_MODES} from './tower/tower-room.js';
+import {TowerRoom,TOWER_MODES,towerCapacity} from './tower/tower-room.js';
 import {TenRoom} from './ten/ten-room.js';
 import {ChallengeRoom,ChallengeQueue} from './challenges/challenge-room.js';
 import {BillingRegistry,handleBillingRequest} from './billing/billing.js';
@@ -50,7 +50,7 @@ class SocialDelegateBase {
 const BoardSocialUser = createSocialUserClass(SocialDelegateBase);
 export const QuickArena = createQuickArenaClass(DurableObject);
 
-const RELEASE='33.21.0';
+const RELEASE='33.21.1';
 // 32.0.0: every hero in the catalogue (short ids: fox, samurai, …)
 const BOARD_CHARACTERS=Career.HEROES?.length?Career.HEROES.map(hero=>hero.id):['princess','fairy','astronaut','fox','cat','robot'],DEFAULT_BOARD_CHARACTERS=['fox','fox','fox','fox'];
 // Live reactions in board-game rooms: a fixed vocabulary, never free text.
@@ -627,7 +627,8 @@ export default {
       if(url.pathname==='/api/tower/quick'&&request.method==='POST'){const b=await body();if(!b)return json({ok:false},400);const mode=TOWER_MODES.includes(b.mode)?b.mode:'race';return await env.ROOMS.get(env.ROOMS.idFromName('tower:queue:'+mode)).fetch('https://tower.internal/queue',{method:'POST',body:JSON.stringify({mode})});}
       if(url.pathname==='/api/tower/rooms'&&request.method==='POST'){
         const b=await body();if(!b||!TOWER_MODES.includes(b.mode)||!Number.isInteger(b.capacity)||b.capacity<2||b.capacity>8)return json({ok:false,error:'اختر الطور ومن 2 إلى 8 لاعبين'},400);
-        for(let i=0;i<8;i++){const code=roomCodeFor('tower'),hostKey=token(),res=await env.ROOMS.get(env.ROOMS.idFromName('tower:'+code)).fetch('https://tower.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:b.capacity,mode:b.mode})});if(res.status===201)return json({ok:true,code,hostKey});}
+        if(towerCapacity(b.mode,b.capacity)!==b.capacity)return json({ok:false,error:'طور الفرق يحتاج 2 أو 4 أو 6 أو 8 لاعبين'},400);
+        for(let i=0;i<8;i++){const code=roomCodeFor('tower'),hostKey=token(),res=await env.ROOMS.get(env.ROOMS.idFromName('tower:'+code)).fetch('https://tower.internal/init',{method:'POST',body:JSON.stringify({code,hostKey,capacity:b.capacity,mode:b.mode,world:b.world})});if(res.status===201)return json({ok:true,code,hostKey});}
         return json({ok:false,error:'تعذّر فتح غرفة'},503);
       }
       // 33.19.0: today's level — a signed-in player's time, with the path that proves it
@@ -638,7 +639,7 @@ export default {
       if(m[2]==='ws'){const st=String(h.get('sec-websocket-protocol')||'').split(',').map(v=>v.trim()).find(v=>v.startsWith('st.'))?.slice(3),auth=await authenticate(st?new Request(request.url,{headers:{authorization:'Bearer '+st}}):request,env);if(st&&!auth)return json({ok:false,error:'انتهت جلسة الحساب'},401);if(auth){h.set('x-bs-account',auth.username);h.set('x-bs-name',accountRoomName(auth));}}
       return await env.ROOMS.get(env.ROOMS.idFromName('tower:'+m[1])).fetch(new Request('https://tower.internal/'+m[2]+url.search,{headers:h}));
     }
-    // 33.21.0: «عشر ثواني» live: a public table, a friends room, and the room's socket
+    // 33.21.1: «عشر ثواني» live: a public table, a friends room, and the room's socket
     if(url.pathname.startsWith('/api/ten/')){
       if(!env.ROOMS)return json({ok:false,error:'الغرف غير متاحة الآن'},503);
       const limited=await rateLimit(request,env,'ten-api',120,60000);if(limited)return limited;
@@ -1001,7 +1002,7 @@ export class GameRoom extends DurableObject {
   async tanksDelegate(){if(!this.tanksRoom)this.tanksRoom=new TanksRoom(this.ctx,this.env);await this.tanksRoom.ready;return this.tanksRoom;}
   // 33.18.0: «برج التحديات» rooms, its public queue and its leaderboard
   async towerDelegate(){if(!this.towerRoom)this.towerRoom=new TowerRoom(this.ctx,this.env);await this.towerRoom.ready;return this.towerRoom;}
-  // 33.21.0: «عشر ثواني» live tables and their public queue
+  // 33.21.1: «عشر ثواني» live tables and their public queue
   async tenDelegate(){if(!this.tenRoom)this.tenRoom=new TenRoom(this.ctx,this.env);await this.tenRoom.ready;return this.tenRoom;}
 
   async hockeyDelegate(){if(!this.hockeyRoom)this.hockeyRoom=new HockeyRoom(this.ctx,this.env);await this.hockeyRoom.ready;return this.hockeyRoom;}

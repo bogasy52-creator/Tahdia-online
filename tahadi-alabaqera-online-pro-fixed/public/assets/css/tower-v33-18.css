@@ -248,3 +248,12 @@ body.tower-page .tw-dash{--dash-ready:1}
 body.tower-page .tw-dash::after{content:'';position:absolute;inset:5px;border-radius:inherit;background:conic-gradient(#ffe2a5 calc(var(--dash-ready)*1turn),transparent 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);pointer-events:none}
 @media(max-width:420px){body.tower-page .tw-lobby-foot{padding:9px;gap:8px;border-radius:18px}}
 @media(max-height:650px) and (orientation:landscape){body.tower-page .tw-lobby-foot{margin-inline-start:auto;margin-inline-end:0;width:min(410px,52vw)}}
+
+body.tower-page .tw-friends-banner{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:68px;padding:10px 15px;border:1px solid #f6cf8166;border-radius:18px;background:linear-gradient(90deg,#150d2470,#211234fa 73%),url('/assets/brand/tower-cover-v33-21.webp') center 43%/cover;text-align:start;color:#fff4d8;box-shadow:0 8px 24px #0e081b55}
+body.tower-page .tw-friends-banner span{display:grid;gap:4px}
+body.tower-page .tw-friends-banner b{font-size:1.06rem}
+body.tower-page .tw-friends-banner small{color:#e1ccea}
+body.tower-page .tw-friends-banner i{font:normal 28px/1 system-ui;color:#ffd780}
+body.tower-page .tw-modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.tower-page #twRoomReady[aria-pressed="true"]{color:#d5ffdf;border-color:#6ee0a3}
+body.tower-page #twPrivate select{max-width:54%}

@@ -377,10 +377,11 @@ export function buildCourse({ challenges = ['steps'], d = 0.3, seed = 1, world =
 export const levelCourse = (n) => { const L = levelInfo(n); return buildCourse({ challenges: L.challenges, d: L.d, seed: L.seed, world: L.world }); };
 
 /** An online round: a mix of four challenges at middling difficulty, from the room's seed. */
-export function roundCourse(seed, round = 0, players = 8) {
-  const r = rng(seed + round * 977), world = WORLDS[r.int(0, WORLDS.length - 1)].id, bag = CHALLENGE_IDS.slice(), list = [];
-  while (list.length < 4) list.push(bag.splice(r.int(0, bag.length - 1), 1)[0]);
-  return buildCourse({ challenges: list, d: 0.42 + 0.12 * round, seed: seed ^ (round * 7919), world, players });
+export function roundCourse(seed, round = 0, players = 8, { mode, world } = {}) {
+  const r = rng(seed + round * 977), randomWorld = WORLDS[r.int(0, WORLDS.length - 1)].id, bag = CHALLENGE_IDS.slice(), list = [];
+  const length = mode === 'sprint' ? 2 : 4;
+  while (list.length < length) list.push(bag.splice(r.int(0, bag.length - 1), 1)[0]);
+  return buildCourse({ challenges: list, d: 0.42 + 0.12 * round, seed: seed ^ (round * 7919), world: world || randomWorld, players });
 }
 
 /* ------------------------------------------------------------------ 33.19.0: the day and the season */

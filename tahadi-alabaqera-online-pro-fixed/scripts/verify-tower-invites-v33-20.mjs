@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { setTimeout as sleep } from 'node:timers/promises';
 import {createRuntime} from './local-runtime-v26.mjs';
 
 const runtime=await createRuntime();
@@ -69,12 +70,18 @@ try {
   {
     const made=await api('/api/ten/rooms',{capacity:4},a);assert.equal(made.status,200,JSON.stringify(made));assert.match(made.data.code,/^03\d{4}$/);
     const code=made.data.code,path='/api/ten/rooms/'+code+'/ws?name=Host';
+    const resolved=await api('/api/rooms/resolve/'+code);
+    assert.equal(resolved.status,200);
+    assert.equal(resolved.data.page,'/ten');
     const note=await api('/api/social/invites',{username:'towercharlie',game:'ten',roomCode:code},a);
     assert.equal(note.status,200,JSON.stringify(note));assert.equal(note.data.invite.joinPath,'/ten?room='+code);
     assert.equal((await api('/api/social/invites/check',{game:'ten',roomCode:code},c)).status,200);
     assert.equal((await request(note.data.invite.joinPath)).status,200);
-    const host=await connect(path,'bs-ten-v1','hk.'+made.data.hostKey,'st.'+a);await host.wait(m=>m.type==='hello');
-    const guest=await connect('/api/ten/rooms/'+code+'/ws?name=Guest','bs-ten-v1','st.'+c);await guest.wait(m=>m.type==='hello');
+    const host=await connect(path,'bs-ten-v1','hk.'+made.data.hostKey,'st.'+a);
+    const ownerReceipt=await host.wait(m=>m.type==='hello');
+    const guestPath='/api/ten/rooms/'+code+'/ws?name=Guest';
+    const guest=await connect(guestPath,'bs-ten-v1','st.'+c);
+    const guestReceipt=await guest.wait(m=>m.type==='hello');
     const lobby=await host.wait(m=>m.type==='state'&&m.state.players.length===2);assert.equal(lobby.state.status,'lobby');
     host.send('start');
     const counting=await guest.wait(m=>m.type==='state'&&m.state.status==='count');
@@ -83,7 +90,20 @@ try {
     assert.equal((await request('/api/ten/rooms/'+code+'/ws?name=Late',{headers:{upgrade:'websocket','sec-websocket-protocol':'bs-ten-v1'}})).status,409);
     const quick=await api('/api/ten/quick',{},undefined);assert.equal(quick.status,200,JSON.stringify(quick));assert.match(quick.data.code,/^03\d{4}$/);
     const page=await (await request('/ten')).text();assert.match(page,/id="tsFriendsBtn"/);assert.match(page,/id="tsOnlineBtn"/);
-    console.log('Ten: a live friends room, an invite to its code, two real sockets, the start, and the closed-room refusals');
+    guest.ws.close(1000,'reconnect test');
+    const returned=await connect(guestPath,'bs-ten-v1','st.'+c,'rt.'+guestReceipt.token);
+    assert.equal((await returned.wait(m=>m.type==='hello')).id,guestReceipt.id);
+    const resumed=(await returned.wait(m=>m.type==='state'&&m.state.round===counting.state.round)).state;
+    assert.equal(resumed.match,counting.state.match);
+    await sleep(Math.max(0,resumed.goIn)+1000);
+    host.send('stop',{round:resumed.round,ms:1000});
+    await host.wait(m=>m.type==='state'&&m.state.players.some(p=>p.id===ownerReceipt.id&&p.last!==null));
+    await returned.wait(m=>m.type==='state'&&m.state.status==='run'&&m.state.players.every(p=>p.last===null));
+    returned.send('stop',{round:resumed.round,ms:1000});
+    const final=(await host.wait(m=>m.type==='state'&&m.state.status==='finished')).state;
+    assert.equal(final.players.length,2);
+    assert.equal(final.players.filter(p=>p.place===1).length,1);
+    console.log('Ten: live friends room, room-code resolution, invitation, reconnect, and the result shared by both players');
   }
   for(const game of ['blocks']){
     const party=await api('/api/party/rooms',{capacity:4,playlist:[{game}]},a);
@@ -109,4 +129,62 @@ try {
     assert.equal((await request(note.data.invite.joinPath)).status,200);
   }
   console.log('Uno + Ludo + Carrom + Pegs + Jewels + Pool: real room codes and canonical pages');
+
+  async function startParty(game, mode) {
+    const created = await api('/api/party/rooms', { capacity: 2, playlist: [{ game, mode, seats: 2 }] }, a);
+    assert.equal(created.status, 200, JSON.stringify(created));
+    const { code, hostKey } = created.data;
+    const invite = await api('/api/social/invites', { username: 'towerbob', game: 'party', roomCode: code }, a);
+    assert.equal(invite.status, 200, JSON.stringify(invite));
+    assert.equal(invite.data.invite.joinPath, '/party?room=' + code);
+    await inbox.wait(m => m.type === 'notification' && m.notification.id === invite.data.invite.id);
+    const path = '/api/party/rooms/' + code + '/ws';
+    const owner = await connect(path, 'tahdia-party-v29', 'st.' + a, 'hk.' + hostKey);
+    await owner.wait(m => m.type === 'welcome');
+    const guest = await connect(path, 'tahdia-party-v29', 'st.' + b);
+    await guest.wait(m => m.type === 'welcome');
+    owner.send('ready', { ready: true });
+    guest.send('ready', { ready: true });
+    await owner.wait(m => m.type === 'room' && m.state.players.length === 2 && m.state.players.every(p => p.ready));
+    await sleep(80);
+    owner.send('start');
+    return owner;
+  }
+
+  const partyTen = await startParty('ten', 'classic');
+  const tenRound = (await partyTen.wait(m => m.type === 'room' && m.state.round?.link?.status === 'open')).state.round;
+  assert.equal(tenRound.local, undefined);
+  assert.equal(tenRound.link.page, '/ten');
+  const liveTenPath = '/api/ten/rooms/' + tenRound.link.list[0].code + '/ws';
+  const liveTenA = await connect(liveTenPath, 'bs-ten-v1', 'st.' + a);
+  const liveTenB = await connect(liveTenPath, 'bs-ten-v1', 'st.' + b);
+  const tenStarted = (await liveTenA.wait(m => m.type === 'state' && m.state.status === 'count')).state;
+  assert.deepEqual(tenStarted.players.filter(p => p.user).map(p => p.user).sort(), ['toweralice', 'towerbob']);
+  assert.equal((await liveTenB.wait(m => m.type === 'state' && m.state.status === 'count')).state.code, tenStarted.code);
+  console.log('Ten: the uploaded live engine resolves room codes, sends direct invitations, resumes a private game, and starts a shared party table');
+
+  assert.equal((await api('/api/tower/rooms', { mode: 'teams', capacity: 3 }, a)).status, 400);
+  const sprint = await startParty('tower', 'sprint');
+  const { state: quick } = await sprint.wait(m => m.type === 'room' && m.state.round?.link?.status === 'open');
+  const towerPath = '/api/tower/rooms/' + quick.round.link.list[0].code + '/ws';
+  const runnerA = await connect(towerPath, 'bs-tower-v1', 'st.' + a);
+  const runnerB = await connect(towerPath, 'bs-tower-v1', 'st.' + b);
+  const receipt = await runnerA.wait(m => m.type === 'hello');
+  const active = (await runnerA.wait(m => m.type === 'state' && m.state.status === 'playing')).state;
+  assert.deepEqual([active.capacity, active.players.length, active.mode], [2, 2, 'sprint']);
+  await sleep(Math.max(0, active.startAt - Date.now() + 150));
+  runnerA.send('pos', { x: 0, y: 0, z: 1, ry: 0, a: 1, cp: 0 });
+  await runnerB.wait(m => m.type === 'snap' && m.p.some(row => row[0] === receipt.id && row[3] === 1));
+  runnerA.ws.close(1000, 'local network drop');
+  runnerB.ws.close(1000, 'local network drop');
+  await sleep(600);
+  assert.equal((await api(towerPath.replace('/ws', '/status'))).data.status, 'playing');
+  const backToTower = await connect(towerPath, 'bs-tower-v1', 'st.' + a, 'rt.' + receipt.token);
+  const resumed = await backToTower.wait(m => m.type === 'hello');
+  assert.equal(resumed.resume.match, active.match);
+  assert.equal(resumed.resume.pos[2], 1);
+  const world = await api('/api/tower/rooms', { mode: 'teams', capacity: 4, world: 'ice' }, a);
+  const privateTower = await connect('/api/tower/rooms/' + world.data.code + '/ws', 'bs-tower-v1', 'st.' + a, 'hk.' + world.data.hostKey);
+  assert.equal((await privateTower.wait(m => m.type === 'state')).state.world, 'ice');
+  console.log('Tower: selected seats and sprint, simultaneous outage and private world');
 }finally{for(const ws of sockets)try{ws.close(1000,'done')}catch{}await runtime.dispose();}

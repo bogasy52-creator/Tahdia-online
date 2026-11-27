@@ -3,7 +3,7 @@
    steps up low ledges, slides on ice, is carried by belts, bounced by jelly and bumpers, and knocked
    about by bars, hammers, barrels and cannon balls. Everything is checked a few times per frame, so a
    fast hammer cannot pass through a runner on a slow phone. */
-import { GRAVITY, JUMP, RUN, PLAYER_R as R, PLAYER_H as H, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt } from './course.js?v=33.21.0';
+import { GRAVITY, JUMP, RUN, PLAYER_R as R, PLAYER_H as H, offset, blinkOn, hammerAt, rollAt, ballAt, barAngle, windAt } from './course.js?v=33.21.1';
 
 const STEP = 1 / 120, STEP_UP = 0.42, COYOTE = 0.12, BUFFER = 0.14;
 const near = (p, z, pad) => {

@@ -152,7 +152,7 @@ test('«الغرف»: the tower opens as a linked race that starts itself and re
   await room.step(); assert.equal(room.r.status, 'lobby', 'waits for the second player');
   assert.equal((await join(room, 'ريم')).res.status, 101);
   await room.step(); assert.equal(room.r.status, 'playing');
-  assert.equal(room.r.players.length, 4, 'empty seats are filled for a lively race');
+  assert.equal(room.r.players.length, 2, 'a linked race keeps the selected two seats');
   for (let g = 0; room.r.status === 'playing' && g < 9000; g++) { room.r.startAt -= 100; await room.tick(); }
   assert.equal(room.r.status, 'finished');
   const rows = reports.at(-1)?.standings; assert.ok(Array.isArray(rows) && rows.length === 2, 'only the two real players are reported');

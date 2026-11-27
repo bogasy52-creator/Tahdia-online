@@ -7,6 +7,7 @@ export function quickRoomSeats(game,mode,max=20){
  if(game==='snakes')return[2,3,4];
  if(['billiards','carrom','hockey','jewels'].includes(game))return[2];
  const limit=game==='pegs'?6:game==='dice'?10:game==='tanks'?4:Math.max(2,Math.min(20,Number(max)||20));
+ if(game==='tower'&&mode==='teams')return[2,4,6,8];
  if(game==='tanks'&&mode==='teams')return[2,4];
  return Array.from({length:limit-1},(_,i)=>i+2);
 }
